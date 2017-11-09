@@ -1,0 +1,24 @@
+{
+  "Midtier": {
+    "Protocol": "http",
+    "HostName": "localhost",
+    "Port": 5000,
+    "UploadDirectory": "upload",
+    "FileStorageDirectory": "storage"
+  },
+  "Backtier": {
+    "HostName": "cdp4-postgresql",
+    "Port": 5432,
+    "UserName": "cdp4",
+    "Password": "cdp4",
+    "Database": "cdp4server",
+    "DatabaseRestore": "cdp4serverrestore",
+    "DatabaseManage": "cdp4manage",
+    "StatementTimeout": 120
+  },
+  "Defaults": {
+    "PersonPassword": "pass",
+    "LocationServicePath": "http://freegeoip.net/json/",
+    "ContributorsCacheTimeout":  60 
+  } 
+}

@@ -1,0 +1,261 @@
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="QueryParameters.cs" company="RHEA System S.A.">
+//   Copyright (c) 2016 RHEA System S.A.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace CDP4WebServices.API.Services.Protocol
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using CDP4Common.DTO;
+
+    /// <summary>
+    /// The query parameters of the current request.
+    /// </summary>
+    public class QueryParameters : IQueryParameters
+    {
+        /// <summary>
+        /// The extent query parameter.
+        /// </summary>
+        public const string ExtentQuery = "extent";
+
+        /// <summary>
+        /// The include reference data query parameter.
+        /// </summary>
+        public const string IncludeReferenceDataQuery = "includeReferenceData";
+
+        /// <summary>
+        /// The include all containers query parameter.
+        /// </summary>
+        public const string IncludeAllContainersQuery = "includeAllContainers";
+
+        /// <summary>
+        /// The include file data query parameter.
+        /// </summary>
+        public const string IncludeFileDataQuery = "includeFileData";
+
+        /// <summary>
+        /// The export query parameter.
+        /// </summary>
+        public const string ExportQuery = "export";
+
+        /// <summary>
+        /// The revision number query parameter.
+        /// </summary>
+        public const string RevisionNumberQuery = "revisionNumber";
+
+        /// <summary>
+        /// The revision number FROM which the request to get the revisions of a <see cref="Thing"/> is done
+        /// </summary>
+        public const string RevisionFromQuery = "revisionFrom";
+
+        /// <summary>
+        /// The revision number TO which the request to get the revisions of a <see cref="Thing"/> is done
+        /// </summary>
+        public const string RevisionToQuery = "revisionTo";
+
+        /// <summary>
+        /// The query parameter definitions.
+        /// </summary>
+        private readonly Dictionary<string, string[]> queryParameterDefinitions = new Dictionary<string, string[]>
+                               {
+                                   { ExtentQuery, new[] { "deep", "shallow" } },
+                                   { IncludeReferenceDataQuery, new[] { "true", "false" } },
+                                   { IncludeAllContainersQuery, new[] { "true", "false" } },
+                                   { IncludeFileDataQuery, new[] { "true", "false" } },
+                                   { ExportQuery, new[] { "true", "false" } }
+                               };
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueryParameters"/> class.
+        /// </summary>
+        public QueryParameters()
+        {
+            this.SetupQueryParameterDefaults();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="QueryParameters"/> class.
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        public QueryParameters(Dictionary<string, object> queryParameters)
+        {
+            this.SetupQueryParameterDefaults();
+
+            // process the query information against the supported query parameters
+            this.ExtentDeep = this.ProcessQueryParameter(queryParameters, ExtentQuery, "deep");
+            this.IncludeReferenceData = this.ProcessQueryParameter(queryParameters, IncludeReferenceDataQuery, "true");
+            this.IncludeAllContainers = this.ProcessQueryParameter(queryParameters, IncludeAllContainersQuery, "true");
+            this.IncludeFileData = this.ProcessQueryParameter(queryParameters, IncludeFileDataQuery, "true");
+            this.Export = this.ProcessQueryParameter(queryParameters, ExportQuery, "true");
+            this.RevisionNumber = this.ProcessQueryParameter(queryParameters, RevisionNumberQuery);
+            this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionFromQuery);
+            this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionToQuery);
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to extent deep.
+        /// </summary>
+        public bool ExtentDeep { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include reference data.
+        /// </summary>
+        public bool IncludeReferenceData { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include all containers.
+        /// </summary>
+        public bool IncludeAllContainers { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to include file data.
+        /// </summary>
+        public bool IncludeFileData { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to export data.
+        /// </summary>
+        public bool Export { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revision number.
+        /// </summary>
+        public int RevisionNumber { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revision number from which the request is done
+        /// </summary>
+        public int? RevisionFrom { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revision number to which the request is done
+        /// </summary>
+        public int? RevisionTo { get; set; }
+
+        /// <summary>
+        /// The validate query parameter.
+        /// </summary>
+        /// <param name="queryParameter">
+        /// The query parameter.
+        /// </param>
+        /// <param name="value">
+        /// The value.
+        /// </param>
+        /// <exception cref="Exception">
+        /// If unknown query parameter or value is passed
+        /// </exception>
+        public void ValidateQueryParameter(string queryParameter, string value)
+        {
+            if (!this.queryParameterDefinitions.ContainsKey(queryParameter))
+            {
+                throw new Exception(string.Format("Query parameter {0} is not supported", queryParameter));
+            }
+
+            if (!this.queryParameterDefinitions[queryParameter].Contains(value))
+            {
+                throw new Exception("Invalid query parameter value supplied");
+            }
+        }
+
+        /// <summary>
+        /// The process query parameter.
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <param name="trueValue">
+        /// The true value.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        protected bool ProcessQueryParameter(Dictionary<string, object> queryParameters, string key, string trueValue)
+        {
+            if (!queryParameters.ContainsKey(key))
+            {
+                return false;
+            }
+
+            var queryParameterValue = (string)queryParameters[key];
+            this.ValidateQueryParameter(key, queryParameterValue);
+
+            return queryParameterValue == trueValue;
+        }
+
+        /// <summary>
+        /// The process query parameter.
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        protected int ProcessQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            if (!queryParameters.ContainsKey(key))
+            {
+                return -1;
+            }
+
+            int revNumber;
+            if (!int.TryParse(queryParameters[RevisionNumberQuery].ToString(), out revNumber))
+            {
+                return -1;
+            }
+
+            return revNumber;
+        }
+
+        /// <summary>
+        /// The process query parameter.
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        protected int? ProcessRevisionHistoryQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            if (!queryParameters.ContainsKey(key))
+            {
+                return null;
+            }
+
+            int revNumber;
+            if (!int.TryParse(queryParameters[key].ToString(), out revNumber))
+            {
+                return null;
+            }
+
+            return revNumber;
+        }
+
+        /// <summary>
+        /// Setup query parameter defaults.
+        /// </summary>
+        private void SetupQueryParameterDefaults()
+        {
+            this.ExtentDeep = false;
+            this.IncludeReferenceData = false;
+            this.IncludeAllContainers = false;
+            this.IncludeFileData = false;            
+            this.Export = false;            
+        }
+    }
+}

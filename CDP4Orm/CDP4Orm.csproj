@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;net451;net452;net46;net461;net462</TargetFrameworks>
+    <Company>RHEA System S.A.</Company>
+    <Title>CDP4Orm-CE</Title>
+    <Version>0.7.0</Version>
+    <Description>CDP4 Data-Model Object Relational Mapping</Description>
+    <Copyright>Copyright © RHEA System S.A.</Copyright>
+    <Authors>Sam, Merlin, Alex, Naron</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="AutoGenStructure\EngineeringModelDefinition.sql" />
+    <None Remove="AutoGenStructure\SiteDirectoryDefinition.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="AutoGenStructure\EngineeringModelDefinition.sql" />
+    <EmbeddedResource Include="AutoGenStructure\SiteDirectoryDefinition.sql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.0.0-rc4" />
+    <PackageReference Include="Npgsql" Version="3.2.5" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
+  </ItemGroup>
+ 
+</Project>

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;net451;net452;net46;net461;net462</TargetFrameworks>
+    <Company>RHEA System S.A.</Company>
+    <Title>CDP4Authentication-CE</Title>
+    <Version>0.6.2</Version>
+    <Description>Library to support the implementation of authentication</Description>
+    <Copyright>Copyright © RHEA System S.A.</Copyright>
+    <Authors>Sam, Merlin, Alex, Naron</Authors>    
+    <RepositoryUrl>https://github.com/RHEAGROUP/CDP4-SDK-Community-Edition.git</RepositoryUrl>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net452</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <Company>RHEA System S.A.</Company>
+    <Title>CDP4WebServer-CE</Title>
+    <Version>0.6.2</Version>
+    <Description>CDP4 Services Host</Description>
+    <Copyright>Copyright © RHEA System S.A.</Copyright>
+    <Authors>Sam, Merlin, Alex, Naron</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>    
+    <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="1.4.1" />
+    <PackageReference Include="Nancy.Owin" Version="1.4.1" />
+    <PackageReference Include="Owin" Version="1.0" />
+    <PackageReference Include="Microsoft.Owin.Diagnostics" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Owin.Host.HttpListener" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Owin.Hosting" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Owin.SelfHost" Version="3.1.0" />
+    <PackageReference Include="Mono.Posix-4.5" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CDP4WebServices.API\CDP4WebServices.API.csproj" />
+  </ItemGroup>
+
+  <Target Name="PostcompileScript" AfterTargets="Build">
+    
+    <!-- Copy API config -->    
+    <Copy SourceFiles="..\CDP4WebServices.API\config_debug.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Debug'" />
+    <Copy SourceFiles="..\CDP4WebServices.API\config_release.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Release'" />
+
+    <!-- Copy nlog config -->    
+    <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
+    
+    <!-- Copy Database Authentication plugin -->    
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net452'" />
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net452'" />
+    
+  </Target>
+</Project>

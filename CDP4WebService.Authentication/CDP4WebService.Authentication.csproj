@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net45;net451;net452;net46;net461;net462</TargetFrameworks>
+    <Company>RHEA System S.A.</Company>
+    <Title>CDP4WebService-CE.Authentication</Title>
+    <Version>0.6.2.0</Version>
+    <Description>CDP4WebService.Authentication</Description>
+    <Copyright>Copyright © RHEA System S.A.</Copyright>
+    <Authors>Sam, Merlin, Alex, Naron</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Nancy" Version="1.4.4" />
+    <PackageReference Include="NLog" Version="5.0.0-beta11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Runtime.Caching" />
+  </ItemGroup>
+  
+</Project>

@@ -1,0 +1,522 @@
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="Cdp4TransactionManager.cs" company="RHEA System S.A.">
+//   Copyright (c) 2016 RHEA System S.A.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace CDP4WebServices.API.Helpers
+{
+    using System;
+    using System.Data;
+    using System.Linq;
+    using System.Text;
+    using CDP4Common.DTO;
+    using CDP4Orm.Dao;
+    using Configuration;
+    using Npgsql;
+    using NpgsqlTypes;
+    using Services.Authentication;
+    using ServiceUtils = Services.Utils;
+
+    /// <summary>
+    /// A wrapper class for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
+    /// </summary>
+    public class Cdp4TransactionManager : ICdp4TransactionManager
+    {
+        /// <summary>
+        /// The transaction info table name.
+        /// </summary>
+        private const string TransactionInfoTable = "transaction_info";
+
+        /// <summary>
+        /// The transaction info table user id column name.
+        /// </summary>
+        private const string UserIdColumn = "user_id";
+
+        /// <summary>
+        /// The transaction info table period start column name.
+        /// </summary>
+        private const string PeriodStartColumn = "period_start";
+
+        /// <summary>
+        /// The transaction info table period end column name.
+        /// </summary>
+        private const string PeriodEndColumn = "period_end";
+
+        /// <summary>
+        /// The transaction info table instant column name.
+        /// </summary>
+        private const string InstantColumn = "instant";
+
+        /// <summary>
+        /// The transaction info table transaction time column name.
+        /// </summary>
+        private const string TransactionTimeColumn = "transaction_time";
+
+        /// <summary>
+        /// The transaction audit enabled.
+        /// </summary>
+        private const string TransactionAuditEnabled = "audit_enabled";
+
+        /// <summary>
+        /// The value indicating whether to use cache tables for retrieving the data.
+        /// </summary>
+        private bool isCachedDtoReadEnabled;
+
+        /// <summary>
+        /// The value indicating whether the seed process is enabled now.
+        /// </summary>
+        private bool isSeedProcessEnabled;
+
+        /// <summary>
+        /// Gets or sets the iteration setup dao.
+        /// </summary>
+        public IIterationSetupDao IterationSetupDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Command logger.
+        /// </summary>
+        public ICommandLogger CommandLogger { get; set; }
+
+        /// <summary>
+        /// Gets or sets the iteration setup.
+        /// </summary>
+        private IterationSetup IterationSetup { get; set; }
+
+        /// <summary>
+        /// The setup transaction.
+        /// </summary>
+        /// <param name="connection">
+        /// The connection.
+        /// </param>
+        /// <param name="credentials">
+        /// The credentials.
+        /// </param>
+        /// <param name="iterationIid">
+        /// The iteration context to use.
+        /// </param>
+        /// <returns>
+        /// The <see cref="NpgsqlTransaction"/>.
+        /// </returns>
+        public NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials, Guid iterationIid)
+        {
+            var transaction = this.GetTransaction(ref connection, credentials);
+
+            if (iterationIid != Guid.Empty)
+            {
+                this.IterationSetup = this.GetIterationContext(transaction, iterationIid);
+            }
+
+            return transaction;
+        }
+
+        /// <summary>
+        /// Setup a new transaction.
+        /// </summary>
+        /// <param name="connection">
+        /// The connection.
+        /// </param>
+        /// <param name="credentials">
+        /// The user credentials of the current request.
+        /// </param>
+        /// <returns>
+        /// The <see cref="NpgsqlTransaction"/>.
+        /// </returns>
+        public NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials)
+        {
+            return this.GetTransaction(ref connection, credentials);
+        }
+
+        /// <summary>
+        /// Set the transaction statement time used when creating items.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The newly set transaction time.
+        /// </returns>
+        public DateTime UpdateTransactionStatementTime(NpgsqlTransaction transaction)
+        {
+            // make sure to bump the transaction timestamp as iteration contained data needs to be distinguishable when retrieving the versioned information
+            using (var command = new NpgsqlCommand(
+                string.Format("UPDATE {0} SET {1} = statement_timestamp();", TransactionInfoTable, TransactionTimeColumn),
+                transaction.Connection,
+                transaction))
+            {
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+
+            return this.GetTransactionTime(transaction);
+        }
+
+        /// <summary>
+        /// Get the current session time instant.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="DateTime"/>.
+        /// </returns>
+        public DateTime GetSessionInstant(NpgsqlTransaction transaction)
+        {
+            if (!this.CommandLogger.ExecuteCommands)
+            {
+                // if commands are not executed return now time
+                return DateTime.UtcNow;
+            }
+
+            using (var command = new NpgsqlCommand(
+                string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_instant"),
+                transaction.Connection,
+                transaction))
+            { 
+                return (DateTime)command.ExecuteScalar();
+            }
+        }
+
+        /// <summary>
+        /// Sets a value indicating whether to use cached Dto in form of Jsonb.
+        /// </summary>
+        /// <param name="value">
+        /// The value indicating whether to use cached Dto in form of Jsonb.
+        /// </param>
+        public void SetCachedDtoReadEnabled(bool value)
+        {
+            this.isCachedDtoReadEnabled = value;
+        }
+
+        /// <summary>
+        /// Sets a value indicating whether to use a cached Dto in form of Jsonb.
+        /// </summary>
+        /// <param name="value">
+        /// The value indicating whether it is a seed process now or not.
+        /// </param>
+        public void SetSeedProcessState(bool value)
+        {
+            this.isSeedProcessEnabled = value;
+        }
+
+        /// <summary>
+        /// Check session's instant time whether it is the latest state of things.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        public bool IsCachedDtoReadEnabled(NpgsqlTransaction transaction)
+        {
+            if (!this.isCachedDtoReadEnabled)
+            {
+                return false;
+            }
+
+            var dateTime = this.GetSessionInstant(transaction);
+
+            return dateTime == DateTime.MaxValue;
+        }
+
+        /// <summary>
+        /// Indicate whether a seed process is enabled now or not.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        public bool IsSeedProcessEnabled()
+        {
+            return this.isSeedProcessEnabled;
+        }
+
+
+        /// <summary>
+        /// Get the session timeframe start time.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="DateTime"/>.
+        /// </returns>
+        public DateTime GetSessionTimeFrameStart(NpgsqlTransaction transaction)
+        {
+            if (!this.CommandLogger.ExecuteCommands)
+            {
+                // if commands are not executed return now time
+                return DateTime.UtcNow;
+            }
+
+            using (var command = new NpgsqlCommand(
+                string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_timeframe_start"),
+                transaction.Connection,
+                transaction))
+            { 
+                return (DateTime)command.ExecuteScalar();
+            }
+        }
+
+        /// <summary>
+        /// Get the current transaction time.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="DateTime"/>.
+        /// </returns>
+        public DateTime GetTransactionTime(NpgsqlTransaction transaction)
+        {
+            if (!this.CommandLogger.ExecuteCommands)
+            {
+                // if commands are not executed return now time
+                return DateTime.UtcNow;
+            }
+
+            using (var command = new NpgsqlCommand(
+                        string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_transaction_time"),
+                        transaction.Connection,
+                        transaction))
+            {
+                return (DateTime)command.ExecuteScalar();
+            }
+        }
+
+        /// <summary>
+        /// The set default context.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        public void SetDefaultContext(NpgsqlTransaction transaction)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.AppendFormat(
+                "UPDATE {0} SET ({1}, {2}) = ('-infinity', 'infinity');", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn);
+            
+            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            {
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+        }
+
+        /// <summary>
+        /// Set the audit logging framework state for the current transaction.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="enabled">
+        /// Set the audit logging framework state to off (false), or on (true).
+        /// </param>
+        public void SetAuditLoggingState(NpgsqlTransaction transaction, bool enabled)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.AppendFormat(
+                "UPDATE {0} SET ({1}) = (:{1});", TransactionInfoTable, TransactionAuditEnabled);
+
+            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            {
+                command.Parameters.Add(string.Format("{0}", TransactionAuditEnabled), NpgsqlDbType.Boolean).Value = enabled;
+
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+        }
+
+        /// <summary>
+        /// Apply the iteration context as set from transaction setup method.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        public void SetIterationContext(NpgsqlTransaction transaction, string partition)
+        {
+            this.ApplyIterationContext(transaction, partition, this.IterationSetup);
+        }
+
+        /// <summary>
+        /// Set the iteration context to a specific iteration.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="iterationId">
+        /// The iteration id.
+        /// </param>
+        public void SetIterationContext(NpgsqlTransaction transaction, string partition, Guid iterationId)
+        {
+            // use default (non-iteration-tagged) temporal context to retrieve iterationsetup
+            this.SetDefaultContext(transaction);
+            this.IterationSetup = this.GetIterationContext(transaction, iterationId);
+            this.SetIterationContext(transaction, partition);
+        }
+
+        /// <summary>
+        /// The get transaction.
+        /// </summary>
+        /// <param name="connection">
+        /// The connection.
+        /// </param>
+        /// <param name="credentials">
+        /// The credentials.
+        /// </param>
+        /// <returns>
+        /// The <see cref="NpgsqlTransaction"/>.
+        /// </returns>
+        private NpgsqlTransaction GetTransaction(ref NpgsqlConnection connection, Credentials credentials)
+        {
+            var transaction = this.SetupNewTransaction(ref connection);
+            this.CreateTransactionInfoTable(transaction);
+            this.CreateDefaultTransactionInfoEntry(transaction, credentials);
+
+            return transaction;
+        }
+
+        /// <summary>
+        /// Apply the iteration context to the transaction.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="iterationSetup">
+        /// The iteration Setup.
+        /// </param>
+        private void ApplyIterationContext(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
+        {
+            if (iterationSetup == null)
+            {
+                // skip function as the iteration was not set
+                return;
+            }
+            
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.AppendFormat(
+                "UPDATE {0} SET ({1}, {2}) =", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn).Append(
+                " (SELECT \"ValidFrom\", \"ValidTo\"").AppendFormat(
+                "  FROM \"{0}\".\"IterationRevisionLog_View\"", partition).Append(
+                "  WHERE \"IterationIid\" = :iterationIid);");
+
+            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            {
+                command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
+
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+        }
+
+        /// <summary>
+        /// The setup iteration context.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="iterationIid">
+        /// The iteration id.
+        /// </param>
+        /// <returns>
+        /// The <see cref="IterationSetup"/>.
+        /// </returns>
+        private IterationSetup GetIterationContext(NpgsqlTransaction transaction, Guid iterationIid)
+        {
+            return this.IterationSetupDao.ReadByIteration(transaction, "SiteDirectory", iterationIid).SingleOrDefault();
+        }
+
+        /// <summary>
+        /// The setup new transaction.
+        /// </summary>
+        /// <param name="connection">
+        /// The connection.
+        /// </param>
+        /// <returns>
+        /// The <see cref="NpgsqlTransaction"/>.
+        /// </returns>
+        private NpgsqlTransaction SetupNewTransaction(ref NpgsqlConnection connection)
+        {
+            // setup connection if not supplied
+            if (connection == null)
+            {
+                connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(AppConfig.Current.Backtier.Database));
+            }
+            
+            // ensure an open connection
+            if (connection.State != ConnectionState.Open)
+            {
+                connection.Open();
+            }
+
+            // start transaction with rollback support
+            return connection.BeginTransaction();
+        }
+
+        /// <summary>
+        /// The create default transaction info entry.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="credentials">
+        /// The credentials.
+        /// </param>
+        private void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
+        {
+            // insertactor from the request credentials otherwise use default (null) user
+            var sqlBuilder = new StringBuilder();
+            var isCredentialSet = credentials != null;
+
+            sqlBuilder.AppendFormat("INSERT INTO {0} ({1}, {2})", TransactionInfoTable, UserIdColumn, TransactionTimeColumn);
+            sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? string.Format(":{0}", UserIdColumn) : "null");
+
+            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            {
+                if (isCredentialSet)
+                {
+                    command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
+                }
+
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+        }
+
+        /// <summary>
+        /// Create a transaction info table with transaction scope lifetime.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        private void CreateTransactionInfoTable(NpgsqlTransaction transaction)
+        {
+            // setup transaction_info table that is valid only for this transaction
+            var sqlBuilder = new StringBuilder();
+
+            sqlBuilder.AppendFormat("CREATE TEMPORARY TABLE {0} (", TransactionInfoTable);
+            sqlBuilder.AppendFormat("{0} uuid, ", UserIdColumn);
+            sqlBuilder.AppendFormat("{0} timestamp NOT NULL DEFAULT '-infinity', ", PeriodStartColumn);
+            sqlBuilder.AppendFormat("{0} timestamp NOT NULL DEFAULT 'infinity', ", PeriodEndColumn);
+            sqlBuilder.AppendFormat("{0} timestamp NOT NULL DEFAULT 'infinity', ", InstantColumn);
+            sqlBuilder.AppendFormat("{0} timestamp NOT NULL DEFAULT statement_timestamp(), ", TransactionTimeColumn);
+            sqlBuilder.AppendFormat("{0} boolean NOT NULL DEFAULT 'true'", TransactionAuditEnabled);
+            sqlBuilder.Append(") ON COMMIT DROP;");
+
+            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            {
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+        }
+    }
+}
