@@ -8,7 +8,8 @@
     <Description>Library to support the implementation of authentication</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron</Authors>    
-    <RepositoryUrl>https://github.com/RHEAGROUP/CDP4-SDK-Community-Edition.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/RHEAGROUP/CDP4-SDK-Community-Edition.git</RepositoryUrl>    
+    <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
  
   <ItemGroup>
