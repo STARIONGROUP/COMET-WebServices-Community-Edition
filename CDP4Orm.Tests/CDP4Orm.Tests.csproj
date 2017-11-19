@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.0.0-rc4" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.0.0-rc6" />
     <PackageReference Include="Npgsql" Version="3.2.5" />
     <PackageReference Include="NUnit" Version="3.8.1" />
   </ItemGroup>
