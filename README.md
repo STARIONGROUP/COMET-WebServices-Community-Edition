@@ -2,7 +2,9 @@
 
 ## Introduction
 
-The Concurrent Design Platform 4 (CDP4) Webservices is the RHEA Group Concurrent Design REST API. The CDP4 is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. The CDP4 is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API.
+The Concurrent Design Platform 4 (CDP4) Webservices is the RHEA Group Concurrent Design REST API. The CDP4 is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. The CDP4 is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
+
+Read the [[Wiki|https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/wiki]] for detailed information on installation, architecture and much more.
 
 ## Concurrent Design
 
