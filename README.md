@@ -1,4 +1,4 @@
-# CDP4 Webservices Community Edition
+<img src="https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/raw/master/CDP-Community-Edition.png" width="250">
 
 ## Introduction
 
