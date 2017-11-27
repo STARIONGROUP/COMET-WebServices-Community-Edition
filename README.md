@@ -30,6 +30,8 @@ The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctne
 
 The CDP4 Webservices Community Edition are provided to the community under the GNU Affero General Public License. The CDP4 Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
 
+The [RHEA Group](https://www.rheagroup.com) also provides the [CDP4 Web Services Enterprise Edition](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/wiki/CDP4-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.rheagroup.com/contact) us for more details.
+
 # Contributions
 
 Contributions to the code-base are welcome. However, before we can accept your contributions we ask any contributor to sign the Contributor License Agreement (CLA) and send this digitaly signed to s.gerene@rheagroup.com. You can find the CLA's in the CLA folder.
