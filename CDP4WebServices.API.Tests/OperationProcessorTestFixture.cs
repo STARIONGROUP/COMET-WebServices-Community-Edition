@@ -17,7 +17,6 @@ namespace CDP4WebServices.API.Tests
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
-    using CDP4Common.Operations;
     using CDP4Common.Types;
 
     using CDP4WebServices.API.Services;
@@ -61,7 +60,7 @@ namespace CDP4WebServices.API.Tests
 
         private OperationProcessor operationProcessor;
 
-        private PostOperation operation;
+        private CdpPostOperation operation;
 
         [SetUp]
         public void TestSetup()

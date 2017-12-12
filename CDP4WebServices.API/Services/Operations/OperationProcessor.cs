@@ -11,13 +11,10 @@ namespace CDP4WebServices.API.Services.Operations
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
-    using CDP4Common.Operations;
     using CDP4Common.Types;
-
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
@@ -136,7 +133,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateDeleteOperations(PostOperation operation)
+        internal void ValidateDeleteOperations(CdpPostOperation operation)
         {
             // verify presence of classkind and iid
             if (operation.Delete.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -172,7 +169,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateCreateOperations(PostOperation operation, Dictionary<string, Stream> fileStore)
+        internal void ValidateCreateOperations(CdpPostOperation operation, Dictionary<string, Stream> fileStore)
         {
             // verify all mandatory properties of the thing supplied (throw), 
             // defer property validation as per the operationsideeffect
@@ -259,7 +256,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateUpdateOperations(PostOperation operation)
+        internal void ValidateUpdateOperations(CdpPostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Update.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -280,7 +277,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="operation">
         /// The operation.
         /// </param>
-        private void RegisterUpdateContainersForResolvement(PostOperation operation)
+        private void RegisterUpdateContainersForResolvement(CdpPostOperation operation)
         {
             // register items for resolvement
             foreach (var thingInfo in operation.Update.Select(x => x.GetInfoPlaceholder()))
@@ -347,7 +344,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <returns>
         /// True if the thing type is contained.
         /// </returns>
-        private bool IsContainerUpdateIncluded(PostOperation operation, Thing thing)
+        private bool IsContainerUpdateIncluded(CdpPostOperation operation, Thing thing)
         {
             var thingType = thing.GetType().Name;
             var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(thingType);
@@ -371,7 +368,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <returns>
         /// True if found, which also registers the container in the local operationContainmentCache
         /// </returns>
-        private bool TryFindContainerInUpdates(PostOperation operation, Thing thing, IMetaInfo metaInfo)
+        private bool TryFindContainerInUpdates(CdpPostOperation operation, Thing thing, IMetaInfo metaInfo)
         {
             // get the thing info as cachekey
             var thingInfo = thing.GetInfoPlaceholder();
@@ -467,7 +464,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <returns>
         /// True if found, which also registers the container in the local operationContainmentCache
         /// </returns>
-        private bool TryFindContainerInCreateSection(PostOperation operation, Thing thing, IMetaInfo metaInfo)
+        private bool TryFindContainerInCreateSection(CdpPostOperation operation, Thing thing, IMetaInfo metaInfo)
         {
             // get the thing info as cachekey
             var thingInfo = thing.GetInfoPlaceholder();
@@ -683,7 +680,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void ApplyDeleteOperations(PostOperation operation, NpgsqlTransaction transaction)
+        private void ApplyDeleteOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
             foreach (var deleteInfo in operation.Delete)
             {
@@ -806,7 +803,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If the item already exists
         /// </exception>
-        private void ApplyCreateOperations(PostOperation operation, NpgsqlTransaction transaction)
+        private void ApplyCreateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
             foreach (var createInfo in operation.Create.Select(x => x.GetInfoPlaceholder()))
             {
@@ -857,7 +854,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void ApplyUpdateOperations(PostOperation operation, NpgsqlTransaction transaction)
+        private void ApplyUpdateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
             foreach (var updateInfo in operation.Update)
             {

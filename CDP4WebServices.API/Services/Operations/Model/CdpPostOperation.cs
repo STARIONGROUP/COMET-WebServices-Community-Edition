@@ -10,51 +10,46 @@ namespace CDP4WebServices.API.Services.Operations
 
     using CDP4Common;
     using CDP4Common.DTO;
-    using CDP4Common.Operations;
-
     using Newtonsoft.Json;
 
     /// <summary>
     /// The CDP POST operation.
     /// </summary>
-    public class CdpPostOperation : PostOperation
+    public class CdpPostOperation
     {
+        /// <summary>
+        /// Initializes a new instance of <see cref="CdpPostOperation"/>
+        /// </summary>
+        public CdpPostOperation()
+        {
+            this.Delete = new List<ClasslessDTO>();
+            this.Create = new List<Thing>();
+            this.Update = new List<ClasslessDTO>();
+            this.Copy = new List<ClasslessDTO>();
+        }
+
         /// <summary>
         /// Gets or sets the collection of DTO's that need to be deleted
         /// </summary>
         [JsonProperty("_delete")]
-        public override List<ClasslessDTO> Delete { get; set; }
+        public List<ClasslessDTO> Delete { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of DTO's that need to be create
         /// </summary>
         [JsonProperty("_create")]
-        public override List<Thing> Create { get; set; }
+        public List<Thing> Create { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of DTO's that need to be updated
         /// </summary>
         [JsonProperty("_update")]
-        public override List<ClasslessDTO> Update { get; set; }
+        public List<ClasslessDTO> Update { get; set; }
 
         /// <summary>
         /// Gets or sets the collection of DTO's that need to be copied
         /// </summary>
         [JsonProperty("_copy")]
-        public override List<ClasslessDTO> Copy { get; set; }
-
-        /// <summary>
-        /// The construct from operation.
-        /// </summary>
-        /// <param name="operation">
-        /// The operation.
-        /// </param>
-        /// <remarks>
-        /// Not used
-        /// </remarks>
-        public override void ConstructFromOperation(Operation operation)
-        {
-            // do nothing
-        }
+        public List<ClasslessDTO> Copy { get; set; }
     }
 }
