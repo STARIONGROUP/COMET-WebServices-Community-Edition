@@ -14,6 +14,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -105,7 +106,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check for itself
                 if (termsId.Contains(thing.Iid))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format("BooleanExpression {0} cannot have itself as a term.", thing.Iid));
                 }
 
@@ -114,7 +115,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     if (!((ParametricConstraint)container).Expression.Contains(id))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "BooleanExpression {0} cannot have a term from outside the parametric constraint.",
                                 thing.Iid));
@@ -131,7 +132,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     if (!this.IsTermAcyclic(expressions, termId, thing.Iid))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "BooleanExpression {0} cannot have a BooleanExpression {1} that leads to cyclic dependency",
                                 thing.Iid,

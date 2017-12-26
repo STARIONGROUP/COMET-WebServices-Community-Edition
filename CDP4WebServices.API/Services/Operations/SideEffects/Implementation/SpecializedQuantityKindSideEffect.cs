@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -70,7 +71,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check for itself
                 if (kindId == thing.Iid)
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "SpecializedQuantityKind {0} {1} cannot have itself as a general quantity kind.",
                             thing.Name,
@@ -88,7 +89,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check that qantity kind is from the same RDL chain
                 if (!parameterTypeIdsFromChain.Contains(kindId))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "SpecializedQuantityKind {0} {1} cannot have a general quantity kind from outside the RDL chain.",
                             thing.Name,
@@ -103,7 +104,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check whether containing folder is acyclic
                 if (!this.IsSpecializedQuantityKindAcyclic(parameterTypes, kindId, thing.Iid))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "Folder {0} {1} cannot have a containing Folder {2} that leads to cyclic dependency",
                             thing.Name,

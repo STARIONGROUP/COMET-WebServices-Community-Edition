@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -110,7 +111,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -133,7 +134,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var id = this.siteReferenceDataLibraryA.Iid;
             this.siteReferenceDataLibraryA.RequiredRdl = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -155,7 +156,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Out of the store
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.siteReferenceDataLibraryD.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -167,7 +168,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.siteReferenceDataLibraryC,
                     this.siteDirectory,
@@ -191,7 +192,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var id = this.siteReferenceDataLibraryD.Iid;
             this.siteReferenceDataLibraryA.RequiredRdl = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -204,7 +205,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             id = this.siteReferenceDataLibraryA.Iid;
             this.siteReferenceDataLibraryC.RequiredRdl = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.siteReferenceDataLibraryC,
                     this.siteDirectory,

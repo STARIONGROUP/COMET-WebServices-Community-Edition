@@ -14,6 +14,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -96,7 +97,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                             Guid.Parse(orderedItem.V.ToString()),
                             thing.Iid))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "DerivedUnit {0} {1} cannot have a UnitFactor {2} that leads to cyclic dependency",
                                 thing.Name,

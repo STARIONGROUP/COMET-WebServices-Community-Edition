@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -140,14 +141,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check for itself
             if (containingFolderId == thing.Iid)
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format("Folder {0} {1} cannot have itself as a containing Folder.", thing.Name, thing.Iid));
             }
 
             // Check that containing folder is from the same file store
             if (!((FileStore)container).Folder.Contains(containingFolderId))
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "Folder {0} {1} cannot have a Folder from outside the current file store.",
                         thing.Name,
@@ -161,7 +162,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check whether containing folder is acyclic
             if (!this.IsFolderAcyclic(folders, containingFolderId, thing.Iid))
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "Folder {0} {1} cannot have a containing Folder {2} that leads to cyclic dependency",
                         thing.Name,

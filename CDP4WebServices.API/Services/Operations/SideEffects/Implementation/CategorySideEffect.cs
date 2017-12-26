@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -70,7 +71,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check for itself in super categories list
                 if (superCategoriesId.Contains(thing.Iid))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format("Category {0} {1} cannot have itself as a SuperCategory", thing.Name, thing.Iid));
                 }
 
@@ -87,7 +88,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     if (!categoryIdsFromChain.Contains(superCategoryId))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "Category {0} {1} cannot have a SuperCategory from outside the RDL chain",
                                 thing.Name,
@@ -103,7 +104,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     if (!this.IsSuperCategoryAcyclic(categories, superCategoryId, thing.Iid))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "Category {0} {1} cannot have a SuperCategory {2} that leads to cyclic dependency",
                                 thing.Name,

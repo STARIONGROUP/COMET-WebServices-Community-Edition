@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -108,7 +109,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                         container.Iid,
                         parameterTypeId))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "{0} {1} cannot have a ParameterType {2} that leads to cyclic dependency",
                             thing.ClassKind.ToString(),

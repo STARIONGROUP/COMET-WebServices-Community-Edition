@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -122,7 +123,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          }
                                      };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.requirementsGroupA,
                     this.requirementsSpecification,
@@ -152,7 +153,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          }
                                      };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.requirementsGroupA,
                     this.requirementsSpecification,
@@ -173,7 +174,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          }
                                      };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.requirementsGroupF,
                     this.requirementsSpecification,

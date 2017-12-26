@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -155,7 +156,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryA.Iid } }
                                      };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.categoryA,
                     this.referenceDataLibraryA,
@@ -181,7 +182,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryB.Iid } }
                                      };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.categoryA,
                     this.referenceDataLibraryA,
@@ -196,7 +197,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryD.Iid } }
                                      };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.categoryC,
                     this.referenceDataLibraryA,

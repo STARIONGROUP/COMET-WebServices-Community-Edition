@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -82,7 +83,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                             containedElementId,
                             thing.Iid))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "ElementDefinition {0} {1} cannot have an ElementUsage {2} that leads to cyclic dependency",
                                 thing.Name,

@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -135,7 +136,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check for itself
             if (requiredRdlId == thing.Iid)
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "SiteReferenceDataLibrary {0} {1} cannot have itself as a required SiteReferenceDataLibrary.",
                         thing.Name,
@@ -145,7 +146,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check that required rdl is from the same siteDirectory
             if (!((SiteDirectory)container).SiteReferenceDataLibrary.Contains(requiredRdlId))
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "SiteReferenceDataLibrary {0} {1} cannot have a SiteReferenceDataLibrary from outside the current SiteDirectory.",
                         thing.Name,
@@ -162,7 +163,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check whether required rdl is acyclic
             if (!this.IsRdlAcyclic(rdls, requiredRdlId, thing.Iid))
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "SiteReferenceDataLibrary {0} {1} cannot have a requred rdl {2} that leads to cyclic dependency",
                         thing.Name,

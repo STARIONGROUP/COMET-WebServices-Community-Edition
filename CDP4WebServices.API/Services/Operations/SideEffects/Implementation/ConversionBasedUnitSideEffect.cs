@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -73,7 +74,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check for itself
                 if (referenceUnitId == thing.Iid)
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "ConversionBasedUnit {0} cannot have itself as a RefernceUnit",
                             thing.Iid));
@@ -90,7 +91,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check that reference unit is present in the chain
                 if (!unitIdsFromChain.Contains(referenceUnitId))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "ConversionBasedUnit {0} cannot have a RefernceUnit from outside the RDL chain",
                             thing.Iid));
@@ -104,7 +105,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check reference unit that it is acyclic
                 if (!this.IsReferenceUnitAcyclic(units, referenceUnitId, thing.Iid))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "ConversionBasedUnit {0} cannot have a RefernceUnit {1} that leads to cyclic dependency",
                             thing.Iid,

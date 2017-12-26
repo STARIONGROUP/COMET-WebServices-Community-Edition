@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -180,7 +181,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check for itself
             if (containingGroupId == thing.Iid)
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "ParameterGroup {0} {1} cannot have itself as a containing ParameterGroup.",
                         thing.Name,
@@ -190,7 +191,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check that containing group is from the same element definition
             if (!((ElementDefinition)container).ParameterGroup.Contains(containingGroupId))
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "ParameterGroup {0} {1} cannot have a ParameterGroup from outside the current elementDefinition.",
                         thing.Name,
@@ -207,7 +208,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Check whether containing parameter group is acyclic
             if (!this.IsParameterGroupAcyclic(parameterGroups, containingGroupId, thing.Iid))
             {
-                throw new ArgumentException(
+                throw new AcyclicValidationException(
                     string.Format(
                         "ParameterGroup {0} {1} cannot have a containing ParameterGroup {2} that leads to cyclic dependency",
                         thing.Name,

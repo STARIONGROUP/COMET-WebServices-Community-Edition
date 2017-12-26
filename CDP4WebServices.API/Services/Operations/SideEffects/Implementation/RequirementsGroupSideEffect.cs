@@ -14,6 +14,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -73,7 +74,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Check for itself in the list
                 if (requirementsGroupIds.Contains(thing.Iid))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format("RequirementsGroup {0} {1} cannot contain itself.", thing.Name, thing.Iid));
                 }
 
@@ -91,7 +92,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                     if (!this.IsRequirementsGroupAcyclic(requirementsGroups, groupIdsToCheck, requirementsGroupId))
                     {
-                        throw new ArgumentException(
+                        throw new AcyclicValidationException(
                             string.Format(
                                 "RequirementsGroup {0} {1} cannot contain RequirementsGroup {2} that leads to cyclic dependency",
                                 thing.Name,

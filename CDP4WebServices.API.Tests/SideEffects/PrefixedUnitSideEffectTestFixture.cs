@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -132,7 +133,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.prefixedUnitA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.prefixedUnitA,
                     this.referenceDataLibraryA,
@@ -156,7 +157,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.prefixedUnitE.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,
@@ -168,7 +169,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.prefixedUnitA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,

@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -94,7 +95,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.parameterGroupA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.parameterGroupA,
                     this.elementDefinition,
@@ -113,7 +114,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var id = this.parameterGroupA.Iid;
             this.parameterGroupA.ContainingGroup = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.parameterGroupA,
                     this.elementDefinition,
@@ -131,7 +132,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Out of the store
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.parameterGroupD.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.parameterGroupA,
                     this.elementDefinition,
@@ -143,7 +144,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.parameterGroupA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.parameterGroupC,
                     this.elementDefinition,
@@ -163,7 +164,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var id = this.parameterGroupD.Iid;
             this.parameterGroupA.ContainingGroup = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.parameterGroupA,
                     this.elementDefinition,
@@ -176,7 +177,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             id = this.parameterGroupA.Iid;
             this.parameterGroupC.ContainingGroup = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.parameterGroupC,
                     this.elementDefinition,

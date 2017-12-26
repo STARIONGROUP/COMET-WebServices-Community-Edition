@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -88,7 +89,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.folderA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.folderA,
                     this.fileStore,
@@ -106,7 +107,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var id = this.folderA.Iid;
             this.folderA.ContainingFolder = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.folderA,
                     this.fileStore,
@@ -123,7 +124,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Out of the store
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.folderD.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.folderA,
                     this.fileStore,
@@ -135,7 +136,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.folderA.Iid } };
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
                     this.folderC,
                     this.fileStore,
@@ -154,7 +155,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var id = this.folderD.Iid;
             this.folderA.ContainingFolder = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.folderA,
                     this.fileStore,
@@ -167,7 +168,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             id = this.folderA.Iid;
             this.folderC.ContainingFolder = id;
 
-            Assert.Throws<ArgumentException>(
+            Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreate(
                     this.folderC,
                     this.fileStore,

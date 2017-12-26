@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -90,7 +91,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                 if (!this.IsUnitFactorAcyclic(transaction, partition, securityContext, units, container.Iid, unitId))
                 {
-                    throw new ArgumentException(
+                    throw new AcyclicValidationException(
                         string.Format(
                             "UnitFactor {0} cannot have a UnitFactor {1} that leads to cyclic dependency",
                             thing.Iid,
