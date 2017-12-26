@@ -1,0 +1,224 @@
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="BooleanExpressionSideEffectTestFixture.cs" company="RHEA System S.A.">
+//   Copyright (c) 2017 RHEA System S.A.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace CDP4WebServices.API.Tests.SideEffects
+{
+    using System;
+    using System.Collections.Generic;
+
+    using CDP4Common;
+    using CDP4Common.DTO;
+
+    using CDP4WebServices.API.Services;
+    using CDP4WebServices.API.Services.Authorization;
+    using CDP4WebServices.API.Services.Operations.SideEffects;
+
+    using Moq;
+
+    using Npgsql;
+
+    using NUnit.Framework;
+
+    /// <summary>
+    /// Suite of tests for the <see cref="BooleanExpressionSideEffect"/>
+    /// </summary>
+    [TestFixture]
+    public class BooleanExpressionSideEffectTestFixture
+    {
+        private NpgsqlTransaction npgsqlTransaction;
+
+        private Mock<ISecurityContext> securityContext;
+
+        private Mock<IParametricConstraintService> parametricConstraintService;
+
+        private NotExpressionSideEffect sideEffect;
+
+        private AndExpression andA;
+
+        private NotExpression notA;
+
+        private NotExpression notB;
+
+        private NotExpression notC;
+
+        private NotExpression notD;
+
+        private NotExpression notE;
+
+        private OrExpression orA;
+
+        private ExclusiveOrExpression exclusiveOrA;
+
+        private RelationalExpression relA;
+
+        private RelationalExpression relB;
+
+        private RelationalExpression relC;
+
+        private RelationalExpression relD;
+
+        private RelationalExpression relE;
+
+        private ParametricConstraint constraintA;
+
+        private ClasslessDTO rawUpdateInfo;
+
+        private const string TestKey = "Term";
+
+        [SetUp]
+        public void Setup()
+        {
+            this.npgsqlTransaction = null;
+            this.securityContext = new Mock<ISecurityContext>();
+
+            ////                    AndA
+            ////                   /    \
+            ////                 NotA    OrA
+            ////                 /       /  \
+            ////              RelA    NotB  ExclusiveOrA
+            ////             /          /      \
+            ////           RelB       NotC      NotD
+            ////                      /           \
+            ////                    RelC          RelD will be updated with itself, NotE outside constraint, AndA, RelE
+            this.relA = new RelationalExpression { Iid = Guid.NewGuid() };
+            this.relB = new RelationalExpression { Iid = Guid.NewGuid() };
+            this.relC = new RelationalExpression { Iid = Guid.NewGuid() };
+            this.relD = new RelationalExpression { Iid = Guid.NewGuid() };
+            this.relE = new RelationalExpression { Iid = Guid.NewGuid() };
+
+            this.notA = new NotExpression { Iid = Guid.NewGuid(), Term = this.relA.Iid };
+            this.notB = new NotExpression { Iid = Guid.NewGuid(), Term = this.relB.Iid };
+            this.notC = new NotExpression { Iid = Guid.NewGuid(), Term = this.relC.Iid };
+            this.notD = new NotExpression { Iid = Guid.NewGuid(), Term = this.relD.Iid };
+            this.notE = new NotExpression { Iid = Guid.NewGuid() }; // ouside constraint
+
+            this.exclusiveOrA =
+                new ExclusiveOrExpression
+                    {
+                        Iid = Guid.NewGuid(),
+                        Term = new List<Guid> { this.notC.Iid, this.notD.Iid }
+                    };
+
+            this.orA = new OrExpression
+                           {
+                               Iid = Guid.NewGuid(),
+                               Term = new List<Guid> { this.notB.Iid, this.exclusiveOrA.Iid }
+                           };
+
+            this.andA = new AndExpression
+                            {
+                                Iid = Guid.NewGuid(),
+                                Term = new List<Guid> { this.notA.Iid, this.orA.Iid }
+                            };
+
+            this.constraintA = new ParametricConstraint
+                                   {
+                                       Iid = Guid.NewGuid(),
+                                       Expression =
+                                           new List<Guid>
+                                               {
+                                                   this.relA.Iid,
+                                                   this.relB.Iid,
+                                                   this.relC.Iid,
+                                                   this.relD.Iid,
+                                                   this.relE.Iid,
+                                                   this.notA.Iid,
+                                                   this.notB.Iid,
+                                                   this.notC.Iid,
+                                                   this.notD.Iid,
+                                                   this.exclusiveOrA.Iid,
+                                                   this.orA.Iid,
+                                                   this.andA.Iid
+                                               }
+                                   };
+
+            this.parametricConstraintService = new Mock<IParametricConstraintService>();
+            this.parametricConstraintService
+                .Setup(
+                    x => x.GetDeep(
+                        this.npgsqlTransaction,
+                        It.IsAny<string>(),
+                        new List<Guid> { this.constraintA.Iid },
+                        It.IsAny<ISecurityContext>())).Returns(
+                    new List<Thing>
+                        {
+                            this.relA,
+                            this.relB,
+                            this.relC,
+                            this.relD,
+                            this.relE,
+                            this.notA,
+                            this.notB,
+                            this.notC,
+                            this.notD,
+                            this.exclusiveOrA,
+                            this.orA,
+                            this.andA
+                        });
+
+            this.sideEffect =
+                new NotExpressionSideEffect { ParametricConstraintService = this.parametricConstraintService.Object };
+        }
+
+        [Test]
+        public void VerifyThatExceptionIsThrownWhenTermIsTermItself()
+        {
+            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.notD.Iid } };
+
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(
+                    this.notD,
+                    this.constraintA,
+                    this.npgsqlTransaction,
+                    "partition",
+                    this.securityContext.Object,
+                    this.rawUpdateInfo));
+        }
+
+        [Test]
+        public void VerifyThatExceptionIsThrownWhenTermIsOutOfChainOrLeadsToCircularDependency()
+        {
+            // Out of chain
+            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.notE.Iid } };
+
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(
+                    this.notD,
+                    this.constraintA,
+                    this.npgsqlTransaction,
+                    "partition",
+                    this.securityContext.Object,
+                    this.rawUpdateInfo));
+
+            // Leads to circular dependency
+            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.andA.Iid } };
+
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(
+                    this.notD,
+                    this.constraintA,
+                    this.npgsqlTransaction,
+                    "partition",
+                    this.securityContext.Object,
+                    this.rawUpdateInfo));
+        }
+
+        [Test]
+        public void VerifyThatExceptionIsNotThrownWhenTermWithoutCircularDependency()
+        {
+            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.relE.Iid } };
+
+            Assert.DoesNotThrow(
+                () => this.sideEffect.BeforeUpdate(
+                    this.notD,
+                    this.constraintA,
+                    this.npgsqlTransaction,
+                    "partition",
+                    this.securityContext.Object,
+                    this.rawUpdateInfo));
+        }
+    }
+}
