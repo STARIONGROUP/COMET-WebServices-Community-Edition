@@ -111,7 +111,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.sideEffect =
                 new RequirementsGroupSideEffect() { RequirementsSpecificationService = this.requirementsSpecificationService.Object };
 
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          {
                                              TestKey,
@@ -140,7 +140,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 new RequirementsGroupSideEffect() { RequirementsSpecificationService = this.requirementsSpecificationService.Object };
             
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          {
                                              TestKey,
@@ -162,7 +162,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.securityContext.Object,
                     this.rawUpdateInfo));
 
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          {
                                              TestKey,
@@ -191,7 +191,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 new RequirementsGroupSideEffect() { RequirementsSpecificationService = this.requirementsSpecificationService.Object };
 
             // There is a chain d -> e -> f
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          {
                                              TestKey,

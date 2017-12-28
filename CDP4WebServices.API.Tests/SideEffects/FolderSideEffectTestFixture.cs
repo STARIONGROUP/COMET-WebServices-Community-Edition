@@ -87,7 +87,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         {
             this.sideEffect = new FolderSideEffect() { FolderService = this.folderService.Object };
 
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.folderA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.folderA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -122,7 +122,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.sideEffect = new FolderSideEffect() { FolderService = this.folderService.Object };
 
             // Out of the store
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.folderD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.folderD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -134,7 +134,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.folderA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.folderA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(

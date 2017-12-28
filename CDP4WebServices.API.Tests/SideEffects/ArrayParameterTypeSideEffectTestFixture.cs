@@ -209,7 +209,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenParameterTypeComponentLeadsToCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          {
                                              TestKey,
@@ -239,7 +239,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsNotThrownWhenParameterTypeComponentDoesNotLeadToCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          {
                                              TestKey,

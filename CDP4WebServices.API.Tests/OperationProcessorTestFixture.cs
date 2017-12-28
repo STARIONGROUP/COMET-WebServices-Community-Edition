@@ -78,9 +78,9 @@ namespace CDP4WebServices.API.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<SimpleQuantityKind>())).Returns(this.simpleQuantityKindMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
 
-            var deleteObjectWithoutIid = new ClasslessDTO(new MetaInfoProvider()) { { ClasskindKey, SimpleQuantityKindTypeString } };
+            var deleteObjectWithoutIid = new ClasslessDTO() { { ClasskindKey, SimpleQuantityKindTypeString } };
 
-            var deleteObjectWithoutClassKind = new ClasslessDTO(new MetaInfoProvider()) { { IidKey, Guid.NewGuid() } };
+            var deleteObjectWithoutClassKind = new ClasslessDTO() { { IidKey, Guid.NewGuid() } };
 
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithoutIid);
@@ -96,7 +96,7 @@ namespace CDP4WebServices.API.Tests
                 typeof(InvalidOperationException),
                 () => this.operationProcessor.ValidateDeleteOperations(postOperation));
 
-            var completeDeleteObject = new ClasslessDTO(new MetaInfoProvider()) { { IidKey, Guid.NewGuid() }, { ClasskindKey, SimpleQuantityKindTypeString } };
+            var completeDeleteObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, SimpleQuantityKindTypeString } };
             postOperation.Delete.Clear();
             postOperation.Delete.Add(completeDeleteObject);
 
@@ -109,7 +109,7 @@ namespace CDP4WebServices.API.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<SimpleQuantityKind>())).Returns(this.simpleQuantityKindMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
 
-            var deleteObjectWithScalarPropertySet = new ClasslessDTO(new MetaInfoProvider())
+            var deleteObjectWithScalarPropertySet = new ClasslessDTO()
                                                     {
                                                         { IidKey, Guid.NewGuid() },
                                                         { ClasskindKey, SimpleQuantityKindTypeString },
@@ -123,7 +123,7 @@ namespace CDP4WebServices.API.Tests
                 typeof(InvalidOperationException),
                 () => this.operationProcessor.ValidateDeleteOperations(postOperation));
 
-            var deleteObjectWithListProperty = new ClasslessDTO(new MetaInfoProvider())
+            var deleteObjectWithListProperty = new ClasslessDTO()
                                                     {
                                                         { IidKey, Guid.NewGuid() },
                                                         { ClasskindKey, SimpleQuantityKindTypeString },
@@ -228,7 +228,7 @@ namespace CDP4WebServices.API.Tests
             };
 
             // simpleQuantityKind container update
-            var modelReferenceDataLibrary = new ClasslessDTO(new MetaInfoProvider())
+            var modelReferenceDataLibrary = new ClasslessDTO()
                                             {
                                                 { IidKey, Guid.NewGuid() },
                                                 { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
@@ -270,7 +270,7 @@ namespace CDP4WebServices.API.Tests
             };
 
             // simplequantitykind container update
-            var modelReferenceDataLibrary = new ClasslessDTO(new MetaInfoProvider())
+            var modelReferenceDataLibrary = new ClasslessDTO()
                                             {
                                                 { IidKey, Guid.NewGuid() },
                                                 { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
@@ -288,9 +288,9 @@ namespace CDP4WebServices.API.Tests
         [Test]
         public void VerifyIncompleteUpdateOperationValidation()
         {
-            var updateObjectWithoutIid = new ClasslessDTO(new MetaInfoProvider()) { { ClasskindKey, SimpleQuantityKindTypeString } };
+            var updateObjectWithoutIid = new ClasslessDTO() { { ClasskindKey, SimpleQuantityKindTypeString } };
 
-            var updateObjectWithoutClassKind = new ClasslessDTO(new MetaInfoProvider()) { { IidKey, Guid.NewGuid() } };
+            var updateObjectWithoutClassKind = new ClasslessDTO() { { IidKey, Guid.NewGuid() } };
 
             var postOperation = new CdpPostOperation();
             postOperation.Update.Add(updateObjectWithoutIid);
@@ -306,7 +306,7 @@ namespace CDP4WebServices.API.Tests
                 typeof(InvalidOperationException),
                 () => this.operationProcessor.ValidateUpdateOperations(postOperation));
 
-            var completeUpdateObject = new ClasslessDTO(new MetaInfoProvider()) { { IidKey, Guid.NewGuid() }, { ClasskindKey, Guid.NewGuid() } };
+            var completeUpdateObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, Guid.NewGuid() } };
             postOperation.Update.Clear();
             postOperation.Update.Add(completeUpdateObject);
 

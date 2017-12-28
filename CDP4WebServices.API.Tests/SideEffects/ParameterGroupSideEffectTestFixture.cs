@@ -93,7 +93,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.sideEffect =
                 new ParameterGroupSideEffect() { ParameterGroupService = this.parameterGroupService.Object };
 
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.parameterGroupA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.parameterGroupA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -130,7 +130,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 new ParameterGroupSideEffect() { ParameterGroupService = this.parameterGroupService.Object };
 
             // Out of the store
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.parameterGroupD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.parameterGroupD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -142,7 +142,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.parameterGroupA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.parameterGroupA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(

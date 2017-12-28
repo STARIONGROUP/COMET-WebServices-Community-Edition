@@ -133,7 +133,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                           this.siteReferenceDataLibraryService.Object
                                   };
 
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.linearConversionUnitA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -157,7 +157,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                   };
 
             // Out of chain
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.linearConversionUnitE.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitE.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -169,7 +169,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.linearConversionUnitA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -193,7 +193,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                   };
 
             // There is a chain a -> b -> c
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.linearConversionUnitD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitD.Iid } };
 
             Assert.DoesNotThrow(
                 () => this.sideEffect.BeforeUpdate(

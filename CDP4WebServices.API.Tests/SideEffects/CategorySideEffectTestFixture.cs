@@ -151,7 +151,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                           this.siteReferenceDataLibraryService.Object
                                   };
 
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          { TestKey, new List<Guid> { this.categoryA.Iid } }
                                      };
@@ -177,7 +177,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                   };
 
             // Out of chain
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          { TestKey, new List<Guid> { this.categoryB.Iid } }
                                      };
@@ -192,7 +192,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          { TestKey, new List<Guid> { this.categoryD.Iid } }
                                      };
@@ -219,7 +219,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             // There is a chain d -> e -> f and e -> g -> c
             // category will reference a -> d and -> g which means that it references g twice, but without circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null)
+            this.rawUpdateInfo = new ClasslessDTO()
                                      {
                                          { TestKey, new List<Guid> { this.categoryD.Iid, this.categoryG.Iid } }
                                      };

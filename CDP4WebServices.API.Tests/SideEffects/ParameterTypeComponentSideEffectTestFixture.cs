@@ -240,7 +240,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenParameterTypeComponentUpdateLeadsToCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.compoundParameterTypeC.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.compoundParameterTypeC.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -255,7 +255,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsNotThrownWhenParameterTypeComponentUpdateDoesNotLeadToCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.booleanParameterTypeE.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.booleanParameterTypeE.Iid } };
 
             Assert.DoesNotThrow(
                 () => this.sideEffect.BeforeUpdate(

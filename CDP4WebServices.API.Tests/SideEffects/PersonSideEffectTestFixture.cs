@@ -54,7 +54,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatPasswordChangeIsEncapsulated()
         {
-            this.rawUpdateinfo = new ClasslessDTO(null)
+            this.rawUpdateinfo = new ClasslessDTO()
                                      {
                                             { TestValue, TestValue },
                                             { PasswordKey, ClearTextPassword }
@@ -77,7 +77,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatNoPasswordChangeIsIgnored()
         {
-            this.rawUpdateinfo = new ClasslessDTO(null)
+            this.rawUpdateinfo = new ClasslessDTO()
                                      {
                                              { TestValue, TestValue }
                                      };

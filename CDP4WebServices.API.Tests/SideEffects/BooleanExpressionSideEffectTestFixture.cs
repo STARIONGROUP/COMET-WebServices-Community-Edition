@@ -167,7 +167,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenTermIsTermItself()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.notD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.notD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -183,7 +183,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         public void VerifyThatExceptionIsThrownWhenTermIsOutOfChainOrLeadsToCircularDependency()
         {
             // Out of chain
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.notE.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.notE.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -195,7 +195,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.andA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.andA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -210,7 +210,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsNotThrownWhenTermWithoutCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.relE.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.relE.Iid } };
 
             Assert.DoesNotThrow(
                 () => this.sideEffect.BeforeUpdate(

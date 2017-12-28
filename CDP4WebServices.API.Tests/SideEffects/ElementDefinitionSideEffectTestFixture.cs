@@ -134,7 +134,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenElementUsageLeadsToCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, new List<Guid> { this.euD.Iid } } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<Guid> { this.euD.Iid } } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -149,7 +149,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsNotThrownWhennElementUsageDoesNotLeadToCircularDependency()
         {
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, new List<Guid> { this.euE.Iid } } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<Guid> { this.euE.Iid } } };
 
             Assert.DoesNotThrow(
                 () => this.sideEffect.BeforeUpdate(

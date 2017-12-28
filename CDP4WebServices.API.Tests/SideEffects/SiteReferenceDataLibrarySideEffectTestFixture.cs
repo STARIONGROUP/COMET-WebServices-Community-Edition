@@ -109,7 +109,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                             this.siteReferenceDataLibraryService.Object
                     };
 
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.siteReferenceDataLibraryA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -154,7 +154,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     };
 
             // Out of the store
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.siteReferenceDataLibraryD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -166,7 +166,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO(null) { { TestKey, this.siteReferenceDataLibraryA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
