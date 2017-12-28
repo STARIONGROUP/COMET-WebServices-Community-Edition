@@ -14,6 +14,15 @@ The Concurrent Design method brings many advantages to the early design phase by
 
 To read more about Concurrent Design and how to use the CDP4 Desktop application to perform concurrent design please read our documentation at http://cdp4docs.rheagroup.com/
 
+## Build status
+
+AppVeyor is used to build and test the CDP4 Webservices
+
+Branch | Build Status
+------- | :------------
+Master |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med/branch/master?svg=true)](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med)
+Development |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med/branch/development?svg=true)](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med)
+
 ## CDP4-SDK
 
 The Concurrent Design Platform 4 (CDP4) Webservices make use of the [CDP4-SDK](http://sdk.cdp4.org/).
