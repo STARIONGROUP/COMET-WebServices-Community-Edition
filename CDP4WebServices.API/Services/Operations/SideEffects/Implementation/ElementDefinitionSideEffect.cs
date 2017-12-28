@@ -119,23 +119,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             Guid elementDefinitionId)
         {
             var elementUsage = elementUsages.Find(x => x.Iid == containedElementId);
-            if (elementUsage.ElementDefinition != elementDefinitionId)
-            {
-                if (!this.IsReferencedElementDefinitionAcyclic(
-                    elementDefinitions,
-                    elementUsages,
-                    elementUsage.ElementDefinition,
-                    elementDefinitionId))
-                {
-                    return false;
-                }
-            }
-            else
-            {
-                return false;
-            }
 
-            return true;
+            return !(elementUsage.ElementDefinition == elementDefinitionId || !this.IsReferencedElementDefinitionAcyclic(
+                         elementDefinitions,
+                         elementUsages,
+                         elementUsage.ElementDefinition,
+                         elementDefinitionId));
         }
 
         /// <summary>
