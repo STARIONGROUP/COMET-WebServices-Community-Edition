@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.0.0-rc10" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.0.1-rc02" />
     <PackageReference Include="DotNetZip" Version="1.10.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
     <PackageReference Include="Nancy" Version="1.4.4" />
