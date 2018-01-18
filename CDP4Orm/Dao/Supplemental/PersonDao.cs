@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -9,11 +9,8 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
     using CDP4Authentication;
-
     using CDP4Common.DTO;
-
     using Npgsql;
 
     /// <summary>
@@ -157,6 +154,11 @@ namespace CDP4Orm.Dao
         internal void ApplyPasswordChange(Thing thing, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             var person = (Person)thing;
+
+            if (person.Password == null)
+            {
+                person.Password = EncryptionUtils.GenerateRandomSaltString();
+            }
 
             // encrypt the password as a salted hash
             var salt = EncryptionUtils.GenerateRandomSaltString();
