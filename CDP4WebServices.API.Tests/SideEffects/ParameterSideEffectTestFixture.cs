@@ -9,8 +9,12 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
+    using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;
+
+    using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -58,6 +62,14 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
         private ParameterSideEffect sideEffect;
 
+        private Guid existingQuantityKindParameterTypeGuid = Guid.NewGuid();
+        private Guid existingNotQuantityKindParameterTypeGuid = Guid.NewGuid();
+        private Guid notExistingParameterTypeGuid = Guid.NewGuid();
+        private Guid scaleGuid = Guid.NewGuid();
+
+        private const string ParameterTypeTestKey = "ParameterType";
+        private const string ScaleTestKey = "Scale";
+
         [SetUp]
         public void Setup()
         {
@@ -81,7 +93,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.option1 = new Option(Guid.NewGuid(), 1);
             this.option2 = new Option(Guid.NewGuid(), 1);
 
-            this.iteration.Option.Add(new OrderedItem {K = 1, V = this.option1.Iid});
+            this.iteration.Option.Add(new OrderedItem { K = 1, V = this.option1.Iid });
             this.iteration.Option.Add(new OrderedItem { K = 2, V = this.option2.Iid });
 
             this.actualList = new ActualFiniteStateList(Guid.NewGuid(), 1);
@@ -95,51 +107,60 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.cptParameterType = new CompoundParameterType(Guid.NewGuid(), 1);
             this.boolPt = new BooleanParameterType(Guid.NewGuid(), 1);
-            this.cpt1 = new ParameterTypeComponent(Guid.NewGuid(), 1) {ParameterType = this.boolPt.Iid};
-            this.cpt2 = new ParameterTypeComponent(Guid.NewGuid(), 1) {ParameterType = this.boolPt.Iid};
+            this.cpt1 = new ParameterTypeComponent(Guid.NewGuid(), 1) { ParameterType = this.boolPt.Iid };
+            this.cpt2 = new ParameterTypeComponent(Guid.NewGuid(), 1) { ParameterType = this.boolPt.Iid };
 
-            this.cptParameterType.Component.Add(new OrderedItem {K = 1, V = this.cpt1.Iid.ToString()});
-            this.cptParameterType.Component.Add(new OrderedItem {K = 2, V = this.cpt2.Iid.ToString()});
-            
+            this.cptParameterType.Component.Add(new OrderedItem { K = 1, V = this.cpt1.Iid.ToString() });
+            this.cptParameterType.Component.Add(new OrderedItem { K = 2, V = this.cpt2.Iid.ToString() });
+
             this.sideEffect = new ParameterSideEffect
-                              {
-                                  IterationService = this.iterationService.Object,
-                                  ActualFiniteStateListService = this.actualFiniteStateListService.Object,
-                                  ParameterValueSetService = this.valueSetService.Object,
-                                  ParameterOverrideValueSetService = this.parameterOverrideValueSetService.Object,
-                                  ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object,
-                                  ParameterOverrideService = this.parameterOverrideService.Object,
-                                  ParameterSubscriptionService = this.parameterSubscriptionService.Object,
-                                  ParameterTypeService = this.parameterTypeService.Object,
-                                  ElementUsageService = this.elementUsageService.Object,
-                                  ParameterTypeComponentService = this.parameterTypeComponentService.Object,
-                                  OptionService = this.optionService.Object,
-                                  ParameterValueSetFactory = new ParameterValueSetFactory(),
-                                  ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
-                                  ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
-                                  DefaultValueArrayFactory = new DefaultValueArrayFactory()
-                              };
+            {
+                IterationService = this.iterationService.Object,
+                ActualFiniteStateListService = this.actualFiniteStateListService.Object,
+                ParameterValueSetService = this.valueSetService.Object,
+                ParameterOverrideValueSetService = this.parameterOverrideValueSetService.Object,
+                ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object,
+                ParameterOverrideService = this.parameterOverrideService.Object,
+                ParameterSubscriptionService = this.parameterSubscriptionService.Object,
+                ParameterTypeService = this.parameterTypeService.Object,
+                ElementUsageService = this.elementUsageService.Object,
+                ParameterTypeComponentService = this.parameterTypeComponentService.Object,
+                OptionService = this.optionService.Object,
+                ParameterValueSetFactory = new ParameterValueSetFactory(),
+                ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
+                ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
+                DefaultValueArrayFactory = new DefaultValueArrayFactory()
+            };
 
             // prepare mock data
             this.elementDefinition = new ElementDefinition(Guid.NewGuid(), 1);
             this.elementDefinition.Parameter.Add(this.parameter.Iid);
             this.parameterOverride = new ParameterOverride(Guid.NewGuid(), 1) { Parameter = this.parameter.Iid };
-            this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid }};
+            this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid } };
 
             this.parameterService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(this.cptParameterType.Iid)), this.securityContext.Object))
                     .Returns(new List<Thing> { this.cptParameterType });
-            
+
             this.iterationService.Setup(x => x.GetShallow(null, "partition", null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.iteration });
 
-            this.actualFiniteStateListService.Setup( x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), "partition",It.Is<IEnumerable<Guid>>(y => y.Contains(this.actualList.Iid)), this.securityContext.Object))
-                .Returns(new List<Thing> {this.actualList});
+            this.actualFiniteStateListService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(this.actualList.Iid)), this.securityContext.Object))
+                .Returns(new List<Thing> { this.actualList });
 
             this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.boolPt, this.cptParameterType});
+                .Returns(new List<Thing> { this.boolPt, this.cptParameterType });
 
-            this.parameterTypeComponentService.Setup( x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.cpt1, this.cpt2});
+            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new List<Guid> { this.existingNotQuantityKindParameterTypeGuid }, this.securityContext.Object))
+                .Returns(new List<Thing> { new BooleanParameterType(this.existingNotQuantityKindParameterTypeGuid, 1) });
+
+            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new List<Guid> { this.existingQuantityKindParameterTypeGuid }, this.securityContext.Object))
+                .Returns(new List<Thing> { new SimpleQuantityKind(this.existingQuantityKindParameterTypeGuid, 1) });
+
+            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new List<Guid> { this.notExistingParameterTypeGuid }, this.securityContext.Object))
+                .Returns(new List<Thing>());
+
+            this.parameterTypeComponentService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
+                .Returns(new List<Thing> { this.cpt1, this.cpt2 });
 
             this.parameterOverrideService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameterOverride });
@@ -216,8 +237,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
             this.parameter.ValueSet.Add(valueset.Iid);
 
-            this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, null);
-
             var updatedParameter = new Parameter(this.parameter.Iid, 0) { StateDependence = this.actualList.Iid };
             updatedParameter.ValueSet.Add(valueset.Iid);
             updatedParameter.ParameterType = this.cptParameterType.Iid;
@@ -246,7 +265,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     x.GetShallow(this.npgsqlTransaction, "partition",
                         It.Is<IEnumerable<Guid>>(g => g.Contains(subscription1.Iid) && g.Contains(subscription2.Iid)),
                         this.securityContext.Object))
-                        .Returns(new List<Thing> {subscription1, subscription2});
+                        .Returns(new List<Thing> { subscription1, subscription2 });
 
             this.valueSetService.Setup(x => x.DeleteConcept(null, "partition", It.IsAny<ParameterValueSet>(), this.parameter))
                 .Returns(true);
@@ -257,8 +276,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
             this.parameter.ValueSet.Add(valueset.Iid);
 
-            this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, null);
-
             var updatedParameter = new Parameter(this.parameter.Iid, 0) { StateDependence = this.actualList.Iid };
             updatedParameter.ValueSet.Add(valueset.Iid);
             updatedParameter.ParameterType = this.cptParameterType.Iid;
@@ -266,13 +283,13 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.sideEffect.AfterUpdate(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
-            this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverrideValueSet>(), this.parameterOverride, -1), 
+            this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverrideValueSet>(), this.parameterOverride, -1),
                 Times.Exactly(2));
 
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), subscription1, -1), 
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), subscription1, -1),
                 Times.Exactly(2));
 
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), subscription2, -1), 
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), subscription2, -1),
                 Times.Exactly(2));
         }
 
@@ -285,10 +302,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var originalThing = this.parameter.DeepClone<Thing>();
 
             this.parameter.Owner = domain1.Iid;
-            this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, null);
 
-            var updatedParameter = new Parameter(this.parameter.Iid, 0)  {  ParameterType = this.boolPt.Iid,  Owner = domain2.Iid, AllowDifferentOwnerOfOverride = true };
-            var parameterOverride1 = new ParameterOverride(Guid.NewGuid(), 0) {  Parameter = updatedParameter.Iid, Owner = domain2.Iid   };
+            var updatedParameter = new Parameter(this.parameter.Iid, 0) { ParameterType = this.boolPt.Iid, Owner = domain2.Iid, AllowDifferentOwnerOfOverride = true };
+            var parameterOverride1 = new ParameterOverride(Guid.NewGuid(), 0) { Parameter = updatedParameter.Iid, Owner = domain2.Iid };
             var domain2Subscription = new ParameterSubscription(Guid.NewGuid(), 0) { Owner = domain2.Iid };
             updatedParameter.ParameterSubscription.Add(domain2Subscription.Iid);
             parameterOverride1.ParameterSubscription.Add(domain2Subscription.Iid);
@@ -302,25 +318,185 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.sideEffect.AfterUpdate(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             // Check that the subscription owned by domain2 is deleted since domain2 is now the owner of the parameter
-            this.parameterSubscriptionService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscription>(), It.IsAny<Parameter>()), 
+            this.parameterSubscriptionService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscription>(), It.IsAny<Parameter>()),
                 Times.Once);
-            
+
             // Since that is the only subscription, no updates are performed on ParameterSubscriptionValueSet
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), -1), 
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), -1),
                 Times.Never);
 
             // Check that since AllowDifferentOwnerOfOverride is True the owner of the parameterOverrides are not updated
-            this.parameterOverrideService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverride>(), It.IsAny<ElementUsage>()), 
+            this.parameterOverrideService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverride>(), It.IsAny<ElementUsage>()),
                 Times.Never);
 
             var updatedParameter1 = new Parameter(this.parameter.Iid, 0) { ParameterType = this.boolPt.Iid, Owner = domain2.Iid, AllowDifferentOwnerOfOverride = false };
             updatedParameter1.ParameterSubscription.Add(domain2Subscription.Iid);
-            this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, null);
             this.sideEffect.AfterUpdate(updatedParameter1, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             // Check that since AllowDifferentOwnerOfOverride is False the owner of the parameterOverride is updated
-            this.parameterOverrideService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverride>(), It.IsAny<ElementUsage>()), 
+            this.parameterOverrideService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverride>(), It.IsAny<ElementUsage>()),
                 Times.Once);
+        }
+
+        [Test]
+        public void VerifyBeforeUpdateSideEffectThrowsExceptionForNotExistingParameterType()
+        {
+            var rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.notExistingParameterTypeGuid } };
+
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Once);
+        }
+
+        [Test]
+        public void VerifyBeforeUpdateSideEffectThrowsExceptionForQuantityKindScaleBeingNull()
+        {
+            var rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid }, { ScaleTestKey, null } };
+            this.parameter.Scale = this.scaleGuid;
+            Assert.Throws<ArgumentNullException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid } };
+            this.parameter.Scale = null;
+            Assert.Throws<ArgumentNullException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid }, { ScaleTestKey, null } };
+            Assert.Throws<ArgumentNullException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Exactly(3));
+        }
+
+        [Test]
+        public void VerifyBeforeUpdateSideEffectThrowsExceptionForNotQuantityKindScaleNotBeingNull()
+        {
+            var rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid }, { ScaleTestKey, this.scaleGuid } };
+            this.parameter.Scale = this.scaleGuid;
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid } };
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid }, { ScaleTestKey, this.scaleGuid } };
+            this.parameter.Scale = null;
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Exactly(3));
+        }
+
+        [Test]
+        public void VerifyBeforeUpdateSideEffectPasses()
+        {
+            var rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid } };
+            this.sideEffect.BeforeUpdate(
+                this.parameter,
+                this.elementDefinition,
+                this.npgsqlTransaction,
+                "partition",
+                this.securityContext.Object,
+                rawUpdateInfo);
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid }, { ScaleTestKey, null } };
+            this.parameter.Scale = this.scaleGuid;
+            this.sideEffect.BeforeUpdate(
+                this.parameter,
+                this.elementDefinition,
+                this.npgsqlTransaction,
+                "partition",
+                this.securityContext.Object,
+                rawUpdateInfo);
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid } };
+            this.sideEffect.BeforeUpdate(
+                this.parameter,
+                this.elementDefinition,
+                this.npgsqlTransaction,
+                "partition",
+                this.securityContext.Object,
+                rawUpdateInfo);
+
+            rawUpdateInfo = new ClasslessDTO() { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid }, { ScaleTestKey, this.scaleGuid } };
+            this.parameter.Scale = null;
+            this.sideEffect.BeforeUpdate(
+                this.parameter,
+                this.elementDefinition,
+                this.npgsqlTransaction,
+                "partition",
+                this.securityContext.Object,
+                rawUpdateInfo);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Exactly(4));
+        }
+
+        [Test]
+        public void VerifyBeforeCreateSideEffectThrowsExceptionForNotExistingParameterType()
+        {
+            this.parameter.ParameterType = this.notExistingParameterTypeGuid;
+
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Once);
+        }
+
+        [Test]
+        public void VerifyBeforeCreateSideEffectThrowsExceptionForNotQuantityKindScaleNotBeingNull()
+        {
+            this.parameter.ParameterType = this.existingNotQuantityKindParameterTypeGuid;
+            this.parameter.Scale = this.scaleGuid;
+
+            Assert.Throws<ArgumentException>(
+                () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Once);
+        }
+
+        [Test]
+        public void VerifyBeforeCreateSideEffectThrowsExceptionForQuantityKindScaleBeingNull()
+        {
+            this.parameter.ParameterType = this.existingQuantityKindParameterTypeGuid;
+
+            Assert.Throws<ArgumentNullException>(
+                () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Once);
+        }
+
+        [Test]
+        public void VerifyBeforeCreateSideEffectPasses()
+        {
+            this.parameter.ParameterType = this.existingNotQuantityKindParameterTypeGuid;
+            this.sideEffect.BeforeCreate(
+                this.parameter,
+                this.elementDefinition,
+                this.npgsqlTransaction,
+                "partition",
+                this.securityContext.Object);
+
+            this.parameter.ParameterType = this.existingQuantityKindParameterTypeGuid;
+            this.parameter.Scale = this.scaleGuid;
+
+            this.sideEffect.BeforeCreate(
+                this.parameter,
+                this.elementDefinition,
+                this.npgsqlTransaction,
+                "partition",
+                this.securityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Exactly(2));
         }
     }
 }

@@ -9,10 +9,15 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using Authorization;
+
+    using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;
+
     using CDP4Orm.Dao;
+
     using Npgsql;
 
     /// <summary>
@@ -106,8 +111,73 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             get
             {
-                return new[] {"ValueSet"};
+                return new[] { "ValueSet" };
             }
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic before an update operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Parameter"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        /// <param name="rawUpdateInfo">
+        /// The raw update info that was serialized from the user posted request.
+        /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
+        /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
+        /// </param>
+        public override void BeforeUpdate(
+            Parameter thing,
+            Thing container,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext,
+            ClasslessDTO rawUpdateInfo)
+        {
+            if (rawUpdateInfo.ContainsKey("ParameterType"))
+            {
+                this.ValidateParameterTypeUpdate(thing, transaction, partition, securityContext, rawUpdateInfo);
+            }
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic before a create operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void BeforeCreate(
+            Parameter thing,
+            Thing container,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext)
+        {
+            this.ValidateParameterTypeAndScale(thing, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -131,8 +201,13 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(Parameter thing, Thing container, Parameter originalThing,
-            NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void AfterCreate(
+            Parameter thing,
+            Thing container,
+            Parameter originalThing,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext)
         {
             if (originalThing.ValueSet.Any())
             {
@@ -169,7 +244,13 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(Parameter thing, Thing container, Parameter originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void AfterUpdate(
+            Parameter thing,
+            Thing container,
+            Parameter originalThing,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext)
         {
             var isOptionDependencyChanged = thing.IsOptionDependent != originalThing.IsOptionDependent;
             var isStateDependencyChanged = thing.StateDependence != originalThing.StateDependence;
@@ -184,25 +265,24 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.InitializeDefaultValueArrayFactory(transaction, securityContext);
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(thing.ParameterType);
 
-            var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext, defaultValueArray).ToList();
+            var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext, defaultValueArray)
+                .ToList();
             this.WriteValueSet(transaction, partition, thing, newValueSet);
 
-            var parameterOverrides =
-                this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext)
-                    .Where(i => i.GetType() == typeof(ParameterOverride)).Cast<ParameterOverride>()
-                    .Where(x => x.Parameter == thing.Iid)
-                    .ToList();
+            var parameterOverrides = this.ParameterOverrideService
+                .GetShallow(transaction, partition, null, securityContext)
+                .Where(i => i.GetType() == typeof(ParameterOverride)).Cast<ParameterOverride>()
+                .Where(x => x.Parameter == thing.Iid).ToList();
 
             var elementUsages = this.ElementUsageService.GetShallow(transaction, partition, null, securityContext)
-                .Cast<ElementUsage>()
-                .Where(x => x.ElementDefinition == container.Iid)
-                .ToList();
+                .Cast<ElementUsage>().Where(x => x.ElementDefinition == container.Iid).ToList();
 
             var parameterSubscriptionIds = new List<Guid>(thing.ParameterSubscription);
             parameterSubscriptionIds.AddRange(parameterOverrides.SelectMany(x => x.ParameterSubscription));
 
-            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, parameterSubscriptionIds, securityContext)
-                    .Where(i => i.GetType() == typeof(ParameterSubscription)).Cast<ParameterSubscription>().ToList();
+            var parameterSubscriptions = this.ParameterSubscriptionService
+                .GetShallow(transaction, partition, parameterSubscriptionIds, securityContext)
+                .Where(i => i.GetType() == typeof(ParameterSubscription)).Cast<ParameterSubscription>().ToList();
 
             foreach (var parameterOverride in parameterOverrides)
             {
@@ -210,29 +290,41 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     // Set the owner of the ParameterOverride to the new owner of the Parameter
                     parameterOverride.Owner = thing.Owner;
-                    var elementUsage = elementUsages.SingleOrDefault(x => x.ParameterOverride.Contains(parameterOverride.Iid));
+                    var elementUsage =
+                        elementUsages.SingleOrDefault(x => x.ParameterOverride.Contains(parameterOverride.Iid));
                     if (elementUsage == null)
                     {
                         throw new InvalidOperationException("The ElementUsage could not be retrieved.");
                     }
 
-                    this.ParameterOverrideService.UpdateConcept(transaction, partition, parameterOverride, elementUsage);
+                    this.ParameterOverrideService.UpdateConcept(
+                        transaction,
+                        partition,
+                        parameterOverride,
+                        elementUsage);
                 }
 
-                this.UpdateParameterOverrideAndSubscription(parameterOverride, newValueSet, parameterSubscriptions,
-                    defaultValueArray, transaction, partition);
+                this.UpdateParameterOverrideAndSubscription(
+                    parameterOverride,
+                    newValueSet,
+                    parameterSubscriptions,
+                    defaultValueArray,
+                    transaction,
+                    partition);
             }
 
             // Remove the subscriptions owned by the new owner of the Parameter
             if (isOwnerChanged && parameterSubscriptions.Any(s => s.Owner == thing.Owner))
             {
-                var parameterSubscriptionToRemove =
-                    parameterSubscriptions.SingleOrDefault(
-                        s => s.Owner == thing.Owner && thing.ParameterSubscription.Contains(s.Iid));
+                var parameterSubscriptionToRemove = parameterSubscriptions.SingleOrDefault(
+                    s => s.Owner == thing.Owner && thing.ParameterSubscription.Contains(s.Iid));
                 if (parameterSubscriptionToRemove != null)
                 {
-                    if (this.ParameterSubscriptionService.DeleteConcept(transaction, partition,
-                        parameterSubscriptionToRemove, thing))
+                    if (this.ParameterSubscriptionService.DeleteConcept(
+                        transaction,
+                        partition,
+                        parameterSubscriptionToRemove,
+                        thing))
                     {
                         parameterSubscriptions.Remove(parameterSubscriptionToRemove);
                     }
@@ -241,14 +333,15 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 // Remove the subscriptions owned by the new owner of the Parameter on all parameterOverrides
                 foreach (var parameterOverride in parameterOverrides.Where(o => o.ParameterSubscription.Any()))
                 {
-                    var subscriptionToRemove =
-                        parameterSubscriptions.SingleOrDefault(
-                            s =>
-                                parameterOverride.ParameterSubscription.Contains(s.Iid) &&
-                                s.Owner == parameterOverride.Owner);
+                    var subscriptionToRemove = parameterSubscriptions.SingleOrDefault(
+                        s => parameterOverride.ParameterSubscription.Contains(s.Iid)
+                             && s.Owner == parameterOverride.Owner);
                     if (subscriptionToRemove != null)
                     {
-                        if (this.ParameterSubscriptionService.DeleteConcept(transaction, partition, subscriptionToRemove,
+                        if (this.ParameterSubscriptionService.DeleteConcept(
+                            transaction,
+                            partition,
+                            subscriptionToRemove,
                             thing))
                         {
                             parameterSubscriptions.Remove(subscriptionToRemove);
@@ -257,7 +350,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 }
             }
 
-            this.UpdateParameterSubscriptions(thing, newValueSet, parameterSubscriptions, defaultValueArray, transaction,
+            this.UpdateParameterSubscriptions(
+                thing,
+                newValueSet,
+                parameterSubscriptions,
+                defaultValueArray,
+                transaction,
                 partition);
 
             // clean up old values
@@ -273,26 +371,38 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="defaultValueArray">The default value array</param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        private void UpdateParameterOverrideAndSubscription(ParameterOverride parameterOverride,
-            IEnumerable<ParameterValueSet> newValueSet, IEnumerable<ParameterSubscription> parameterSubscriptions,
-            ValueArray<string> defaultValueArray, NpgsqlTransaction transaction, string partition)
+        private void UpdateParameterOverrideAndSubscription(
+            ParameterOverride parameterOverride,
+            IEnumerable<ParameterValueSet> newValueSet,
+            IEnumerable<ParameterSubscription> parameterSubscriptions,
+            ValueArray<string> defaultValueArray,
+            NpgsqlTransaction transaction,
+            string partition)
         {
-            var overrideSubscription =
-                parameterSubscriptions.Where(x => parameterOverride.ParameterSubscription.Contains(x.Iid)).ToList();
+            var overrideSubscription = parameterSubscriptions
+                .Where(x => parameterOverride.ParameterSubscription.Contains(x.Iid)).ToList();
             foreach (var parameterValueSet in newValueSet)
             {
                 var newValueSetOverride =
-                    this.ParameterOverrideValueSetFactory.CreateWithDefaultValueArray(parameterValueSet.Iid,
+                    this.ParameterOverrideValueSetFactory.CreateWithDefaultValueArray(
+                        parameterValueSet.Iid,
                         defaultValueArray);
-                this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, newValueSetOverride,
+                this.ParameterOverrideValueSetService.CreateConcept(
+                    transaction,
+                    partition,
+                    newValueSetOverride,
                     parameterOverride);
                 foreach (var parameterSubscription in overrideSubscription)
                 {
                     var newSubscriptionValueSet =
-                        this.ParameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(newValueSetOverride.Iid,
+                        this.ParameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(
+                            newValueSetOverride.Iid,
                             defaultValueArray);
-                    this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition,
-                        newSubscriptionValueSet, parameterSubscription);
+                    this.ParameterSubscriptionValueSetService.CreateConcept(
+                        transaction,
+                        partition,
+                        newSubscriptionValueSet,
+                        parameterSubscription);
                 }
             }
         }
@@ -306,20 +416,29 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="defaultValueArray">The default value array</param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        private void UpdateParameterSubscriptions(Parameter parameter, IEnumerable<ParameterValueSet> newValueSet,
-            IEnumerable<ParameterSubscription> parameterSubscriptions, ValueArray<string> defaultValueArray,
-            NpgsqlTransaction transaction, string partition)
+        private void UpdateParameterSubscriptions(
+            Parameter parameter,
+            IEnumerable<ParameterValueSet> newValueSet,
+            IEnumerable<ParameterSubscription> parameterSubscriptions,
+            ValueArray<string> defaultValueArray,
+            NpgsqlTransaction transaction,
+            string partition)
         {
-            var subscriptions = parameterSubscriptions.Where(x => parameter.ParameterSubscription.Contains(x.Iid)).ToList();
+            var subscriptions = parameterSubscriptions.Where(x => parameter.ParameterSubscription.Contains(x.Iid))
+                .ToList();
             foreach (var parameterValueSet in newValueSet)
             {
                 foreach (var parameterSubscription in subscriptions)
                 {
                     var newSubscriptionValueSet =
-                        this.ParameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(parameterValueSet.Iid,
+                        this.ParameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(
+                            parameterValueSet.Iid,
                             defaultValueArray);
-                    this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition,
-                        newSubscriptionValueSet, parameterSubscription);
+                    this.ParameterSubscriptionValueSetService.CreateConcept(
+                        transaction,
+                        partition,
+                        newSubscriptionValueSet,
+                        parameterSubscription);
                 }
             }
         }
@@ -335,12 +454,16 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         private void InitializeDefaultValueArrayFactory(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            var parameterTypes =
-                this.ParameterTypeService.GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null,
-                    securityContext).Cast<ParameterType>();
-            var parameterTypeComponents =
-                this.ParameterTypeComponentService.GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                    null, securityContext).Cast<ParameterTypeComponent>();
+            var parameterTypes = this.ParameterTypeService.GetShallow(
+                transaction,
+                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                null,
+                securityContext).Cast<ParameterType>();
+            var parameterTypeComponents = this.ParameterTypeComponentService.GetShallow(
+                transaction,
+                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                null,
+                securityContext).Cast<ParameterTypeComponent>();
 
             this.DefaultValueArrayFactory.Initialize(parameterTypes, parameterTypeComponents);
         }
@@ -366,8 +489,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <returns>
         /// The new <see cref="ParameterValueSet"/>s
         /// </returns>
-        private IEnumerable<ParameterValueSet> ComputeValueSets(Parameter parameter, NpgsqlTransaction transaction,
-            string partition, ISecurityContext securityContext, ValueArray<string> defaultValueArray)
+        private IEnumerable<ParameterValueSet> ComputeValueSets(
+            Parameter parameter,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext,
+            ValueArray<string> defaultValueArray)
         {
             var newValueSet = new List<ParameterValueSet>();
             if (parameter.IsOptionDependent)
@@ -376,34 +503,38 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 var engineeringModelPartition = partition.Replace(
                     Utils.IterationSubPartition,
                     Utils.EngineeringModelPartition);
-                var iteration =
-                    this.IterationService.GetShallow(transaction, engineeringModelPartition, null, securityContext)
-                        .Where(i => i.GetType() == typeof(Iteration)).Cast<Iteration>()
-                        .SingleOrDefault();
+                var iteration = this.IterationService
+                    .GetShallow(transaction, engineeringModelPartition, null, securityContext)
+                    .Where(i => i.GetType() == typeof(Iteration)).Cast<Iteration>().SingleOrDefault();
 
                 if (iteration == null)
                 {
                     throw new KeyNotFoundException("The iteration could not be found");
                 }
 
-                newValueSet.AddRange(this.CreateDefaultOptionDependentValueSetCollection(parameter, iteration,
-                    transaction, partition, securityContext, defaultValueArray));
+                newValueSet.AddRange(
+                    this.CreateDefaultOptionDependentValueSetCollection(
+                        parameter,
+                        iteration,
+                        transaction,
+                        partition,
+                        securityContext,
+                        defaultValueArray));
             }
             else if (parameter.StateDependence != null)
             {
-                var actualList =
-                    this.ActualFiniteStateListService.GetShallow(transaction, partition,
-                            new[] {parameter.StateDependence.Value}, securityContext)
-                        .Where(i => i.GetType() == typeof(ActualFiniteStateList)).Cast<ActualFiniteStateList>()
-                        .SingleOrDefault();
+                var actualList = this.ActualFiniteStateListService
+                    .GetShallow(transaction, partition, new[] { parameter.StateDependence.Value }, securityContext)
+                    .Where(i => i.GetType() == typeof(ActualFiniteStateList)).Cast<ActualFiniteStateList>()
+                    .SingleOrDefault();
                 if (actualList == null)
                 {
-                    throw new KeyNotFoundException(string.Format("The ActualFiniteStateList {0} could not be found.",
-                        parameter.StateDependence));
+                    throw new KeyNotFoundException(
+                        string.Format("The ActualFiniteStateList {0} could not be found.", parameter.StateDependence));
                 }
 
-                newValueSet.AddRange(this.CreateDefaultStateDependentValueSetCollection(actualList, null,
-                    defaultValueArray));
+                newValueSet.AddRange(
+                    this.CreateDefaultStateDependentValueSetCollection(actualList, null, defaultValueArray));
             }
             else
             {
@@ -437,39 +568,48 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <returns>
         /// The new <see cref="ParameterValueSet"/>
         /// </returns>
-        private IEnumerable<ParameterValueSet> CreateDefaultOptionDependentValueSetCollection(Parameter parameter,
-            Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext,
+        private IEnumerable<ParameterValueSet> CreateDefaultOptionDependentValueSetCollection(
+            Parameter parameter,
+            Iteration iteration,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext,
             ValueArray<string> defaultValueArray)
         {
             var newValueSet = new List<ParameterValueSet>();
             var options = iteration.Option.OrderBy(x => x.K);
             if (parameter.StateDependence != null)
             {
-                var actualFiniteStateList =
-                    this.ActualFiniteStateListService.GetShallow(transaction, partition,
-                            new List<Guid> {parameter.StateDependence.Value}, securityContext)
-                        .Where(i => i.GetType() == typeof(ActualFiniteStateList))
-                        .Cast<ActualFiniteStateList>()
-                        .SingleOrDefault();
+                var actualFiniteStateList = this.ActualFiniteStateListService
+                    .GetShallow(
+                        transaction,
+                        partition,
+                        new List<Guid> { parameter.StateDependence.Value },
+                        securityContext).Where(i => i.GetType() == typeof(ActualFiniteStateList))
+                    .Cast<ActualFiniteStateList>().SingleOrDefault();
                 if (actualFiniteStateList == null)
                 {
                     throw new KeyNotFoundException(
-                        string.Format("The ActualFiniteStateList with id {0} could not be found",
+                        string.Format(
+                            "The ActualFiniteStateList with id {0} could not be found",
                             parameter.StateDependence));
                 }
 
                 foreach (var option in options)
                 {
-                    newValueSet.AddRange(this.CreateDefaultStateDependentValueSetCollection(actualFiniteStateList,
-                        Guid.Parse(option.V.ToString()), defaultValueArray));
+                    newValueSet.AddRange(
+                        this.CreateDefaultStateDependentValueSetCollection(
+                            actualFiniteStateList,
+                            Guid.Parse(option.V.ToString()),
+                            defaultValueArray));
                 }
             }
             else
             {
                 foreach (var option in options)
                 {
-                    newValueSet.Add(this.CreateDefaultParameterValueSet(Guid.Parse(option.V.ToString()), null,
-                        defaultValueArray));
+                    newValueSet.Add(
+                        this.CreateDefaultParameterValueSet(Guid.Parse(option.V.ToString()), null, defaultValueArray));
                 }
             }
 
@@ -492,7 +632,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// The <see cref="IEnumerable{ParameterValueSet}"/>.
         /// </returns>
         private IEnumerable<ParameterValueSet> CreateDefaultStateDependentValueSetCollection(
-            ActualFiniteStateList actualFiniteStateList, Guid? actualOption, ValueArray<string> defaultValueArray)
+            ActualFiniteStateList actualFiniteStateList,
+            Guid? actualOption,
+            ValueArray<string> defaultValueArray)
         {
             foreach (var state in actualFiniteStateList.ActualState)
             {
@@ -516,9 +658,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             foreach (var valueset in originalThing.ValueSet)
             {
-                if (
-                    !this.ParameterValueSetService.DeleteConcept(transaction, partition,
-                        new ParameterValueSet(valueset, 0), originalThing))
+                if (!this.ParameterValueSetService.DeleteConcept(
+                        transaction,
+                        partition,
+                        new ParameterValueSet(valueset, 0),
+                        originalThing))
                 {
                     throw new InvalidOperationException(
                         string.Format("The delete operation of the parameter value set {0} failed.", valueset));
@@ -533,7 +677,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="partition">The current partition</param>
         /// <param name="parameter">The current <see cref="Parameter"/></param>
         /// <param name="newValueSet">The <see cref="ParameterValueSet"/> to write</param>
-        private void WriteValueSet(NpgsqlTransaction transaction, string partition, Parameter parameter,
+        private void WriteValueSet(
+            NpgsqlTransaction transaction,
+            string partition,
+            Parameter parameter,
             IEnumerable<ParameterValueSet> newValueSet)
         {
             foreach (var parameterValueSet in newValueSet)
@@ -557,11 +704,179 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <returns>
         /// The created <see cref="ParameterValueSet"/>.
         /// </returns>
-        private ParameterValueSet CreateDefaultParameterValueSet(Guid? actualOption, Guid? actualState,
+        private ParameterValueSet CreateDefaultParameterValueSet(
+            Guid? actualOption,
+            Guid? actualState,
             ValueArray<string> defaultValueArray)
         {
-            return this.ParameterValueSetFactory.CreateWithDefaultValueArray(actualOption, actualState,
+            return this.ParameterValueSetFactory.CreateWithDefaultValueArray(
+                actualOption,
+                actualState,
                 defaultValueArray);
+        }
+
+        /// <summary>
+        /// Validates ParameterType update on a Parameter.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Parameter"/> instance that will be inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        /// <param name="rawUpdateInfo">
+        /// The raw update info that was serialized from the user posted request.
+        /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
+        /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
+        /// </param>
+        private void ValidateParameterTypeUpdate(
+            Parameter thing,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext,
+            ClasslessDTO rawUpdateInfo)
+        {
+            var parameterTypeId = (Guid)rawUpdateInfo["ParameterType"];
+
+            // Check whether it is a QuantityKind type
+            var parameterType = this.ParameterTypeService
+                .GetShallow(transaction, partition, new List<Guid> { parameterTypeId }, securityContext)
+                .Cast<ParameterType>().ToList();
+
+            if (parameterType.Count == 0)
+            {
+                throw new ArgumentException(
+                    string.Format("ParameterType with iid {0} cannot be found.", parameterTypeId));
+            }
+
+            if (parameterType[0] is QuantityKind)
+            {
+                // Check that a parameter contains scale and it is not changed to null
+                if (thing.Scale != null)
+                {
+                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    {
+                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        if (scaleId == null || scaleId == Guid.Empty)
+                        {
+                            throw new ArgumentNullException(
+                                "Parameter with a parameterType of QuantityKind cannot have scale set to null.");
+                        }
+                    }
+                }
+
+                if (thing.Scale == null)
+                {
+                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    {
+                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        if (scaleId == null || scaleId == Guid.Empty)
+                        {
+                            throw new ArgumentNullException(
+                                "Parameter with a parameterType of QuantityKind cannot have scale set to null.");
+                        }
+                    }
+                    else
+                    {
+                        throw new ArgumentNullException(
+                            "Parameter with a parameterType of QuantityKind cannot have scale set to null.");
+                    }
+                }
+            }
+            else
+            {
+                // Check that a parameter does not contain scale
+                if (thing.Scale != null)
+                {
+                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    {
+                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        if (scaleId != null)
+                        {
+                            throw new ArgumentException(
+                                "Parameter with a parameterType of type different from QuantityKind must have scale set to null.");
+                        }
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            "Parameter with a parameterType of type different from QuantityKind must have scale set to null.");
+                    }
+                }
+
+                if (thing.Scale == null)
+                {
+                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    {
+                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        if (scaleId != null)
+                        {
+                            throw new ArgumentException(
+                                "Parameter with a parameterType of type different from QuantityKind must have scale set to null.");
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Validates ParameterType update on a Parameter.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Parameter"/> instance that will be inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        private void ValidateParameterTypeAndScale(
+            Parameter thing,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext)
+        {
+            // Check whether a parameterType is a QuantityKind type
+            var parameterType = this.ParameterTypeService.GetShallow(
+                transaction,
+                partition,
+                new List<Guid> { thing.ParameterType },
+                securityContext).Cast<ParameterType>().ToList();
+
+            if (parameterType.Count == 0)
+            {
+                throw new ArgumentException(
+                    string.Format("ParameterType with iid {0} cannot be found.", thing.ParameterType));
+            }
+
+            if (parameterType[0] is QuantityKind)
+            {
+                // Check that a parameter contains scale
+                if (thing.Scale == null)
+                {
+                    throw new ArgumentNullException(
+                        "Parameter with a parameterType of QuantityKind cannot have scale set to null.");
+                }
+            }
+            else
+            {
+                // Check that a parameter does not contain scale
+                if (thing.Scale != null)
+                {
+                    throw new ArgumentException(
+                        "Parameter with a parameterType of type different from QuantityKind must have scale set to null.");
+                }
+            }
         }
     }
 }
