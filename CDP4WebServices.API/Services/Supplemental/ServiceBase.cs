@@ -145,7 +145,7 @@ namespace CDP4WebServices.API.Services
         {
             foreach (var resolvable in resolvables)
             {
-                var dto = this.RequestUtils.Cache.SingleOrDefault(x => x.Iid == Guid.Parse((string)resolvable.V));
+                var dto = this.RequestUtils.Cache.SingleOrDefault(x => x.Iid == Guid.Parse(resolvable.V.ToString()));
                 if (dto != null)
                 {
                     yield return new OrderedItem { K = resolvable.K, V = dto };
