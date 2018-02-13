@@ -148,7 +148,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             if (rawUpdateInfo.ContainsKey("ParameterType"))
             {
-                this.ValidateParameterTypeUpdate(thing, transaction, partition, securityContext, rawUpdateInfo);
+                this.ValidateParameterTypeUpdate(thing, transaction, securityContext, rawUpdateInfo);
             }
         }
 
@@ -177,7 +177,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
-            this.ValidateParameterTypeAndScale(thing, transaction, partition, securityContext);
+            this.ValidateParameterTypeAndScale(thing, transaction, securityContext);
         }
 
         /// <summary>
@@ -724,9 +724,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
@@ -738,7 +735,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         private void ValidateParameterTypeUpdate(
             Parameter thing,
             NpgsqlTransaction transaction,
-            string partition,
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
@@ -746,7 +742,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // Check whether it is a QuantityKind type
             var parameterType = this.ParameterTypeService
-                .GetShallow(transaction, partition, new List<Guid> { parameterTypeId }, securityContext)
+                .GetShallow(transaction, Utils.SiteDirectoryPartition, new List<Guid> { parameterTypeId }, securityContext)
                 .Cast<ParameterType>().ToList();
 
             if (parameterType.Count == 0)
@@ -834,22 +830,18 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
         private void ValidateParameterTypeAndScale(
             Parameter thing,
             NpgsqlTransaction transaction,
-            string partition,
             ISecurityContext securityContext)
         {
             // Check whether a parameterType is a QuantityKind type
             var parameterType = this.ParameterTypeService.GetShallow(
                 transaction,
-                partition,
+                Utils.SiteDirectoryPartition,
                 new List<Guid> { thing.ParameterType },
                 securityContext).Cast<ParameterType>().ToList();
 

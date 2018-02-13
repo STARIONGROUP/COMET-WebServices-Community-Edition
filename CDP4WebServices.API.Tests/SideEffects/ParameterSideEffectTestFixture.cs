@@ -150,13 +150,13 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.boolPt, this.cptParameterType });
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new List<Guid> { this.existingNotQuantityKindParameterTypeGuid }, this.securityContext.Object))
+            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", new List<Guid> { this.existingNotQuantityKindParameterTypeGuid }, this.securityContext.Object))
                 .Returns(new List<Thing> { new BooleanParameterType(this.existingNotQuantityKindParameterTypeGuid, 1) });
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new List<Guid> { this.existingQuantityKindParameterTypeGuid }, this.securityContext.Object))
+            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", new List<Guid> { this.existingQuantityKindParameterTypeGuid }, this.securityContext.Object))
                 .Returns(new List<Thing> { new SimpleQuantityKind(this.existingQuantityKindParameterTypeGuid, 1) });
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new List<Guid> { this.notExistingParameterTypeGuid }, this.securityContext.Object))
+            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", new List<Guid> { this.notExistingParameterTypeGuid }, this.securityContext.Object))
                 .Returns(new List<Thing>());
 
             this.parameterTypeComponentService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
@@ -346,7 +346,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Once);
         }
 
@@ -367,7 +367,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.Throws<ArgumentNullException>(
                 () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Exactly(3));
         }
 
@@ -388,7 +388,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Exactly(3));
         }
 
@@ -433,7 +433,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 this.securityContext.Object,
                 rawUpdateInfo);
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Exactly(4));
         }
 
@@ -445,7 +445,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Once);
         }
 
@@ -458,7 +458,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Once);
         }
 
@@ -470,7 +470,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.Throws<ArgumentNullException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Once);
         }
 
@@ -496,6 +496,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 this.securityContext.Object);
 
             this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
+                Times.Exactly(0));
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
                 Times.Exactly(2));
         }
     }
