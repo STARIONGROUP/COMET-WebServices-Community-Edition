@@ -101,17 +101,13 @@ namespace CDP4WebServices.API.Services
         {
             var sw = new Stopwatch();
             sw.Start();
-            string logMessage;
-
-            logMessage = string.Format("Store Binary Data with hash: {0} started", hash);
-            Logger.Debug(logMessage);
+            
+            Logger.Debug("Store Binary Data with hash: {0} started", hash);
 
             string filePath;
-
             if (this.TryGetFileStoragePath(hash, out filePath))
             {
-                logMessage = string.Format("The file already exists: {0}/{1}", filePath, hash);
-                Logger.Debug(logMessage);
+                Logger.Debug("The file already exists: {0}/{1}", filePath, hash);
 
                 // return as file already exists
                 sw.Stop();
@@ -121,25 +117,25 @@ namespace CDP4WebServices.API.Services
             // create the path for the file
             var stroragePath = this.GetBinaryStoragePath(hash, true);
             filePath = Path.Combine(stroragePath, hash);
-            
+            Logger.Debug("New File storage path: ", filePath);
+
             using (var fileStream = File.Create(filePath))
             {
                 data.Seek(0, SeekOrigin.Begin);
                 data.CopyTo(fileStream);
             }
-
-            logMessage = string.Format("File {0} stored in {1} [ms]", filePath, sw.ElapsedMilliseconds);
-            Logger.Debug(logMessage);
+            
+            Logger.Debug("File {0} stored in {1} [ms]", filePath, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
-        /// Utility method to calculate the SHA1 hash from a stream.
+        /// Calculate the SHA1 hash from a stream.
         /// </summary>
         /// <param name="stream">
         /// The stream for which to calculate the hash.
         /// </param>
         /// <returns>
-        /// The SHA1 hash string.
+        /// The hexadecimal string representation of a SHA-1 hash code.
         /// </returns>
         public string CalculateHashFromStream(Stream stream)
         {

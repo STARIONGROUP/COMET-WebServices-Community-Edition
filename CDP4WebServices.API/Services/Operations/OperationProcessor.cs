@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessor.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//   Copyright (c) 2015-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -17,14 +17,10 @@ namespace CDP4WebServices.API.Services.Operations
     using CDP4Common.Types;
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
-
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
-
     using NLog;
-
     using Npgsql;
-
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
@@ -66,8 +62,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <summary>
         /// The operation <see cref="Thing"/> instance cache.
         /// </summary>
-        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache =
-            new Dictionary<DtoInfo, DtoResolveHelper>();
+        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new Dictionary<DtoInfo, DtoResolveHelper>();
 
         /// <summary>
         /// Gets or sets the service registry.
@@ -103,7 +98,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// Process the posted operation message.
         /// </summary>
         /// <param name="operation">
-        /// The operation.
+        /// The <see cref="CdpPostOperation"/> that is to be processed
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -196,28 +191,21 @@ namespace CDP4WebServices.API.Services.Operations
                 var thingType = thing.GetType().Name;
                 if (this.topContainerTypes.Contains(thingType))
                 {
-                    throw new InvalidOperationException(
-                              string.Format("Topcontainer item:'{0}' creation is not supported", thingType));
+                    throw new InvalidOperationException($"Topcontainer item:'{thingType}' creation is not supported");
                 }
 
                 if (!this.IsContainerUpdateIncluded(operation, thing))
                 {
-                    throw new InvalidOperationException(
-                              string.Format(
-                                  "Container update of item:'{0}' with iid:'{1}' is missing from the operation",
-                                  thingType,
-                                  thing.Iid));
+                    throw new InvalidOperationException($"Container update of item:'{thingType}' with iid:'{thing.Iid}' is missing from the operation");
                 }
             }
 
-            var newFileRevisions = operation.Create
-                .Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>().ToList();
+            var newFileRevisions = operation.Create.Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>().ToList();
 
             // validate that each uploaded file has a resepective fileRevision part
             if (fileStore.Keys.Any(hashKey => newFileRevisions.All(x => x.ContentHash != hashKey)))
             {
-                throw new InvalidOperationException(
-                          "All uploaded files must be referenced by their respective (SHA1) content hash in a new 'FileRevision' object.");
+                throw new InvalidOperationException("All uploaded files must be referenced by their respective (SHA1) content hash in a new 'FileRevision' object.");
             }
 
             // validate the FileRevision items in operation

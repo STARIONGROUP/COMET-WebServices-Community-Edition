@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2015-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -14,7 +14,6 @@ namespace CDP4WebServices.API.Modules
     using System.Text.RegularExpressions;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
-
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authentication;
     using Helpers;
@@ -90,7 +89,7 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                logMessage = string.Format("{0} started", requestToken);
+                logMessage = $"{requestToken} started";
                 Logger.Info(this.ConstructLog(logMessage));
 
                 // validate (and set) the supplied query parameters
@@ -145,7 +144,7 @@ namespace CDP4WebServices.API.Modules
                     Guid guid;
                     if (!Guid.TryParse(iid, out guid))
                     {
-                        var invalidRequest = new JsonResponse(string.Format("The identifier of the object to query was not found or the route is invalid."), new DefaultJsonSerializer());
+                        var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
                         return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                     }
 
@@ -170,9 +169,8 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 transaction.Commit();
-
-                logMessage = string.Format("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Info(logMessage);
+                
+                Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 var fileRevisions = resourceResponse.Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>().ToList();
                 if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
@@ -199,11 +197,11 @@ namespace CDP4WebServices.API.Modules
                     transaction.Rollback();                    
                 }
 
-                logMessage = string.Format("{0} failed after {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                logMessage = $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]";
                 Logger.Error(ex, this.ConstructFailureLog(logMessage));
 
                 // error handling
-                var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
+                var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
                 return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
             }
             finally
@@ -241,28 +239,22 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                logMessage = string.Format("{0} started", requestToken);
+                logMessage = $"{requestToken} started";
                 Logger.Info(this.ConstructLog(logMessage));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, new[] { QueryParameters.RevisionNumberQuery });
-
+                
                 var contentTypeRegex = new Regex("^multipart/.*;\\s*boundary=(.*)$", RegexOptions.IgnoreCase);
-                var isMultiPart = contentTypeRegex.IsMatch(this.Request.Headers.ContentType) && this.Request.Files.Any();
+                var isMultiPart = contentTypeRegex.IsMatch(this.Request.Headers.ContentType);
 
-                logMessage = string.Format("Request {0} is mutlipart: {1}", requestToken, isMultiPart);
+                logMessage = $"Request {requestToken} is mutlipart: {isMultiPart}";
                 Logger.Debug(this.ConstructLog(logMessage));
 
                 Stream bodyStream;
                 Dictionary<string, Stream> fileDictionary = null;
                 if (isMultiPart)
                 {
-                    if (this.Request.Files.First().ContentType != this.MimeTypeJson)
-                    {
-                        throw new InvalidOperationException("A multipart request must start with a JSON request");
-                    }
-
-                    // use the stream of the first JSON content part
-                    bodyStream = this.Request.Files.First().Value;
+                    bodyStream = this.ExtractJsonBodyStreamFromMultiPartMessage();
 
                     // - New File: 
                     //      create -> File, FileRevision
@@ -284,7 +276,7 @@ namespace CDP4WebServices.API.Modules
                     {
                         var hash = this.FileBinaryService.CalculateHashFromStream(uploadedFile.Value);
 
-                        logMessage = string.Format("File with hash {0} present in request: {1}", hash, requestToken);
+                        logMessage = $"File with hash {hash} present in request: {requestToken}";
                         Logger.Debug(this.ConstructLog(logMessage));
 
                         fileDictionary.Add(hash, uploadedFile.Value);
@@ -343,8 +335,7 @@ namespace CDP4WebServices.API.Modules
 
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
                 {
-                    logMessage = string.Format("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    Logger.Info(logMessage);
+                    Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
                     return this.GetJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion);
                 }
 
@@ -355,9 +346,8 @@ namespace CDP4WebServices.API.Modules
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
                 var revisionResponse = ((IEnumerable<Thing>)this.RevisionService.Get(transaction, partition, fromRevision)).ToArray();
                 transaction.Commit();
-
-                logMessage = string.Format("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Info(logMessage);
+                
+                Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
             }            
@@ -401,6 +391,38 @@ namespace CDP4WebServices.API.Modules
                     connection.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Extracts the JSON part from the multi-part message
+        /// </summary>
+        /// <returns>
+        /// A <see cref="Stream"/> that contains the posted JSON
+        /// </returns>
+        private Stream ExtractJsonBodyStreamFromMultiPartMessage()
+        {
+            var contentType = this.Request.Headers.ContentType;
+            var boundary = Regex.Match(contentType, @"boundary=""?(?<token>[^\n\;\"" ]*)").Groups["token"].Value;
+            var multipart = new HttpMultipart(this.Request.Body, boundary);
+            var multipartBoundaries = multipart.GetBoundaries();
+            var jsonMultipartBoundary = multipartBoundaries.SingleOrDefault(x => x.ContentType == "application/json");
+            if (jsonMultipartBoundary == null)
+            {
+                throw new InvalidOperationException("A multipart request must contain a JSON part");
+            }
+
+            var bodyStream = jsonMultipartBoundary.Value;
+
+            if (Logger.IsTraceEnabled)
+            {
+                var reader = new StreamReader(bodyStream);
+                var multipartjson = reader.ReadToEnd();
+                bodyStream.Position = 0;
+
+                Logger.Trace("multipart post JSON: {0}", multipartjson);
+            }
+
+            return bodyStream;
         }
 
         /// <summary>
