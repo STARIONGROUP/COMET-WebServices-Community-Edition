@@ -8,12 +8,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
-
     using Authorization;
-
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.EngineeringModelData;
+    using CDP4Common.Exceptions;
     using CDP4Common.Types;
     using Npgsql;
 

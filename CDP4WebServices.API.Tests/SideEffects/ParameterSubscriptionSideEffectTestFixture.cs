@@ -11,6 +11,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;

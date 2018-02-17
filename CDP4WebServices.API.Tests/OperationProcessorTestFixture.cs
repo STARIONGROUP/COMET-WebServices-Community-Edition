@@ -16,6 +16,7 @@ namespace CDP4WebServices.API.Tests
     using CDP4Common;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
 
