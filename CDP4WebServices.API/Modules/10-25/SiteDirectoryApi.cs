@@ -156,7 +156,7 @@ namespace CDP4WebServices.API.Modules
                 logMessage = string.Format("return {0} response started", requestToken);
                 Logger.Info(logMessage);
 
-                return this.GetJsonResponse(HttpRequestHelper.FilterOutPermissions(resourceResponse, this.RequestUtils), this.RequestUtils.GetRequestDataModelVersion, HttpStatusCode.OK, requestToken);
+                return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, HttpStatusCode.OK, requestToken);
             }
             catch (Exception ex)
             {

@@ -34,6 +34,7 @@ namespace CDP4WebServices.API
     using CDP4WebServices.API.Services.FileHandling;
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Operations.SideEffects;
+    using CDP4WebServices.API.Services.Supplemental;
 
     using Nancy;
     using Nancy.Bootstrapper;
@@ -203,6 +204,12 @@ namespace CDP4WebServices.API
 
                         // wireup AccessRightKind validation service
                         builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindValidationService, IAccessRightKindValidationService>();
+
+                        // wireup PermissionPropertyFilter service
+                        builder.RegisterTypeAsPropertyInjectedSingleton<PermissionPropertyFilterService, IPermissionPropertyFilterService>();
+
+                        // wireup PermissionInstanceFilter service
+                        builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
                     });
 
             // apply logging configuration

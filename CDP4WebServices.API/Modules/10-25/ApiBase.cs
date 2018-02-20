@@ -19,6 +19,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4JsonSerializer;
 
     using CDP4WebServices.API.Services.Operations;
+    using CDP4WebServices.API.Services.Supplemental;
 
     using Helpers;
 
@@ -155,6 +156,16 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the <see cref="ICdp4JsonSerializer"/>
         /// </summary>
         public ICdp4JsonSerializer JsonSerializer { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IPermissionPropertyFilterService"/>
+        /// </summary>
+        public IPermissionPropertyFilterService PermissionPropertyFilterService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IPermissionInstanceFilterService"/>
+        /// </summary>
+        public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
 
         /// <summary>
         /// Gets the request path.
@@ -443,14 +454,14 @@ namespace CDP4WebServices.API.Modules
         {
             // create a new response with contents assigned by stream
             return new Response
-                       {
-                           Contents = stream => this.CreateResponseStream(
-                               resourceResponse,
-                               stream,
-                               requestDataModelVersion,
-                               requestToken),
-                           StatusCode = statusCode
-                       };
+            {
+                Contents = stream => this.CreateFilteredResponseStream(
+                    resourceResponse,
+                    stream,
+                    requestDataModelVersion,
+                    requestToken),
+                StatusCode = statusCode
+            };
         }
 
         /// <summary>
@@ -475,14 +486,14 @@ namespace CDP4WebServices.API.Modules
         {
             // create a new multipart response with contents assigned by stream
             return new Response
-                       {
-                           Contents = stream => this.PrepareMultiPartResponse(
-                               stream,
-                               fileRevisions,
-                               resourceResponse,
-                               this.RequestUtils.GetRequestDataModelVersion),
-                           StatusCode = statusCode
-                       };
+            {
+                Contents = stream => this.PrepareMultiPartResponse(
+                    stream,
+                    fileRevisions,
+                    resourceResponse,
+                    this.RequestUtils.GetRequestDataModelVersion),
+                StatusCode = statusCode
+            };
         }
 
         /// <summary>
@@ -511,15 +522,15 @@ namespace CDP4WebServices.API.Modules
         {
             // create a new archived response with contents assigned by stream
             return new Response
-                       {
-                           Contents = stream => this.PrepareArchivedResponse(
-                               stream,
-                               resourceResponse,
-                               this.RequestUtils.GetRequestDataModelVersion,
-                               partition,
-                               routeSegments),
-                           StatusCode = statusCode
-                       };
+            {
+                Contents = stream => this.PrepareArchivedResponse(
+                    stream,
+                    resourceResponse,
+                    this.RequestUtils.GetRequestDataModelVersion,
+                    partition,
+                    routeSegments),
+                StatusCode = statusCode
+            };
         }
 
         /// <summary>
@@ -650,10 +661,10 @@ namespace CDP4WebServices.API.Modules
             {
                 // create a new response with contents assigned by stream
                 var response = new Response
-                                   {
-                                       Contents = stream => this.CreateFileResponseStream(stream, path),
-                                       StatusCode = statusCode
-                                   };
+                {
+                    Contents = stream => this.CreateFileResponseStream(stream, path),
+                    StatusCode = statusCode
+                };
 
                 response.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
                 response.Headers.Add(ContentDispositionHeader, EngineeringModelZipFileName);
@@ -674,7 +685,7 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
+        /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
         /// </summary>
         /// <param name="dtos">
         /// The DTO's that needs to be serialized to a stream
@@ -688,12 +699,16 @@ namespace CDP4WebServices.API.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateResponseStream(
+        private void CreateFilteredResponseStream(
             IEnumerable<Thing> dtos,
             Stream stream,
             Version requestDataModelVersion,
             string requestToken = "")
         {
+            this.PermissionInstanceFilterService.FilterOutPermissions(dtos.ToList(), this.RequestUtils, requestDataModelVersion);
+            this.PermissionPropertyFilterService.FilterPersonPermissionProperty(dtos.ToList().OfType<PersonRole>(), requestDataModelVersion);
+            this.PermissionPropertyFilterService.FilterParticipantPermissionProperty(dtos.ToList().OfType<ParticipantRole>(), requestDataModelVersion);
+
             var sw = new Stopwatch();
             sw.Start();
             Logger.Debug("{0} start serialing dtos", requestToken);
@@ -738,7 +753,7 @@ namespace CDP4WebServices.API.Modules
 
             using (var stream = new MemoryStream())
             {
-                this.CreateResponseStream(resourceResponse, stream, requestDataModelVersion);
+                this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
 
                 // rewind stream prior to reading
                 stream.Position = 0;
@@ -810,7 +825,7 @@ namespace CDP4WebServices.API.Modules
 
                 using (var stream = new MemoryStream())
                 {
-                    this.CreateResponseStream(resourceResponse, stream, requestDataModelVersion);
+                    this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
 
                     // rewind stream prior to reading
                     stream.Position = 0;

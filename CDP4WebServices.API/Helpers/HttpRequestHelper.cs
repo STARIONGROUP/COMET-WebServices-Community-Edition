@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="HttpRequestHelper.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,9 +8,7 @@ namespace CDP4WebServices.API.Helpers
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
-    using CDP4Common.DTO;
     using Nancy;
     using NLog;
     using Services;
@@ -21,7 +19,6 @@ namespace CDP4WebServices.API.Helpers
     /// </summary>
     public static class HttpRequestHelper
     {
-
         /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
@@ -85,64 +82,6 @@ namespace CDP4WebServices.API.Helpers
         {
             return string.Format("{0}/{1}", topContainer, routeParams.uri)
                 .Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
-        }
-
-        /// <summary>
-        /// Filter out permission depending on the supported version
-        /// </summary>
-        /// <param name="things">The collection of <see cref="Thing"/> to filter</param>
-        /// <param name="requestUtils">The <see cref="IRequestUtils"/></param>
-        /// <returns>The filtered collection of <see cref="Thing"/></returns>
-        public static IEnumerable<Thing> FilterOutPermissions(IReadOnlyCollection<Thing> things, IRequestUtils requestUtils)
-        {
-            var timer = Stopwatch.StartNew();
-
-            var personRoles = things.OfType<PersonRole>().ToArray();
-            var participantRoles = things.OfType<ParticipantRole>().ToArray();
-            var personPermissions = things.OfType<PersonPermission>().ToArray();
-            var participantPermissions = things.OfType<ParticipantPermission>().ToArray();
-
-            var excludedPersonPermission = new List<PersonPermission>();
-            var excludedParticipantPermission = new List<ParticipantPermission>();
-
-            foreach (var personPermission in personPermissions)
-            {
-                var metainfo = requestUtils.MetaInfoProvider.GetMetaInfo(personPermission.ObjectClass.ToString());
-                if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestUtils.GetRequestDataModelVersion > new Version(metainfo.ClassVersion))
-                {
-                    continue;
-                }
-
-                excludedPersonPermission.Add(personPermission);
-            }
-
-            foreach (var participantPermission in participantPermissions)
-            {
-                var metainfo = requestUtils.MetaInfoProvider.GetMetaInfo(participantPermission.ObjectClass.ToString());
-                if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestUtils.GetRequestDataModelVersion > new Version(metainfo.ClassVersion))
-                {
-                    continue;
-                }
-
-                excludedParticipantPermission.Add(participantPermission);
-            }
-
-            foreach (var personRole in personRoles)
-            {
-                personRole.PersonPermission.RemoveAll(x => excludedPersonPermission.Select(pp => pp.Iid).Contains(x));
-            }
-
-            foreach (var participantRole in participantRoles)
-            {
-                participantRole.ParticipantPermission.RemoveAll(x => excludedParticipantPermission.Select(pp => pp.Iid).Contains(x));
-            }
-
-            foreach (var thing in things.Except(excludedParticipantPermission).Except(excludedPersonPermission))
-            {
-                yield return thing;
-            }
-
-            Logger.Info(string.Format("permission filter operation took {0} ms", timer.ElapsedMilliseconds));
         }
     }
 }
