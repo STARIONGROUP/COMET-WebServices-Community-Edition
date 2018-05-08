@@ -251,7 +251,7 @@ namespace CDP4WebServices.API.Modules
             catch (Exception ex)
             {
                 // swallow exception but log it
-                Logger.Error(ex, "Unable to remove file");
+                Logger.Error(ex, "Unable to remove file {0}", filePath);
             }
 
             try
