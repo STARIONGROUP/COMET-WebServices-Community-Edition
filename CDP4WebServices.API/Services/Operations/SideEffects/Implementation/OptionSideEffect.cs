@@ -124,7 +124,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public override void AfterCreate(Option option, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // query all the parametertypes and parametertype components and store them in cache. this cache is used to compute the number of values for a ValueArray
-            this.InitializeDefaultValueArrayFactory(transaction, securityContext);
+            this.DefaultValueArrayFactory.Load(transaction, securityContext);
 
             // query and cache all the option dependent parameters for which new valuesets will need to be created for the option that has just been created.
             this.QueryAndCacheAllOptionDependentParameters(transaction, partition, securityContext);
@@ -343,24 +343,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 this.actualFiniteStateLists = this.ActualFiniteStateListService.GetShallow(transaction, partition, null, securityContext).Cast<ActualFiniteStateList>();
             }
-        }
-
-        /// <summary>
-        /// Queries the data store for all the <see cref="ParameterType"/>s and <see cref="ParameterTypeComponent"/>s and populates
-        /// the parameterTypeCache and parameterTypeComponentCache data stores
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="securityContext">
-        /// The <see cref="ISecurityContext"/> used for permission checking.
-        /// </param>
-        private void InitializeDefaultValueArrayFactory(NpgsqlTransaction transaction, ISecurityContext securityContext)
-        {
-            var parameterTypes = this.ParameterTypeService.GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext).Cast<ParameterType>();
-            var parameterTypeComponents = this.ParameterTypeComponentService.GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext).Cast<ParameterTypeComponent>();
-
-            this.DefaultValueArrayFactory.Initialize(parameterTypes, parameterTypeComponents);
         }
 
         /// <summary>

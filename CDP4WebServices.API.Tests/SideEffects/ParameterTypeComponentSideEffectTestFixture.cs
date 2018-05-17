@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterTypeComponentSideEffectTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//   Copyright (c) 2017-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,20 +8,15 @@ namespace CDP4WebServices.API.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
-
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;
-
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
-
     using Moq;
-
     using Npgsql;
-
     using NUnit.Framework;
 
     /// <summary>
@@ -43,6 +38,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IArrayParameterTypeService> arrayParameterTypeService;
 
         private Mock<IParameterTypeComponentService> parameterTypeComponentService;
+
+        private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
 
         private ParameterTypeComponentSideEffect sideEffect;
 
@@ -77,6 +74,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         {
             this.npgsqlTransaction = null;
             this.securityContext = new Mock<ISecurityContext>();
+            this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
 
             // There is a chain cptA -> ptcA -> cptB -> ptcB -> bptD
             this.booleanParameterTypeD = new BooleanParameterType { Iid = Guid.NewGuid() };
@@ -235,6 +233,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                           this.modelReferenceDataLibraryService
                                               .Object
                                   };
+
+            this.sideEffect.DefaultValueArrayFactory = this.defaultValueArrayFactory.Object;
         }
 
         [Test]
@@ -265,6 +265,30 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     "partition",
                     this.securityContext.Object,
                     this.rawUpdateInfo));
+        }
+
+        [Test]
+        public void Verify_that_upon_AfterCreate_DefaultValueArrayFactory_is_reset()
+        {
+            this.sideEffect.AfterCreate(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
+
+            this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+        }
+
+        [Test]
+        public void Verify_that_upon_AfterDelete_DefaultValueArrayFactory_is_reset()
+        {
+            this.sideEffect.AfterDelete(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
+
+            this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+        }
+
+        [Test]
+        public void Verify_that_upon_AfterUpdate_DefaultValueArrayFactory_is_reset()
+        {
+            this.sideEffect.AfterUpdate(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
+
+            this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
         }
     }
 }

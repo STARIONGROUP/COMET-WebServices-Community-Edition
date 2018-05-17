@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -9,15 +9,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
     using Authorization;
-
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;
-
     using CDP4Orm.Dao;
-
     using Npgsql;
 
     /// <summary>
@@ -216,7 +212,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             }
 
             // creates default value-arrays for the parameter
-            this.InitializeDefaultValueArrayFactory(transaction, securityContext);
+            this.DefaultValueArrayFactory.Load(transaction, securityContext);
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(thing.ParameterType);
 
             var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext, defaultValueArray);
@@ -262,7 +258,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 return;
             }
 
-            this.InitializeDefaultValueArrayFactory(transaction, securityContext);
+            // creates default value-arrays for the parameter
+            this.DefaultValueArrayFactory.Load(transaction, securityContext);
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(thing.ParameterType);
 
             var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext, defaultValueArray)
@@ -442,32 +439,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 }
             }
         }
-
-        /// <summary>
-        /// Queries the data-store for all the <see cref="ParameterType"/>s and <see cref="ParameterTypeComponent"/>s to initialize the <see cref="DefaultValueArrayFactory"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="securityContext">
-        /// The <see cref="ISecurityContext"/> used for permission checking.
-        /// </param>
-        private void InitializeDefaultValueArrayFactory(NpgsqlTransaction transaction, ISecurityContext securityContext)
-        {
-            var parameterTypes = this.ParameterTypeService.GetShallow(
-                transaction,
-                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                null,
-                securityContext).Cast<ParameterType>();
-            var parameterTypeComponents = this.ParameterTypeComponentService.GetShallow(
-                transaction,
-                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                null,
-                securityContext).Cast<ParameterTypeComponent>();
-
-            this.DefaultValueArrayFactory.Initialize(parameterTypes, parameterTypeComponents);
-        }
-
+        
         /// <summary>
         /// Compute the <see cref="ParameterValueSet"/> for a <see cref="Parameter"/>
         /// </summary>

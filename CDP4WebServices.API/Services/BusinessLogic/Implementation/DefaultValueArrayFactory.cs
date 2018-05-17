@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefaultValueArrayFactory.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,10 +8,13 @@ namespace CDP4WebServices.API.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.Linq;
     using CDP4Common.DTO;
     using CDP4Common.Types;
-
+    using CDP4WebServices.API.Services.Authorization;
     using NLog;
+    using Npgsql;
 
     /// <summary>
     /// The purpose of the <see cref="IDefaultValueArrayFactory"/> is to create a default <see cref="ValueArray{String}"/>
@@ -24,6 +27,12 @@ namespace CDP4WebServices.API.Services
         /// The NLog logger
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        /// <summary>
+        /// A cache of <see cref="ValueArray{string}"/> that has been computed for <see cref="ParameterType"/>
+        /// that is used for fast access so taht the default ValueArray does not have to be recomputed.
+        /// </summary>
+        private readonly Dictionary<Guid, ValueArray<string>> defaultValueArrayCache = new Dictionary<Guid, ValueArray<string>>();
 
         /// <summary>
         /// a cache of <see cref="ParameterType"/>s that is populated in the context of the current <see cref="DefaultValueArrayFactory"/>
@@ -41,37 +50,95 @@ namespace CDP4WebServices.API.Services
         private readonly Dictionary<ParameterType, int> parameterTypeNumberOfValuesMap = new Dictionary<ParameterType, int>();
 
         /// <summary>
-        /// Initializes the <see cref="DefaultValueArrayFactory"/>.
+        /// Gets or sets the <see cref="IParameterTypeService"/>
         /// </summary>
-        /// <param name="parameterTypes">
-        /// The <see cref="ParameterType"/>s that are used to compute the default <see cref="ValueArray{T}"/>
+        public IParameterTypeService ParameterTypeService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterTypeComponentService"/>
+        /// </summary>
+        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
+
+        /// <summary>
+        /// Load required data from the database, i.e. <see cref="ParameterType"/> and <see cref="ParameterTypeComponent"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
         /// </param>
-        /// <param name="parameterTypeComponents">
-        /// The <see cref="ParameterTypeComponent"/>s that are used to compute the default <see cref="ValueArray{T}"/>
+        /// <param name="securityContext">
+        /// The <see cref="ISecurityContext"/> used for permission checking.
         /// </param>
-        public void Initialize(IEnumerable<ParameterType> parameterTypes, IEnumerable<ParameterTypeComponent> parameterTypeComponents)
+        public void Load(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            Logger.Trace("Initializing");
-
-            if (this.parameterTypeCache.Count == 0)
+            if (this.IsLoaded)
             {
-                foreach (var parameterType in parameterTypes)
-                {
-                    this.parameterTypeCache.Add(parameterType.Iid, parameterType);
-                }
+                Logger.Trace("The DefaultValueArrayFactory has already been loaded, no need to hit the database again");
+                return;
             }
 
-            if (this.parameterTypeComponentCache.Count == 0)
-            {
-                foreach (var parameterTypeComponent in parameterTypeComponents)
-                {
-                    this.parameterTypeComponentCache.Add(parameterTypeComponent.Iid, parameterTypeComponent);
-                }
-            }
+            Logger.Trace("Loading ParameterTypes and ParameterTypeComponents");
 
-            Logger.Trace("Initialized with {0} ParameterTypes and {1} ParameterTypeComponents", this.parameterTypeCache.Count, this.parameterTypeComponentCache.Count);
+            var sw = Stopwatch.StartNew();
+
+            var parameterTypes = this.ParameterTypeService.GetShallow(
+                transaction,
+                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                null,
+                securityContext).Cast<ParameterType>();
+
+            Logger.Trace("ParameterTypes loaded in {0} [ms]", sw.ElapsedMilliseconds);
+
+            sw.Restart();
+
+            var parameterTypeComponents = this.ParameterTypeComponentService.GetShallow(
+                transaction,
+                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                null,
+                securityContext).Cast<ParameterTypeComponent>();
+
+            Logger.Trace("ParameterTypeComponents loaded in {0} [ms]", sw.ElapsedMilliseconds);
+            
+            Logger.Trace("Initializing ParameterType cache");
+
+            sw.Restart();
+
+            foreach (var parameterType in parameterTypes)
+            {
+                this.parameterTypeCache.Add(parameterType.Iid, parameterType);
+            }
+            
+            Logger.Trace("Initializing ParameterTypeComponent cache");
+            
+            foreach (var parameterTypeComponent in parameterTypeComponents)
+            {
+                this.parameterTypeComponentCache.Add(parameterTypeComponent.Iid, parameterTypeComponent);
+            }
+            
+            this.IsLoaded = true;
+
+            Logger.Trace("Cache initialized with {0} ParameterTypes and {1} ParameterTypeComponents in {2}", this.parameterTypeCache.Count, this.parameterTypeComponentCache.Count, sw.ElapsedMilliseconds);
         }
 
+        /// <summary>
+        /// Resets the <see cref="IDefaultValueArrayFactory"/>.
+        /// </summary>
+        /// <remarks>
+        /// After the <see cref="IDefaultValueArrayFactory"/> has been reset the data needs to be loaded again using the <see cref="Load"/> method.
+        /// </remarks>
+        public void Reset()
+        {
+            this.defaultValueArrayCache.Clear();
+            this.parameterTypeCache.Clear();
+            this.parameterTypeComponentCache.Clear();
+            this.parameterTypeNumberOfValuesMap.Clear();
+            this.IsLoaded = false;
+        }
+
+        /// <summary>
+        /// Assertion that determines whether the <see cref="DefaultValueArrayFactory"/> is loaded.
+        /// </summary>
+        public bool IsLoaded { get; private set; }
+        
         /// <summary>
         /// Creates a <see cref="ValueArray{String}"/> where the number of slots is equal to to number of values associated to a <see cref="ParameterType"/> and where
         /// each slot has the value "-"
@@ -84,16 +151,25 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public ValueArray<string> CreateDefaultValueArray(Guid parameterTypeIid)
         {
+            ValueArray<string> defaultValueArray;
+            if (this.defaultValueArrayCache.TryGetValue(parameterTypeIid, out defaultValueArray))
+            {
+                return defaultValueArray;
+            }
+
             ParameterType parameterType;
             if (!this.parameterTypeCache.TryGetValue(parameterTypeIid, out parameterType))
             {
-                var execptionMessage = string.Format("The ParameterType with iid {0} could not be found", parameterTypeIid);
+                var execptionMessage = $"The ParameterType with iid {parameterTypeIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
                 Logger.Error(execptionMessage);
                 throw new KeyNotFoundException(execptionMessage);
             }
 
             var numberOfValues = this.ComputeNumberOfValues(parameterType);
             var valueArray = this.CreateDefaultValueArray(numberOfValues);
+
+            this.defaultValueArrayCache.Add(parameterTypeIid, valueArray);
+
             return valueArray;
         }
 
@@ -174,7 +250,7 @@ namespace CDP4WebServices.API.Services
                 ParameterTypeComponent parameterTypeComponent;
                 if (!this.parameterTypeComponentCache.TryGetValue(parameterTypeComponentIid, out parameterTypeComponent))
                 {
-                    var exceptionMessage = string.Format("The ParameterTypeComponent with Iid {0} could not be found", parameterTypeComponentIid);
+                    var exceptionMessage = $"The ParameterTypeComponent with Iid {parameterTypeComponentIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
                     Logger.Error(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
@@ -182,7 +258,7 @@ namespace CDP4WebServices.API.Services
                 ParameterType parameterType;
                 if (!this.parameterTypeCache.TryGetValue(parameterTypeComponent.ParameterType, out parameterType))
                 {
-                    var exceptionMessage = string.Format("The ParameterType {0} of the ParameterTypeComponent {1} could not be found", parameterTypeComponent.ParameterType, parameterTypeComponent.Iid);
+                    var exceptionMessage = $"The ParameterType {parameterTypeComponent.ParameterType} of the ParameterTypeComponent {parameterTypeComponent.Iid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
                     Logger.Error(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }

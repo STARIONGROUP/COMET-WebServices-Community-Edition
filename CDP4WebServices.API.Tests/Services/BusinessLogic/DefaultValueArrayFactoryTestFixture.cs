@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefaultValueArrayFactoryTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -11,8 +11,11 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
     using CDP4Common.DTO;
     using CDP4Common.Types;
     using CDP4WebServices.API.Services;
+    using CDP4WebServices.API.Services.Authorization;
+    using Moq;
+    using Npgsql;
     using NUnit.Framework;
-
+    
     [TestFixture]
     public class DefaultValueArrayFactoryTestFixture
     {
@@ -29,19 +32,34 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
         private Guid invalidReferencedCompoundParameterTypeIid;
         private Guid invalidReferencedParameterTypeFromComponentIid;
 
-        private DefaultValueArrayFactory defaultValueArrayFactory;
-
+        private Mock<IParameterTypeService> parameterTypeService;
+        private Mock<IParameterTypeComponentService> parameterTypeComponentService;
         private List<ParameterType> parameterTypes;
-
         private List<ParameterTypeComponent> parameterTypeComponents;
+        private Mock<ISecurityContext> secutrityContext;
+        private NpgsqlTransaction transaction;
 
+        private DefaultValueArrayFactory defaultValueArrayFactory;
+        
         [SetUp]
         public void SetUp()
         {
-            this.PopulateParameterTypes();
+            this.secutrityContext = new Mock<ISecurityContext>();
+            this.transaction = null;
             
+            this.PopulateParameterTypes();
+
+            this.parameterTypeService = new Mock<IParameterTypeService>();
+            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypes);
+
+            this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
+            this.parameterTypeComponentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypeComponents);
+
             this.defaultValueArrayFactory = new DefaultValueArrayFactory();
-            this.defaultValueArrayFactory.Initialize(this.parameterTypes, this.parameterTypeComponents);
+            this.defaultValueArrayFactory.ParameterTypeService = this.parameterTypeService.Object;
+            this.defaultValueArrayFactory.ParameterTypeComponentService = this.parameterTypeComponentService.Object;
         }
 
         private void PopulateParameterTypes()
@@ -127,6 +145,11 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             var value = new List<string>() {"-"};
             var expectedValueArray = new ValueArray<string>(value);
 
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.massIid);
 
             CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
@@ -140,6 +163,11 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
         {
             var value = new List<string>() { "-", "-", "-" };
             var expectedValueArray = new ValueArray<string>(value);
+
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.vectorIid);
 
@@ -155,6 +183,12 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             var value = new List<string>() { "-", "-", "-", "-" };
             var expectedValueArray = new ValueArray<string>(value);
 
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+
+
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.jaggedArrayIid);
 
             CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
@@ -169,8 +203,41 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             var value = new List<string>(0);
             var expectedValueArray = new ValueArray<string>(value);
 
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.incompleteCoundParameterTypeIid);
             CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+        }
+
+        [Test]
+        public void Verify_that_when_reset_is_called_IsLoaded_is_false()
+        {
+            Assert.IsFalse(this.defaultValueArrayFactory.IsLoaded);
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+
+            Assert.IsTrue(this.defaultValueArrayFactory.IsLoaded);
+
+            this.defaultValueArrayFactory.Reset();
+            Assert.IsFalse(this.defaultValueArrayFactory.IsLoaded);
+        }
+
+        [Test]
+        public void Verify_that_ParameterType_and_ParameterTypeService_are_only_called_once_when_load_is_called_mulitple_times()
+        {
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+
+            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
         }
 
         [Test]
