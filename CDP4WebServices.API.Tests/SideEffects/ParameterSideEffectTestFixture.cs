@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSideEffectTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -29,9 +29,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     public class ParameterSideEParameterSideEffectTestFixtureffect
     {
         private Mock<ISecurityContext> securityContext;
-
         private NpgsqlTransaction npgsqlTransaction;
-
         private Mock<IOptionService> optionService;
         private Mock<IActualFiniteStateListService> actualFiniteStateListService;
         private Mock<ICompoundParameterTypeService> parameterService;
@@ -44,6 +42,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterTypeComponentService> parameterTypeComponentService;
         private Mock<IParameterTypeService> parameterTypeService;
         private Mock<IElementUsageService> elementUsageService;
+        private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
 
         private Parameter parameter;
         private ParameterOverride parameterOverride;
@@ -67,6 +66,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Guid notExistingParameterTypeGuid = Guid.NewGuid();
         private Guid scaleGuid = Guid.NewGuid();
 
+        private ValueArray<string> compoundDefaultValueArray;
+        private ValueArray<string> scalarDefaultValueArray;
+
+
         private const string ParameterTypeTestKey = "ParameterType";
         private const string ScaleTestKey = "Scale";
 
@@ -86,6 +89,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
             this.parameterTypeService = new Mock<IParameterTypeService>();
             this.elementUsageService = new Mock<IElementUsageService>();
+            this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
 
             this.npgsqlTransaction = null;
 
@@ -126,10 +130,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 ElementUsageService = this.elementUsageService.Object,
                 ParameterTypeComponentService = this.parameterTypeComponentService.Object,
                 OptionService = this.optionService.Object,
+                DefaultValueArrayFactory = this.defaultValueArrayFactory.Object,
                 ParameterValueSetFactory = new ParameterValueSetFactory(),
                 ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
-                ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
-                DefaultValueArrayFactory = new DefaultValueArrayFactory()
+                ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory()
             };
 
             // prepare mock data
@@ -167,6 +171,16 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.elementUsageService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.elementUsage });
+
+            this.scalarDefaultValueArray = new ValueArray<string>(new List<string>() { "-" });
+            this.compoundDefaultValueArray = new ValueArray<string>(new List<string>() { "-", "-" });
+
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(this.cptParameterType.Iid))
+                .Returns(this.compoundDefaultValueArray);
+
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(this.boolPt.Iid))
+                .Returns(this.scalarDefaultValueArray);
+
         }
 
         [Test]
