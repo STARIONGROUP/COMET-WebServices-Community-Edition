@@ -14,7 +14,7 @@ namespace CDP4Orm.Dao
     using System.Linq;
  
     using CDP4Common.DTO;
-
+    using CDP4JsonSerializer;
     using Npgsql;
     using NpgsqlTypes;
  
@@ -52,11 +52,11 @@ namespace CDP4Orm.Dao
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                         {
-                            { "Published", !this.IsDerived(parameterValueSetBase, "Published") ? parameterValueSetBase.Published.ToString() : string.Empty },
-                            { "Formula", !this.IsDerived(parameterValueSetBase, "Formula") ? parameterValueSetBase.Formula.ToString() : string.Empty },
-                            { "Computed", !this.IsDerived(parameterValueSetBase, "Computed") ? parameterValueSetBase.Computed.ToString() : string.Empty },
-                            { "Manual", !this.IsDerived(parameterValueSetBase, "Manual") ? parameterValueSetBase.Manual.ToString() : string.Empty },
-                            { "Reference", !this.IsDerived(parameterValueSetBase, "Reference") ? parameterValueSetBase.Reference.ToString() : string.Empty },
+                            { "Published", !this.IsDerived(parameterValueSetBase, "Published") ? parameterValueSetBase.Published.ToHstoreString() : string.Empty },
+                            { "Formula", !this.IsDerived(parameterValueSetBase, "Formula") ? parameterValueSetBase.Formula.ToHstoreString() : string.Empty },
+                            { "Computed", !this.IsDerived(parameterValueSetBase, "Computed") ? parameterValueSetBase.Computed.ToHstoreString() : string.Empty },
+                            { "Manual", !this.IsDerived(parameterValueSetBase, "Manual") ? parameterValueSetBase.Manual.ToHstoreString() : string.Empty },
+                            { "Reference", !this.IsDerived(parameterValueSetBase, "Reference") ? parameterValueSetBase.Reference.ToHstoreString() : string.Empty },
                             { "ValueSwitch", !this.IsDerived(parameterValueSetBase, "ValueSwitch") ? parameterValueSetBase.ValueSwitch.ToString() : string.Empty },
                         }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 
@@ -111,11 +111,11 @@ namespace CDP4Orm.Dao
                 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                         {
-                            { "Published", !this.IsDerived(parameterValueSetBase, "Published") ? parameterValueSetBase.Published.ToString() : string.Empty },
-                            { "Formula", !this.IsDerived(parameterValueSetBase, "Formula") ? parameterValueSetBase.Formula.ToString() : string.Empty },
-                            { "Computed", !this.IsDerived(parameterValueSetBase, "Computed") ? parameterValueSetBase.Computed.ToString() : string.Empty },
-                            { "Manual", !this.IsDerived(parameterValueSetBase, "Manual") ? parameterValueSetBase.Manual.ToString() : string.Empty },
-                            { "Reference", !this.IsDerived(parameterValueSetBase, "Reference") ? parameterValueSetBase.Reference.ToString() : string.Empty },
+                            { "Published", !this.IsDerived(parameterValueSetBase, "Published") ? parameterValueSetBase.Published.ToHstoreString() : string.Empty },
+                            { "Formula", !this.IsDerived(parameterValueSetBase, "Formula") ? parameterValueSetBase.Formula.ToHstoreString() : string.Empty },
+                            { "Computed", !this.IsDerived(parameterValueSetBase, "Computed") ? parameterValueSetBase.Computed.ToHstoreString() : string.Empty },
+                            { "Manual", !this.IsDerived(parameterValueSetBase, "Manual") ? parameterValueSetBase.Manual.ToHstoreString() : string.Empty },
+                            { "Reference", !this.IsDerived(parameterValueSetBase, "Reference") ? parameterValueSetBase.Reference.ToHstoreString() : string.Empty },
                             { "ValueSwitch", !this.IsDerived(parameterValueSetBase, "ValueSwitch") ? parameterValueSetBase.ValueSwitch.ToString() : string.Empty },
                         }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 

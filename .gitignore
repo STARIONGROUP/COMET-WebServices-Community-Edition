@@ -70,3 +70,5 @@ packages/
 #Test files
 
 CDP4.v12.suo
+
+/CodeGenerator/*

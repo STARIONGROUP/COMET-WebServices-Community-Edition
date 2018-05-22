@@ -14,7 +14,7 @@ namespace CDP4Orm.Dao
     using System.Linq;
  
     using CDP4Common.DTO;
-
+    using CDP4JsonSerializer;
     using Npgsql;
     using NpgsqlTypes;
  
@@ -143,27 +143,27 @@ namespace CDP4Orm.Dao
             
             if (valueDict.TryGetValue("Published", out tempPublished))
             {
-                dto.Published = Utils.ParseValueArray<string>(tempPublished);
+                dto.Published = tempPublished.FromHstoreToValueArray<string>();
             }
             
             if (valueDict.TryGetValue("Formula", out tempFormula))
             {
-                dto.Formula = Utils.ParseValueArray<string>(tempFormula);
+                dto.Formula = tempFormula.FromHstoreToValueArray<string>();
             }
             
             if (valueDict.TryGetValue("Computed", out tempComputed))
             {
-                dto.Computed = Utils.ParseValueArray<string>(tempComputed);
+                dto.Computed = tempComputed.FromHstoreToValueArray<string>();
             }
             
             if (valueDict.TryGetValue("Manual", out tempManual))
             {
-                dto.Manual = Utils.ParseValueArray<string>(tempManual);
+                dto.Manual = tempManual.FromHstoreToValueArray<string>();
             }
             
             if (valueDict.TryGetValue("Reference", out tempReference))
             {
-                dto.Reference = Utils.ParseValueArray<string>(tempReference);
+                dto.Reference = tempReference.FromHstoreToValueArray<string>();
             }
             
             if (valueDict.TryGetValue("ValueSwitch", out tempValueSwitch))

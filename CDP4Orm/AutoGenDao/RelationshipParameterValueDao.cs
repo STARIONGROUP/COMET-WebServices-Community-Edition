@@ -14,7 +14,7 @@ namespace CDP4Orm.Dao
     using System.Linq;
  
     using CDP4Common.DTO;
-
+    using CDP4JsonSerializer;
     using Npgsql;
     using NpgsqlTypes;
  
@@ -139,7 +139,7 @@ namespace CDP4Orm.Dao
             
             if (valueDict.TryGetValue("Value", out tempValue))
             {
-                dto.Value = Utils.ParseValueArray<string>(tempValue);
+                dto.Value = tempValue.FromHstoreToValueArray<string>();
             }
             
             return dto;

@@ -95,6 +95,52 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Convert a string to a <see cref="ValueArray{T}"/>
+        /// </summary>
+        /// <typeparam name="T">The generic type of the <see cref="ValueArray{T}"/></typeparam>
+        /// <param name="valueArrayString">The string to convert</param>
+        /// <returns>The <see cref="ValueArray{T}"/></returns>
+        public static ValueArray<T> FromHstoreToValueArray<T>(this string valueArrayString)
+        {
+            var extractArray = new Regex(@"^\{(.*)\}$");
+            var arrayExtractResult = extractArray.Match(valueArrayString);
+            var extractedArrayString = arrayExtractResult.Groups[1].Value;
+
+            // match within 2 unescape double-quote the following content:
+            // 1) (no special char \ or ") 0..* times
+            // 2) (a pattern that starts with \ followed by any character (special included) and 0..* "non special" characters) 0..* times
+            var valueExtractionRegex = new Regex(@"""([^""\\]*(\\.[^""\\]*)*)""");
+            var test = valueExtractionRegex.Matches(extractedArrayString);
+
+            var stringValues = new List<string>();
+            foreach (Match match in test)
+            {
+                // remove the extra backslash character added during serialization
+                stringValues.Add(match.Groups[1].Value.Replace("\\\"", "\"").Replace("\\\\", "\\"));
+            }
+
+            var returned = stringValues.Select(m => (T)Convert.ChangeType(m.Trim(), typeof(T))).ToList();
+            return new ValueArray<T>(returned);
+        }
+
+        /// <summary>
+        /// Convert a <see cref="ValueArray{String}"/> to the JSON format
+        /// </summary>
+        /// <param name="valueArray">The <see cref="ValueArray{String}"/></param>
+        /// <returns>The JSON string</returns>
+        public static string ToHstoreString(this ValueArray<string> valueArray)
+        {
+            var items = valueArray.ToList();
+            for (var i = 0; i < items.Count; i++)
+            {
+                // make sure to escape double quote and backslash as this has special meaning in the value-array syntax
+                items[i] = string.Format("\"{0}\"", items[i].Replace("\\", "\\\\").Replace("\"", "\\\""));
+            }
+
+            return string.Format("{{{0}}}", string.Join(";", items));
+        }
+
+        /// <summary>
         /// Parse a source string to it's equivalent enumeration representation.
         /// </summary>
         /// <param name="source">
@@ -176,38 +222,6 @@ namespace CDP4Orm.Dao
                             V = (T)converter.ConvertFromString(orderedSource[1, i])
                         };
             }
-        }
-
-        /// <summary>
-        /// Parse a string to a typed <see cref="ValueArray{T}"/>
-        /// </summary>
-        /// <param name="source">
-        /// The source string.
-        /// </param>
-        /// <typeparam name="T">
-        /// Value type T to which the value should be parsed
-        /// </typeparam>
-        /// <returns>
-        /// An instantiated <see cref="ValueArray{T}"/>.
-        /// </returns>
-        public static ValueArray<T> ParseValueArray<T>(string source)
-        {
-            const string ValueArrayPattern = @"\{([^)]*)\}";
-            const string Delimiter = ";";
-
-            var matches = Regex.Matches(source, ValueArrayPattern);
-            var content = matches[0].Groups[1].Value;
-            
-            // unescape the Hstore escaped string before further processing
-            var unescapedContent = content.Replace("\"", string.Empty);
-            var stringValues = unescapedContent.Split(Delimiter.ToCharArray());
-            
-            // get type converter for type
-            var converter = TypeDescriptor.GetConverter(typeof(T));
-            
-            // cast the values to the supplied type T, ensure Trim is called
-            var castValues = stringValues.Select(x => (T)converter.ConvertFromString(x.Trim()));
-            return new ValueArray<T>(castValues);
         }
 
         /// <summary>

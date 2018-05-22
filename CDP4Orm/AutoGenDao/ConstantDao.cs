@@ -14,6 +14,7 @@ namespace CDP4Orm.Dao
     using System.Linq;
  
     using CDP4Common.DTO;
+    using CDP4JsonSerializer;
 
     using Npgsql;
     using NpgsqlTypes;
@@ -156,7 +157,7 @@ namespace CDP4Orm.Dao
             
             if (valueDict.TryGetValue("Value", out tempValue))
             {
-                dto.Value = Utils.ParseValueArray<string>(tempValue);
+                dto.Value = tempValue.FromHstoreToValueArray<string>();
             }
             
             if (valueDict.TryGetValue("IsDeprecated", out tempIsDeprecated))
@@ -196,7 +197,7 @@ namespace CDP4Orm.Dao
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                         {
-                            { "Value", !this.IsDerived(constant, "Value") ? constant.Value.ToString() : string.Empty },
+                            { "Value", !this.IsDerived(constant, "Value") ? constant.Value.ToHstoreString() : string.Empty },
                             { "IsDeprecated", !this.IsDerived(constant, "IsDeprecated") ? constant.IsDeprecated.ToString() : string.Empty },
                         }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 

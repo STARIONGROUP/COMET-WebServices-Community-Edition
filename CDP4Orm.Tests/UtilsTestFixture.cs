@@ -45,6 +45,15 @@ namespace CDP4Orm.Tests
         }
 
         [Test]
+        public void VerifyComplicatedString()
+        {
+            const string HstoreSource = "\"TestKey1 \" =>   \"TestValue1\"   , \"TestKey2\"=>\"TestValue2\"";
+            var expected = new Dictionary<string, string> { { "TestKey1", "TestValue1" }, { "TestKey2", "TestValue2" } };
+
+            CollectionAssert.AreEquivalent(expected, Utils.ParseHstoreString(HstoreSource));
+        }
+
+        [Test]
         public void VerifyEnumDeserialization()
         {
             const string EnumSource = "Assembly";
@@ -82,6 +91,22 @@ namespace CDP4Orm.Tests
             const string ExpectedEscapedString = "This is not valid for \\\"hstore\\\" persistence";
 
             Assert.AreEqual(ExpectedEscapedString, UnescapedString.Escape());
+        }
+
+        [Test]
+        public void TestValueArrayStringConversion()
+        {
+            var valuearray = new[] { "123\"(,)\"", "abc\\" };
+            var expected = "{\"123\\\"(,)\\\"\";\"abc\\\\\"}";
+
+            var test = new ValueArray<string>(valuearray);
+
+            var res = test.ToHstoreString();
+            Assert.AreEqual(expected, res);
+
+            var back = res.FromHstoreToValueArray<string>();
+            Assert.AreEqual(valuearray[0], back[0]);
+            Assert.AreEqual(valuearray[1], back[1]);
         }
     }
 }
