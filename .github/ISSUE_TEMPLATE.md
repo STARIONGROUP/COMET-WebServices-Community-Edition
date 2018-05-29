@@ -14,8 +14,9 @@
 <!-- Tell us about the environment where you are experiencing the bug -->
 
 - CDP4 Web Services version:
-  - [ ] CDP4Common:         
-  - [ ] Other:              
+  - [ ] CDP4Common:  
+  - [ ] PostrgreSQL: 
+  - [ ] Other:       
 - Environment (Operating system, version and so on):
 - .NET Framework version:
 - Mono version:
