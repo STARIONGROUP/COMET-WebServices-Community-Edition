@@ -58,5 +58,16 @@ namespace CDP4WebServices.API.Services
         /// an instance of <see cref="ValueArray{T}"/>
         /// </returns>
         ValueArray<string> CreateDefaultValueArray(Guid parameterTypeIid);
+
+        /// <summary>
+        /// Creates a <see cref="ValueArray{String}"/> with as many slots containing "-" as the provided <paramref name="numberOfValues"/>
+        /// </summary>
+        /// <param name="numberOfValues">
+        /// An integer denoting the number of slots
+        /// </param>
+        /// <returns>
+        /// An instance of <see cref="ValueArray{String}"/>
+        /// </returns>
+        ValueArray<string> CreateDefaultValueArray(int numberOfValues);
     }
 }

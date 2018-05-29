@@ -12,6 +12,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
+    using CDP4Common.Types;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -25,8 +26,11 @@ namespace CDP4WebServices.API.Tests.SideEffects
     [TestFixture]
     public class ParameterSubscriptionSideEffectTestFixture
     {
-        private Mock<ISecurityContext> securityContext;        
+        private Mock<ISecurityContext> securityContext;
         private Mock<IParameterSubscriptionValueSetService> parameterSubscriptionValueSetService;
+        private Mock<IParameterValueSetService> parameterValueSetService;
+        private Mock<IParameterOverrideValueSetService> parameterValueSetOverrideService;
+
 
         private NpgsqlTransaction npgsqlTransaction;
         private ParameterSubscriptionSideEffect sideEffect;
@@ -36,7 +40,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
         {
             this.securityContext = new Mock<ISecurityContext>();
             this.npgsqlTransaction = null;
-            
+            this.parameterValueSetService = new Mock<IParameterValueSetService>();
+            this.parameterValueSetOverrideService = new Mock<IParameterOverrideValueSetService>();
+
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.parameterSubscriptionValueSetService.Setup(
                 x => x.CreateConcept(
@@ -48,7 +54,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
             
             this.sideEffect = new ParameterSubscriptionSideEffect()
                                   {
-                                      ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object
+                                      ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object,
+                                      ParameterValueSetService = this.parameterValueSetService.Object,
+                                      ParameterOverrideValueSetService = this.parameterValueSetOverrideService.Object,
+                                      DefaultValueArrayFactory = new DefaultValueArrayFactory()
                                   };            
         }
 
@@ -69,7 +78,11 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatWhenAParameterSubscriptionIsPostedValueSetsAreCreated()
         {
-            var parameterSubscription = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() } ;            
+            this.parameterValueSetService
+                .Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), "partition", It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
+                .Returns(new [] { new ParameterValueSet(Guid.NewGuid(), 0) {Manual = new ValueArray<string>(new[] {"1", "2"})}});
+
+            var parameterSubscription = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() } ;
             var originalparameterSubscription = new ParameterSubscription(parameterSubscription.Iid, 1);
 
             var parameter = new Parameter(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() } ;

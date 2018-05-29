@@ -182,7 +182,7 @@ namespace CDP4WebServices.API.Services
         /// <returns>
         /// An instance of <see cref="ValueArray{String}"/>
         /// </returns>
-        private ValueArray<string> CreateDefaultValueArray(int numberOfValues)
+        public ValueArray<string> CreateDefaultValueArray(int numberOfValues)
         {
             var defaultValue = new List<string>(numberOfValues);
 

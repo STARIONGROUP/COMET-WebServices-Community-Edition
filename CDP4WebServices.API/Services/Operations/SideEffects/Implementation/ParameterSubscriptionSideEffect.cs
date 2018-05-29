@@ -8,6 +8,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using Authorization;
     using CDP4Common;
     using CDP4Common.DTO;
@@ -18,6 +19,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
+    using ParameterValueSetBase = CDP4Common.DTO.ParameterValueSetBase;
 
     /// <summary>
     /// The purpose of the <see cref="ParameterSubscriptionSideEffect"/> Side-Effect class is to execute additional logic before and after a specific operation is performed.
@@ -30,6 +32,21 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/>
         /// </summary>
         public IParameterSubscriptionValueSetService ParameterSubscriptionValueSetService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDefaultValueArrayFactory"/>
+        /// </summary>
+        public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterValueSetService"/>
+        /// </summary>
+        public IParameterValueSetService ParameterValueSetService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterOverrideValueSetService"/>
+        /// </summary>
+        public IParameterOverrideValueSetService ParameterOverrideValueSetService { get; set; }
 
         #endregion
 
@@ -101,43 +118,53 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
-            this.CreateParameterSubscriptionValueSets(thing, container, transaction, partition);
+            this.CreateParameterSubscriptionValueSets(thing, container, transaction, partition, securityContext);
         }
 
         /// <summary>
         /// Creates ParameterSubscriptionValueSets for the supplied ParameterValueSets.
         /// </summary>
         /// <param name="thing">
-        /// The <see cref="Thing"/> instance that will be inspected.
+        ///     The <see cref="Thing"/> instance that will be inspected.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
+        ///     The container instance of the <see cref="Thing"/> that is inspected.
         /// </param>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        ///     The current transaction to the database.
         /// </param>
         /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
+        ///     The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        ///     The security-context
         /// </param>
         private void CreateParameterSubscriptionValueSets(
             ParameterSubscription thing,
             Thing container,
             NpgsqlTransaction transaction,
-            string partition)
+            string partition,
+            ISecurityContext securityContext)
         {
-            foreach (var parameterValueSetId in ((CDP4Common.DTO.ParameterOrOverrideBase)container).ValueSets)
+            if (!(container is CDP4Common.DTO.ParameterOrOverrideBase parameterOrOverrideBase))
+            {
+                throw new InvalidOperationException("The container of a ParameterSubscription can only be a ParameterOrOverrideBase.");
+            }
+
+            var parameterValueSets = parameterOrOverrideBase is CDP4Common.DTO.Parameter 
+                ? this.ParameterValueSetService.GetShallow(transaction, partition, parameterOrOverrideBase.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray() 
+                : this.ParameterOverrideValueSetService.GetShallow(transaction, partition, parameterOrOverrideBase.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
+
+            foreach (var parameterValueSet in parameterValueSets)
             {
                 var parameterSubscriptionValueSet =
                     new ParameterSubscriptionValueSet(Guid.NewGuid(), 0)
                         {
-                            SubscribedValueSet = parameterValueSetId,
+                            SubscribedValueSet = parameterValueSet.Iid,
                             ValueSwitch = ParameterSwitchKind.COMPUTED
                         };
 
-                var defaultValue = new List<string>(1);
-                defaultValue.Add("-");
-
-                var valueArray = new ValueArray<string>(defaultValue);
+                var valueArray = new ValueArray<string>(this.DefaultValueArrayFactory.CreateDefaultValueArray(parameterValueSet.Manual.Count));
                 parameterSubscriptionValueSet.Manual = valueArray;
 
                 this.ParameterSubscriptionValueSetService.CreateConcept(
