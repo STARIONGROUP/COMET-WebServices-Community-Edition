@@ -90,7 +90,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.sideEffect.AfterCreate(parameterSubscription, parameter, originalparameterSubscription, this.npgsqlTransaction, "partition", this.securityContext.Object);
             
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Once);
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterSubscriptionValueSet>(s => s.Manual.Count == 2), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Once);
         }
     }
 }
