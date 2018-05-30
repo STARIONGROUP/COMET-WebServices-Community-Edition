@@ -229,7 +229,7 @@ namespace CDP4Orm.Dao
                 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                         {
-                            { "Value", !this.IsDerived(simpleParameterValue, "Value") ? simpleParameterValue.Value.ToString() : string.Empty },
+                            { "Value", !this.IsDerived(simpleParameterValue, "Value") ? simpleParameterValue.Value.ToHstoreString() : string.Empty },
                         }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 
                 using (var command = new NpgsqlCommand())

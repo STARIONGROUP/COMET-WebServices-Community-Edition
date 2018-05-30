@@ -334,7 +334,7 @@ namespace CDP4Orm.Dao
                 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                         {
-                            { "Value", !this.IsDerived(constant, "Value") ? constant.Value.ToString() : string.Empty },
+                            { "Value", !this.IsDerived(constant, "Value") ? constant.Value.ToHstoreString() : string.Empty },
                             { "IsDeprecated", !this.IsDerived(constant, "IsDeprecated") ? constant.IsDeprecated.ToString() : string.Empty },
                         }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 
