@@ -17,7 +17,6 @@ namespace CDP4WebServices.API.Configuration
         public DefaultsConfig()
         {
             this.PersonPassword = "pass";
-            this.DevServerPath = "http://localhost:4200/app";
             this.LocationServicePath = "http://freegeoip.net/json/";
             this.ContributorsCacheTimeout = 60;
         }
@@ -29,14 +28,6 @@ namespace CDP4WebServices.API.Configuration
         /// The default password to assign to new users
         /// </remarks>
         public string PersonPassword { get; set; }
-
-        /// <summary>
-        /// Gets or sets the default path to the development server where the web app is served.
-        /// </summary>
-        /// <remarks>
-        /// The default path to assign to the development server
-        /// </remarks>
-        public string DevServerPath { get; set; }
 
         /// <summary>
         /// Gets or sets the location service path.

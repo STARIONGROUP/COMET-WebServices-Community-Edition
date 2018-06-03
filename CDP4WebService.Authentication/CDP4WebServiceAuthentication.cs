@@ -17,7 +17,6 @@ namespace CDP4WebService.Authentication
     using Nancy.Cookies;
     using Nancy.Cryptography;
     using Nancy.Extensions;
-    using Nancy.Responses;
     using Nancy.Security;
 
     using NLog;
@@ -182,15 +181,29 @@ namespace CDP4WebService.Authentication
         /// <summary>
         /// Logs the user out.
         /// </summary>
+        /// <param name="context">
+        /// Current context
+        /// </param>
         /// <returns>
         /// Nancy response
         /// </returns>
-        public Response LogOutResponse()
+        public Response LogOutResponse(NancyContext context)
         {
-            var response = (Response)HttpStatusCode.OK;
+            var response = (Response)HttpStatusCode.NoContent;
+            var userName = context.CurrentUser != null
+                               ? context.CurrentUser.UserName
+                               : string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(userName))
+            {
+                // remove the existing cookie
+                if (this.EvictCredentialFromCache(userName))
+                {
+                    Logger.Info("User '{0}' has logged out", userName);
+                }
+            }
 
             var authenticationCookie = this.BuildLogoutCookie(this.currentConfiguration);
-
             response.WithCookie(authenticationCookie);
 
             return response;
@@ -211,7 +224,9 @@ namespace CDP4WebService.Authentication
         public Response LogOutAndRedirectResponse(NancyContext context, string redirectUrl)
         {
             var response = context.GetRedirect(redirectUrl);
-            var userName = context.CurrentUser.UserName;
+            var userName = context.CurrentUser != null
+                               ? context.CurrentUser.UserName
+                               : string.Empty;
 
             if (!string.IsNullOrWhiteSpace(userName))
             {
@@ -312,8 +327,8 @@ namespace CDP4WebService.Authentication
                 }
                 else
                 {
-                    // any other path: redirect to login page
-                    context.Response = new RedirectResponse("/app/login");
+                    // any other path: unauthorized status
+                    context.Response = (Response)HttpStatusCode.Unauthorized;
                 }
             }
             else if ((context.Response.StatusCode == HttpStatusCode.OK || context.Response.StatusCode == HttpStatusCode.Accepted) && context.CurrentUser != null)
@@ -512,7 +527,7 @@ namespace CDP4WebService.Authentication
             {
                 cookie.Path = configuration.Path;
             }
-
+            
             return cookie;
         }
     }

@@ -11,6 +11,7 @@ namespace CDP4WebServices.API.Modules
 
     using Nancy;
     using Nancy.Responses;
+    using Nancy.Security;
 
     /// <summary>
     /// The authentication module handler. Handles routes to do with authentication settings.
@@ -25,16 +26,6 @@ namespace CDP4WebServices.API.Modules
         /// </param>
         public AuthenticationModule(ICDP4WebServiceAuthentication webServiceAuthentication)
         {
-            this.Get["/app/login"] = _ =>
-                {
-                    if (this.Context.CurrentUser == null)
-                    {
-                        return this.View["appLogin"];
-                    }
-
-                    return new RedirectResponse("/app");
-                };
-
             this.Get["/login"] = _ =>
                 {
                     if (this.Context.CurrentUser == null)
@@ -48,7 +39,10 @@ namespace CDP4WebServices.API.Modules
                     return HttpStatusCode.Accepted;
                 };
 
-            this.Get["/logout"] = _ => webServiceAuthentication.LogOutAndRedirectResponse(this.Context, "/app/login");
+            this.Get["/logout"] = _ =>
+                {
+                   return  webServiceAuthentication.LogOutResponse(this.Context);
+                };
         }
 
         /// <summary>

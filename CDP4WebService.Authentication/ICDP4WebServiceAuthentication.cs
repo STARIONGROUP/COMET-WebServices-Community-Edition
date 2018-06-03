@@ -43,6 +43,13 @@ namespace CDP4WebService.Authentication
         /// Logs the user out and redirects them to a URL
         /// </summary>
         /// <param name="context"> Current context </param>
+        /// <returns>Nancy response</returns>
+        Response LogOutResponse(NancyContext context);
+
+        /// <summary>
+        /// Logs the user out and redirects them to a URL
+        /// </summary>
+        /// <param name="context"> Current context </param>
         /// <param name="redirectUrl"> URL to redirect to </param>
         /// <returns>Nancy response</returns>
         Response LogOutAndRedirectResponse(NancyContext context, string redirectUrl);
