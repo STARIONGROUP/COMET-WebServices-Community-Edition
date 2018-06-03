@@ -70,8 +70,6 @@ namespace CDP4WebServices.API.Services
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition</param>
-        /// <param name="revisionNumber">The new revision to insert</param>
-        /// <param name="actor">The person who created the new revision</param>
-        void InsertRevisionRegistry(NpgsqlTransaction transaction, string partition, int revisionNumber, Guid actor);
+        void InsertInitialRevision(NpgsqlTransaction transaction, string partition);
     }
 }

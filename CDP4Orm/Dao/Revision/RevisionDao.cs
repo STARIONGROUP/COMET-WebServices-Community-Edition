@@ -7,7 +7,6 @@
 namespace CDP4Orm.Dao.Revision
 {
     using System;
-    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using CDP4Common.DTO;
@@ -192,26 +191,15 @@ namespace CDP4Orm.Dao.Revision
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition</param>
-        /// <param name="revisionNumber">The new revision to insert</param>
-        /// <param name="actor">The person who created the new revision</param>
-        public void InsertRevisionRegistry(NpgsqlTransaction transaction, string partition, int revisionNumber, Guid actor)
+        public void InsertInitialRevision(NpgsqlTransaction transaction, string partition)
         {
-            var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\")", revisionColumn, instantColumn, actorColumn);
-            var values = string.Format("(:revisionNumber, \"SiteDirectory\".get_transaction_time(), :actor)");
-
             var sqlQuery = string.Format(
-                "INSERT INTO \"{0}\".\"RevisionRegistry\" {1} VALUES {2}",
-                partition,
-                columns,
-                values);
+                "SELECT * FROM \"{0}\".get_current_revision();",
+                partition);
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
-                command.Parameters.Add("revisionNumber", NpgsqlDbType.Integer).Value = revisionNumber;
-                command.Parameters.Add("actor", NpgsqlDbType.Uuid).Value = actor;
-
-                // log the sql command 
-                this.CommandLogger.ExecuteAndLog(command);
+                command.ExecuteScalar();
             }
         }
 

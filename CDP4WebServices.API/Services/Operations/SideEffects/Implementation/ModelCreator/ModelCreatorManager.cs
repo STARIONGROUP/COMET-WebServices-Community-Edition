@@ -232,7 +232,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                     }
 
                     // save revision-registry
-                    this.RevisionService.InsertRevisionRegistry(transaction, targetPartition, 1, this.RequestUtils.Context.AuthenticatedCredentials.Person.Iid);
+                    this.RevisionService.InsertInitialRevision(transaction, targetPartition);
                     this.RevisionService.InsertIterationRevisionLog(transaction, targetPartition, iteration.Iid, null, null);
 
                     continue;

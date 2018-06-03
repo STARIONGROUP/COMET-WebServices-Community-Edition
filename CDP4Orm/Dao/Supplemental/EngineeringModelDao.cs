@@ -6,6 +6,8 @@
 namespace CDP4Orm.Dao
 {
     using System;
+    using System.Collections.Generic;
+
     using CDP4Common.DTO;
     using Npgsql;
     using NpgsqlTypes;
@@ -91,7 +93,14 @@ namespace CDP4Orm.Dao
         {
             using (var command = new NpgsqlCommand())
             {
-                var sql = string.Format("UPDATE \"{0}\".\"Thing\" SET \"Iid\" = uuid_generate_v4() WHERE \"ValueTypeDictionary\" -> 'ClassKind' != 'EngineeringModel' AND \"ValueTypeDictionary\" -> 'ClassKind' != 'Iteration';", partition);
+                var valueTypeDictionaryContents = new Dictionary<string, string>
+                                                      {
+                                                          { "RevisionNumber", "1" }
+                                                      };
+
+                var sql = string.Format("UPDATE \"{0}\".\"Thing\" SET \"Iid\" = uuid_generate_v4() WHERE \"ValueTypeDictionary\" -> 'ClassKind' != 'EngineeringModel' AND \"ValueTypeDictionary\" -> 'ClassKind' != 'Iteration'; UPDATE \"{0}\".\"Thing\" SET \"ValueTypeDictionary\" = \"ValueTypeDictionary\" || :valueTypeDictionary;", partition);
+
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
 
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
