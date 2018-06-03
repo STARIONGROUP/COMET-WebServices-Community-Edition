@@ -270,6 +270,8 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
+            this.TransactionManager.SetFullAccessState(true);
+
             var engineeringModelSetup = thing as EngineeringModelSetup;
             var createSuccesful = this.EngineeringModelSetupDao.Write(transaction, partition, engineeringModelSetup, container);
             return createSuccesful && this.CreateContainment(transaction, partition, engineeringModelSetup);

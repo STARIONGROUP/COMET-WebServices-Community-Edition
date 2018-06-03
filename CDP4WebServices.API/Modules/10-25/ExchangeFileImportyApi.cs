@@ -148,6 +148,36 @@ namespace CDP4WebServices.API.Modules
         public IUserValidator UserValidator { get; set; }
 
         /// <summary>
+        /// Gets or sets the Person service.
+        /// </summary>
+        public IPersonService PersonService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the PersonRole service.
+        /// </summary>
+        public IPersonRoleService PersonRoleService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the PersonPermission service.
+        /// </summary>
+        public IPersonPermissionService PersonPermissionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Participant service.
+        /// </summary>
+        public IParticipantService ParticipantService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ParticipantRole service.
+        /// </summary>
+        public IParticipantRoleService ParticipantRoleService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ParticipantPermission service.
+        /// </summary>
+        public IParticipantPermissionService ParticipantPermissionService { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/> class.
         /// </summary>
         public ExchangeFileImportyApi()
@@ -251,7 +281,7 @@ namespace CDP4WebServices.API.Modules
             catch (Exception ex)
             {
                 // swallow exception but log it
-                Logger.Error(ex, "Unable to remove file {0}", filePath);
+                Logger.Error(ex, "Unable to remove file");
             }
 
             try
@@ -309,7 +339,7 @@ namespace CDP4WebServices.API.Modules
                     // clear database schemas if seeding
                     Logger.Info("Start clearing the current data store");
                     transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                    this.TransactionManager.SetSeedProcessState(true);
+                    this.TransactionManager.SetFullAccessState(true);
                     this.ClearDatabaseSchemas(transaction);
                     transaction.Commit();
                 }
@@ -319,7 +349,7 @@ namespace CDP4WebServices.API.Modules
 
                 // use new transaction to for inserting the data
                 transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetSeedProcessState(true);
+                this.TransactionManager.SetFullAccessState(true);
 
                 // important, make sure to defer the constraints
                 var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
@@ -370,11 +400,16 @@ namespace CDP4WebServices.API.Modules
 
                 if (result)
                 {
-                    var engineeringModelSetups = items
-                        .Where(
-                            x => x.ClassKind == ClassKind.EngineeringModelSetup
-                                 && x.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>()
-                        .ToList();
+                    this.RequestUtils.QueryParameters = new QueryParameters();
+
+                    // Add missing Person permissions
+                    this.CreateMissingPersonPermissions(transaction);
+
+                    var engineeringModelSetups =
+                        items.Where(
+                                x => x.ClassKind == ClassKind.EngineeringModelSetup
+                                     && x.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>()
+                            .ToList();
                     var engineeringModelService =
                         this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
@@ -405,6 +440,9 @@ namespace CDP4WebServices.API.Modules
                             result = false;
                             break;
                         }
+
+                        // Add missing Participant permissions
+                        this.CreateMissingParticipantPermissions(transaction, engineeringModelSetup);
 
                         // extract any referenced file data to disk if not already present
                         this.PersistFileBinaryData(fileName, password);
@@ -536,10 +574,9 @@ namespace CDP4WebServices.API.Modules
                 .Where(i => i.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>().ToList();
 
             // unset the FrozenOn and SourceIterationSetup properties for single iteration setup in the siteDirectory.
-            foreach (var iterationSetups in engineeringModelSetups
-                .Select(
-                    engineeringModelSetup => items
-                        .Where(
+            foreach (var iterationSetups in engineeringModelSetups.Select(
+                engineeringModelSetup =>
+                    items.Where(
                             x => engineeringModelSetup.IterationSetup.Contains(x.Iid)
                                  && x.ClassKind == ClassKind.IterationSetup && x.GetType() == typeof(IterationSetup))
                         .Cast<IterationSetup>().ToList()).Where(iterationSetups => iterationSetups.Count == 1))
@@ -664,17 +701,18 @@ namespace CDP4WebServices.API.Modules
             {
                 // Create a revision history for SiteDirectory's entries
                 transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetSeedProcessState(true);
+                this.TransactionManager.SetFullAccessState(true);
 
                 // Save revision history for SiteDirectory's entries
                 this.RevisionService.SaveRevisions(transaction, TopContainer, Guid.Empty, 0);
 
-                var siteDirectory = this.SiteDirectoryService
-                    .Get(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true })
-                    .OfType<SiteDirectory>().ToList();
-                
-                var engineeringModelSetups = this.EngineeringModelSetupService
-                    .GetShallow(
+                var siteDirectory = this.SiteDirectoryService.Get(
+                    transaction,
+                    TopContainer,
+                    null,
+                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList();
+
+                var engineeringModelSetups = this.EngineeringModelSetupService.GetShallow(
                         transaction,
                         TopContainer,
                         siteDirectory[0].Model,
@@ -688,7 +726,7 @@ namespace CDP4WebServices.API.Modules
                 foreach (var engineeringModelSetup in engineeringModelSetups)
                 {
                     transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                    this.TransactionManager.SetSeedProcessState(true);
+                    this.TransactionManager.SetFullAccessState(true);
 
                     var partition =
                         this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
@@ -728,6 +766,188 @@ namespace CDP4WebServices.API.Modules
                 if (connection != null)
                 {
                     connection.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create missing participant permissions.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The EngineeringModelSetup to create permissions for participants of it.
+        /// </param>
+        private void CreateMissingParticipantPermissions(
+            NpgsqlTransaction transaction,
+            EngineeringModelSetup engineeringModelSetup)
+        {
+            var participants = this.ParticipantService.GetShallow(
+                transaction,
+                TopContainer,
+                engineeringModelSetup.Participant,
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Participant>().ToList();
+
+            // Find and create all missing permissions for each Participant
+            foreach (var participant in participants)
+            {
+                this.FindAndCreateMissingParticipantPermissions(participant, transaction);
+            }
+        }
+
+        /// <summary>
+        /// Find and create missing participant permissions.
+        /// </summary>
+        /// <param name="participant">
+        /// The participant to find and create permissions for.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        private void FindAndCreateMissingParticipantPermissions(Participant participant, NpgsqlTransaction transaction)
+        {
+            var participantRole = this.ParticipantRoleService.GetShallow(
+                transaction,
+                TopContainer,
+                new List<Guid> { participant.Role },
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantRole>().ToList()[0];
+
+            var participantPermissions = this.ParticipantPermissionService.GetShallow(
+                transaction,
+                TopContainer,
+                participantRole.ParticipantPermission,
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantPermission>().ToList();
+
+            var defaultDefaultPermissionProvider = new CDP4Common.Helpers.DefaultPermissionProvider();
+
+            // Iterate all available clasKinds to filter out classKinds a person misses permissions for
+            foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
+            {
+                // Some classKinds might be the cause of an exception during retrieving a default permission (for instance NotThing)
+                try
+                {
+                    var defaultPermission =
+                        defaultDefaultPermissionProvider.GetDefaultParticipantPermission(classKind.ToString());
+
+                    if (defaultPermission == ParticipantAccessRightKind.NONE)
+                    {
+                        var participantPermission = participantPermissions.Find(x => x.ObjectClass == classKind);
+
+                        if (participantPermission == null)
+                        {
+                            var permission =
+                                new ParticipantPermission(Guid.NewGuid(), 0)
+                                    {
+                                        ObjectClass = classKind,
+                                        AccessRight = defaultPermission
+                                    };
+
+                            participantRole.ParticipantPermission.Add(permission.Iid);
+                            this.ParticipantPermissionService.CreateConcept(
+                                transaction,
+                                TopContainer,
+                                permission,
+                                participantRole);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "There is no default permission for the given ClassKind: " + classKind);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Create missing person permissions.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        private void CreateMissingPersonPermissions(NpgsqlTransaction transaction)
+        {
+            var siteDirectory = this.SiteDirectoryService.Get(
+                transaction,
+                TopContainer,
+                null,
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList()[0];
+
+            var persons = this.PersonService.GetShallow(
+                transaction,
+                TopContainer,
+                siteDirectory.Person,
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().ToList();
+
+            // Find and create all missing permissions for each Person
+            foreach (var person in persons)
+            {
+                this.FindAndCreateMissingPersonPermissions(person, transaction);
+            }
+        }
+
+        /// <summary>
+        /// Find and create missing person permissions.
+        /// </summary>
+        /// <param name="person">
+        /// The person to find and create permissions for.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        private void FindAndCreateMissingPersonPermissions(Person person, NpgsqlTransaction transaction)
+        {
+            if (person.Role.HasValue)
+            {
+                var personRole = this.PersonRoleService.GetShallow(
+                    transaction,
+                    TopContainer,
+                    new List<Guid> { person.Role.Value },
+                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonRole>().ToList()[0];
+
+                var personPermissions = this.PersonPermissionService.GetShallow(
+                    transaction,
+                    TopContainer,
+                    personRole.PersonPermission,
+                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonPermission>().ToList();
+
+                var defaultDefaultPermissionProvider = new CDP4Common.Helpers.DefaultPermissionProvider();
+
+                // Iterate all available clasKinds to filter out classKinds a person misses permissions for
+                foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
+                {
+                    // Some classKinds might be the cause of an exception during retrieving a default permission (for instance NotThing)
+                    try
+                    {
+                        var defaultPermission =
+                            defaultDefaultPermissionProvider.GetDefaultPersonPermission(classKind.ToString());
+
+                        if (defaultPermission == PersonAccessRightKind.NONE)
+                        {
+                            var personPermission = personPermissions.Find(x => x.ObjectClass == classKind);
+
+                            if (personPermission == null)
+                            {
+                                var permission =
+                                    new PersonPermission(Guid.NewGuid(), 0)
+                                        {
+                                            ObjectClass = classKind,
+                                            AccessRight = defaultPermission
+                                        };
+
+                                personRole.PersonPermission.Add(permission.Iid);
+                                this.PersonPermissionService.CreateConcept(
+                                    transaction,
+                                    TopContainer,
+                                    permission,
+                                    personRole);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error(ex, "There is no default permission for the given ClassKind: " + classKind);
+                    }
                 }
             }
         }

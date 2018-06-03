@@ -113,6 +113,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeCreate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            this.TransactionManager.SetFullAccessState(true);
+
             // validate that the SiteDirectory container has the Default Participant Role set
             var siteDir = (SiteDirectory)container;
             if (!siteDir.DefaultParticipantRole.HasValue)
@@ -148,6 +150,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 thing.EngineeringModelIid = Guid.NewGuid();
             }
 
+            this.TransactionManager.SetFullAccessState(false);
+
             // TODO set default participant(s) iids (which are not contained) for engineeringmodelsetup (task T2818 CDP4WEBSERVICES)
         }
 
@@ -177,12 +181,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // reset the cache
             this.RequestUtils.Cache.Clear();
 
-            // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
             var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
-            credentials.EngineeringModelSetup = thing;
-            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-            this.PermissionService.Credentials = credentials;
-
             var actor = credentials.Person.Iid;
 
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)

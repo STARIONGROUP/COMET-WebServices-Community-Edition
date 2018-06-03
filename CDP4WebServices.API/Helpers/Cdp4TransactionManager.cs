@@ -64,9 +64,9 @@ namespace CDP4WebServices.API.Helpers
         private bool isCachedDtoReadEnabled;
 
         /// <summary>
-        /// The value indicating whether the seed process is enabled now.
+        /// The value indicating whether the full access is granted to the current person.
         /// </summary>
-        private bool isSeedProcessEnabled;
+        private bool isFullAccessGranted;
 
         /// <summary>
         /// Gets or sets the iteration setup dao.
@@ -189,14 +189,14 @@ namespace CDP4WebServices.API.Helpers
         }
 
         /// <summary>
-        /// Sets a value indicating whether to use a cached Dto in form of Jsonb.
+        /// Sets a value indicating whether the current person has full access or not.
         /// </summary>
         /// <param name="value">
-        /// The value indicating whether it is a seed process now or not.
+        /// The value indicating whether the current person has full access or not.
         /// </param>
-        public void SetSeedProcessState(bool value)
+        public void SetFullAccessState(bool value)
         {
-            this.isSeedProcessEnabled = value;
+            this.isFullAccessGranted = value;
         }
 
         /// <summary>
@@ -221,14 +221,14 @@ namespace CDP4WebServices.API.Helpers
         }
 
         /// <summary>
-        /// Indicate whether a seed process is enabled now or not.
+        /// Indicate whether the full access was granted for the current person.
         /// </summary>
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public bool IsSeedProcessEnabled()
+        public bool IsFullAccessEnabled()
         {
-            return this.isSeedProcessEnabled;
+            return this.isFullAccessGranted;
         }
 
 

@@ -100,12 +100,12 @@ namespace CDP4WebServices.API.Helpers
         DateTime GetSessionInstant(NpgsqlTransaction transaction);
 
         /// <summary>
-        /// Indicate whether a seed process is enabled now or not.
+        /// Indicate whether the full access was granted for the current person.
         /// </summary>
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        bool IsSeedProcessEnabled();
+        bool IsFullAccessEnabled();
 
         /// <summary>
         /// Check session's instant time whether it is the latest state of things.
@@ -171,11 +171,11 @@ namespace CDP4WebServices.API.Helpers
         void SetCachedDtoReadEnabled(bool value);
 
         /// <summary>
-        /// Sets a value indicating whether to use a cached Dto in form of Jsonb.
+        /// Sets a value indicating whether the current person has full access or not.
         /// </summary>
         /// <param name="value">
-        /// The value indicating whether it is a seed process now or not.
+        /// The value indicating whether the current person has full access or not.
         /// </param>
-        void SetSeedProcessState(bool value);
+        void SetFullAccessState(bool value);
     }
 }

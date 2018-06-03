@@ -170,7 +170,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         protected ISecurityContext AuthorizeReadRequest(string typeName, ISecurityContext containerSecurityContext, string partition)
         {
-            if (this.TransactionManager.IsSeedProcessEnabled())
+            if (this.TransactionManager.IsFullAccessEnabled())
             {
                 return new RequestSecurityContext { ContainerReadAllowed = true };
             }
@@ -196,7 +196,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         protected bool IsInstanceReadAllowed(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            return this.TransactionManager.IsSeedProcessEnabled() || this.PermissionService.CanRead(transaction, thing, partition);
+            return this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanRead(transaction, thing, partition);
         }
 
         /// <summary>
@@ -219,7 +219,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         protected bool IsInstanceModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
         {
-            return this.TransactionManager.IsSeedProcessEnabled() || this.PermissionService.CanWrite(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true });
+            return this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanWrite(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true });
         }
     }
 }
