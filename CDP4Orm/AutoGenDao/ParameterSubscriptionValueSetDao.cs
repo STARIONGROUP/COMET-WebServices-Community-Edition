@@ -14,7 +14,7 @@ namespace CDP4Orm.Dao
     using System.Linq;
  
     using CDP4Common.DTO;
-    using CDP4JsonSerializer;
+
     using Npgsql;
     using NpgsqlTypes;
  
@@ -234,7 +234,7 @@ namespace CDP4Orm.Dao
                 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                         {
-                            { "Manual", !this.IsDerived(parameterSubscriptionValueSet, "Manual") ? parameterSubscriptionValueSet.Manual.ToString() : string.Empty },
+                            { "Manual", !this.IsDerived(parameterSubscriptionValueSet, "Manual") ? parameterSubscriptionValueSet.Manual.ToHstoreString() : string.Empty },
                             { "ValueSwitch", !this.IsDerived(parameterSubscriptionValueSet, "ValueSwitch") ? parameterSubscriptionValueSet.ValueSwitch.ToString() : string.Empty },
                         }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
                 

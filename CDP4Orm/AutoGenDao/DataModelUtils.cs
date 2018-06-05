@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DataModelUtils.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016 RHEA S.A.
 // </copyright>
 // <summary>
 //   This a utility class for Dao functionalities

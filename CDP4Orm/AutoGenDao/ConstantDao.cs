@@ -14,7 +14,6 @@ namespace CDP4Orm.Dao
     using System.Linq;
  
     using CDP4Common.DTO;
-    using CDP4JsonSerializer;
 
     using Npgsql;
     using NpgsqlTypes;
