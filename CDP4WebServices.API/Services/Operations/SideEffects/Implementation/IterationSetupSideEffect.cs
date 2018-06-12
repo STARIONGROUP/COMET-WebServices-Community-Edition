@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -16,8 +16,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using NLog;
     using Npgsql;
 
-    using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
-
     /// <summary>
     /// The iteration setup side effect.
     /// </summary>
@@ -29,32 +27,32 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the engineering model service.
+        /// Gets or sets the <see cref="IEngineeringModelService"/>
         /// </summary>
         public IEngineeringModelService EngineeringModelService { get; set; }
 
         /// <summary>
-        /// Gets or sets the iteration service.
+        /// Gets or sets the <see cref="IIterationService"/>
         /// </summary>
         public IIterationService IterationService { get; set; }
 
         /// <summary>
-        /// Gets or sets the iteration setup service.
+        /// Gets or sets the <see cref="IIterationSetupService"/>
         /// </summary>
         public IIterationSetupService IterationSetupService { get; set; }
 
         /// <summary>
-        /// Gets or sets the revision service.
+        /// Gets or sets the <see cref="IRevisionService"/>
         /// </summary>
         public IRevisionService RevisionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the person resolver.
+        /// Gets or sets the <see cref="IPersonResolver"/>
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
 
         /// <summary>
-        /// Gets or sets the engineering model dao.
+        /// Gets or sets the <see cref="IEngineeringModelDao"/>
         /// </summary>
         public IEngineeringModelDao EngineeringModelDao { get; set; }
 
@@ -76,12 +74,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeCreate(
-            IterationSetup thing,
-            Thing container,
-            NpgsqlTransaction transaction,
-            string partition,
-            ISecurityContext securityContext)
+        public override void BeforeCreate(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // bump the transaction timestamp and use it to properly keep track of iteration contained data 
             thing.CreatedOn = this.TransactionManager.UpdateTransactionStatementTime(transaction);
@@ -89,13 +82,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var engineeringModelSetup = (EngineeringModelSetup)container;
 
             // switch partition to engineeringModel
-            var engineeringModelPartition =
-                this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
             // set the next iteration number
-            thing.IterationNumber = this.EngineeringModelDao.GetNextIterationNumber(
-                transaction,
-                engineeringModelPartition);
+            thing.IterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
         }
 
         /// <summary>
@@ -119,23 +109,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(
-            IterationSetup thing,
-            Thing container,
-            IterationSetup originalThing,
-            NpgsqlTransaction transaction,
-            string partition,
-            ISecurityContext securityContext)
+        public override void AfterCreate(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // Freeze all other iterationSetups contained by this EngineeringModelSetup that are not frozen yet
             var engineeringModelSetup = (EngineeringModelSetup)container;
             var iterationSetupIidsToUpdate = engineeringModelSetup.IterationSetup.Except(new[] { thing.Iid });
-            var iterationSetupsToUpdate =
-                this.IterationSetupService.GetShallow(
-                    transaction,
-                    partition,
-                    iterationSetupIidsToUpdate,
-                    securityContext).OfType<IterationSetup>();
+            var iterationSetupsToUpdate = this.IterationSetupService.GetShallow(transaction, partition, iterationSetupIidsToUpdate, securityContext).OfType<IterationSetup>();
 
             foreach (var iterationSetup in iterationSetupsToUpdate.Where(x => x.FrozenOn == null && x.Iid != thing.Iid))
             {
@@ -156,24 +135,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
             this.PermissionService.Credentials = credentials;
 
-            var engineeringModel =
-                this.EngineeringModelService.GetShallow(
-                    transaction,
-                    engineeringModelPartition,
-                    new[] { engineeringModelIid },
-                    securityContext).SingleOrDefault();
-
-            if (!this.IterationService.CreateConcept(
-                    transaction,
-                    engineeringModelPartition,
-                    iteration,
-                    engineeringModel))
+            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new[] { engineeringModelIid }, securityContext).SingleOrDefault();
+            if (!this.IterationService.CreateConcept(transaction, engineeringModelPartition, iteration, engineeringModel))
             {
-                throw new InvalidOperationException(
-                          string.Format(
-                              "There was a problem creating the new Iteration: {0} contained by EngineeringModel: {1}",
-                              iteration.Iid,
-                              engineeringModelIid));
+                throw new InvalidOperationException($"There was a problem creating the new Iteration: {iteration.Iid} contained by EngineeringModel: {engineeringModelIid}");
             }
 
             // Create revisions for created Iteration and updated EngineeringModel
@@ -234,13 +199,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(
-            IterationSetup thing,
-            Thing container,
-            IterationSetup originalThing,
-            NpgsqlTransaction transaction,
-            string partition,
-            ISecurityContext securityContext)
+        public override void AfterDelete(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var modelSetup = (EngineeringModelSetup)container;
             var engineeringModelIid = modelSetup.EngineeringModelIid;
@@ -253,39 +212,25 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // switch partition to engineeringModel
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
-            var iteration =
-                this.IterationService.GetShallow(
-                    transaction,
-                    engineeringModelPartition,
-                    new List<Guid> { thing.IterationIid },
-                    securityContext).OfType<Iteration>().SingleOrDefault();
+            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new List<Guid> { thing.IterationIid }, securityContext).OfType<Iteration>().SingleOrDefault();
 
             if (iteration == null)
             {
-                Logger.Warn(string.Format("The iteration {0} was not found in the database.", thing.IterationIid));
+                Logger.Warn($"The iteration {thing.IterationIid} was not found in the database.");
                 return;
             }
 
-            var engineeringModel =
-                this.EngineeringModelService.GetShallow(
-                    transaction,
-                    engineeringModelPartition,
-                    new List<Guid> { engineeringModelIid },
-                    securityContext).OfType<EngineeringModel>().SingleOrDefault();
+            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new List<Guid> { engineeringModelIid }, securityContext).OfType<EngineeringModel>().SingleOrDefault();
 
             if (engineeringModel == null)
             {
-                throw new InvalidOperationException(string.Format("The Engineering Model with iid {0} could not be found in {1}", engineeringModelIid, engineeringModelPartition));
+                throw new InvalidOperationException($"The Engineering Model with iid {engineeringModelIid} could not be found in {engineeringModelPartition}");
             }
 
             // Remove the iteration 
             if (!this.IterationService.DeleteConcept(transaction, engineeringModelPartition, iteration, engineeringModel))
             {
-                throw new InvalidOperationException(
-                          string.Format(
-                              "There was a problem deleting the Iteration: {0} contained by EngineeringModel: {1}",
-                              thing.IterationIid,
-                              engineeringModelIid));
+                throw new InvalidOperationException($"There was a problem deleting the Iteration: {thing.IterationIid} contained by EngineeringModel: {engineeringModelIid}");
             }
         }
 
@@ -303,11 +248,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </returns>
         private Thing GetTopContainer(NpgsqlTransaction transaction, string partition)
         {
-            return this.EngineeringModelService.GetShallow(
-                transaction,
-                partition,
-                null,
-                new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
+            return this.EngineeringModelService.GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
         }
     }
 }

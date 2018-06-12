@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileImportyApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//   Copyright (c) 2017-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -13,14 +13,10 @@ namespace CDP4WebServices.API.Modules
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
-
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
-
     using CDP4Orm.Dao;
-
     using CDP4WebService.Authentication;
-
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
@@ -29,13 +25,10 @@ namespace CDP4WebServices.API.Modules
     using CDP4WebServices.API.Services.DataStore;
     using CDP4WebServices.API.Services.FileHandling;
     using CDP4WebServices.API.Services.Protocol;
-
     using Nancy;
     using Nancy.ModelBinding;
     using Nancy.Responses;
-
     using NLog;
-
     using Npgsql;
 
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
@@ -51,6 +44,12 @@ namespace CDP4WebServices.API.Modules
         /// The top container.
         /// </summary>
         private const string TopContainer = "SiteDirectory";
+
+        /// <summary>
+        /// Due to the behaviour of a sql sequence the first time the sequence nextval us queried the seemignly currentval
+        /// is returned.
+        /// </summary>
+        private const int IterationNumberSequenceInitialization = 1;
 
         /// <summary>
         /// A <see cref="NLog.Logger"/> instance
@@ -454,7 +453,7 @@ namespace CDP4WebServices.API.Modules
                                      && x.GetType() == typeof(IterationSetup)).Cast<IterationSetup>().ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
-                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + 1;
+                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
                         this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(

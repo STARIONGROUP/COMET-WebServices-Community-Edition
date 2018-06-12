@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2017 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -13,12 +13,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Orm.Dao;
-
-    using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Services.Authorization;
     using NLog;
     using Npgsql;
-
     using EngineeringModelSetup = CDP4Common.DTO.EngineeringModelSetup;
     using IterationSetup = CDP4Common.DTO.IterationSetup;
 
@@ -33,42 +30,42 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the engineering model service.
+        /// Gets or sets the <see cref="IEngineeringModelService"/>
         /// </summary>
         public IEngineeringModelService EngineeringModelService { get; set; }
 
         /// <summary>
-        /// Gets or sets the engineering model setup service.
+        /// Gets or sets the <see cref="IEngineeringModelSetupService"/>
         /// </summary>
         public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
 
         /// <summary>
-        /// Gets or sets the iteration service.
+        /// Gets or sets the <see cref="IIterationService"/>
         /// </summary>
         public IIterationService IterationService { get; set; }
 
         /// <summary>
-        /// Gets or sets the iteration setup service.
+        /// Gets or sets the <see cref="IIterationSetupService"/>
         /// </summary>
         public IIterationSetupService IterationSetupService { get; set; }
 
         /// <summary>
-        /// Gets or sets the revision service.
+        /// Gets or sets the <see cref="IRevisionService"/>
         /// </summary>
         public IRevisionService RevisionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="Participant"/> service.
+        /// Gets or sets the <see cref="IParticipantService"/>.
         /// </summary>
         public IParticipantService ParticipantService { get; set; }
 
         /// <summary>
-        /// Gets or sets the iteration setup service.
+        /// Gets or sets the <see cref="IDomainFileStoreService"/>
         /// </summary>
         public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
-        /// Gets or sets the Option service.
+        /// Gets or sets the <see cref="IOptionService"/>
         /// </summary>
         public IOptionService OptionService { get; set; }
 
@@ -81,6 +78,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IPersonResolver"/> (injected)
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelDao"/>
+        /// </summary>
+        public IEngineeringModelDao EngineeringModelDao { get; set; }
 
         /// <summary>
         /// Gets the list of property names that are to be excluded from validation logic.
@@ -237,7 +239,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var engineeringModel = new EngineeringModel(thing.EngineeringModelIid, 1) { EngineeringModelSetup = thing.Iid };
             if (!this.EngineeringModelService.CreateConcept(transaction, newEngineeringModelPartition, engineeringModel, container))
             {
-                var errorMessage = string.Format("There was a problem creating the new EngineeringModel: {0} from EngineeringModelSetup: {1}", engineeringModel.Iid, thing.Iid);
+                var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
                 Logger.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -246,7 +248,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var firstIteration = new Iteration(firstIterationSetup.IterationIid, 1) { IterationSetup = firstIterationSetup.Iid };
             if (!this.IterationService.CreateConcept(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
             {
-                var errorMessage = string.Format("There was a problem creating the new Iteration: {0} contained by EngineeringModel: {1}", firstIteration.Iid, engineeringModel.Iid);
+                var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";
                 Logger.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -263,7 +265,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, firstIteration))
             {
-                var errorMessage = string.Format("There was a problem creating the new DomainFileStore: {0} contained by Iteration: {1}", newDomainFileStore.Iid, firstIteration.Iid);
+                var errorMessage = $"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {firstIteration.Iid}";
                 Logger.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -290,9 +292,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 Name = "Option 1",
                 ShortName = "option_1"
             };
+
             if (!this.OptionService.CreateConcept(transaction, partition, newOption, container))
             {
-                var errorMessage = string.Format("There was a problem creating the new Option: {0} contained by Iteration: {1}", newOption.Iid, container.Iid);
+                var errorMessage = $"There was a problem creating the new Option: {newOption.Iid} contained by Iteration: {container.Iid}";
                 Logger.Error(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
@@ -310,23 +313,52 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private IterationSetup CreateIterationSetup(EngineeringModelSetup thing, NpgsqlTransaction transaction, string partition)
+        private IterationSetup CreateIterationSetup(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction, string partition)
         {
+            var iterationNumber = this.QeuryIterationNumberForFirstIteration(engineeringModelSetup, transaction);
+
             // create iteration setup in sitedirectory (= partition)
-            var newIterationIid = Guid.NewGuid();
             var iterationSetup = new IterationSetup(Guid.NewGuid(), 1)
             {
-                IterationNumber = 1,
-                IterationIid = newIterationIid,
+                IterationNumber = iterationNumber,
+                IterationIid = Guid.NewGuid(),
                 Description = "Iteration 1"
             };
 
-            if (!this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, thing))
+            if (!this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, engineeringModelSetup))
             {
-                throw new InvalidOperationException(string.Format("There was a problem creating the new IterationSetup: {0} contained by EngineeringModelSetup: {1}", iterationSetup.Iid, thing.Iid));
+                throw new InvalidOperationException($"There was a problem creating the new IterationSetup: {iterationSetup.Iid} contained by EngineeringModelSetup: {engineeringModelSetup.Iid}");
             }
 
             return iterationSetup;
+        }
+
+        /// <summary>
+        /// Queries the iteration-number from the database
+        /// </summary>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that is being created and for which a new <see cref="IterationSetup"/> is created as well
+        /// </param>
+        /// <param name="transaction">
+        /// The <see cref="NpgsqlTransaction"/> used to connect to the database
+        /// </param>
+        /// <returns>
+        /// the new iteration number based on the IterationNumberSequence 
+        /// </returns>
+        /// <remarks>
+        /// The function shall always return 1. When creating a new <see cref="EngineeringModelSetup"/>
+        /// </remarks>
+        private int QeuryIterationNumberForFirstIteration(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction)
+        {
+            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+            var iterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
+
+            if (iterationNumber != 1)
+            {
+                throw new InvalidOperationException("The first IterationSetup of a new EngineeringModelSetup shall always have the IterationNumber set to 1");
+            }
+
+            return iterationNumber;
         }
 
         /// <summary>
@@ -367,16 +399,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             if (!this.ParticipantService.CreateConcept(transaction, partition, participant, thing))
             {
-                throw new InvalidOperationException(
-                    string.Format("There was a problem creating the new Participant: {0} contained by EngineeringModelSetup: {1}", participant.Iid, thing.Iid));
+                throw new InvalidOperationException($"There was a problem creating the new Participant: {participant.Iid} contained by EngineeringModelSetup: {thing.Iid}");
             }
 
             thing.Participant.Add(participant.Iid);
 
             if (!this.EngineeringModelSetupService.UpdateConcept(transaction, partition, thing, container))
             {
-                throw new InvalidOperationException(
-                    string.Format("There was a problem adding the new Participant: {0} to the EngineeringModelSetup: {1}", participant.Iid, thing.Iid));
+                throw new InvalidOperationException($"There was a problem adding the new Participant: {participant.Iid} to the EngineeringModelSetup: {thing.Iid}");
             }
         }
 
@@ -430,9 +460,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public override void AfterUpdate(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
-            var newIterationPartition = newEngineeringModelPartition.Replace(
-                Utils.EngineeringModelPartition,
-                Utils.IterationSubPartition);
+            var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
             var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, thing.IterationSetup, securityContext).Cast<IterationSetup>();
             var iterations = this.IterationService.GetShallow(transaction, newEngineeringModelPartition, iterationSetups.Select(i => i.IterationIid), securityContext).Cast<Iteration>();
 
@@ -458,8 +486,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                     if (!this.DomainFileStoreService.DeleteConcept(transaction, newIterationPartition, domainFileStore, iteration))
                     {
-                        throw new InvalidOperationException(
-                            string.Format("There was a problem deleting the DomainFileStore: {0} contained by Iteration: {1}", domainFileStore.Iid, iteration.Iid));
+                        throw new InvalidOperationException($"There was a problem deleting the DomainFileStore: {domainFileStore.Iid} contained by Iteration: {iteration.Iid}");
                     }
                 }
 
@@ -481,8 +508,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                     if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, iteration))
                     {
-                        throw new InvalidOperationException(
-                            string.Format("There was a problem creating the new DomainFileStore: {0} contained by Iteration: {1}", newDomainFileStore.Iid, iteration.Iid));
+                        throw new InvalidOperationException($"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {iteration.Iid}");
                     }
                 }
             }
@@ -527,10 +553,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // Delete the EngineeringModel associated to the EngineeringModelSetup that has been deleted
             if (!this.EngineeringModelService.DeleteConcept(transaction, newEngineeringModelPartition, engineeringModel))
             {
-                throw new InvalidOperationException(
-                    string.Format("There was a problem deleting the EngineeringModel: {0} for EngineeringModelSetup: {1}", engineeringModel.Iid, thing.Iid));
+                throw new InvalidOperationException($"There was a problem deleting the EngineeringModel: {engineeringModel.Iid} for EngineeringModelSetup: {thing.Iid}");
             }
         }
     }
 }
-

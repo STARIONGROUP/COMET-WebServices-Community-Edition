@@ -1,21 +1,17 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupSideEffectTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2017 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
-// <summary>
-//   EngineeringModelSetup Side Effect test class
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Tests.SideEffects
 {
     using System;
-    using System.Collections.Generic;
-    
+    using System.Collections.Generic;    
     using CDP4Common.DTO;
     using CDP4Common.Types;
     using CDP4Authentication;
-
+    using CDP4Orm.Dao;
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
@@ -27,6 +23,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using Npgsql;
     using NUnit.Framework;
 
+    /// <summary>
+    /// Suite of tests for the <see cref="EngineeringModelSetupSideEffect"/>
+    /// </summary>
     [TestFixture]
     internal class EngineeringModelSetupSideEffectTestFixture
     {
@@ -47,6 +46,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<ISecurityContext> securityContext;
         private Mock<IPersonResolver> personResolver;
         private Mock<IPermissionService> permissionService;
+        private Mock<IEngineeringModelDao> engineeringModelDao;
 
         private SiteDirectory siteDirectory;
         private NpgsqlTransaction npgsqlTransaction;
@@ -77,6 +77,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.revisionService = new Mock<IRevisionService>();
             this.personResolver = new Mock<IPersonResolver>();
             this.permissionService = new Mock<IPermissionService>();
+            this.engineeringModelDao = new Mock<IEngineeringModelDao>();
             this.npgsqlTransaction = null;
 
             this.modelCreatorManager = new ModelCreatorManager();
@@ -95,7 +96,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 ModelCreatorManager = this.modelCreatorManager,
                 PersonResolver = this.personResolver.Object,
                 PermissionService = this.permissionService.Object,
-                RevisionService = this.revisionService.Object
+                RevisionService = this.revisionService.Object,
+                EngineeringModelDao = this.engineeringModelDao.Object
             };
 
             this.siteDirectory = new SiteDirectory(Guid.NewGuid(), 1);
@@ -191,6 +193,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     It.IsAny<string>(),
                     It.IsAny<Guid>(),
                     It.IsAny<int>())).Returns(new List<Thing>());
+
+            this.engineeringModelDao.Setup(x => x.GetNextIterationNumber(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(1);
         }
 
         [Test]
