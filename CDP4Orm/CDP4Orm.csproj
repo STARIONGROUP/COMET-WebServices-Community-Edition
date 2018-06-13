@@ -1,10 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net45;net451;net452;net46;net461;net462</TargetFrameworks>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Orm-CE</Title>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <Description>CDP4 Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron</Authors>
