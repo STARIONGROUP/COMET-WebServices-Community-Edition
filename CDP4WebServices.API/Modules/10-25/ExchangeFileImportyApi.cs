@@ -15,6 +15,7 @@ namespace CDP4WebServices.API.Modules
     using System.Threading.Tasks;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
+    using CDP4Common.Helpers;
     using CDP4Orm.Dao;
     using CDP4WebService.Authentication;
     using CDP4WebServices.API.Configuration;
@@ -175,6 +176,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the ParticipantPermission service.
         /// </summary>
         public IParticipantPermissionService ParticipantPermissionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDefaultPermissionProvider"/>
+        /// </summary>
+        public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/> class.
@@ -770,91 +776,65 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Create missing participant permissions.
+        /// Create missing participant permissions for all <see cref="ParticipantRole"/>s
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        /// <param name="engineeringModelSetup">
-        /// The EngineeringModelSetup to create permissions for participants of it.
-        /// </param>
-        private void CreateMissingParticipantPermissions(
-            NpgsqlTransaction transaction,
-            EngineeringModelSetup engineeringModelSetup)
+        private void CreateMissingParticipantPermissions(NpgsqlTransaction transaction)
         {
-            var participants = this.ParticipantService.GetShallow(
+            var participantRoles = this.ParticipantRoleService.GetShallow(
                 transaction,
                 TopContainer,
-                engineeringModelSetup.Participant,
-                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Participant>().ToList();
+                null,
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantRole>();
 
             // Find and create all missing permissions for each Participant
-            foreach (var participant in participants)
+            foreach (var participantRole in participantRoles)
             {
-                this.FindAndCreateMissingParticipantPermissions(participant, transaction);
+                this.FindAndCreateMissingParticipantPermissions(participantRole, transaction);
             }
         }
 
         /// <summary>
-        /// Find and create missing participant permissions.
+        /// Find and create missing <see cref="ParticipantPermission"/>
         /// </summary>
-        /// <param name="participant">
-        /// The participant to find and create permissions for.
+        /// <param name="participantRole">
+        /// The <see cref="ParticipantRole"/> to find and create <see cref="ParticipantPermission"/>s for.
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void FindAndCreateMissingParticipantPermissions(Participant participant, NpgsqlTransaction transaction)
+        private void FindAndCreateMissingParticipantPermissions(ParticipantRole participantRole, NpgsqlTransaction transaction)
         {
-            var participantRole = this.ParticipantRoleService.GetShallow(
-                transaction,
-                TopContainer,
-                new List<Guid> { participant.Role },
-                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantRole>().ToList()[0];
-
             var participantPermissions = this.ParticipantPermissionService.GetShallow(
                 transaction,
                 TopContainer,
                 participantRole.ParticipantPermission,
                 new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantPermission>().ToList();
-
-            var defaultDefaultPermissionProvider = new CDP4Common.Helpers.DefaultPermissionProvider();
-
-            // Iterate all available clasKinds to filter out classKinds a person misses permissions for
+            
             foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
             {
-                // Some classKinds might be the cause of an exception during retrieving a default permission (for instance NotThing)
-                try
-                {
-                    var defaultPermission =
-                        defaultDefaultPermissionProvider.GetDefaultParticipantPermission(classKind.ToString());
+                var defaultPermission = this.DefaultPermissionProvider.GetDefaultParticipantPermission(classKind);
 
-                    if (defaultPermission == ParticipantAccessRightKind.NONE)
+                if (defaultPermission == ParticipantAccessRightKind.NONE)
+                {
+                    var participantPermission = participantPermissions.Find(x => x.ObjectClass == classKind);
+
+                    if (participantPermission == null)
                     {
-                        var participantPermission = participantPermissions.Find(x => x.ObjectClass == classKind);
+                        Logger.Debug("Create ParticipantPermission for class {0} for ParticipantRole {1}", classKind, participantRole.Iid);
 
-                        if (participantPermission == null)
+                        var permission = new ParticipantPermission(Guid.NewGuid(), 0)
                         {
-                            var permission =
-                                new ParticipantPermission(Guid.NewGuid(), 0)
-                                    {
-                                        ObjectClass = classKind,
-                                        AccessRight = defaultPermission
-                                    };
+                            ObjectClass = classKind,
+                            AccessRight = defaultPermission
+                        };
 
-                            participantRole.ParticipantPermission.Add(permission.Iid);
-                            this.ParticipantPermissionService.CreateConcept(
-                                transaction,
-                                TopContainer,
-                                permission,
-                                participantRole);
-                        }
+                        participantRole.ParticipantPermission.Add(permission.Iid);
+                        this.ParticipantPermissionService.CreateConcept(transaction, TopContainer, permission, participantRole);
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "There is no default permission for the given ClassKind: " + classKind);
-                }
+                }   
             }
         }
 
@@ -866,89 +846,59 @@ namespace CDP4WebServices.API.Modules
         /// </param>
         private void CreateMissingPersonPermissions(NpgsqlTransaction transaction)
         {
-            var siteDirectory = this.SiteDirectoryService.Get(
+            var personRoles = this.PersonRoleService.GetShallow(
                 transaction,
                 TopContainer,
                 null,
-                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList()[0];
-
-            var persons = this.PersonService.GetShallow(
-                transaction,
-                TopContainer,
-                siteDirectory.Person,
-                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().ToList();
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonRole>();
 
             // Find and create all missing permissions for each Person
-            foreach (var person in persons)
+            foreach (var personRole in personRoles)
             {
-                this.FindAndCreateMissingPersonPermissions(person, transaction);
+                this.FindAndCreateMissingPersonPermissions(personRole, transaction);
             }
         }
 
         /// <summary>
-        /// Find and create missing person permissions.
+        /// Find and create missing <see cref="PersonPermission"/>s
         /// </summary>
-        /// <param name="person">
-        /// The person to find and create permissions for.
+        /// <param name="personRole">
+        /// The <see cref="PersonRole"/> to find and create <see cref="PersonPermission"/> for.
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void FindAndCreateMissingPersonPermissions(Person person, NpgsqlTransaction transaction)
+        private void FindAndCreateMissingPersonPermissions(PersonRole personRole, NpgsqlTransaction transaction)
         {
-            if (person.Role.HasValue)
+            var personPermissions = this.PersonPermissionService.GetShallow(
+                transaction,
+                TopContainer,
+                personRole.PersonPermission,
+                new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonPermission>().ToList();
+            
+            foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
             {
-                var personRole = this.PersonRoleService.GetShallow(
-                    transaction,
-                    TopContainer,
-                    new List<Guid> { person.Role.Value },
-                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonRole>().ToList()[0];
+                var defaultPermission = this.DefaultPermissionProvider.GetDefaultPersonPermission(classKind);
 
-                var personPermissions = this.PersonPermissionService.GetShallow(
-                    transaction,
-                    TopContainer,
-                    personRole.PersonPermission,
-                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonPermission>().ToList();
-
-                var defaultDefaultPermissionProvider = new CDP4Common.Helpers.DefaultPermissionProvider();
-
-                // Iterate all available clasKinds to filter out classKinds a person misses permissions for
-                foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
+                if (defaultPermission == PersonAccessRightKind.NONE)
                 {
-                    // Some classKinds might be the cause of an exception during retrieving a default permission (for instance NotThing)
-                    try
-                    {
-                        var defaultPermission =
-                            defaultDefaultPermissionProvider.GetDefaultPersonPermission(classKind.ToString());
+                    var personPermission = personPermissions.Find(x => x.ObjectClass == classKind);
 
-                        if (defaultPermission == PersonAccessRightKind.NONE)
+                    if (personPermission == null)
+                    {
+                        Logger.Debug("Create PersonPermission for class {0} for PersonRole {1}", classKind, personRole.Iid);
+
+                        var permission = new PersonPermission(Guid.NewGuid(), 0)
                         {
-                            var personPermission = personPermissions.Find(x => x.ObjectClass == classKind);
+                            ObjectClass = classKind,
+                            AccessRight = defaultPermission
+                        };
 
-                            if (personPermission == null)
-                            {
-                                var permission =
-                                    new PersonPermission(Guid.NewGuid(), 0)
-                                        {
-                                            ObjectClass = classKind,
-                                            AccessRight = defaultPermission
-                                        };
-
-                                personRole.PersonPermission.Add(permission.Iid);
-                                this.PersonPermissionService.CreateConcept(
-                                    transaction,
-                                    TopContainer,
-                                    permission,
-                                    personRole);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error(ex, "There is no default permission for the given ClassKind: " + classKind);
+                        personRole.PersonPermission.Add(permission.Iid);
+                        this.PersonPermissionService.CreateConcept(transaction, TopContainer, permission, personRole);
                     }
                 }
-            }
+            }   
         }
     }
 }
