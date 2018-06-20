@@ -6,10 +6,12 @@
 
 namespace CDP4WebServices.API.Services.Authorization
 {
+    using System;
     using System.Linq;
     using Authentication;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
+    using CDP4Orm.Dao;
     using NLog;
     using Npgsql;
     using Thing = CDP4Common.DTO.Thing;
@@ -35,9 +37,14 @@ namespace CDP4WebServices.API.Services.Authorization
         private Credentials credentials;
 
         /// <summary>
-        /// Gets or sets a ParticipantService
+        /// Gets or sets a <see cref="IParticipantDao"/>
         /// </summary>
-        public IParticipantService ParticipantService { get; set; }
+        public IParticipantDao ParticipantDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IModelReferenceDataLibraryDao"/>
+        /// </summary>
+        public IModelReferenceDataLibraryDao ModelReferenceDataLibraryDao { get; set; }
 
         /// <summary>
         /// Gets or sets the request utils for this request.
@@ -52,18 +59,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <summary>
         /// Gets or sets the <see cref="Credentials"/> assigned to this service.
         /// </summary>
-        public Credentials Credentials
-        {
-            get
-            {
-                return this.credentials;
-            }
-
-            set
-            {
-                this.credentials = value;
-            }
-        }
+        public Credentials Credentials { get; set; }
 
         /// <summary>
         /// Determines whether the typeName can be read.
@@ -178,23 +174,40 @@ namespace CDP4WebServices.API.Services.Authorization
                 {
                     case PersonAccessRightKind.READ_IF_PARTICIPANT:
                         {
-                            var modelSetup = thing as EngineeringModelSetup;
-
-                            if (modelSetup != null)
+                            if (!(thing is IParticipantAffectedAccessThing))
                             {
-                                var participants = this.ParticipantService
-                                    .GetShallow(
-                                        transaction,
-                                        partition,
-                                        modelSetup.Participant,
-                                        new RequestSecurityContext { ContainerReadAllowed = true })
-                                    .OfType<Participant>().ToList();
-
-                                return participants.Any(
-                                    participant => participant.Person == this.Credentials.Person.Iid);
+                                return false;
                             }
 
-                            return false;
+                            if (thing is EngineeringModelSetup modelSetup)
+                            {
+                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
+
+                            }
+
+                            if (thing is IterationSetup iterationSetup)
+                            {
+                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.IterationSetup.Contains(iterationSetup.Iid));
+                            }
+
+                            if (thing is Participant)
+                            {
+                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.Participant.Contains(thing.Iid));
+                            }
+
+                            if (thing is ModelReferenceDataLibrary)
+                            {
+                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.RequiredRdl.Contains(thing.Iid));
+
+                            }
+
+                            if (thing is SiteReferenceDataLibrary)
+                            {
+                                var rdlDependency = this.ModelReferenceDataLibraryDao.GetSiteReferenceDataLibraryDependency(this.Credentials.EngineeringModelSetups, transaction);
+                                return rdlDependency.Contains(thing.Iid);
+                            }
+
+                            throw new NotImplementedException($"No implementation for type {thing.ClassKind} for CanRead");
                         }
 
                     default: return true;
@@ -344,12 +357,9 @@ namespace CDP4WebServices.API.Services.Authorization
                 return false;
             }
 
-            var modelSetup = thing as EngineeringModelSetup;
-            if (modelSetup != null)
+            if (thing is EngineeringModelSetup modelSetup)
             {
-                var participants = this.ParticipantService.GetShallow(transaction, partition, modelSetup.Participant, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Participant>().ToList();
-
-                return participants.Any(participant => participant.Person == this.Credentials.Person.Iid);
+                return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
             }
 
             return false;
@@ -390,12 +400,11 @@ namespace CDP4WebServices.API.Services.Authorization
                 return true;
             }
 
-            var currentParticipant = this.ParticipantService
-                .GetShallow(transaction, SiteDirectory, this.Credentials.EngineeringModelSetup.Participant, new RequestSecurityContext { ContainerReadAllowed = true })
-                .OfType<Participant>().ToList()
-                .Find(participant => participant.Person == this.Credentials.Person.Iid);
+            var currentParticipant = this.ParticipantDao
+                .Read(transaction, SiteDirectory, null).ToList()
+                .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
 
-            return currentParticipant.Domain.Contains(ownedThing.Owner);
+            return currentParticipant.SelectMany(x => x.Domain).Contains(ownedThing.Owner);
         }
 
         /// <summary>
@@ -408,17 +417,13 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <returns>True if a supplied <see cref="Thing"/> excludes a domain of the current <see cref="Participant"/>.</returns>
         private bool IsExcludedDomain(NpgsqlTransaction transaction, Thing thing)
         {
-            var currentParticipant = this.ParticipantService
-                .GetShallow(
-                    transaction,
-                    SiteDirectory,
-                    this.Credentials.EngineeringModelSetup.Participant,
-                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Participant>().ToList().Find(
-                    participant => participant.Person == this.Credentials.Person.Iid);
+            var currentParticipant = this.ParticipantDao
+                .Read(transaction, SiteDirectory, null).ToList()
+                .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
 
             var isExcludedDomain = true;
 
-            foreach (var domainId in currentParticipant.Domain)
+            foreach (var domainId in currentParticipant.SelectMany(x => x.Domain))
             {
                 if (!thing.ExcludedDomain.Contains(domainId))
                 {
