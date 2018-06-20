@@ -447,7 +447,7 @@ namespace CDP4WebServices.API.Modules
                         }
 
                         // Add missing Participant permissions
-                        this.CreateMissingParticipantPermissions(transaction, engineeringModelSetup);
+                        this.CreateMissingParticipantPermissions(transaction);
 
                         // extract any referenced file data to disk if not already present
                         this.PersistFileBinaryData(fileName, password);
