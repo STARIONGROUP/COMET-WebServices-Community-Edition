@@ -32,11 +32,6 @@ namespace CDP4WebServices.API.Services.Authorization
         private const string CreateOperation = "create";
 
         /// <summary>
-        /// The credentials of the authenticated entity.
-        /// </summary>
-        private Credentials credentials;
-
-        /// <summary>
         /// Gets or sets a <see cref="IParticipantDao"/>
         /// </summary>
         public IParticipantDao ParticipantDao { get; set; }
@@ -173,42 +168,57 @@ namespace CDP4WebServices.API.Services.Authorization
                 switch (personAccessRightKind)
                 {
                     case PersonAccessRightKind.READ_IF_PARTICIPANT:
+                    {
+                        if (thing is Person person)
                         {
-                            if (!(thing is IParticipantAffectedAccessThing))
-                            {
-                                return false;
-                            }
-
-                            if (thing is EngineeringModelSetup modelSetup)
-                            {
-                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
-
-                            }
-
-                            if (thing is IterationSetup iterationSetup)
-                            {
-                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.IterationSetup.Contains(iterationSetup.Iid));
-                            }
-
-                            if (thing is Participant)
-                            {
-                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.Participant.Contains(thing.Iid));
-                            }
-
-                            if (thing is ModelReferenceDataLibrary)
-                            {
-                                return this.Credentials.EngineeringModelSetups.Any(ems => ems.RequiredRdl.Contains(thing.Iid));
-
-                            }
-
-                            if (thing is SiteReferenceDataLibrary)
-                            {
-                                var rdlDependency = this.ModelReferenceDataLibraryDao.GetSiteReferenceDataLibraryDependency(this.Credentials.EngineeringModelSetups, transaction);
-                                return rdlDependency.Contains(thing.Iid);
-                            }
-
-                            throw new NotImplementedException($"No implementation for type {thing.ClassKind} for CanRead");
+                            return this.PersonIsParticipantWithinCurrentUserModel(transaction, person);
                         }
+
+                        if (!(thing is IParticipantAffectedAccessThing))
+                        {
+                            return false;
+                        }
+
+                        if (thing is EngineeringModelSetup modelSetup)
+                        {
+                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
+
+                        }
+
+                        if (thing is IterationSetup iterationSetup)
+                        {
+                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.IterationSetup.Contains(iterationSetup.Iid));
+                        }
+
+                        if (thing is Participant)
+                        {
+                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.Participant.Contains(thing.Iid));
+                        }
+
+                        if (thing is ModelReferenceDataLibrary)
+                        {
+                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.RequiredRdl.Contains(thing.Iid));
+                        }
+
+                        if (thing is SiteReferenceDataLibrary)
+                        {
+                            var rdlDependency = this.ModelReferenceDataLibraryDao.GetSiteReferenceDataLibraryDependency(this.Credentials.EngineeringModelSetups, transaction);
+                            return rdlDependency.Contains(thing.Iid);
+                        }
+
+                        throw new NotImplementedException($"No implementation for type {thing.ClassKind} for CanRead");
+                    }
+
+                    case PersonAccessRightKind.MODIFY_OWN_PERSON:
+                    {
+                        if (thing is Person person)
+                        {
+                            return this.PersonIsParticipantWithinCurrentUserModel(transaction, person) || person.Iid == this.Credentials.Person.Iid;
+                        }
+
+                        // That should only be applied on Person
+                        return false;
+                    }
 
                     default: return true;
                 }
@@ -470,6 +480,25 @@ namespace CDP4WebServices.API.Services.Authorization
                                                  : participantPermission.AccessRight;
 
             return participantAccessRightKind;
+        }
+
+        /// <summary>
+        /// Check whether the <paramref name="person"/> is a participant in any model where the current user is participating
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="person">The <see cref="Person"/></param>
+        /// <returns>True if that is the case</returns>
+        private bool PersonIsParticipantWithinCurrentUserModel(NpgsqlTransaction transaction, Person person)
+        {
+            var participantsIds = this.Credentials.EngineeringModelSetups.SelectMany(x => x.Participant).ToArray();
+            if (participantsIds.Length == 0)
+            {
+                return false;
+            }
+
+            return this.ParticipantDao
+                            .Read(transaction, SiteDirectory, participantsIds)
+                            .Any(p => p.Person == person.Iid);
         }
     }
 }

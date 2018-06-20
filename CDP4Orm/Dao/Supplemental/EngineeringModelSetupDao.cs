@@ -42,7 +42,7 @@ namespace CDP4Orm.Dao
 
                 if (!personId.Equals(Guid.Empty))
                 {
-                    sqlBuilder.AppendFormat(" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId)", partition);
+                    sqlBuilder.AppendFormat(" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')", partition);
                     command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
                 }
 
