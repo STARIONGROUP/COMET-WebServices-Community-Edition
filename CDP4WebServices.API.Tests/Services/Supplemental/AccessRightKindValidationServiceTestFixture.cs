@@ -36,8 +36,6 @@ namespace CDP4WebServices.API.Tests.Services
             this.metaInfoProvider = new Mock<IMetaInfoProvider>();
 
             this.requestUtils.Setup(x => x.MetaInfoProvider).Returns(this.metaInfoProvider.Object);
-            this.metaInfoProvider.Setup(x => x.BaseType("DiagramCanvas")).Returns("Thing");
-            this.metaInfoProvider.Setup(x => x.BaseType("Book")).Returns("OwnedThing");
 
             this.service = new AccessRightKindValidationService() { RequestUtils = this.requestUtils.Object };
         }

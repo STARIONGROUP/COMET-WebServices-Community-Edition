@@ -7,7 +7,8 @@
 namespace CDP4WebServices.API.Services
 {
     using System;
-
+    using System.Linq;
+    using System.Reflection;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
@@ -126,21 +127,14 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         private bool IsOwnedClassKind(string typeName)
         {
-            var baseType = this.RequestUtils.MetaInfoProvider.BaseType(typeName);
-
-            if (baseType == OwnedThing)
+            // for some reason single multiples type matching the conditions
+            var type = typeof(Thing).Assembly.GetTypes().FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.FullName) && x.FullName.Contains($"{typeof(Thing).Namespace}.{typeName}"));
+            if (type == null)
             {
-                return true;
+                throw new InvalidOperationException($"No type associated to classkind {typeName}");
             }
 
-            if (baseType == Thing)
-            {
-                return false;
-            }
-
-            this.IsOwnedClassKind(baseType);
-
-            return false;
+            return typeof(IOwnedThing).IsAssignableFrom(type);
         }
     }
 }
