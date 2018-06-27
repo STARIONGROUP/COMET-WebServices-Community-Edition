@@ -447,7 +447,7 @@ namespace CDP4WebServices.API.Modules
         /// The <see cref="Response"/>.
         /// </returns>
         protected Response GetJsonResponse(
-            IEnumerable<Thing> resourceResponse,
+            IReadOnlyList<Thing> resourceResponse,
             Version requestDataModelVersion,
             HttpStatusCode statusCode = HttpStatusCode.OK,
             string requestToken = "")
@@ -700,14 +700,14 @@ namespace CDP4WebServices.API.Modules
         /// optional request token
         /// </param>
         private void CreateFilteredResponseStream(
-            IEnumerable<Thing> dtos,
+            IReadOnlyList<Thing> dtos,
             Stream stream,
             Version requestDataModelVersion,
             string requestToken = "")
         {
-            this.PermissionInstanceFilterService.FilterOutPermissions(dtos.ToList(), this.RequestUtils, requestDataModelVersion);
-            this.PermissionPropertyFilterService.FilterPersonPermissionProperty(dtos.ToList().OfType<PersonRole>(), requestDataModelVersion);
-            this.PermissionPropertyFilterService.FilterParticipantPermissionProperty(dtos.ToList().OfType<ParticipantRole>(), requestDataModelVersion);
+            this.PermissionInstanceFilterService.FilterOutPermissions(dtos, this.RequestUtils, requestDataModelVersion);
+            this.PermissionPropertyFilterService.FilterPersonPermissionProperty(dtos.OfType<PersonRole>(), requestDataModelVersion);
+            this.PermissionPropertyFilterService.FilterParticipantPermissionProperty(dtos.OfType<ParticipantRole>(), requestDataModelVersion);
 
             var sw = new Stopwatch();
             sw.Start();

@@ -67,7 +67,8 @@ namespace CDP4WebServices.API.Services.Supplemental
         /// </param>
         public void FilterPersonPermissionProperty(IEnumerable<PersonRole> personRoles, Version requestDataModelVersion)
         {
-            if (personRoles != null && personRoles.Any())
+            var personRolesArray = personRoles?.ToArray();
+            if (personRolesArray != null && personRolesArray.Any())
             {
                 NpgsqlConnection connection = null;
                 NpgsqlTransaction transaction = null;
@@ -78,10 +79,10 @@ namespace CDP4WebServices.API.Services.Supplemental
                     // get prepared data source transaction
                     transaction = this.TransactionManager.SetupTransaction(ref connection, null);
 
-                    var personPermissions = this.PersonPermissionDao.Read(transaction, SiteDirectoryData, null, true);
+                    var personPermissions = this.PersonPermissionDao.Read(transaction, SiteDirectoryData, personRolesArray.SelectMany(x => x.PersonPermission).ToArray(), true);
 
                     // filter to have only prohibited ids
-                    var prohibitedPersonPermissions = personPermissions.Where(
+                    var prohibitedPersonPermissionIds = personPermissions.Where(
                         x =>
                             {
                                 var metainfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(x.ObjectClass.ToString());
@@ -92,10 +93,9 @@ namespace CDP4WebServices.API.Services.Supplemental
                                 }
 
                                 return true;
-                            }).ToArray();
-                    var prohibitedPersonPermissionIds = prohibitedPersonPermissions.Select(x => x.Iid).ToArray();
+                            }).Select(x => x.Iid).ToArray();
 
-                    foreach (var personRole in personRoles)
+                    foreach (var personRole in personRolesArray)
                     {
                         personRole.PersonPermission.RemoveAll(x => prohibitedPersonPermissionIds.Contains(x));
                     }
@@ -131,7 +131,8 @@ namespace CDP4WebServices.API.Services.Supplemental
         /// </param>
         public void FilterParticipantPermissionProperty(IEnumerable<ParticipantRole> participantRoles, Version requestDataModelVersion)
         {
-            if (participantRoles != null && participantRoles.Any())
+            var participantRolesArray = participantRoles?.ToArray();
+            if (participantRolesArray != null && participantRolesArray.Any())
             {
                 NpgsqlConnection connection = null;
                 NpgsqlTransaction transaction = null;
@@ -145,28 +146,24 @@ namespace CDP4WebServices.API.Services.Supplemental
                     var participantPermissions = this.ParticipantPermissionDao.Read(
                         transaction,
                         SiteDirectoryData,
-                        null,
+                        participantRolesArray.SelectMany(x => x.ParticipantPermission).ToArray(),
                         true);
 
                     // filter to have only prohibited ids
-                    var prohibitedparticipantPermissions = participantPermissions.Where(
-                        x =>
-                            {
-                                var metainfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(x.ObjectClass.ToString());
-                                if (string.IsNullOrEmpty(metainfo.ClassVersion)
-                                    || requestDataModelVersion >= new Version(metainfo.ClassVersion))
-                                {
-                                    return false;
-                                }
+                    var prohibitedparticipantPermissionIds = 
+                        participantPermissions
+                            .Where(
+                                x =>
+                                    {
+                                        var metainfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(x.ObjectClass.ToString());
+                                        return !string.IsNullOrEmpty(metainfo.ClassVersion) && requestDataModelVersion < new Version(metainfo.ClassVersion);
+                                    })
+                            .Select(x => x.Iid)
+                            .ToArray();
 
-                                return true;
-                            });
-                    var prohibitedparticipantPermissionIds = prohibitedparticipantPermissions.Select(x => x.Iid);
-
-                    foreach (var participantRole in participantRoles)
+                    foreach (var participantRole in participantRolesArray)
                     {
-                        participantRole.ParticipantPermission.RemoveAll(
-                            x => prohibitedparticipantPermissionIds.Contains(x));
+                        participantRole.ParticipantPermission.RemoveAll(x => prohibitedparticipantPermissionIds.Contains(x));
                     }
                 }
                 catch (Exception ex)

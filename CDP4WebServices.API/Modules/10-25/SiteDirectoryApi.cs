@@ -270,7 +270,7 @@ namespace CDP4WebServices.API.Modules
 
                 // save revision-history
                 var actor = credentials.Person.Iid;
-                var changedThings = this.RevisionService.SaveRevisions(transaction, TopContainer, actor, fromRevision);
+                var changedThings = this.RevisionService.SaveRevisions(transaction, TopContainer, actor, fromRevision).ToList();
 
                 // commit the operation + revision-historty
                 transaction.Commit();
