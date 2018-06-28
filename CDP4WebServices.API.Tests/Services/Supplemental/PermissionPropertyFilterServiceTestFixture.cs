@@ -146,7 +146,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.participantPermission3 = new ParticipantPermission(this.participantPermission3id, 1);
             this.participantPermission3.ObjectClass = ClassKind.SiteDirectoryDataAnnotation;
             this.participantPermissionDao = new Mock<IParticipantPermissionDao>();
-            this.participantPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, null, true))
+            this.participantPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true))
                 .Returns(
                     new List<ParticipantPermission>
                         {
@@ -162,7 +162,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.personPermission3 = new PersonPermission(this.personPermission3id, 1);
             this.personPermission3.ObjectClass = ClassKind.SiteDirectoryDataAnnotation;
             this.personPermissionDao = new Mock<IPersonPermissionDao>();
-            this.personPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, null, true)).Returns(
+            this.personPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true)).Returns(
                 new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 });
         }
 
