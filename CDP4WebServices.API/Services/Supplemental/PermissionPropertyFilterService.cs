@@ -8,17 +8,13 @@ namespace CDP4WebServices.API.Services.Supplemental
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
-
     using CDP4Common.DTO;
-
     using CDP4Orm.Dao;
-
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Protocol;
-
     using NLog;
-
     using Npgsql;
 
     /// <summary>
@@ -67,6 +63,8 @@ namespace CDP4WebServices.API.Services.Supplemental
         /// </param>
         public void FilterPersonPermissionProperty(IEnumerable<PersonRole> personRoles, Version requestDataModelVersion)
         {
+            var sw = Stopwatch.StartNew();
+
             var personRolesArray = personRoles?.ToArray();
             if (personRolesArray != null && personRolesArray.Any())
             {
@@ -103,7 +101,7 @@ namespace CDP4WebServices.API.Services.Supplemental
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "Failed on person permission property filtering.");
-                    throw new Exception("Something went wrong.");
+                    throw new Exception("Something went wrong while filtering PersonPermissions from PersonRole.");
                 }
                 finally
                 {
@@ -117,6 +115,8 @@ namespace CDP4WebServices.API.Services.Supplemental
                         connection.Dispose();
                     }
                 }
+
+                Logger.Info($"PermissionPropertyFilterService FilterPersonPermissionProperty operation took {sw.ElapsedMilliseconds} ms");
             }
         }
 
@@ -131,6 +131,8 @@ namespace CDP4WebServices.API.Services.Supplemental
         /// </param>
         public void FilterParticipantPermissionProperty(IEnumerable<ParticipantRole> participantRoles, Version requestDataModelVersion)
         {
+            var sw = Stopwatch.StartNew();
+
             var participantRolesArray = participantRoles?.ToArray();
             if (participantRolesArray != null && participantRolesArray.Any())
             {
@@ -169,7 +171,7 @@ namespace CDP4WebServices.API.Services.Supplemental
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "Failed on participant permission property filtering.");
-                    throw new Exception("Something went wrong.");
+                    throw new Exception("Something went wrong while filtering ParticipantPermissions from ParticipantRole.");
                 }
                 finally
                 {
@@ -183,6 +185,8 @@ namespace CDP4WebServices.API.Services.Supplemental
                         connection.Dispose();
                     }
                 }
+
+                Logger.Info($"PermissionPropertyFilterService FilterParticipantPermissionProperty operation took {sw.ElapsedMilliseconds} ms");
             }
         }
     }

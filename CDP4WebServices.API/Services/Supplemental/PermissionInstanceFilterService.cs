@@ -10,9 +10,7 @@ namespace CDP4WebServices.API.Services.Supplemental
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
-
     using CDP4Common.DTO;
-
     using NLog;
 
     /// <summary>
@@ -34,12 +32,9 @@ namespace CDP4WebServices.API.Services.Supplemental
         /// The data model version of this request to use with serialization.
         /// </param>
         /// <returns>The filtered collection of <see cref="Thing"/></returns>
-        public IEnumerable<Thing> FilterOutPermissions(
-            IReadOnlyCollection<Thing> things,
-            IRequestUtils requestUtils,
-            Version requestDataModelVersion)
+        public IEnumerable<Thing> FilterOutPermissions(IReadOnlyCollection<Thing> things, IRequestUtils requestUtils, Version requestDataModelVersion)
         {
-            var timer = Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
 
             var personRoles = things.OfType<PersonRole>().ToArray();
             var participantRoles = things.OfType<ParticipantRole>().ToArray();
@@ -89,7 +84,7 @@ namespace CDP4WebServices.API.Services.Supplemental
                 yield return thing;
             }
 
-            Logger.Info(string.Format("permission filter operation took {0} ms", timer.ElapsedMilliseconds));
+            Logger.Info($"PermissionInstanceFilterService FilterOutPermissions operation took {sw.ElapsedMilliseconds} ms");
         }
     }
 }

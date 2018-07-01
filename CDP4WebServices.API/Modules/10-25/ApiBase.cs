@@ -705,9 +705,9 @@ namespace CDP4WebServices.API.Modules
             Version requestDataModelVersion,
             string requestToken = "")
         {
-            this.PermissionInstanceFilterService.FilterOutPermissions(dtos, this.RequestUtils, requestDataModelVersion);
-            this.PermissionPropertyFilterService.FilterPersonPermissionProperty(dtos.OfType<PersonRole>(), requestDataModelVersion);
-            this.PermissionPropertyFilterService.FilterParticipantPermissionProperty(dtos.OfType<ParticipantRole>(), requestDataModelVersion);
+            var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, this.RequestUtils, requestDataModelVersion);
+            this.PermissionPropertyFilterService.FilterPersonPermissionProperty(filteredDtos.OfType<PersonRole>(), requestDataModelVersion);
+            this.PermissionPropertyFilterService.FilterParticipantPermissionProperty(filteredDtos.OfType<ParticipantRole>(), requestDataModelVersion);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -716,7 +716,7 @@ namespace CDP4WebServices.API.Modules
             this.JsonSerializer.Initialize(
                 this.RequestUtils.MetaInfoProvider,
                 this.RequestUtils.GetRequestDataModelVersion);
-            this.JsonSerializer.SerializeToStream(dtos, stream);
+            this.JsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
             Logger.Debug("serialing dtos {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
