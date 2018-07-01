@@ -7,6 +7,7 @@
 namespace CDP4WebServices.API.Services.Authorization
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using Authentication;
     using CDP4Common.CommonData;
@@ -55,6 +56,11 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets or sets the <see cref="Credentials"/> assigned to this service.
         /// </summary>
         public Credentials Credentials { get; set; }
+
+        /// <summary>
+        /// Gets the list of <see cref="Participant"/> of the current <see cref="Person"/> that is represented by the current <see cref="Credentials"/> 
+        /// </summary>
+        private List<Participant> currentParticipantCache;
 
         /// <summary>
         /// Determines whether the typeName can be read.
@@ -393,6 +399,35 @@ namespace CDP4WebServices.API.Services.Authorization
         }
 
         /// <summary>
+        /// Queries the <see cref="Participant"/>s of the current <see cref="Credentials"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The <see cref="NpgsqlTransaction"/> used to query the database
+        /// </param>
+        /// <returns>
+        /// a list of <see cref="Participant"/>s for the current <see cref="Credentials"/>
+        /// </returns>
+        /// <remarks>
+        /// The <see cref="Participant"/> objects are cached in the <see cref="currentParticipantCache"/> field of the current
+        /// <see cref="PermissionService"/>. This can be done due to the fact that the <see cref="PermissionService"/> is valid for one request
+        /// </remarks>
+        private List<Participant> QueryCurrentParticipant(NpgsqlTransaction transaction)
+        {
+            if (this.currentParticipantCache == null)
+            {
+                this.currentParticipantCache = new List<Participant>();
+
+                var participants = this.ParticipantDao
+                    .Read(transaction, SiteDirectory, null).ToList()
+                    .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
+
+                this.currentParticipantCache.AddRange(participants);
+            }
+
+            return this.currentParticipantCache;
+        }
+
+        /// <summary>
         /// Determines whether a supplied <see cref="Thing"/> is owned by the current <see cref="Participant"/>.
         /// </summary>
         /// <param name="transaction">
@@ -410,9 +445,7 @@ namespace CDP4WebServices.API.Services.Authorization
                 return true;
             }
 
-            var currentParticipant = this.ParticipantDao
-                .Read(transaction, SiteDirectory, null).ToList()
-                .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
+            var currentParticipant = this.QueryCurrentParticipant(transaction);
 
             return currentParticipant.SelectMany(x => x.Domain).Contains(ownedThing.Owner);
         }
@@ -427,9 +460,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <returns>True if a supplied <see cref="Thing"/> excludes a domain of the current <see cref="Participant"/>.</returns>
         private bool IsExcludedDomain(NpgsqlTransaction transaction, Thing thing)
         {
-            var currentParticipant = this.ParticipantDao
-                .Read(transaction, SiteDirectory, null).ToList()
-                .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
+            var currentParticipant = this.QueryCurrentParticipant(transaction);
 
             var isExcludedDomain = true;
 
