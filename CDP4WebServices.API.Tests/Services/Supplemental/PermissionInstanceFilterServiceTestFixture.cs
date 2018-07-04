@@ -9,16 +9,16 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
+    using API.Helpers;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
-
+    using CDP4Orm.Dao;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Supplemental;
 
     using Moq;
-
+    using Npgsql;
     using NUnit.Framework;
 
     using Thing = CDP4Common.DTO.Thing;
@@ -29,68 +29,232 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
     [TestFixture]
     public class PermissionInstanceFilterServiceTestFixture
     {
+        private const string SiteDirectoryData = "SiteDirectory";
+        private Mock<ICdp4TransactionManager> transactionManager;
+
+        private Mock<IParticipantPermissionDao> participantPermissionDao;
+
+        private Mock<IPersonPermissionDao> personPermissionDao;
+
+        private IMetaInfoProvider metaInfoProvider;
+
+        private NpgsqlTransaction npgsqlTransaction;
+
+        private List<PersonRole> personRoles;
+
+        private List<ParticipantRole> participantRoles;
+
+        private Guid personPermission1id = Guid.NewGuid();
+
+        private Guid personPermission2id = Guid.NewGuid();
+
+        private Guid personPermission3id = Guid.NewGuid();
+
+        private Guid participantPermission1id = Guid.NewGuid();
+
+        private Guid participantPermission2id = Guid.NewGuid();
+
+        private Guid participantPermission3id = Guid.NewGuid();
+
+        private PersonPermission personPermission1;
+
+        private PersonPermission personPermission2;
+
+        private PersonPermission personPermission3;
+
+        private ParticipantPermission participantPermission1;
+
+        private ParticipantPermission participantPermission2;
+
+        private ParticipantPermission participantPermission3;
+
+        private PermissionInstanceFilterService service;
+
+        [SetUp]
+        public void Setup()
+        {
+            this.npgsqlTransaction = null;
+            this.metaInfoProvider = new MetaInfoProvider
+            {
+                DomainOfExpertiseMetaInfo = new DomainOfExpertiseMetaInfo(),
+                IterationSetupMetaInfo = new IterationSetupMetaInfo(),
+                SiteDirectoryDataAnnotationMetaInfo = new SiteDirectoryDataAnnotationMetaInfo(),
+                ElementDefinitionMetaInfo = new ElementDefinitionMetaInfo(),
+                ElementUsageMetaInfo = new ElementUsageMetaInfo(),
+                BookMetaInfo = new BookMetaInfo(),
+                ActionItemMetaInfo = new ActionItemMetaInfo(),
+                SiteDirectoryMetaInfo = new SiteDirectoryMetaInfo(),
+                ActualFiniteStateMetaInfo = new ActualFiniteStateMetaInfo(),
+                DiagramCanvasMetaInfo = new DiagramCanvasMetaInfo(),
+                EngineeringModelMetaInfo = new EngineeringModelMetaInfo(),
+            };
+
+            this.personRoles = new List<PersonRole>
+                                   {
+                                       new PersonRole
+                                           {
+                                               Iid = Guid.NewGuid(),
+                                               RevisionNumber = 1,
+                                               PersonPermission =
+                                                   new List<Guid>
+                                                       {
+                                                           this
+                                                               .personPermission1id,
+                                                           this
+                                                               .personPermission2id,
+                                                           this
+                                                               .personPermission3id
+                                                       }
+                                           }
+                                   };
+            this.participantRoles = new List<ParticipantRole>
+                                        {
+                                            new ParticipantRole
+                                                {
+                                                    Iid = Guid.NewGuid(),
+                                                    RevisionNumber = 1,
+                                                    ParticipantPermission =
+                                                        new List<Guid>
+                                                            {
+                                                                this
+                                                                    .participantPermission1id,
+                                                                this
+                                                                    .participantPermission2id,
+                                                                this
+                                                                    .participantPermission3id
+                                                            }
+                                                }
+                                        };
+
+
+            
+
+            this.transactionManager = new Mock<ICdp4TransactionManager>();
+            NpgsqlConnection connection = null;
+            this.transactionManager.Setup(x => x.SetupTransaction(ref connection, null))
+                .Returns(this.npgsqlTransaction);
+
+            this.participantPermission1 = new ParticipantPermission(this.participantPermission1id, 1);
+            this.participantPermission1.ObjectClass = ClassKind.DomainOfExpertise;
+            this.participantPermission2 = new ParticipantPermission(this.participantPermission2id, 1);
+            this.participantPermission2.ObjectClass = ClassKind.IterationSetup;
+            this.participantPermission3 = new ParticipantPermission(this.participantPermission3id, 1);
+            this.participantPermission3.ObjectClass = ClassKind.SiteDirectoryDataAnnotation;
+            this.participantPermissionDao = new Mock<IParticipantPermissionDao>();
+            this.participantPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true))
+                .Returns(
+                    new List<ParticipantPermission>
+                        {
+                            this.participantPermission1,
+                            this.participantPermission2,
+                            this.participantPermission3
+                        });
+
+            this.personPermission1 = new PersonPermission(this.personPermission1id, 1);
+            this.personPermission1.ObjectClass = ClassKind.DomainOfExpertise;
+            this.personPermission2 = new PersonPermission(this.personPermission2id, 1);
+            this.personPermission2.ObjectClass = ClassKind.IterationSetup;
+            this.personPermission3 = new PersonPermission(this.personPermission3id, 1);
+            this.personPermission3.ObjectClass = ClassKind.SiteDirectoryDataAnnotation;
+            this.personPermissionDao = new Mock<IPersonPermissionDao>();
+            this.personPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true)).Returns(
+                new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 });
+
+            this.service = new PermissionInstanceFilterService
+            {
+                MetadataProvider = this.metaInfoProvider,
+                TransactionManager = this.transactionManager.Object,
+                ParticipantPermissionDao = this.participantPermissionDao.Object,
+                PersonPermissionDao = this.personPermissionDao.Object
+            };
+
+        }
+
+        [Test]
+        public void VerifyThatPersonPermissionPropertyIsFilteredForPureRequest()
+        {
+            var result = this.service.FilterOutPermissions(this.personRoles, new Version("1.0.0")).OfType<PersonRole>().ToArray();
+
+            CollectionAssert.AreEquivalent(
+                result[0].PersonPermission,
+                new List<Guid> { this.personPermission1id, this.personPermission2id });
+        }
+
+        [Test]
+        public void VerifyThatPersonPermissionPropertyIsNotFilteredForCDP4Request()
+        {
+            var result = this.service.FilterOutPermissions(this.personRoles, new Version("1.1.0")).OfType<PersonRole>().ToArray();
+
+            CollectionAssert.AreEquivalent(
+                result[0].PersonPermission,
+                new List<Guid> { this.personPermission1id, this.personPermission2id, this.personPermission3id });
+        }
+
+        [Test]
+        public void VerifyThatParticipantPermissionPropertyIsFilteredForPureRequest()
+        {
+            var result = this.service.FilterOutPermissions(this.participantRoles, new Version("1.0.0")).OfType<ParticipantRole>().ToArray();
+
+            CollectionAssert.AreEquivalent(
+                result[0].ParticipantPermission,
+                new List<Guid> { this.participantPermission1id, this.participantPermission2id });
+        }
+
+        [Test]
+        public void VerifyThatParticipantPermissionPropertyIsNotFilteredForCDP4Request()
+        {
+            var result = this.service.FilterOutPermissions(this.participantRoles, new Version("1.1.0")).OfType<ParticipantRole>().ToArray();
+
+            CollectionAssert.AreEquivalent(
+                result[0].ParticipantPermission,
+                new List<Guid> { this.participantPermission1id, this.participantPermission2id, this.participantPermission3id });
+        }
+
         [Test]
         public void VerifyThatRoleAndPermissionAreFilteredCorrectly()
         {
-            var requestUtil = new Mock<IRequestUtils>();
-            var metaInfoProvider = new Mock<IMetaInfoProvider>();
-            requestUtil.Setup(x => x.GetRequestDataModelVersion).Returns(new Version(1, 0));
-            metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.ActionItem.ToString()))
-                .Returns(new ActionItemMetaInfo());
-            metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.SiteDirectory.ToString()))
-                .Returns(new SiteDirectoryMetaInfo());
-            metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.ActualFiniteState.ToString()))
-                .Returns(new ActualFiniteStateMetaInfo());
-            metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.DiagramCanvas.ToString()))
-                .Returns(new DiagramCanvasMetaInfo());
-            metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.EngineeringModel.ToString()))
-                .Returns(new EngineeringModelMetaInfo());
-            metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.ElementDefinition.ToString()))
-                .Returns(new ElementDefinitionMetaInfo());
-            requestUtil.Setup(x => x.MetaInfoProvider).Returns(metaInfoProvider.Object);
             var personRole = new PersonRole(Guid.NewGuid(), 0);
             var participantRole = new ParticipantRole(Guid.NewGuid(), 0);
 
-            var personPermission1 = new PersonPermission(Guid.NewGuid(), 0);
-            personPermission1.ObjectClass = ClassKind.ActionItem;
-            var personPermission2 = new PersonPermission(Guid.NewGuid(), 0);
-            personPermission2.ObjectClass = ClassKind.SiteDirectory;
-            var personPermission3 = new PersonPermission(Guid.NewGuid(), 0);
-            personPermission3.ObjectClass = ClassKind.ActualFiniteState;
+            this.personPermission1 = new PersonPermission(Guid.NewGuid(), 0);
+            this.personPermission1.ObjectClass = ClassKind.ActionItem;
+            this.personPermission2 = new PersonPermission(Guid.NewGuid(), 0);
+            this.personPermission2.ObjectClass = ClassKind.SiteDirectory;
+            this.personPermission3 = new PersonPermission(Guid.NewGuid(), 0);
+            this.personPermission3.ObjectClass = ClassKind.ActualFiniteState;
 
-            var participantPermission1 = new ParticipantPermission(Guid.NewGuid(), 0);
-            participantPermission1.ObjectClass = ClassKind.DiagramCanvas;
-            var participantPermission2 = new ParticipantPermission(Guid.NewGuid(), 0);
-            participantPermission2.ObjectClass = ClassKind.EngineeringModel;
-            var participantPermission3 = new ParticipantPermission(Guid.NewGuid(), 0);
-            participantPermission3.ObjectClass = ClassKind.ElementDefinition;
+            this.participantPermission1 = new ParticipantPermission(Guid.NewGuid(), 0);
+            this.participantPermission1.ObjectClass = ClassKind.DiagramCanvas;
+            this.participantPermission2 = new ParticipantPermission(Guid.NewGuid(), 0);
+            this.participantPermission2.ObjectClass = ClassKind.EngineeringModel;
+            this.participantPermission3 = new ParticipantPermission(Guid.NewGuid(), 0);
+            this.participantPermission3.ObjectClass = ClassKind.ElementDefinition;
 
-            personRole.PersonPermission.Add(personPermission3.Iid);
-            personRole.PersonPermission.Add(personPermission2.Iid);
-            personRole.PersonPermission.Add(personPermission1.Iid);
+            personRole.PersonPermission.Add(this.personPermission3.Iid);
+            personRole.PersonPermission.Add(this.personPermission2.Iid);
+            personRole.PersonPermission.Add(this.personPermission1.Iid);
 
-            participantRole.ParticipantPermission.Add(participantPermission1.Iid);
-            participantRole.ParticipantPermission.Add(participantPermission2.Iid);
-            participantRole.ParticipantPermission.Add(participantPermission3.Iid);
+            participantRole.ParticipantPermission.Add(this.participantPermission1.Iid);
+            participantRole.ParticipantPermission.Add(this.participantPermission2.Iid);
+            participantRole.ParticipantPermission.Add(this.participantPermission3.Iid);
 
             var input = new List<Thing>
                             {
                                 personRole,
                                 participantRole,
-                                personPermission1,
-                                personPermission2,
-                                personPermission3,
-                                participantPermission1,
-                                participantPermission2,
-                                participantPermission3
+                                this.personPermission1,
+                                this.personPermission2,
+                                this.personPermission3,
+                                this.participantPermission1,
+                                this.participantPermission2,
+                                this.participantPermission3
                             };
 
-            var result = new PermissionInstanceFilterService().FilterOutPermissions(
+            var result = this.service.FilterOutPermissions(
                 input,
-                requestUtil.Object,
-                requestUtil.Object.GetRequestDataModelVersion).ToArray();
-            Assert.IsFalse(result.Contains(personPermission1));
-            Assert.IsFalse(result.Contains(participantPermission1));
+                new Version(1, 0)).ToArray();
+            Assert.IsFalse(result.Contains(this.personPermission1));
+            Assert.IsFalse(result.Contains(this.participantPermission1));
             Assert.AreEqual(personRole.PersonPermission.Count, 2);
             Assert.AreEqual(participantRole.ParticipantPermission.Count, 2);
         }

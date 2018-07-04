@@ -158,11 +158,6 @@ namespace CDP4WebServices.API.Modules
         public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IPermissionPropertyFilterService"/>
-        /// </summary>
-        public IPermissionPropertyFilterService PermissionPropertyFilterService { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IPermissionInstanceFilterService"/>
         /// </summary>
         public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
@@ -705,9 +700,7 @@ namespace CDP4WebServices.API.Modules
             Version requestDataModelVersion,
             string requestToken = "")
         {
-            var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, this.RequestUtils, requestDataModelVersion);
-            this.PermissionPropertyFilterService.FilterPersonPermissionProperty(filteredDtos.OfType<PersonRole>(), requestDataModelVersion);
-            this.PermissionPropertyFilterService.FilterParticipantPermissionProperty(filteredDtos.OfType<ParticipantRole>(), requestDataModelVersion);
+            var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
 
             var sw = new Stopwatch();
             sw.Start();

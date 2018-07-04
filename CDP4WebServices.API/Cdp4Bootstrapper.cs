@@ -205,9 +205,6 @@ namespace CDP4WebServices.API
                         // wireup AccessRightKind validation service
                         builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindValidationService, IAccessRightKindValidationService>();
 
-                        // wireup PermissionPropertyFilter service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<PermissionPropertyFilterService, IPermissionPropertyFilterService>();
-
                         // wireup PermissionInstanceFilter service
                         builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
                     });
