@@ -8,6 +8,7 @@ namespace CDP4WebServices.API.Services.Supplemental
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Diagnostics;
     using System.Linq;
     using CDP4Common.CommonData;
@@ -127,28 +128,45 @@ namespace CDP4WebServices.API.Services.Supplemental
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            // get prepared data source transaction
-            var queryPersonPermissions = inPersonRoles.SelectMany(x => x.PersonPermission).Except(inPersonPermissions.Select(x => x.Iid)).ToArray();
-
-            transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-
-            // if all permissions are in then dont do extra db query
-            var personPermissions = queryPersonPermissions.Length > 0 
-                ? this.PersonPermissionDao.Read(transaction, SiteDirectoryData, queryPersonPermissions, true).Union(inPersonPermissions)
-                : inPersonPermissions;
-
-            foreach (var personPermission in personPermissions)
+            try
             {
-                var metainfo = this.MetadataProvider.GetMetaInfo(personPermission.ObjectClass.ToString());
-                if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestDataModelVersion >= new Version(metainfo.ClassVersion))
+                // get prepared data source transaction
+                var queryPersonPermissions = inPersonRoles.SelectMany(x => x.PersonPermission).Except(inPersonPermissions.Select(x => x.Iid)).ToArray();
+
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+
+                // if all permissions are in then dont do extra db query
+                var personPermissions = queryPersonPermissions.Length > 0
+                    ? this.PersonPermissionDao.Read(transaction, SiteDirectoryData, queryPersonPermissions, true).Union(inPersonPermissions)
+                    : inPersonPermissions;
+
+                foreach (var personPermission in personPermissions)
                 {
-                    continue;
+                    var metainfo = this.MetadataProvider.GetMetaInfo(personPermission.ObjectClass.ToString());
+                    if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestDataModelVersion >= new Version(metainfo.ClassVersion))
+                    {
+                        continue;
+                    }
+
+                    excludedPersonPermission.Add(personPermission.Iid);
                 }
 
-                excludedPersonPermission.Add(personPermission.Iid);
+                return excludedPersonPermission;
             }
-
-            return excludedPersonPermission;
+            catch (Exception e)
+            {
+                Logger.Error("Getting participant permission ids failed: {0}", e.Message);
+                throw;
+            }
+            finally
+            {
+                if (connection != null && connection.State != ConnectionState.Closed)
+                {
+                    NpgsqlConnection.ClearPool(connection);
+                    connection.Close();
+                    connection.Dispose();
+                }
+            }
         }
 
         /// <summary>
@@ -164,26 +182,43 @@ namespace CDP4WebServices.API.Services.Supplemental
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            // get prepared data source transaction
-            transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-
-            var queryPersonPermissions = inParticipantRoles.SelectMany(x => x.ParticipantPermission).Except(inParticipantPermissions.Select(x => x.Iid)).ToArray();
-            var participantPermissions = queryPersonPermissions.Length > 0
-                ? this.ParticipantPermissionDao.Read(transaction, SiteDirectoryData, null, true).Union(inParticipantPermissions)
-                : inParticipantPermissions;
-
-            foreach (var participantPermission in participantPermissions)
+            try
             {
-                var metainfo = this.MetadataProvider.GetMetaInfo(participantPermission.ObjectClass.ToString());
-                if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestDataModelVersion >= new Version(metainfo.ClassVersion))
+                // get prepared data source transaction
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+
+                var queryPersonPermissions = inParticipantRoles.SelectMany(x => x.ParticipantPermission).Except(inParticipantPermissions.Select(x => x.Iid)).ToArray();
+                var participantPermissions = queryPersonPermissions.Length > 0
+                    ? this.ParticipantPermissionDao.Read(transaction, SiteDirectoryData, null, true).Union(inParticipantPermissions)
+                    : inParticipantPermissions;
+
+                foreach (var participantPermission in participantPermissions)
                 {
-                    continue;
+                    var metainfo = this.MetadataProvider.GetMetaInfo(participantPermission.ObjectClass.ToString());
+                    if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestDataModelVersion >= new Version(metainfo.ClassVersion))
+                    {
+                        continue;
+                    }
+
+                    excludedParticipantPermission.Add(participantPermission.Iid);
                 }
 
-                excludedParticipantPermission.Add(participantPermission.Iid);
+                return excludedParticipantPermission;
             }
-
-            return excludedParticipantPermission;
+            catch (Exception e)
+            {
+                Logger.Error("Getting participant permission ids failed: {0}", e.Message);
+                throw;
+            }
+            finally
+            {
+                if (connection != null && connection.State != ConnectionState.Closed)
+                {
+                    NpgsqlConnection.ClearPool(connection);
+                    connection.Close();
+                    connection.Dispose();
+                }
+            }
         }
     }
 }
