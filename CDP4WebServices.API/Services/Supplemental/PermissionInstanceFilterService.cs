@@ -160,9 +160,13 @@ namespace CDP4WebServices.API.Services.Supplemental
             }
             finally
             {
+                if (transaction != null)
+                {
+                    transaction.Dispose();
+                }
+
                 if (connection != null && connection.State != ConnectionState.Closed)
                 {
-                    NpgsqlConnection.ClearPool(connection);
                     connection.Close();
                     connection.Dispose();
                 }
@@ -212,9 +216,13 @@ namespace CDP4WebServices.API.Services.Supplemental
             }
             finally
             {
+                if (transaction != null)
+                {
+                    transaction.Dispose();
+                }
+
                 if (connection != null && connection.State != ConnectionState.Closed)
                 {
-                    NpgsqlConnection.ClearPool(connection);
                     connection.Close();
                     connection.Dispose();
                 }
