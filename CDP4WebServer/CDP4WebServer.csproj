@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net452</TargetFrameworks>
+    <TargetFrameworks>net472</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WebServer-CE</Title>
-    <Version>1.0.5</Version>
+    <Version>1.0.6</Version>
     <Description>CDP4 Services Host</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron</Authors>
@@ -38,8 +38,8 @@
     <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
     
     <!-- Copy Database Authentication plugin -->    
-    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net452'" />
-    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net452'" />
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net472'" />
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net472'" />
     
   </Target>
 </Project>
