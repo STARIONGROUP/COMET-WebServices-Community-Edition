@@ -25,6 +25,11 @@ Development |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrx
 
 [![Build history](https://buildstats.info/appveyor/chart/samatrhea/cdp4-webservices-community-edition)](https://ci.appveyor.com/project/samatrhea/cdp4-webservices-community-edition/history)
 
+## Statistics
+
+  - Downloads: [![GitHub issues](https://img.shields.io/github/issues/badges/shields.svg)](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition)
+  - Issues: 
+
 ## CDP4-SDK
 
 The Concurrent Design Platform 4 (CDP4) Webservices make use of the [CDP4-SDK](http://sdk.cdp4.org/).
