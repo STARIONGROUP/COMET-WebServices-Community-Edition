@@ -27,8 +27,8 @@ Development |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrx
 
 ## Statistics
 
-  - Downloads: [![GitHub issues](https://img.shields.io/github/issues/badges/shields.svg)](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition)
-  - Issues: 
+  - Downloads: [![Github All Releases](https://img.shields.io/github/downloads/atom/atom/total.svg)](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/releases)
+  - Issues: [![GitHub issues](https://img.shields.io/github/issues/badges/shields.svg)](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/issues)
 
 ## CDP4-SDK
 
