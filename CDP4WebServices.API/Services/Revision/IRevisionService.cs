@@ -14,7 +14,10 @@ namespace CDP4WebServices.API.Services
     using Npgsql;
 
     /// <summary>
-    /// The RevisionService interface.
+    /// A service that allows revision based retrieval of concepts from the data store.
+    /// For data retrieval the revision number of the partition's top container Thing is used
+    /// For data manipulations a new revision is created based on the transaction timestamp, 
+    /// this revision is reused throughout the active transaction
     /// </summary>
     public interface IRevisionService
     {
@@ -66,10 +69,17 @@ namespace CDP4WebServices.API.Services
         void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision);
 
         /// <summary>
-        /// Insert new data in the RevisionRegistry table
+        /// Insert new data in the RevisionRegistry table if it does not exist for this transaction
         /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        void InsertInitialRevision(NpgsqlTransaction transaction, string partition);
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="partition">
+        /// The partition
+        /// </param>
+        /// <returns>
+        /// The current or next available revision number
+        /// </returns>
+        int GetNextRevision(NpgsqlTransaction transaction, string partition);
     }
 }

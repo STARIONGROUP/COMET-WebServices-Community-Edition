@@ -319,11 +319,11 @@ namespace CDP4WebServices.API.Modules
                     command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
                 }
 
-                // retrieve topcontainer to acertain the current revision
-                var topContainerInstance = this.GetTopContainer(transaction, partition, TopContainer);
-                var fromRevision = topContainerInstance.RevisionNumber;
+                // retrieve the revision for this transaction (or get next revision if not exists)
+                var fromRevision = this.RevisionService.GetNextRevision(transaction, partition);
 
                 this.OperationProcessor.Process(operationData, transaction, partition, fileDictionary);
+                
                 // save revision-history
                 var actor = credentials.Person.Iid;
                 var changedThings = (IEnumerable<Thing>)(this.RevisionService.SaveRevisions(transaction, partition, actor, fromRevision));

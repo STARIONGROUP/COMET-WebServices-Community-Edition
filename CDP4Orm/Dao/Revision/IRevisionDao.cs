@@ -54,11 +54,18 @@ namespace CDP4Orm.Dao.Revision
         void WriteRevision(NpgsqlTransaction transaction, string partition, Thing thing, Guid actor);
 
         /// <summary>
-        /// Insert new data in the RevisionRegistry table
+        /// Insert new data in the RevisionRegistry table if it does not exist for this transaction
         /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        void InsertInitialRevision(NpgsqlTransaction transaction, string partition);
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="partition">
+        /// The partition
+        /// </param>
+        /// <returns>
+        /// The current or next available revision number
+        /// </returns>
+        int GetNextRevision(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Insert new values into the IterationRevisionLog table

@@ -19,7 +19,7 @@ namespace CDP4Orm.Dao.Revision
     using Resolve;
 
     /// <summary>
-    /// The authentication dao.
+    /// A data access object class that allows revision based retrieval of concepts from the data store.
     /// </summary>
     public class RevisionDao : IRevisionDao
     {
@@ -121,7 +121,7 @@ namespace CDP4Orm.Dao.Revision
             var table = this.GetThingRevisionTableName(thing);
 
             var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\")", IidKey, revisionColumnName, instantColumn, actorColumn, jsonColumnName);
-            var values = string.Format("(:iid, :revisionnumber, \"SiteDirectory\".get_transaction_time(), :actor, :jsonb)");
+            var values = "(:iid, :revisionnumber, \"SiteDirectory\".get_transaction_time(), :actor, :jsonb)";
             var sqlQuery = string.Format("INSERT INTO \"{0}\".\"{1}\" {2} VALUES {3}", partition, table, columns, values);
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
@@ -187,11 +187,18 @@ namespace CDP4Orm.Dao.Revision
         }
 
         /// <summary>
-        /// Insert new data in the RevisionRegistry table
+        /// Insert new data in the RevisionRegistry table if it does not exist for this transaction
         /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        public void InsertInitialRevision(NpgsqlTransaction transaction, string partition)
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="partition">
+        /// The partition
+        /// </param>
+        /// <returns>
+        /// The current or next available revision number
+        /// </returns>
+        public int GetNextRevision(NpgsqlTransaction transaction, string partition)
         {
             var sqlQuery = string.Format(
                 "SELECT * FROM \"{0}\".get_current_revision();",
@@ -199,7 +206,7 @@ namespace CDP4Orm.Dao.Revision
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
-                command.ExecuteScalar();
+                return (int)command.ExecuteScalar();
             }
         }
 

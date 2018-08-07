@@ -76,6 +76,9 @@ namespace CDP4WebServices.API.Modules
                 route => this.PostResponse(route);
         }
 
+        /// <summary>
+        /// Gets or sets the model creator manager service.
+        /// </summary>
         public IModelCreatorManager ModelCreatorManager { get; set; }
 
         /// <summary>
@@ -262,9 +265,8 @@ namespace CDP4WebServices.API.Modules
                     command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
                 }
 
-                // retrieve topcontainer to acertain the current revision
-                var topContainerInstance = this.GetTopContainer(transaction, TopContainer, TopContainer);
-                var fromRevision = topContainerInstance.RevisionNumber;
+                // retrieve the revision for this transaction (or get next revision if not exists)
+                var fromRevision = this.RevisionService.GetNextRevision(transaction, TopContainer);
 
                 this.OperationProcessor.Process(operationData, transaction, TopContainer);
 
