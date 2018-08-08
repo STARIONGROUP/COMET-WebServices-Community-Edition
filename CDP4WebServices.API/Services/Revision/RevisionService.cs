@@ -62,18 +62,30 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision)
         {
-            return this.InternalGet(transaction, partition, revision).Select(x => x.Thing);
+            return this.InternalGet(transaction, partition, revision, true).Select(x => x.Thing);
         }
 
         /// <summary>
-        /// Gets the revisions of the <see cref="Thing"/> with the given <paramref name="Guid"/>
+        /// Gets the revisions of the <see cref="Thing"/> with the given <paramref name="{Guid}"/>
         /// </summary>
-        /// <param name="transaction">The current transaction to the database.</param>
-        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
-        /// <param name="identifier">The identifier of the <see cref="Thing"/> to query</param>
-        /// <param name="revisionFrom">The oldest revision to retrieve</param>
-        /// <param name="revisionTo">The latest revision to retrieve</param>
-        /// <returns>A collection of revised <see cref="Thing"/></returns>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="identifier">
+        /// The identifier of the <see cref="Thing"/> to query
+        /// </param>
+        /// <param name="revisionFrom">
+        /// The oldest revision to retrieve
+        /// </param>
+        /// <param name="revisionTo">
+        /// The latest revision to retrieve
+        /// </param>
+        /// <returns>
+        /// A collection of revised <see cref="Thing"/>
+        /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo)
         {
             // Set the transaction to retrieve the latest database state
@@ -84,14 +96,24 @@ namespace CDP4WebServices.API.Services
         /// <summary>
         /// Save The revision of a <see cref="Thing"/>
         /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
-        /// <param name="actor">The identifier of the person who made this revision</param>
-        /// <param name="revision">The base revision number from which the query is performed</param>
-        /// <returns>A collection of saved <see cref="Thing"/></returns>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="actor">
+        /// The identifier of the person who made this revision
+        /// </param>
+        /// <param name="revision">
+        /// The base revision number from which the query is performed
+        /// </param>
+        /// <returns>
+        /// A collection of saved <see cref="Thing"/>
+        /// </returns>
         public IEnumerable<Thing> SaveRevisions(NpgsqlTransaction transaction, string partition, Guid actor, int revision)
         {
-            var thingRevisionInfos = this.InternalGet(transaction, partition, revision).ToArray();
+            var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false).ToArray();
             foreach (var thingRevInfo in thingRevisionInfos)
             {
                 this.RevisionDao.WriteRevision(transaction, thingRevInfo.RevisionInfo.Partition, thingRevInfo.Thing, actor);
@@ -104,18 +126,29 @@ namespace CDP4WebServices.API.Services
         /// <summary>
         /// Insert new values into the IterationRevisionLog table
         /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        /// <param name="iteration">The iteration associated to the revision</param>
-        /// <param name="fromRevision">The starting revision number for the iteration. If null the current revision is used.</param>
-        /// <param name="toRevision">The ending revision number for the iteration. If null it means the iteration is the current one.</param>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="partition">
+        /// The partition
+        /// </param>
+        /// <param name="iteration">
+        /// The iteration associated to the revision
+        /// </param>
+        /// <param name="fromRevision">
+        /// The starting revision number for the iteration. If null the current revision is used.
+        /// </param>
+        /// <param name="toRevision">
+        /// The to Revision.
+        /// </param>
         public void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
         {
             this.RevisionDao.InsertIterationRevisionLog(transaction, partition, iteration, fromRevision, toRevision);
         }
 
         /// <summary>
-        /// Insert new data in the RevisionRegistry table if it does not exist for this transaction
+        /// Gets a unique revision number for this transaction by reading it from the RevisionRegistry table, or adding it there if it does not exist yet
+        /// This ensures that there is only 
         /// </summary>
         /// <param name="transaction">
         /// The current transaction
@@ -126,9 +159,9 @@ namespace CDP4WebServices.API.Services
         /// <returns>
         /// The current or next available revision number
         /// </returns>
-        public int GetNextRevision(NpgsqlTransaction transaction, string partition)
+        public int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition)
         {
-            return this.RevisionDao.GetNextRevision(transaction, partition);
+            return this.RevisionDao.GetRevisionForTransaction(transaction, partition);
         }
 
         /// <summary>
@@ -143,16 +176,20 @@ namespace CDP4WebServices.API.Services
         /// <param name="revision">
         /// The revision.
         /// </param>
+        /// <param name="deltaResponse">
+        /// The delta Response.
+        /// </param>
         /// <returns>
         /// A collection of <see cref="Thing"/> instances.
         /// </returns>
-        private IEnumerable<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision)
+        private IEnumerable<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse)
         {
             // Set the transaction to retrieve the latest database state
             this.TransactionManager.SetDefaultContext(transaction);
 
-            var revisionInfoPerPartition =
-                this.RevisionDao.Read(transaction, partition, revision).GroupBy(x => x.Partition);
+            var revisionInfoPerPartition = deltaResponse
+                                               ? this.RevisionDao.Read(transaction, partition, revision).GroupBy(x => x.Partition)
+                                               : this.RevisionDao.ReadCurrentRevisionChanges(transaction, partition, revision).GroupBy(x => x.Partition);
 
             // Use the revision model data (grouped by partition)
             foreach (var partitionInfo in revisionInfoPerPartition)

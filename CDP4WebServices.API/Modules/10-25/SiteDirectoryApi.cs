@@ -53,6 +53,29 @@ namespace CDP4WebServices.API.Modules
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// The supported get query parameters.
+        /// </summary>
+        private static readonly string[] SupportedGetQueryParameters =
+            {
+                QueryParameters.ExtentQuery, 
+                QueryParameters.IncludeReferenceDataQuery,
+                QueryParameters.IncludeAllContainersQuery, 
+                QueryParameters.IncludeFileDataQuery,
+                QueryParameters.RevisionNumberQuery, 
+                QueryParameters.RevisionFromQuery, 
+                QueryParameters.RevisionToQuery
+            };
+
+        /// <summary>
+        /// The supported post query parameter.
+        /// </summary>
+        private static readonly string[] SupportedPostQueryParameter =
+            { 
+                QueryParameters.RevisionNumberQuery, 
+                QueryParameters.ExportQuery
+            };
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SiteDirectoryApi"/> class.
         /// </summary>
         public SiteDirectoryApi()
@@ -107,41 +130,43 @@ namespace CDP4WebServices.API.Modules
                 logMessage = string.Format("{0} database operations started", requestToken);
                 Logger.Info(this.ConstructLog(logMessage));
 
-                HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, new[]
-                           {
-                               QueryParameters.ExtentQuery,
-                               QueryParameters.IncludeReferenceDataQuery,
-                               QueryParameters.IncludeAllContainersQuery,
-                               QueryParameters.IncludeFileDataQuery,
-                               QueryParameters.RevisionNumberQuery,
-                               QueryParameters.RevisionFromQuery,
-                               QueryParameters.RevisionToQuery
-                           });
+                // validate (and set) the supplied query parameters
+                HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedGetQueryParameters);
 
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
                 var resourceResponse = new List<Thing>();
-                
+
                 // get prepared data source transaction
                 var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
-                
+
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, fromRevision).ToList());
+                    resourceResponse.AddRange(
+                        this.RevisionService.Get(transaction, TopContainer, fromRevision).ToList());
                 }
-                else if (this.RequestUtils.QueryParameters.RevisionFrom.HasValue || this.RequestUtils.QueryParameters.RevisionTo.HasValue)
+                else if (this.RequestUtils.QueryParameters.RevisionFrom.HasValue
+                         || this.RequestUtils.QueryParameters.RevisionTo.HasValue)
                 {
                     string[] routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
                     var iid = routeSegments.Last();
                     Guid guid;
                     if (!Guid.TryParse(iid, out guid))
                     {
-                        var invalidRequest = new JsonResponse(string.Format("The identifier of the object to query was not found or the route is invalid."), new DefaultJsonSerializer());
+                        var invalidRequest = new JsonResponse(
+                            "The identifier of the object to query was not found or the route is invalid.",
+                            new DefaultJsonSerializer());
                         return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                     }
 
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, guid, this.RequestUtils.QueryParameters.RevisionFrom ?? 0, this.RequestUtils.QueryParameters.RevisionTo ?? int.MaxValue));
+                    resourceResponse.AddRange(
+                        this.RevisionService.Get(
+                            transaction,
+                            TopContainer,
+                            guid,
+                            this.RequestUtils.QueryParameters.RevisionFrom ?? 0,
+                            this.RequestUtils.QueryParameters.RevisionTo ?? int.MaxValue));
                 }
                 else
                 {
@@ -152,14 +177,21 @@ namespace CDP4WebServices.API.Modules
                 transaction.Commit();
 
                 sw.Stop();
-                logMessage = string.Format("Database operations {0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                logMessage = string.Format(
+                    "Database operations {0} completed in {1} [ms]",
+                    requestToken,
+                    sw.ElapsedMilliseconds);
                 Logger.Info(logMessage);
 
                 sw.Start();
                 logMessage = string.Format("return {0} response started", requestToken);
                 Logger.Info(logMessage);
 
-                return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, HttpStatusCode.OK, requestToken);
+                return this.GetJsonResponse(
+                    resourceResponse,
+                    this.RequestUtils.GetRequestDataModelVersion,
+                    HttpStatusCode.OK,
+                    requestToken);
             }
             catch (Exception ex)
             {
@@ -220,7 +252,7 @@ namespace CDP4WebServices.API.Modules
                 logMessage = string.Format("{0} started", requestToken);
                 Logger.Info(this.ConstructLog(logMessage));
 
-                HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, new[] { QueryParameters.RevisionNumberQuery, QueryParameters.ExportQuery });
+                HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedPostQueryParameter);
 
                 var contentTypeRegex = new Regex("^multipart/.*;\\s*boundary=(.*)$", RegexOptions.IgnoreCase);
                 Stream bodyStream;
@@ -265,16 +297,16 @@ namespace CDP4WebServices.API.Modules
                     command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
                 }
 
-                // retrieve the revision for this transaction (or get next revision if not exists)
-                var fromRevision = this.RevisionService.GetNextRevision(transaction, TopContainer);
+                // retrieve the revision for this transaction (or get next revision if it does not exist)
+                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, TopContainer);
 
                 this.OperationProcessor.Process(operationData, transaction, TopContainer);
 
                 // save revision-history
                 var actor = credentials.Person.Iid;
-                var changedThings = this.RevisionService.SaveRevisions(transaction, TopContainer, actor, fromRevision).ToList();
+                var changedThings = this.RevisionService.SaveRevisions(transaction, TopContainer, actor, transactionRevision).ToList();
 
-                // commit the operation + revision-historty
+                // commit the operation + revision-history
                 transaction.Commit();
                 if (this.ModelCreatorManager.IsUserTriggerDisable)
                 {
@@ -293,7 +325,7 @@ namespace CDP4WebServices.API.Modules
 
                 // get the latest revision state including revisions that may have happened meanwhile
                 Logger.Info(this.ConstructLog());
-                fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
+                var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
@@ -304,8 +336,8 @@ namespace CDP4WebServices.API.Modules
                 Logger.Info(logMessage);
 
                 return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
-            }           
-            catch(InvalidOperationException ex)
+            }
+            catch (InvalidOperationException ex)
             {
                 if (transaction != null)
                 {
@@ -335,15 +367,8 @@ namespace CDP4WebServices.API.Modules
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
-
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
+                transaction?.Dispose();
+                connection?.Dispose();
             }
         }
 

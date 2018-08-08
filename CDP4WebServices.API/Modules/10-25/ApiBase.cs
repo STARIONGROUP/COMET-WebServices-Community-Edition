@@ -330,6 +330,7 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters from the request.
         /// </param>
+        /// <param name="supportedQueryParameters"></param>
         /// <returns>
         /// The <see cref="Response"/>.
         /// </returns>
@@ -348,7 +349,17 @@ namespace CDP4WebServices.API.Modules
         {
             // wireup cdp authorization support
             this.CdpAuthorization();
-            var response = this.GetResponseData(routeParams);
+            var response = this.GetResponseData(routeParams,
+                new[]
+                    {
+                        QueryParameters.ExtentQuery,
+                        QueryParameters.IncludeReferenceDataQuery,
+                        QueryParameters.IncludeAllContainersQuery,
+                        QueryParameters.IncludeFileDataQuery,
+                        QueryParameters.RevisionNumberQuery,
+                        QueryParameters.RevisionFromQuery,
+                        QueryParameters.RevisionToQuery
+                    });
 
             // Register the required CDP4 headers to every response send
             this.HeaderInfoProvider.RegisterResponseHeaders(response);

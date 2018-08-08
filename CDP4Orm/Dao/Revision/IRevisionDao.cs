@@ -12,12 +12,12 @@ namespace CDP4Orm.Dao.Revision
     using Npgsql;
 
     /// <summary>
-    /// The RevisionDao interface.
+    /// A data access class that allows revision based retrieval of concepts from the data store.
     /// </summary>
     public interface IRevisionDao
     {
         /// <summary>
-        /// Read the data from the database.
+        /// Retrieves the data that was changed after the indicated revision.
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -26,12 +26,29 @@ namespace CDP4Orm.Dao.Revision
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
         /// <param name="revision">
-        /// revision to retrieve from the database.
+        /// The revision number from which to determine the delta response up to the current revision.
         /// </param>
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
         IEnumerable<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision);
+
+        /// <summary>
+        /// Retrieves the data that was changed in the indicated revision.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="revision">
+        /// The revision number from which to return a delta response.
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="RevisionInfo"/>.
+        /// </returns>
+        IEnumerable<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision);
 
         /// <summary>
         /// Read the revisions of a <see cref="Thing"/>
@@ -65,7 +82,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// The current or next available revision number
         /// </returns>
-        int GetNextRevision(NpgsqlTransaction transaction, string partition);
+        int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Insert new values into the IterationRevisionLog table

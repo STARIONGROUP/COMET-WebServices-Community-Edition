@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RevisionDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 System RHEA System S.A.
+//   Copyright (c) 2017-2018 System RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -10,6 +10,7 @@ namespace CDP4Orm.Dao.Revision
     using System.Collections.Generic;
     using System.Linq;
     using CDP4Common.DTO;
+
     using CDP4JsonSerializer;
     using Newtonsoft.Json.Linq;
     using NLog;
@@ -19,29 +20,24 @@ namespace CDP4Orm.Dao.Revision
     using Resolve;
 
     /// <summary>
-    /// A data access object class that allows revision based retrieval of concepts from the data store.
+    /// A data access class that allows revision based retrieval of concepts from the data store.
     /// </summary>
     public class RevisionDao : IRevisionDao
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
         /// The Revision history table suffix
         /// </summary>
-        private const string revisionTableSuffix = "_Revision";
+        private const string RevisionTableSuffix = "_Revision";
 
         /// <summary>
         /// The column name of the JSON representation of the thing in the revision-history table
         /// </summary>
-        private const string jsonColumnName = "Jsonb";
+        private const string JsonColumnName = "Jsonb";
 
         /// <summary>
         /// The column name of the Revision number of the thing in the revision-history table
         /// </summary>
-        private const string revisionColumnName = "RevisionNumber";
+        private const string RevisionColumnName = "RevisionNumber";
 
         /// <summary>
         /// The same as connected partition key.
@@ -61,17 +57,27 @@ namespace CDP4Orm.Dao.Revision
         /// <summary>
         /// The Instant key.
         /// </summary>
-        private const string instantColumn = "Instant";
+        private const string InstantColumn = "Instant";
 
         /// <summary>
         /// The Actor key.
         /// </summary>
-        private const string actorColumn = "Actor";
+        private const string ActorColumn = "Actor";
 
         /// <summary>
-        /// The Revision key.
+        /// Use the comparator to determine the changes in the indicated revision only.
         /// </summary>
-        private const string revisionColumn = "Revision";
+        private const string ChangesInCurrentRevision = "=";
+
+        /// <summary>
+        /// Use the comparator to determine the changes since the indicated revision.
+        /// </summary>
+        private const string ChangesSinceRevision = ">";
+
+        /// <summary>
+        /// A <see cref="NLog.Logger"/> instance
+        /// </summary>
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
         /// Gets or sets the Command logger.
@@ -84,7 +90,7 @@ namespace CDP4Orm.Dao.Revision
         public IResolveDao ResolveDao { get; set; }
 
         /// <summary>
-        /// Read the data from the database.
+        /// Retrieves the data that was changed after the indicated revision.
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -93,20 +99,34 @@ namespace CDP4Orm.Dao.Revision
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
         /// <param name="revision">
-        /// revision to retrieve from the database.
+        /// The revision number from which to determine the delta response up to the current revision.
         /// </param>
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
         public IEnumerable<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision)
         {
-            if (partition == Utils.SiteDirectoryPartition)
-            {
-                return this.ReadSiteDirectoryRevisions(transaction, partition, revision).ToList();
-            }
-            
-            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            return this.ReadEngineeringModelRevisions(transaction, partition, revision).ToList();
+            return this.InternalGetRevisionInfo(transaction, partition, revision, ChangesSinceRevision);
+        }
+
+        /// <summary>
+        /// Retrieves the data that was changed in the indicated revision.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="revision">
+        /// The revision number from which to return a delta response.
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="RevisionInfo"/>.
+        /// </returns>
+        public IEnumerable<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision)
+        {
+            return this.InternalGetRevisionInfo(transaction, partition, revision, ChangesInCurrentRevision);
         }
 
         /// <summary>
@@ -120,7 +140,7 @@ namespace CDP4Orm.Dao.Revision
         {
             var table = this.GetThingRevisionTableName(thing);
 
-            var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\")", IidKey, revisionColumnName, instantColumn, actorColumn, jsonColumnName);
+            var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\")", IidKey, RevisionColumnName, InstantColumn, ActorColumn, JsonColumnName);
             var values = "(:iid, :revisionnumber, \"SiteDirectory\".get_transaction_time(), :actor, :jsonb)";
             var sqlQuery = string.Format("INSERT INTO \"{0}\".\"{1}\" {2} VALUES {3}", partition, table, columns, values);
 
@@ -147,7 +167,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>The collection of revised <see cref="Thing"/></returns>
         public IEnumerable<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
         {
-            var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] {thingIid}).ToArray();
+            var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] { thingIid }).ToArray();
             if (resolveInfos.Length != 1)
             {
                 throw new InvalidOperationException(string.Format("Multiple entries were found for {0}", thingIid));
@@ -158,11 +178,11 @@ namespace CDP4Orm.Dao.Revision
             var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
             var sqlQuery = string.Format(
                 "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
-                jsonColumnName,
+                JsonColumnName,
                 partition,
                 revisionTableName,
                 IidKey,
-                revisionColumnName);
+                RevisionColumnName);
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
@@ -187,7 +207,8 @@ namespace CDP4Orm.Dao.Revision
         }
 
         /// <summary>
-        /// Insert new data in the RevisionRegistry table if it does not exist for this transaction
+        /// Gets a unique revision number for this transaction by reading it from the RevisionRegistry table, or adding it there if it does not exist yet
+        /// This ensures that there is only 
         /// </summary>
         /// <param name="transaction">
         /// The current transaction
@@ -198,26 +219,43 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// The current or next available revision number
         /// </returns>
-        public int GetNextRevision(NpgsqlTransaction transaction, string partition)
+        public int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition)
         {
             var sqlQuery = string.Format(
                 "SELECT * FROM \"{0}\".get_current_revision();",
                 partition);
 
+            int revision;
+
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
-                return (int)command.ExecuteScalar();
+                if (!int.TryParse(command.ExecuteScalar()?.ToString(), out revision))
+                {
+                    throw new ApplicationException("The revision number for this transaction could not be retrieved, cancel processing");
+                }
             }
+
+            return revision;
         }
 
         /// <summary>
         /// Insert new values into the IterationRevisionLog table
         /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        /// <param name="iteration">The iteration associated to the revision</param>
-        /// <param name="fromRevision">The starting revision number for the iteration. If null the current revision is used.</param>
-        /// <param name="toRevision">The ending revision number for the iteration. If null it means the iteration is the current one.</param>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="partition">
+        /// The partition
+        /// </param>
+        /// <param name="iteration">
+        /// The iteration associated to the revision
+        /// </param>
+        /// <param name="fromRevision">
+        /// The starting revision number for the iteration. If null the current revision is used.
+        /// </param>
+        /// <param name="toRevision">
+        /// The ending revision number for the iteration. If null it means the iteration is the current one.
+        /// </param>
         public void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
         {
             var iterationColumn = "\"IterationIid\"";
@@ -268,6 +306,35 @@ namespace CDP4Orm.Dao.Revision
         }
 
         /// <summary>
+        /// The internal get revision info.
+        /// </summary>
+        /// <param name="transaction">
+        /// The transaction.
+        /// </param>
+        /// <param name="partition">
+        /// The partition.
+        /// </param>
+        /// <param name="revision">
+        /// The revision.
+        /// </param>
+        /// <param name="comparator">
+        /// The comparator.
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="RevisionInfo"/>.
+        /// </returns>
+        private IEnumerable<RevisionInfo> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        {
+            if (partition == Utils.SiteDirectoryPartition)
+            {
+                return this.ReadSiteDirectoryRevisions(transaction, partition, revision, comparator).ToList();
+            }
+
+            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
+            return this.ReadEngineeringModelRevisions(transaction, partition, revision, comparator).ToList();
+        }
+
+        /// <summary>
         /// Internal read method that uses yield to return the data from the database.
         /// </summary>
         /// <param name="transaction">
@@ -279,10 +346,13 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="revision">
         /// revision to retrieve from the database.
         /// </param>
+        /// <param name="comparator">
+        /// The comparator used to determine the delta response.
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private IEnumerable<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision)
+        private IEnumerable<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -290,13 +360,14 @@ namespace CDP4Orm.Dao.Revision
             sqlBuilder.Append(
                 "SELECT \"ValueTypeSet\"-> 'ClassKind' as \"{1}\", \"{2}\"").Append(
                 " FROM \"{0}\".\"Thing_View\"").Append(
-                " WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer >= :revision;");
+                " WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer {3} :revision;");
 
             var sql = string.Format(
                 sqlBuilder.ToString(),
                 partition,
                 TypeInfoKey,
-                IidKey);
+                IidKey, 
+                comparator);
 
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
@@ -349,10 +420,13 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="revision">
         /// revision to retrieve from the database.
         /// </param>
+        /// <param name="comparator">
+        /// The comparator used to determine the delta response.
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private IEnumerable<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision)
+        private IEnumerable<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -362,11 +436,11 @@ namespace CDP4Orm.Dao.Revision
             sqlBuilder.Append("SELECT \"AllThings\".\"{2}\", \"AllThings\".\"{3}\", \"AllThings\".\"{4}\"").Append(
                 " FROM (SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'true'::boolean AS \"{4}\"").Append(
                 "       FROM \"{0}\".\"Thing_View\"").Append(
-                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer >= :revision").Append(
+                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer {5} :revision").Append(
                 "       UNION ALL").Append(
                 "       SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'false'::boolean AS \"{4}\"").Append(
                 "       FROM \"{1}\".\"Thing_View\"").Append(
-                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer >= :revision) AS \"AllThings\";");
+                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer {5} :revision) AS \"AllThings\";");
 
             var sql = string.Format(
                 sqlBuilder.ToString(),
@@ -374,7 +448,8 @@ namespace CDP4Orm.Dao.Revision
                 subPartition,
                 TypeInfoKey,
                 IidKey,
-                SameAsConnectedPartitionKey);
+                SameAsConnectedPartitionKey,
+                comparator);
             
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
@@ -431,7 +506,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>The name of the revision table</returns>
         private string GetThingRevisionTableName(ResolveInfo resolveInfo)
         {
-            return resolveInfo.InstanceInfo.TypeName + revisionTableSuffix;
+            return resolveInfo.InstanceInfo.TypeName + RevisionTableSuffix;
         }
 
         /// <summary>
@@ -441,7 +516,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>The name of the revision table</returns>
         private string GetThingRevisionTableName(Thing thing)
         {
-            return thing.ClassKind + revisionTableSuffix;
+            return thing.ClassKind + RevisionTableSuffix;
         }
 
         /// <summary>
@@ -453,7 +528,7 @@ namespace CDP4Orm.Dao.Revision
         {
             var jsonObject = JObject.Parse(reader.GetValue(0).ToString());
 
-            Thing thing = null;
+            Thing thing;
 
             try
             {
