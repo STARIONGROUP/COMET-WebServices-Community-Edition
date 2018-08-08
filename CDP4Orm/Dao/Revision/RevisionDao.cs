@@ -286,11 +286,11 @@ namespace CDP4Orm.Dao.Revision
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
-            // get all Thing 'concepts' that are newer then passed in revision
+            // get all Thing 'concepts' which revisions are newer or equal to the revision
             sqlBuilder.Append(
                 "SELECT \"ValueTypeSet\"-> 'ClassKind' as \"{1}\", \"{2}\"").Append(
                 " FROM \"{0}\".\"Thing_View\"").Append(
-                " WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer > :revision;");
+                " WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer >= :revision;");
 
             var sql = string.Format(
                 sqlBuilder.ToString(),
@@ -362,11 +362,11 @@ namespace CDP4Orm.Dao.Revision
             sqlBuilder.Append("SELECT \"AllThings\".\"{2}\", \"AllThings\".\"{3}\", \"AllThings\".\"{4}\"").Append(
                 " FROM (SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'true'::boolean AS \"{4}\"").Append(
                 "       FROM \"{0}\".\"Thing_View\"").Append(
-                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer > :revision").Append(
+                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer >= :revision").Append(
                 "       UNION ALL").Append(
                 "       SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'false'::boolean AS \"{4}\"").Append(
                 "       FROM \"{1}\".\"Thing_View\"").Append(
-                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer > :revision) AS \"AllThings\";");
+                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer >= :revision) AS \"AllThings\";");
 
             var sql = string.Format(
                 sqlBuilder.ToString(),
