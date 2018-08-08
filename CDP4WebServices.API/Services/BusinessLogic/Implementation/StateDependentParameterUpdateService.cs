@@ -10,12 +10,24 @@ namespace CDP4WebServices.API.Services
     using System.Collections.Generic;
     using System.Linq;
     using CDP4Common.DTO;
+    using CDP4Common.EngineeringModelData;
     using CDP4Common.Types;
     using CDP4WebServices.API.Services.Authorization;
     using Npgsql;
+    using ActualFiniteState = CDP4Common.DTO.ActualFiniteState;
+    using ActualFiniteStateList = CDP4Common.DTO.ActualFiniteStateList;
+    using Iteration = CDP4Common.DTO.Iteration;
+    using Parameter = CDP4Common.DTO.Parameter;
+    using ParameterOrOverrideBase = CDP4Common.DTO.ParameterOrOverrideBase;
+    using ParameterOverride = CDP4Common.DTO.ParameterOverride;
+    using ParameterOverrideValueSet = CDP4Common.DTO.ParameterOverrideValueSet;
+    using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
+    using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
+    using ParameterValueSet = CDP4Common.DTO.ParameterValueSet;
+    using ParameterValueSetBase = CDP4Common.DTO.ParameterValueSetBase;
 
     /// <summary>
-    /// A service that handles update on <see cref="ActualFiniteStateList"/>, <see cref="ActualFiniteState"/> and <see cref="ParameterBase"/> and their value-set
+    /// A service that handles update on <see cref="CDP4Common.DTO.ActualFiniteStateList"/>, <see cref="CDP4Common.DTO.ActualFiniteState"/> and <see cref="CDP4Common.DTO.ParameterBase"/> and their value-set
     /// </summary>
     public class StateDependentParameterUpdateService : IStateDependentParameterUpdateService
     {
@@ -55,14 +67,19 @@ namespace CDP4WebServices.API.Services
         public ICompoundParameterTypeService CompoundParameterTypeService { get; set; }
 
         /// <summary>
-        /// Update all the relevant <see cref="ParameterBase"/>
+        /// Gets or sets the <see cref="IParameterValueSetFactory"/>
         /// </summary>
-        /// <param name="actualFiniteStateList">The updated <see cref="ActualFiniteStateList"/></param>
-        /// <param name="iteration">The <see cref="Iteration"/></param>
+        public IDefaultValueArrayFactory DefaultValueSetFactory { get; set; }
+
+        /// <summary>
+        /// Update all the relevant <see cref="CDP4Common.DTO.ParameterBase"/>
+        /// </summary>
+        /// <param name="actualFiniteStateList">The updated <see cref="CDP4Common.DTO.ActualFiniteStateList"/></param>
+        /// <param name="iteration">The <see cref="CDP4Common.DTO.Iteration"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        /// <param name="newOldActualStateMap">The map that links the new to old <see cref="ActualFiniteState"/></param>
+        /// <param name="newOldActualStateMap">The map that links the new to old <see cref="CDP4Common.DTO.ActualFiniteState"/></param>
         public void UpdateAllStateDependentParameters(ActualFiniteStateList actualFiniteStateList, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ActualFiniteState, ActualFiniteState> newOldActualStateMap)
         {
             if (iteration == null)
@@ -70,9 +87,9 @@ namespace CDP4WebServices.API.Services
                 throw new ArgumentNullException("iteration");
             }
 
-            var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Where(i => i.GetType() == typeof(Parameter)).Cast<Parameter>()
+            var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Where(i => i is Parameter).Cast<Parameter>()
                 .Where(x => x.StateDependence == actualFiniteStateList.Iid).ToList();
-            var parameterOverrides = this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext).Where(i => i.GetType() == typeof(ParameterOverride)).Cast<ParameterOverride>()
+            var parameterOverrides = this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext).Where(i => i is ParameterOverride).Cast<ParameterOverride>()
                 .Where(x => parameters.Select(p => p.Iid).Contains(x.Parameter)).ToList();
 
             // update the parameters with the new actual states
@@ -101,7 +118,7 @@ namespace CDP4WebServices.API.Services
 
             // update the parameter subscription from the updated parameter/overide value sets
             var parameterOrOverrides = parameters.Cast<ParameterOrOverrideBase>().Union(parameterOverrides).ToList();
-            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, null, securityContext).Where(i => i.GetType() == typeof(ParameterSubscription)).Cast<ParameterSubscription>()
+            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, null, securityContext).Where(i => i is ParameterSubscription).Cast<ParameterSubscription>()
                 .Where(x => parameterOrOverrides.SelectMany(p => p.ParameterSubscription).Contains(x.Iid));
             foreach (var parameterSubscription in parameterSubscriptions)
             {
@@ -124,7 +141,7 @@ namespace CDP4WebServices.API.Services
         private void UpdateParameter(Parameter parameter, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ActualFiniteState, ActualFiniteState> newOldActualStateMap, ref Dictionary<ParameterValueSet, ParameterValueSet> newOldValueSetMap)
         {
             var oldValueSets = this.ParameterValueSetService.GetShallow(transaction, partition, parameter.ValueSet, securityContext)
-                    .Where(i => i.GetType() == typeof(ParameterValueSet)).Cast<ParameterValueSet>().ToList();
+                    .Where(i => i is ParameterValueSet).Cast<ParameterValueSet>().ToList();
 
             if (parameter.IsOptionDependent)
             {
@@ -144,14 +161,14 @@ namespace CDP4WebServices.API.Services
         /// Create new <see cref="ParameterValueSet"/> for a <see cref="Parameter"/>
         /// </summary>
         /// <param name="parameter">The <see cref="Parameter"/></param>
-        /// <param name="actualOption">The actual <see cref="Option"/></param>
+        /// <param name="actualOption">The actual <see cref="CDP4Common.DTO.Option"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
         /// <param name="newOldActualStateMap">The map that links the new <see cref="ActualFiniteState"/> to the old ones</param>
         /// <param name="oldValueSets">The old <see cref="ParameterValueSet"/></param>
         /// <param name="newOldValueSetMap">The map that links the new to old <see cref="ParameterValueSet"/></param>
-        private void CreateParameterValueSets(Parameter parameter, Guid? actualOption, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ActualFiniteState, ActualFiniteState> newOldActualStateMap, IEnumerable<ParameterValueSet> oldValueSets, ref Dictionary<ParameterValueSet, ParameterValueSet> newOldValueSetMap)
+        private void CreateParameterValueSets(Parameter parameter, Guid? actualOption, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ActualFiniteState, ActualFiniteState> newOldActualStateMap, IReadOnlyList<ParameterValueSet> oldValueSets, ref Dictionary<ParameterValueSet, ParameterValueSet> newOldValueSetMap)
         {
             if (newOldActualStateMap == null || !newOldActualStateMap.Any())
             {
@@ -192,30 +209,21 @@ namespace CDP4WebServices.API.Services
         /// <param name="actualState">The <see cref="ActualFiniteState"/></param>
         /// <param name="transaction">The transaction</param>
         /// <param name="partition">The partition</param>
-        /// <param name="securityContex">The security context</param>
+        /// <param name="securityContext">The security context</param>
         /// <returns>The created <see cref="ParameterValueSet"/></returns>
-        private ParameterValueSet CreateParameterValueSet(ParameterValueSet oldValue, Parameter parameter, Guid? actualOption, Guid? actualState, NpgsqlTransaction transaction, string partition, ISecurityContext securityContex)
+        private ParameterValueSet CreateParameterValueSet(ParameterValueSet oldValue, Parameter parameter, Guid? actualOption, Guid? actualState, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var numberOfComponent = 0;
-            if (oldValue == null)
-            {
-                numberOfComponent = this.GetNumberOfComponent(parameter, transaction, securityContex);
-            }
-
-            var defaultValue = new List<string>(numberOfComponent);
-            for (var i = 0; i < numberOfComponent; i++)
-            {
-                defaultValue.Add("-");
-            }
+            this.DefaultValueSetFactory.Load(transaction, securityContext);
+            var defaultValue = this.DefaultValueSetFactory.CreateDefaultValueArray(parameter.ParameterType);
 
             var isOldValueNull = oldValue == null;
             var valueSet = new ParameterValueSet(Guid.NewGuid(), 1)
             {
-                Manual = new ValueArray<string>(isOldValueNull ? (IEnumerable<string>)defaultValue : oldValue.Manual),
-                Computed = new ValueArray<string>(isOldValueNull ? (IEnumerable<string>)defaultValue : oldValue.Computed),
-                Reference = new ValueArray<string>(isOldValueNull ? (IEnumerable<string>)defaultValue : oldValue.Reference),
-                Published = new ValueArray<string>(isOldValueNull ? (IEnumerable<string>)defaultValue : oldValue.Published),
-                Formula = new ValueArray<string>(isOldValueNull ? (IEnumerable<string>)defaultValue : oldValue.Formula),
+                Manual = new ValueArray<string>(isOldValueNull ? defaultValue : oldValue.Manual),
+                Computed = new ValueArray<string>(isOldValueNull ? defaultValue : oldValue.Computed),
+                Reference = new ValueArray<string>(isOldValueNull ? defaultValue : oldValue.Reference),
+                Published = new ValueArray<string>(isOldValueNull ? defaultValue : oldValue.Published),
+                Formula = new ValueArray<string>(isOldValueNull ? defaultValue : oldValue.Formula),
                 ActualOption = actualOption,
                 ActualState = actualState,
                 ValueSwitch = isOldValueNull ? CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL : oldValue.ValueSwitch
@@ -228,19 +236,19 @@ namespace CDP4WebServices.API.Services
 
         #region ParameterOVerride
         /// <summary>
-        /// Update a <see cref="ParameterOverride"/> with new <see cref="ParameterOverrideValueSet"/>
+        /// Update a <see cref="ParameterOverride"/> with new <see cref="CDP4Common.DTO.ParameterOverrideValueSet"/>
         /// </summary>
         /// <param name="parameterOverride">The <see cref="ParameterOverride"/></param>
         /// <param name="transaction">The transaction</param>
         /// <param name="partition">The partition</param>
         /// <param name="securityContext">The security context</param>
         /// <param name="newOldParameterValueSetMap">The map that links the new <see cref="ParameterValueSet"/> to the old ones</param>
-        /// <param name="newOldValueSetMap">A map that links the created <see cref="ParameterOverrideValueSet"/> to the old ones</param>
+        /// <param name="newOldValueSetMap">A map that links the created <see cref="CDP4Common.DTO.ParameterOverrideValueSet"/> to the old ones</param>
         private void UpdateParameterOverride(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IDictionary<ParameterValueSet, ParameterValueSet> newOldParameterValueSetMap, ref Dictionary<ParameterValueSetBase, ParameterValueSetBase> newOldValueSetMap)
         {
             var oldValueSets =
                 this.ParameterOverrideValueSetService.GetShallow(transaction, partition, parameterOverride.ValueSet, securityContext)
-                    .Where(i => i.GetType() == typeof(ParameterOverrideValueSet)).Cast<ParameterOverrideValueSet>().ToList();
+                    .Where(i => i is ParameterOverrideValueSet).Cast<ParameterOverrideValueSet>().ToList();
 
             foreach (var newOldParameterValueSetPair in newOldParameterValueSetMap)
             {
@@ -290,7 +298,7 @@ namespace CDP4WebServices.API.Services
 
         #region Parameter Subscription
         /// <summary>
-        /// Update a <see cref="ParameterSubscription"/> with new <see cref="ParameterSubscriptionValueSet"/>
+        /// Update a <see cref="ParameterSubscription"/> with new <see cref="CDP4Common.DTO.ParameterSubscriptionValueSet"/>
         /// </summary>
         /// <param name="parameterSubscription">The <see cref="ParameterSubscription"/></param>
         /// <param name="transaction">The current transaction</param>
@@ -300,7 +308,7 @@ namespace CDP4WebServices.API.Services
         private void UpdateParameterSubscription(ParameterSubscription parameterSubscription, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ParameterValueSetBase, ParameterValueSetBase> newOldValueSetBaseMap)
         {
             var oldValueSets = this.ParameterSubscriptionValueSetService.GetShallow(transaction, partition, parameterSubscription.ValueSet, securityContext)
-                    .Where(i => i.GetType() == typeof(ParameterSubscriptionValueSet)).Cast<ParameterSubscriptionValueSet>().ToList();
+                    .Where(i => i is ParameterSubscriptionValueSet).Cast<ParameterSubscriptionValueSet>().ToList();
 
             foreach (var newOldParameterValueSetPair in newOldValueSetBaseMap)
             {
@@ -337,21 +345,5 @@ namespace CDP4WebServices.API.Services
             this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, newValueSet, container);
         }
         #endregion
-
-        /// <summary>
-        /// Gets the number of component related to a <see cref="ParameterType"/>
-        /// </summary>
-        /// <param name="parameter">The <see cref="Parameter"/></param>
-        /// <param name="transaction">The current <see cref="NpgsqlTransaction"/></param>
-        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        /// <returns>The number of component</returns>
-        private int GetNumberOfComponent(Parameter parameter, NpgsqlTransaction transaction, ISecurityContext securityContext)
-        {
-            var cptParameterType =
-                this.CompoundParameterTypeService.GetShallow(transaction, "SiteDirectory", new List<Guid> { parameter.ParameterType }, securityContext).Cast<CompoundParameterType>().SingleOrDefault();
-
-            // considering the compnents are all scalar
-            return cptParameterType == null ? 1 : cptParameterType.Component.Count;
-        }
     }
 }

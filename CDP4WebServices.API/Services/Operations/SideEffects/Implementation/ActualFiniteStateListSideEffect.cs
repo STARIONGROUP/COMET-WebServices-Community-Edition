@@ -85,12 +85,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void AfterUpdate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // check whether possibleFiniteStateList was added
-            if (thing.PossibleFiniteStateList != originalThing.PossibleFiniteStateList)
+            if (!thing.PossibleFiniteStateList.All(x => originalThing.PossibleFiniteStateList.Any(y => y.K == x.K && y.V == x.V))
+                || thing.PossibleFiniteStateList.Count != originalThing.PossibleFiniteStateList.Count)
             {
                 // Update all actualFiniteStates
                 this.AddOrUpdateActualFiniteStates(thing, container as Iteration, transaction, partition, securityContext);
-            }           
+            }
         }
 
         /// <summary>
@@ -113,8 +113,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(ActualFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-             // Get all associated state dependent parameters and re-create value set without the state dependency
-             this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(thing, (Iteration)container, transaction, partition, securityContext, null);
+            // Get all associated state dependent parameters and re-create value set without the state dependency
+            this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(thing, (Iteration)container, transaction, partition, securityContext, null);
         }
 
         /// <summary>
@@ -129,7 +129,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             // delete the old ActualFiniteState
             var oldActualStates = this.ActualFiniteStateService.GetShallow(transaction, partition, actualFiniteStateList.ActualState, securityContext)
-                .Where(i => i.GetType() == typeof(ActualFiniteState)).OfType<ActualFiniteState>().ToList();
+                .Where(i => i is ActualFiniteState).OfType<ActualFiniteState>().ToList();
 
             // Gets the possible finite state list of the current processed ActualFiniteStateList
             var pslCollection =
@@ -161,7 +161,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 if (!this.ActualFiniteStateService.DeleteConcept(transaction, partition, actualState, actualFiniteStateList))
                 {
-                    throw new InvalidOperationException(string.Format("The actual finite state {0} could not be deleted", actualState.Iid));
+                    throw new InvalidOperationException($"The actual finite state {actualState.Iid} could not be deleted");
                 }
             }
         }

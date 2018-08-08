@@ -88,6 +88,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Guid owner = Guid.NewGuid();
 
         private List<string> initValue = new List<string> { "init" };
+        private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
+
 
         [SetUp]
         public void Setup()
@@ -103,6 +105,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.iterationService = new Mock<IIterationService>();
+            this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.parameterUpdateService = new StateDependentParameterUpdateService();
 
@@ -367,10 +370,11 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
                 .Returns(new List<Thing>());
 
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
+            this.parameterUpdateService.DefaultValueSetFactory = this.defaultValueArrayFactory.Object;
             this.parameterValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(true);
             this.parameterOverrideValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(true);
             this.parameterSubscriptionValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>())).Returns(true);
-
         }
 
         [Test]

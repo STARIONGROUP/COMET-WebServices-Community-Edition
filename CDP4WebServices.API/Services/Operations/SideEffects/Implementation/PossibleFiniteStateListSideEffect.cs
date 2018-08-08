@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PossibleFiniteStateListSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -52,19 +52,20 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             var actualFiniteStateListCollectionToUpdate =
                 this.ActualFiniteStateListService.GetShallow(transaction, partition, null, securityContext)
-                    .Where(i => i.GetType() == typeof(ActualFiniteStateList)).Cast<ActualFiniteStateList>()
+                    .Where(i => i is ActualFiniteStateList).Cast<ActualFiniteStateList>()
                     .Where(x => x.PossibleFiniteStateList.Select(oi => Guid.Parse(oi.V.ToString())).Contains(thing.Iid))
                     .ToList();
 
             foreach (var actualFiniteStateList in actualFiniteStateListCollectionToUpdate)
             {
                 // delete all actual lists that only have the deleted PossibleList as PossibleList and update all parameters that depend on them
+                // do it before as otherwise the ActualStateList would not contain the PossibleFiniteStateList anymore
                 if (actualFiniteStateList.PossibleFiniteStateList.Count == 1)
                 {
                     this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext, null);
                     if (!this.ActualFiniteStateListService.DeleteConcept(transaction, partition, actualFiniteStateList, container))
                     {
-                        throw new InvalidOperationException(string.Format("The actual finite state list {0} could not be deleted", actualFiniteStateList.Iid));
+                        throw new InvalidOperationException($"The actual finite state list {actualFiniteStateList.Iid} could not be deleted");
                     }
                 }
             }

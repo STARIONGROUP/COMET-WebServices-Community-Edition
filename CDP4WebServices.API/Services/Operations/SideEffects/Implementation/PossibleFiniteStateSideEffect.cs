@@ -11,12 +11,17 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System.Linq;
 
     using CDP4Common.DTO;
-
+    using CDP4Common.EngineeringModelData;
     using CDP4Orm.Dao;
 
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
+    using ActualFiniteState = CDP4Common.DTO.ActualFiniteState;
+    using ActualFiniteStateList = CDP4Common.DTO.ActualFiniteStateList;
+    using Iteration = CDP4Common.DTO.Iteration;
+    using PossibleFiniteState = CDP4Common.DTO.PossibleFiniteState;
+    using PossibleFiniteStateList = CDP4Common.DTO.PossibleFiniteStateList;
 
     /// <summary>
     /// The purpose of the <see cref="PossibleFiniteStateSideEffect"/> class is to execute additional logic before and after a specific operation is performed.
@@ -101,7 +106,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             var iteration =
                 this.IterationService.GetShallow(transaction, engineeringModelPartition, null, securityContext)
-                    .Where(i => i.GetType() == typeof(Iteration)).Cast<Iteration>()
+                    .Where(i => i is Iteration).Cast<Iteration>()
                     .SingleOrDefault();
 
             if (iteration == null)
@@ -115,6 +120,21 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 throw new InvalidOperationException(string.Format("It is not allowed to delete the last Possible Finite State {0} from the list. Consider deleting the whole Possible Finite State List {1}", thing.Iid, possibleList.Iid));
             }
+        }
+
+        /// <summary>
+        /// After a <see cref="PossibleFiniteState"/> is deleted, update related <see cref="ActualFiniteStateList"/> and related <see cref="ParameterBase"/>s
+        /// </summary>
+        /// <param name="thing">The deleted <see cref="PossibleFiniteState"/></param>
+        /// <param name="container">The container</param>
+        /// <param name="originalThing">The original <see cref="PossibleFiniteState"/></param>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="securityContext">The security context</param>
+        public override void AfterDelete(PossibleFiniteState thing, Thing container, PossibleFiniteState originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            base.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
+            this.UpdateAllRelevantActualFiniteStateList((PossibleFiniteStateList)container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -141,7 +161,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             var iteration =
                 this.IterationService.GetShallow(transaction, engineeringModelPartition, null, securityContext)
-                    .Where(i => i.GetType() == typeof(Iteration)).Cast<Iteration>()
+                    .Where(i => i is Iteration).Cast<Iteration>()
                     .SingleOrDefault();
 
             if (iteration == null)
@@ -171,7 +191,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             // delete the old ActualFiniteState
             var oldActualStates = this.ActualFiniteStateService.GetShallow(transaction, partition, actualFiniteStateList.ActualState, securityContext)
-                .Where(i => i.GetType() == typeof(ActualFiniteState)).Cast<ActualFiniteState>().ToList();
+                .Where(i => i is ActualFiniteState).Cast<ActualFiniteState>().ToList();
 
             // Gets the possible finite state list of the current processed ActualFiniteStateList
             var pslCollection =
@@ -223,6 +243,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             var currentPossibleStateIds = possibleStateIds == null ? new List<Guid>() : possibleStateIds.ToList();
 
+            // build the different PossibleStates combination taken from the PossibleFiniteStateLists and create an ActualState for each of these combinations
             foreach (var orderedItem in pslCollection[pslIndex].PossibleState.OrderBy(x => x.K))
             {
                 var newPossibleStateIds = currentPossibleStateIds.ToList();
@@ -239,6 +260,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                     var oldActualState =
                         oldActualStates.SingleOrDefault(x => x.PossibleState.SequenceEqual(newPossibleStateIds));
+
+                    newActualstate.Kind = oldActualState?.Kind ?? ActualFiniteStateKind.MANDATORY;
 
                     newOldStateMap.Add(newActualstate, oldActualState);
                     continue;
