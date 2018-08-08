@@ -356,7 +356,7 @@ namespace CDP4Orm.Dao.Revision
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
-            // get all Thing 'concepts' which revisions are newer or equal to the revision
+            // get all Thing 'concepts' whose revisions are as per the supplied revision comparator
             sqlBuilder.Append(
                 "SELECT \"ValueTypeSet\"-> 'ClassKind' as \"{1}\", \"{2}\"").Append(
                 " FROM \"{0}\".\"Thing_View\"").Append(
@@ -433,6 +433,7 @@ namespace CDP4Orm.Dao.Revision
             var connectedPartition = partition;
             var subPartition = partition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
 
+            // get all Thing 'concepts' whose revisions are as per the supplied revision comparator
             sqlBuilder.Append("SELECT \"AllThings\".\"{2}\", \"AllThings\".\"{3}\", \"AllThings\".\"{4}\"").Append(
                 " FROM (SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'true'::boolean AS \"{4}\"").Append(
                 "       FROM \"{0}\".\"Thing_View\"").Append(

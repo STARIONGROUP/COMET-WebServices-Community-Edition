@@ -330,7 +330,6 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters from the request.
         /// </param>
-        /// <param name="supportedQueryParameters"></param>
         /// <returns>
         /// The <see cref="Response"/>.
         /// </returns>
@@ -349,17 +348,7 @@ namespace CDP4WebServices.API.Modules
         {
             // wireup cdp authorization support
             this.CdpAuthorization();
-            var response = this.GetResponseData(routeParams,
-                new[]
-                    {
-                        QueryParameters.ExtentQuery,
-                        QueryParameters.IncludeReferenceDataQuery,
-                        QueryParameters.IncludeAllContainersQuery,
-                        QueryParameters.IncludeFileDataQuery,
-                        QueryParameters.RevisionNumberQuery,
-                        QueryParameters.RevisionFromQuery,
-                        QueryParameters.RevisionToQuery
-                    });
+            var response = this.GetResponseData(routeParams);
 
             // Register the required CDP4 headers to every response send
             this.HeaderInfoProvider.RegisterResponseHeaders(response);
@@ -638,13 +627,13 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Get a zipped models archive response instance from the passed list of guid.
+        /// Get a zipped models archive response instance from the passed list of <see cref="Guid"/>.
         /// </summary>
         /// <param name="requestDataModelVersion">
         /// The data model version of this request to use with serialization.
         /// </param>
         /// <param name="modelSetupGuidList">
-        /// The list of EngineeringModelSetup guid to export
+        /// The list of EngineeringModelSetup <see cref="Guid"/> to export
         /// </param>
         /// <param name="statusCode">
         /// The optional HTML status Code.
