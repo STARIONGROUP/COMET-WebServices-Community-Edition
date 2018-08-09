@@ -39,6 +39,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterSubscriptionService> parameterSubscriptionService;
         private Mock<IIterationService> iterationService;
         private Mock<ICompoundParameterTypeService> compoundParameterTypeService;
+        private FiniteStateLogicService finiteStateLogicService;
         private StateDependentParameterUpdateService parameterUpdateService;
 
         private string partition = "partition";
@@ -108,12 +109,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.parameterUpdateService = new StateDependentParameterUpdateService();
-
-            this.sideEffect.ActualFiniteStateService = this.actualFiniteStateService.Object;
-            this.sideEffect.ActualFiniteStateListService = this.actualFiniteStateListService.Object;
-            this.sideEffect.PossibleFiniteStateListService = this.possibleFiniteStateListslService.Object;
-            this.sideEffect.IterationService = this.iterationService.Object;
-            this.sideEffect.StateDependentParameterUpdateService = this.parameterUpdateService;
+            this.finiteStateLogicService = new FiniteStateLogicService();
 
             this.parameterUpdateService.ParameterValueSetService = this.parameterValueSetService.Object;
             this.parameterUpdateService.ParameterOverrideValueSetService = this.parameterOverrideValueSetService.Object;
@@ -371,6 +367,14 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 .Returns(new List<Thing>());
 
             this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
+            this.finiteStateLogicService.ActualFiniteStateListService = this.actualFiniteStateListService.Object;
+            this.finiteStateLogicService.ActualFiniteStateService = this.actualFiniteStateService.Object;
+            this.finiteStateLogicService.IterationService = this.iterationService.Object;
+            this.finiteStateLogicService.PossibleFiniteStateListService = this.possibleFiniteStateListslService.Object;
+            this.finiteStateLogicService.StateDependentParameterUpdateService = this.parameterUpdateService;
+
+            this.sideEffect.FiniteStateLogicService = this.finiteStateLogicService;
+
             this.parameterUpdateService.DefaultValueSetFactory = this.defaultValueArrayFactory.Object;
             this.parameterValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(true);
             this.parameterOverrideValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(true);

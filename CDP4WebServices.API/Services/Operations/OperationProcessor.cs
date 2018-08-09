@@ -964,8 +964,10 @@ namespace CDP4WebServices.API.Services.Operations
                             var orderedCollectionItems = ((IEnumerable<OrderedItem>)update.Value).ToList();
                             if (propInfo.Aggregation != AggregationKind.Composite)
                             {
-                                foreach (var newOrderedItem in orderedCollectionItems)
+                                foreach (var newOrderedItem in orderedCollectionItems.Where(x => !x.M.HasValue))
                                 {
+                                    service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
+
                                     // add ordered item to collection property
                                     isUpdated = service.AddToCollectionProperty(
                                         transaction,
