@@ -128,30 +128,6 @@ namespace CDP4WebServices.API.Helpers
         }
 
         /// <summary>
-        /// Set the transaction statement time used when creating items.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <returns>
-        /// The newly set transaction time.
-        /// </returns>
-        public DateTime UpdateTransactionStatementTime(NpgsqlTransaction transaction)
-        {
-            // make sure to bump the transaction timestamp as iteration contained data needs to be distinguishable when retrieving the versioned information
-            using (var command = new NpgsqlCommand(
-                string.Format("UPDATE {0} SET {1} = statement_timestamp();", TransactionInfoTable, TransactionTimeColumn),
-                transaction.Connection,
-                transaction))
-            {
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
-            }
-
-            return this.GetTransactionTime(transaction);
-        }
-
-        /// <summary>
         /// Get the current session time instant.
         /// </summary>
         /// <param name="transaction">

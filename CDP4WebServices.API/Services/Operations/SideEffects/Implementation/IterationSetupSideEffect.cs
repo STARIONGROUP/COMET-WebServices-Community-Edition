@@ -76,8 +76,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeCreate(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // bump the transaction timestamp and use it to properly keep track of iteration contained data 
-            thing.CreatedOn = this.TransactionManager.UpdateTransactionStatementTime(transaction);
+            thing.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
 
             var engineeringModelSetup = (EngineeringModelSetup)container;
 
@@ -143,12 +142,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // Create revisions for created Iteration and updated EngineeringModel
             var actor = credentials.Person.Iid;
-
-            // retrieve topcontainer to acertain the current revision
-            var topContainerInstance = this.GetTopContainer(transaction, engineeringModelPartition);
-            var fromRevision = topContainerInstance.RevisionNumber - 1;
-
-            this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, fromRevision);
+            
+            var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
+            this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
         }
 
         /// <summary>

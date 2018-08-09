@@ -25,6 +25,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     public class EngineeringModelSetupSideEffect : OperationSideEffect<EngineeringModelSetup>
     {
         /// <summary>
+        /// The first revision.
+        /// </summary>
+        public const int FirstRevision = 1;
+
+        /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -185,14 +190,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
             var actor = credentials.Person.Iid;
-
+            
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
                 this.CreateCopyEngineeringModel(thing, container, transaction, partition, securityContext);
 
                 // Create revisions for created EngineeringModel
-                this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, 0);
+                this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 return;
             }
@@ -200,214 +205,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.CreateDefaultEngineeringModel(thing, container, transaction, partition, securityContext);
 
             // Create revisions for created EngineeringModel
-            this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, 0);
-        }
-
-        /// <summary>
-        /// Creates a new <see cref="EngineeringModel"/> from a source
-        /// </summary>
-        /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
-        /// <param name="container">The container</param>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        /// <param name="securityContext">The security context</param>
-        private void CreateCopyEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
-        {
-            // copy data from the source engineering-model
-            this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
-        }
-
-        /// <summary>
-        /// Create a new <see cref="EngineeringModel"/> from scratch
-        /// </summary>
-        /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
-        /// <param name="container">The container</param>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
-        /// <param name="securityContext">The security context</param>
-        private void CreateDefaultEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
-        {
-            // No need to create a model RDL for the created EngineeringModelSetup since is handled in the client. It happens in the same transaction as the creation of the EngineeringModelSetup itself
-            var firstIterationSetup = this.CreateIterationSetup(thing, transaction, partition);
-
-            this.CreateParticipant(thing, (SiteDirectory)container, transaction, partition);
-
-            // The EngineeringModel schema (for the new EngineeringModelSetup) is already created from the DAO at this point, get its partition name
-            var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
-
-            // Create the engineering model in the newEngineeringModelPartition
-            var engineeringModel = new EngineeringModel(thing.EngineeringModelIid, 1) { EngineeringModelSetup = thing.Iid };
-            if (!this.EngineeringModelService.CreateConcept(transaction, newEngineeringModelPartition, engineeringModel, container))
-            {
-                var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
-                Logger.Error(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            // Create the first iteration in the newEngineeringModelPartition
-            var firstIteration = new Iteration(firstIterationSetup.IterationIid, 1) { IterationSetup = firstIterationSetup.Iid };
-            if (!this.IterationService.CreateConcept(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
-            {
-                var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";
-                Logger.Error(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            // switch to iteration partition:
-            var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
-
-            // Create a Domain FileStore for the current domain in the first iteration
-            var newDomainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
-            {
-                Owner = thing.ActiveDomain.Single(),
-                CreatedOn = DateTime.UtcNow
-            };
-
-            if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, firstIteration))
-            {
-                var errorMessage = $"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {firstIteration.Iid}";
-                Logger.Error(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-
-            this.CreateDefaultOption(firstIteration, transaction, newIterationPartition);
-        }
-        
-        /// <summary>
-        /// Create the first <see cref="Option"/> in the <see cref="Iteration"/>
-        /// </summary>
-        /// <param name="container">
-        /// The container <see cref="Iteration"/> of the <see cref="Option"/> that is to be created
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        private void CreateDefaultOption(Iteration container, NpgsqlTransaction transaction, string partition)
-        {
-            var newOption = new Option(Guid.NewGuid(), 1)
-            {
-                Name = "Option 1",
-                ShortName = "option_1"
-            };
-
-            if (!this.OptionService.CreateConcept(transaction, partition, newOption, container))
-            {
-                var errorMessage = $"There was a problem creating the new Option: {newOption.Iid} contained by Iteration: {container.Iid}";
-                Logger.Error(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
-        }
-
-        /// <summary>
-        /// Create the first <see cref="IterationSetup"/> that is to be contained by the new <see cref="EngineeringModelSetup"/>
-        /// </summary>
-        /// <param name="thing">
-        /// The <see cref="EngineeringModelSetup"/> instance that has been created.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        private IterationSetup CreateIterationSetup(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction, string partition)
-        {
-            var iterationNumber = this.QeuryIterationNumberForFirstIteration(engineeringModelSetup, transaction);
-
-            // create iteration setup in sitedirectory (= partition)
-            var iterationSetup = new IterationSetup(Guid.NewGuid(), 1)
-            {
-                IterationNumber = iterationNumber,
-                IterationIid = Guid.NewGuid(),
-                Description = "Iteration 1"
-            };
-
-            if (!this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, engineeringModelSetup))
-            {
-                throw new InvalidOperationException($"There was a problem creating the new IterationSetup: {iterationSetup.Iid} contained by EngineeringModelSetup: {engineeringModelSetup.Iid}");
-            }
-
-            return iterationSetup;
-        }
-
-        /// <summary>
-        /// Queries the iteration-number from the database
-        /// </summary>
-        /// <param name="engineeringModelSetup">
-        /// The <see cref="EngineeringModelSetup"/> that is being created and for which a new <see cref="IterationSetup"/> is created as well
-        /// </param>
-        /// <param name="transaction">
-        /// The <see cref="NpgsqlTransaction"/> used to connect to the database
-        /// </param>
-        /// <returns>
-        /// the new iteration number based on the IterationNumberSequence 
-        /// </returns>
-        /// <remarks>
-        /// The function shall always return 1. When creating a new <see cref="EngineeringModelSetup"/>
-        /// </remarks>
-        private int QeuryIterationNumberForFirstIteration(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction)
-        {
-            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
-            var iterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
-
-            if (iterationNumber != 1)
-            {
-                throw new InvalidOperationException("The first IterationSetup of a new EngineeringModelSetup shall always have the IterationNumber set to 1");
-            }
-
-            return iterationNumber;
-        }
-
-        /// <summary>
-        /// Create a <see cref="Participant"/> in the new <see cref="EngineeringModelSetup"/> for the current <see cref="Person"/>
-        /// </summary>
-        /// The <see cref="EngineeringModelSetup"/> instance that has been created.
-        /// <param name="thing">
-        /// The <see cref="EngineeringModelSetup"/> instance that has been created.
-        /// </param>
-        /// <param name="container">
-        /// The container.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        private void CreateParticipant(EngineeringModelSetup thing, SiteDirectory container, NpgsqlTransaction transaction, string partition)
-        {
-            if (!container.DefaultParticipantRole.HasValue)
-            {
-                throw new InvalidOperationException("The Default Participant Role must be set on the Site Directory");
-            }
-
-            // use the default participant role as specified in the SiteDirectort container object
-            var defaultRole = container.DefaultParticipantRole.Value;
-
-            var currentPerson = this.RequestUtils.Context.AuthenticatedCredentials.Person;
-            var defaultDomain = currentPerson.DefaultDomain;
-            var participant = new Participant(Guid.NewGuid(), 1) { IsActive = true, Person = currentPerson.Iid, Role = defaultRole };
-            if (defaultDomain != null)
-            {
-                var domainId = defaultDomain.Value;
-                participant.Domain.Add(domainId);
-                participant.SelectedDomain = domainId;
-            }
-
-            if (!this.ParticipantService.CreateConcept(transaction, partition, participant, thing))
-            {
-                throw new InvalidOperationException($"There was a problem creating the new Participant: {participant.Iid} contained by EngineeringModelSetup: {thing.Iid}");
-            }
-
-            thing.Participant.Add(participant.Iid);
-
-            if (!this.EngineeringModelSetupService.UpdateConcept(transaction, partition, thing, container))
-            {
-                throw new InvalidOperationException($"There was a problem adding the new Participant: {participant.Iid} to the EngineeringModelSetup: {thing.Iid}");
-            }
+            this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
         }
 
         /// <summary>
@@ -554,6 +352,216 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (!this.EngineeringModelService.DeleteConcept(transaction, newEngineeringModelPartition, engineeringModel))
             {
                 throw new InvalidOperationException($"There was a problem deleting the EngineeringModel: {engineeringModel.Iid} for EngineeringModelSetup: {thing.Iid}");
+            }
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="EngineeringModel"/> from a source
+        /// </summary>
+        /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
+        /// <param name="container">The container</param>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The partition</param>
+        /// <param name="securityContext">The security context</param>
+        private void CreateCopyEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            // copy data from the source engineering-model
+            this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
+        }
+
+        /// <summary>
+        /// Create a new <see cref="EngineeringModel"/> from scratch
+        /// </summary>
+        /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
+        /// <param name="container">The container</param>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The partition</param>
+        /// <param name="securityContext">The security context</param>
+        private void CreateDefaultEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            // No need to create a model RDL for the created EngineeringModelSetup since is handled in the client. It happens in the same transaction as the creation of the EngineeringModelSetup itself
+            var firstIterationSetup = this.CreateIterationSetup(thing, transaction, partition);
+
+            this.CreateParticipant(thing, (SiteDirectory)container, transaction, partition);
+
+            // The EngineeringModel schema (for the new EngineeringModelSetup) is already created from the DAO at this point, get its partition name
+            var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
+
+            // Create the engineering model in the newEngineeringModelPartition
+            var engineeringModel = new EngineeringModel(thing.EngineeringModelIid, 1) { EngineeringModelSetup = thing.Iid };
+            if (!this.EngineeringModelService.CreateConcept(transaction, newEngineeringModelPartition, engineeringModel, container))
+            {
+                var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
+                Logger.Error(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            // Create the first iteration in the newEngineeringModelPartition
+            var firstIteration = new Iteration(firstIterationSetup.IterationIid, 1) { IterationSetup = firstIterationSetup.Iid };
+            if (!this.IterationService.CreateConcept(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
+            {
+                var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";
+                Logger.Error(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            // switch to iteration partition:
+            var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
+
+            // Create a Domain FileStore for the current domain in the first iteration
+            var newDomainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
+            {
+                Owner = thing.ActiveDomain.Single(),
+                CreatedOn = DateTime.UtcNow
+            };
+
+            if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, firstIteration))
+            {
+                var errorMessage = $"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {firstIteration.Iid}";
+                Logger.Error(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            this.CreateDefaultOption(firstIteration, transaction, newIterationPartition);
+        }
+        
+        /// <summary>
+        /// Create the first <see cref="Option"/> in the <see cref="Iteration"/>
+        /// </summary>
+        /// <param name="container">
+        /// The container <see cref="Iteration"/> of the <see cref="Option"/> that is to be created
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        private void CreateDefaultOption(Iteration container, NpgsqlTransaction transaction, string partition)
+        {
+            var newOption = new Option(Guid.NewGuid(), 1)
+            {
+                Name = "Option 1",
+                ShortName = "option_1"
+            };
+
+            if (!this.OptionService.CreateConcept(transaction, partition, newOption, container))
+            {
+                var errorMessage = $"There was a problem creating the new Option: {newOption.Iid} contained by Iteration: {container.Iid}";
+                Logger.Error(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+        }
+
+        /// <summary>
+        /// Create the first <see cref="IterationSetup"/> that is to be contained by the new <see cref="EngineeringModelSetup"/>
+        /// </summary>
+        /// <param name="engineeringModelSetup">
+        /// The engineering Model Setup.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <returns>
+        /// The <see cref="IterationSetup"/>.
+        /// </returns>
+        private IterationSetup CreateIterationSetup(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction, string partition)
+        {
+            var iterationNumber = this.QeuryIterationNumberForFirstIteration(engineeringModelSetup, transaction);
+
+            // create iteration setup in sitedirectory (= partition)
+            var iterationSetup = new IterationSetup(Guid.NewGuid(), 1)
+            {
+                IterationNumber = iterationNumber,
+                IterationIid = Guid.NewGuid(),
+                Description = "Iteration 1"
+            };
+
+            if (!this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, engineeringModelSetup))
+            {
+                throw new InvalidOperationException($"There was a problem creating the new IterationSetup: {iterationSetup.Iid} contained by EngineeringModelSetup: {engineeringModelSetup.Iid}");
+            }
+
+            return iterationSetup;
+        }
+
+        /// <summary>
+        /// Queries the iteration-number from the database
+        /// </summary>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that is being created and for which a new <see cref="IterationSetup"/> is created as well
+        /// </param>
+        /// <param name="transaction">
+        /// The <see cref="NpgsqlTransaction"/> used to connect to the database
+        /// </param>
+        /// <returns>
+        /// the new iteration number based on the IterationNumberSequence 
+        /// </returns>
+        /// <remarks>
+        /// The function shall always return 1. When creating a new <see cref="EngineeringModelSetup"/>
+        /// </remarks>
+        private int QeuryIterationNumberForFirstIteration(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction)
+        {
+            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+            var iterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
+
+            if (iterationNumber != 1)
+            {
+                throw new InvalidOperationException("The first IterationSetup of a new EngineeringModelSetup shall always have the IterationNumber set to 1");
+            }
+
+            return iterationNumber;
+        }
+
+        /// <summary>
+        /// Create a <see cref="Participant"/> in the new <see cref="EngineeringModelSetup"/> for the current <see cref="Person"/>
+        /// </summary>
+        /// The <see cref="EngineeringModelSetup"/> instance that has been created.
+        /// <param name="thing">
+        /// The <see cref="EngineeringModelSetup"/> instance that has been created.
+        /// </param>
+        /// <param name="container">
+        /// The container.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        private void CreateParticipant(EngineeringModelSetup thing, SiteDirectory container, NpgsqlTransaction transaction, string partition)
+        {
+            if (!container.DefaultParticipantRole.HasValue)
+            {
+                throw new InvalidOperationException("The Default Participant Role must be set on the Site Directory");
+            }
+
+            // use the default participant role as specified in the SiteDirectort container object
+            var defaultRole = container.DefaultParticipantRole.Value;
+
+            var currentPerson = this.RequestUtils.Context.AuthenticatedCredentials.Person;
+            var defaultDomain = currentPerson.DefaultDomain;
+            var participant = new Participant(Guid.NewGuid(), 1) { IsActive = true, Person = currentPerson.Iid, Role = defaultRole };
+            if (defaultDomain != null)
+            {
+                var domainId = defaultDomain.Value;
+                participant.Domain.Add(domainId);
+                participant.SelectedDomain = domainId;
+            }
+
+            if (!this.ParticipantService.CreateConcept(transaction, partition, participant, thing))
+            {
+                throw new InvalidOperationException($"There was a problem creating the new Participant: {participant.Iid} contained by EngineeringModelSetup: {thing.Iid}");
+            }
+
+            thing.Participant.Add(participant.Iid);
+
+            if (!this.EngineeringModelSetupService.UpdateConcept(transaction, partition, thing, container))
+            {
+                throw new InvalidOperationException($"There was a problem adding the new Participant: {participant.Iid} to the EngineeringModelSetup: {thing.Iid}");
             }
         }
     }

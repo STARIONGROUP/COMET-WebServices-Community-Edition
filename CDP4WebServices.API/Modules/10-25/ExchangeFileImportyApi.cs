@@ -25,6 +25,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.DataStore;
     using CDP4WebServices.API.Services.FileHandling;
+    using CDP4WebServices.API.Services.Operations.SideEffects;
     using CDP4WebServices.API.Services.Protocol;
     using Nancy;
     using Nancy.ModelBinding;
@@ -489,9 +490,6 @@ namespace CDP4WebServices.API.Modules
                                 iterationInsertResult = false;
                                 break;
                             }
-
-                            // bump the transaction time, so we can keep track of individual iterations
-                            this.TransactionManager.UpdateTransactionStatementTime(transaction);
                         }
 
                         if (!iterationInsertResult)
@@ -709,7 +707,7 @@ namespace CDP4WebServices.API.Modules
                 this.TransactionManager.SetFullAccessState(true);
 
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, Guid.Empty, 0);
+                this.RevisionService.SaveRevisions(transaction, TopContainer, Guid.Empty, EngineeringModelSetupSideEffect.FirstRevision);
 
                 var siteDirectory = this.SiteDirectoryService.Get(
                     transaction,
@@ -737,7 +735,7 @@ namespace CDP4WebServices.API.Modules
                         this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                     // Save revision history for EngineeringModel's entries
-                    this.RevisionService.SaveRevisions(transaction, partition, Guid.Empty, 0);
+                    this.RevisionService.SaveRevisions(transaction, partition, Guid.Empty, EngineeringModelSetupSideEffect.FirstRevision);
 
                     // commit revision history
                     transaction.Commit();
@@ -745,33 +743,18 @@ namespace CDP4WebServices.API.Modules
             }
             catch (NpgsqlException ex)
             {
-                if (transaction != null)
-                {
-                    transaction.Rollback();
-                }
-
+                transaction?.Rollback();
                 Logger.Error(ex, "Error occured during revision history creation");
             }
             catch (Exception ex)
             {
-                if (transaction != null)
-                {
-                    transaction.Rollback();
-                }
-
+                transaction?.Rollback();
                 Logger.Error(ex, "Error occured during revision history creation");
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
-
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
+                transaction?.Dispose();
+                connection?.Dispose();
             }
         }
 

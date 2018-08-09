@@ -56,17 +56,6 @@ namespace CDP4WebServices.API.Helpers
         NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials, Guid iterationIid);
 
         /// <summary>
-        /// Set the transaction statement time used when creating items.
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction.
-        /// </param>
-        /// <returns>
-        /// The newly set transaction time.
-        /// </returns>
-        DateTime UpdateTransactionStatementTime(NpgsqlTransaction transaction);
-
-        /// <summary>
         /// Get the current transaction time.
         /// </summary>
         /// <param name="transaction">
