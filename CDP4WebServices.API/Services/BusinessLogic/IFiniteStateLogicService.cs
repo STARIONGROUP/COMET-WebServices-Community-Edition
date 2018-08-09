@@ -15,7 +15,6 @@ namespace CDP4WebServices.API.Services
     /// </summary>
     public interface IFiniteStateLogicService : IBusinessLogicService
     {
-        // todo add get default (task T2815 CDP4WEBSERVICES)
         /// <summary>
         /// Get and update all relevant <see cref="CDP4Common.DTO.ActualFiniteStateList"/>
         /// </summary>

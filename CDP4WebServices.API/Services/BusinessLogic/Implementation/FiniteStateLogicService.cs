@@ -22,7 +22,6 @@ namespace CDP4WebServices.API.Services
     /// </summary>
     public class FiniteStateLogicService : IFiniteStateLogicService
     {
-        // TODO add get default finite states method when needed (task T2815 CDP4WEBSERVICES)
         /// <summary>
         /// Gets or sets the <see cref="IIterationService"/>
         /// </summary>
