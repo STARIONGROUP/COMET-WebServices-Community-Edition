@@ -283,7 +283,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"QuantityKindFactor\"", partition);
                 sqlBuilder.AppendFormat(" SET (\"Sequence\")");
                 sqlBuilder.AppendFormat(" = (:reorderSequence)");
-                sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
+                sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid");
                 sqlBuilder.AppendFormat(" AND \"Sequence\" = :sequence;");
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = (Guid)orderedItem.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = orderedItem.K;
