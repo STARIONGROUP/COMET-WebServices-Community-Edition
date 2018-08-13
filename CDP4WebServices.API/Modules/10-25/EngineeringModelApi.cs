@@ -306,7 +306,7 @@ namespace CDP4WebServices.API.Modules
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
                 
                 // the route pattern enforces that there is atleast one route segment
-                var routeSegments = string.Format("{0}/{1}", TopContainer, routeParams.uri)
+                string[] routeSegments = string.Format("{0}/{1}", TopContainer, routeParams.uri)
                     .Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
 
                 var resourceProcessor = new ResourceProcessor(
