@@ -123,12 +123,10 @@ namespace CDP4WebServices.API.Modules
             var sw = new Stopwatch();
             sw.Start();
             var requestToken = this.GenerateRandomToken();
-            string logMessage;
-
+            
             try
             {
-                logMessage = string.Format("{0} database operations started", requestToken);
-                Logger.Info(this.ConstructLog(logMessage));
+                Logger.Info(this.ConstructLog($"{requestToken} database operations started"));
 
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedGetQueryParameters);
@@ -177,15 +175,10 @@ namespace CDP4WebServices.API.Modules
                 transaction.Commit();
 
                 sw.Stop();
-                logMessage = string.Format(
-                    "Database operations {0} completed in {1} [ms]",
-                    requestToken,
-                    sw.ElapsedMilliseconds);
-                Logger.Info(logMessage);
+                Logger.Info("Database operations {0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 sw.Start();
-                logMessage = string.Format("return {0} response started", requestToken);
-                Logger.Info(logMessage);
+                Logger.Info("return {0} response started", requestToken);
 
                 return this.GetJsonResponse(
                     resourceResponse,
@@ -200,8 +193,7 @@ namespace CDP4WebServices.API.Modules
                     transaction.Rollback();
                 }
 
-                logMessage = string.Format("{0} failed after {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Error(ex, this.ConstructFailureLog(logMessage));
+                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
@@ -220,8 +212,7 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 sw.Stop();
-                logMessage = string.Format("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Info(logMessage);
+                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 
@@ -245,12 +236,10 @@ namespace CDP4WebServices.API.Modules
             var sw = new Stopwatch();
             sw.Start();
             var requestToken = this.GenerateRandomToken();
-            string logMessage;
-
+            
             try
             {
-                logMessage = string.Format("{0} started", requestToken);
-                Logger.Info(this.ConstructLog(logMessage));
+                Logger.Info(this.ConstructLog($"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedPostQueryParameter);
 
@@ -318,8 +307,7 @@ namespace CDP4WebServices.API.Modules
 
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
                 {
-                    logMessage = string.Format("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    Logger.Info(logMessage);
+                    Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
                     return this.GetJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion);
                 }
 
@@ -332,8 +320,7 @@ namespace CDP4WebServices.API.Modules
                 var revisionResponse = this.RevisionService.Get(transaction, TopContainer, fromRevision).ToArray();
                 transaction.Commit();
 
-                logMessage = string.Format("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Info(logMessage);
+                Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
             }
@@ -344,8 +331,7 @@ namespace CDP4WebServices.API.Modules
                     transaction.Rollback();
                 }
 
-                logMessage = string.Format("{0} failed after {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Error(ex, this.ConstructFailureLog(logMessage));
+                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
@@ -358,8 +344,7 @@ namespace CDP4WebServices.API.Modules
                     transaction.Rollback();
                 }
 
-                logMessage = string.Format("{0} failed after {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                Logger.Error(ex, this.ConstructFailureLog(logMessage));
+                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
