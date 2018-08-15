@@ -50,7 +50,6 @@ namespace CDP4Orm.Dao.Resolve
 
             // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
             return this.ReadEngineeringModelInternal(transaction, partition, ids).ToList();
-
         }
 
         /// <summary>

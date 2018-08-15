@@ -88,20 +88,20 @@ namespace CDP4WebServices.API.Tests
             
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation));
+                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
 
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithoutClassKind);
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation));
+                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
 
             var completeDeleteObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, SimpleQuantityKindTypeString } };
             postOperation.Delete.Clear();
             postOperation.Delete.Add(completeDeleteObject);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation));
+            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace CDP4WebServices.API.Tests
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation));
+                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
 
             var deleteObjectWithListProperty = new ClasslessDTO()
                                                     {
@@ -133,7 +133,7 @@ namespace CDP4WebServices.API.Tests
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithListProperty);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation));
+            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
         }
 
         [Test]
