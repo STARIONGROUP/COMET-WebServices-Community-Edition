@@ -138,14 +138,17 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             if (rawUpdateInfo.ContainsKey("ContainingGroup"))
             {
-                var containingGroupId = (Guid)rawUpdateInfo["ContainingGroup"];
-                this.ValidateContainingGroup(
-                    thing,
-                    container,
-                    transaction,
-                    partition,
-                    securityContext,
-                    containingGroupId);
+                var containingGroupId = rawUpdateInfo["ContainingGroup"];
+                if (containingGroupId != null && Guid.TryParse(containingGroupId.ToString(), out var containingGroupIdGuid))
+                {
+                    this.ValidateContainingGroup(
+                        thing,
+                        container,
+                        transaction,
+                        partition,
+                        securityContext,
+                        containingGroupIdGuid);
+                }
             }
         }
 
