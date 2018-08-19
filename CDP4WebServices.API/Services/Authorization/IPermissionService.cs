@@ -74,12 +74,5 @@ namespace CDP4WebServices.API.Services.Authorization
         /// </param>
         /// <returns>True if the given <see cref="Thing"/> can be written.</returns>
         bool CanWrite(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext);
-
-        /// <summary>
-        /// Determines whether a given <see cref="Participant"/> is a participant in the
-        /// supplied <see cref="EngineeringModel"/>
-        /// </summary>
-        /// <returns>True if the given <see cref="Participant"/> is a participant of the <see cref="EngineeringModel"/>.</returns>
-        bool IsEngineeringModelSetupModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation);
     }
 }

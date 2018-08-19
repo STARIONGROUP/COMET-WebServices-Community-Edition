@@ -48,6 +48,11 @@ namespace CDP4WebServices.API.Services.Authorization
         public IRequestUtils RequestUtils { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="IAccessRightKindService"/> for this request
+        /// </summary>
+        public IAccessRightKindService AccessRightKindService { get; set; }
+
+        /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -79,12 +84,12 @@ namespace CDP4WebServices.API.Services.Authorization
         /// </returns>
         public bool CanRead(string typeName, ISecurityContext securityContext, string partition)
         {
-            Logger.Debug("{0}:{1}", typeName, partition);
+            Logger.Debug("Type CanRead: {0}:{1}", typeName, partition);
 
             if (partition == SiteDirectory)
             {
                 // Get the person's permission and if found use it. If not, use the default.
-                var personAccessRightKind = this.GetPersonAccessRightKind(typeName);
+                var personAccessRightKind = this.AccessRightKindService.QueryPersonAccessRightKind(this.Credentials, typeName);
 
                 switch (personAccessRightKind)
                 {
@@ -119,7 +124,7 @@ namespace CDP4WebServices.API.Services.Authorization
             }
 
             // Get the person's permission and if found use it. If not, use the default.
-            var participantAccessRightKind = this.GetParticipantAccessRightKind(typeName);
+            var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.Credentials, typeName);
 
             switch (participantAccessRightKind)
             {
@@ -161,6 +166,8 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <returns>True if the given <see cref="Thing"/> can be read.</returns>
         public bool CanRead(NpgsqlTransaction transaction, Thing thing, string partition)
         {
+            Logger.Debug("Database CanRead: {0}:{1}:{2}", thing.ClassKind, thing.Iid, partition);
+
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.Credentials.Person.Iid))
             {
@@ -169,7 +176,7 @@ namespace CDP4WebServices.API.Services.Authorization
 
             if (partition == SiteDirectory)
             {
-                var personAccessRightKind = this.GetPersonAccessRightKind(thing.GetType().Name);
+                var personAccessRightKind = this.AccessRightKindService.QueryPersonAccessRightKind(this.Credentials, thing.GetType().Name);
 
                 switch (personAccessRightKind)
                 {
@@ -188,7 +195,6 @@ namespace CDP4WebServices.API.Services.Authorization
                         if (thing is EngineeringModelSetup modelSetup)
                         {
                             return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
-
                         }
 
                         if (thing is IterationSetup iterationSetup)
@@ -265,7 +271,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <returns>True if the given <see cref="Thing"/> can be written.</returns>
         public bool CanWrite(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext)
         {
-            Logger.Debug("{0}:{1}", typeName, partition);
+            Logger.Debug("Database CanWrite: {0}:{1}:{2}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.Credentials.Person.Iid))
@@ -275,7 +281,7 @@ namespace CDP4WebServices.API.Services.Authorization
 
             if (partition == SiteDirectory)
             {
-                var personAccessRightKind = this.GetPersonAccessRightKind(typeName);
+                var personAccessRightKind =  this.AccessRightKindService.QueryPersonAccessRightKind(this.Credentials, typeName);
 
                 switch (personAccessRightKind)
                 {
@@ -291,7 +297,7 @@ namespace CDP4WebServices.API.Services.Authorization
 
                     case PersonAccessRightKind.MODIFY_IF_PARTICIPANT:
                         {
-                            return this.IsEngineeringModelSetupModifyAllowed(transaction, thing, partition, modifyOperation);
+                            return this.IsEngineeringModelSetupModifyAllowed(thing, modifyOperation);
                         }
 
                     case PersonAccessRightKind.MODIFY_OWN_PERSON:
@@ -321,7 +327,7 @@ namespace CDP4WebServices.API.Services.Authorization
             }
 
             // Get the person's permission and if found use it. If not, use the default.
-            var participantAccessRightKind = this.GetParticipantAccessRightKind(typeName);
+            var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.Credentials, typeName);
 
             switch (participantAccessRightKind)
             {
@@ -355,18 +361,12 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <summary>
         /// Determines whether it is allowed for the current <see cref="Participant"/> to modify <see cref="EngineeringModelSetup"/>
         /// </summary>
-        /// <param name="transaction">
-        /// The transaction object.
-        /// </param>
         /// <param name="thing">The <see cref="Thing"/> to compute permissions for.</param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource is stored.
-        /// </param>
         /// <param name="modifyOperation">
         /// The string representation of the type of the modify operation.
         /// </param>
         /// <returns>True if the modification  of the <see cref="EngineeringModelSetup"/> by the current <see cref="Participant"/> is allowed.</returns>
-        public bool IsEngineeringModelSetupModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
+        private bool IsEngineeringModelSetupModifyAllowed(Thing thing, string modifyOperation)
         {
             if (modifyOperation == CreateOperation)
             {
@@ -474,43 +474,6 @@ namespace CDP4WebServices.API.Services.Authorization
             }
 
             return isExcludedDomain;
-        }
-
-        /// <summary>
-        /// Get <see cref="PersonAccessRightKind"/> for the supplied object type.
-        /// </summary>
-        /// <param name="typeName">
-        /// The string representation of the typeName to compute permissions for.
-        /// </param>
-        /// <returns><see cref="PersonAccessRightKind"/> for the supplied object type.</returns>
-        private PersonAccessRightKind GetPersonAccessRightKind(string typeName)
-        {
-            // Get the person's permission and if found use it. If not, use the default.
-            var personPermission = this.Credentials.PersonPermissions.FirstOrDefault(pp => pp.ObjectClass.ToString().Equals(typeName));
-            var personAccessRightKind = personPermission == null
-                                            ? this.RequestUtils.DefaultPermissionProvider.GetDefaultPersonPermission(typeName)
-                                            : personPermission.AccessRight;
-
-            return personAccessRightKind;
-        }
-
-        /// <summary>
-        /// Get <see cref="ParticipantAccessRightKind"/> for the supplied object type.
-        /// </summary>
-        /// <param name="typeName">
-        /// The string representation of the typeName to compute permissions for.
-        /// </param>
-        /// <returns><see cref="ParticipantAccessRightKind"/> for the supplied object type.</returns>
-        private ParticipantAccessRightKind GetParticipantAccessRightKind(string typeName)
-        {
-            // Get the particpant's permission and if found use it. If not, use the default.
-            var participantPermission = this.Credentials.ParticipantPermissions.FirstOrDefault(
-                    pp => pp.ObjectClass.ToString().Equals(typeName));
-            var participantAccessRightKind = participantPermission == null
-                                                 ? this.RequestUtils.DefaultPermissionProvider.GetDefaultParticipantPermission(typeName)
-                                                 : participantPermission.AccessRight;
-
-            return participantAccessRightKind;
         }
 
         /// <summary>

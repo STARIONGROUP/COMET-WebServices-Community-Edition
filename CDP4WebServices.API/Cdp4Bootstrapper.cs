@@ -154,6 +154,9 @@ namespace CDP4WebServices.API
                         // wireup class cdp4JsonSerializer
                         builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4JsonSerializer, ICdp4JsonSerializer>();
 
+                        // wireup AccessRightKind service
+                        builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindService, IAccessRightKindService>();
+
                         // wireup permission service
                         builder.RegisterTypeAsPropertyInjectedSingleton<PermissionService, IPermissionService>();
 
