@@ -29,5 +29,14 @@ namespace CDP4WebServices.API.Services
         /// A instance of <see cref="ParameterSubscriptionValueSet"/>
         /// </returns>
         ParameterSubscriptionValueSet CreateWithDefaultValueArray(Guid subscribedValueSetIid, ValueArray<string> valueArray);
+
+        /// <summary>
+        /// Create a <see cref="ParameterSubscriptionValueSet"/> from an old <see cref="ParameterSubscriptionValueSet"/>
+        /// </summary>
+        /// <param name="oldValueSet">The old <see cref="ParameterSubscriptionValueSet"/>. If null the default values are used</param>
+        /// <param name="subscribedValueSetGuid">The subscribed value-set</param>
+        /// <param name="defaultValueArray">The default value-array</param>
+        /// <returns>The new <see cref="ParameterSubscriptionValueSet"/></returns>
+        ParameterSubscriptionValueSet CreateWithOldValues(ParameterSubscriptionValueSet oldValueSet, Guid subscribedValueSetGuid, ValueArray<string> defaultValueArray);
     }
 }

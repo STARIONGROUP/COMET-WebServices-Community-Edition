@@ -36,7 +36,7 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
         [Test]
         public void VerifyThatIfNonDefaultValueArrayIsProvidedArgumentExceptionIsThrown()
         {
-            Assert.Throws<ArgumentException>(() => this.parameterValueSetFactory.CreateWithDefaultValueArray(null, null, this.nonDefaultValueArray));
+            Assert.Throws<ArgumentException>(() => this.parameterValueSetFactory.CreateNewParameterValueSetFromSource(null, null, null, this.nonDefaultValueArray));
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             var optionIid = Guid.NewGuid();
             var actualStateIid = Guid.NewGuid();
 
-            var parameterValueSet =  this.parameterValueSetFactory.CreateWithDefaultValueArray(optionIid, actualStateIid, this.defaultValueArray);
+            var parameterValueSet =  this.parameterValueSetFactory.CreateNewParameterValueSetFromSource(optionIid, actualStateIid, null, this.defaultValueArray);
 
             Assert.AreEqual(optionIid, parameterValueSet.ActualOption);
             Assert.AreEqual(actualStateIid, parameterValueSet.ActualState);

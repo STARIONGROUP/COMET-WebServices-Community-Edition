@@ -86,6 +86,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             string partition, 
             ISecurityContext securityContext)
         {
+            if (thing.Owner == Guid.Empty)
+            {
+                throw new InvalidOperationException("The owner cannot be empty.");
+            }
+
             this.CheckOwnership(thing, container);
         }
 

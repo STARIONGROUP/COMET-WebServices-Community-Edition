@@ -176,7 +176,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             foreach (var set in parameterValueSets)
             {
-                yield return this.ParameterOverrideValueSetFactory.CreateParameterOverrideValueSet(set, parameterOverride.Owner);
+                yield return this.ParameterOverrideValueSetFactory.CreateParameterOverrideValueSet(set);
             }
         }
 

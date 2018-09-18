@@ -33,7 +33,7 @@ namespace CDP4WebServices.API.Services
         {
             if (valueArray.Any(value => value != "-"))
             {
-                throw new ArgumentException("The valueArray must be a default valueArray that only contains \"-\"", "valueArray");
+                throw new ArgumentException("The valueArray must be a default valueArray that only contains \"-\"", nameof(valueArray));
             }
 
             var parameterOverrideValueSet = new ParameterOverrideValueSet(Guid.NewGuid(), -1)
@@ -54,13 +54,12 @@ namespace CDP4WebServices.API.Services
         /// Creates a new <see cref="ParameterOverrideValueSet"/> from a <see cref="ParameterValueSet"/>
         /// </summary>
         /// <param name="parameterValueSet">The <see cref="ParameterValueSet"/></param>
-        /// <param name="owner">The owner</param>
         /// <returns>The <see cref="ParameterOverrideValueSet"/></returns>
-        public ParameterOverrideValueSet CreateParameterOverrideValueSet(ParameterValueSet parameterValueSet, Guid owner)
+        public ParameterOverrideValueSet CreateParameterOverrideValueSet(ParameterValueSet parameterValueSet)
         {
             if (parameterValueSet == null)
             {
-                throw new ArgumentNullException("parameterValueSet", "The source ParameterValueSet cannot be null");
+                throw new ArgumentNullException(nameof(parameterValueSet), "The source ParameterValueSet cannot be null");
             }
 
             var parameterOverrideValueSet = new ParameterOverrideValueSet(Guid.NewGuid(), -1)
@@ -72,6 +71,33 @@ namespace CDP4WebServices.API.Services
                 Formula = parameterValueSet.Formula,
                 Published = parameterValueSet.Published,
                 ValueSwitch = parameterValueSet.ValueSwitch
+            };
+
+            return parameterOverrideValueSet;
+        }
+
+        /// <summary>
+        /// Create a new <see cref="ParameterOverrideValueSet"/> given a source <see cref="ParameterOverrideValueSet"/>
+        /// </summary>
+        /// <param name="sourceValueSet">The source <see cref="ParameterOverrideValueSet"/></param>
+        /// <param name="parameterValueSet">The associated <see cref="ParameterValueSet"/></param>
+        /// <returns>The new <see cref="ParameterOverrideValueSet"/></returns>
+        public ParameterOverrideValueSet CreateWithOldValues(ParameterOverrideValueSet sourceValueSet, ParameterValueSet parameterValueSet)
+        {
+            if (sourceValueSet == null)
+            {
+                return this.CreateParameterOverrideValueSet(parameterValueSet);
+            }
+
+            var parameterOverrideValueSet = new ParameterOverrideValueSet(Guid.NewGuid(), -1)
+            {
+                ParameterValueSet = parameterValueSet.Iid,
+                Manual = sourceValueSet.Manual,
+                Computed = sourceValueSet.Computed,
+                Reference = sourceValueSet.Reference,
+                Formula = sourceValueSet.Formula,
+                Published = sourceValueSet.Published,
+                ValueSwitch = sourceValueSet.ValueSwitch
             };
 
             return parameterOverrideValueSet;

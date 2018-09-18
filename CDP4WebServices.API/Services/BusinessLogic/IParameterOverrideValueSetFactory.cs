@@ -34,8 +34,15 @@ namespace CDP4WebServices.API.Services
         /// Creates a new <see cref="ParameterOverrideValueSet"/> from a <see cref="ParameterValueSet"/>
         /// </summary>
         /// <param name="parameterValueSet">The <see cref="ParameterValueSet"/></param>
-        /// <param name="owner">The owner</param>
         /// <returns>The <see cref="ParameterOverrideValueSet"/></returns>
-        ParameterOverrideValueSet CreateParameterOverrideValueSet(ParameterValueSet parameterValueSet, Guid owner);
+        ParameterOverrideValueSet CreateParameterOverrideValueSet(ParameterValueSet parameterValueSet);
+
+        /// <summary>
+        /// Create a new <see cref="ParameterOverrideValueSet"/> given a source <see cref="ParameterOverrideValueSet"/>
+        /// </summary>
+        /// <param name="sourceValueSet">The source <see cref="ParameterOverrideValueSet"/></param>
+        /// <param name="parameterValueSet">The associated <see cref="ParameterValueSet"/></param>
+        /// <returns>The new <see cref="ParameterOverrideValueSet"/></returns>
+        ParameterOverrideValueSet CreateWithOldValues(ParameterOverrideValueSet sourceValueSet, ParameterValueSet parameterValueSet);
     }
 }

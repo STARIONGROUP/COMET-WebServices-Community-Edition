@@ -33,15 +33,39 @@ namespace CDP4WebServices.API.Services
         {
             if (valueArray.Any(value => value != "-"))
             {
-                throw new ArgumentException("The valueArray must be a default valueArray that only contains \"-\"", "valueArray");
+                throw new ArgumentException("The valueArray must be a default valueArray that only contains \"-\"", nameof(valueArray));
             }
 
             var parameterSubscriptionValueSet = new ParameterSubscriptionValueSet(Guid.NewGuid(), -1)
                         {
                             SubscribedValueSet = subscribedValueSetIid,
                             Manual = valueArray,
-                            ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL                            
+                            ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL
                         };
+
+            return parameterSubscriptionValueSet;
+        }
+
+        /// <summary>
+        /// Create a <see cref="ParameterSubscriptionValueSet"/> from an old <see cref="ParameterSubscriptionValueSet"/>
+        /// </summary>
+        /// <param name="oldValueSet">The old <see cref="ParameterSubscriptionValueSet"/>. If null the default values are used</param>
+        /// <param name="subscribedValueSetGuid">The subscribed value-set</param>
+        /// <param name="defaultValueArray">The default value-array</param>
+        /// <returns>The new <see cref="ParameterSubscriptionValueSet"/></returns>
+        public ParameterSubscriptionValueSet CreateWithOldValues(ParameterSubscriptionValueSet oldValueSet, Guid subscribedValueSetGuid, ValueArray<string> defaultValueArray)
+        {
+            if (oldValueSet == null)
+            {
+                return this.CreateWithDefaultValueArray(subscribedValueSetGuid, defaultValueArray);
+            }
+
+            var parameterSubscriptionValueSet = new ParameterSubscriptionValueSet(Guid.NewGuid(), -1)
+            {
+                SubscribedValueSet = subscribedValueSetGuid,
+                Manual = oldValueSet.Manual,
+                ValueSwitch = oldValueSet.ValueSwitch
+            };
 
             return parameterSubscriptionValueSet;
         }

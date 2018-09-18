@@ -9,9 +9,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
+    using API.Services.BusinessLogic;
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.EngineeringModelData;
     using CDP4Common.Types;
 
     using CDP4WebServices.API.Helpers;
@@ -21,6 +22,18 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using Moq;
     using Npgsql;
     using NUnit.Framework;
+    using ActualFiniteState = CDP4Common.DTO.ActualFiniteState;
+    using ActualFiniteStateList = CDP4Common.DTO.ActualFiniteStateList;
+    using ElementDefinition = CDP4Common.DTO.ElementDefinition;
+    using ElementUsage = CDP4Common.DTO.ElementUsage;
+    using Iteration = CDP4Common.DTO.Iteration;
+    using Option = CDP4Common.DTO.Option;
+    using Parameter = CDP4Common.DTO.Parameter;
+    using ParameterOverride = CDP4Common.DTO.ParameterOverride;
+    using ParameterOverrideValueSet = CDP4Common.DTO.ParameterOverrideValueSet;
+    using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
+    using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
+    using ParameterValueSet = CDP4Common.DTO.ParameterValueSet;
 
     /// <summary>
     /// Test fixture for the <see cref="ParameterSideEffect"/> class
@@ -43,6 +56,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterTypeService> parameterTypeService;
         private Mock<IElementUsageService> elementUsageService;
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
+        private Mock<IOldParameterContextProvider> OldParameterContextProvider;
 
         private Parameter parameter;
         private ParameterOverride parameterOverride;
@@ -90,6 +104,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterTypeService = new Mock<IParameterTypeService>();
             this.elementUsageService = new Mock<IElementUsageService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
+            this.OldParameterContextProvider = new Mock<IOldParameterContextProvider>();
 
             this.npgsqlTransaction = null;
 
@@ -133,13 +148,17 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 DefaultValueArrayFactory = this.defaultValueArrayFactory.Object,
                 ParameterValueSetFactory = new ParameterValueSetFactory(),
                 ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
-                ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory()
+                ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
+                OldParameterContextProvider = this.OldParameterContextProvider.Object
             };
 
             // prepare mock data
             this.elementDefinition = new ElementDefinition(Guid.NewGuid(), 1);
             this.elementDefinition.Parameter.Add(this.parameter.Iid);
-            this.parameterOverride = new ParameterOverride(Guid.NewGuid(), 1) { Parameter = this.parameter.Iid };
+            this.parameterOverride = new ParameterOverride(Guid.NewGuid(), 1)
+            {
+                Parameter = this.parameter.Iid,
+            };
             this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid } };
 
             this.parameterService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(this.cptParameterType.Iid)), this.securityContext.Object))
@@ -180,6 +199,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(this.boolPt.Iid))
                 .Returns(this.scalarDefaultValueArray);
+
+            this.OldParameterContextProvider.Setup(x => x.GetsourceValueSet(It.IsAny<Guid?>(), It.IsAny<Guid?>())).Returns((ParameterValueSet)null);
 
         }
 
@@ -264,8 +285,38 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatAfterUpdateUpdateTheOVerrideAndSubscription()
         {
+            var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
+            valueset.Manual = new ValueArray<string>(new[] { "set" });
+            valueset.Published = new ValueArray<string>(new[] { "set" });
+            valueset.Computed = new ValueArray<string>(new[] { "set" });
+            valueset.ValueSwitch = ParameterSwitchKind.REFERENCE;
+
+            this.parameter.ValueSet.Add(valueset.Iid);
+            this.OldParameterContextProvider.Setup(x => x.GetsourceValueSet(null, It.IsAny<Guid?>())).Returns(valueset);
+
+            var overrideValueSet = new ParameterOverrideValueSet(Guid.NewGuid(), 1);
+            overrideValueSet.ParameterValueSet = valueset.Iid;
+            overrideValueSet.Manual = new ValueArray<string>(new[] { "override" });
+            overrideValueSet.Published = new ValueArray<string>(new[] { "override" });
+            overrideValueSet.Computed = new ValueArray<string>(new[] { "override" });
+            overrideValueSet.ValueSwitch = ParameterSwitchKind.REFERENCE;
+
+            this.parameterOverride.ValueSet.Add(overrideValueSet.Iid);
+
             var subscription1 = new ParameterSubscription(Guid.NewGuid(), 1);
             var subscription2 = new ParameterSubscription(Guid.NewGuid(), 2);
+
+            var subscription1ValueSet = new ParameterSubscriptionValueSet(Guid.NewGuid(), 1);
+            subscription1ValueSet.Manual = new ValueArray<string>(new [] { "sub1" });
+            subscription1ValueSet.SubscribedValueSet = valueset.Iid;
+
+            var subscription2ValueSet = new ParameterSubscriptionValueSet(Guid.NewGuid(), 1);
+            subscription2ValueSet.Manual = new ValueArray<string>(new[] { "sub2" });
+            subscription2ValueSet.SubscribedValueSet = overrideValueSet.Iid;
+
+            subscription1.ValueSet.Add(subscription1ValueSet.Iid);
+            subscription2.ValueSet.Add(subscription2ValueSet.Iid);
+
             var originalThing = this.parameter.DeepClone<Thing>();
 
             this.parameterOverride.ParameterSubscription.Add(subscription2.Iid);
@@ -284,11 +335,20 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.valueSetService.Setup(x => x.DeleteConcept(null, "partition", It.IsAny<ParameterValueSet>(), this.parameter))
                 .Returns(true);
 
-            this.parameter.ParameterType = this.cptParameterType.Iid;
+            this.parameterOverrideValueSetService
+                .Setup(x => x.GetShallow(null, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(overrideValueSet.Iid)), this.securityContext.Object))
+                .Returns(new[] {overrideValueSet});
 
+            this.parameterSubscriptionValueSetService
+                .Setup(x => x.GetShallow(null, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(subscription1ValueSet.Iid)), this.securityContext.Object))
+                .Returns(new[] { subscription1ValueSet });
+
+            this.parameterSubscriptionValueSetService
+                .Setup(x => x.GetShallow(null, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(subscription2ValueSet.Iid)), this.securityContext.Object))
+                .Returns(new[] { subscription2ValueSet });
+
+            this.parameter.ParameterType = this.cptParameterType.Iid;
             this.parameter.StateDependence = null;
-            var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
-            this.parameter.ValueSet.Add(valueset.Iid);
 
             var updatedParameter = new Parameter(this.parameter.Iid, 0) { StateDependence = this.actualList.Iid };
             updatedParameter.ValueSet.Add(valueset.Iid);
@@ -297,13 +357,16 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.sideEffect.AfterUpdate(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
-            this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverrideValueSet>(), this.parameterOverride, -1),
+            this.valueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterValueSet>(y => y.Manual.Contains("set")), updatedParameter, -1),
                 Times.Exactly(2));
 
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), subscription1, -1),
+            this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterOverrideValueSet>(y => y.Manual.Contains("override")), this.parameterOverride, -1),
                 Times.Exactly(2));
 
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscriptionValueSet>(), subscription2, -1),
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterSubscriptionValueSet>(y => y.Manual.Contains("sub1")), subscription1, -1),
+                Times.Exactly(2));
+
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterSubscriptionValueSet>(y => y.Manual.Contains("sub2")), subscription2, -1),
                 Times.Exactly(2));
         }
 
@@ -517,3 +580,4 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
     }
 }
+

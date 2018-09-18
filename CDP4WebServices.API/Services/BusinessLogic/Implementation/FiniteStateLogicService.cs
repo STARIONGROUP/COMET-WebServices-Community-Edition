@@ -170,7 +170,7 @@ namespace CDP4WebServices.API.Services
                     this.ActualFiniteStateService.CreateConcept(transaction, partition, newActualstate, container);
 
                     var oldActualState =
-                        oldActualStates.FirstOrDefault(x => x.PossibleState.SequenceEqual(newPossibleStateIds));
+                        oldActualStates.FirstOrDefault(x => x.PossibleState.All(ps => newPossibleStateIds.Contains(ps)));
 
                     newActualstate.Kind = oldActualState?.Kind ?? ActualFiniteStateKind.MANDATORY;
 

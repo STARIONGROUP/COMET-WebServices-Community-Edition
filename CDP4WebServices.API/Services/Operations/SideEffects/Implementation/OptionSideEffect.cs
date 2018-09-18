@@ -178,7 +178,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var actualFiniteStateListIid = container.StateDependence;
             if (actualFiniteStateListIid == null)
             {
-                var parameterValueSet = this.ParameterValueSetFactory.CreateWithDefaultValueArray(option.Iid, null, defaultValueArray);
+                var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, null, null, defaultValueArray);
                 
                 this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, container);
 
@@ -196,7 +196,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == actualFiniteStateListIid);
             foreach (var actualStateIid in actualFiniteStateList.ActualState)
             {
-                var parameterValueSet = this.ParameterValueSetFactory.CreateWithDefaultValueArray(option.Iid, actualStateIid, defaultValueArray);
+                var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, actualStateIid, null, defaultValueArray);
 
                 this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, container);
 

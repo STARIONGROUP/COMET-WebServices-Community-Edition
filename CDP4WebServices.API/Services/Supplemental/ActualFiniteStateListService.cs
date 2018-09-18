@@ -1,0 +1,94 @@
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ActualFiniteStateListService.cs" company="RHEA System S.A.">
+//   Copyright (c) 2016-2018 RHEA System S.A.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace CDP4WebServices.API.Services
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using Authorization;
+    using CDP4Common.DTO;
+    using Npgsql;
+
+    /// <summary>
+    /// The ActualFiniteStateList Service which provides services on <see cref="ActualFiniteStateList"/>
+    /// </summary>
+    public sealed partial class ActualFiniteStateListService
+    {
+        /// <summary>
+        /// Gets or sets the <see cref="IPossibleFiniteStateListService"/>
+        /// </summary>
+        public IPossibleFiniteStateListService PossibleFiniteStateListService { get; set; }
+
+        /// <summary>
+        /// Gets the default <see cref="ActualFiniteState"/> for <paramref name="actualList"/>
+        /// </summary>
+        /// <param name="actualList">The <see cref="ActualFiniteStateList"/> to get the default for</param>
+        /// <param name="actualListStates">A list of <see cref="ActualFiniteState"/> defining the <paramref name="actualList"/></param>
+        /// <param name="possibleLists">A list of <see cref="PossibleFiniteStateList"/> defining the <paramref name="actualList"/></param>
+        /// <returns>The default <see cref="ActualFiniteState"/> if any, null otherwise</returns>
+        public ActualFiniteState GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, IReadOnlyList<PossibleFiniteStateList> possibleLists)
+        {
+            if (actualList == null)
+            {
+                throw new ArgumentNullException(nameof(actualList));
+            }
+
+            if (actualListStates == null)
+            {
+                throw new ArgumentNullException(nameof(actualListStates));
+            }
+
+            if (!actualList.ActualState.TrueForAll(x => actualListStates.Select(s => s.Iid).Contains(x)))
+            {
+                throw new ArgumentException("Some Actual Finite States are missing.", nameof(actualListStates));
+            }
+
+            if (possibleLists == null)
+            {
+                throw new ArgumentNullException(nameof(possibleLists));
+            }
+
+            if (!actualList.PossibleFiniteStateList.TrueForAll(x => possibleLists.Select(s => s.Iid).Contains(Guid.Parse(x.V.ToString()))))
+            {
+                throw new ArgumentException("Some Actual Finite States are missing.", nameof(possibleLists));
+            }
+
+            // get all default states from the possibleList combination making up the ActualList
+            var actualPossibleLists = possibleLists.Where(p => actualList.PossibleFiniteStateList.Select(x => Guid.Parse(x.V.ToString())).Contains(p.Iid)).ToList();
+
+            var defaultPossibleStates = new List<Guid>();
+            foreach (var possibleFiniteStateList in actualPossibleLists)
+            {
+                if (!possibleFiniteStateList.DefaultState.HasValue)
+                {
+                    // no default ActualState if at least one has no default state
+                    return null;
+                }
+
+                defaultPossibleStates.Add(possibleFiniteStateList.DefaultState.Value);
+            }
+
+            var actualActualListStates = actualListStates.Where(a => actualList.ActualState.Contains(a.Iid));
+            return actualActualListStates.FirstOrDefault(a => a.PossibleState.TrueForAll(x => defaultPossibleStates.Contains(x)));
+        }
+
+        /// <summary>
+        /// Gets the default <see cref="ActualFiniteState"/> for <paramref name="actualList"/>
+        /// </summary>
+        /// <param name="actualList">The <see cref="ActualFiniteStateList"/> to get the default for</param>
+        /// <param name="actualListStates">A list of <see cref="ActualFiniteState"/> defining the <paramref name="actualList"/></param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="securityContext">The security-context</param>
+        /// <param name="transaction">The current transaction</param>
+        /// <returns>The default <see cref="ActualFiniteState"/> if any, null otherwise</returns>
+        public ActualFiniteState GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, string partition, ISecurityContext securityContext, NpgsqlTransaction transaction)
+        {
+            var possibleLists = this.PossibleFiniteStateListService.GetShallow(transaction, partition, actualList.PossibleFiniteStateList.Select(x => Guid.Parse(x.V.ToString())), securityContext).OfType<PossibleFiniteStateList>().ToList();
+            return this.GetDefaultState(actualList, actualListStates, possibleLists);
+        }
+    }
+}
