@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BacktierConfig.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -66,7 +66,7 @@ namespace CDP4WebServices.API.Configuration
         public string DatabaseManage { get; set; }
 
         /// <summary>
-        /// Gets or sets the SQL statement timeout in seconds to observer before an error is thrown.
+        /// Gets or sets the time to wait (in seconds) while trying to execute a command before terminating the attempt and generating an error. Set to zero for infinity.
         /// </summary>
         /// <remarks>
         /// Default is 120 seconds

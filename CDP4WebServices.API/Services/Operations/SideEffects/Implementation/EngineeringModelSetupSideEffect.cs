@@ -194,9 +194,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
+                Logger.Info("Create a Copy of an EngineeringModel");
                 this.CreateCopyEngineeringModel(thing, container, transaction, partition, securityContext);
 
-                // Create revisions for created EngineeringModel
+                Logger.Info("Create revisions for created EngineeringModel");
                 this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 return;

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelCreatorManager.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//   Copyright (c) 2017-2018 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,12 +8,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using Authentication;
     using Authorization;
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
+    using NLog;
     using Npgsql;
 
     /// <summary>
@@ -21,6 +23,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     /// </summary>
     public class ModelCreatorManager : IModelCreatorManager
     {
+        /// <summary>
+        /// A <see cref="NLog.Logger"/> instance
+        /// </summary>
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// The Site-Directory partition name
         /// </summary>
@@ -171,15 +178,19 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var sourceIterationPartition = sourcePartition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
             var targetIterationPartition = targetPartition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            // copy all data from the source to the target partition
             // disable user triggers
             this.DisableUserTrigger(transaction);
 
-            this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
+            // copy all data from the source to the target partition
+            Logger.Debug("Copy EngineeringModel data from {0} to {1}", sourcePartition, targetPartition);
+            this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);            
+            Logger.Debug("Copy Iteration data from {0} to {1}", sourceIterationPartition, targetIterationPartition);
             this.IterationService.CopyIteration(transaction, sourceIterationPartition, targetIterationPartition);
 
             // change id on Thing table for all other things
+            Logger.Debug("Modify Identifiers of EngineeringModel {0} data", targetPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition);
+            Logger.Debug("Modify Identifiers of Iteration {0} data", targetIterationPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
@@ -193,6 +204,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             newEngineeringModel.Iid = newModelSetup.EngineeringModelIid;
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
+            Logger.Debug("Modify Identifier of new EngineeringModel {0} to {1}", oldIid, newModelSetup.EngineeringModelIid);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, newEngineeringModel, oldIid);
 
             if (!this.EngineeringModelService.UpdateConcept(transaction, targetPartition, newEngineeringModel, null))
@@ -203,6 +215,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // modify references of things contained in the new engineering-model-setup (rdl included)
             var modelThings = this.EngineeringModelService.GetDeep(transaction, targetPartition, null, securityContext).ToList();
             modelThings.AddRange(this.IterationService.GetDeep(transaction, targetPartition, null, securityContext));
+
+            var sw = Stopwatch.StartNew();
+            Logger.Debug("start modify {0} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
             foreach (var modelThing in modelThings)
             {
                 var model = modelThing as EngineeringModel;
@@ -250,8 +265,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                     
                     service.UpdateConcept(transaction, partition, modelThing, container);
                 }
-            }
-
+            }            
+            Logger.Debug("modified {0} references of things contained in the new engineering-model-setup in {1} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
 
             // IMPORTANT: re-enable user trigger once the current transaction is commited commited
         }
@@ -265,7 +280,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
+            Logger.Debug("disable triggers for EngineeringModel {0}", partition);
             this.EngineeringModelService.ModifyUserTrigger(transaction, partition, false);
+
+            Logger.Debug("disable triggers for Iteration {0}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, false);
 
             this.IsUserTriggerDisable = true;
@@ -285,7 +303,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
+            Logger.Debug("enable triggers for EngineeringModel {0}", partition);
             this.EngineeringModelService.ModifyUserTrigger(transaction, partition, true);
+
+            Logger.Debug("enable triggers for Iteration {0}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, true);
         }
     }
