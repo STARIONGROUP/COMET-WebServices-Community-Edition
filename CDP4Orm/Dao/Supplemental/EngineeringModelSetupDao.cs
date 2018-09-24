@@ -9,6 +9,7 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using CDP4Common.DTO;
+    using MigrationEngine;
     using Npgsql;
     using NpgsqlTypes;
 
@@ -17,6 +18,11 @@ namespace CDP4Orm.Dao
     /// </summary>
     public partial class EngineeringModelSetupDao
     {
+        /// <summary>
+        /// Gets or sets the <see cref="IMigrationService"/> (injected)
+        /// </summary>
+        public IMigrationService MigrationService { get; set; }
+
         /// <summary>
         /// Read the data from the database based on <see cref="Person"/> id.
         /// </summary>
@@ -94,15 +100,17 @@ namespace CDP4Orm.Dao
             
             // insert the engineeringmodel schema
             var replacementInfo = new List<Tuple<string, string>>();
+            var engineeringModelPartition = Utils.GetEngineeringModelSchemaName(engineeringModelSetup.EngineeringModelIid);
+            var iterationPartition = Utils.GetEngineeringModelIterationSchemaName(engineeringModelSetup.EngineeringModelIid);
 
             replacementInfo.Add(new Tuple<string, string>(
                 "EngineeringModel_REPLACE",
-                string.Format("{0}", Utils.GetEngineeringModelSchemaName(engineeringModelSetup.EngineeringModelIid))));
+                string.Format("{0}", engineeringModelPartition)));
 
             // support iteration sub partition (schema) which will have the same engineeringmodel identifier applied
             replacementInfo.Add(new Tuple<string, string>(
                 "Iteration_REPLACE",
-                string.Format("{0}", Utils.GetEngineeringModelIterationSchemaName(engineeringModelSetup.EngineeringModelIid))));
+                string.Format("{0}", iterationPartition)));
 
             using (var command = new NpgsqlCommand())
             {
@@ -115,6 +123,9 @@ namespace CDP4Orm.Dao
 
                 this.ExecuteAndLogCommand(command);
             }
+
+            this.MigrationService.ApplyMigrations(transaction, engineeringModelPartition);
+            this.MigrationService.ApplyMigrations(transaction, iterationPartition);
 
             return result;
         }

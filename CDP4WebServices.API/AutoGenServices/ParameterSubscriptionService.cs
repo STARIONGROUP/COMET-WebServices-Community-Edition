@@ -310,7 +310,7 @@ namespace CDP4WebServices.API.Services
             }
 
             var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
-            var parameterSubscriptionColl = results.Where(i => i.GetType() == typeof(ParameterSubscription)).Cast<ParameterSubscription>().ToList();
+            var parameterSubscriptionColl = results.OfType<ParameterSubscription>().ToList();
 
             results.AddRange(this.ParameterSubscriptionValueSetService.GetDeep(transaction, partition, parameterSubscriptionColl.SelectMany(x => x.ValueSet), containerSecurityContext));
 

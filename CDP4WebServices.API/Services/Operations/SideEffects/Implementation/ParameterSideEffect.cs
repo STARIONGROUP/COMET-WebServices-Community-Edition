@@ -673,22 +673,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         private void DeleteOldValueSet(NpgsqlTransaction transaction, string partition, Parameter originalThing, IReadOnlyList<ParameterOverride> parameterOverrides, IReadOnlyList<ParameterSubscription> parameterSubscriptions)
         {
-            foreach (var parameterSubscription in parameterSubscriptions)
-            {
-                foreach (var parameterSubscriptionValueSetId in parameterSubscription.ValueSet)
-                {
-                    this.ParameterSubscriptionValueSetService.DeleteConcept(transaction, partition, new ParameterSubscriptionValueSet(parameterSubscriptionValueSetId, 0));
-                }
-            }
-
-            foreach (var parameterOverride in parameterOverrides)
-            {
-                foreach (var parameterOverrideValueSetId in parameterOverride.ValueSet)
-                {
-                    this.ParameterOverrideValueSetService.DeleteConcept(transaction, partition, new ParameterOverrideValueSet(parameterOverrideValueSetId, 0));
-                }
-            }
-
             foreach (var valueset in originalThing.ValueSet)
             {
                 this.ParameterValueSetService.DeleteConcept(transaction, partition, new ParameterValueSet(valueset, 0), originalThing);

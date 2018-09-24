@@ -21,7 +21,7 @@ namespace CDP4WebServices.API
     using CDP4Orm.Dao.Cache;
     using CDP4Orm.Dao.Resolve;
     using CDP4Orm.Dao.Revision;
-
+    using CDP4Orm.MigrationEngine;
     using CDP4WebService.Authentication;
 
     using CDP4WebServices.API.Configuration;
@@ -107,6 +107,7 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonResolver, IPersonResolver>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<UserValidator, IUserValidator>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<CDP4WebServiceAuthentication, ICDP4WebServiceAuthentication>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<MigrationService, IMigrationService>();
                 });
         }
 
@@ -210,6 +211,7 @@ namespace CDP4WebServices.API
 
                         // wireup PermissionInstanceFilter service
                         builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
+
                     });
 
             // apply logging configuration
@@ -265,6 +267,8 @@ namespace CDP4WebServices.API
 
             // add the folder for the static content containing the compiled app
             this.Conventions.StaticContentsConventions.Add(StaticContentConventionBuilder.AddDirectory("assets"));
+
+            MigrationEngine.MigrateAllAtStartUp();
         }
 
         #region Support Property Injection on Nancy Modules

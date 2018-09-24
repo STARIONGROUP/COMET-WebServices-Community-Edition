@@ -17,6 +17,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
     using CDP4Orm.Dao;
+    using CDP4Orm.MigrationEngine;
     using CDP4WebService.Authentication;
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
@@ -182,6 +183,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the <see cref="IDefaultPermissionProvider"/>
         /// </summary>
         public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IMigrationService"/>
+        /// </summary>
+        public IMigrationService MigrationService { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/> class.
@@ -368,7 +374,7 @@ namespace CDP4WebServices.API.Modules
                 var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(fileName, password).ToList();
 
                 // assign default password to all imported persons.
-                foreach (var person in items.Where(i => i.GetType() == typeof(Person)).Cast<Person>())
+                foreach (var person in items.OfType<Person>())
                 {
                     person.Password = AppConfig.Current.Defaults.PersonPassword;
                 }
@@ -393,6 +399,9 @@ namespace CDP4WebServices.API.Modules
                     siteDirCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
                 }
 
+                // apply migration on new SiteDirectory partition
+                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name);
+
                 var result = false;
                 if (topContainer.GetType().Name == "SiteDirectory")
                 {
@@ -412,9 +421,7 @@ namespace CDP4WebServices.API.Modules
                     this.CreateMissingPersonPermissions(transaction);
 
                     var engineeringModelSetups =
-                        items.Where(
-                                x => x.ClassKind == ClassKind.EngineeringModelSetup
-                                     && x.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>()
+                        items.OfType<EngineeringModelSetup>()
                             .ToList();
                     var engineeringModelService =
                         this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
@@ -430,8 +437,7 @@ namespace CDP4WebServices.API.Modules
                             .ReadEngineeringModelFromfile(fileName, password, engineeringModelSetup).ToList();
 
                         // should return one engineeringmodel topcontainer 
-                        var engineeringModel = engineeringModelItems.Where(i => i.GetType() == typeof(EngineeringModel))
-                            .Cast<EngineeringModel>().Single();
+                        var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
                         if (engineeringModel == null)
                         {
                             result = false;
@@ -453,11 +459,9 @@ namespace CDP4WebServices.API.Modules
                         // extract any referenced file data to disk if not already present
                         this.PersistFileBinaryData(fileName, password);
 
-                        var iterationSetups = items
+                        var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
-                                x => engineeringModelSetup.IterationSetup.Contains(x.Iid)
-                                     && x.ClassKind == ClassKind.IterationSetup
-                                     && x.GetType() == typeof(IterationSetup)).Cast<IterationSetup>().ToList();
+                                x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
                         int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
@@ -573,16 +577,14 @@ namespace CDP4WebServices.API.Modules
         /// </param>
         private void FixSingleIterationSetups(List<Thing> items)
         {
-            var engineeringModelSetups = items.Where(x => x.ClassKind == ClassKind.EngineeringModelSetup)
-                .Where(i => i.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>().ToList();
+            var engineeringModelSetups = items.OfType<EngineeringModelSetup>().ToList();
 
             // unset the FrozenOn and SourceIterationSetup properties for single iteration setup in the siteDirectory.
             foreach (var iterationSetups in engineeringModelSetups.Select(
                 engineeringModelSetup =>
-                    items.Where(
-                            x => engineeringModelSetup.IterationSetup.Contains(x.Iid)
-                                 && x.ClassKind == ClassKind.IterationSetup && x.GetType() == typeof(IterationSetup))
-                        .Cast<IterationSetup>().ToList()).Where(iterationSetups => iterationSetups.Count == 1))
+                    items.OfType<IterationSetup>().Where(
+                            x => engineeringModelSetup.IterationSetup.Contains(x.Iid))
+                         .ToList()).Where(iterationSetups => iterationSetups.Count == 1))
             {
                 iterationSetups[0].FrozenOn = null;
                 iterationSetups[0].SourceIterationSetup = null;
