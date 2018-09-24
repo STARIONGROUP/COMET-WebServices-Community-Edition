@@ -553,8 +553,7 @@ namespace CDP4WebServices.API.Modules
         /// </param>
         private void PersistFileBinaryData(string fileName, string password = null)
         {
-            var fileRevisions = this.RequestUtils.Cache.Where(i => i.GetType() == typeof(FileRevision))
-                .Cast<FileRevision>().ToList();
+            var fileRevisions = this.RequestUtils.Cache.OfType<FileRevision>().ToList();
             if (!fileRevisions.Any())
             {
                 // nothing to do
@@ -708,8 +707,12 @@ namespace CDP4WebServices.API.Modules
                 transaction = this.TransactionManager.SetupTransaction(ref connection, null);
                 this.TransactionManager.SetFullAccessState(true);
 
+                // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
+                var actor = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
+                var actorId = actor != null ? actor.Iid : Guid.Empty;
+
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, Guid.Empty, EngineeringModelSetupSideEffect.FirstRevision);
+                this.RevisionService.SaveRevisions(transaction, TopContainer, actorId, EngineeringModelSetupSideEffect.FirstRevision);
 
                 var siteDirectory = this.SiteDirectoryService.Get(
                     transaction,
@@ -737,7 +740,7 @@ namespace CDP4WebServices.API.Modules
                         this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                     // Save revision history for EngineeringModel's entries
-                    this.RevisionService.SaveRevisions(transaction, partition, Guid.Empty, EngineeringModelSetupSideEffect.FirstRevision);
+                    this.RevisionService.SaveRevisions(transaction, partition, actorId, EngineeringModelSetupSideEffect.FirstRevision);
 
                     // commit revision history
                     transaction.Commit();
