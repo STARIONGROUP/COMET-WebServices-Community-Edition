@@ -22,7 +22,7 @@ namespace CDP4Orm.MigrationEngine
     {
         protected const char SCRIPT_VERSION_SEPARATOR = '_';
         protected const char CODE_VERSION_SEPARATOR = '.';
-        protected static Regex MIGRATION_FILENAME_PATTERN = new Regex(@"^(?<applicableDomain>[a-zA-Z]+)(_(?<migrationClass>[a-zA-Z]+))?_(?<date>\d{8})_(?<version>\d_\d_\d_\d)_(?<name>.*\.sql)$");
+        protected static Regex MIGRATION_FILENAME_PATTERN = new Regex(@"^(?<applicableDomain>[a-zA-Z]+)(_(?<migrationClass>[a-zA-Z]+))?_(?<date>\d{8})_(?<version>\d+_\d+_\d+_\d+)_(?<name>.*\.sql)$");
         
         /// <summary>
         /// Initializes a new instance of the <see cref="MigrationMetaData"/> class

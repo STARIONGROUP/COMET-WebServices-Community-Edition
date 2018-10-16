@@ -16,7 +16,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common.Exceptions;
     using CDP4Common.Types;
     using Npgsql;
-
+    using ParameterOrOverrideBase = CDP4Common.DTO.ParameterOrOverrideBase;
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
     using ParameterValueSetBase = CDP4Common.DTO.ParameterValueSetBase;
@@ -27,7 +27,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     public sealed class ParameterSubscriptionSideEffect : OperationSideEffect<ParameterSubscription>
     {
         #region Injected services
-        
         /// <summary>
         /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/>
         /// </summary>
@@ -47,6 +46,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IParameterOverrideValueSetService"/>
         /// </summary>
         public IParameterOverrideValueSetService ParameterOverrideValueSetService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterSubscriptionService"/>
+        /// </summary>
+        public IParameterSubscriptionService ParameterSubscriptionService { get; set; }
 
         #endregion
 
@@ -91,6 +95,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 throw new InvalidOperationException("The owner cannot be empty.");
             }
 
+            this.IsUniqueSubscription(transaction, partition, securityContext, thing, container);
             this.CheckOwnership(thing, container);
         }
 
@@ -227,6 +232,32 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 throw new Cdp4ModelValidationException(
                     "Parameter and ParameterSubscription cannot have the same owner.");
+            }
+        }
+
+        /// <summary>
+        /// Check whether the subscription to create on a <paramref name="container"/> is unique owner-wise
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="securityContext">The security-context</param>
+        /// <param name="newSubscription">The subscription that is being created</param>
+        /// <param name="container">The container</param>
+        private void IsUniqueSubscription(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ParameterSubscription newSubscription, Thing container)
+        {
+            var parameterOrOverride = container as CDP4Common.DTO.ParameterOrOverrideBase;
+            if (parameterOrOverride == null)
+            {
+                throw new InvalidOperationException("The container of a new parameter-subscription can only be a ParameterOrOverrideBase");
+            }
+
+
+            var existingSubscription = this.ParameterSubscriptionService.GetShallow(transaction, partition, parameterOrOverride.ParameterSubscription, securityContext).OfType<ParameterSubscription>().
+                FirstOrDefault(x => x.Owner == newSubscription.Owner);
+
+            if (existingSubscription != null)
+            {
+                throw new InvalidOperationException(string.Format("A subscription already exist on parameter {0}", container.Iid));
             }
         }
     }

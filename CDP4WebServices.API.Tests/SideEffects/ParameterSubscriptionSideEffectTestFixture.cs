@@ -8,7 +8,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
-
+    using System.Linq;
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -30,6 +30,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterSubscriptionValueSetService> parameterSubscriptionValueSetService;
         private Mock<IParameterValueSetService> parameterValueSetService;
         private Mock<IParameterOverrideValueSetService> parameterValueSetOverrideService;
+        private Mock<IParameterSubscriptionService> parameterSubscriptionService;
 
 
         private NpgsqlTransaction npgsqlTransaction;
@@ -42,6 +43,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.npgsqlTransaction = null;
             this.parameterValueSetService = new Mock<IParameterValueSetService>();
             this.parameterValueSetOverrideService = new Mock<IParameterOverrideValueSetService>();
+            this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
 
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.parameterSubscriptionValueSetService.Setup(
@@ -57,7 +59,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                       ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object,
                                       ParameterValueSetService = this.parameterValueSetService.Object,
                                       ParameterOverrideValueSetService = this.parameterValueSetOverrideService.Object,
-                                      DefaultValueArrayFactory = new DefaultValueArrayFactory()
+                                      DefaultValueArrayFactory = new DefaultValueArrayFactory(),
+                                      ParameterSubscriptionService = this.parameterSubscriptionService.Object
                                   };            
         }
 
@@ -91,6 +94,23 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.sideEffect.AfterCreate(parameterSubscription, parameter, originalparameterSubscription, this.npgsqlTransaction, "partition", this.securityContext.Object);
             
             this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterSubscriptionValueSet>(s => s.Manual.Count == 2), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Once);
+        }
+
+        [Test]
+        public void CheckThatMultipleSubscriptionCannotBeCreatedForSameOwner()
+        {
+            var subOwnerGuid = Guid.NewGuid();
+            var existingSub = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = subOwnerGuid };
+            var parameterSubscription = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = subOwnerGuid };
+
+            var parameter = new Parameter(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() };
+            parameter.ValueSet = new List<Guid>() { Guid.NewGuid() };
+            parameter.ParameterSubscription.Add(existingSub.Iid);
+
+            this.parameterSubscriptionService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(existingSub.Iid)), this.securityContext.Object)).
+                Returns(new List<Thing> {existingSub});
+
+            Assert.Throws<InvalidOperationException>(() => this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
     }
 }
