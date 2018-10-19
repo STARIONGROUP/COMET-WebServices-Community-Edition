@@ -183,8 +183,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
                 .Returns(new List<Thing> {this.as11, this.as12});
 
-            this.iterationService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.iteration});
+            this.iterationService.Setup(x => x.GetActiveIteration(this.transaction, this.partition, this.securityContext.Object))
+                .Returns(this.iteration);
 
             this.parameter1 = new Parameter(Guid.NewGuid(), 1);
             this.parameter1.StateDependence = this.asl1.Iid;
