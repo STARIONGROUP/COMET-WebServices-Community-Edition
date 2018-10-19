@@ -6,6 +6,8 @@
 
 namespace CDP4WebServices.API.Services
 {
+    using Authorization;
+    using CDP4Common.DTO;
     using Npgsql;
 
     /// <summary>
@@ -40,5 +42,14 @@ namespace CDP4WebServices.API.Services
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
         void ModifyUserTrigger(NpgsqlTransaction transaction, string sourcePartition, bool enable);
+
+        /// <summary>
+        /// Gets the active <see cref="Iteration"/> for the given <paramref name="partition"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="securityContext">The security context</param>
+        /// <returns>The active <see cref="Iteration"/></returns>
+        Iteration GetActiveIteration(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
     }
 }

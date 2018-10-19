@@ -24,6 +24,11 @@ namespace CDP4WebServices.API.Helpers
     public class Cdp4TransactionManager : ICdp4TransactionManager
     {
         /// <summary>
+        /// The SiteDirectory partition
+        /// </summary>
+        public const string SITE_DIRECTORY_PARTITION = "SiteDirectory";
+
+        /// <summary>
         /// The transaction info table name.
         /// </summary>
         private const string TransactionInfoTable = "transaction_info";

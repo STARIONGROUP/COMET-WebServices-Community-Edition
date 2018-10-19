@@ -70,14 +70,7 @@ namespace CDP4WebServices.API.Services
                 CDP4Orm.Dao.Utils.EngineeringModelPartition);
 
             var iteration =
-                this.IterationService.GetShallow(transaction, engineeringModelPartition, null, securityContext)
-                    .Where(i => i is Iteration).Cast<Iteration>()
-                    .SingleOrDefault();
-
-            if (iteration == null)
-            {
-                throw new InvalidOperationException("The iteration could not be found.");
-            }
+                this.IterationService.GetActiveIteration(transaction, engineeringModelPartition, securityContext);
 
             // get all actual finite state list
             var actualFiniteStateList = this.ActualFiniteStateListService.GetShallow(transaction, partition, null, securityContext).Cast<ActualFiniteStateList>();

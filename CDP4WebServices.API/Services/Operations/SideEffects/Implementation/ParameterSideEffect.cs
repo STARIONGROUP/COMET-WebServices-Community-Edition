@@ -519,9 +519,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             var engineeringModelPartition = partition.Replace(
                 Utils.IterationSubPartition,
                 Utils.EngineeringModelPartition);
-            var iteration = this.IterationService
-                .GetShallow(transaction, engineeringModelPartition, null, securityContext)
-                .Cast<Iteration>().First();
+            var iteration = this.IterationService.GetActiveIteration(transaction, engineeringModelPartition, securityContext);
 
             if (oldParameter != null)
             {
