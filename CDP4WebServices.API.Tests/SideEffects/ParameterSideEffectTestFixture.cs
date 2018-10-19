@@ -164,8 +164,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(this.cptParameterType.Iid)), this.securityContext.Object))
                     .Returns(new List<Thing> { this.cptParameterType });
 
-            this.iterationService.Setup(x => x.GetShallow(null, "partition", null, this.securityContext.Object))
-                .Returns(new List<Thing> { this.iteration });
+            this.iterationService.Setup(x => x.GetActiveIteration(null, "partition", this.securityContext.Object))
+                .Returns( this.iteration );
 
             this.actualFiniteStateListService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(this.actualList.Iid)), this.securityContext.Object))
                 .Returns(new List<Thing> { this.actualList });
