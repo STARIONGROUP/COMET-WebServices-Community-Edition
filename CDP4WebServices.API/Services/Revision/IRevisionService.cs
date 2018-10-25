@@ -33,10 +33,13 @@ namespace CDP4WebServices.API.Services
         /// <param name="revision">
         /// The revision number used to retrieve data from the database
         /// </param>
+        /// <param name="useDefaultContext">
+        /// Indicates whether the default context shall be used. Else use the request context (set at module-level).
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="Thing"/>.
         /// </returns>
-        IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision);
+        IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext);
 
         /// <summary>
         /// Gets the revisions of the <see cref="Thing"/> with the given <paramref name="{Guid}"/>

@@ -142,7 +142,7 @@ namespace CDP4WebServices.API.Modules
                 {
                     // gather all Things that are newer then the indicated revision
                     resourceResponse.AddRange(
-                        this.RevisionService.Get(transaction, TopContainer, fromRevision).ToList());
+                        this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToList());
                 }
                 else if (this.RequestUtils.QueryParameters.RevisionFrom.HasValue
                          || this.RequestUtils.QueryParameters.RevisionTo.HasValue)
@@ -317,7 +317,7 @@ namespace CDP4WebServices.API.Modules
 
                 // use new transaction to include latest database state
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
-                var revisionResponse = this.RevisionService.Get(transaction, TopContainer, fromRevision).ToArray();
+                var revisionResponse = this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
                 transaction.Commit();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);

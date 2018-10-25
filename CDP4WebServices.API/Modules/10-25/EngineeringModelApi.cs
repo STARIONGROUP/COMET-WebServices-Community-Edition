@@ -147,7 +147,7 @@ namespace CDP4WebServices.API.Modules
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, fromRevision));
+                    resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, fromRevision, false));
                 }
                 else if (this.RequestUtils.QueryParameters.RevisionFrom.HasValue || this.RequestUtils.QueryParameters.RevisionTo.HasValue)
                 {
@@ -205,7 +205,7 @@ namespace CDP4WebServices.API.Modules
             {
                 if (transaction != null)
                 {
-                    transaction.Rollback();                    
+                    transaction.Rollback();
                 }
 
                 Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
@@ -339,7 +339,7 @@ namespace CDP4WebServices.API.Modules
                 
                 // save revision-history
                 var actor = credentials.Person.Iid;
-                var changedThings = (IEnumerable<Thing>)this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision);
+                var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision);
 
                 transaction.Commit();
 
@@ -354,13 +354,13 @@ namespace CDP4WebServices.API.Modules
 
                 // use new transaction to include latest database state
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
-                var revisionResponse = ((IEnumerable<Thing>)this.RevisionService.Get(transaction, partition, fromRevision)).ToArray();
+                var revisionResponse = this.RevisionService.Get(transaction, partition, fromRevision, true).ToArray();
                 transaction.Commit();
                 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
-            }            
+            }
             catch (InvalidOperationException ex)
             {
                 if (transaction != null)

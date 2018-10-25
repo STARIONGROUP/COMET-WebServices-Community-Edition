@@ -86,7 +86,7 @@ namespace CDP4WebServices.API.Helpers
         /// <summary>
         /// Gets or sets the iteration setup.
         /// </summary>
-        private IterationSetup IterationSetup { get; set; }
+        public IterationSetup IterationSetup { get; private set; }
 
         /// <summary>
         /// The setup transaction.

@@ -207,6 +207,7 @@ namespace CDP4WebServices.API.Modules
             resourcePath = new List<Thing>();
 
             // select per route segment tuple (type and optional id)
+            // processing containment from top to bottom, we populate first the containmentColl then the responseColl
             for (var i = 0; i < routeSegments.Length; i++)
             {
                 if (i % 2 != 0)
@@ -240,6 +241,7 @@ namespace CDP4WebServices.API.Modules
 
                 if (resourceContainmentSegment)
                 {
+                    // this part is always used except for the last tuple
                     var identifier = Utils.ParseIdentifier(routeSegments[i + 1]);
 
                     processor.ValidateContainment(containmentColl, containerProperty, identifier);
@@ -268,9 +270,12 @@ namespace CDP4WebServices.API.Modules
                     if (serviceType == typeof(Iteration).Name && containmentInfo != null)
                     {
                         // support temporal retrieval if iteration general resource is requested
+                        // should only contain 1 element
                         foreach (var containedIterationId in containmentInfo)
                         {
                             // switch to iteration context for further processing
+                            // use engineering-model id to set the iteration context
+                            // partition here should be EngineeringModel_<uuid>
                             this.TransactionManager.SetIterationContext(
                                 processor.Transaction,
                                 partition,

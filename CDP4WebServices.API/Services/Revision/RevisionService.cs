@@ -57,12 +57,21 @@ namespace CDP4WebServices.API.Services
         /// <param name="revision">
         /// The revision number used to retrieve data from the database
         /// </param>
+        /// <param name="useDefaultContext">
+        /// Indicates whether the default context shall be used. Else use the request context (set at module-level).
+        /// should only be false for engineering-model data
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="Thing"/>.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision)
+        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext)
         {
-            return this.InternalGet(transaction, partition, revision, true).Select(x => x.Thing);
+            if (partition == Cdp4TransactionManager.SITE_DIRECTORY_PARTITION && !useDefaultContext)
+            {
+                throw new ArgumentException("the parameter shall be true for Sitedirectory data", nameof(useDefaultContext));
+            }
+
+            return this.InternalGet(transaction, partition, revision, true, useDefaultContext).Select(x => x.Thing);
         }
 
         /// <summary>
@@ -89,6 +98,7 @@ namespace CDP4WebServices.API.Services
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo)
         {
             // Set the transaction to retrieve the latest database state
+            // TODO This will cause issue with older iterations
             this.TransactionManager.SetDefaultContext(transaction);
             return this.RevisionDao.ReadRevision(transaction, partition, identifier, revisionFrom, revisionTo);
         }
@@ -113,7 +123,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public IEnumerable<Thing> SaveRevisions(NpgsqlTransaction transaction, string partition, Guid actor, int revision)
         {
-            var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false).ToArray();
+            var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false, true).ToArray();
             foreach (var thingRevInfo in thingRevisionInfos)
             {
                 this.RevisionDao.WriteRevision(transaction, thingRevInfo.RevisionInfo.Partition, thingRevInfo.Thing, actor);
@@ -179,14 +189,24 @@ namespace CDP4WebServices.API.Services
         /// <param name="deltaResponse">
         /// The delta Response.
         /// </param>
+        /// <param name="useDefaultContext">
+        /// Indicates whether the default context shall be used. Else use the request context (set at module-level).
+        /// </param>
         /// <returns>
         /// A collection of <see cref="Thing"/> instances.
         /// </returns>
-        private IEnumerable<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse)
+        private IEnumerable<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse, bool useDefaultContext)
         {
-            // Set the transaction to retrieve the latest database state
-            this.TransactionManager.SetDefaultContext(transaction);
-
+            if (useDefaultContext)
+            {
+                // Set the transaction to retrieve the latest database state
+                this.TransactionManager.SetDefaultContext(transaction);
+            }
+            else
+            {
+                this.TransactionManager.SetIterationContext(transaction, partition);
+            }
+             
             var revisionInfoPerPartition = deltaResponse
                                                ? this.RevisionDao.Read(transaction, partition, revision).GroupBy(x => x.Partition)
                                                : this.RevisionDao.ReadCurrentRevisionChanges(transaction, partition, revision).GroupBy(x => x.Partition);
@@ -199,7 +219,12 @@ namespace CDP4WebServices.API.Services
                 {
                     var resolvedPartition = partitionInfo.Key;
                     var instanceType = revisionTypeInfo.Key;
-                    var revisionedInstanceIids = revisionTypeInfo.Select(x => x.Iid);
+
+                    // filter out iteration objects not within the current context
+                    var revisionedInstanceIids = instanceType == typeof(Iteration).Name && !useDefaultContext
+                        ? revisionTypeInfo.Select(x => x.Iid).Where(x => x == this.TransactionManager.IterationSetup.IterationIid)
+                        : revisionTypeInfo.Select(x => x.Iid);
+
                     var service = this.ServiceProvider.MapToReadService(instanceType);
                     
                     // Retrieve typed information filtered by the revisioned iids

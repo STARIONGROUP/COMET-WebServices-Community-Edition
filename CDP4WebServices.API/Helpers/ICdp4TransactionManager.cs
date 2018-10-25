@@ -7,7 +7,7 @@
 namespace CDP4WebServices.API.Helpers
 {
     using System;
-
+    using CDP4Common.DTO;
     using CDP4Orm.Dao;
 
     using CDP4WebServices.API.Services.Authentication;
@@ -19,6 +19,11 @@ namespace CDP4WebServices.API.Helpers
     /// </summary>
     public interface ICdp4TransactionManager
     {
+        /// <summary>
+        /// Gets the iteration setup context.
+        /// </summary>
+        IterationSetup IterationSetup { get;}
+
         /// <summary>
         /// Gets or sets the Command logger.
         /// </summary>
