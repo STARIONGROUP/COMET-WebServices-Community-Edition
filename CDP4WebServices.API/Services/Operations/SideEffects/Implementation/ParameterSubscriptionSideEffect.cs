@@ -52,6 +52,15 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </summary>
         public IParameterSubscriptionService ParameterSubscriptionService { get; set; }
 
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterService"/>
+        /// </summary>
+        public IParameterService ParameterService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterOverrideService"/>
+        /// </summary>
+        public IParameterOverrideService ParameterOverrideService { get; set; }
         #endregion
 
         /// <summary>
@@ -161,9 +170,28 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 throw new InvalidOperationException("The container of a ParameterSubscription can only be a ParameterOrOverrideBase.");
             }
 
-            var parameterValueSets = parameterOrOverrideBase is CDP4Common.DTO.Parameter 
-                ? this.ParameterValueSetService.GetShallow(transaction, partition, parameterOrOverrideBase.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray() 
-                : this.ParameterOverrideValueSetService.GetShallow(transaction, partition, parameterOrOverrideBase.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
+            ParameterOrOverrideBase paramContainer;
+            if (parameterOrOverrideBase.ValueSets.Any())
+            {
+                paramContainer = (CDP4Common.DTO.ParameterOrOverrideBase)container;
+            }
+            else
+            {
+                // the parameter/override is created in the same operation and does not contain any value-set 
+                // fetch latest version of the container
+                paramContainer = container is CDP4Common.DTO.Parameter
+                    ? (ParameterOrOverrideBase)this.ParameterService.GetShallow(transaction, partition, new[] {container.Iid}, securityContext).OfType<CDP4Common.DTO.Parameter>().SingleOrDefault()
+                    : this.ParameterOverrideService.GetShallow(transaction, partition, new[] {container.Iid}, securityContext).OfType<CDP4Common.DTO.ParameterOverride>().SingleOrDefault();
+            }
+
+            if (paramContainer == null || !paramContainer.ValueSets.Any())
+            {
+                throw new InvalidOperationException($"Could not determine the value-set to subscribe on for the parameter-subscription {thing.Iid} to create on parameter/override {container.Iid}");
+            }
+
+            var parameterValueSets = parameterOrOverrideBase is CDP4Common.DTO.Parameter
+                ? this.ParameterValueSetService.GetShallow(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray()
+                : this.ParameterOverrideValueSetService.GetShallow(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
 
             foreach (var parameterValueSet in parameterValueSets)
             {

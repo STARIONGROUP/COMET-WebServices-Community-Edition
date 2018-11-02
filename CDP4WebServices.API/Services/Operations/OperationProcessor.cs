@@ -846,6 +846,8 @@ namespace CDP4WebServices.API.Services.Operations
         /// </exception>
         private void ApplyCreateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
+            // re-order create
+            this.ReorderCreateOrder(operation);
             foreach (var createInfo in operation.Create.Select(x => x.GetInfoPlaceholder()))
             {
                 var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
@@ -1148,6 +1150,25 @@ namespace CDP4WebServices.API.Services.Operations
 
             // call after delete hook
             this.OperationSideEffectProcessor.AfterDelete(persistedThing, containerInfo, originalThing, transaction, resolvedInfo.Partition, securityContext);
+        }
+
+
+        /// <summary>
+        /// Reorder the create list of a <see cref="CdpPostOperation"/>
+        /// </summary>
+        /// <param name="postOperation">The <see cref="CdpPostOperation"/></param>
+        /// <remarks>
+        /// This is done to make sure that some things that depend on other are created last
+        /// </remarks>
+        private void ReorderCreateOrder(CdpPostOperation postOperation)
+        {
+            var subscriptions = postOperation.Create.OfType<ParameterSubscription>().ToArray();
+            foreach (var subscription in subscriptions)
+            {
+                postOperation.Create.Remove(subscription);
+            }
+
+            postOperation.Create.AddRange(subscriptions);
         }
     }
 }

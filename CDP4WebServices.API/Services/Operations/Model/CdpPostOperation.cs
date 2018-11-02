@@ -7,7 +7,7 @@
 namespace CDP4WebServices.API.Services.Operations
 {
     using System.Collections.Generic;
-
+    using System.Linq;
     using CDP4Common;
     using CDP4Common.DTO;
     using Newtonsoft.Json;
