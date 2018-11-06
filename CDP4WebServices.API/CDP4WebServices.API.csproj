@@ -4,7 +4,7 @@
     <TargetFrameworks>net45;net451;net452;net46;net461;net462;net47;net471;net472</TargetFrameworks>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WebServices-CE.API</Title>
-    <Version>3.1.0</Version>
+    <Version>3.2.0</Version>
     <Description>Library that contains the CDP4 Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron</Authors>
