@@ -57,6 +57,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </summary>
         public IParameterSubscriptionValueSetService ParameterSubscriptionValueSetService { get; set; }
 
+        /// <summary>
+        /// Gets or sets the <see cref="IDefaultValueArrayFactory"/>
+        /// </summary>
+        public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
+
         #endregion
 
         /// <summary>
@@ -94,8 +99,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public override void AfterCreate(ParameterOverride thing, Thing container, ParameterOverride originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext);
+            var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext).ToList();
             this.WriteValueSet(transaction, partition, thing, newValueSet);
+            this.CreateSubscriptionFromParameter(transaction, partition, thing, securityContext, newValueSet);
         }
 
         /// <summary>
@@ -192,6 +198,65 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             foreach (var parameterValueSet in newValueSet)
             {
                 this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterValueSet, parameterOverride);
+            }
+        }
+
+        /// <summary>
+        /// Create <see cref="ParameterSubscription"/> for this <paramref name="parameterOverride"/> from its <see cref="Parameter"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="parameterOverride">The <see cref="ParameterOverride"/></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
+        /// <param name="overrideValueset">The <see cref="ParameterOverrideValueSet"/> to subscribe on</param>
+        private void CreateSubscriptionFromParameter(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, ISecurityContext securityContext, IReadOnlyList<ParameterOverrideValueSet> overrideValueset)
+        {
+            var parameters = this.ParameterService.GetShallow(transaction, partition, new[] { parameterOverride.Parameter }, securityContext).OfType<Parameter>().ToArray();
+            if (parameters.Length != 1)
+            {
+                throw new InvalidOperationException("None or more than one parameters were returned");
+            }
+
+            var parameter = parameters.Single();
+
+            var existingSubscriptions = this.ParameterSubscriptionService
+                                            .GetShallow(transaction, partition, null, securityContext)
+                                            .OfType<ParameterSubscription>()
+                                            .ToList();
+
+            var parameterSubscriptions = existingSubscriptions.Where(x => parameter.ParameterSubscription.Contains(x.Iid)).ToList();
+
+            this.DefaultValueArrayFactory.Load(transaction, securityContext);
+            var defaultArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(parameter.ParameterType);
+
+            var existingOverrideSubscriptions = existingSubscriptions.Where(x => parameterOverride.ParameterSubscription.Contains(x.Iid)).ToList();
+
+            var subscriptionValueSets =
+                this.ParameterSubscriptionValueSetService
+                    .GetShallow(transaction, partition, parameterSubscriptions.SelectMany(x => x.ValueSet), securityContext)
+                    .OfType<ParameterSubscriptionValueSet>()
+                    .ToList();
+
+            foreach (var parameterSubscription in parameterSubscriptions)
+            {
+                if (parameterSubscription.Owner == parameterOverride.Owner || existingOverrideSubscriptions.Any(x => x.Owner == parameterSubscription.Owner))
+                {
+                    continue;
+                }
+
+                var newSubscription = new ParameterSubscription(Guid.NewGuid(), 0) { Owner = parameterSubscription.Owner };
+                this.ParameterSubscriptionService.CreateConcept(transaction, partition, newSubscription, parameterOverride);
+
+                foreach (var parameterOverrideValueSet in overrideValueset)
+                {
+                    var subscriptionValueset =
+                        this.ParameterSubscriptionValueSetFactory.CreateWithOldValues(
+                            subscriptionValueSets.FirstOrDefault(x => x.SubscribedValueSet == parameterOverrideValueSet.ParameterValueSet), 
+                            parameterOverrideValueSet.Iid, 
+                            defaultArray);
+
+                    this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, subscriptionValueset, newSubscription);
+                }
             }
         }
     }

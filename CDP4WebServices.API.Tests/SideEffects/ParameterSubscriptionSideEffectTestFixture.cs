@@ -31,6 +31,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterValueSetService> parameterValueSetService;
         private Mock<IParameterOverrideValueSetService> parameterValueSetOverrideService;
         private Mock<IParameterSubscriptionService> parameterSubscriptionService;
+        private Mock<IParameterService> parameterService;
+        private Mock<IParameterOverrideService> parameterOverrideService;
 
 
         private NpgsqlTransaction npgsqlTransaction;
@@ -44,6 +46,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterValueSetService = new Mock<IParameterValueSetService>();
             this.parameterValueSetOverrideService = new Mock<IParameterOverrideValueSetService>();
             this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
+            this.parameterService = new Mock<IParameterService>();
+            this.parameterOverrideService = new Mock<IParameterOverrideService>();
 
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.parameterSubscriptionValueSetService.Setup(
@@ -60,7 +64,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                       ParameterValueSetService = this.parameterValueSetService.Object,
                                       ParameterOverrideValueSetService = this.parameterValueSetOverrideService.Object,
                                       DefaultValueArrayFactory = new DefaultValueArrayFactory(),
-                                      ParameterSubscriptionService = this.parameterSubscriptionService.Object
+                                      ParameterSubscriptionService = this.parameterSubscriptionService.Object,
+                                      ParameterService = this.parameterService.Object,
+                                      ParameterOverrideService = this.parameterOverrideService.Object
                                   };            
         }
 
@@ -72,6 +78,11 @@ namespace CDP4WebServices.API.Tests.SideEffects
             
             var parameter = new Parameter(Guid.NewGuid(), 1) {Owner = owner};
             parameter.ValueSet.Add(Guid.NewGuid());
+            parameter.ParameterSubscription.Add(parameterSubscription.Iid);
+
+            this.parameterService
+                .Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(i => i.Single() == parameter.Iid), this.securityContext.Object))
+                .Returns(new Thing[] { parameter });
             
             Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
@@ -107,10 +118,14 @@ namespace CDP4WebServices.API.Tests.SideEffects
             parameter.ValueSet = new List<Guid>() { Guid.NewGuid() };
             parameter.ParameterSubscription.Add(existingSub.Iid);
 
+            this.parameterService
+                .Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(i => i.Single() == parameter.Iid), this.securityContext.Object))
+                .Returns(new Thing[] { parameter });
+
             this.parameterSubscriptionService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(existingSub.Iid)), this.securityContext.Object)).
                 Returns(new List<Thing> {existingSub});
 
-            Assert.Throws<InvalidOperationException>(() => this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
+           Assert.IsFalse(this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
     }
 }

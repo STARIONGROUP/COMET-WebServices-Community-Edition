@@ -46,7 +46,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeCreate(
+        public override bool BeforeCreate(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -63,6 +63,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                     securityContext,
                     (Guid)thing.ContainingFolder);
             }
+
+            return true;
         }
 
         /// <summary>

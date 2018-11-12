@@ -60,7 +60,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeCreate(Publication thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override bool BeforeCreate(Publication thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             thing.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
 
@@ -74,6 +74,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             this.UpdatePublishedParameter(thing, parameterToUpdate, transaction, partition, securityContext);
             this.UpdatePublishedOverride(thing, overridesToUpdate, transaction, partition, securityContext);
+            return true;
         }
 
         /// <summary>

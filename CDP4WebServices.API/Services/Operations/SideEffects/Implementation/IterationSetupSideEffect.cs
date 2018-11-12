@@ -74,9 +74,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeCreate(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override bool BeforeCreate(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             thing.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
+
+            if (string.IsNullOrWhiteSpace(thing.Description))
+            {
+                thing.Description = "-";
+            }
 
             var engineeringModelSetup = (EngineeringModelSetup)container;
 
@@ -85,6 +90,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // set the next iteration number
             thing.IterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
+            return true;
         }
 
         /// <summary>

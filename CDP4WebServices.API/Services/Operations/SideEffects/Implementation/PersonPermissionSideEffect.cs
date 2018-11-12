@@ -56,7 +56,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeCreate(
+        public override bool BeforeCreate(
             PersonPermission thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -64,6 +64,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             ISecurityContext securityContext)
         {
             this.ValidateAccessRightKind(thing);
+            return true;
         }
 
         /// <summary>

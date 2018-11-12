@@ -51,7 +51,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        void BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
+        /// <returns>
+        /// Returns true if the create operation may continue, otherwise it shall be skipped.
+        /// </returns>
+        bool BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
 
         /// <summary>
         /// Execute additional logic after a successful create operation.

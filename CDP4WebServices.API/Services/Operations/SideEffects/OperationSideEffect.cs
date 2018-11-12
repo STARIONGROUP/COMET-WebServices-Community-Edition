@@ -113,8 +113,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public virtual void BeforeCreate(T thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        /// <returns>
+        /// Returns true if the create operation may continue, otherwise it shall be skipped.
+        /// </returns>
+        public virtual bool BeforeCreate(T thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            return true;
         }
 
         /// <summary>
@@ -259,9 +263,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public bool BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.BeforeCreate((T)thing, container, transaction, partition, securityContext);
+            return this.BeforeCreate((T)thing, container, transaction, partition, securityContext);
         }
 
         /// <summary>

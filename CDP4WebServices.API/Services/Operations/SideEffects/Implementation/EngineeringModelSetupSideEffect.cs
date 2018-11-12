@@ -118,7 +118,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeCreate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override bool BeforeCreate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.TransactionManager.SetFullAccessState(true);
 
@@ -160,6 +160,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.TransactionManager.SetFullAccessState(false);
 
             // TODO set default participant(s) iids (which are not contained) for engineeringmodelsetup (task T2818 CDP4WEBSERVICES)
+            return true;
         }
 
         /// <summary>

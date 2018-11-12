@@ -33,6 +33,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterSubscriptionService> parameterSubscriptionService;
         private Mock<IParameterService> parameterService;
 
+        private Mock<IParameterSubscriptionValueSetService> subscriptionValueSetService;
+
+        private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
+
         private Parameter parameter;
         private ParameterValueSet valueset;
         private ParameterOverride parameterOverride;
@@ -49,6 +53,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterOverrideValueSetService = new Mock<IParameterOverrideValueSetService>();
             this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
             this.parameterService = new Mock<IParameterService>();
+            this.subscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
+            this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
+
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] {"-"}));
 
             this.npgsqlTransaction = null;
 
@@ -61,6 +69,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.valueset.Reference = new ValueArray<string>(new [] {"1"});
             this.parameter.ValueSet.Add(this.valueset.Iid);
             this.parameter.ParameterType = Guid.NewGuid();
+            this.parameter.Owner = Guid.NewGuid();
 
             
             this.sideEffect = new ParameterOverrideSideEffect
@@ -71,6 +80,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                   ParameterSubscriptionService = this.parameterSubscriptionService.Object,
                                   ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
                                   ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
+                                  ParameterSubscriptionValueSetService = this.subscriptionValueSetService.Object,
+                                  DefaultValueArrayFactory = this.defaultValueArrayFactory.Object
                               };
 
             // prepare mock data
@@ -123,8 +134,28 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.sideEffect.AfterUpdate(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
-
             this.parameterSubscriptionService.Verify(x => x.DeleteConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>()));
+        }
+
+        [Test]
+        public void VerifySubscriptionsAreCreated()
+        {
+            var originalThing = this.parameterOverride.DeepClone<Thing>();
+            this.parameterOverride.Owner = this.parameter.Owner;
+            var subscription1 = new ParameterSubscription(Guid.NewGuid(), 0) { Owner = Guid.NewGuid() };
+            var subscription2 = new ParameterSubscription(Guid.NewGuid(), 0) { Owner = Guid.NewGuid() };
+
+            this.parameter.ParameterSubscription.Add(subscription1.Iid);
+            this.parameter.ParameterSubscription.Add(subscription2.Iid);
+
+            this.parameterSubscriptionService.Setup(x => x.GetShallow(null, It.IsAny<string>(), null, this.securityContext.Object)).Returns(new[] { subscription2, subscription1 });
+
+
+            this.sideEffect.AfterCreate(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+
+
+            this.parameterSubscriptionService.Verify(x => x.CreateConcept(null, It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>(), It.IsAny<long>()), Times.Exactly(2));
+            this.subscriptionValueSetService.Verify(x => x.CreateConcept(null, It.IsAny<string>(), It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Exactly(2));
         }
     }
 }

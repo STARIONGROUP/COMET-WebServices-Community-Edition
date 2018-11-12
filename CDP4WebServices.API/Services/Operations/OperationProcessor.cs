@@ -871,7 +871,12 @@ namespace CDP4WebServices.API.Services.Operations
                 var originalThing = resolvedInfo.Thing.DeepClone<Thing>();
 
                 // call before create hook
-                this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext);
+                if (!this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
+                {
+                    Logger.Warn("Skipping create operation of thing {0} with id {1} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
+                    continue;
+                }
+
                 if (resolvedInfo.ContainerInfo.ContainmentSequence != -1)
                 {
                     service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);

@@ -151,12 +151,18 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        /// <returns>
+        /// Return a boolean specifying whether the operation shall be executed
+        /// </returns>
+        public bool BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (this.IsSideEffectRegistered(thing))
             {
-                this.GetOperationSideEffect(thing).BeforeCreate(thing, container, transaction, partition, securityContext);
+                return this.GetOperationSideEffect(thing).BeforeCreate(thing, container, transaction, partition, securityContext);
             }
+
+            // if no side-effect just return true
+            return true;
         }
 
         /// <summary>
