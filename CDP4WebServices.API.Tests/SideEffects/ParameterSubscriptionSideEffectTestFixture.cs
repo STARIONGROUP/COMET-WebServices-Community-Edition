@@ -102,6 +102,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
             var parameter = new Parameter(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() } ;
             parameter.ValueSet = new List<Guid>() { Guid.NewGuid() };
 
+            this.parameterService
+                .Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(enu => enu.Contains(parameter.Iid)), It.IsAny<ISecurityContext>()))
+                .Returns(new[] { parameter });
+
             this.sideEffect.AfterCreate(parameterSubscription, parameter, originalparameterSubscription, this.npgsqlTransaction, "partition", this.securityContext.Object);
             
             this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterSubscriptionValueSet>(s => s.Manual.Count == 2), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Once);

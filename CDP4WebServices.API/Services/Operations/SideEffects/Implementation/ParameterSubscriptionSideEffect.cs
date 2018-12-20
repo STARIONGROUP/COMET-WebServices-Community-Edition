@@ -177,19 +177,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 throw new InvalidOperationException("The container of a ParameterSubscription can only be a ParameterOrOverrideBase.");
             }
 
-            ParameterOrOverrideBase paramContainer;
-            if (parameterOrOverrideBase.ValueSets.Any())
-            {
-                paramContainer = (CDP4Common.DTO.ParameterOrOverrideBase)container;
-            }
-            else
-            {
-                // the parameter/override is created in the same operation and does not contain any value-set 
-                // fetch latest version of the container
-                paramContainer = container is CDP4Common.DTO.Parameter
+            var paramContainer = container is CDP4Common.DTO.Parameter
                     ? (ParameterOrOverrideBase)this.ParameterService.GetShallow(transaction, partition, new[] {container.Iid}, securityContext).OfType<CDP4Common.DTO.Parameter>().SingleOrDefault()
                     : this.ParameterOverrideService.GetShallow(transaction, partition, new[] {container.Iid}, securityContext).OfType<CDP4Common.DTO.ParameterOverride>().SingleOrDefault();
-            }
+            
 
             if (paramContainer == null || !paramContainer.ValueSets.Any())
             {

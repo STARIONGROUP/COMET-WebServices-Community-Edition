@@ -440,7 +440,14 @@ namespace CDP4WebServices.API.Helpers
             }
 
             // start transaction with rollback support
-            return connection.BeginTransaction();
+            var transaction = connection.BeginTransaction();
+            using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED", transaction.Connection, transaction))
+            {
+                // log the sql command
+                this.CommandLogger.ExecuteAndLog(command);
+            }
+
+            return transaction;
         }
 
         /// <summary>

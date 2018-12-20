@@ -183,7 +183,7 @@ namespace CDP4WebServices.API.Modules
                 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                var fileRevisions = resourceResponse.Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>().ToList();
+                var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
                 if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries

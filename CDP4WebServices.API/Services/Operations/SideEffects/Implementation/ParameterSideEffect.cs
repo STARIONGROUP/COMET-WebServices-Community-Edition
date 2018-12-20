@@ -218,12 +218,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
-            if (originalThing.ValueSet.Any())
-            {
-                // we return here to avoid creating default value-sets during a copy, ie avoid duplicates
-                return;
-            }
-
             // creates default value-arrays for the parameter
             this.DefaultValueArrayFactory.Load(transaction, securityContext);
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(thing.ParameterType);

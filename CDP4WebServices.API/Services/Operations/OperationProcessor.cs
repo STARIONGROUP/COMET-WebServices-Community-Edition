@@ -703,7 +703,15 @@ namespace CDP4WebServices.API.Services.Operations
         /// </param>
         private void DeletePersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Thing persistedThing)
         {
-            service.DeleteConcept(transaction, partition, persistedThing);
+            // get the persisted thing (full) so that   permission can be checked against potential owner
+            var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
+            var thing = service.GetShallow(transaction, partition, new[] {persistedThing.Iid}, securityContext).FirstOrDefault();
+            if (thing == null)
+            {
+                return;
+            }
+
+            service.DeleteConcept(transaction, partition, thing);
         }
 
         /// <summary>
