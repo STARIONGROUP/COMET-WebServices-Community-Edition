@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.8.0" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="1.8.1" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
   </ItemGroup>
   
