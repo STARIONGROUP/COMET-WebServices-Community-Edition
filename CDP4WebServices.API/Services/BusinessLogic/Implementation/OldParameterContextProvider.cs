@@ -103,6 +103,10 @@ namespace CDP4WebServices.API.Services.BusinessLogic
             this.OldParameter = oldParameter;
             this.OldValueSet = this.ParameterValueSetService.GetShallow(transaction, partition, this.OldParameter.ValueSet, securityContext).Cast<ParameterValueSet>().ToList();
 
+            this.OldActualFiniteStateList = null;
+            this.OldActualFiniteStates = null;
+            this.OldDefaultState = null;
+
             if (this.OldParameter.StateDependence.HasValue)
             {
                 this.OldActualFiniteStateList = this.ActualFiniteStateListService
@@ -118,6 +122,7 @@ namespace CDP4WebServices.API.Services.BusinessLogic
                 this.OldDefaultState = this.ActualFiniteStateListService.GetDefaultState(this.OldActualFiniteStateList, this.OldActualFiniteStates, partition, securityContext, transaction);
             }
 
+            this.OldDefaultOption = null;
             if (this.IsOldOptionDependent)
             {
                 if (iteration == null)

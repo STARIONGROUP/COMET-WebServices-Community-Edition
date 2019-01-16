@@ -12,6 +12,8 @@ namespace CDP4WebServices.API.Services.Operations
     using System.IO;
     using System.Linq;
     using CDP4Common;
+    using CDP4Common.CommonData;
+    using CDP4Common.Dto;
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
     using CDP4Common.MetaInfo;
@@ -94,6 +96,11 @@ namespace CDP4WebServices.API.Services.Operations
         /// Gets or sets the file binary service.
         /// </summary>
         public IFileBinaryService FileBinaryService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ICopySourceService"/>
+        /// </summary>
+        public ICopySourceService CopySourceService { get; set; }
 
         /// <summary>
         /// Process the posted operation message.
@@ -319,6 +326,58 @@ namespace CDP4WebServices.API.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
+        internal void ValidateCopyOperations(CdpPostOperation operation)
+        {
+            // verify presence of classkind and iid (throw)
+            if (operation.Copy.Any(x => x.Source.Thing.Iid == Guid.Empty))
+            {
+                throw new InvalidOperationException("Incomplete copy items encountered in operation");
+            }
+
+            // verify presence of classkind and iid (throw)
+            if (operation.Copy.Any(x => x.Source.TopContainer.Iid == Guid.Empty))
+            {
+                throw new InvalidOperationException("Incomplete copy items encountered in operation");
+            }
+
+            // verify presence of classkind and iid (throw)
+            if (operation.Copy.Any(x => x.Target.Container.Iid == Guid.Empty))
+            {
+                throw new InvalidOperationException("Incomplete copy items encountered in operation");
+            }
+
+            // verify presence of classkind and iid (throw)
+            if (operation.Copy.Any(x => x.Target.TopContainer.Iid == Guid.Empty))
+            {
+                throw new InvalidOperationException("Incomplete copy items encountered in operation");
+            }
+
+            // verify owner has value if used
+            if (operation.Copy.Any(x => x.Options.KeepOwner.HasValue && !x.Options.KeepOwner.Value && x.ActiveOwner == Guid.Empty))
+            {
+                throw new InvalidOperationException("Incomplete copy items encountered in operation");
+            }
+
+            if (operation.Copy.Any(x => x.Source.Thing.Type != ClassKind.ElementDefinition))
+            {
+                throw new InvalidOperationException("Only Element-Definition may be copied");
+            }
+
+            if (operation.Copy.Any(x => x.Source.TopContainer.Type != ClassKind.EngineeringModel || x.Target.TopContainer.Type != ClassKind.EngineeringModel))
+            {
+                throw new InvalidOperationException("Copy operations may only be applied on Engineering-Model");
+            }
+        }
+
+        /// <summary>
+        /// Validate the integrity of the update operations.
+        /// </summary>
+        /// <param name="operation">
+        /// The operation.
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// If validation failed
+        /// </exception>
         internal void ValidateUpdateOperations(CdpPostOperation operation)
         {
             // verify presence of classkind and iid (throw)
@@ -391,6 +450,7 @@ namespace CDP4WebServices.API.Services.Operations
             this.ValidateDeleteOperations(operation, transaction, partition);
             this.ValidateCreateOperations(operation, fileStore);
             this.ValidateUpdateOperations(operation);
+            this.ValidateCopyOperations(operation);
 
             this.RegisterUpdateContainersForResolvement(operation);
         }
@@ -684,6 +744,8 @@ namespace CDP4WebServices.API.Services.Operations
             {
                 this.FileBinaryService.StoreBinaryData(kvp.Key, kvp.Value);
             }
+
+            this.ApplyCopyOperations(operation, transaction, partition);
         }
 
         /// <summary>
@@ -898,6 +960,101 @@ namespace CDP4WebServices.API.Services.Operations
 
                 // call after create hook
                 this.OperationSideEffectProcessor.AfterCreate(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
+            }
+        }
+
+        /// <summary>
+        /// Executes the copy-operations
+        /// </summary>
+        /// <param name="operation">
+        /// The operation.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="requestPartition">
+        /// The current contexttual partition
+        /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// If mandatory resources cannot be found to perform the operation
+        /// </exception>
+        private void ApplyCopyOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        {
+            // re-order create
+            var targetModelPartition = requestPartition.Contains(typeof(EngineeringModel).Name) ? requestPartition : requestPartition.Replace(typeof(Iteration).Name, typeof(EngineeringModel).Name);
+            var targetIterationPartition = requestPartition.Contains(typeof(EngineeringModel).Name) ? requestPartition.Replace(typeof(EngineeringModel).Name, typeof(Iteration).Name) : requestPartition;
+
+            var modelSetupService = (IEngineeringModelSetupService)this.ServiceProvider.MapToReadService(ClassKind.EngineeringModelSetup.ToString());
+
+            foreach (var copyinfo in operation.Copy)
+            {
+                var targetModelSetup = modelSetupService.GetEngineeringModelSetup(transaction, copyinfo.Target.TopContainer.Iid);
+                if (targetModelSetup == null)
+                {
+                    throw new InvalidOperationException("The target engineering-model-setup could not be found");
+                }
+
+                var sourceThings = this.CopySourceService.GetCopySourceData(transaction, copyinfo, requestPartition);
+
+                var service = this.ServiceProvider.MapToPersitableService(copyinfo.Source.Thing.Type.ToString());
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
+
+                var containerService = this.ServiceProvider.MapToReadService(copyinfo.Target.Container.Type.ToString());
+                var container = containerService.GetShallow(transaction, requestPartition, new[] {copyinfo.Target.Container.Iid}, securityContext).SingleOrDefault();
+                if (container == null)
+                {
+                    throw new InvalidOperationException("The container for the copy operation cannot be found.");
+                }
+
+                var mrdlService = (IModelReferenceDataLibraryService)this.ServiceProvider.MapToReadService(typeof(ModelReferenceDataLibrary).Name);
+                var iterationservice = this.ServiceProvider.MapToReadService(typeof(Iteration).Name);
+
+                var targetIteration = (Iteration)iterationservice.GetShallow(transaction, targetModelPartition, new[] {copyinfo.Target.IterationId.Value}, securityContext).SingleOrDefault();
+                if (targetIteration == null)
+                {
+                    throw new InvalidOperationException("The target iteration could not be found");
+                }
+
+                var rdls = mrdlService.QueryReferenceDataLibrary(transaction, targetIteration).ToList();
+
+                // copy all sourceDtos from copySource
+                var topCopy = sourceThings.Single(x => x.Iid == copyinfo.Source.Thing.Iid);
+
+                var idmap = this.CopySourceService.GenerateCopyReference(sourceThings);
+
+                var elementDefs = sourceThings.OfType<ElementDefinition>().ToList();
+                if (elementDefs.Count == 1)
+                {
+                    ((ServiceBase)service).Copy(transaction, targetIterationPartition, topCopy, container, sourceThings, copyinfo, idmap, rdls, targetModelSetup, securityContext);
+                }
+                else
+                {
+                    // Copy across different models
+                    // copy usages after all definitions
+                    foreach (var elementDefinition in elementDefs)
+                    {
+                        ((ServiceBase)service).Copy(transaction, targetIterationPartition, elementDefinition, container, sourceThings, copyinfo, idmap, rdls, targetModelSetup, securityContext);
+                    }
+
+                    var sourceElementDefIds = elementDefs.Select(x => x.Iid).ToArray();
+                    var elementDefCopyIds = idmap.Where(x => sourceElementDefIds.Contains(x.Key)).Select(x => x.Value);
+                    var elementDefCopies = service.GetShallow(transaction, targetIterationPartition, elementDefCopyIds, securityContext).ToList();
+
+                    var sourceUsages = sourceThings.OfType<ElementUsage>().ToList();
+                    var usageService = this.ServiceProvider.MapToPersitableService(ClassKind.ElementUsage.ToString());
+                    foreach (var elementUsage in sourceUsages)
+                    {
+                        var sourceElementDefContainer = elementDefs.Single(x => x.ContainedElement.Contains(elementUsage.Iid));
+                        var elementDefContainer = elementDefCopies.SingleOrDefault(x => x.Iid == idmap[sourceElementDefContainer.Iid]);
+                        if (elementDefContainer == null)
+                        {
+                            throw new InvalidOperationException($"The target element definition container could not be found for the usage to copy.");
+                        }
+
+                        ((ServiceBase)usageService).Copy(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetModelSetup, securityContext);
+                    }
+                }
+
             }
         }
 

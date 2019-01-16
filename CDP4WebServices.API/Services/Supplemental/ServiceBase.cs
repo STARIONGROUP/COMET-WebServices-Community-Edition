@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ServiceBase.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2019 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -11,6 +11,7 @@ namespace CDP4WebServices.API.Services
     using System.Linq;
 
     using CDP4Common;
+    using CDP4Common.Dto;
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
@@ -60,6 +61,24 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the transaction manager.
         /// </summary>
         public ICdp4TransactionManager TransactionManager { get; set; }
+
+        /// <summary>
+        /// Copy the <paramref name="sourceThing"/> into the target <paramref name="partition"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="sourceThing">The source <see cref="Thing"/> to copy</param>
+        /// <param name="targetContainer">The target container <see cref="Thing"/></param>
+        /// <param name="allSourceThings">All source <see cref="Thing"/>s in the current copy operation</param>
+        /// <param name="copyinfo">The <see cref="CopyInfo"/></param>
+        /// <param name="sourceToCopyMap">A dictionary mapping identifiers of original to copy</param>
+        /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
+        /// <param name="targetEngineeringModelSetup">The target <see cref="EngineeringModelSetup"/></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
+        public virtual void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+            Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
+        {
+        }
 
         /// <summary>
         /// Execute additional logic before each get function call.

@@ -9,6 +9,7 @@ namespace CDP4WebServices.API.Services.Operations
     using System.Collections.Generic;
     using System.Linq;
     using CDP4Common;
+    using CDP4Common.Dto;
     using CDP4Common.DTO;
     using Newtonsoft.Json;
 
@@ -25,7 +26,7 @@ namespace CDP4WebServices.API.Services.Operations
             this.Delete = new List<ClasslessDTO>();
             this.Create = new List<Thing>();
             this.Update = new List<ClasslessDTO>();
-            this.Copy = new List<ClasslessDTO>();
+            this.Copy = new List<CopyInfo>();
         }
 
         /// <summary>
@@ -50,6 +51,6 @@ namespace CDP4WebServices.API.Services.Operations
         /// Gets or sets the collection of DTO's that need to be copied
         /// </summary>
         [JsonProperty("_copy")]
-        public List<ClasslessDTO> Copy { get; set; }
+        public List<CopyInfo> Copy { get; set; }
     }
 }
