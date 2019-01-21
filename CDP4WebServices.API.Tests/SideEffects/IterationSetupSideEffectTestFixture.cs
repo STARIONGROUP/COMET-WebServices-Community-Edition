@@ -105,17 +105,22 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyAfterCreate()
         {
-            var iterationSetup = new IterationSetup(Guid.NewGuid(), 1);
+            var sourceId = Guid.NewGuid();
+            this.mockedIterationSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).
+              Returns(new[] {new IterationSetup(sourceId, 0)});
+
+            var iterationSetup = new IterationSetup(Guid.NewGuid(), 1) {SourceIterationSetup = sourceId };
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
             var originalThing = iterationSetup.DeepClone<Thing>();
 
+            
             this.iterationSetupSideEffect.AfterCreate(iterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
 
             // Check that the other iterationSetups get frozen when creating the iterationSetup
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", It.IsAny<IterationSetup>(), this.engineeringModelSetup), Times.Once);
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
-            this.mockedIterationService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "EngineeringModel", It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1), Times.Once);
+            this.mockedIterationService.Verify(x => x.PopulateDataFromLastIteration(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModel>(), this.mockedSecurityContext.Object), Times.Once);
         }
 
         [Test]
