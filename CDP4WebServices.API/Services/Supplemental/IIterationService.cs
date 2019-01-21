@@ -51,5 +51,29 @@ namespace CDP4WebServices.API.Services
         /// <param name="securityContext">The security context</param>
         /// <returns>The active <see cref="Iteration"/></returns>
         Iteration GetActiveIteration(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Populates the data of a new iteration using the last iteration
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="iterationPartition">The iteration partition</param>
+        /// <param name="iterationSetup">The new <see cref="IterationSetup"/></param>
+        /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
+        /// <param name="engineeringModel">The current <see cref="EngineeringModel"/></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
+        void PopulateDataFromLastIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Populates the data of a new iteration using a specific source <paramref name="sourceIterationSetup"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="iterationPartition">The iteration partition</param>
+        /// <param name="iterationSetup">The new <see cref="IterationSetup"/></param>
+        /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
+        /// <param name="engineeringModel">The current <see cref="EngineeringModel"/></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
+        void PopulateDataFromOlderIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup,
+            EngineeringModel engineeringModel, ISecurityContext securityContext);
+
     }
 }

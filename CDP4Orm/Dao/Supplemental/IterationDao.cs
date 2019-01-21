@@ -1,12 +1,13 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2019 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
 {
     using System;
+    using System.Collections.Generic;
     using CDP4Common.DTO;
     using Npgsql;
     using NpgsqlTypes;
@@ -17,91 +18,64 @@ namespace CDP4Orm.Dao
     public partial class IterationDao
     {
         /// <summary>
-        /// Execute additional logic after each write function call.
+        /// Set the end-validity of all iteration data
         /// </summary>
-        /// <param name="writeResult">
-        /// The result from the main write logic.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="thing">
-        /// The thing DTO that was persisted.
-        /// </param>
-        /// <param name="container">
-        /// The container of the persisted DTO.
-        /// </param>
-        /// <returns>
-        /// True if the additional logic was successfully executed.
-        /// </returns>
-        public new bool AfterWrite(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
-        {
-            // move iteration ahead update containment info for all iteration contained concepts
-            
-            var iterationPartition = string.Format("{0}_{1}", "Iteration", container.Iid.ToString().Replace("-", "_")); 
-
-            this.MoveToNextIteration(transaction, iterationPartition, thing);
-
-            // TODO 0 - relate current transaction revision to new iteration to ensure iteration wide revision time (task T2814 CDP4WEBSERVICES)
-            // TODO 1 - for each iteration contained concept: drop timetravel triggers. (task T2814 CDP4WEBSERVICES)
-            // TODO 2 - for each iteration contained concept: delete data from 'current' table. (task T2814 CDP4WEBSERVICES)
-            // TODO 3 - for each iteration contained concept: insert selection of timestamped data (as set in the temp transaction_info table) into 'current' table. (task T2814 CDP4WEBSERVICES)
-            // TODO 3.1 - !!make sure to set the validfrom column to this iteration revision timestamp. (task T2814 CDP4WEBSERVICES)
-            // TODO 4 - for each iteration contained concept: reinstate timetravel triggers. (task T2814 CDP4WEBSERVICES)
-            return base.AfterWrite(writeResult, transaction, partition, thing, container);
-        }
-
-        private void BranchFromSourceIteration(NpgsqlTransaction transaction, string partition, Thing sourceIteration, Thing targetIteration)
-        {
-            // TODO (task T2814 CDP4WEBSERVICES)
-            // clean up current views
-            string.Format("DELETE FROM \"{0}\".\"{1}\"", partition, "Thing");
-
-            // insert the data from historic records into table with the container set to the new iteration
-            string.Format("INSERT INTO \"{0}\".\"{1}\"", partition, "Option");
-            string.Format(" (\"{0}\", \"{1}\", \"Container\")");
-            string.Format(" SELECT \"{0}\", \"{1}\", ");
-            string.Format(" FROM \"{0}\".\"{1}\"", partition, "Option");
-        }
-
-        /// <summary>
-        /// update containment information
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="containedType">
-        /// The contained Type.
-        /// </param>
-        /// <param name="sourceIteration">
-        /// The source Iteration.
-        /// </param>
-        /// <param name="newIteration">
-        /// The new Iteration.
-        /// </param>
-        private void BranchContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing sourceIteration, Thing newIteration)
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The iteration partition</param>
+        public void SetIterationValidityEnd(NpgsqlTransaction transaction, string partition)
         {
             using (var command = new NpgsqlCommand())
             {
-                command.CommandText = string.Format("DELETE FROM \"{0}\".\"{1}\";", partition, containedType.Name);
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("SELECT \"SiteDirectory\".end_all_current_data_validity(:partitionname);");
+                command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
+
+                command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
-                command.ExecuteNonQuery();
+                this.ExecuteAndLogCommand(command);
             }
-            
-            using(var command = new NpgsqlCommand())
+        }
+
+        /// <summary>
+        /// Insert data in the "current" tables using the audit table data at a specific <paramref name="instant"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="instant">The instant that matches an iteration</param>
+        public void InsertDataFromAudit(NpgsqlTransaction transaction, string partition, DateTime instant)
+        {
+            using (var command = new NpgsqlCommand())
             {
-                command.CommandText = string.Format("INSERT INTO \"{0}\".\"{1}\" SELECT *, :containerId FROM \"{0}\".\"{1}_Data\" SET \"Container\" = :container;", partition, containedType.Name);
-                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = sourceIteration.Iid;
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("SELECT \"SiteDirectory\".insert_data_from_audit(:partitionname, :instant);");
+                command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+
+                command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
-                command.ExecuteNonQuery();
+                this.ExecuteAndLogCommand(command);
+            }
+        }
+
+        /// <summary>
+        /// Deletes all things of the "current" tables
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The iteration partition</param>
+        public void DeleteAllIterationThings(NpgsqlTransaction transaction, string partition)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+
+                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Thing\";", partition);
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+                this.ExecuteAndLogCommand(command);
             }
         }
 
@@ -117,9 +91,8 @@ namespace CDP4Orm.Dao
         /// <param name="thing">
         /// The thing DTO that is to be persisted.
         /// </param>
-        private void MoveToNextIteration(NpgsqlTransaction transaction, string partition, Thing thing)
+        public void MoveToNextIterationFromLast(NpgsqlTransaction transaction, string partition, Thing thing)
         {
-            // TODO code generate (task T2814 CDP4WEBSERVICES)
             this.UpdateContainment(transaction, partition, typeof(Option), thing);
             this.UpdateContainment(transaction, partition, typeof(Publication), thing);
             this.UpdateContainment(transaction, partition, typeof(PossibleFiniteStateList), thing);

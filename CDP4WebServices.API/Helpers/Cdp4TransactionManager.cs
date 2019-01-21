@@ -29,6 +29,16 @@ namespace CDP4WebServices.API.Helpers
         public const string SITE_DIRECTORY_PARTITION = "SiteDirectory";
 
         /// <summary>
+        /// The iteration partition prefix
+        /// </summary>
+        public const string ITERATION_PARTITION_PREFIX = "Iteration_";
+
+        /// <summary>
+        /// The engineering-model partition prefix
+        /// </summary>
+        public const string ENGINEERING_MODEL_PARTITION_PREFIX = "EngineeringModel_";
+
+        /// <summary>
         /// The transaction info table name.
         /// </summary>
         private const string TransactionInfoTable = "transaction_info";
@@ -441,11 +451,6 @@ namespace CDP4WebServices.API.Helpers
 
             // start transaction with rollback support
             var transaction = connection.BeginTransaction();
-            using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED", transaction.Connection, transaction))
-            {
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
-            }
 
             return transaction;
         }

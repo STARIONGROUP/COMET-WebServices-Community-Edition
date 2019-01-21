@@ -248,6 +248,27 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Deletes all data from the <paramref name="table"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The partition of the table to delete</param>
+        /// <param name="table">The table to clear</param>
+        protected void DeleteAll(NpgsqlTransaction transaction, string partition, string table)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+
+                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"{1}\";", partition, table);
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+                this.ExecuteAndLogCommand(command);
+            }
+        }
+
+        /// <summary>
         /// Instantiates a <see cref="Thing"/> from the content of a <see cref="NpgsqlDataReader"/>
         /// </summary>
         /// <param name="reader">The <see cref="NpgsqlDataReader"/></param>

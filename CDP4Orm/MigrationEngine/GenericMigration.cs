@@ -51,7 +51,7 @@ namespace CDP4Orm.MigrationEngine
 
             if (applicableSchemas.Count == 0)
             {
-                // no schema to apply the migration on
+                Logger.Info(" no schema to apply the migration on");
                 return;
             }
 

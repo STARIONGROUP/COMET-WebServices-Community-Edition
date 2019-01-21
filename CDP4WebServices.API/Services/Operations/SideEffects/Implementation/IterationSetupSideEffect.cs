@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Common.DTO;
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authentication;
+    using Helpers;
     using NLog;
     using Npgsql;
 
@@ -133,22 +134,51 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // switch partition to engineeringModel
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
-
+            
             // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
             var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
             credentials.EngineeringModelSetup = engineeringModelSetup;
             this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
             this.PermissionService.Credentials = credentials;
 
-            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new[] { engineeringModelIid }, securityContext).SingleOrDefault();
-            if (!this.IterationService.CreateConcept(transaction, engineeringModelPartition, iteration, engineeringModel))
+            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new[] { engineeringModelIid }, securityContext).SingleOrDefault() as EngineeringModel;
+
+            var sourceIterationSetups = this.IterationSetupService.GetShallow(
+                transaction,
+                Cdp4TransactionManager.SITE_DIRECTORY_PARTITION,
+                engineeringModelSetup.IterationSetup,
+                securityContext).Where(x => x.Iid != thing.Iid).Cast<IterationSetup>().ToList();
+
+            // update iteration partition with source data if applicable
+            if (thing.SourceIterationSetup.HasValue)
             {
-                throw new InvalidOperationException($"There was a problem creating the new Iteration: {iteration.Iid} contained by EngineeringModel: {engineeringModelIid}");
+                var sourceIterationSetup = sourceIterationSetups.SingleOrDefault(x => x.Iid == thing.SourceIterationSetup.Value);
+                if (sourceIterationSetup == null)
+                {
+                    throw new InvalidOperationException("The source iteration-setup could not be found.");
+                }
+
+                var lastIterationNumber = sourceIterationSetups.Max(x => x.IterationNumber);
+                var iterationPartition = $"{Cdp4TransactionManager.ITERATION_PARTITION_PREFIX}{engineeringModelIid.ToString().Replace("-", "_")}";
+                if (sourceIterationSetup.IterationNumber != lastIterationNumber)
+                {
+                    this.IterationService.PopulateDataFromOlderIteration(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
+                }
+                else
+                {
+                    this.IterationService.PopulateDataFromLastIteration(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
+                }
+            }
+            else if (sourceIterationSetups.Count > 0)
+            {
+                throw new InvalidOperationException("The source iteration is null. Please set the source of the new iteration to create.");
             }
 
             // Create revisions for created Iteration and updated EngineeringModel
             var actor = credentials.Person.Iid;
-            
+
+            this.TransactionManager.SetDefaultContext(transaction);
+            this.TransactionManager.SetCachedDtoReadEnabled(false);
             var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
             this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
         }

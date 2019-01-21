@@ -1,17 +1,21 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2019 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
 {
     using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Runtime.Remoting;
     using Authorization;
+    using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using Helpers;
+    using NLog;
     using Npgsql;
 
     /// <summary>
@@ -19,6 +23,11 @@ namespace CDP4WebServices.API.Services
     /// </summary>
     public sealed partial class IterationService
     {
+        /// <summary>
+        /// The Logger
+        /// </summary>
+        private static Logger Logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// The cached active iteration identifier in the context of the current request
         /// </summary>
@@ -108,6 +117,111 @@ namespace CDP4WebServices.API.Services
                 this.activeIterationId = activeIteration.Iid;
                 return activeIteration;
             }
+        }
+
+        /// <summary>
+        /// Populates the data of a new iteration using the last iteration
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="iterationPartition">The iteration partition</param>
+        /// <param name="iterationSetup">The new <see cref="IterationSetup"/></param>
+        /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
+        /// <param name="engineeringModel">The current <see cref="EngineeringModel"/></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
+        public void PopulateDataFromLastIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
+        {
+            Logger.Info("Creating new iteration using the last iteration");
+            var start = Stopwatch.StartNew();
+
+            var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
+
+            this.IterationDao.MoveToNextIterationFromLast(transaction, iterationPartition, newiteration);
+            this.PublicationService.DeleteAll(transaction, iterationPartition);
+            Logger.Info("End populate data for new iteration. Operation took {0} ms", start.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Populates the data of a new iteration using a specific source <paramref name="sourceIterationSetup"/>
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="iterationPartition">The iteration partition</param>
+        /// <param name="iterationSetup">The new <see cref="IterationSetup"/></param>
+        /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
+        /// <param name="engineeringModel">The current <see cref="EngineeringModel"/></param>
+        /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
+        public void PopulateDataFromOlderIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
+        {
+            Logger.Info("Creating new iteration using the source iteration number {0}", sourceIterationSetup.IterationNumber);
+            var start = Stopwatch.StartNew();
+            var engineeringModelPartition = iterationPartition.Replace(Cdp4TransactionManager.ITERATION_PARTITION_PREFIX, Cdp4TransactionManager.ENGINEERING_MODEL_PARTITION_PREFIX);
+
+            // Set end-validity for all current data
+            this.IterationDao.SetIterationValidityEnd(transaction, iterationPartition);
+
+            Logger.Info("Setting end validity took {0} ms", start.ElapsedMilliseconds);
+            start.Reset();
+            start.Start();
+
+            // Get source data to copy
+            this.TransactionManager.SetIterationContext(transaction, engineeringModelPartition, sourceIterationSetup.IterationIid);
+            var sourceInstant = this.TransactionManager.GetSessionInstant(transaction);
+
+            // disable triggers to delete all current data in the context of this transaction
+            this.ModifyUserTrigger(transaction, iterationPartition, false);
+
+            // delete current data
+            this.IterationDao.DeleteAllIterationThings(transaction, iterationPartition);
+
+            // re-enable triggers
+            this.ModifyUserTrigger(transaction, iterationPartition, true);
+
+            this.IterationDao.InsertDataFromAudit(transaction, iterationPartition, sourceInstant);
+
+            var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
+            this.IterationDao.MoveToNextIterationFromLast(transaction, iterationPartition, newiteration);
+
+            Logger.Info("Inserting data took {0} ms", start.ElapsedMilliseconds);
+
+            // Delete Publications (cascading all things that references them)
+            this.PublicationService.DeleteAll(transaction, iterationPartition);
+
+            Logger.Info("End populate data for new iteration");
+        }
+
+        /// <summary>
+        /// Create and return a new <see cref="Iteration"/> from a source
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="iterationPartition">The iteration partition</param>
+        /// <param name="iterationSetup">The new <see cref="IterationSetup"/> for the <see cref="Iteration"/> to create</param>
+        /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
+        /// <param name="engineeringModel">The <see cref="EngineeringModel"/></param>
+        /// <param name="securityContext">The security-context</param>
+        /// <returns>The new <see cref="Iteration"/></returns>
+        private Iteration CreateIterationObjectFromSource(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
+        {
+            var engineeringModelPartition = iterationPartition.Replace(Cdp4TransactionManager.ITERATION_PARTITION_PREFIX, Cdp4TransactionManager.ENGINEERING_MODEL_PARTITION_PREFIX);
+            var sourceIteration = (Iteration)this.GetShallow(transaction, engineeringModelPartition, new[] { sourceIterationSetup.IterationIid }, securityContext).SingleOrDefault();
+            if (sourceIteration == null)
+            {
+                throw new InvalidOperationException("The source iteration could not be found.");
+            }
+
+            var iteration = new Iteration(iterationSetup.IterationIid, 1)
+            {
+                IterationSetup = iterationSetup.Iid,
+                DefaultOption = sourceIteration.DefaultOption,
+                SourceIterationIid = sourceIteration.Iid,
+                TopElement = sourceIteration.TopElement,
+            };
+
+            // create from last iteration
+            if (!this.IterationDao.Write(transaction, engineeringModelPartition, iteration, engineeringModel))
+            {
+                throw new InvalidOperationException($"There was a problem creating the new Iteration: {iteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}");
+            }
+
+            return iteration;
         }
     }
 }
