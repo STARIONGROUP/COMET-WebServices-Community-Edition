@@ -4,7 +4,7 @@
     <TargetFrameworks>net45;net451;net452;net46;net461;net462;net47;net471;net472</TargetFrameworks>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Authentication-CE</Title>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <Description>Library to support the implementation of authentication</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron</Authors>    
