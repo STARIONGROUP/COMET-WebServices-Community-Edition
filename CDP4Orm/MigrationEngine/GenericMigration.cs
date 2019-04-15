@@ -36,6 +36,8 @@ namespace CDP4Orm.MigrationEngine
         /// <summary>
         /// Apply the current migration on the specified schema if applicable
         /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="existingSchemas">The schema on which the migration shall be applied on</param>
         public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
             Logger.Info("Start migration script {0}", this.MigrationMetaData.ResourceName);
@@ -57,6 +59,7 @@ namespace CDP4Orm.MigrationEngine
 
             foreach (var applicableSchema in applicableSchemas)
             {
+                // using the actual schema name in the generic script to execute
                 var replace = new Tuple<string, string>(SCHEMA_NAME_REPLACE, applicableSchema);
                 using (var sqlCommand = new NpgsqlCommand())
                 {

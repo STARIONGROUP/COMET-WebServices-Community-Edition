@@ -315,49 +315,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         }
 
         /// <summary>
-        /// Execute additional logic after a successful EngineeringModelSetup delete operation.
-        /// </summary>
-        /// <param name="thing">
-        /// The <see cref="EngineeringModelSetup"/> instance that has been removed.
-        /// </param>
-        /// <param name="container">
-        /// The container (<see cref="SiteDirectory"/>) instance of the <see cref="EngineeringModelSetup"/> that has been removed.
-        /// </param>
-        /// <param name="originalThing">
-        /// The original Thing.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be deleted from.
-        /// </param>
-        /// <param name="securityContext">
-        /// The security Context used for permission checking.
-        /// </param>
-        public override void AfterDelete(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction,  string partition, ISecurityContext securityContext)
-        {
-            var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
-
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
-            credentials.EngineeringModelSetup = thing;
-            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-            this.PermissionService.Credentials = credentials;
-
-            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, newEngineeringModelPartition, new[] { thing.EngineeringModelIid }, securityContext).SingleOrDefault();
-            if (engineeringModel == null)
-            {
-                return;
-            }
-
-            // Delete the EngineeringModel associated to the EngineeringModelSetup that has been deleted
-            if (!this.EngineeringModelService.DeleteConcept(transaction, newEngineeringModelPartition, engineeringModel))
-            {
-                throw new InvalidOperationException($"There was a problem deleting the EngineeringModel: {engineeringModel.Iid} for EngineeringModelSetup: {thing.Iid}");
-            }
-        }
-
-        /// <summary>
         /// Creates a new <see cref="EngineeringModel"/> from a source
         /// </summary>
         /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>

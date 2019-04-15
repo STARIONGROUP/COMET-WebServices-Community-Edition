@@ -559,12 +559,12 @@ namespace CDP4WebServices.API.Tests
                     Thing = new CopyReference
                     {
                         Iid = sourceElementDef1.Iid,
-                        Type = ClassKind.ElementDefinition
+                        ClassKind = ClassKind.ElementDefinition
                     },
                     TopContainer = new CopyReference
                     {
                         Iid = Guid.NewGuid(),
-                        Type = ClassKind.EngineeringModel
+                        ClassKind = ClassKind.EngineeringModel
                     }
                 },
                 Target = new CopyTarget
@@ -573,12 +573,12 @@ namespace CDP4WebServices.API.Tests
                     Container = new CopyReference
                     {
                         Iid = targetIteration.Iid,
-                        Type = ClassKind.Iteration
+                        ClassKind = ClassKind.Iteration
                     },
                     TopContainer = new CopyReference
                     {
                         Iid = Guid.NewGuid(),
-                        Type = ClassKind.EngineeringModel
+                        ClassKind = ClassKind.EngineeringModel
                     }
                 }
             };

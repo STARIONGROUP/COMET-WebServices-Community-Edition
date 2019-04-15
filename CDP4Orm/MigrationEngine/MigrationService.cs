@@ -26,9 +26,10 @@ namespace CDP4Orm.MigrationEngine
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The target partition</param>
-        public void ApplyMigrations(NpgsqlTransaction transaction, string partition)
+        /// <param name="isStartup">Asserts whether the <see cref="IMigrationService"/> is called on startup</param>
+        public void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup)
         {
-            var migrations = GetMigrations().Where(x => partition.StartsWith(x.MigrationMetaData.MigrationScriptApplicationKind.ToString()) || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All);
+            var migrations = GetMigrations(isStartup).Where(x => partition.StartsWith(x.MigrationMetaData.MigrationScriptApplicationKind.ToString()) || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All);
             foreach (var migrationBase in migrations.OrderBy(x => x.MigrationMetaData.Version))
             {
                 migrationBase.ApplyMigration(transaction, new [] { partition });
@@ -39,7 +40,7 @@ namespace CDP4Orm.MigrationEngine
         /// Gets all migration scripts
         /// </summary>
         /// <returns>The List of <see cref="MigrationBase"/></returns>
-        public static IReadOnlyList<MigrationBase> GetMigrations()
+        public static IReadOnlyList<MigrationBase> GetMigrations(bool isStartup)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var resourceFullNames = assembly.GetManifestResourceNames().Where(x => x.StartsWith(MIGRATION_SCRIPT_NAMESPACE) && x.EndsWith(".sql"));
@@ -48,6 +49,12 @@ namespace CDP4Orm.MigrationEngine
             var migrationList = new List<MigrationBase>();
             foreach (var migrationMetaData in migrationScriptMetadatas)
             {
+                if (migrationMetaData.MigrationScriptKind.HasValue && migrationMetaData.MigrationScriptKind.Value == MigrationScriptKind.OnStartUpOnly && !isStartup)
+                {
+                    // do not run script meant to be only executed on startup
+                    continue;
+                }
+
                 MigrationBase migration;
                 switch (migrationMetaData.MigrationScriptKind)
                 {

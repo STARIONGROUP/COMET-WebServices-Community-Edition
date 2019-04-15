@@ -110,7 +110,7 @@ namespace CDP4WebServices.API
                 }
 
                 // exclude migration of already applied migrations at start up
-                migrations.AddRange(MigrationService.GetMigrations().Where(x => !existingMigrations.Contains(x.MigrationMetaData.Version)));
+                migrations.AddRange(MigrationService.GetMigrations(true).Where(x => !existingMigrations.Contains(x.MigrationMetaData.Version)));
                 foreach (var migration in migrations.Where(x => x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.SiteDirectory || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All).OrderBy(x => x.MigrationMetaData.Version))
                 {
                     migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.SiteDirectory.ToString())).ToList());

@@ -92,6 +92,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
+        /// <remarks>
+        /// THIS MUST BE "new" AND NOT OVERRIDE. Else this will be called by every abstract layer of the EngineeringModelSetupDao.
+        /// </remarks>
         public new bool AfterWrite(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
             var result = base.AfterWrite(writeResult, transaction, partition, thing, container);
@@ -124,8 +127,8 @@ namespace CDP4Orm.Dao
                 this.ExecuteAndLogCommand(command);
             }
 
-            this.MigrationService.ApplyMigrations(transaction, engineeringModelPartition);
-            this.MigrationService.ApplyMigrations(transaction, iterationPartition);
+            this.MigrationService.ApplyMigrations(transaction, engineeringModelPartition, false);
+            this.MigrationService.ApplyMigrations(transaction, iterationPartition, false);
 
             return result;
         }

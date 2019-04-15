@@ -211,62 +211,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         }
 
         /// <summary>
-        /// Executes additional logic after a successful delete IterationSetup operation.
-        /// </summary>
-        /// <param name="thing">
-        /// The <see cref="Thing"/> instance that was deleted.
-        /// </param>
-        /// <param name="container">
-        /// The container instance of the <see cref="Thing"/> that was deleted.
-        /// </param>
-        /// <param name="originalThing">
-        /// The original Thing.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be deleted from.
-        /// </param>
-        /// <param name="securityContext">
-        /// The security Context used for permission checking.
-        /// </param>
-        public override void AfterDelete(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
-        {
-            var modelSetup = (EngineeringModelSetup)container;
-            var engineeringModelIid = modelSetup.EngineeringModelIid;
-
-            // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
-            credentials.EngineeringModelSetup = modelSetup;
-            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-            this.PermissionService.Credentials = credentials;
-
-            // switch partition to engineeringModel
-            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
-            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new List<Guid> { thing.IterationIid }, securityContext).OfType<Iteration>().SingleOrDefault();
-
-            if (iteration == null)
-            {
-                Logger.Warn($"The iteration {thing.IterationIid} was not found in the database.");
-                return;
-            }
-
-            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new List<Guid> { engineeringModelIid }, securityContext).OfType<EngineeringModel>().SingleOrDefault();
-
-            if (engineeringModel == null)
-            {
-                throw new InvalidOperationException($"The Engineering Model with iid {engineeringModelIid} could not be found in {engineeringModelPartition}");
-            }
-
-            // Remove the iteration 
-            if (!this.IterationService.DeleteConcept(transaction, engineeringModelPartition, iteration, engineeringModel))
-            {
-                throw new InvalidOperationException($"There was a problem deleting the Iteration: {thing.IterationIid} contained by EngineeringModel: {engineeringModelIid}");
-            }
-        }
-
-        /// <summary>
         /// Read the current state of the top container.
         /// </summary>
         /// <param name="transaction">

@@ -358,12 +358,12 @@ namespace CDP4WebServices.API.Services.Operations
                 throw new InvalidOperationException("Incomplete copy items encountered in operation");
             }
 
-            if (operation.Copy.Any(x => x.Source.Thing.Type != ClassKind.ElementDefinition))
+            if (operation.Copy.Any(x => x.Source.Thing.ClassKind != ClassKind.ElementDefinition))
             {
                 throw new InvalidOperationException("Only Element-Definition may be copied");
             }
 
-            if (operation.Copy.Any(x => x.Source.TopContainer.Type != ClassKind.EngineeringModel || x.Target.TopContainer.Type != ClassKind.EngineeringModel))
+            if (operation.Copy.Any(x => x.Source.TopContainer.ClassKind != ClassKind.EngineeringModel || x.Target.TopContainer.ClassKind != ClassKind.EngineeringModel))
             {
                 throw new InvalidOperationException("Copy operations may only be applied on Engineering-Model");
             }
@@ -996,10 +996,10 @@ namespace CDP4WebServices.API.Services.Operations
 
                 var sourceThings = this.CopySourceService.GetCopySourceData(transaction, copyinfo, requestPartition);
 
-                var service = this.ServiceProvider.MapToPersitableService(copyinfo.Source.Thing.Type.ToString());
+                var service = this.ServiceProvider.MapToPersitableService(copyinfo.Source.Thing.ClassKind.ToString());
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
 
-                var containerService = this.ServiceProvider.MapToReadService(copyinfo.Target.Container.Type.ToString());
+                var containerService = this.ServiceProvider.MapToReadService(copyinfo.Target.Container.ClassKind.ToString());
                 var container = containerService.GetShallow(transaction, requestPartition, new[] {copyinfo.Target.Container.Iid}, securityContext).SingleOrDefault();
                 if (container == null)
                 {

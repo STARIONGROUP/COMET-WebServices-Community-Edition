@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services
     using BusinessLogic;
     using CDP4Common.Dto;
     using CDP4Common.DTO;
+    using CDP4Common.Types;
     using Npgsql;
     using Operations.SideEffects;
 
@@ -100,6 +101,9 @@ namespace CDP4WebServices.API.Services
                     sourceToCopyMap[sourceOverridenValueSet.Iid] = valueset.Iid;
 
                     valueset.Manual = sourceOverridenValueSet.Manual;
+                    valueset.Computed = sourceOverridenValueSet.Computed;
+                    valueset.Reference = sourceOverridenValueSet.Reference;
+                    valueset.Published = new ValueArray<string>(Enumerable.Repeat("-", valueset.Manual.Count));
                     valueset.ValueSwitch = sourceOverridenValueSet.ValueSwitch;
 
                     this.ParameterOverrideValueSetService.UpdateConcept(transaction, partition, valueset, copy);

@@ -400,7 +400,7 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name);
+                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
 
                 var result = false;
                 if (topContainer.GetType().Name == "SiteDirectory")

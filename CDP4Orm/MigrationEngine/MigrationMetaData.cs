@@ -10,9 +10,20 @@ namespace CDP4Orm.MigrationEngine
     using System.Globalization;
     using System.Text.RegularExpressions;
 
+    /// <summary>
+    /// Assertion on the different kind of specialized migration script
+    /// </summary>
     internal enum MigrationScriptKind
     {
-        NonThingTableMigrationTemplate
+        /// <summary>
+        /// Assertion that the migration script is only applied on Non-Thing table
+        /// </summary>
+        NonThingTableMigrationTemplate,
+
+        /// <summary>
+        /// Assertion that the migration script is only applied on start-up
+        /// </summary>
+        OnStartUpOnly
     }
 
     /// <summary>

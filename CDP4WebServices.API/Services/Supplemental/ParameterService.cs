@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services
     using BusinessLogic;
     using CDP4Common.Dto;
     using CDP4Common.DTO;
+    using CDP4Common.Types;
     using Npgsql;
     using Operations.SideEffects;
 
@@ -126,6 +127,7 @@ namespace CDP4WebServices.API.Services
                     valueset.Computed = sourceValueset.Computed;
                     valueset.Reference = sourceValueset.Reference;
                     valueset.ValueSwitch = sourceValueset.ValueSwitch;
+                    valueset.Published = new ValueArray<string>(Enumerable.Repeat("-", valueset.Manual.Count));
 
                     this.ParameterValueSetService.UpdateConcept(transaction, partition, valueset, copy);
                 }

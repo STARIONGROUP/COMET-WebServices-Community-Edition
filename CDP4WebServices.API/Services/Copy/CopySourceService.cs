@@ -50,7 +50,7 @@ namespace CDP4WebServices.API.Services
                 ? $"Iteration_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}"
                 : $"EngineeringModel_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
 
-            var readservice = this.ServiceProvider.MapToReadService(copyinfo.Source.Thing.Type.ToString());
+            var readservice = this.ServiceProvider.MapToReadService(copyinfo.Source.Thing.ClassKind.ToString());
 
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
 
@@ -63,11 +63,7 @@ namespace CDP4WebServices.API.Services
             // also get all referenced element-definition as they dont exist in target iteration
             if (copyinfo.Source.IterationId.Value != copyinfo.Target.IterationId.Value)
             {
-                var usages = source.OfType<ElementUsage>().ToArray();
-                if (usages.Length > 0)
-                {
-                    source.AddRange(readservice.GetDeep(transaction, partition, usages.Select(x => x.ElementDefinition).ToArray(), securityContext));
-                }
+                source.AddRange(this.GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, source, readservice, source.Select(x => x.Iid).ToList()));
             }
 
             // revert context to current
@@ -90,6 +86,30 @@ namespace CDP4WebServices.API.Services
             }
 
             return map;
+        }
+
+        /// <summary>
+        /// Gets Additional <see cref="Thing"/> related to the <see cref="ElementUsage"/> to copy
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <param name="securityContext">The security context</param>
+        /// <param name="source">The current source that may contain <see cref="ElementUsage"/> to copy</param>
+        /// <param name="readservice">The element-definition read service</param>
+        /// <param name="allSourcesId">A list containing the identifier of all things to copy</param>
+        /// <returns>A list containing additional <see cref="Thing"/> to copy</returns>guid
+        private IReadOnlyList<Thing> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
+        {
+            var additionalSources = new List<Thing>();
+            var usages = source.OfType<ElementUsage>().ToArray();
+            if (usages.Length > 0)
+            {
+                var getResults = readservice.GetDeep(transaction, partition, usages.Select(x => x.ElementDefinition).Distinct().Where(x => !allSourcesId.Contains(x)).ToArray(), securityContext).ToList();
+                additionalSources.AddRange(getResults);
+                additionalSources.AddRange(this.GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, getResults, readservice, allSourcesId.Union(getResults.Select(x => x.Iid)).ToList()));
+            }
+
+            return additionalSources;
         }
     }
 }

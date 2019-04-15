@@ -18,6 +18,7 @@ namespace CDP4Orm.MigrationEngine
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The target partition</param>
-        void ApplyMigrations(NpgsqlTransaction transaction, string partition);
+        /// <param name="isStartup"> Asserts whether the <see cref= "IMigrationService" /> is called on startup</param>
+        void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup);
     }
 }
