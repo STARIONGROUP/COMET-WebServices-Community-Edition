@@ -144,7 +144,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             setupToCreate.Name = modelSetupBeforeResolve.Name;
             setupToCreate.ShortName = modelSetupBeforeResolve.ShortName;
 
-            foreach (var iterationSetup in this.originalToCopyMap.Keys.OfType<IterationSetup>())
+            foreach (var iterationSetup in this.originalToCopyMap.Keys.OfType<IterationSetup>().OrderBy(x => x.IterationNumber))
             {
                 var copy = (IterationSetup)this.originalToCopyMap[iterationSetup];
                 copy.IterationIid = Guid.NewGuid();
@@ -249,6 +249,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                     // save revision-registry
                     this.RevisionService.GetRevisionForTransaction(transaction, targetPartition);
                     this.RevisionService.InsertIterationRevisionLog(transaction, targetPartition, iteration.Iid, null, null);
+
+                    // increase sequence number
+                    this.EngineeringModelService.QueryNextIterationNumber(transaction, targetPartition);
 
                     continue;
                 }

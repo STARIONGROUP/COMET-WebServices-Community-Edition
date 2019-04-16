@@ -60,6 +60,17 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Query the next iteration number
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <returns>The next iteration number</returns>
+        public int QueryNextIterationNumber(NpgsqlTransaction transaction, string partition)
+        {
+            return this.EngineeringModelDao.GetNextIterationNumber(transaction, partition);
+        }
+
+        /// <summary>
         /// Modify the identifier of the <paramref name="thing"/>
         /// </summary>
         /// <param name="transaction">The current transaction</param>

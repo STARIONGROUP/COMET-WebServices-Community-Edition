@@ -58,5 +58,13 @@ namespace CDP4WebServices.API.Services
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
         void ModifyUserTrigger(NpgsqlTransaction transaction, string sourcePartition, bool enable);
+
+        /// <summary>
+        /// Query the next iteration number
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The current partition</param>
+        /// <returns>The next iteration number</returns>
+        int QueryNextIterationNumber(NpgsqlTransaction transaction, string partition);
     }
 }
