@@ -1,4 +1,4 @@
-FROM mono:5.18.0.225
+FROM mono:5.20.1.19
 WORKDIR /app
 COPY CDP4WebServer/bin/Release/net472 /app
 COPY LICENSE /app
