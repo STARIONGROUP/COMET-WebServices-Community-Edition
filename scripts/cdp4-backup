@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo "start backup of CDP4 server"
+
+DATELABEL=`date +%Y-%m-%dT%T`
+
+su postgres -c "pg_dumpall | gzip -c > /opt/cdp4/backtier/backup/$DATELABEL-CDP4.sql.gz"
+
+echo "finish backup of CDP4 server"
