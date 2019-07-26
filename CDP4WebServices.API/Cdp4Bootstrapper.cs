@@ -271,6 +271,20 @@ namespace CDP4WebServices.API
             MigrationEngine.MigrateAllAtStartUp();
         }
 
+        
+        protected override void RequestStartup(ILifetimeScope container, IPipelines pipelines, NancyContext context)
+        {
+            //Enable CORS 
+            pipelines.AfterRequest.AddItemToEndOfPipeline((ctx) =>
+            {
+                ctx.Response
+                    .WithHeader("Access-Control-Allow-Origin", "*")
+                    .WithHeader("Access-Control-Allow-Methods", "PUT, GET, POST, DELETE, OPTIONS")
+                    .WithHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with, Authorization, Accept, Origin, user-agent, Accept-CDP, CDP4-Token, CDP4-Common, CDP4-Server")
+                    .WithHeader("Access-Control-Expose-Headers", "Content-Type, x-requested-with, Authorization, Accept, Origin, user-agent, Accept-CDP, CDP4-Token, CDP4-Common, CDP4-Server");
+            });
+        }
+
         #region Support Property Injection on Nancy Modules
         /// <summary>
         /// Retrieve a specific module instance from the container
