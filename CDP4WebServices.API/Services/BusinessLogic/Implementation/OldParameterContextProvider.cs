@@ -98,7 +98,7 @@ namespace CDP4WebServices.API.Services.BusinessLogic
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
         /// <param name="iteration">The current <see cref="Iteration"/> (nullable)</param>
-        public void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration = null)
+        public void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration)
         {
             this.OldParameter = oldParameter;
             this.OldValueSet = this.ParameterValueSetService.GetShallow(transaction, partition, this.OldParameter.ValueSet, securityContext).Cast<ParameterValueSet>().ToList();
@@ -190,7 +190,9 @@ namespace CDP4WebServices.API.Services.BusinessLogic
                 // old is both state/option dependent
                 if (this.IsOldStateDependent && this.IsOldOptionDependent)
                 {
-                    return this.OldDefaultState != null ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid && x.ActualOption == option.Value) : this.OldValueSet.FirstOrDefault(x => x.ActualOption == option.Value);
+                    return this.OldDefaultState != null 
+                        ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid && x.ActualOption == option.Value)
+                        : this.OldValueSet.FirstOrDefault(x => x.ActualOption == option.Value);
                 }
 
                 // old is only state dependent
@@ -229,6 +231,44 @@ namespace CDP4WebServices.API.Services.BusinessLogic
             return this.OldValueSet.FirstOrDefault(x => x.ActualState == state.Value)
                     ?? this.OldValueSet.FirstOrDefault(x => this.OldDefaultState != null && x.ActualState == this.OldDefaultState.Iid)
                     ?? this.OldValueSet.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the default value 
+        /// </summary>
+        /// <returns>The default <see cref="ParameterValueSet"/></returns>
+        public ParameterValueSet GetDefaultValue()
+        {
+            if (this.OldParameter == null)
+            {
+                return null;
+            }
+
+            if (!this.IsOldStateDependent && !this.IsOldOptionDependent)
+            {
+                return this.OldValueSet.FirstOrDefault();
+            }
+
+            // old is both state/option dependent
+            if (this.IsOldStateDependent && this.IsOldOptionDependent)
+            {
+                return this.OldDefaultState != null & this.OldDefaultOption != null
+                    ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid && x.ActualOption == this.OldDefaultOption.Iid)
+                    : this.OldDefaultOption != null 
+                        ? this.OldValueSet.FirstOrDefault(x => x.ActualOption == this.OldDefaultOption.Iid)
+                        : this.OldDefaultState != null
+                            ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid)
+                            : this.OldValueSet.FirstOrDefault();
+            }
+
+            // old is only state dependent
+            if (this.IsOldStateDependent)
+            {
+                return this.OldDefaultState != null ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid) : this.OldValueSet.FirstOrDefault();
+            }
+
+            // old is only option dependent
+            return this.OldDefaultOption != null ? this.OldValueSet.FirstOrDefault(x => x.ActualOption == this.OldDefaultOption.Iid) : this.OldValueSet.FirstOrDefault();
         }
     }
 }

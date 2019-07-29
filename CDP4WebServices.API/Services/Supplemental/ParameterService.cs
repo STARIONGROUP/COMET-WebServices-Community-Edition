@@ -33,6 +33,16 @@ namespace CDP4WebServices.API.Services
         public IOldParameterContextProvider OldParameterContextProvider { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IDefaultValueArrayFactory"/>
+        /// </summary>
+        public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IIterationService"/>
+        /// </summary>
+        public IIterationService IterationService { get; set; }
+
+        /// <summary>
         /// Copy the <paramref name="sourceThing"/> into the target <paramref name="partition"/>
         /// </summary>
         /// <param name="transaction">The current transaction</param>
@@ -61,11 +71,10 @@ namespace CDP4WebServices.API.Services
                 copy.Group = sourceToCopyMap[copy.Group.Value];
             }
 
-            // if source and target iteration are different, remove state/option dependency
+            // if source and target iteration are different, remove state dependency. Keep option dependency
             if (copyinfo.Source.IterationId.Value != copyinfo.Target.IterationId.Value)
             {
                 copy.StateDependence = null;
-                copy.IsOptionDependent = false;
             }
 
             // check parameter type validity if different top-container
@@ -102,19 +111,24 @@ namespace CDP4WebServices.API.Services
 
                 var topcontainerPartition = $"EngineeringModel_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
                 this.TransactionManager.SetIterationContext(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
-
                 var sourcepartition = $"Iteration_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
+                var iteration = (Iteration)this.IterationService.Get(transaction, topcontainerPartition, new Guid[] {copyinfo.Source.IterationId.Value}, securityContext).SingleOrDefault();
+                if (iteration == null)
+                {
+                    throw new InvalidOperationException($"The source iteration {copyinfo.Source.IterationId.Value} could not be found.");
+                }
 
-                this.OldParameterContextProvider.Initialize(sourceParameter, transaction, sourcepartition, securityContext);
-
+                this.OldParameterContextProvider.Initialize(sourceParameter, transaction, sourcepartition, securityContext, iteration);
+                
                 // switch back to request context
                 var engineeringModelPartition = partition.Replace("Iteration", "EngineeringModel");
                 this.TransactionManager.SetIterationContext(transaction, engineeringModelPartition, copyinfo.Target.IterationId.Value);
 
                 // update all value-set
+                this.DefaultValueArrayFactory.Load(transaction, securityContext);
                 foreach (var valueset in valuesets)
                 {
-                    var sourceValueset = this.OldParameterContextProvider.GetsourceValueSet(valueset.ActualOption, valueset.ActualState);
+                    var sourceValueset = this.OldParameterContextProvider.GetsourceValueSet(valueset.ActualOption, valueset.ActualState) ?? this.OldParameterContextProvider.GetDefaultValue();
                     if (sourceValueset == null)
                     {
                         Logger.Warn("No source value-set was found for the copy operation.");
@@ -127,7 +141,8 @@ namespace CDP4WebServices.API.Services
                     valueset.Computed = sourceValueset.Computed;
                     valueset.Reference = sourceValueset.Reference;
                     valueset.ValueSwitch = sourceValueset.ValueSwitch;
-                    valueset.Published = new ValueArray<string>(Enumerable.Repeat("-", valueset.Manual.Count));
+                    valueset.Formula = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
+                    valueset.Published = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
 
                     this.ParameterValueSetService.UpdateConcept(transaction, partition, valueset, copy);
                 }

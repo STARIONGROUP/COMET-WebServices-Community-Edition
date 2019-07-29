@@ -25,7 +25,7 @@ namespace CDP4WebServices.API.Services.BusinessLogic
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
         /// <param name="iteration">The current <see cref="Iteration"/> (nullable)</param>
-        void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration = null);
+        void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration);
 
         /// <summary>
         /// Gets the source <see cref="ParameterValueSet"/> for the new one to be created for a specified option and state
@@ -34,5 +34,11 @@ namespace CDP4WebServices.API.Services.BusinessLogic
         /// <param name="state">The identifier of the state</param>
         /// <returns>The source <see cref="ParameterValueSet"/></returns>
         ParameterValueSet GetsourceValueSet(Guid? option, Guid? state);
+
+        /// <summary>
+        /// Gets the default value 
+        /// </summary>
+        /// <returns>The default <see cref="ParameterValueSet"/></returns>
+        ParameterValueSet GetDefaultValue();
     }
 }
