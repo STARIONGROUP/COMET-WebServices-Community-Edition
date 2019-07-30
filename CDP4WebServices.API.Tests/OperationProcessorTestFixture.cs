@@ -354,6 +354,9 @@ namespace CDP4WebServices.API.Tests
         public void VerifyCopyElementDefWorks()
         {
             var modelSetupService = new Mock<IEngineeringModelSetupService>();
+            var iterationService = new Mock<IIterationService>();
+            var defaultArrayService = new Mock<IDefaultValueArrayFactory>();
+            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new [] {"-"}));
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
             modelSetupService.Setup(x => x.GetEngineeringModelSetup(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).Returns(modelSetup);
 
@@ -401,6 +404,7 @@ namespace CDP4WebServices.API.Tests
             var ovs = new ParameterOverrideValueSet(Guid.NewGuid(), 1) {ParameterValueSet = pvs2.Iid};
             override2.ValueSet.Add(ovs.Iid);
             sourceUsage1.ParameterOverride.Add(override2.Iid);
+
 
             this.copySourceDtos.Add(sourceIteration);
             this.copySourceDtos.Add(sourceElementDef1);
@@ -488,6 +492,9 @@ namespace CDP4WebServices.API.Tests
                 });
 
             var paramDao = new TestParameterDao();
+            iterationService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { sourceIteration });
+            iterationService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { targetIteration });
+
             var paramService = new ParameterService
             {
                 PermissionService = this.permissionService.Object,
@@ -496,7 +503,9 @@ namespace CDP4WebServices.API.Tests
                 TransactionManager = this.transactionManager.Object,
                 OldParameterContextProvider = parameterContextProvider,
                 ParameterSubscriptionService = paramSubscriptionService,
-                ParameterValueSetService = valueSetService.Object
+                ParameterValueSetService = valueSetService.Object,
+                IterationService = iterationService.Object,
+                DefaultValueArrayFactory = defaultArrayService.Object
             };
 
             var paramOverrideDao = new TestParameterOverrideDao();
@@ -586,6 +595,7 @@ namespace CDP4WebServices.API.Tests
             postOperation.Copy.Add(copyinfo);
 
             this.serviceProvider.Setup(x => x.MapToReadService(ClassKind.EngineeringModelSetup.ToString())).Returns(modelSetupService.Object);
+            // targetIteration
             this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
 
             Assert.AreEqual(2, edDao.WrittenThingCount);
