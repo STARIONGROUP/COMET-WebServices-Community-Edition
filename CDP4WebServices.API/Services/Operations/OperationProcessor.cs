@@ -1204,9 +1204,11 @@ namespace CDP4WebServices.API.Services.Operations
                                 foreach (var orderedItemUpdate in orderedCollectionItems.Where(x => x.M.HasValue))
                                 {
                                     orderedItemUpdate.MoveItem(orderedItemUpdate.K, orderedItemUpdate.M.Value);
-                                        
+
                                     // try apply collection property reorder
-                                    if (!service.ReorderCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate))
+                                    isUpdated = service.ReorderCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate);
+
+                                    if (!isUpdated)
                                     { 
                                         Logger.Info(
                                             "The item '{0}' order update from sequence {1} to {2} of {3}.{4} with iid: '{5}' could not be performed.",
@@ -1251,7 +1253,9 @@ namespace CDP4WebServices.API.Services.Operations
                                     };
                                     orderedItemUpdate.MoveItem(orderUpdateItemInfo.K, orderUpdateItemInfo.M.Value);
 
-                                    if (!containedThingService.ReorderContainment(transaction, resolvedInfo.Partition, orderedItemUpdate))
+                                    isUpdated = containedThingService.ReorderContainment(transaction, resolvedInfo.Partition, orderedItemUpdate);
+
+                                    if (!isUpdated)
                                     {
                                             Logger.Info(
                                                 "The contained item '{0}' with iid: '{1}' could not be reordered.",
