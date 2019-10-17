@@ -6,12 +6,12 @@
     <Title>CDP4Orm-CE.Tests</Title>
     <Description>CDP4 Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
-    <Authors>Sam, Merlin, Alex, Naron</Authors>
+    <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
     <Configurations>Debug;Release;Test</Configurations>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="3.0.1" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="3.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
     <PackageReference Include="NUnit" Version="3.12.0" />
