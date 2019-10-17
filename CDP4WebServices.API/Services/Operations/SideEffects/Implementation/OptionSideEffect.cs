@@ -101,6 +101,38 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
 
         /// <summary>
+        /// Gets or sets the injected <see cref="IOptionService"/>
+        /// </summary>
+        public IOptionService OptionService { get; set; }
+
+        /// <summary>
+        /// Perform check before deleting the <see cref="Option"/> <paramref name="thing"/>
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+            if (options.Count == 1 && options.Single().Iid == thing.Iid)
+            {
+                throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
+            }
+        }
+
+        /// <summary>
         /// Allows derived classes to override and execute additional logic after a successful create operation.
         /// </summary>
         /// <param name="option">
