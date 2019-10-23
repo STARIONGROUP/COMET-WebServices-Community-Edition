@@ -9,38 +9,157 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
     using CDP4Common;
     using CDP4Common.DTO;
-
+    using CDP4Orm.Dao;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
-
     using Npgsql;
 
     /// <summary>
-    /// The purpose of the <see cref="ElementDefinitionSideEffect"/> class is to execute additional logic before and after a specific operation is performed.
+    /// The purpose of the <see cref="ElementDefinitionSideEffect" /> class is to execute additional logic before and after
+    /// a specific operation is performed.
     /// </summary>
     public sealed class ElementDefinitionSideEffect : OperationSideEffect<ElementDefinition>
     {
         /// <summary>
-        /// Gets or sets the <see cref="IElementDefinitionService"/>
+        /// Gets or sets the <see cref="IElementDefinitionService" />
         /// </summary>
         public IElementDefinitionService ElementDefinitionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IElementUsageService"/>
+        /// Gets or sets the <see cref="IElementUsageService" />
         /// </summary>
         public IElementUsageService ElementUsageService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IIterationService" />
+        /// </summary>
+        public IIterationService IterationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IIterationSetupService" />
+        /// </summary>
+        public IIterationSetupService IterationSetupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelService" />
+        /// </summary>
+        public IEngineeringModelService EngineeringModelService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelSetupService" />
+        /// </summary>
+        public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic before a delete operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="ElementDefinition" /> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing" /> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void BeforeDelete(ElementDefinition thing, Thing container, NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext)
+        {
+            if (container is Iteration iteration)
+            {
+                if (!(iteration.TopElement?.Equals(thing.Iid) ?? false))
+                {
+                    return;
+                }
+
+                var baseErrorString =
+                    $"Could not set {nameof(Iteration)}.{nameof(Iteration.TopElement)} to null.";
+
+                var iterationSetup = this.IterationSetupService.GetShallow(transaction,
+                    Utils.SiteDirectoryPartition,
+                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+
+                if (iterationSetup == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
+                }
+
+                var engineeringModelSetup = this.EngineeringModelSetupService
+                    .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                    .Cast<EngineeringModelSetup>()
+                    .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
+
+                if (engineeringModelSetup == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(EngineeringModelSetup)}");
+                }
+
+                var engineeringModelPartition =
+                    this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+
+                var updatedIteration = this.IterationService
+                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                    .Cast<Iteration>()
+                    .SingleOrDefault();
+
+                if (updatedIteration == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(Iteration)} with iid {iteration.Iid}) could not be found.");
+                }
+
+                if (!(updatedIteration.TopElement?.Equals(thing.Iid) ?? false))
+                {
+                    return;
+                }
+
+                updatedIteration.TopElement = null;
+
+                var engineeringModel = this.EngineeringModelService
+                    .GetShallow(transaction, engineeringModelPartition,
+                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                    .SingleOrDefault();
+
+                if (engineeringModel == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
+                }
+
+                this.IterationService.UpdateConcept(transaction, engineeringModelPartition, updatedIteration,
+                    engineeringModel);
+            }
+            else
+            {
+                if (container == null)
+                {
+                    throw new ArgumentNullException(nameof(container));
+                }
+
+                throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
+                    nameof(container));
+            }
+        }
 
         /// <summary>
         /// Allows derived classes to override and execute additional logic before an update operation.
         /// </summary>
         /// <param name="thing">
-        /// The <see cref="ElementDefinition"/> instance that will be inspected.
+        /// The <see cref="ElementDefinition" /> instance that will be inspected.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// The container instance of the <see cref="Thing" /> that is inspected.
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -53,8 +172,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         /// <param name="rawUpdateInfo">
         /// The raw update info that was serialized from the user posted request.
-        /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
-        /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
+        /// The <see cref="ClasslessDTO" /> instance only contains values for properties that are to be updated.
+        /// It is important to note that this variable is not to be changed likely as it can/will change the operation
+        /// processor outcome.
         /// </param>
         public override void BeforeUpdate(
             ElementDefinition thing,
@@ -66,7 +186,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             if (rawUpdateInfo.ContainsKey("ContainedElement"))
             {
-                var containedElementsId = (IEnumerable<Guid>)rawUpdateInfo["ContainedElement"];
+                var containedElementsId = (IEnumerable<Guid>) rawUpdateInfo["ContainedElement"];
 
                 var elementDefinitions = this.ElementDefinitionService
                     .Get(transaction, partition, null, securityContext).Cast<ElementDefinition>().ToList();
@@ -78,17 +198,13 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 foreach (var containedElementId in containedElementsId)
                 {
                     if (!this.IsElementDefinitionAcyclic(
-                            elementDefinitions,
-                            elementUsages,
-                            containedElementId,
-                            thing.Iid))
+                        elementDefinitions,
+                        elementUsages,
+                        containedElementId,
+                        thing.Iid))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "ElementDefinition {0} {1} cannot have an ElementUsage {2} that leads to cyclic dependency",
-                                thing.Name,
-                                thing.Iid,
-                                containedElementId));
+                            $"{nameof(ElementDefinition)} {thing.Name} {thing.Iid} cannot have an {nameof(ElementUsage)} {containedElementId} that leads to cyclic dependency");
                     }
                 }
             }
@@ -110,7 +226,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// The element definition id to set element usage to.
         /// </param>
         /// <returns>
-        /// The <see cref="bool"/> whether applied element usage will not lead to cyclic dependency.
+        /// The <see cref="bool" /> whether applied element usage will not lead to cyclic dependency.
         /// </returns>
         private bool IsElementDefinitionAcyclic(
             List<ElementDefinition> elementDefinitions,
@@ -120,7 +236,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             var elementUsage = elementUsages.Find(x => x.Iid == containedElementId);
 
-            return !(elementUsage.ElementDefinition == elementDefinitionId || !this.IsReferencedElementDefinitionAcyclic(
+            return !(elementUsage.ElementDefinition == elementDefinitionId ||
+                     !this.IsReferencedElementDefinitionAcyclic(
                          elementDefinitions,
                          elementUsages,
                          elementUsage.ElementDefinition,
@@ -143,7 +260,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// The root element definition id.
         /// </param>
         /// <returns>
-        /// The <see cref="bool"/> whether referenced element definition will not lead to cyclic dependency.
+        /// The <see cref="bool" /> whether referenced element definition will not lead to cyclic dependency.
         /// </returns>
         private bool IsReferencedElementDefinitionAcyclic(
             List<ElementDefinition> elementDefinitions,
