@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="3.0.4" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="3.0.5" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
     <PackageReference Include="NUnit" Version="3.12.0" />
