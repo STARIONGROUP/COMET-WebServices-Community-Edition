@@ -78,7 +78,7 @@ namespace CDP4Authentication.Contracts
 
             if (string.IsNullOrWhiteSpace(json))
             {
-                throw new ConfigurationErrorsException("Configuration file is empty.", configLocation, 0);
+                throw new JsonException($"Configuration file {configLocation} is empty.");
             }
 
             this.AuthenticatorConfig = this.DeserializeConfigFile(json, configLocation);
@@ -103,7 +103,7 @@ namespace CDP4Authentication.Contracts
 
             if (appConfig == null)
             {
-                throw new ConfigurationErrorsException("Configuration file holds invalid settings.", configLocation, 0);
+                throw new JsonException($"Configuration file {configLocation} holds invalid settings.");
             }
 
             return appConfig;

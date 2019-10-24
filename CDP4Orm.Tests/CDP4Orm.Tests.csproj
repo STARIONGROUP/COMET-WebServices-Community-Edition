@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net45;net451;net452;net46;net461;net462;net47;net471;net472</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Orm-CE.Tests</Title>
     <Description>CDP4 Data-Model Object Relational Mapping</Description>
@@ -12,10 +12,11 @@
 
   <ItemGroup>
     <PackageReference Include="CDP4JsonSerializer-CE" Version="3.0.5" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Include="Npgsql" Version="3.2.7" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.2.0" />
     <PackageReference Include="NUnit" Version="3.12.0" />
-    <PackageReference Include="NUnit3TestAdapter" Version="3.13.0" />
+    <PackageReference Include="NUnit.Console" Version="3.10.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="3.14.0" />
   </ItemGroup>
   
   <ItemGroup>
