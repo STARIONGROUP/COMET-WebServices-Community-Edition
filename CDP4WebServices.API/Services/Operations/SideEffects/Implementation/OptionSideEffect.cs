@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OptionSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2019 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -9,8 +9,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using CDP4Common.DTO;    
+    using CDP4Common.DTO;
+    using CDP4Common.SiteDirectoryData;
     using CDP4Common.Types;
+    using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authorization;
     using Npgsql;
     
@@ -36,47 +38,47 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         private IEnumerable<ActualFiniteStateList> actualFiniteStateLists;
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterService"/> that is used to query the <see cref="Parameter"/>s
+        /// Gets or sets the (injected) <see cref="IParameterService"/> that is used to query the <see cref="Parameter"/>s
         /// </summary>
         public IParameterService ParameterService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterOverrideService"/> that is used to query the <see cref="ParameterOverride"/>s
+        /// Gets or sets the (injected) <see cref="IParameterOverrideService"/> that is used to query the <see cref="ParameterOverride"/>s
         /// </summary>
         public IParameterOverrideService ParameterOverrideService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterSubscriptionService"/> that is used to query <see cref="ParameterSubscription"/>s
+        /// Gets or sets the (injected) <see cref="IParameterSubscriptionService"/> that is used to query <see cref="ParameterSubscription"/>s
         /// </summary>
         public IParameterSubscriptionService ParameterSubscriptionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/> that is used to create new <see cref="ParameterSubscriptionValueSet"/>
+        /// Gets or sets the (injected) <see cref="IParameterSubscriptionValueSetService"/> that is used to create new <see cref="ParameterSubscriptionValueSet"/>
         /// </summary>
         public IParameterSubscriptionValueSetService ParameterSubscriptionValueSetService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IActualFiniteStateListService"/> that is used to query the <see cref="ActualFiniteStateList"/>s
+        /// Gets or sets the (injected) <see cref="IActualFiniteStateListService"/> that is used to query the <see cref="ActualFiniteStateList"/>s
         /// </summary>
         public IActualFiniteStateListService ActualFiniteStateListService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeService"/> that is used to query the <see cref="ParameterType"/>s
+        /// Gets or sets the (injected) <see cref="IParameterTypeService"/> that is used to query the <see cref="ParameterType"/>s
         /// </summary>
         public IParameterTypeService ParameterTypeService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeComponentService"/> that is used to query the <see cref="ParameterTypeComponent"/>s
+        /// Gets or sets the (injected) <see cref="IParameterTypeComponentService"/> that is used to query the <see cref="ParameterTypeComponent"/>s
         /// </summary>
         public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterValueSetService"/> that is used to create <see cref="ParameterValueSet"/>s
+        /// Gets or sets the (injected) <see cref="IParameterValueSetService"/> that is used to create <see cref="ParameterValueSet"/>s
         /// </summary>
         public IParameterValueSetService ParameterValueSetService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterOverrideValueSetService"/> that is used to create <see cref="ParameterOverrideValueSet"/>s
+        /// Gets or sets the (injected) <see cref="IParameterOverrideValueSetService"/> that is used to create <see cref="ParameterOverrideValueSet"/>s
         /// </summary>
         public IParameterOverrideValueSetService ParameterOverrideValueSetService { get; set; }
 
@@ -86,24 +88,34 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IParameterValueSetFactory ParameterValueSetFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterOverrideValueSetFactory"/> that is used to create <see cref="ParameterOverrideValueSet"/>
+        /// Gets or sets the (injected) <see cref="IParameterOverrideValueSetFactory"/> that is used to create <see cref="ParameterOverrideValueSet"/>
         /// </summary>
         public IParameterOverrideValueSetFactory ParameterOverrideValueSetFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterSubscriptionValueSetFactory"/> that is used to create <see cref="ParameterSubscriptionValueSet"/>
+        /// Gets or sets the (injected) <see cref="IParameterSubscriptionValueSetFactory"/> that is used to create <see cref="ParameterSubscriptionValueSet"/>
         /// </summary>
         public IParameterSubscriptionValueSetFactory ParameterSubscriptionValueSetFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IDefaultValueArrayFactory"/> that is used to create default <see cref="ValueArray{String}"/>
+        /// Gets or sets the (injected) <see cref="IDefaultValueArrayFactory"/> that is used to create default <see cref="ValueArray{String}"/>
         /// </summary>
         public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the injected <see cref="IOptionService"/>
+        /// Gets or sets the (injected) <see cref="IOptionService"/>
         /// </summary>
         public IOptionService OptionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IIterationSetupService"/>
+        /// </summary>
+        public IIterationSetupService IterationSetupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IEngineeringModelSetupService"/>
+        /// </summary>
+        public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
 
         /// <summary>
         /// Perform check before deleting the <see cref="Option"/> <paramref name="thing"/>
@@ -129,6 +141,60 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (options.Count == 1 && options.Single().Iid == thing.Iid)
             {
                 throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
+            }
+        }
+
+        /// <summary>
+        /// Adds extra logic before the <see cref="Option"/> is created.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Option"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        /// <returns>
+        /// Returns true if the create operation may continue, otherwise it shall be skipped.
+        /// </returns>
+        public override bool BeforeCreate(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            // when the amount of Options is zero, it is always allowed to create an Option.
+            var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+            if (options.Count == 0)
+            {
+                return true;
+            }
+
+            // if there are already option(s) and the EngineeringModel is a Catalogue, it is not allowed to create additional Options
+            // in principle, a Catalogue model may only contain 1 Option. When another type of model is converted into a Catalogue
+            // it may occur that such a model has more than 1 Option. E-TM-10-25 does not specify rules what should happen when
+            // a model that contains more than one Option is converted into a Catalogue.
+            var iteration = (Iteration) container;
+
+            var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,
+                new[] {iteration.IterationSetup}, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
+
+            var engineeringModelSetup = this.EngineeringModelSetupService
+                .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                .Cast<CDP4Common.DTO.EngineeringModelSetup>()
+                .SingleOrDefault(modelSetup => modelSetup.IterationSetup.Contains(iterationSetup.Iid));
+
+            if (engineeringModelSetup.Kind == EngineeringModelKind.MODEL_CATALOGUE)
+            {
+                throw new InvalidOperationException("The container EngineeringModel is a Catalogue, a Catalogue may not contain more than one Option");
+            }
+            else
+            {
+                return true;
             }
         }
 
