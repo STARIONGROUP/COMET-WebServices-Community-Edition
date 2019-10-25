@@ -112,13 +112,10 @@ namespace CDP4Orm.Tests
         public void Verify_that_a_ValueArray_is_serialized_and_deserialized([ValueSource(nameof(TestStrings))] string input)
         {
             var valueArray = new ValueArray<string>(new List<string> { input });
-            var trimmedValueArray = new ValueArray<string>(new List<string> { input.Trim() });
-
             var hstore = valueArray.ToHstoreString();
-
             var result = hstore.FromHstoreToValueArray<string>();
 
-            Assert.AreEqual(trimmedValueArray, result, "ValueArray creation failed for string \"{0}\"", input);
+            Assert.AreEqual(valueArray, result, "ValueArray creation failed for string \"{0}\"", input);
 
             var resultjson = result.ToHstoreString();
 
@@ -155,8 +152,8 @@ namespace CDP4Orm.Tests
         private const string XmlString = @"<?xml version=""1.0"" encoding=""UTF-8""?>
             <bookstore>
                 <book category=""cooking"">
-                    <title lang=""en"">Everyday Italian</title>
-                    <author>Giada De Laurentiis</author>
+                    <title lang=""en"">Everyday food</title>
+                    <author>Some great cook</author>
                     <year>2005</year>
                     <price>30.00</price>
                     <data><![CDATA[Within this Character Data block I can
@@ -168,14 +165,14 @@ namespace CDP4Orm.Tests
                         ]]></data>
                 </book>
                 <book category=""children"">
-                    <title lang=""en"">Harry Potter</title>
-                    <author>J K. Rowling</author>
+                    <title lang=""en"">Harry the child</title>
+                    <author>Some child author</author>
                     <year>2005</year>
                     <price>29.99</price>
                 </book>
                 <book category=""web"">
                     <title lang=""en"">Learning XML</title>
-                    <author>Erik T. Ray</author>
+                    <author>Some XML expert</author>
                     <year>2003</year>
                     <price>39.95</price>
                 </book>
@@ -183,11 +180,12 @@ namespace CDP4Orm.Tests
 
         private static readonly string[] TestStrings = new string[]
         {
-            // See https://github.com/RHEAGROUP/CDP4-SDK-Community-Edition/issues/67
-            //"value with trailing spaces  ",
-            //"value with trailing space ",
-            //" value with leading spaces",
-            //"  value with leading space",
+            "value with trailing spaces  ",
+            "value with trailing space ",
+            " value with leading spaces",
+            "  value with leading space",
+            "\t\t\tvalue with leading and trailing tabs \t",
+            "\nvalue with leading and trailing linebreaks \r",
             "=2*(2+2)",
             "=2*\n(2+2)",
             "=2*\r(2+2)",
