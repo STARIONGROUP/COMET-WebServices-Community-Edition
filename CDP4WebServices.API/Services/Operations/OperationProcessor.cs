@@ -11,6 +11,7 @@ namespace CDP4WebServices.API.Services.Operations
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Security;
     using CDP4Common;
     using CDP4Common.CommonData;
     using CDP4Common.Dto;
@@ -1101,6 +1102,16 @@ namespace CDP4WebServices.API.Services.Operations
 
                 // keep a copy of the orginal thing to pass to the after update hook
                 var originalThing = updatableThing.DeepClone<Thing>();
+
+                // PreCheck CanWrite
+                if (service is ServiceBase serviceBase)
+                {
+                    if (!serviceBase.PermissionService.CanWrite(transaction, originalThing, updateInfoKey.TypeName,
+                        resolvedInfo.Partition, ServiceBase.UpdateOperation, securityContext))
+                    {
+                        throw new SecurityException("The person " + serviceBase.PermissionService.Credentials.Person.UserName + " does not have an appropriate update permission for " + originalThing.GetType().Name + ".");
+                    }
+                }
 
                 // call before update hook
                 this.OperationSideEffectProcessor.BeforeUpdate(updatableThing, containerInfo, transaction, resolvedInfo.Partition, securityContext, updateInfo);
