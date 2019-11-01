@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ReviewItemDiscrepancyService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
@@ -12,51 +28,47 @@ namespace CDP4WebServices.API.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-	using System.Security;
-
+    using System.Security;
     using CDP4Common.DTO;
-    
     using CDP4Orm.Dao;
- 
     using CDP4WebServices.API.Services.Authorization;
- 
     using Npgsql;
- 
+
     /// <summary>
-    /// The ReviewItemDiscrepancy Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="ReviewItemDiscrepancy"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
     public sealed partial class ReviewItemDiscrepancyService : ServiceBase, IReviewItemDiscrepancyService
     {
         /// <summary>
-        /// Gets or sets the modellingThingReference service.
+        /// Gets or sets the <see cref="IApprovalService"/>.
         /// </summary>
-        public IModellingThingReferenceService ModellingThingReferenceService { get; set; }
- 
+        public IApprovalService ApprovedByService { get; set; }
+
         /// <summary>
-        /// Gets or sets the engineeringModelDataDiscussionItem service.
+        /// Gets or sets the <see cref="IEngineeringModelDataDiscussionItemService"/>.
         /// </summary>
-        public IEngineeringModelDataDiscussionItemService EngineeringModelDataDiscussionItemService { get; set; }
- 
+        public IEngineeringModelDataDiscussionItemService DiscussionService { get; set; }
+
         /// <summary>
-        /// Gets or sets the approval service.
+        /// Gets or sets the <see cref="IModellingThingReferenceService"/>.
         /// </summary>
-        public IApprovalService ApprovalService { get; set; }
- 
+        public IModellingThingReferenceService RelatedThingService { get; set; }
+
         /// <summary>
-        /// Gets or sets the solution service.
+        /// Gets or sets the <see cref="ISolutionService"/>.
         /// </summary>
         public ISolutionService SolutionService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the reviewItemDiscrepancy dao.
+        /// Gets or sets the <see cref="IReviewItemDiscrepancyDao"/>.
         /// </summary>
         public IReviewItemDiscrepancyDao ReviewItemDiscrepancyDao { get; set; }
 
         /// <summary>
-        /// Get the requested data from the ORM layer.
+        /// Get the requested <see cref="ReviewItemDiscrepancy"/>s from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -68,20 +80,20 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="ReviewItemDiscrepancy"/>.
+        /// List of instances of <see cref="ReviewItemDiscrepancy"/>, optionally with contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                       ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                       : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
+                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
         /// Add the supplied value to the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -107,7 +119,7 @@ namespace CDP4WebServices.API.Services
         /// Remove the supplied value from the association property as indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -133,7 +145,7 @@ namespace CDP4WebServices.API.Services
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -159,7 +171,7 @@ namespace CDP4WebServices.API.Services
         /// Update the containment order as indicated by the supplied orderedItem.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -176,10 +188,10 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Delete the supplied DTO instance.
+        /// Delete the supplied <see cref="ReviewItemDiscrepancy"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -188,7 +200,7 @@ namespace CDP4WebServices.API.Services
         /// The <see cref="ReviewItemDiscrepancy"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be removed.
+        /// The container instance of the <see cref="ReviewItemDiscrepancy"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -204,19 +216,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Update the supplied DTO instance.
+        /// Update the supplied <see cref="ReviewItemDiscrepancy"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="thing">
-        /// The Thing to update.
+        /// The <see cref="ReviewItemDiscrepancy"/> <see cref="Thing"/> to update.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be updated.
+        /// The container instance of the <see cref="ReviewItemDiscrepancy"/> to be updated.
         /// </param>
         /// <returns>
         /// True if the update was successful.
@@ -233,19 +245,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Persist the supplied DTO instance.
+        /// Persist the supplied <see cref="ReviewItemDiscrepancy"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The Thing to create.
+        /// The <see cref="ReviewItemDiscrepancy"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be persisted.
+        /// The container instance of the <see cref="ReviewItemDiscrepancy"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -269,7 +281,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -302,7 +314,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer by chaining the containment properties.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -314,7 +326,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="ReviewItemDiscrepancy"/>.
+        /// List of instances of <see cref="ReviewItemDiscrepancy"/> and contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -327,22 +339,22 @@ namespace CDP4WebServices.API.Services
             var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
             var reviewItemDiscrepancyColl = results.Where(i => i.GetType() == typeof(ReviewItemDiscrepancy)).Cast<ReviewItemDiscrepancy>().ToList();
 
-            results.AddRange(this.ModellingThingReferenceService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.RelatedThing), containerSecurityContext));
-            results.AddRange(this.EngineeringModelDataDiscussionItemService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.Discussion), containerSecurityContext));
-            results.AddRange(this.ApprovalService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.ApprovedBy), containerSecurityContext));
+            results.AddRange(this.ApprovedByService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.ApprovedBy), containerSecurityContext));
+            results.AddRange(this.DiscussionService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.Discussion), containerSecurityContext));
+            results.AddRange(this.RelatedThingService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.RelatedThing), containerSecurityContext));
             results.AddRange(this.SolutionService.GetDeep(transaction, partition, reviewItemDiscrepancyColl.SelectMany(x => x.Solution), containerSecurityContext));
 
             return results;
-         }
+        }
 
         /// <summary>
-        /// Execute additional logic after each get function call.
+        /// Execute additional logic after each GET function call.
         /// </summary>
         /// <param name="resultCollection">
         /// An instance collection that was retrieved from the persistence layer.
         /// </param>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from which the requested resource is to be retrieved.
@@ -370,22 +382,21 @@ namespace CDP4WebServices.API.Services
                     Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
-            
+
             return filteredCollection;
         }
 
-
         /// <summary>
-        /// Persist the DTO composition to the ORM layer.
+        /// Persist the <see cref="ReviewItemDiscrepancy"/> containment tree to the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="reviewItemDiscrepancy">
-        /// The reviewItemDiscrepancy instance to persist.
+        /// The <see cref="ReviewItemDiscrepancy"/> instance to persist.
         /// </param>
         /// <returns>
         /// True if the persistence was successful.
@@ -394,24 +405,24 @@ namespace CDP4WebServices.API.Services
         {
             var results = new List<bool>();
 
-            foreach (var relatedThing in this.ResolveFromRequestCache(reviewItemDiscrepancy.RelatedThing))
+            foreach (var approvedBy in this.ResolveFromRequestCache(reviewItemDiscrepancy.ApprovedBy))
             {
-               results.Add(this.ModellingThingReferenceService.CreateConcept(transaction, partition, relatedThing, reviewItemDiscrepancy));
+                results.Add(this.ApprovedByService.CreateConcept(transaction, partition, approvedBy, reviewItemDiscrepancy));
             }
 
             foreach (var discussion in this.ResolveFromRequestCache(reviewItemDiscrepancy.Discussion))
             {
-               results.Add(this.EngineeringModelDataDiscussionItemService.CreateConcept(transaction, partition, discussion, reviewItemDiscrepancy));
+                results.Add(this.DiscussionService.CreateConcept(transaction, partition, discussion, reviewItemDiscrepancy));
             }
 
-            foreach (var approvedBy in this.ResolveFromRequestCache(reviewItemDiscrepancy.ApprovedBy))
+            foreach (var relatedThing in this.ResolveFromRequestCache(reviewItemDiscrepancy.RelatedThing))
             {
-               results.Add(this.ApprovalService.CreateConcept(transaction, partition, approvedBy, reviewItemDiscrepancy));
+                results.Add(this.RelatedThingService.CreateConcept(transaction, partition, relatedThing, reviewItemDiscrepancy));
             }
 
             foreach (var solution in this.ResolveFromRequestCache(reviewItemDiscrepancy.Solution))
             {
-               results.Add(this.SolutionService.CreateConcept(transaction, partition, solution, reviewItemDiscrepancy));
+                results.Add(this.SolutionService.CreateConcept(transaction, partition, solution, reviewItemDiscrepancy));
             }
 
             return results.All(x => x);

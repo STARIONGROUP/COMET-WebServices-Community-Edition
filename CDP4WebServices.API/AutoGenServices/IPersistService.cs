@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICreateService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IPersistService.cs" company="RHEA System S.A.">
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
@@ -24,7 +40,7 @@ namespace CDP4WebServices.API.Services
         /// Update the supplied DTO instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
@@ -44,7 +60,7 @@ namespace CDP4WebServices.API.Services
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -67,7 +83,7 @@ namespace CDP4WebServices.API.Services
         /// Update the containment order as indicated by the supplied orderedItem.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -84,7 +100,7 @@ namespace CDP4WebServices.API.Services
         /// Create the supplied DTO instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -107,7 +123,7 @@ namespace CDP4WebServices.API.Services
         /// Add the supplied value to the association property as indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -130,7 +146,7 @@ namespace CDP4WebServices.API.Services
         /// Delete the supplied DTO instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -150,7 +166,7 @@ namespace CDP4WebServices.API.Services
         /// Remove the supplied value from the association property as indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.

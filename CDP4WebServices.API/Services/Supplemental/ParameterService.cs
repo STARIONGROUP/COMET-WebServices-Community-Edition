@@ -105,7 +105,7 @@ namespace CDP4WebServices.API.Services
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ParameterValueSetService
+                var valuesets = this.ValueSetService
                     .GetShallow(transaction, partition, newparameter.ValueSet, securityContext)
                     .OfType<ParameterValueSet>().ToList();
 
@@ -144,7 +144,7 @@ namespace CDP4WebServices.API.Services
                     valueset.Formula = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
                     valueset.Published = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
 
-                    this.ParameterValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
                 }
             }
 

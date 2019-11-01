@@ -79,7 +79,7 @@ namespace CDP4WebServices.API.Services
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ParameterOverrideValueSetService
+                var valuesets = this.ValueSetService
                     .GetShallow(transaction, partition, newparameterOverride.ValueSet, securityContext)
                     .OfType<ParameterOverrideValueSet>().ToList();
 
@@ -106,7 +106,7 @@ namespace CDP4WebServices.API.Services
                     valueset.Published = new ValueArray<string>(Enumerable.Repeat("-", valueset.Manual.Count));
                     valueset.ValueSwitch = sourceOverridenValueSet.ValueSwitch;
 
-                    this.ParameterOverrideValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
                 }
             }
 

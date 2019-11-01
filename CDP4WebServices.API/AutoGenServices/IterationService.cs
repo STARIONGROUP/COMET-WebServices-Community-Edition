@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
@@ -12,116 +28,112 @@ namespace CDP4WebServices.API.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-	using System.Security;
-
+    using System.Security;
     using CDP4Common.DTO;
-    
     using CDP4Orm.Dao;
- 
     using CDP4WebServices.API.Services.Authorization;
- 
     using Npgsql;
- 
+
     /// <summary>
-    /// The Iteration Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="Iteration"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
     public sealed partial class IterationService : ServiceBase, IIterationService
     {
         /// <summary>
-        /// Gets or sets the option service.
-        /// </summary>
-        public IOptionService OptionService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the publication service.
-        /// </summary>
-        public IPublicationService PublicationService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the possibleFiniteStateList service.
-        /// </summary>
-        public IPossibleFiniteStateListService PossibleFiniteStateListService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the elementDefinition service.
-        /// </summary>
-        public IElementDefinitionService ElementDefinitionService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the relationship service.
-        /// </summary>
-        public IRelationshipService RelationshipService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the externalIdentifierMap service.
-        /// </summary>
-        public IExternalIdentifierMapService ExternalIdentifierMapService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the requirementsSpecification service.
-        /// </summary>
-        public IRequirementsSpecificationService RequirementsSpecificationService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the domainFileStore service.
-        /// </summary>
-        public IDomainFileStoreService DomainFileStoreService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the actualFiniteStateList service.
+        /// Gets or sets the <see cref="IActualFiniteStateListService"/>.
         /// </summary>
         public IActualFiniteStateListService ActualFiniteStateListService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the ruleVerificationList service.
-        /// </summary>
-        public IRuleVerificationListService RuleVerificationListService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the stakeholder service.
-        /// </summary>
-        public IStakeholderService StakeholderService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the goal service.
-        /// </summary>
-        public IGoalService GoalService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the valueGroup service.
-        /// </summary>
-        public IValueGroupService ValueGroupService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the stakeholderValue service.
-        /// </summary>
-        public IStakeholderValueService StakeholderValueService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the stakeHolderValueMap service.
-        /// </summary>
-        public IStakeHolderValueMapService StakeHolderValueMapService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the sharedStyle service.
-        /// </summary>
-        public ISharedStyleService SharedStyleService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the diagramCanvas service.
+        /// Gets or sets the <see cref="IDiagramCanvasService"/>.
         /// </summary>
         public IDiagramCanvasService DiagramCanvasService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the iteration dao.
+        /// Gets or sets the <see cref="IDomainFileStoreService"/>.
+        /// </summary>
+        public IDomainFileStoreService DomainFileStoreService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IElementDefinitionService"/>.
+        /// </summary>
+        public IElementDefinitionService ElementService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IExternalIdentifierMapService"/>.
+        /// </summary>
+        public IExternalIdentifierMapService ExternalIdentifierMapService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IGoalService"/>.
+        /// </summary>
+        public IGoalService GoalService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IOptionService"/>.
+        /// </summary>
+        public IOptionService OptionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IPossibleFiniteStateListService"/>.
+        /// </summary>
+        public IPossibleFiniteStateListService PossibleFiniteStateListService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IPublicationService"/>.
+        /// </summary>
+        public IPublicationService PublicationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IRelationshipService"/>.
+        /// </summary>
+        public IRelationshipService RelationshipService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IRequirementsSpecificationService"/>.
+        /// </summary>
+        public IRequirementsSpecificationService RequirementsSpecificationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IRuleVerificationListService"/>.
+        /// </summary>
+        public IRuleVerificationListService RuleVerificationListService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ISharedStyleService"/>.
+        /// </summary>
+        public ISharedStyleService SharedDiagramStyleService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IStakeholderService"/>.
+        /// </summary>
+        public IStakeholderService StakeholderService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IStakeholderValueService"/>.
+        /// </summary>
+        public IStakeholderValueService StakeholderValueService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IStakeHolderValueMapService"/>.
+        /// </summary>
+        public IStakeHolderValueMapService StakeholderValueMapService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IValueGroupService"/>.
+        /// </summary>
+        public IValueGroupService ValueGroupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IIterationDao"/>.
         /// </summary>
         public IIterationDao IterationDao { get; set; }
 
         /// <summary>
-        /// Get the requested data from the ORM layer.
+        /// Get the requested <see cref="Iteration"/>s from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -133,20 +145,20 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Iteration"/>.
+        /// List of instances of <see cref="Iteration"/>, optionally with contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                       ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                       : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
+                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
         /// Add the supplied value to the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -172,7 +184,7 @@ namespace CDP4WebServices.API.Services
         /// Remove the supplied value from the association property as indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -198,7 +210,7 @@ namespace CDP4WebServices.API.Services
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -224,7 +236,7 @@ namespace CDP4WebServices.API.Services
         /// Update the containment order as indicated by the supplied orderedItem.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -241,10 +253,10 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Delete the supplied DTO instance.
+        /// Delete the supplied <see cref="Iteration"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -253,7 +265,7 @@ namespace CDP4WebServices.API.Services
         /// The <see cref="Iteration"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be removed.
+        /// The container instance of the <see cref="Iteration"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -269,19 +281,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Update the supplied DTO instance.
+        /// Update the supplied <see cref="Iteration"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="thing">
-        /// The Thing to update.
+        /// The <see cref="Iteration"/> <see cref="Thing"/> to update.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be updated.
+        /// The container instance of the <see cref="Iteration"/> to be updated.
         /// </param>
         /// <returns>
         /// True if the update was successful.
@@ -298,19 +310,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Persist the supplied DTO instance.
+        /// Persist the supplied <see cref="Iteration"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The Thing to create.
+        /// The <see cref="Iteration"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be persisted.
+        /// The container instance of the <see cref="Iteration"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -334,7 +346,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -367,7 +379,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer by chaining the containment properties.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -379,7 +391,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Iteration"/>.
+        /// List of instances of <see cref="Iteration"/> and contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -393,35 +405,35 @@ namespace CDP4WebServices.API.Services
             var iterationColl = results.Where(i => i.GetType() == typeof(Iteration)).Cast<Iteration>().ToList();
 
             var iterationPartition = partition.Replace("EngineeringModel", "Iteration");
-            results.AddRange(this.OptionService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Option).ToIdList(), containerSecurityContext));
-            results.AddRange(this.PublicationService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Publication), containerSecurityContext));
-            results.AddRange(this.PossibleFiniteStateListService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.PossibleFiniteStateList), containerSecurityContext));
-            results.AddRange(this.ElementDefinitionService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Element), containerSecurityContext));
-            results.AddRange(this.RelationshipService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Relationship), containerSecurityContext));
-            results.AddRange(this.ExternalIdentifierMapService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.ExternalIdentifierMap), containerSecurityContext));
-            results.AddRange(this.RequirementsSpecificationService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.RequirementsSpecification), containerSecurityContext));
-            results.AddRange(this.DomainFileStoreService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.DomainFileStore), containerSecurityContext));
             results.AddRange(this.ActualFiniteStateListService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.ActualFiniteStateList), containerSecurityContext));
-            results.AddRange(this.RuleVerificationListService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.RuleVerificationList), containerSecurityContext));
-            results.AddRange(this.StakeholderService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Stakeholder), containerSecurityContext));
-            results.AddRange(this.GoalService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Goal), containerSecurityContext));
-            results.AddRange(this.ValueGroupService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.ValueGroup), containerSecurityContext));
-            results.AddRange(this.StakeholderValueService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.StakeholderValue), containerSecurityContext));
-            results.AddRange(this.StakeHolderValueMapService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.StakeholderValueMap), containerSecurityContext));
-            results.AddRange(this.SharedStyleService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.SharedDiagramStyle), containerSecurityContext));
             results.AddRange(this.DiagramCanvasService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.DiagramCanvas), containerSecurityContext));
+            results.AddRange(this.DomainFileStoreService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.DomainFileStore), containerSecurityContext));
+            results.AddRange(this.ElementService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Element), containerSecurityContext));
+            results.AddRange(this.ExternalIdentifierMapService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.ExternalIdentifierMap), containerSecurityContext));
+            results.AddRange(this.GoalService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Goal), containerSecurityContext));
+            results.AddRange(this.OptionService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Option).ToIdList(), containerSecurityContext));
+            results.AddRange(this.PossibleFiniteStateListService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.PossibleFiniteStateList), containerSecurityContext));
+            results.AddRange(this.PublicationService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Publication), containerSecurityContext));
+            results.AddRange(this.RelationshipService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Relationship), containerSecurityContext));
+            results.AddRange(this.RequirementsSpecificationService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.RequirementsSpecification), containerSecurityContext));
+            results.AddRange(this.RuleVerificationListService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.RuleVerificationList), containerSecurityContext));
+            results.AddRange(this.SharedDiagramStyleService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.SharedDiagramStyle), containerSecurityContext));
+            results.AddRange(this.StakeholderService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.Stakeholder), containerSecurityContext));
+            results.AddRange(this.StakeholderValueService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.StakeholderValue), containerSecurityContext));
+            results.AddRange(this.StakeholderValueMapService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.StakeholderValueMap), containerSecurityContext));
+            results.AddRange(this.ValueGroupService.GetDeep(transaction, iterationPartition, iterationColl.SelectMany(x => x.ValueGroup), containerSecurityContext));
 
             return results;
-         }
+        }
 
         /// <summary>
-        /// Execute additional logic after each get function call.
+        /// Execute additional logic after each GET function call.
         /// </summary>
         /// <param name="resultCollection">
         /// An instance collection that was retrieved from the persistence layer.
         /// </param>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from which the requested resource is to be retrieved.
@@ -449,22 +461,21 @@ namespace CDP4WebServices.API.Services
                     Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
-            
+
             return filteredCollection;
         }
 
-
         /// <summary>
-        /// Persist the DTO composition to the ORM layer.
+        /// Persist the <see cref="Iteration"/> containment tree to the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="iteration">
-        /// The iteration instance to persist.
+        /// The <see cref="Iteration"/> instance to persist.
         /// </param>
         /// <returns>
         /// True if the persistence was successful.
@@ -474,89 +485,89 @@ namespace CDP4WebServices.API.Services
             var results = new List<bool>();
             var iterationPartition = partition.Replace("EngineeringModel", "Iteration");
 
-            foreach (var option in this.ResolveFromRequestCache(iteration.Option))
-            {
-               results.Add(this.OptionService.CreateConcept(transaction, iterationPartition, (Option)option.V, iteration, option.K));
-            }
-
-            foreach (var publication in this.ResolveFromRequestCache(iteration.Publication))
-            {
-               results.Add(this.PublicationService.CreateConcept(transaction, iterationPartition, publication, iteration));
-            }
-
-            foreach (var possibleFiniteStateList in this.ResolveFromRequestCache(iteration.PossibleFiniteStateList))
-            {
-               results.Add(this.PossibleFiniteStateListService.CreateConcept(transaction, iterationPartition, possibleFiniteStateList, iteration));
-            }
-
-            foreach (var element in this.ResolveFromRequestCache(iteration.Element))
-            {
-               results.Add(this.ElementDefinitionService.CreateConcept(transaction, iterationPartition, element, iteration));
-            }
-
-            foreach (var relationship in this.ResolveFromRequestCache(iteration.Relationship))
-            {
-               results.Add(this.RelationshipService.CreateConcept(transaction, iterationPartition, relationship, iteration));
-            }
-
-            foreach (var externalIdentifierMap in this.ResolveFromRequestCache(iteration.ExternalIdentifierMap))
-            {
-               results.Add(this.ExternalIdentifierMapService.CreateConcept(transaction, iterationPartition, externalIdentifierMap, iteration));
-            }
-
-            foreach (var requirementsSpecification in this.ResolveFromRequestCache(iteration.RequirementsSpecification))
-            {
-               results.Add(this.RequirementsSpecificationService.CreateConcept(transaction, iterationPartition, requirementsSpecification, iteration));
-            }
-
-            foreach (var domainFileStore in this.ResolveFromRequestCache(iteration.DomainFileStore))
-            {
-               results.Add(this.DomainFileStoreService.CreateConcept(transaction, iterationPartition, domainFileStore, iteration));
-            }
-
             foreach (var actualFiniteStateList in this.ResolveFromRequestCache(iteration.ActualFiniteStateList))
             {
-               results.Add(this.ActualFiniteStateListService.CreateConcept(transaction, iterationPartition, actualFiniteStateList, iteration));
-            }
-
-            foreach (var ruleVerificationList in this.ResolveFromRequestCache(iteration.RuleVerificationList))
-            {
-               results.Add(this.RuleVerificationListService.CreateConcept(transaction, iterationPartition, ruleVerificationList, iteration));
-            }
-
-            foreach (var stakeholder in this.ResolveFromRequestCache(iteration.Stakeholder))
-            {
-               results.Add(this.StakeholderService.CreateConcept(transaction, iterationPartition, stakeholder, iteration));
-            }
-
-            foreach (var goal in this.ResolveFromRequestCache(iteration.Goal))
-            {
-               results.Add(this.GoalService.CreateConcept(transaction, iterationPartition, goal, iteration));
-            }
-
-            foreach (var valueGroup in this.ResolveFromRequestCache(iteration.ValueGroup))
-            {
-               results.Add(this.ValueGroupService.CreateConcept(transaction, iterationPartition, valueGroup, iteration));
-            }
-
-            foreach (var stakeholderValue in this.ResolveFromRequestCache(iteration.StakeholderValue))
-            {
-               results.Add(this.StakeholderValueService.CreateConcept(transaction, iterationPartition, stakeholderValue, iteration));
-            }
-
-            foreach (var stakeholderValueMap in this.ResolveFromRequestCache(iteration.StakeholderValueMap))
-            {
-               results.Add(this.StakeHolderValueMapService.CreateConcept(transaction, iterationPartition, stakeholderValueMap, iteration));
-            }
-
-            foreach (var sharedDiagramStyle in this.ResolveFromRequestCache(iteration.SharedDiagramStyle))
-            {
-               results.Add(this.SharedStyleService.CreateConcept(transaction, iterationPartition, sharedDiagramStyle, iteration));
+                results.Add(this.ActualFiniteStateListService.CreateConcept(transaction, iterationPartition, actualFiniteStateList, iteration));
             }
 
             foreach (var diagramCanvas in this.ResolveFromRequestCache(iteration.DiagramCanvas))
             {
-               results.Add(this.DiagramCanvasService.CreateConcept(transaction, iterationPartition, diagramCanvas, iteration));
+                results.Add(this.DiagramCanvasService.CreateConcept(transaction, iterationPartition, diagramCanvas, iteration));
+            }
+
+            foreach (var domainFileStore in this.ResolveFromRequestCache(iteration.DomainFileStore))
+            {
+                results.Add(this.DomainFileStoreService.CreateConcept(transaction, iterationPartition, domainFileStore, iteration));
+            }
+
+            foreach (var element in this.ResolveFromRequestCache(iteration.Element))
+            {
+                results.Add(this.ElementService.CreateConcept(transaction, iterationPartition, element, iteration));
+            }
+
+            foreach (var externalIdentifierMap in this.ResolveFromRequestCache(iteration.ExternalIdentifierMap))
+            {
+                results.Add(this.ExternalIdentifierMapService.CreateConcept(transaction, iterationPartition, externalIdentifierMap, iteration));
+            }
+
+            foreach (var goal in this.ResolveFromRequestCache(iteration.Goal))
+            {
+                results.Add(this.GoalService.CreateConcept(transaction, iterationPartition, goal, iteration));
+            }
+
+            foreach (var option in this.ResolveFromRequestCache(iteration.Option))
+            {
+                results.Add(this.OptionService.CreateConcept(transaction, iterationPartition, (Option)option.V, iteration, option.K));
+            }
+
+            foreach (var possibleFiniteStateList in this.ResolveFromRequestCache(iteration.PossibleFiniteStateList))
+            {
+                results.Add(this.PossibleFiniteStateListService.CreateConcept(transaction, iterationPartition, possibleFiniteStateList, iteration));
+            }
+
+            foreach (var publication in this.ResolveFromRequestCache(iteration.Publication))
+            {
+                results.Add(this.PublicationService.CreateConcept(transaction, iterationPartition, publication, iteration));
+            }
+
+            foreach (var relationship in this.ResolveFromRequestCache(iteration.Relationship))
+            {
+                results.Add(this.RelationshipService.CreateConcept(transaction, iterationPartition, relationship, iteration));
+            }
+
+            foreach (var requirementsSpecification in this.ResolveFromRequestCache(iteration.RequirementsSpecification))
+            {
+                results.Add(this.RequirementsSpecificationService.CreateConcept(transaction, iterationPartition, requirementsSpecification, iteration));
+            }
+
+            foreach (var ruleVerificationList in this.ResolveFromRequestCache(iteration.RuleVerificationList))
+            {
+                results.Add(this.RuleVerificationListService.CreateConcept(transaction, iterationPartition, ruleVerificationList, iteration));
+            }
+
+            foreach (var sharedDiagramStyle in this.ResolveFromRequestCache(iteration.SharedDiagramStyle))
+            {
+                results.Add(this.SharedDiagramStyleService.CreateConcept(transaction, iterationPartition, sharedDiagramStyle, iteration));
+            }
+
+            foreach (var stakeholder in this.ResolveFromRequestCache(iteration.Stakeholder))
+            {
+                results.Add(this.StakeholderService.CreateConcept(transaction, iterationPartition, stakeholder, iteration));
+            }
+
+            foreach (var stakeholderValue in this.ResolveFromRequestCache(iteration.StakeholderValue))
+            {
+                results.Add(this.StakeholderValueService.CreateConcept(transaction, iterationPartition, stakeholderValue, iteration));
+            }
+
+            foreach (var stakeholderValueMap in this.ResolveFromRequestCache(iteration.StakeholderValueMap))
+            {
+                results.Add(this.StakeholderValueMapService.CreateConcept(transaction, iterationPartition, stakeholderValueMap, iteration));
+            }
+
+            foreach (var valueGroup in this.ResolveFromRequestCache(iteration.ValueGroup))
+            {
+                results.Add(this.ValueGroupService.CreateConcept(transaction, iterationPartition, valueGroup, iteration));
             }
 
             return results.All(x => x);

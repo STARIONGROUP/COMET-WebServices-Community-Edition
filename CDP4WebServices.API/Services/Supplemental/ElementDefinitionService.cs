@@ -99,7 +99,7 @@ namespace CDP4WebServices.API.Services
             {
                 foreach (var usage in allSourceThings.Where(x => sourceElementDef.ContainedElement.Contains(x.Iid)))
                 {
-                    ((ServiceBase)this.ElementUsageService).Copy(transaction, partition, usage, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                    ((ServiceBase)this.ContainedElementService).Copy(transaction, partition, usage, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
                 }
             }
         }

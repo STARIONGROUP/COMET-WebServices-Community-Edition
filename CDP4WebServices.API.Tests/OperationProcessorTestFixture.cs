@@ -503,7 +503,7 @@ namespace CDP4WebServices.API.Tests
                 TransactionManager = this.transactionManager.Object,
                 OldParameterContextProvider = parameterContextProvider,
                 ParameterSubscriptionService = paramSubscriptionService,
-                ParameterValueSetService = valueSetService.Object,
+                ValueSetService = valueSetService.Object,
                 IterationService = iterationService.Object,
                 DefaultValueArrayFactory = defaultArrayService.Object
             };
@@ -518,7 +518,7 @@ namespace CDP4WebServices.API.Tests
                 TransactionManager = this.transactionManager.Object,
                 OperationSideEffectProcessor = customOperationSideEffectProcessor.Object,
                 ParameterSubscriptionService = paramSubscriptionService,
-                ParameterOverrideValueSetService = overrideValueSetService.Object
+                ValueSetService = overrideValueSetService.Object
             };
 
             var usageDao = new Mock<IElementUsageDao>();
@@ -538,7 +538,7 @@ namespace CDP4WebServices.API.Tests
                 PermissionService = this.permissionService.Object,
 
                 ElementDefinitionDao = edDao,
-                ElementUsageService = usageService,
+                ContainedElementService = usageService,
                 ParameterService = paramService,
                 TransactionManager = this.transactionManager.Object,
                 OperationSideEffectProcessor = customOperationSideEffectProcessor.Object,

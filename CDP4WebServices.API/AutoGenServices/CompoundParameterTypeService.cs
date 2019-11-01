@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CompoundParameterTypeService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
@@ -12,56 +28,52 @@ namespace CDP4WebServices.API.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-	using System.Security;
-
+    using System.Security;
     using CDP4Common.DTO;
-    
     using CDP4Orm.Dao;
- 
     using CDP4WebServices.API.Services.Authorization;
- 
     using Npgsql;
- 
+
     /// <summary>
-    /// The CompoundParameterType Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="CompoundParameterType"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
     public sealed partial class CompoundParameterTypeService : ServiceBase, ICompoundParameterTypeService
     {
         /// <summary>
-        /// Gets or sets the arrayParameterType service.
+        /// Gets or sets the <see cref="IArrayParameterTypeService"/>.
         /// </summary>
         public IArrayParameterTypeService ArrayParameterTypeService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the alias service.
+        /// Gets or sets the <see cref="IAliasService"/>.
         /// </summary>
         public IAliasService AliasService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the definition service.
+        /// Gets or sets the <see cref="IParameterTypeComponentService"/>.
+        /// </summary>
+        public IParameterTypeComponentService ComponentService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the hyperLink service.
+        /// Gets or sets the <see cref="IHyperLinkService"/>.
         /// </summary>
         public IHyperLinkService HyperLinkService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the parameterTypeComponent service.
-        /// </summary>
-        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the compoundParameterType dao.
+        /// Gets or sets the <see cref="ICompoundParameterTypeDao"/>.
         /// </summary>
         public ICompoundParameterTypeDao CompoundParameterTypeDao { get; set; }
 
         /// <summary>
-        /// Get the requested data from the ORM layer.
+        /// Get the requested <see cref="CompoundParameterType"/>s from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -73,20 +85,20 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="CompoundParameterType"/>.
+        /// List of instances of <see cref="CompoundParameterType"/>, optionally with contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                       ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                       : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
+                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
         /// Add the supplied value to the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -112,7 +124,7 @@ namespace CDP4WebServices.API.Services
         /// Remove the supplied value from the association property as indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -138,7 +150,7 @@ namespace CDP4WebServices.API.Services
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -164,7 +176,7 @@ namespace CDP4WebServices.API.Services
         /// Update the containment order as indicated by the supplied orderedItem.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -181,10 +193,10 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Delete the supplied DTO instance.
+        /// Delete the supplied <see cref="CompoundParameterType"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -193,7 +205,7 @@ namespace CDP4WebServices.API.Services
         /// The <see cref="CompoundParameterType"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be removed.
+        /// The container instance of the <see cref="CompoundParameterType"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -209,19 +221,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Update the supplied DTO instance.
+        /// Update the supplied <see cref="CompoundParameterType"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="thing">
-        /// The Thing to update.
+        /// The <see cref="CompoundParameterType"/> <see cref="Thing"/> to update.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be updated.
+        /// The container instance of the <see cref="CompoundParameterType"/> to be updated.
         /// </param>
         /// <returns>
         /// True if the update was successful.
@@ -236,26 +248,25 @@ namespace CDP4WebServices.API.Services
             var compoundParameterType = thing as CompoundParameterType;
             if (compoundParameterType.IsSameOrDerivedClass<ArrayParameterType>())
             {
-               return this.ArrayParameterTypeService.UpdateConcept(transaction, partition, compoundParameterType, container);
+                return this.ArrayParameterTypeService.UpdateConcept(transaction, partition, compoundParameterType, container);
             }
-
             return this.CompoundParameterTypeDao.Update(transaction, partition, compoundParameterType, container);
         }
 
         /// <summary>
-        /// Persist the supplied DTO instance.
+        /// Persist the supplied <see cref="CompoundParameterType"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The Thing to create.
+        /// The <see cref="CompoundParameterType"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be persisted.
+        /// The container instance of the <see cref="CompoundParameterType"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -273,7 +284,7 @@ namespace CDP4WebServices.API.Services
             var compoundParameterType = thing as CompoundParameterType;
             if (compoundParameterType.IsSameOrDerivedClass<ArrayParameterType>())
             {
-               return this.ArrayParameterTypeService.CreateConcept(transaction, partition, compoundParameterType, container);
+                return this.ArrayParameterTypeService.CreateConcept(transaction, partition, compoundParameterType, container);
             }
 
             var createSuccesful = this.CompoundParameterTypeDao.Write(transaction, partition, compoundParameterType, container);
@@ -284,7 +295,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -310,7 +321,6 @@ namespace CDP4WebServices.API.Services
 
             var compoundParameterTypeColl = new List<Thing>(this.CompoundParameterTypeDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
 
-            // also retrieve derived concepts as per the indicated extent retrieval mode
             compoundParameterTypeColl.AddRange(
                 this.RequestUtils.QueryParameters.ExtentDeep
                     ? this.ArrayParameterTypeService.GetDeep(transaction, partition, idFilter, authorizedContext)
@@ -323,7 +333,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer by chaining the containment properties.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -335,7 +345,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="CompoundParameterType"/>.
+        /// List of instances of <see cref="CompoundParameterType"/> and contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -349,21 +359,21 @@ namespace CDP4WebServices.API.Services
             var compoundParameterTypeColl = results.Where(i => i.GetType() == typeof(CompoundParameterType)).Cast<CompoundParameterType>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, compoundParameterTypeColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.ComponentService.GetDeep(transaction, partition, compoundParameterTypeColl.SelectMany(x => x.Component).ToIdList(), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, compoundParameterTypeColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, compoundParameterTypeColl.SelectMany(x => x.HyperLink), containerSecurityContext));
-            results.AddRange(this.ParameterTypeComponentService.GetDeep(transaction, partition, compoundParameterTypeColl.SelectMany(x => x.Component).ToIdList(), containerSecurityContext));
 
             return results;
-         }
+        }
 
         /// <summary>
-        /// Execute additional logic after each get function call.
+        /// Execute additional logic after each GET function call.
         /// </summary>
         /// <param name="resultCollection">
         /// An instance collection that was retrieved from the persistence layer.
         /// </param>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from which the requested resource is to be retrieved.
@@ -391,22 +401,21 @@ namespace CDP4WebServices.API.Services
                     Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
-            
+
             return filteredCollection;
         }
 
-
         /// <summary>
-        /// Persist the DTO composition to the ORM layer.
+        /// Persist the <see cref="CompoundParameterType"/> containment tree to the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="compoundParameterType">
-        /// The compoundParameterType instance to persist.
+        /// The <see cref="CompoundParameterType"/> instance to persist.
         /// </param>
         /// <returns>
         /// True if the persistence was successful.
@@ -417,22 +426,22 @@ namespace CDP4WebServices.API.Services
 
             foreach (var alias in this.ResolveFromRequestCache(compoundParameterType.Alias))
             {
-               results.Add(this.AliasService.CreateConcept(transaction, partition, alias, compoundParameterType));
-            }
-
-            foreach (var definition in this.ResolveFromRequestCache(compoundParameterType.Definition))
-            {
-               results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, compoundParameterType));
-            }
-
-            foreach (var hyperLink in this.ResolveFromRequestCache(compoundParameterType.HyperLink))
-            {
-               results.Add(this.HyperLinkService.CreateConcept(transaction, partition, hyperLink, compoundParameterType));
+                results.Add(this.AliasService.CreateConcept(transaction, partition, alias, compoundParameterType));
             }
 
             foreach (var component in this.ResolveFromRequestCache(compoundParameterType.Component))
             {
-               results.Add(this.ParameterTypeComponentService.CreateConcept(transaction, partition, (ParameterTypeComponent)component.V, compoundParameterType, component.K));
+                results.Add(this.ComponentService.CreateConcept(transaction, partition, (ParameterTypeComponent)component.V, compoundParameterType, component.K));
+            }
+
+            foreach (var definition in this.ResolveFromRequestCache(compoundParameterType.Definition))
+            {
+                results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, compoundParameterType));
+            }
+
+            foreach (var hyperLink in this.ResolveFromRequestCache(compoundParameterType.HyperLink))
+            {
+                results.Add(this.HyperLinkService.CreateConcept(transaction, partition, hyperLink, compoundParameterType));
             }
 
             return results.All(x => x);

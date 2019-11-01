@@ -62,7 +62,7 @@ namespace CDP4WebServices.API.Services
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ParameterSubscriptionValueSetService
+                var valuesets = this.ValueSetService
                     .GetShallow(transaction, partition, newparameterSubscription.ValueSet, securityContext)
                     .OfType<ParameterSubscriptionValueSet>().ToList();
 
@@ -85,7 +85,7 @@ namespace CDP4WebServices.API.Services
                     valueset.Manual = sourceSubscriptionValueSet.Manual;
                     valueset.ValueSwitch = sourceSubscriptionValueSet.ValueSwitch;
 
-                    this.ParameterSubscriptionValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
                 }
             }
         }

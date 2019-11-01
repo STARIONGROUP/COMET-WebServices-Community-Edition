@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
@@ -12,56 +28,52 @@ namespace CDP4WebServices.API.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-	using System.Security;
-
+    using System.Security;
     using CDP4Common.DTO;
-    
     using CDP4Orm.Dao;
- 
     using CDP4WebServices.API.Services.Authorization;
- 
     using Npgsql;
- 
+
     /// <summary>
-    /// The EngineeringModel Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="EngineeringModel"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
     public sealed partial class EngineeringModelService : ServiceBase, IEngineeringModelService
     {
         /// <summary>
-        /// Gets or sets the commonFileStore service.
-        /// </summary>
-        public ICommonFileStoreService CommonFileStoreService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the modelLogEntry service.
-        /// </summary>
-        public IModelLogEntryService ModelLogEntryService { get; set; }
- 
-        /// <summary>
-        /// Gets or sets the book service.
+        /// Gets or sets the <see cref="IBookService"/>.
         /// </summary>
         public IBookService BookService { get; set; }
- 
+
         /// <summary>
-        /// Gets or sets the engineeringModelDataNote service.
+        /// Gets or sets the <see cref="ICommonFileStoreService"/>.
         /// </summary>
-        public IEngineeringModelDataNoteService EngineeringModelDataNoteService { get; set; }
- 
+        public ICommonFileStoreService CommonFileStoreService { get; set; }
+
         /// <summary>
-        /// Gets or sets the modellingAnnotationItem service.
+        /// Gets or sets the <see cref="IEngineeringModelDataNoteService"/>.
         /// </summary>
-        public IModellingAnnotationItemService ModellingAnnotationItemService { get; set; }
- 
+        public IEngineeringModelDataNoteService GenericNoteService { get; set; }
+
         /// <summary>
-        /// Gets or sets the engineeringModel dao.
+        /// Gets or sets the <see cref="IModelLogEntryService"/>.
+        /// </summary>
+        public IModelLogEntryService LogEntryService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IModellingAnnotationItemService"/>.
+        /// </summary>
+        public IModellingAnnotationItemService ModellingAnnotationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelDao"/>.
         /// </summary>
         public IEngineeringModelDao EngineeringModelDao { get; set; }
 
         /// <summary>
-        /// Get the requested data from the ORM layer.
+        /// Get the requested <see cref="EngineeringModel"/>s from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -73,20 +85,20 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="EngineeringModel"/>.
+        /// List of instances of <see cref="EngineeringModel"/>, optionally with contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                       ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                       : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
+                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
         /// Persist the supplied DTO instance to the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -110,7 +122,7 @@ namespace CDP4WebServices.API.Services
         /// Add the supplied value to the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -136,7 +148,7 @@ namespace CDP4WebServices.API.Services
         /// Remove the supplied value from the association property as indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -162,7 +174,7 @@ namespace CDP4WebServices.API.Services
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -188,7 +200,7 @@ namespace CDP4WebServices.API.Services
         /// Update the containment order as indicated by the supplied orderedItem.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource order will be updated.
@@ -205,10 +217,10 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Delete the supplied DTO instance.
+        /// Delete the supplied <see cref="EngineeringModel"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from where the requested resource will be removed.
@@ -217,7 +229,7 @@ namespace CDP4WebServices.API.Services
         /// The <see cref="EngineeringModel"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be removed.
+        /// The container instance of the <see cref="EngineeringModel"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -233,19 +245,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Update the supplied DTO instance.
+        /// Update the supplied <see cref="EngineeringModel"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="thing">
-        /// The Thing to update.
+        /// The <see cref="EngineeringModel"/> <see cref="Thing"/> to update.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be updated.
+        /// The container instance of the <see cref="EngineeringModel"/> to be updated.
         /// </param>
         /// <returns>
         /// True if the update was successful.
@@ -262,19 +274,19 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Persist the supplied DTO instance.
+        /// Persist the supplied <see cref="EngineeringModel"/> instance.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The Thing to create.
+        /// The <see cref="EngineeringModel"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the DTO to be persisted.
+        /// The container instance of the <see cref="EngineeringModel"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -298,7 +310,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -331,7 +343,7 @@ namespace CDP4WebServices.API.Services
         /// Get the requested data from the ORM layer by chaining the containment properties.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -343,7 +355,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="EngineeringModel"/>.
+        /// List of instances of <see cref="EngineeringModel"/> and contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -356,23 +368,23 @@ namespace CDP4WebServices.API.Services
             var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
             var engineeringModelColl = results.Where(i => i.GetType() == typeof(EngineeringModel)).Cast<EngineeringModel>().ToList();
 
-            results.AddRange(this.CommonFileStoreService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.CommonFileStore), containerSecurityContext));
-            results.AddRange(this.ModelLogEntryService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.LogEntry), containerSecurityContext));
             results.AddRange(this.BookService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.Book).ToIdList(), containerSecurityContext));
-            results.AddRange(this.EngineeringModelDataNoteService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.GenericNote), containerSecurityContext));
-            results.AddRange(this.ModellingAnnotationItemService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.ModellingAnnotation), containerSecurityContext));
+            results.AddRange(this.CommonFileStoreService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.CommonFileStore), containerSecurityContext));
+            results.AddRange(this.GenericNoteService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.GenericNote), containerSecurityContext));
+            results.AddRange(this.LogEntryService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.LogEntry), containerSecurityContext));
+            results.AddRange(this.ModellingAnnotationService.GetDeep(transaction, partition, engineeringModelColl.SelectMany(x => x.ModellingAnnotation), containerSecurityContext));
 
             return results;
-         }
+        }
 
         /// <summary>
-        /// Execute additional logic after each get function call.
+        /// Execute additional logic after each GET function call.
         /// </summary>
         /// <param name="resultCollection">
         /// An instance collection that was retrieved from the persistence layer.
         /// </param>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) from which the requested resource is to be retrieved.
@@ -400,22 +412,21 @@ namespace CDP4WebServices.API.Services
                     Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
-            
+
             return filteredCollection;
         }
 
-
         /// <summary>
-        /// Persist the DTO composition to the ORM layer.
+        /// Persist the <see cref="EngineeringModel"/> containment tree to the ORM layer.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction object.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="engineeringModel">
-        /// The engineeringModel instance to persist.
+        /// The <see cref="EngineeringModel"/> instance to persist.
         /// </param>
         /// <returns>
         /// True if the persistence was successful.
@@ -424,29 +435,29 @@ namespace CDP4WebServices.API.Services
         {
             var results = new List<bool>();
 
-            foreach (var commonFileStore in this.ResolveFromRequestCache(engineeringModel.CommonFileStore))
-            {
-               results.Add(this.CommonFileStoreService.CreateConcept(transaction, partition, commonFileStore, engineeringModel));
-            }
-
-            foreach (var logEntry in this.ResolveFromRequestCache(engineeringModel.LogEntry))
-            {
-               results.Add(this.ModelLogEntryService.CreateConcept(transaction, partition, logEntry, engineeringModel));
-            }
-
             foreach (var book in this.ResolveFromRequestCache(engineeringModel.Book))
             {
-               results.Add(this.BookService.CreateConcept(transaction, partition, (Book)book.V, engineeringModel, book.K));
+                results.Add(this.BookService.CreateConcept(transaction, partition, (Book)book.V, engineeringModel, book.K));
+            }
+
+            foreach (var commonFileStore in this.ResolveFromRequestCache(engineeringModel.CommonFileStore))
+            {
+                results.Add(this.CommonFileStoreService.CreateConcept(transaction, partition, commonFileStore, engineeringModel));
             }
 
             foreach (var genericNote in this.ResolveFromRequestCache(engineeringModel.GenericNote))
             {
-               results.Add(this.EngineeringModelDataNoteService.CreateConcept(transaction, partition, genericNote, engineeringModel));
+                results.Add(this.GenericNoteService.CreateConcept(transaction, partition, genericNote, engineeringModel));
+            }
+
+            foreach (var logEntry in this.ResolveFromRequestCache(engineeringModel.LogEntry))
+            {
+                results.Add(this.LogEntryService.CreateConcept(transaction, partition, logEntry, engineeringModel));
             }
 
             foreach (var modellingAnnotation in this.ResolveFromRequestCache(engineeringModel.ModellingAnnotation))
             {
-               results.Add(this.ModellingAnnotationItemService.CreateConcept(transaction, partition, modellingAnnotation, engineeringModel));
+                results.Add(this.ModellingAnnotationService.CreateConcept(transaction, partition, modellingAnnotation, engineeringModel));
             }
 
             return results.All(x => x);
