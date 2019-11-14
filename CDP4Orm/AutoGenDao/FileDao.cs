@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -12,12 +28,12 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Linq;
- 
+
     using CDP4Common.DTO;
 
     using Npgsql;
     using NpgsqlTypes;
- 
+
     /// <summary>
     /// The File Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
@@ -27,7 +43,7 @@ namespace CDP4Orm.Dao
         /// Read the data from the database.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -87,16 +103,16 @@ namespace CDP4Orm.Dao
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
                     }
-                    
+
                     sqlBuilder.Append(";");
-                    
+
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
                     command.CommandText = sqlBuilder.ToString();
-                    
+
                     // log the sql command 
                     this.LogCommand(command);
-                    
+
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -107,7 +123,7 @@ namespace CDP4Orm.Dao
                 }
             }
         }
- 
+
         /// <summary>
         /// The mapping from a database record to data transfer object.
         /// </summary>
@@ -120,39 +136,39 @@ namespace CDP4Orm.Dao
         public virtual CDP4Common.DTO.File MapToDto(NpgsqlDataReader reader)
         {
             string tempModifiedOn;
-            
+
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
-            
+
             var dto = new CDP4Common.DTO.File(iid, revisionNumber);
-            dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
-            dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
-            dto.LockedBy = reader["LockedBy"] is DBNull ? (Guid?)null : Guid.Parse(reader["LockedBy"].ToString());
-            dto.FileRevision.AddRange(Array.ConvertAll((string[])reader["FileRevision"], Guid.Parse));
-            dto.Owner = Guid.Parse(reader["Owner"].ToString());
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
-            
+            dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
+            dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
+            dto.FileRevision.AddRange(Array.ConvertAll((string[])reader["FileRevision"], Guid.Parse));
+            dto.LockedBy = reader["LockedBy"] is DBNull ? (Guid?)null : Guid.Parse(reader["LockedBy"].ToString());
+            dto.Owner = Guid.Parse(reader["Owner"].ToString());
+
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
             }
-            
+
             return dto;
         }
- 
+
         /// <summary>
         /// Insert a new database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="file">
         /// The file DTO that is to be persisted.
-        /// </param> 
+        /// </param>
         /// <param name="container">
         /// The container of the DTO to be persisted.
         /// </param>
@@ -171,32 +187,33 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
+                    
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"File\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"LockedBy\", \"Owner\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :container, :lockedBy, :owner);");
+
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = file.Iid;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                     command.Parameters.Add("lockedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "LockedBy") ? Utils.NullableValue(file.LockedBy) : Utils.NullableValue(null);
                     command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "Owner") ? file.Owner : Utils.NullableValue(null);
-                
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     this.ExecuteAndLogCommand(command);
                 }
-                
                 file.Category.ForEach(x => this.AddCategory(transaction, partition, file.Iid, x));
             }
 
             return this.AfterWrite(beforeWrite, transaction, partition, file, container);
         }
- 
+
         /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -216,7 +233,7 @@ namespace CDP4Orm.Dao
         public override bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             var isCreated = base.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
- 
+
             switch (propertyName)
             {
                 case "Category":
@@ -224,21 +241,21 @@ namespace CDP4Orm.Dao
                         isCreated = this.AddCategory(transaction, partition, iid, (Guid)value);
                         break;
                     }
- 
+
                 default:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
 
             return isCreated;
         }
- 
+
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -257,31 +274,32 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-            
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"File_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"File\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:file, :category);");
+
                 command.Parameters.Add("file", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = category;
-            
+
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
+
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
- 
+
         /// <summary>
         /// Update a database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="file">
-        /// The file DTO that is to be updated.
+        /// The File DTO that is to be updated.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be updated.
@@ -297,35 +315,36 @@ namespace CDP4Orm.Dao
             if (!isHandled)
             {
                 beforeUpdate = beforeUpdate && base.Update(transaction, partition, file, container);
-                
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"File\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"Container\", \"LockedBy\", \"Owner\")");
                     sqlBuilder.AppendFormat(" = (:container, :lockedBy, :owner)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
+
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = file.Iid;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                     command.Parameters.Add("lockedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "LockedBy") ? Utils.NullableValue(file.LockedBy) : Utils.NullableValue(null);
                     command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "Owner") ? file.Owner : Utils.NullableValue(null);
-                
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     this.ExecuteAndLogCommand(command);
                 }
             }
 
             return this.AfterUpdate(beforeUpdate, transaction, partition, file, container);
         }
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be deleted.
@@ -347,12 +366,12 @@ namespace CDP4Orm.Dao
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
         }
- 
+
         /// <summary>
         /// Delete the supplied value from the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be removed.
@@ -372,7 +391,7 @@ namespace CDP4Orm.Dao
         public override bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             var isDeleted = base.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
- 
+
             switch (propertyName)
             {
                 case "Category":
@@ -380,7 +399,7 @@ namespace CDP4Orm.Dao
                         isDeleted = this.DeleteCategory(transaction, partition, iid, (Guid)value);
                         break;
                     }
- 
+
                 default:
                 {
                     break;
@@ -389,12 +408,12 @@ namespace CDP4Orm.Dao
 
             return isDeleted;
         }
- 
+
         /// <summary>
         /// Delete an association record in the link table.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be deleted.
@@ -413,16 +432,17 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-            
                 sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"File_Category\"", partition);
                 sqlBuilder.Append(" WHERE \"File\" = :file");
                 sqlBuilder.Append(" AND \"Category\" = :category;");
+
                 command.Parameters.Add("file", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = category;
-            
+
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
+
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }

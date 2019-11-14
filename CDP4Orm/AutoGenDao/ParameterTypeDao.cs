@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterTypeDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -12,29 +28,30 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Linq;
- 
+
     using CDP4Common.DTO;
 
     using Npgsql;
     using NpgsqlTypes;
- 
+
     /// <summary>
     /// The abstract ParameterType Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
     public abstract partial class ParameterTypeDao : DefinedThingDao
     {
+
         /// <summary>
         /// Insert a new database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="parameterType">
         /// The parameterType DTO that is to be persisted.
-        /// </param> 
+        /// </param>
         /// <param name="container">
         /// The container of the DTO to be persisted.
         /// </param>
@@ -51,39 +68,40 @@ namespace CDP4Orm.Dao
                 beforeWrite = beforeWrite && base.Write(transaction, partition, parameterType, container);
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
-                        {
-                            { "Symbol", !this.IsDerived(parameterType, "Symbol") ? parameterType.Symbol.Escape() : string.Empty },
-                            { "IsDeprecated", !this.IsDerived(parameterType, "IsDeprecated") ? parameterType.IsDeprecated.ToString() : string.Empty },
-                        }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                
+                {
+                    { "IsDeprecated", !this.IsDerived(parameterType, "IsDeprecated") ? parameterType.IsDeprecated.ToString() : string.Empty },
+                    { "Symbol", !this.IsDerived(parameterType, "Symbol") ? parameterType.Symbol.Escape() : string.Empty },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
+                    
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterType\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterType.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     this.ExecuteAndLogCommand(command);
                 }
-                
                 parameterType.Category.ForEach(x => this.AddCategory(transaction, partition, parameterType.Iid, x));
             }
 
             return this.AfterWrite(beforeWrite, transaction, partition, parameterType, container);
         }
- 
+
         /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -103,7 +121,7 @@ namespace CDP4Orm.Dao
         public override bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             var isCreated = base.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
- 
+
             switch (propertyName)
             {
                 case "Category":
@@ -111,21 +129,21 @@ namespace CDP4Orm.Dao
                         isCreated = this.AddCategory(transaction, partition, iid, (Guid)value);
                         break;
                     }
- 
+
                 default:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
 
             return isCreated;
         }
- 
+
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
@@ -144,31 +162,32 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-            
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterType_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"ParameterType\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:parameterType, :category);");
+
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = category;
-            
+
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
+
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
- 
+
         /// <summary>
         /// Update a database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="parameterType">
-        /// The parameterType DTO that is to be updated.
+        /// The ParameterType DTO that is to be updated.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be updated.
@@ -184,40 +203,41 @@ namespace CDP4Orm.Dao
             if (!isHandled)
             {
                 beforeUpdate = beforeUpdate && base.Update(transaction, partition, parameterType, container);
-                
+
                 var valueTypeDictionaryContents = new Dictionary<string, string>
-                        {
-                            { "Symbol", !this.IsDerived(parameterType, "Symbol") ? parameterType.Symbol.Escape() : string.Empty },
-                            { "IsDeprecated", !this.IsDerived(parameterType, "IsDeprecated") ? parameterType.IsDeprecated.ToString() : string.Empty },
-                        }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                
+                {
+                    { "IsDeprecated", !this.IsDerived(parameterType, "IsDeprecated") ? parameterType.IsDeprecated.ToString() : string.Empty },
+                    { "Symbol", !this.IsDerived(parameterType, "Symbol") ? parameterType.Symbol.Escape() : string.Empty },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ParameterType\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Container\", \"ValueTypeDictionary\")");
-                    sqlBuilder.AppendFormat(" = (:container, \"ValueTypeDictionary\" || :valueTypeDictionary)");
+                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
+                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
+
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterType.Iid;
-                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                
+                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     this.ExecuteAndLogCommand(command);
                 }
             }
 
             return this.AfterUpdate(beforeUpdate, transaction, partition, parameterType, container);
         }
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be deleted.
@@ -237,33 +257,32 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
                     var valueTypeDictionaryContents = new Dictionary<string, string>
                             {
-                                { "IsDeprecated", "true" },
+                                { "IsDeprecated", "true" }
                             };
-                
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ParameterType\"", partition);
                     sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\" = \"ValueTypeDictionary\" || :valueTypeDictionary");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     isHandled = this.ExecuteAndLogCommand(command) > 0;
                 }
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
         }
- 
+
         /// <summary>
         /// Delete the supplied value from the association link table indicated by the supplied property name.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be removed.
@@ -283,7 +302,7 @@ namespace CDP4Orm.Dao
         public override bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             var isDeleted = base.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
- 
+
             switch (propertyName)
             {
                 case "Category":
@@ -291,7 +310,7 @@ namespace CDP4Orm.Dao
                         isDeleted = this.DeleteCategory(transaction, partition, iid, (Guid)value);
                         break;
                     }
- 
+
                 default:
                 {
                     break;
@@ -300,12 +319,12 @@ namespace CDP4Orm.Dao
 
             return isDeleted;
         }
- 
+
         /// <summary>
         /// Delete an association record in the link table.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be deleted.
@@ -324,16 +343,17 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-            
                 sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"ParameterType_Category\"", partition);
                 sqlBuilder.Append(" WHERE \"ParameterType\" = :parameterType");
                 sqlBuilder.Append(" AND \"Category\" = :category;");
+
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = category;
-            
+
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
+
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }

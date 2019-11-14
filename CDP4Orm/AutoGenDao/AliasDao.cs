@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AliasDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2019 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated class. Any manual changes on this file will be overwritten!
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -12,12 +28,12 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Linq;
- 
+
     using CDP4Common.DTO;
 
     using Npgsql;
     using NpgsqlTypes;
- 
+
     /// <summary>
     /// The Alias Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
@@ -27,7 +43,7 @@ namespace CDP4Orm.Dao
         /// Read the data from the database.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -87,16 +103,16 @@ namespace CDP4Orm.Dao
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
                     }
-                    
+
                     sqlBuilder.Append(";");
-                    
+
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
                     command.CommandText = sqlBuilder.ToString();
-                    
+
                     // log the sql command 
                     this.LogCommand(command);
-                    
+
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -107,7 +123,7 @@ namespace CDP4Orm.Dao
                 }
             }
         }
- 
+
         /// <summary>
         /// The mapping from a database record to data transfer object.
         /// </summary>
@@ -119,54 +135,54 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual CDP4Common.DTO.Alias MapToDto(NpgsqlDataReader reader)
         {
-            string tempModifiedOn;
+            string tempContent;
             string tempIsSynonym;
             string tempLanguageCode;
-            string tempContent;
-            
+            string tempModifiedOn;
+
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
-            
+
             var dto = new CDP4Common.DTO.Alias(iid, revisionNumber);
-            dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
-            
-            if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
-            {
-                dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
-            }
-            
-            if (valueDict.TryGetValue("IsSynonym", out tempIsSynonym))
-            {
-                dto.IsSynonym = bool.Parse(tempIsSynonym);
-            }
-            
-            if (valueDict.TryGetValue("LanguageCode", out tempLanguageCode))
-            {
-                dto.LanguageCode = tempLanguageCode.UnEscape();
-            }
-            
+            dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
+
             if (valueDict.TryGetValue("Content", out tempContent))
             {
                 dto.Content = tempContent.UnEscape();
             }
-            
+
+            if (valueDict.TryGetValue("IsSynonym", out tempIsSynonym))
+            {
+                dto.IsSynonym = bool.Parse(tempIsSynonym);
+            }
+
+            if (valueDict.TryGetValue("LanguageCode", out tempLanguageCode))
+            {
+                dto.LanguageCode = tempLanguageCode.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
+            {
+                dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
+            }
+
             return dto;
         }
- 
+
         /// <summary>
         /// Insert a new database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="alias">
         /// The alias DTO that is to be persisted.
-        /// </param> 
+        /// </param>
         /// <param name="container">
         /// The container of the DTO to be persisted.
         /// </param>
@@ -183,44 +199,46 @@ namespace CDP4Orm.Dao
                 beforeWrite = beforeWrite && base.Write(transaction, partition, alias, container);
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
-                        {
-                            { "IsSynonym", !this.IsDerived(alias, "IsSynonym") ? alias.IsSynonym.ToString() : string.Empty },
-                            { "LanguageCode", !this.IsDerived(alias, "LanguageCode") ? alias.LanguageCode.Escape() : string.Empty },
-                            { "Content", !this.IsDerived(alias, "Content") ? alias.Content.Escape() : string.Empty },
-                        }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                
+                {
+                    { "Content", !this.IsDerived(alias, "Content") ? alias.Content.Escape() : string.Empty },
+                    { "IsSynonym", !this.IsDerived(alias, "IsSynonym") ? alias.IsSynonym.ToString() : string.Empty },
+                    { "LanguageCode", !this.IsDerived(alias, "LanguageCode") ? alias.LanguageCode.Escape() : string.Empty },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
+                    
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Alias\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = alias.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     this.ExecuteAndLogCommand(command);
                 }
             }
 
             return this.AfterWrite(beforeWrite, transaction, partition, alias, container);
         }
- 
+
         /// <summary>
         /// Update a database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="alias">
-        /// The alias DTO that is to be updated.
+        /// The Alias DTO that is to be updated.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be updated.
@@ -236,41 +254,42 @@ namespace CDP4Orm.Dao
             if (!isHandled)
             {
                 beforeUpdate = beforeUpdate && base.Update(transaction, partition, alias, container);
-                
+
                 var valueTypeDictionaryContents = new Dictionary<string, string>
-                        {
-                            { "IsSynonym", !this.IsDerived(alias, "IsSynonym") ? alias.IsSynonym.ToString() : string.Empty },
-                            { "LanguageCode", !this.IsDerived(alias, "LanguageCode") ? alias.LanguageCode.Escape() : string.Empty },
-                            { "Content", !this.IsDerived(alias, "Content") ? alias.Content.Escape() : string.Empty },
-                        }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                
+                {
+                    { "Content", !this.IsDerived(alias, "Content") ? alias.Content.Escape() : string.Empty },
+                    { "IsSynonym", !this.IsDerived(alias, "IsSynonym") ? alias.IsSynonym.ToString() : string.Empty },
+                    { "LanguageCode", !this.IsDerived(alias, "LanguageCode") ? alias.LanguageCode.Escape() : string.Empty },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Alias\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Container\", \"ValueTypeDictionary\")");
-                    sqlBuilder.AppendFormat(" = (:container, \"ValueTypeDictionary\" || :valueTypeDictionary)");
+                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
+                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
+
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = alias.Iid;
-                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                
+                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
+
                     this.ExecuteAndLogCommand(command);
                 }
             }
 
             return this.AfterUpdate(beforeUpdate, transaction, partition, alias, container);
         }
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be deleted.

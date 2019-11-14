@@ -169,7 +169,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
-            return this.UserRuleVerificationDao.ReorderContainment(transaction, partition, orderedItem);
+            throw new NotSupportedException();
         }
 
         /// <summary>
