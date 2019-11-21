@@ -423,7 +423,7 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"NestedElement_ElementUsage\"", partition);
                 sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.Append(" = (:reorderSequence);");
+                sqlBuilder.Append(" = (:reorderSequence)");
                 sqlBuilder.Append(" WHERE \"NestedElement\" = :nestedElement");
                 sqlBuilder.Append(" AND \"ElementUsage\" = :elementUsage");
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");

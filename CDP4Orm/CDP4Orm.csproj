@@ -23,6 +23,7 @@
     <None Remove="MigrationScript\SiteDirectory_20180919_0_0_0_1_MigrationManagement.sql" />
     <None Remove="MigrationScript\SiteDirectory_20181016_1_0_11_1_UsernameConstraint.sql" />
     <None Remove="MigrationScript\SiteDirectory_20190117_3_3_0_1_Update_All_Table.sql" />
+    <None Remove="MigrationScript\SiteDirectory_20191121_4_0_0_2_Update_Revision_Management.sql" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +36,7 @@
     <EmbeddedResource Include="MigrationScript\All_NonThingTableMigrationTemplate_20180919_0_0_0_3_Add-Delete-Triggers.sql" />
     <EmbeddedResource Include="MigrationScript\All_20180919_0_0_0_2_Add-Delete-Triggers.sql" />
     <EmbeddedResource Include="MigrationScript\EngineeringModel_OnStartUpOnly_20190401_4_0_0_1_RemoveEngineeringModelDeleteConstraint.sql" />
+    <EmbeddedResource Include="MigrationScript\SiteDirectory_20191121_4_0_0_2_Update_Revision_Management.sql" />
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20190117_3_3_0_1_Update_All_Table.sql" />
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20181016_1_0_11_1_UsernameConstraint.sql" />
   </ItemGroup>

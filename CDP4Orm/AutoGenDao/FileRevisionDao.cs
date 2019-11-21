@@ -441,7 +441,7 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"FileRevision_FileType\"", partition);
                 sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.Append(" = (:reorderSequence);");
+                sqlBuilder.Append(" = (:reorderSequence)");
                 sqlBuilder.Append(" WHERE \"FileRevision\" = :fileRevision");
                 sqlBuilder.Append(" AND \"FileType\" = :fileType");
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
