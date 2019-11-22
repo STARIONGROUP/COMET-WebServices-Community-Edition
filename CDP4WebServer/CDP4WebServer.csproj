@@ -38,8 +38,8 @@
     <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
     
     <!-- Copy Database Authentication plugin -->    
-    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net472'" />
-    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\$(TargetFramework)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" Condition="'$(TargetFramework)'=='net472'" />
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
     
   </Target>
 </Project>
