@@ -659,6 +659,11 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
+                if (path == null)
+                {
+                    throw new Exception("The server was unable to export EngineeringModel. You might not be eligible to export some models, please check your permissions or contact your administrator.");
+                }
+
                 // create a new response with contents assigned by stream
                 var response = new Response
                 {
@@ -678,7 +683,10 @@ namespace CDP4WebServices.API.Modules
                     string.Format("exception:{0}", ex.Message),
                     new DefaultJsonSerializer());
 
-                System.IO.File.Delete(path);
+                if (path != null)
+                {
+                    System.IO.File.Delete(path);
+                }
 
                 return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
             }
