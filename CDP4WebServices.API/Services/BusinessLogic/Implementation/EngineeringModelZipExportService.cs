@@ -183,7 +183,7 @@ namespace CDP4WebServices.API.Services
                 this.RequestUtils.MetaInfoProvider,
                 this.RequestUtils.GetRequestDataModelVersion);
 
-            var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>();
+            var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new ThingComparer());
             var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
@@ -306,6 +306,7 @@ namespace CDP4WebServices.API.Services
                     Logger.Error("Failed to export the open session to {0}. Error: {1}", path, ex.Message);
 
                     System.IO.File.Delete(path);
+                    path = null;
                 }
 
                 transaction.Commit();
@@ -963,6 +964,11 @@ namespace CDP4WebServices.API.Services
                     new List<Guid> { engineeringModelSetup.EngineeringModelIid },
                     authorizedContext).ToList();
 
+                if (engineeringModelDtos.Count == 0)
+                {
+                    throw new UnauthorizedAccessException(string.Format("Person {0} is not authorized to access model {1}", this.RequestUtils.Context.AuthenticatedCredentials.Person.UserName, engineeringModelSetup.EngineeringModelIid));
+                }
+
                 var fileRevisions = engineeringModelDtos.Where(x => x.ClassKind == ClassKind.FileRevision)
                     .OfType<FileRevision>().ToList();
 
@@ -1044,6 +1050,29 @@ namespace CDP4WebServices.API.Services
             // Set the state of the credentials and the participant flag before retrieving EngineeringModel data
             credentials.IsParticipant = currentParticipantFlag;
             this.PermissionService.Credentials = credentials;
+        }
+
+        /// <summary>
+        /// An implementation of <see cref="IEqualityComparer{Thing}"/> for <see cref="CDP4Common.DTO.Thing"/> to be used in <see cref="HashSet{Thing}"/>.
+        /// </summary>
+        private class ThingComparer : IEqualityComparer<Thing>
+        {
+            public bool Equals(Thing t1, Thing t2)
+            {
+                if (t2 == null && t1 == null)
+                    return true;
+                else if (t1 == null || t2 == null)
+                    return false;
+                else if (t1.Iid.Equals(t2.Iid))
+                    return true;
+                else
+                    return false;
+            }
+
+            public int GetHashCode(Thing thing)
+            {
+                return thing.Iid.GetHashCode();
+            }
         }
     }
 }
