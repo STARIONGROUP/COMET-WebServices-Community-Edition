@@ -210,7 +210,7 @@ namespace CDP4WebServices.API.Services
                     .ToList();
 
                 // Get all DomainOfExpertises that are contained by the EngineeringModelSetups
-                List<DomainOfExpertise> domainsOfExpertises = new List<DomainOfExpertise>();
+                var domainsOfExpertises = new HashSet<DomainOfExpertise>(new ThingComparer());
                 foreach (var engineeringModelSetup in engineeringModelSetups)
                 {
                     var activeDomains = this.DomainOfExpertiseService
@@ -219,7 +219,8 @@ namespace CDP4WebServices.API.Services
                             siteDirectoryPartition,
                             engineeringModelSetup.ActiveDomain,
                             authorizedContext).OfType<DomainOfExpertise>().ToList();
-                    domainsOfExpertises.AddRange(activeDomains);
+
+                    activeDomains.ForEach(x => domainsOfExpertises.Add(x));
                 }
 
                 // Get all ModelReferenceDataLibraris that are contained by the EngineeringModelSetups
@@ -487,7 +488,7 @@ namespace CDP4WebServices.API.Services
         private IEnumerable<Thing> CreateSiteDirectoryAndPrunedContainedThingDtos(
             SiteDirectory siteDirectory,
             HashSet<SiteReferenceDataLibrary> siteReferenceDataLibraries,
-            IEnumerable<DomainOfExpertise> domainOfExpertises,
+            HashSet<DomainOfExpertise> domainOfExpertises,
             HashSet<Person> persons,
             IEnumerable<EngineeringModelSetup> engineeringModelSetups,
             NpgsqlTransaction transaction,
