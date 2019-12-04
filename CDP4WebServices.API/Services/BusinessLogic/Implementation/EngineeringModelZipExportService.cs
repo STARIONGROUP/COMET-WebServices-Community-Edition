@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Services
     using System.Text.RegularExpressions;
 
     using CDP4Common.CommonData;
+    using CDP4Common.Comparers;
     using CDP4Common.DTO;
     using CDP4Common.Extensions;
 
@@ -183,7 +184,7 @@ namespace CDP4WebServices.API.Services
                 this.RequestUtils.MetaInfoProvider,
                 this.RequestUtils.GetRequestDataModelVersion);
 
-            var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new ThingComparer());
+            var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new DtoThingIidComparer());
             var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
@@ -210,7 +211,7 @@ namespace CDP4WebServices.API.Services
                     .ToList();
 
                 // Get all DomainOfExpertises that are contained by the EngineeringModelSetups
-                var domainsOfExpertises = new HashSet<DomainOfExpertise>(new ThingComparer());
+                var domainsOfExpertises = new HashSet<DomainOfExpertise>(new DtoThingIidComparer());
                 foreach (var engineeringModelSetup in engineeringModelSetups)
                 {
                     var activeDomains = this.DomainOfExpertiseService
@@ -1051,29 +1052,6 @@ namespace CDP4WebServices.API.Services
             // Set the state of the credentials and the participant flag before retrieving EngineeringModel data
             credentials.IsParticipant = currentParticipantFlag;
             this.PermissionService.Credentials = credentials;
-        }
-
-        /// <summary>
-        /// An implementation of <see cref="IEqualityComparer{Thing}"/> for <see cref="CDP4Common.DTO.Thing"/> to be used in <see cref="HashSet{Thing}"/>.
-        /// </summary>
-        private class ThingComparer : IEqualityComparer<Thing>
-        {
-            public bool Equals(Thing t1, Thing t2)
-            {
-                if (t2 == null && t1 == null)
-                    return true;
-                else if (t1 == null || t2 == null)
-                    return false;
-                else if (t1.Iid.Equals(t2.Iid))
-                    return true;
-                else
-                    return false;
-            }
-
-            public int GetHashCode(Thing thing)
-            {
-                return thing.Iid.GetHashCode();
-            }
         }
     }
 }
