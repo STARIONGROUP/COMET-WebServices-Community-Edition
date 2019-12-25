@@ -321,7 +321,7 @@ namespace CDP4WebServices.API
             //return (byte[])converter.ConvertTo(Properties.Resources.cdplogo3d_16x16, typeof(byte[]));
             return null;
 
-            //TODO: include CDP logo as resource
+            //TODO: include CDP logo as resource: https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/issues/83
         }
     }
 }
