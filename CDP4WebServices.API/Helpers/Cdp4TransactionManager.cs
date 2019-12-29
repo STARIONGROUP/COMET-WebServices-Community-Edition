@@ -305,13 +305,11 @@ namespace CDP4WebServices.API.Helpers
         /// </param>
         public void SetAuditLoggingState(NpgsqlTransaction transaction, bool enabled)
         {
-            var sqlBuilder = new StringBuilder();
-            sqlBuilder.AppendFormat(
-                "UPDATE {0} SET ({1}) = (:{1});", TransactionInfoTable, TransactionAuditEnabled);
+            var sql = $"UPDATE {TransactionInfoTable} SET {TransactionAuditEnabled} = :{TransactionAuditEnabled};";
 
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
-                command.Parameters.Add(string.Format("{0}", TransactionAuditEnabled), NpgsqlDbType.Boolean).Value = enabled;
+                command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
 
                 // log the sql command
                 this.CommandLogger.ExecuteAndLog(command);
@@ -466,7 +464,7 @@ namespace CDP4WebServices.API.Helpers
         /// </param>
         private void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
         {
-            // insertactor from the request credentials otherwise use default (null) user
+            // insert actor from the request credentials otherwise use default (null) user
             var sqlBuilder = new StringBuilder();
             var isCredentialSet = credentials != null;
 
