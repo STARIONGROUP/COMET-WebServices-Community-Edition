@@ -252,8 +252,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"PossibleFiniteState\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Container\")");
-                    sqlBuilder.AppendFormat(" = (:container)");
+                    sqlBuilder.AppendFormat(" SET \"Container\"");
+                    sqlBuilder.AppendFormat(" = :container");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = possibleFiniteState.Iid;
@@ -292,8 +292,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"PossibleFiniteState\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.AppendFormat(" = (:reorderSequence)");
+                sqlBuilder.AppendFormat(" SET \"Sequence\"");
+                sqlBuilder.AppendFormat(" = :reorderSequence");
                 sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid");
                 sqlBuilder.AppendFormat(" AND \"Sequence\" = :sequence;");
 

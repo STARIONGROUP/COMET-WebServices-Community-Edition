@@ -354,7 +354,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"FileRevision\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container, :containingFolder, :creator)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :containingFolder, :creator)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = fileRevision.Iid;
@@ -440,8 +440,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"FileRevision_FileType\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.Append(" = (:reorderSequence)");
+                sqlBuilder.AppendFormat(" SET \"Sequence\"");
+                sqlBuilder.Append(" = :reorderSequence");
                 sqlBuilder.Append(" WHERE \"FileRevision\" = :fileRevision");
                 sqlBuilder.Append(" AND \"FileType\" = :fileType");
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");

@@ -285,7 +285,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"BinaryRelationshipRule\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"RelationshipCategory\", \"SourceCategory\", \"TargetCategory\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :relationshipCategory, :sourceCategory, :targetCategory)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :relationshipCategory, :sourceCategory, :targetCategory)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = binaryRelationshipRule.Iid;

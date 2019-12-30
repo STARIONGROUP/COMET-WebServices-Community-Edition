@@ -391,7 +391,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Definition\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = definition.Iid;
@@ -481,8 +481,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Definition_Example\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.Append(" = (:reorderSequence)");
+                sqlBuilder.AppendFormat(" SET \"Sequence\"");
+                sqlBuilder.Append(" = :reorderSequence");
                 sqlBuilder.Append(" WHERE \"Definition\" = :definition");
                 sqlBuilder.Append(" AND \"Example\" = :example");
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
@@ -524,8 +524,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Definition_Note\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.Append(" = (:reorderSequence)");
+                sqlBuilder.AppendFormat(" SET \"Sequence\"");
+                sqlBuilder.Append(" = :reorderSequence");
                 sqlBuilder.Append(" WHERE \"Definition\" = :definition");
                 sqlBuilder.Append(" AND \"Note\" = :note");
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");

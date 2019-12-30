@@ -253,8 +253,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"UserRuleVerification\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Rule\")");
-                    sqlBuilder.AppendFormat(" = (:rule)");
+                    sqlBuilder.AppendFormat(" SET \"Rule\"");
+                    sqlBuilder.AppendFormat(" = :rule");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = userRuleVerification.Iid;

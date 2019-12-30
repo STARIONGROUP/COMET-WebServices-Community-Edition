@@ -363,7 +363,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"DecompositionRule\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ContainingCategory\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :containingCategory)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :containingCategory)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = decompositionRule.Iid;

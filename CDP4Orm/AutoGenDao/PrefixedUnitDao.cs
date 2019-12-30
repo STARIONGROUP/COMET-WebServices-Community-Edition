@@ -244,8 +244,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"PrefixedUnit\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Prefix\")");
-                    sqlBuilder.AppendFormat(" = (:prefix)");
+                    sqlBuilder.AppendFormat(" SET \"Prefix\"");
+                    sqlBuilder.AppendFormat(" = :prefix");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = prefixedUnit.Iid;

@@ -234,8 +234,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"NotExpression\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Term\")");
-                    sqlBuilder.AppendFormat(" = (:term)");
+                    sqlBuilder.AppendFormat(" SET \"Term\"");
+                    sqlBuilder.AppendFormat(" = :term");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = notExpression.Iid;

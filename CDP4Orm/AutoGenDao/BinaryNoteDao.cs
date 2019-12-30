@@ -272,7 +272,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"BinaryNote\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"FileType\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :fileType)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :fileType)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = binaryNote.Iid;
