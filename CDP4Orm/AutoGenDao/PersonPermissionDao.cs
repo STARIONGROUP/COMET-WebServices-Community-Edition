@@ -267,7 +267,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"PersonPermission\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = personPermission.Iid;
@@ -314,7 +314,7 @@ namespace CDP4Orm.Dao
                                 { "IsDeprecated", "true" }
                             };
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"PersonPermission\"", partition);
-                    sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\" = \"ValueTypeDictionary\" || :valueTypeDictionary");
+                    sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\" = :valueTypeDictionary");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

@@ -284,8 +284,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ContractChangeNotice\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"ChangeProposal\")");
-                    sqlBuilder.AppendFormat(" = (:changeProposal)");
+                    sqlBuilder.AppendFormat(" SET \"ChangeProposal\"");
+                    sqlBuilder.AppendFormat(" = :changeProposal");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = contractChangeNotice.Iid;

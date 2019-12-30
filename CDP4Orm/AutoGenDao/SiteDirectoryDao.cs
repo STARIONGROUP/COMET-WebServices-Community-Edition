@@ -287,7 +287,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"SiteDirectory\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = siteDirectory.Iid;

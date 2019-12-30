@@ -330,8 +330,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"StakeholderValue\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Container\")");
-                    sqlBuilder.AppendFormat(" = (:container)");
+                    sqlBuilder.AppendFormat(" SET \"Container\"");
+                    sqlBuilder.AppendFormat(" = :container");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = stakeholderValue.Iid;

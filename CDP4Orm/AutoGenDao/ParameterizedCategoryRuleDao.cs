@@ -337,8 +337,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ParameterizedCategoryRule\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Category\")");
-                    sqlBuilder.AppendFormat(" = (:category)");
+                    sqlBuilder.AppendFormat(" SET \"Category\"");
+                    sqlBuilder.AppendFormat(" = :category");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterizedCategoryRule.Iid;

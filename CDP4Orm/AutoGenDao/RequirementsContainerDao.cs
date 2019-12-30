@@ -201,8 +201,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"RequirementsContainer\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Owner\")");
-                    sqlBuilder.AppendFormat(" = (:owner)");
+                    sqlBuilder.AppendFormat(" SET \"Owner\"");
+                    sqlBuilder.AppendFormat(" = :owner");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = requirementsContainer.Iid;

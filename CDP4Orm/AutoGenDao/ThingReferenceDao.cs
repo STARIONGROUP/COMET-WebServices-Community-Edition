@@ -132,7 +132,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ThingReference\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ReferencedThing\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :referencedThing)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :referencedThing)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thingReference.Iid;

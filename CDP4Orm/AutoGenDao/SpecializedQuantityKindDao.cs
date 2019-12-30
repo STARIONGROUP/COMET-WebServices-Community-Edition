@@ -270,8 +270,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"SpecializedQuantityKind\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"General\")");
-                    sqlBuilder.AppendFormat(" = (:general)");
+                    sqlBuilder.AppendFormat(" SET \"General\"");
+                    sqlBuilder.AppendFormat(" = :general");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = specializedQuantityKind.Iid;

@@ -281,8 +281,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ParametricConstraint\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.AppendFormat(" = (:reorderSequence)");
+                sqlBuilder.AppendFormat(" SET \"Sequence\"");
+                sqlBuilder.AppendFormat(" = :reorderSequence");
                 sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid");
                 sqlBuilder.AppendFormat(" AND \"Sequence\" = :sequence;");
 

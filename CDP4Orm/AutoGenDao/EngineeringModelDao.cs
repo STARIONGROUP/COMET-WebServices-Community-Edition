@@ -246,8 +246,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"EngineeringModel\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"EngineeringModelSetup\")");
-                    sqlBuilder.AppendFormat(" = (:engineeringModelSetup)");
+                    sqlBuilder.AppendFormat(" SET \"EngineeringModelSetup\"");
+                    sqlBuilder.AppendFormat(" = :engineeringModelSetup");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModel.Iid;

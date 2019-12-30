@@ -262,7 +262,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"RelationalExpression\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ParameterType\", \"Scale\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :parameterType, :scale)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :parameterType, :scale)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = relationalExpression.Iid;

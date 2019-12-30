@@ -120,8 +120,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"DiscussionItem\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"ReplyTo\")");
-                    sqlBuilder.AppendFormat(" = (:replyTo)");
+                    sqlBuilder.AppendFormat(" SET \"ReplyTo\"");
+                    sqlBuilder.AppendFormat(" = :replyTo");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = discussionItem.Iid;

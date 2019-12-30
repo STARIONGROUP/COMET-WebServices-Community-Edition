@@ -339,7 +339,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Participant\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Person\", \"Role\", \"SelectedDomain\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container, :person, :role, :selectedDomain)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :person, :role, :selectedDomain)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = participant.Iid;

@@ -265,7 +265,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Folder\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\", \"Owner\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container, :containingFolder, :creator, :owner)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :containingFolder, :creator, :owner)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = folder.Iid;

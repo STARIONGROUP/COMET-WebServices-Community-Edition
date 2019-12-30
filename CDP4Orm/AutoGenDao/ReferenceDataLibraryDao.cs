@@ -246,8 +246,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ReferenceDataLibrary\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"RequiredRdl\")");
-                    sqlBuilder.AppendFormat(" = (:requiredRdl)");
+                    sqlBuilder.AppendFormat(" SET \"RequiredRdl\"");
+                    sqlBuilder.AppendFormat(" = :requiredRdl");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referenceDataLibrary.Iid;
@@ -330,8 +330,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ReferenceDataLibrary_BaseQuantityKind\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Sequence\")");
-                sqlBuilder.Append(" = (:reorderSequence)");
+                sqlBuilder.AppendFormat(" SET \"Sequence\"");
+                sqlBuilder.Append(" = :reorderSequence");
                 sqlBuilder.Append(" WHERE \"ReferenceDataLibrary\" = :referenceDataLibrary");
                 sqlBuilder.Append(" AND \"BaseQuantityKind\" = :baseQuantityKind");
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");

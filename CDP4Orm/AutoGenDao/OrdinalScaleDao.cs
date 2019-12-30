@@ -315,8 +315,8 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"OrdinalScale\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary)");
+                    sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\"");
+                    sqlBuilder.AppendFormat(" = :valueTypeDictionary");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ordinalScale.Iid;

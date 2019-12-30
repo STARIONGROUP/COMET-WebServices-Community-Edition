@@ -273,7 +273,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"NestedParameter\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ActualState\", \"AssociatedParameter\", \"Owner\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :container, :actualState, :associatedParameter, :owner)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :actualState, :associatedParameter, :owner)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = nestedParameter.Iid;

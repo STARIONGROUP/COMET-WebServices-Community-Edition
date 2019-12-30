@@ -213,7 +213,7 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"QuantityKind\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"DefaultScale\")");
-                    sqlBuilder.AppendFormat(" = (\"ValueTypeDictionary\" || :valueTypeDictionary, :defaultScale)");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :defaultScale)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = quantityKind.Iid;
