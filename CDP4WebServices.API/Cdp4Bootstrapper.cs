@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Cdp4Bootstrapper.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,20 +8,24 @@ namespace CDP4WebServices.API
 {
     using System;
     using System.Diagnostics;
-    using System.Drawing;
+    using System.IO;
 
     using Autofac;
 
     using CDP4Authentication;
+
     using CDP4Common.Helpers;
     using CDP4Common.MetaInfo;
+
     using CDP4JsonSerializer;
+
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Authentication;
     using CDP4Orm.Dao.Cache;
     using CDP4Orm.Dao.Resolve;
     using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
+
     using CDP4WebService.Authentication;
 
     using CDP4WebServices.API.Configuration;
@@ -75,10 +79,7 @@ namespace CDP4WebServices.API
         /// <summary>
         /// Gets the favorite icon.
         /// </summary>
-        protected override byte[] FavIcon
-        {
-            get { return this.LoadFavoriteIcon(); }
-        }
+        protected override byte[] FavIcon { get; } = LoadFavoriteIcon();
 
         /// <summary>
         /// Application container scope hook.
@@ -129,90 +130,89 @@ namespace CDP4WebServices.API
             Logger.Debug("Start Request Boostrapping");
 
             base.ConfigureRequestContainer(container, context);
-            
+
             // wireup service providers for each request
             container.Update(
                 builder =>
-                    {
-                        // local storage controller to stream binary to disk
-                        builder.RegisterTypeAsPropertyInjectedSingleton<LocalFileStorage, ILocalFileStorage>();
+                {
+                    // local storage controller to stream binary to disk
+                    builder.RegisterTypeAsPropertyInjectedSingleton<LocalFileStorage, ILocalFileStorage>();
 
-                        // wire up the datastore controller
-                        builder.RegisterTypeAsPropertyInjectedSingleton<DataStoreController, IDataStoreController>();
+                    // wire up the datastore controller
+                    builder.RegisterTypeAsPropertyInjectedSingleton<DataStoreController, IDataStoreController>();
 
-                        // wireup command logger for this request
-                        builder.RegisterTypeAsPropertyInjectedSingleton<CommandLogger, ICommandLogger>();
+                    // wireup command logger for this request
+                    builder.RegisterTypeAsPropertyInjectedSingleton<CommandLogger, ICommandLogger>();
 
-                        // expose request context as injectable wrapper
-                        builder.Register(c => new Cdp4RequestContext(context)).As<ICdp4RequestContext>().SingleInstance();
+                    // expose request context as injectable wrapper
+                    builder.Register(c => new Cdp4RequestContext(context)).As<ICdp4RequestContext>().SingleInstance();
 
-                        // wireup service provider
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ServiceProvider, IServiceProvider>();
+                    // wireup service provider
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ServiceProvider, IServiceProvider>();
 
-                        // wireup class meta info provider
-                        builder.RegisterTypeAsPropertyInjectedSingleton<MetaInfoProvider, IMetaInfoProvider>();
+                    // wireup class meta info provider
+                    builder.RegisterTypeAsPropertyInjectedSingleton<MetaInfoProvider, IMetaInfoProvider>();
 
-                        // wireup class cdp4JsonSerializer
-                        builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4JsonSerializer, ICdp4JsonSerializer>();
+                    // wireup class cdp4JsonSerializer
+                    builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4JsonSerializer, ICdp4JsonSerializer>();
 
-                        // wireup AccessRightKind service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindService, IAccessRightKindService>();
+                    // wireup AccessRightKind service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindService, IAccessRightKindService>();
 
-                        // wireup permission service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<PermissionService, IPermissionService>();
+                    // wireup permission service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<PermissionService, IPermissionService>();
 
-                        // wireup util classes
-                        builder.RegisterTypeAsPropertyInjectedSingleton<RequestUtils, IRequestUtils>();
+                    // wireup util classes
+                    builder.RegisterTypeAsPropertyInjectedSingleton<RequestUtils, IRequestUtils>();
 
-                        // wireup exchange file processor
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ExchangeFileProcessor, IExchangeFileProcessor>();
+                    // wireup exchange file processor
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ExchangeFileProcessor, IExchangeFileProcessor>();
 
-                        // wireup revision read service provider
-                        builder.RegisterTypeAsPropertyInjectedSingleton<RevisionDao, IRevisionDao>();
-                        builder.RegisterTypeAsPropertyInjectedSingleton<RevisionService, IRevisionService>();
+                    // wireup revision read service provider
+                    builder.RegisterTypeAsPropertyInjectedSingleton<RevisionDao, IRevisionDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<RevisionService, IRevisionService>();
 
-                        // wireup cache service provider
-                        builder.RegisterTypeAsPropertyInjectedSingleton<CacheDao, ICacheDao>();
-                        builder.RegisterTypeAsPropertyInjectedSingleton<CacheService, ICacheService>();
+                    // wireup cache service provider
+                    builder.RegisterTypeAsPropertyInjectedSingleton<CacheDao, ICacheDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<CacheService, ICacheService>();
 
-                        // wireup resolve and container read service provider
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ResolveDao, IResolveDao>();
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ContainerDao, IContainerDao>();
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ResolveService, IResolveService>();
+                    // wireup resolve and container read service provider
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ResolveDao, IResolveDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ContainerDao, IContainerDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ResolveService, IResolveService>();
 
-                        // wireup transaction manager
-                        builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4TransactionManager, ICdp4TransactionManager>();
+                    // wireup transaction manager
+                    builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4TransactionManager, ICdp4TransactionManager>();
 
-                        // auto-wire all derived types by parent type
-                        builder.RegisterDerivedTypesAsPropertyInjectedSingleton<IMetaInfo>();
-                        builder.RegisterDerivedTypesAsPropertyInjectedSingleton<BaseDao>();
-                        builder.RegisterDerivedTypesAsPropertyInjectedSingleton<ServiceBase>();
+                    // auto-wire all derived types by parent type
+                    builder.RegisterDerivedTypesAsPropertyInjectedSingleton<IMetaInfo>();
+                    builder.RegisterDerivedTypesAsPropertyInjectedSingleton<BaseDao>();
+                    builder.RegisterDerivedTypesAsPropertyInjectedSingleton<ServiceBase>();
 
-                        // wireup ModelCreatorManager
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ModelCreatorManager, IModelCreatorManager>();
+                    // wireup ModelCreatorManager
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ModelCreatorManager, IModelCreatorManager>();
 
-                        // wireup operation processing
-                        builder.RegisterDerivedTypesAsPropertyInjectedSingleton<IBusinessLogicService>();
-                        builder.RegisterDerivedTypesAsPropertyInjectedSingleton<IOperationSideEffect>();
-                        builder.RegisterTypeAsPropertyInjectedSingleton<OperationSideEffectProcessor, IOperationSideEffectProcessor>();
-                        builder.RegisterTypeAsPropertyInjectedSingleton<OperationProcessor, IOperationProcessor>();
+                    // wireup operation processing
+                    builder.RegisterDerivedTypesAsPropertyInjectedSingleton<IBusinessLogicService>();
+                    builder.RegisterDerivedTypesAsPropertyInjectedSingleton<IOperationSideEffect>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<OperationSideEffectProcessor, IOperationSideEffectProcessor>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<OperationProcessor, IOperationProcessor>();
 
-                        // wireup contributor location resolver
-                        builder.RegisterTypeAsPropertyInjectedSingleton<ContributorLocationResolver, IContributorLocationResolver>();
+                    // wireup contributor location resolver
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ContributorLocationResolver, IContributorLocationResolver>();
 
-                        // wireup file archiving service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<FileArchiveService, IFileArchiveService>();
+                    // wireup file archiving service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<FileArchiveService, IFileArchiveService>();
 
-                        // wireup EngineeringModel zip export service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<EngineeringModelZipExportService, IEngineeringModelZipExportService>();
+                    // wireup EngineeringModel zip export service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<EngineeringModelZipExportService, IEngineeringModelZipExportService>();
 
-                        // wireup AccessRightKind validation service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindValidationService, IAccessRightKindValidationService>();
+                    // wireup AccessRightKind validation service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindValidationService, IAccessRightKindValidationService>();
 
-                        // wireup PermissionInstanceFilter service
-                        builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
-
-                    });
+                    // wireup PermissionInstanceFilter service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
+                });
 
             // apply logging configuration
             container.Resolve<ICommandLogger>().LoggingEnabled = AppConfig.Current.Backtier.LogSqlCommands;
@@ -243,27 +243,23 @@ namespace CDP4WebServices.API
 
             // hook up the on error handler
             pipelines.OnError += (ctx, ex) =>
-                {
-                    // log any uncatched errors
-                    var credentials = ctx.CurrentUser as Credentials;
-                    var subject = credentials != null ? credentials.Person : null;
-                    var headerInforProvider = container.Resolve<IHeaderInfoProvider>();
-                    var requestMessage = string.Format(
-                        "[{0}][{1}{2}]",
-                        ctx.Request.Method,
-                        ctx.Request.Url.Path,
-                        ctx.Request.Url.Query);
-                    Logger.Fatal(ex, LoggerUtils.GetLogMessage(subject, ctx.Request.UserHostAddress, false, requestMessage));
-                    
-                    var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
-                    headerInforProvider.RegisterResponseHeaders(errorResponse);
-                    return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
-                };
+            {
+                // log any uncatched errors
+                var subject = ctx.CurrentUser is Credentials credentials ? credentials.Person : null;
+                var headerInforProvider = container.Resolve<IHeaderInfoProvider>();
+                var requestMessage = $"[{ctx.Request.Method}][{ctx.Request.Url.Path}{ctx.Request.Url.Query}]";
+                Logger.Fatal(ex, LoggerUtils.GetLogMessage(subject, ctx.Request.UserHostAddress, false, requestMessage));
+
+                var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
+                headerInforProvider.RegisterResponseHeaders(errorResponse);
+                return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
+            };
 
             // clear all view location conventions (to save on irrelevant locations being visited) and supply the Views convention to use
             this.Conventions.ViewLocationConventions.Clear();
+
             this.Conventions.ViewLocationConventions.Add(
-                (viewName, model, context) => string.Format("Views/{0}", viewName));
+                (viewName, model, context) => $"Views/{viewName}");
 
             // add the folder for the static content containing the compiled app
             this.Conventions.StaticContentsConventions.Add(StaticContentConventionBuilder.AddDirectory("assets"));
@@ -271,7 +267,6 @@ namespace CDP4WebServices.API
             MigrationEngine.MigrateAllAtStartUp();
         }
 
-        
         protected override void RequestStartup(ILifetimeScope container, IPipelines pipelines, NancyContext context)
         {
             //Enable CORS 
@@ -285,7 +280,6 @@ namespace CDP4WebServices.API
             });
         }
 
-        #region Support Property Injection on Nancy Modules
         /// <summary>
         /// Retrieve a specific module instance from the container
         /// </summary>
@@ -307,21 +301,20 @@ namespace CDP4WebServices.API
             return container.Update(builder =>
                     builder.RegisterType(moduleType).As<INancyModule>()
                         .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies))
-                        .Resolve<INancyModule>();
+                .Resolve<INancyModule>();
         }
-        #endregion
 
         /// <summary>
         /// Method in charge of loading the favicon image.
         /// </summary>
         /// <returns>Image byte array</returns>
-        private byte[] LoadFavoriteIcon()
+        private static byte[] LoadFavoriteIcon()
         {
-            var converter = new ImageConverter();
-            //return (byte[])converter.ConvertTo(Properties.Resources.cdplogo3d_16x16, typeof(byte[]));
-            return null;
-
-            //TODO: include CDP logo as resource: https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/issues/83
+            using (var ms = new MemoryStream())
+            {
+                Properties.Resources.cdplogo_48x48.Save(ms);
+                return ms.ToArray();
+            }
         }
     }
 }

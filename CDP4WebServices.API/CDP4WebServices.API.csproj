@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\cdplogo_48x48.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CDP4JsonSerializer-CE" Version="4.0.1" />
     <PackageReference Include="DotNetZip" Version="1.13.2" />
     <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="1.4.1" />
@@ -32,6 +36,27 @@
   
   <ItemGroup>
     <Folder Include="Exceptions\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\cdplogo_48x48.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
    
 </Project>
