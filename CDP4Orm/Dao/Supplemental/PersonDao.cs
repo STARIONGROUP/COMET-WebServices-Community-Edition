@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2018 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -155,7 +155,7 @@ namespace CDP4Orm.Dao
         {
             var person = (Person)thing;
 
-            if (person.Password == null)
+            if (string.IsNullOrWhiteSpace(person.Password))
             {
                 person.Password = EncryptionUtils.GenerateRandomSaltString();
             }
