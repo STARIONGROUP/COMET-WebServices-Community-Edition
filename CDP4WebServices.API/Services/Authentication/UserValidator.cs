@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="UserValidator.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -75,7 +75,7 @@ namespace CDP4WebServices.API.Services.Authentication
             }
             catch (Exception ex)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }

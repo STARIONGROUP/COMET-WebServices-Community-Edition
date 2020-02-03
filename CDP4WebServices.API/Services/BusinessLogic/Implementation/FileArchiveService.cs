@@ -276,7 +276,7 @@ namespace CDP4WebServices.API.Services
             }
             catch (Exception ex)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }
