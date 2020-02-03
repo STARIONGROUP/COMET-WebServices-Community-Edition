@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MigrationEngine.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2018 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -132,7 +132,7 @@ namespace CDP4WebServices.API
             }
             catch (Exception e)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }

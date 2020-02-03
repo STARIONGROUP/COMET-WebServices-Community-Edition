@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelZipExportService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//   Copyright (c) 2017-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -317,7 +317,7 @@ namespace CDP4WebServices.API.Services
             }
             catch (Exception ex)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }

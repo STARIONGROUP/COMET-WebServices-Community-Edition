@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2015-2018 RHEA System S.A.
+//   Copyright (c) 2015-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -203,7 +203,7 @@ namespace CDP4WebServices.API.Modules
             }
             catch (Exception ex)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }
@@ -363,7 +363,7 @@ namespace CDP4WebServices.API.Modules
             }
             catch (InvalidOperationException ex)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }
@@ -376,7 +376,7 @@ namespace CDP4WebServices.API.Modules
             }
             catch (Exception ex)
             {
-                if (transaction != null)
+                if (transaction != null && !transaction.IsCompleted)
                 {
                     transaction.Rollback();
                 }
