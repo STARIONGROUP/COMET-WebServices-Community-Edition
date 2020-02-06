@@ -51,6 +51,20 @@ namespace CDP4Orm.Dao.Revision
         IEnumerable<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision);
 
         /// <summary>
+        /// Retrieves data from the RevisionRegistry table in the specific partition.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="RevisionRegistryInfo"/>.
+        /// </returns>
+        IEnumerable<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition);
+
+        /// <summary>
         /// Read the revisions of a <see cref="Thing"/>
         /// </summary>
         /// <param name="transaction">The current transaction to the database.</param>

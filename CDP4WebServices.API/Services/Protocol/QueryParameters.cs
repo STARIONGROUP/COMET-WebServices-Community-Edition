@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="QueryParameters.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,6 +8,7 @@ namespace CDP4WebServices.API.Services.Protocol
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using CDP4Common.DTO;
 
@@ -128,14 +129,14 @@ namespace CDP4WebServices.API.Services.Protocol
         public int RevisionNumber { get; set; }
 
         /// <summary>
-        /// Gets or sets the revision number from which the request is done
+        /// Gets or sets the revision number, or DateTime from which the request is done
         /// </summary>
-        public int? RevisionFrom { get; set; }
+        public object RevisionFrom { get; set; }
 
         /// <summary>
-        /// Gets or sets the revision number to which the request is done
+        /// Gets or sets the revision number, or DateTime to which the request is done
         /// </summary>
-        public int? RevisionTo { get; set; }
+        public object RevisionTo { get; set; }
 
         /// <summary>
         /// The validate query parameter.
@@ -230,20 +231,24 @@ namespace CDP4WebServices.API.Services.Protocol
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected int? ProcessRevisionHistoryQueryParameter(Dictionary<string, object> queryParameters, string key)
+        protected object ProcessRevisionHistoryQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
             if (!queryParameters.ContainsKey(key))
             {
                 return null;
             }
 
-            int revNumber;
-            if (!int.TryParse(queryParameters[key].ToString(), out revNumber))
+            if (int.TryParse(queryParameters[key].ToString(), out var revNumber))
             {
-                return null;
+                return revNumber;
             }
 
-            return revNumber;
+            if (!DateTime.TryParseExact(queryParameters[key].ToString(), "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp))
+            {
+                throw new ArgumentOutOfRangeException(key);
+            }
+
+            return timestamp;
         }
 
         /// <summary>

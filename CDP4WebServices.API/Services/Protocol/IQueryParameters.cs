@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IQueryParameters.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -44,14 +44,14 @@ namespace CDP4WebServices.API.Services.Protocol
         int RevisionNumber { get; set; }
 
         /// <summary>
-        /// Gets or sets the revision number from which the request is done
+        /// Gets or sets the revision number, or DateTime from which the request is done
         /// </summary>
-        int? RevisionFrom { get; set; }
+        object RevisionFrom { get; set; }
 
         /// <summary>
-        /// Gets or sets the revision number to which the request is done
+        /// Gets or sets the revision number, or DateTime to which the request is done
         /// </summary>
-        int? RevisionTo { get; set; }
+        object RevisionTo { get; set; }
 
         /// <summary>
         /// The validate query parameter.
