@@ -90,7 +90,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void AfterUpdate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (!thing.PossibleFiniteStateList.All(x => originalThing.PossibleFiniteStateList.Any(y => y.K == x.K && y.V == x.V))
+            if (!thing.PossibleFiniteStateList.All(x => originalThing.PossibleFiniteStateList.Any(y => y.K == x.K && y.V.Equals(x.V)))
                 || thing.PossibleFiniteStateList.Count != originalThing.PossibleFiniteStateList.Count)
             {
                 // Update all actualFiniteStates
