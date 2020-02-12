@@ -28,7 +28,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private NpgsqlTransaction transaction;
 
         private Mock<ISecurityContext> securityContext;
-        private Mock<IActualFiniteStateListService> actualFiniteStateListService; 
+        private Mock<IActualFiniteStateListService> actualFiniteStateListService;
         private Mock<IActualFiniteStateService> actualFiniteStateService;
         private Mock<IPossibleFiniteStateListService> possibleFiniteStateListslService;
         private Mock<IParameterValueSetService> parameterValueSetService;
@@ -41,6 +41,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<ICompoundParameterTypeService> compoundParameterTypeService;
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
         private StateDependentParameterUpdateService parameterUpdateService;
+
+        private Mock<IFiniteStateLogicService> finateTrategyLogicService;
 
         private string partition = "partition";
 
@@ -107,6 +109,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.parameterUpdateService = new StateDependentParameterUpdateService();
+            this.finateTrategyLogicService = new Mock<IFiniteStateLogicService>();
 
             this.sideEffect.StateDependentParameterUpdateService = this.parameterUpdateService;
 
@@ -121,7 +124,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.iteration = new Iteration(Guid.NewGuid(), 1);
             this.option1 = new Option(Guid.NewGuid(), 1);
 
-            this.iteration.Option.Add(new OrderedItem {K = 1, V = this.option1.Iid.ToString()});
+            this.iteration.Option.Add(new OrderedItem { K = 1, V = this.option1.Iid.ToString() });
 
             this.psl1 = new PossibleFiniteStateList(Guid.NewGuid(), 1);
             this.psl2 = new PossibleFiniteStateList(Guid.NewGuid(), 1);
@@ -141,13 +144,13 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.iteration.ActualFiniteStateList.Add(this.asl1.Iid);
             this.iteration.ActualFiniteStateList.Add(this.asl2.Iid);
 
-            this.psl1.PossibleState.Add(new OrderedItem {K = 1, V = this.ps11.Iid.ToString()});
-            this.psl1.PossibleState.Add(new OrderedItem {K = 2, V = this.ps12.Iid.ToString()});
-            this.psl2.PossibleState.Add(new OrderedItem {K = 1, V = this.ps21.Iid.ToString()});
-            this.psl2.PossibleState.Add(new OrderedItem {K = 2, V = this.ps22.Iid.ToString()});
+            this.psl1.PossibleState.Add(new OrderedItem { K = 1, V = this.ps11.Iid.ToString() });
+            this.psl1.PossibleState.Add(new OrderedItem { K = 2, V = this.ps12.Iid.ToString() });
+            this.psl2.PossibleState.Add(new OrderedItem { K = 1, V = this.ps21.Iid.ToString() });
+            this.psl2.PossibleState.Add(new OrderedItem { K = 2, V = this.ps22.Iid.ToString() });
 
-            this.asl1.PossibleFiniteStateList.Add(new OrderedItem {K = 1, V = this.psl1.Iid.ToString()});
-            this.asl1.PossibleFiniteStateList.Add(new OrderedItem {K = 2, V = this.psl2.Iid.ToString()});
+            this.asl1.PossibleFiniteStateList.Add(new OrderedItem { K = 1, V = this.psl1.Iid.ToString() });
+            this.asl1.PossibleFiniteStateList.Add(new OrderedItem { K = 2, V = this.psl2.Iid.ToString() });
 
             // initializes actual states actual states
             this.as11 = new ActualFiniteState(Guid.NewGuid(), 1);
@@ -161,7 +164,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.asl1.ActualState.Add(this.as11.Iid);
             this.asl1.ActualState.Add(this.as12.Iid);
 
-            this.asl2.PossibleFiniteStateList.Add(new OrderedItem {K = 1, V = this.psl2.Iid.ToString()});
+            this.asl2.PossibleFiniteStateList.Add(new OrderedItem { K = 1, V = this.psl2.Iid.ToString() });
             this.as21 = new ActualFiniteState(Guid.NewGuid(), 1);
             this.as21.PossibleState.Add(this.ps21.Iid);
             this.as22 = new ActualFiniteState(Guid.NewGuid(), 1);
@@ -172,18 +175,18 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.possibleFiniteStateListslService.Setup(
                 x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing> {this.psl1, this.psl2});
+                .Returns(new List<Thing> { this.psl1, this.psl2 });
 
             this.actualFiniteStateListService.Setup(
                 x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.asl1, this.asl2});
+                .Returns(new List<Thing> { this.asl1, this.asl2 });
 
             this.actualFiniteStateService.Setup(
                 x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing> {this.as11, this.as12});
+                .Returns(new List<Thing> { this.as11, this.as12 });
 
             this.iterationService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.iteration});
+                .Returns(new List<Thing> { this.iteration });
 
             this.parameter1 = new Parameter(Guid.NewGuid(), 1);
             this.parameter1.StateDependence = this.asl1.Iid;
@@ -325,32 +328,32 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.parameterValueSetService.Setup(
                 x => x.GetShallow(this.transaction, this.partition, this.parameter1.ValueSet, this.securityContext.Object))
-                .Returns(new List<Thing> {this.pvs11, this.pvs12});
+                .Returns(new List<Thing> { this.pvs11, this.pvs12 });
             this.parameterValueSetService.Setup(
                 x => x.GetShallow(this.transaction, this.partition, this.parameter2.ValueSet, this.securityContext.Object))
-                .Returns(new List<Thing> {this.pvs21, this.pvs22});
+                .Returns(new List<Thing> { this.pvs21, this.pvs22 });
 
             this.parameterOverrideValueSetService.Setup(
                 x =>
                     x.GetShallow(this.transaction, this.partition, this.parameterOverride1.ValueSet,
                         this.securityContext.Object))
-                .Returns(new List<Thing> {this.povs11, this.povs12});
+                .Returns(new List<Thing> { this.povs11, this.povs12 });
             this.parameterOverrideValueSetService.Setup(
                 x =>
                     x.GetShallow(this.transaction, this.partition, this.parameterOverride2.ValueSet,
                         this.securityContext.Object))
-                .Returns(new List<Thing> {this.povs21, this.povs22});
+                .Returns(new List<Thing> { this.povs21, this.povs22 });
 
             this.parameterSubscriptionValueSetService.Setup(
                 x =>
                     x.GetShallow(this.transaction, this.partition, this.parameterSubscription1.ValueSet,
                         this.securityContext.Object))
-                .Returns(new List<Thing> {this.psvs11, this.psvs12});
+                .Returns(new List<Thing> { this.psvs11, this.psvs12 });
             this.parameterSubscriptionValueSetService.Setup(
                 x =>
                     x.GetShallow(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
                         this.securityContext.Object))
-                .Returns(new List<Thing> {this.psvs21, this.psvs22});
+                .Returns(new List<Thing> { this.psvs21, this.psvs22 });
 
             this.compoundParameterTypeService.Setup(
                 x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
@@ -365,7 +368,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterSubscriptionService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameterSubscription1, this.parameterSubscription2 });
 
-            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] {"-"}));
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
             this.parameterUpdateService.DefaultValueSetFactory = this.defaultValueArrayFactory.Object;
             this.parameterValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(true);
             this.parameterOverrideValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(true);
@@ -378,7 +381,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         {
             this.parameter2.StateDependence = this.asl2.Iid;
             var option2 = new Option(Guid.NewGuid(), 1);
-            this.iteration.Option.Add(new OrderedItem {K = 2, V = option2.Iid.ToString()});
+            this.iteration.Option.Add(new OrderedItem { K = 2, V = option2.Iid.ToString() });
 
             this.sideEffect.BeforeDelete(this.asl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
 
@@ -386,6 +389,34 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterValueSetService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>(), -1), Times.Exactly(2));
             this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>(), -1), Times.Exactly(2));
             this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), -1), Times.Exactly(2));
+        }
+
+        [Test]
+        public void VerifyNotChangedPossibleListAfterUpdateWorks()
+        {
+            var option2 = new Option(Guid.NewGuid(), 1);
+            this.iteration.Option.Add(new OrderedItem { K = 2, V = option2.Iid.ToString() });
+            
+            var guid =  Guid.NewGuid();
+            
+            this.asl1 = new ActualFiniteStateList(guid, 1);
+            this.asl2 = new ActualFiniteStateList(guid, 1);
+            
+            var orderPossibleFiniteItem = new OrderedItem { K = 1, V = guid.ToString() };
+            this.asl1.PossibleFiniteStateList = new List<OrderedItem>
+            {
+                orderPossibleFiniteItem
+            };
+
+            var orderPossibleFiniteOrigItem = new OrderedItem { K = 1, V = guid.ToString() };
+            this.asl2.PossibleFiniteStateList = new List<OrderedItem>
+            {
+                orderPossibleFiniteOrigItem
+            };
+
+            //ActualFiniteStateList
+            this.sideEffect.AfterUpdate(this.asl1, this.iteration, this.asl2, this.transaction, this.partition, this.securityContext.Object);
+            this.finateTrategyLogicService.Verify(x => x.UpdateActualFinisteStateList(this.asl1, this.iteration, this.transaction, this.partition, this.securityContext.Object), Times.Never);
         }
     }
 }
