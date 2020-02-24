@@ -185,38 +185,42 @@ namespace CDP4Orm.Dao.Revision
         public IEnumerable<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
         {
             var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] { thingIid }).ToArray();
-            if (resolveInfos.Length != 1)
+
+            if (resolveInfos.Length > 0)
             {
-                throw new InvalidOperationException(string.Format("Multiple entries were found for {0}", thingIid));
-            }
-
-            var resolveInfo = resolveInfos.Single();
-
-            var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
-            var sqlQuery = string.Format(
-                "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
-                JsonColumnName,
-                resolveInfo.Partition,
-                revisionTableName,
-                IidKey,
-                RevisionColumnName);
-
-            using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
-            {
-                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = resolveInfo.InstanceInfo.Iid;
-                command.Parameters.Add("fromrevision", NpgsqlDbType.Integer).Value = revisionFrom;
-                command.Parameters.Add("torevision", NpgsqlDbType.Integer).Value = revisionTo;
-
-                // log the sql command 
-                this.CommandLogger.Log(command);
-                using (var reader = command.ExecuteReader())
+                if (resolveInfos.Length > 1)
                 {
-                    while (reader.Read())
+                    throw new InvalidOperationException(string.Format("Multiple entries were found for {0}", thingIid));
+                }
+
+                var resolveInfo = resolveInfos.Single();
+
+                var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
+                var sqlQuery = string.Format(
+                    "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
+                    JsonColumnName,
+                    resolveInfo.Partition,
+                    revisionTableName,
+                    IidKey,
+                    RevisionColumnName);
+
+                using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
+                {
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = resolveInfo.InstanceInfo.Iid;
+                    command.Parameters.Add("fromrevision", NpgsqlDbType.Integer).Value = revisionFrom;
+                    command.Parameters.Add("torevision", NpgsqlDbType.Integer).Value = revisionTo;
+
+                    // log the sql command 
+                    this.CommandLogger.Log(command);
+                    using (var reader = command.ExecuteReader())
                     {
-                        var thing = this.MapToDto(reader);
-                        if (thing != null)
+                        while (reader.Read())
                         {
-                            yield return thing;
+                            var thing = this.MapToDto(reader);
+                            if (thing != null)
+                            {
+                                yield return thing;
+                            }
                         }
                     }
                 }
