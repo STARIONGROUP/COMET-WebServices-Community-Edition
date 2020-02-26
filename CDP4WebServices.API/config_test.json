@@ -21,7 +21,7 @@
   },
   "Defaults": {
     "PersonPassword": "pass",
-    "LocationServicePath": "http://freegeoip.net/json/",
+    "LocationServicePath": "http://freegeoip.io/json/",
     "ContributorsCacheTimeout": 60
   }
 }

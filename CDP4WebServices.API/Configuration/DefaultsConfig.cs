@@ -17,7 +17,7 @@ namespace CDP4WebServices.API.Configuration
         public DefaultsConfig()
         {
             this.PersonPassword = "pass";
-            this.LocationServicePath = "http://freegeoip.net/json/";
+            this.LocationServicePath = "http://freegeoip.io/json/";
             this.ContributorsCacheTimeout = 60;
         }
 

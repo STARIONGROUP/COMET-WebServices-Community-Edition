@@ -34,7 +34,8 @@ namespace CDP4WebServices.API.Modules
                     }
 
                     // Identify user's location and save this data
-                    this.ContributorLocationResolver.GetLocationDataAndSave();
+                    // TODO revise geo ip service, it does not work properly, that is why it is commented
+                    // this.ContributorLocationResolver.GetLocationDataAndSave();
 
                     return HttpStatusCode.Accepted;
                 };
