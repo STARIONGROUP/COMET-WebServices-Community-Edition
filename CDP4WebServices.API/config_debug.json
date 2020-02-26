@@ -22,7 +22,7 @@
   "Defaults": {
     "PersonPassword": "pass",
     "DevServerPath": "http://localhost:4200/app",
-    "LocationServicePath": "http://freegeoip.net/json/",
+    "LocationServicePath": "http://freegeoip.io/json/",
     "ContributorsCacheTimeout":  60 
   } 
 }
