@@ -186,16 +186,17 @@ namespace CDP4Orm.Dao.Revision
         {
             var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] { thingIid }).ToArray();
 
-            if (resolveInfos.Length > 0)
+            if (resolveInfos.Length > 1)
             {
-                if (resolveInfos.Length > 1)
-                {
-                    throw new InvalidOperationException(string.Format("Multiple entries were found for {0}", thingIid));
-                }
+                throw new InvalidOperationException($"Multiple entries were found for {thingIid}");
+            }
 
-                var resolveInfo = resolveInfos.Single();
+            var resolveInfo = resolveInfos.SingleOrDefault();
 
+            if (resolveInfo != null)
+            {
                 var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
+
                 var sqlQuery = string.Format(
                     "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
                     JsonColumnName,
@@ -212,11 +213,13 @@ namespace CDP4Orm.Dao.Revision
 
                     // log the sql command 
                     this.CommandLogger.Log(command);
+
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             var thing = this.MapToDto(reader);
+
                             if (thing != null)
                             {
                                 yield return thing;
