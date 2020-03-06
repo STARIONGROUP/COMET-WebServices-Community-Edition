@@ -20,7 +20,6 @@ namespace CDP4WebServices.API.Services
     /// </summary>
     public class RevisionResolver : IRevisionResolver
     {
-
         /// <summary>
         /// The injected instance of <see cref="IRevisionDao"/> that is used to collect RevisionRegistry data
         /// </summary>
@@ -38,7 +37,7 @@ namespace CDP4WebServices.API.Services
         /// <param name="revisionFrom"><see cref="int"/> or <see cref="DateTime"/> type parameter that indicates the From revision number, or timestamp.</param>
         /// <param name="revisionTo"><see cref="int"/> or <see cref="DateTime"/> type parameter that indicates the To revision number, or timestamp.</param>
         /// <param name="resolvedValues">A <see cref="ValueTuple"/> containing the resolved From revision number and To revision number.</param>
-        /// <returns></returns>
+        /// <returns>True is revision numbers have been resolved, otherwise false</returns>
         public bool TryResolve(NpgsqlTransaction transaction, string partition, object revisionFrom, object revisionTo, out (int FromRevision, int ToRevision, IEnumerable<RevisionRegistryInfo> RevisionRegistryInfoList) resolvedValues)
         {
             var resolvedRevisionFrom = 0;
