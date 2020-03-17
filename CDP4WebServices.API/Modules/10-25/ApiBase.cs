@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -146,6 +146,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the revision service.
         /// </summary>
         public IRevisionService RevisionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revision resolver.
+        /// </summary>
+        public IRevisionResolver RevisionResolver { get; set; }
 
         /// <summary>
         /// Gets or sets the transaction manager for this request.
@@ -717,7 +722,7 @@ namespace CDP4WebServices.API.Modules
 
             var sw = new Stopwatch();
             sw.Start();
-            Logger.Debug("{0} start serialing dtos", requestToken);
+            Logger.Debug("{0} start serializing dtos", requestToken);
 
             this.JsonSerializer.Initialize(
                 this.RequestUtils.MetaInfoProvider,
@@ -725,7 +730,7 @@ namespace CDP4WebServices.API.Modules
             this.JsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            Logger.Debug("serialing dtos {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+            Logger.Debug("serializing dtos {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>

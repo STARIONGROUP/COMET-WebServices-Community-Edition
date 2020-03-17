@@ -21,14 +21,21 @@ namespace CDP4WebServices.API.Modules
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Protocol;
+
     using Helpers;
+
     using Nancy;
     using Nancy.Responses;
     using Nancy.Security;
+
     using Newtonsoft.Json;
+
     using NLog;
+
     using Npgsql;
+
     using Services.Operations.SideEffects;
+
     using HttpStatusCode = Nancy.HttpStatusCode;
     using Thing = CDP4Common.DTO.Thing;
 
@@ -141,30 +148,23 @@ namespace CDP4WebServices.API.Modules
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
-                    resourceResponse.AddRange(
-                        this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToList());
+                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToList());
                 }
-                else if (this.RequestUtils.QueryParameters.RevisionFrom.HasValue
-                         || this.RequestUtils.QueryParameters.RevisionTo.HasValue)
+                else if (this.RevisionResolver.TryResolve(transaction, TopContainer, this.RequestUtils.QueryParameters.RevisionFrom, this.RequestUtils.QueryParameters.RevisionTo, out var resolvedValues))
                 {
                     string[] routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
                     var iid = routeSegments.Last();
-                    Guid guid;
-                    if (!Guid.TryParse(iid, out guid))
+
+                    if (!Guid.TryParse(iid, out var guid))
                     {
                         var invalidRequest = new JsonResponse(
                             "The identifier of the object to query was not found or the route is invalid.",
                             new DefaultJsonSerializer());
+
                         return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                     }
 
-                    resourceResponse.AddRange(
-                        this.RevisionService.Get(
-                            transaction,
-                            TopContainer,
-                            guid,
-                            this.RequestUtils.QueryParameters.RevisionFrom ?? 0,
-                            this.RequestUtils.QueryParameters.RevisionTo ?? int.MaxValue));
+                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
                 }
                 else
                 {

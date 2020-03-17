@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RevisionDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017-2018 System RHEA System S.A.
+//   Copyright (c) 2017-2020 System RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -90,6 +90,23 @@ namespace CDP4Orm.Dao.Revision
         public IResolveDao ResolveDao { get; set; }
 
         /// <summary>
+        /// Retrieves data from the RevisionRegistry table in the specific partition.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="RevisionRegistryInfo"/>.
+        /// </returns>
+        public IEnumerable<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition)
+        {
+            return this.InternalGetRevisionRegistryInfo(transaction, partition);
+        }
+
+        /// <summary>
         /// Retrieves the data that was changed after the indicated revision.
         /// </summary>
         /// <param name="transaction">
@@ -168,38 +185,45 @@ namespace CDP4Orm.Dao.Revision
         public IEnumerable<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
         {
             var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] { thingIid }).ToArray();
-            if (resolveInfos.Length != 1)
+
+            if (resolveInfos.Length > 1)
             {
-                throw new InvalidOperationException(string.Format("Multiple entries were found for {0}", thingIid));
+                throw new InvalidOperationException($"Multiple entries were found for {thingIid}");
             }
 
-            var resolveInfo = resolveInfos.Single();
+            var resolveInfo = resolveInfos.SingleOrDefault();
 
-            var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
-            var sqlQuery = string.Format(
-                "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
-                JsonColumnName,
-                partition,
-                revisionTableName,
-                IidKey,
-                RevisionColumnName);
-
-            using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
+            if (resolveInfo != null)
             {
-                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = resolveInfo.InstanceInfo.Iid;
-                command.Parameters.Add("fromrevision", NpgsqlDbType.Integer).Value = revisionFrom;
-                command.Parameters.Add("torevision", NpgsqlDbType.Integer).Value = revisionTo;
+                var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
 
-                // log the sql command 
-                this.CommandLogger.Log(command);
-                using (var reader = command.ExecuteReader())
+                var sqlQuery = string.Format(
+                    "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
+                    JsonColumnName,
+                    resolveInfo.Partition,
+                    revisionTableName,
+                    IidKey,
+                    RevisionColumnName);
+
+                using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
                 {
-                    while (reader.Read())
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = resolveInfo.InstanceInfo.Iid;
+                    command.Parameters.Add("fromrevision", NpgsqlDbType.Integer).Value = revisionFrom;
+                    command.Parameters.Add("torevision", NpgsqlDbType.Integer).Value = revisionTo;
+
+                    // log the sql command 
+                    this.CommandLogger.Log(command);
+
+                    using (var reader = command.ExecuteReader())
                     {
-                        var thing = this.MapToDto(reader);
-                        if (thing != null)
+                        while (reader.Read())
                         {
-                            yield return thing;
+                            var thing = this.MapToDto(reader);
+
+                            if (thing != null)
+                            {
+                                yield return thing;
+                            }
                         }
                     }
                 }
@@ -332,6 +356,54 @@ namespace CDP4Orm.Dao.Revision
 
             // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
             return this.ReadEngineeringModelRevisions(transaction, partition, revision, comparator).ToList();
+        }
+
+        /// <summary>
+        /// Read the entries in the RevisionsRegistry table of specific partition
+        /// </summary>
+        /// <param name="transaction">The current transaction to the database.</param>
+        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
+        /// <returns>The collection of revised <see cref="Thing"/></returns>
+        private IEnumerable<RevisionRegistryInfo> InternalGetRevisionRegistryInfo(NpgsqlTransaction transaction, string partition)
+        {
+            var sqlQuery = $"SELECT \"Revision\", \"Instant\", \"Actor\" FROM \"{partition}\".\"RevisionRegistry\"";
+
+            using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
+            {
+                // log the sql command 
+                this.CommandLogger.Log(command);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    return this.MapToRevisionRegistryInfoList(reader).ToList();
+                }
+            }
+        }
+
+        /// <summary>
+        /// The mapping from a database record to <see cref="IEnumerable{RevisionRegistryInfo}"/> object.
+        /// </summary>
+        /// <param name="reader">
+        /// An instance of the SQL reader.
+        /// </param>
+        /// <returns>
+        /// Enumerable of <see cref="RevisionRegistryInfo"/>.
+        /// </returns>
+        private IEnumerable<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
+        {
+            while (reader.Read())
+            {
+                var revision = reader["Revision"];
+                var instant = reader["Instant"];
+                var actor = reader["Actor"];
+
+                yield return new RevisionRegistryInfo
+                {
+                    Revision = (int?) revision ?? 0,
+                    Instant = (DateTime?) instant ?? DateTime.MinValue,
+                    Actor = actor == DBNull.Value ? Guid.Empty : (Guid) actor
+                };
+            }
         }
 
         /// <summary>

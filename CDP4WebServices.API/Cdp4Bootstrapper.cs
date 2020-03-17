@@ -171,6 +171,7 @@ namespace CDP4WebServices.API
                     // wireup revision read service provider
                     builder.RegisterTypeAsPropertyInjectedSingleton<RevisionDao, IRevisionDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<RevisionService, IRevisionService>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<RevisionResolver, IRevisionResolver>();
 
                     // wireup cache service provider
                     builder.RegisterTypeAsPropertyInjectedSingleton<CacheDao, ICacheDao>();

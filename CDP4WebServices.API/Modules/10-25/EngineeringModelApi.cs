@@ -116,20 +116,20 @@ namespace CDP4WebServices.API.Modules
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedGetQueryParameters);
 
                 // the route pattern enforces that there is at least one route segment
-                var routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
+                string[] routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
 
                 var resourceResponse = new List<Thing>();
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
                 var iterationContextId = Guid.Empty;
-                var iterationContextRequest = routeSegments.Length >= 4 && 
+                var iterationContextRequest = routeSegments.Length >= 4 &&
                                               routeSegments[2] == "iteration" &&
                                               Guid.TryParse(routeSegments[3], out iterationContextId);
 
                 // get prepared data source transaction
                 var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
-                transaction = iterationContextRequest 
-                    ? this.TransactionManager.SetupTransaction(ref connection, credentials, iterationContextId) 
+                transaction = iterationContextRequest
+                    ? this.TransactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
                     : this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 var processor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
@@ -149,17 +149,17 @@ namespace CDP4WebServices.API.Modules
                     // gather all Things that are newer then the indicated revision
                     resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, fromRevision, false));
                 }
-                else if (this.RequestUtils.QueryParameters.RevisionFrom.HasValue || this.RequestUtils.QueryParameters.RevisionTo.HasValue)
+                else if (this.RevisionResolver.TryResolve(transaction, partition, this.RequestUtils.QueryParameters.RevisionFrom, this.RequestUtils.QueryParameters.RevisionTo, out var resolvedValues))
                 {
                     var iid = routeSegments.Last();
-                    Guid guid;
-                    if (!Guid.TryParse(iid, out guid))
+
+                    if (!Guid.TryParse(iid, out var guid))
                     {
                         var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
                         return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                     }
-
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, guid, this.RequestUtils.QueryParameters.RevisionFrom ?? 0, this.RequestUtils.QueryParameters.RevisionTo ?? int.MaxValue));
+                    
+                    resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
                 }
                 else
                 {
@@ -216,15 +216,9 @@ namespace CDP4WebServices.API.Modules
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
+                transaction?.Dispose();
 
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }            
+                connection?.Dispose();
             }
         }
 
