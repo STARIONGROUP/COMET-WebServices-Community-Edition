@@ -289,7 +289,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:nestedElement, :elementUsage, :sequence);");
 
                 command.Parameters.Add("nestedElement", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = elementUsage.V;
+                command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = Guid.Parse(elementUsage.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = elementUsage.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -429,7 +429,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("nestedElement", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = elementUsage.V;
+                command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = Guid.Parse(elementUsage.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = elementUsage.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = elementUsage.M;
 
@@ -539,7 +539,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("nestedElement", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = elementUsage.V;
+                command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = Guid.Parse(elementUsage.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = elementUsage.K;
 
                 command.CommandText = sqlBuilder.ToString();

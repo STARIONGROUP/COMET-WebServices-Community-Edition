@@ -287,7 +287,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:telephoneNumber, :vcardType);");
 
                 command.Parameters.Add("telephoneNumber", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("vcardType", NpgsqlDbType.Text).Value = vcardType;
+                command.Parameters.Add("vcardType", NpgsqlDbType.Text).Value = vcardType.ToString();
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -449,7 +449,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"VcardType\" = :vcardType;");
 
                 command.Parameters.Add("telephoneNumber", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("vcardType", NpgsqlDbType.Text).Value = vcardType;
+                command.Parameters.Add("vcardType", NpgsqlDbType.Text).Value = vcardType.ToString();
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

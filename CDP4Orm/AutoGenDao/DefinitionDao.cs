@@ -304,7 +304,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:definition, :example, :sequence);");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("example", NpgsqlDbType.Text).Value = example.V;
+                command.Parameters.Add("example", NpgsqlDbType.Text).Value = (string)example.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = example.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -342,7 +342,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:definition, :note, :sequence);");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("note", NpgsqlDbType.Text).Value = note.V;
+                command.Parameters.Add("note", NpgsqlDbType.Text).Value = (string)note.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = note.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -488,7 +488,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("example", NpgsqlDbType.Text).Value = example.V;
+                command.Parameters.Add("example", NpgsqlDbType.Text).Value = (string)example.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = example.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = example.M;
 
@@ -531,7 +531,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("note", NpgsqlDbType.Text).Value = note.V;
+                command.Parameters.Add("note", NpgsqlDbType.Text).Value = (string)note.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = note.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = note.M;
 
@@ -647,7 +647,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("example", NpgsqlDbType.Text).Value = example.V;
+                command.Parameters.Add("example", NpgsqlDbType.Text).Value = (string)example.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = example.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -687,7 +687,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("note", NpgsqlDbType.Text).Value = note.V;
+                command.Parameters.Add("note", NpgsqlDbType.Text).Value = (string)note.V;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = note.K;
 
                 command.CommandText = sqlBuilder.ToString();
