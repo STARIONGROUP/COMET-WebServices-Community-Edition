@@ -322,7 +322,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:actualFiniteStateList, :possibleFiniteStateList, :sequence);");
 
                 command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = possibleFiniteStateList.V;
+                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = Guid.Parse(possibleFiniteStateList.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = possibleFiniteStateList.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -456,7 +456,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = possibleFiniteStateList.V;
+                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = Guid.Parse(possibleFiniteStateList.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = possibleFiniteStateList.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = possibleFiniteStateList.M;
 
@@ -610,7 +610,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = possibleFiniteStateList.V;
+                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = Guid.Parse(possibleFiniteStateList.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = possibleFiniteStateList.K;
 
                 command.CommandText = sqlBuilder.ToString();

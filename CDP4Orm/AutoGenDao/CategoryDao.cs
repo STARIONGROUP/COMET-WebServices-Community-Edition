@@ -317,7 +317,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:category, :permissibleClass);");
 
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("permissibleClass", NpgsqlDbType.Text).Value = permissibleClass;
+                command.Parameters.Add("permissibleClass", NpgsqlDbType.Text).Value = permissibleClass.ToString();
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -542,7 +542,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"PermissibleClass\" = :permissibleClass;");
 
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("permissibleClass", NpgsqlDbType.Text).Value = permissibleClass;
+                command.Parameters.Add("permissibleClass", NpgsqlDbType.Text).Value = permissibleClass.ToString();
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

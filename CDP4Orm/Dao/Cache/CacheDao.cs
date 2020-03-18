@@ -10,6 +10,8 @@ namespace CDP4Orm.Dao.Cache
 
     using CDP4Orm.Dao.Revision;
 
+    using Newtonsoft.Json;
+
     using Npgsql;
 
     using NpgsqlTypes;
@@ -74,7 +76,7 @@ namespace CDP4Orm.Dao.Cache
             {
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
                 command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
-                command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject();
+                command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
 
                 // log the sql command 
                 command.ExecuteNonQuery();

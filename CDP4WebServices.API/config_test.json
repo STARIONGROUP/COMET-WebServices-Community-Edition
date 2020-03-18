@@ -7,7 +7,7 @@
     "FileStorageDirectory": "storage"
   },
   "Backtier": {
-    "HostName": "cdp4-test-database-community-edition",
+    "HostName": "localhost",
     "Port": 5432,
     "UserName": "cdp4",
     "Password": "cdp4",

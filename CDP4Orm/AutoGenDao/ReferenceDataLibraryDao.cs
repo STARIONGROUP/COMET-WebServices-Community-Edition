@@ -167,7 +167,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseQuantityKind, :sequence);");
 
                 command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = baseQuantityKind.V;
+                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = Guid.Parse(baseQuantityKind.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = baseQuantityKind.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -337,7 +337,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = baseQuantityKind.V;
+                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = Guid.Parse(baseQuantityKind.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = baseQuantityKind.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = baseQuantityKind.M;
 
@@ -453,7 +453,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = baseQuantityKind.V;
+                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = Guid.Parse(baseQuantityKind.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = baseQuantityKind.K;
 
                 command.CommandText = sqlBuilder.ToString();

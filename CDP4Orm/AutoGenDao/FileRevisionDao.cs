@@ -304,7 +304,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:fileRevision, :fileType, :sequence);");
 
                 command.Parameters.Add("fileRevision", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = fileType.V;
+                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = Guid.Parse(fileType.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = fileType.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -447,7 +447,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("fileRevision", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = fileType.V;
+                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = Guid.Parse(fileType.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = fileType.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = fileType.M;
 
@@ -557,7 +557,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("fileRevision", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = fileType.V;
+                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = Guid.Parse(fileType.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = fileType.K;
 
                 command.CommandText = sqlBuilder.ToString();

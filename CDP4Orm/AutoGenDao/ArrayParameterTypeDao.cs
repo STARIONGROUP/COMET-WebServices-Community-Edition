@@ -321,7 +321,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" VALUES (:arrayParameterType, :dimension, :sequence);");
 
                 command.Parameters.Add("arrayParameterType", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("dimension", NpgsqlDbType.Integer).Value = dimension.V;
+                command.Parameters.Add("dimension", NpgsqlDbType.Integer).Value = Convert.ToInt32(dimension.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = dimension.K;
 
                 command.CommandText = sqlBuilder.ToString();
@@ -459,7 +459,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("arrayParameterType", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("dimension", NpgsqlDbType.Integer).Value = dimension.V;
+                command.Parameters.Add("dimension", NpgsqlDbType.Integer).Value = Convert.ToInt32(dimension.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = dimension.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = dimension.M;
 
@@ -569,7 +569,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" AND \"Sequence\" = :sequence;");
 
                 command.Parameters.Add("arrayParameterType", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("dimension", NpgsqlDbType.Integer).Value = dimension.V;
+                command.Parameters.Add("dimension", NpgsqlDbType.Integer).Value = Convert.ToInt32(dimension.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = dimension.K;
 
                 command.CommandText = sqlBuilder.ToString();

@@ -306,7 +306,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid");
                 sqlBuilder.AppendFormat(" AND \"Sequence\" = :sequence;");
 
-                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = (Guid)orderedItem.V;
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = Guid.Parse(orderedItem.V.ToString());
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = orderedItem.K;
                 command.Parameters.Add("reorderSequence", NpgsqlDbType.Bigint).Value = orderedItem.M;
 
