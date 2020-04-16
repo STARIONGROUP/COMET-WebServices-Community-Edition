@@ -11,6 +11,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System.Linq;
     using CDP4Common.DTO;
     using CDP4Common.SiteDirectoryData;
+    //using CDP4Common.SiteDirectoryData;
     using CDP4Common.Types;
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authorization;
@@ -128,7 +129,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IIterationService IterationService { get; set; }
 
         /// <summary>
-        /// Perform check before deleting the <see cref="Option"/> <paramref name="thing"/>
+        /// Allows derived classes to override and execute additional logic before a delete operation.
         /// </summary>
         /// <param name="thing">
         /// The <see cref="Thing"/> instance that will be inspected.
@@ -147,13 +148,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-
-            //var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
-            //if (options.Count == 1 && options.Single().Iid == thing.Iid)
-            //{
-            //    throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
-            //}
-
             if (container is Iteration iteration)
             {
                 if (!(iteration.DefaultOption?.Equals(thing.Iid) ?? false))
