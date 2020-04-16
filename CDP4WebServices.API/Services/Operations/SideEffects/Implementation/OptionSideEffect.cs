@@ -113,9 +113,19 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IIterationSetupService IterationSetupService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelService" />
+        /// </summary>
+        public IEngineeringModelService EngineeringModelService { get; set; }
+
+        /// <summary>
         /// Gets or sets the (injected) <see cref="IEngineeringModelSetupService"/>
         /// </summary>
         public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IIterationService" />
+        /// </summary>
+        public IIterationService IterationService { get; set; }
 
         /// <summary>
         /// Perform check before deleting the <see cref="Option"/> <paramref name="thing"/>
@@ -137,10 +147,88 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
-            if (options.Count == 1 && options.Single().Iid == thing.Iid)
+
+            //var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+            //if (options.Count == 1 && options.Single().Iid == thing.Iid)
+            //{
+            //    throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
+            //}
+
+            if (container is Iteration iteration)
             {
-                throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
+                if (!(iteration.DefaultOption?.Equals(thing.Iid) ?? false))
+                {
+                    return;
+                }
+
+                var baseErrorString =
+                    $"Could not set {nameof(Iteration)}.{nameof(Iteration.DefaultOption)} to null.";
+
+                var iterationSetup = this.IterationSetupService.GetShallow(transaction,
+                    Utils.SiteDirectoryPartition,
+                    new[] { iteration.IterationSetup }, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
+
+                if (iterationSetup == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(CDP4Common.DTO.IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
+                }
+
+                var engineeringModelSetup = this.EngineeringModelSetupService
+                    .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                    .Cast<CDP4Common.DTO.EngineeringModelSetup>()
+                    .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
+
+                if (engineeringModelSetup == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(CDP4Common.DTO.IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(CDP4Common.DTO.EngineeringModelSetup)}");
+                }
+
+                var engineeringModelPartition =
+                    this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+
+                var updatedIteration = this.IterationService
+                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                    .Cast<Iteration>()
+                    .SingleOrDefault();
+
+                if (updatedIteration == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(Iteration)} with iid {iteration.Iid}) could not be found.");
+                }
+
+                if (!(updatedIteration.DefaultOption?.Equals(thing.Iid) ?? false))
+                {
+                    return;
+                }
+
+                updatedIteration.DefaultOption = null;
+
+                var engineeringModel = this.EngineeringModelService
+                    .GetShallow(transaction, engineeringModelPartition,
+                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                    .SingleOrDefault();
+
+                if (engineeringModel == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(CDP4Common.DTO.EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
+                }
+
+                this.IterationService.UpdateConcept(transaction, engineeringModelPartition, updatedIteration,
+                    engineeringModel);
+            }
+            else
+            {
+                if (container == null)
+                {
+                    throw new ArgumentNullException(nameof(container));
+                }
+
+                throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
+                    nameof(container));
             }
         }
 
