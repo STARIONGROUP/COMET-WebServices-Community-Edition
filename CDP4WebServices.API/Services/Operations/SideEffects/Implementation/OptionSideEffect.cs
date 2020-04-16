@@ -11,7 +11,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System.Linq;
     using CDP4Common.DTO;
     using CDP4Common.SiteDirectoryData;
-    //using CDP4Common.SiteDirectoryData;
     using CDP4Common.Types;
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authorization;
