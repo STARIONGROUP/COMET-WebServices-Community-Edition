@@ -15,7 +15,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authorization;
     using Npgsql;
-    
+
     /// <summary>
     /// The purpose of the <see cref="OptionSideEffect"/> class is to execute additional logic before and after a specific operation is performed
     /// on an <see cref="CDP4Common.DTO.Option"/>
@@ -26,7 +26,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// a cache of <see cref="Option"/> dependent <see cref="CDP4Common.DTO.Parameter"/>s that is populated in the context of the current <see cref="OptionSideEffect"/>
         /// </summary>
         private readonly Dictionary<Guid, Parameter> optionDependentParameterCache = new Dictionary<Guid, Parameter>();
-        
+
         /// <summary>
         /// a cache of the <see cref="ParameterValueSet"/> that have been created by the current <see cref="OptionSideEffect"/>
         /// </summary>
@@ -128,7 +128,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IIterationService IterationService { get; set; }
 
         /// <summary>
-        /// Allows derived classes to override and execute additional logic before a delete operation.
+        /// Perform check before deleting the <see cref="Option"/> <paramref name="thing"/>
         /// </summary>
         /// <param name="thing">
         /// The <see cref="Thing"/> instance that will be inspected.
@@ -147,6 +147,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+            if (options.Count == 1 && options.Single().Iid == thing.Iid)
+            {
+                throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
+            }
+
             if (container is Iteration iteration)
             {
                 if (!(iteration.DefaultOption?.Equals(thing.Iid) ?? false))
@@ -259,10 +265,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // in principle, a Catalogue model may only contain 1 Option. When another type of model is converted into a Catalogue
             // it may occur that such a model has more than 1 Option. E-TM-10-25 does not specify rules what should happen when
             // a model that contains more than one Option is converted into a Catalogue.
-            var iteration = (Iteration) container;
+            var iteration = (Iteration)container;
 
             var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,
-                new[] {iteration.IterationSetup}, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
+                new[] { iteration.IterationSetup }, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
 
             var engineeringModelSetup = this.EngineeringModelSetupService
                 .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
@@ -307,7 +313,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // query and cache all the option dependent parameters for which new valuesets will need to be created for the option that has just been created.
             this.QueryAndCacheAllOptionDependentParameters(transaction, partition, securityContext);
-            
+
             // for each option dependent parameter, create new ParameterValueSets and cache them such that they can later be referenced by the newly created ParameterOverrideValueSets
             var optionDependentParameters = this.optionDependentParameterCache.Values.ToList();
             foreach (var optionDependentParameter in optionDependentParameters)
@@ -323,9 +329,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     this.CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(transaction, partition, option, parameterOverrideDto, securityContext);
                 }
-            }            
+            }
         }
-        
+
         /// <summary>
         /// Creates <see cref="Option"/> dependent <see cref="ParameterValueSet"/>s that are contained by the <see cref="Parameter"/>
         /// as well as <see cref="ParameterSubscriptionValueSet"/>s for the <see cref="ParameterSubscription"/>s that are contained
@@ -358,18 +364,18 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (actualFiniteStateListIid == null)
             {
                 var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, null, null, defaultValueArray);
-                
+
                 this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, container);
 
                 // the created ParameterValueSet is cached because it will later be referenced by a potentialy created ParameterOverrideValueSet
                 var parameterValuetSetCacheItem = new ParameterValueSetCacheItem(container, parameterValueSet);
                 this.createdParameterValuetSetCacheItems.Add(parameterValuetSetCacheItem);
-                
+
                 this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
-                
+
                 return;
             }
-            
+
             this.QueryAndCacheAllActualFiniteStateLists(transaction, partition, securityContext);
 
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == actualFiniteStateListIid);
@@ -383,7 +389,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 this.createdParameterValuetSetCacheItems.Add(parameterValuetSetCacheItem);
 
                 this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
-            }            
+            }
         }
 
         /// <summary>
@@ -424,11 +430,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 var parameterValueSet = this.QueryParameterValueSet(parameter.Iid, option.Iid, null);
 
                 var parameterOverrideValueSet = this.ParameterOverrideValueSetFactory.CreateWithDefaultValueArray(parameterValueSet.Iid, defaultValueArray);
-                
+
                 this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterOverrideValueSet, container);
 
                 this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterOverrideValueSet.Iid, transaction, partition);
-                
+
                 return;
             }
 
@@ -471,9 +477,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 var parameterSubscriptionValueSet =
                     this.ParameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(
-                        subscribedValueSetIid, 
+                        subscribedValueSetIid,
                         defaultValueArray);
-                
+
                 this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, parameterSubscriptionValueSet, parameterSubscription);
             }
         }
@@ -550,7 +556,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 if (parameter.IsOptionDependent)
                 {
                     this.optionDependentParameterCache.Add(parameter.Iid, parameter);
-                }                    
+                }
             }
         }
 
