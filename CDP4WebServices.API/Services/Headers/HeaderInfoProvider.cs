@@ -127,8 +127,10 @@ namespace CDP4WebServices.API.Services
         /// <param name="boundaryString">
         /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
         /// </param>
-        public void RegisterMultipartResponseContentTypeHeader(Response response, string boundaryString) => 
+        public void RegisterMultipartResponseContentTypeHeader(Response response, string boundaryString)
+        {
             response.Headers.Add(this.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundaryString}");
+        }
 
         /// <summary>
         /// Query the assembly version for the given type.

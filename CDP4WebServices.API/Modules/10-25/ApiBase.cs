@@ -897,7 +897,7 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// //add ending line according to https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+        /// add ending line according to https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
         /// </summary>
         /// <param name="targetStream">The <see cref="Stream"/>where to add the end poit to</param>
         private void AddMultiPartMimeEndpoint(Stream targetStream)
