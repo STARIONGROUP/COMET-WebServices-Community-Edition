@@ -264,12 +264,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // in principle, a Catalogue model may only contain 1 Option. When another type of model is converted into a Catalogue
             // it may occur that such a model has more than 1 Option. E-TM-10-25 does not specify rules what should happen when
             // a model that contains more than one Option is converted into a Catalogue.
-
-            //if (container is Iteration iteration1)
-            //{
-            //    return true;
-            //}
-
             var iteration = (Iteration)container;
 
             var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,

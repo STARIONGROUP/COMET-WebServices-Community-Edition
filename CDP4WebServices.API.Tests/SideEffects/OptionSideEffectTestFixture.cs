@@ -56,6 +56,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private NpgsqlTransaction npgsqlTransaction;
 
         private readonly string iterationPartition = $"{CDP4Orm.Dao.Utils.IterationSubPartition}_partition";
+
         private readonly string engineeringModelPartition = $"{CDP4Orm.Dao.Utils.EngineeringModelPartition}_partition";
 
         [SetUp]
@@ -106,7 +107,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             };
             this.engineeringModelSetup.EngineeringModelIid = this.engineeringModel.Iid;
 
-
             this.optionSideEffect = new OptionSideEffect
             {
                 OptionService = this.optionService.Object,
@@ -132,7 +132,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.options.Add(this.option1);
             this.options.Add(this.option2);
 
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+            this.SetupMethodCallsForDeleteOptionTest();
 
             Assert.Throws<InvalidOperationException>(() =>
                 this.optionSideEffect.BeforeCreate(
@@ -140,8 +140,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.iteration,
                     this.npgsqlTransaction,
                     this.iterationPartition,
-                    this.securityContext.Object)
-            );
+                    this.securityContext.Object));
         }
 
         [Test]
@@ -150,7 +149,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.engineeringModelSetup.Kind = CDP4Common.SiteDirectoryData.EngineeringModelKind.STUDY_MODEL;
             this.options.Add(this.option1);
             this.options.Add(this.option2);
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+
+            this.SetupMethodCallsForDeleteOptionTest();
 
             Assert.That(
                 this.optionSideEffect.BeforeCreate(
@@ -158,14 +158,13 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.iteration,
                     this.npgsqlTransaction,
                     this.iterationPartition,
-                    this.securityContext.Object), Is.True
-            );
+                    this.securityContext.Object), Is.True);
         }
 
         [Test]
         public void Verify_that_DefaultOption_is_not_set_and_not_saved_when_Option_is_deleted()
         {
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+            this.SetupMethodCallsForDeleteOptionTest();
 
             this.optionSideEffect.BeforeDelete(
                 this.option1,
@@ -186,7 +185,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void Verify_that_DefaultOption_is_set_and_saved_when_Option_is_deleted()
         {
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+            this.SetupMethodCallsForDeleteOptionTest();
 
             this.optionSideEffect.BeforeDelete(
                 this.option2,
@@ -205,7 +204,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void Verify_that_DefaultOption_is_not_set_and_not_saved_when_DefaultOption_is_deleted_and_DefautOption_was_already_reset_earlier()
         {
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+            this.SetupMethodCallsForDeleteOptionTest();
 
             this.updatedIteration.DefaultOption = null;
 
@@ -224,64 +223,33 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
 
         /// <summary>
-        ///  Descriptive enum to present the <see cref="SetupMethodCallsForTopElementTest" /> method a self-descriptive value on
-        ///  how fake method calls should be setup.
-        ///  Uses Flags attribute for convenience
-        ///  <See cref="https://docs.microsoft.com/en-us/dotnet/api/system.flagsattribute" />
-        /// </summary>
-        [Flags]
-        private enum SetupMethodCallsForOptionTestScenario
-        {
-            IterationSetup = 1,
-            EngineeringModelSetup = 2,
-            Iteration = 4,
-            EngineeringModel = 8,
-            All = IterationSetup | EngineeringModelSetup | Iteration | EngineeringModel
-        }
-
-        /// <summary>
         ///  Sets up fake method calls on mocked classes specifically for the unit tests that check
         ///  <see cref="Iteration.DefaultOption" /> handling when an <see cref="Option" /> is deleted.
         /// </summary>
-        /// <param name="setupMethodCallsForOptionTestScenario">
-        ///  The <see cref="SetupMethodCallsForOptionTestScenario" />
-        ///  When an enum value flag is not set then the corresponding faked method call will NOT return any data.
-        /// </param>
-        private void SetupMethodCallsForDeleteOptionTest(
-            SetupMethodCallsForOptionTestScenario setupMethodCallsForOptionTestScenario)
+        private void SetupMethodCallsForDeleteOptionTest()
         {
             this.requestUtils
                 .Setup(x => x.GetEngineeringModelPartitionString(this.engineeringModelSetup.EngineeringModelIid))
                 .Returns(this.engineeringModelPartition);
 
             var iterationSetups = new List<IterationSetup>();
-            if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario
-                .IterationSetup))
-            {
-                iterationSetups.Add(this.iterationSetup);
-            }
-
+            iterationSetups.Add(this.iterationSetup);
+            
             this.iterationSetupService
                 .Setup(x => x.GetShallow(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     new[] { this.iteration.IterationSetup }, this.securityContext.Object))
                 .Returns(iterationSetups);
 
-            var engineeringModelSetups = new List<EngineeringModelSetup>();
-            if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario.EngineeringModel))
-            {
-                engineeringModelSetups.Add(this.engineeringModelSetup);
-            }
-
+            var engineeringModelSetups = new List<EngineeringModelSetup>(); 
+            engineeringModelSetups.Add(this.engineeringModelSetup);
+            
             this.engineeringModelSetupService
                 .Setup(x => x.GetShallow(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
                 .Returns(engineeringModelSetups);
 
             var newIterations = new List<Iteration>();
-            if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario.Iteration))
-            {
-                newIterations.Add(this.updatedIteration);
-            }
+            newIterations.Add(this.updatedIteration);
 
             this.iterationService
                 .Setup(x => x.GetShallow(this.npgsqlTransaction, this.engineeringModelPartition,
@@ -289,12 +257,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 .Returns(newIterations);
 
             var engineeringModels = new List<EngineeringModel>();
-
-            if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario
-                .EngineeringModel))
-            {
-                engineeringModels.Add(this.engineeringModel);
-            }
+            engineeringModels.Add(this.engineeringModel);
 
             this.engineeringModelService
                 .Setup(x => x.GetShallow(this.npgsqlTransaction, this.engineeringModelPartition,
