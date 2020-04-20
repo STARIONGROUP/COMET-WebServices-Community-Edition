@@ -10,12 +10,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System.Collections.Generic;
     using System.Linq;
     using CDP4Common.DTO;
-    using CDP4Common.SiteDirectoryData;
     using CDP4Common.Types;
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authorization;
     using Npgsql;
-    
+
     /// <summary>
     /// The purpose of the <see cref="OptionSideEffect"/> class is to execute additional logic before and after a specific operation is performed
     /// on an <see cref="CDP4Common.DTO.Option"/>
@@ -26,7 +25,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// a cache of <see cref="Option"/> dependent <see cref="CDP4Common.DTO.Parameter"/>s that is populated in the context of the current <see cref="OptionSideEffect"/>
         /// </summary>
         private readonly Dictionary<Guid, Parameter> optionDependentParameterCache = new Dictionary<Guid, Parameter>();
-        
+
         /// <summary>
         /// a cache of the <see cref="ParameterValueSet"/> that have been created by the current <see cref="OptionSideEffect"/>
         /// </summary>
@@ -113,9 +112,19 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IIterationSetupService IterationSetupService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelService" />
+        /// </summary>
+        public IEngineeringModelService EngineeringModelService { get; set; }
+
+        /// <summary>
         /// Gets or sets the (injected) <see cref="IEngineeringModelSetupService"/>
         /// </summary>
         public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IIterationService" />
+        /// </summary>
+        public IIterationService IterationService { get; set; }
 
         /// <summary>
         /// Perform check before deleting the <see cref="Option"/> <paramref name="thing"/>
@@ -141,6 +150,107 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (options.Count == 1 && options.Single().Iid == thing.Iid)
             {
                 throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
+            }
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic after a successful delete operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original Thing.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void AfterDelete(Option thing, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            if (container is Iteration iteration)
+            {
+                if (!(iteration.DefaultOption?.Equals(thing.Iid) ?? false))
+                {
+                    return;
+                }
+
+                var baseErrorString =
+                    $"Could not set {nameof(Iteration)}.{nameof(Iteration.DefaultOption)} to null.";
+
+                var iterationSetup = this.IterationSetupService.GetShallow(transaction,
+                    Utils.SiteDirectoryPartition,
+                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+
+                if (iterationSetup == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
+                }
+
+                var engineeringModelSetup = this.EngineeringModelSetupService
+                    .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                    .Cast<EngineeringModelSetup>()
+                    .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
+
+                if (engineeringModelSetup == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(CDP4Common.DTO.EngineeringModelSetup)}");
+                }
+
+                var engineeringModelPartition =
+                    this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+
+                var updatedIteration = this.IterationService
+                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                    .Cast<Iteration>()
+                    .SingleOrDefault();
+
+                if (updatedIteration == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(Iteration)} with iid {iteration.Iid}) could not be found.");
+                }
+
+                if (!(updatedIteration.DefaultOption?.Equals(thing.Iid) ?? false))
+                {
+                    return;
+                }
+
+                updatedIteration.DefaultOption = null;
+
+                var engineeringModel = this.EngineeringModelService
+                    .GetShallow(transaction, engineeringModelPartition,
+                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                    .SingleOrDefault();
+
+                if (engineeringModel == null)
+                {
+                    throw new KeyNotFoundException(
+                        $"{baseErrorString}\n{nameof(EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
+                }
+
+                this.IterationService.UpdateConcept(transaction, engineeringModelPartition, updatedIteration,
+                    engineeringModel);
+            }
+            else
+            {
+                if (container == null)
+                {
+                    throw new ArgumentNullException(nameof(container));
+                }
+
+                throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
+                    nameof(container));
             }
         }
 
@@ -178,17 +288,17 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // in principle, a Catalogue model may only contain 1 Option. When another type of model is converted into a Catalogue
             // it may occur that such a model has more than 1 Option. E-TM-10-25 does not specify rules what should happen when
             // a model that contains more than one Option is converted into a Catalogue.
-            var iteration = (Iteration) container;
+            var iteration = (Iteration)container;
 
             var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,
-                new[] {iteration.IterationSetup}, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
+                new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
 
             var engineeringModelSetup = this.EngineeringModelSetupService
                 .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
-                .Cast<CDP4Common.DTO.EngineeringModelSetup>()
-                .SingleOrDefault(modelSetup => modelSetup.IterationSetup.Contains(iterationSetup.Iid));
+                .Cast<EngineeringModelSetup>()
+                .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
-            if (engineeringModelSetup.Kind == EngineeringModelKind.MODEL_CATALOGUE)
+            if (engineeringModelSetup.Kind == CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE)
             {
                 throw new InvalidOperationException("The container EngineeringModel is a Catalogue, a Catalogue may not contain more than one Option");
             }
@@ -226,7 +336,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // query and cache all the option dependent parameters for which new valuesets will need to be created for the option that has just been created.
             this.QueryAndCacheAllOptionDependentParameters(transaction, partition, securityContext);
-            
+
             // for each option dependent parameter, create new ParameterValueSets and cache them such that they can later be referenced by the newly created ParameterOverrideValueSets
             var optionDependentParameters = this.optionDependentParameterCache.Values.ToList();
             foreach (var optionDependentParameter in optionDependentParameters)
@@ -242,9 +352,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 {
                     this.CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(transaction, partition, option, parameterOverrideDto, securityContext);
                 }
-            }            
+            }
         }
-        
+
         /// <summary>
         /// Creates <see cref="Option"/> dependent <see cref="ParameterValueSet"/>s that are contained by the <see cref="Parameter"/>
         /// as well as <see cref="ParameterSubscriptionValueSet"/>s for the <see cref="ParameterSubscription"/>s that are contained
@@ -277,18 +387,18 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (actualFiniteStateListIid == null)
             {
                 var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, null, null, defaultValueArray);
-                
+
                 this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, container);
 
                 // the created ParameterValueSet is cached because it will later be referenced by a potentialy created ParameterOverrideValueSet
                 var parameterValuetSetCacheItem = new ParameterValueSetCacheItem(container, parameterValueSet);
                 this.createdParameterValuetSetCacheItems.Add(parameterValuetSetCacheItem);
-                
+
                 this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
-                
+
                 return;
             }
-            
+
             this.QueryAndCacheAllActualFiniteStateLists(transaction, partition, securityContext);
 
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == actualFiniteStateListIid);
@@ -302,7 +412,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 this.createdParameterValuetSetCacheItems.Add(parameterValuetSetCacheItem);
 
                 this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
-            }            
+            }
         }
 
         /// <summary>
@@ -343,11 +453,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 var parameterValueSet = this.QueryParameterValueSet(parameter.Iid, option.Iid, null);
 
                 var parameterOverrideValueSet = this.ParameterOverrideValueSetFactory.CreateWithDefaultValueArray(parameterValueSet.Iid, defaultValueArray);
-                
+
                 this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterOverrideValueSet, container);
 
                 this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterOverrideValueSet.Iid, transaction, partition);
-                
+
                 return;
             }
 
@@ -390,9 +500,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 var parameterSubscriptionValueSet =
                     this.ParameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(
-                        subscribedValueSetIid, 
+                        subscribedValueSetIid,
                         defaultValueArray);
-                
+
                 this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, parameterSubscriptionValueSet, parameterSubscription);
             }
         }
@@ -469,7 +579,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 if (parameter.IsOptionDependent)
                 {
                     this.optionDependentParameterCache.Add(parameter.Iid, parameter);
-                }                    
+                }
             }
         }
 
