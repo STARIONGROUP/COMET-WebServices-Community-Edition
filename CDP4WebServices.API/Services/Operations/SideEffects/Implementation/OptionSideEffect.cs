@@ -10,7 +10,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using System.Collections.Generic;
     using System.Linq;
     using CDP4Common.DTO;
-    using CDP4Common.SiteDirectoryData;
     using CDP4Common.Types;
     using CDP4Orm.Dao;
     using CDP4WebServices.API.Services.Authorization;
@@ -165,12 +164,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                 var iterationSetup = this.IterationSetupService.GetShallow(transaction,
                     Utils.SiteDirectoryPartition,
-                    new[] { iteration.IterationSetup }, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
+                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
 
                 if (iterationSetup == null)
                 {
                     throw new KeyNotFoundException(
-                        $"{baseErrorString}\n{nameof(CDP4Common.DTO.IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
                 }
 
                 var engineeringModelSetup = this.EngineeringModelSetupService
@@ -181,7 +180,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 if (engineeringModelSetup == null)
                 {
                     throw new KeyNotFoundException(
-                        $"{baseErrorString}\n{nameof(CDP4Common.DTO.IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(CDP4Common.DTO.EngineeringModelSetup)}");
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(CDP4Common.DTO.EngineeringModelSetup)}");
                 }
 
                 var engineeringModelPartition =
@@ -265,17 +264,23 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             // in principle, a Catalogue model may only contain 1 Option. When another type of model is converted into a Catalogue
             // it may occur that such a model has more than 1 Option. E-TM-10-25 does not specify rules what should happen when
             // a model that contains more than one Option is converted into a Catalogue.
+
+            //if (container is Iteration iteration1)
+            //{
+            //    return true;
+            //}
+
             var iteration = (Iteration)container;
 
             var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,
-                new[] { iteration.IterationSetup }, securityContext).Cast<CDP4Common.DTO.IterationSetup>().SingleOrDefault();
+                new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
 
             var engineeringModelSetup = this.EngineeringModelSetupService
                 .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
-                .Cast<CDP4Common.DTO.EngineeringModelSetup>()
-                .SingleOrDefault(modelSetup => modelSetup.IterationSetup.Contains(iterationSetup.Iid));
+                .Cast<EngineeringModelSetup>()
+                .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
-            if (engineeringModelSetup.Kind == EngineeringModelKind.MODEL_CATALOGUE)
+            if (engineeringModelSetup.Kind == CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE)
             {
                 throw new InvalidOperationException("The container EngineeringModel is a Catalogue, a Catalogue may not contain more than one Option");
             }
