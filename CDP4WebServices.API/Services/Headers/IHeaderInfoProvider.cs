@@ -50,5 +50,16 @@ namespace CDP4WebServices.API.Services
         /// The nancy response.
         /// </param>
         void RegisterResponseHeaders(Response response);
+
+        /// <summary>
+        /// Register the multipart CDP4 content-type header to the passed in response.
+        /// </summary>
+        /// <param name="response">
+        /// The nancy response.
+        /// </param>
+        /// <param name="boundaryString">
+        /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
+        /// </param>
+        void RegisterMultipartResponseContentTypeHeader(Response response, string boundaryString);
     }
 }

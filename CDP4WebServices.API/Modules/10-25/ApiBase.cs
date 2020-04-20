@@ -13,6 +13,7 @@ namespace CDP4WebServices.API.Modules
     using System.Linq;
     using System.Net.Http;
     using System.Security.Cryptography;
+    using System.Text;
 
     using CDP4Common.DTO;
 
@@ -42,6 +43,11 @@ namespace CDP4WebServices.API.Modules
     /// </summary>
     public abstract class ApiBase : NancyModule
     {
+        /// <summary>
+        /// The Multipart message boundary string <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
+        /// </summary>
+        protected const string BoundaryString = "----Boundary";
+
         /// <summary>
         /// The site directory data.
         /// </summary>
@@ -490,7 +496,7 @@ namespace CDP4WebServices.API.Modules
             HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             // create a new multipart response with contents assigned by stream
-            return new Response
+            var response = new Response
             {
                 Contents = stream => this.PrepareMultiPartResponse(
                     stream,
@@ -499,6 +505,10 @@ namespace CDP4WebServices.API.Modules
                     this.RequestUtils.GetRequestDataModelVersion),
                 StatusCode = statusCode
             };
+
+            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(response, BoundaryString);
+
+            return response;
         }
 
         /// <summary>
@@ -526,7 +536,7 @@ namespace CDP4WebServices.API.Modules
             HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             // create a new archived response with contents assigned by stream
-            return new Response
+            var response =  new Response
             {
                 Contents = stream => this.PrepareArchivedResponse(
                     stream,
@@ -536,6 +546,10 @@ namespace CDP4WebServices.API.Modules
                     routeSegments),
                 StatusCode = statusCode
             };
+
+            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(response, BoundaryString);
+
+            return response;
         }
 
         /// <summary>
@@ -760,8 +774,7 @@ namespace CDP4WebServices.API.Modules
                 return;
             }
 
-            var content = new MultipartContent("mixed", "----Boundary");
-
+            var content = new MultipartContent("mixed", BoundaryString);
             using (var stream = new MemoryStream())
             {
                 this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
@@ -794,13 +807,14 @@ namespace CDP4WebServices.API.Modules
                 binaryContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
 
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
-                binaryContent.Headers.Add(ContentDispositionHeader, string.Format("attachment; filename={0}", hash));
+                binaryContent.Headers.Add(ContentDispositionHeader, $"attachment; filename={hash}");
                 binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
             }
 
             // stream the multipart content to the request contents target stream
             content.CopyToAsync(targetStream);
+            this.AddMultiPartMimeEndpoint(targetStream);
         }
 
         /// <summary>
@@ -832,7 +846,7 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                var content = new MultipartContent("mixed", "----Boundary");
+                var content = new MultipartContent("mixed", BoundaryString);
 
                 using (var stream = new MemoryStream())
                 {
@@ -867,17 +881,29 @@ namespace CDP4WebServices.API.Modules
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
                 binaryContent.Headers.Add(
                     ContentDispositionHeader,
-                    string.Format("attachment; filename={0}", folderPath + ".zip"));
+                    $"attachment; filename={folderPath + ".zip"}");
                 binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
 
                 // stream the multipart content to the request contents target stream
                 content.CopyToAsync(targetStream);
+
+                this.AddMultiPartMimeEndpoint(targetStream);
             }
             finally
             {
                 this.FileArchiveService.DeleteFileStructureWithArchive(folderPath);
             }
+        }
+
+        /// <summary>
+        /// //add ending line according to https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
+        /// </summary>
+        /// <param name="targetStream">The <see cref="Stream"/>where to add the end poit to</param>
+        private void AddMultiPartMimeEndpoint(Stream targetStream)
+        {
+            var endLine = Encoding.Default.GetBytes($"\r\n--{BoundaryString}--");
+            targetStream.Write(endLine, 0, endLine.Length);
         }
 
         /// <summary>

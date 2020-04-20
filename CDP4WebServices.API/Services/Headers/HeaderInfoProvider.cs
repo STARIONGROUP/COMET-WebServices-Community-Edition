@@ -111,11 +111,24 @@ namespace CDP4WebServices.API.Services
         {
             response.Headers.Add(this.Cdp4ServerHeader, this.Cdp4ServerVersion);
             response.Headers.Add(this.Cdp4CommonHeader, this.Cdp4CommonVersion);
+
             if (!response.Headers.ContainsKey(this.ContentTypeHeader))
             {
                 response.Headers.Add(this.ContentTypeHeader, this.ContentTypeVersion);
             }            
         }
+
+        /// <summary>
+        /// Register the multipart CDP4 content-type header to the passed in response.
+        /// </summary>
+        /// <param name="response">
+        /// The nancy response.
+        /// </param>
+        /// <param name="boundaryString">
+        /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
+        /// </param>
+        public void RegisterMultipartResponseContentTypeHeader(Response response, string boundaryString) => 
+            response.Headers.Add(this.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundaryString}");
 
         /// <summary>
         /// Query the assembly version for the given type.
