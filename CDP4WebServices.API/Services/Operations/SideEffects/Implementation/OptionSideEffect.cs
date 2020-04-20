@@ -151,7 +151,31 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             {
                 throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
             }
+        }
 
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic after a successful delete operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original Thing.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void AfterDelete(Option thing, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
             if (container is Iteration iteration)
             {
                 if (!(iteration.DefaultOption?.Equals(thing.Iid) ?? false))
@@ -174,7 +198,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
                 var engineeringModelSetup = this.EngineeringModelSetupService
                     .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
-                    .Cast<CDP4Common.DTO.EngineeringModelSetup>()
+                    .Cast<EngineeringModelSetup>()
                     .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
                 if (engineeringModelSetup == null)
@@ -212,7 +236,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 if (engineeringModel == null)
                 {
                     throw new KeyNotFoundException(
-                        $"{baseErrorString}\n{nameof(CDP4Common.DTO.EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
+                        $"{baseErrorString}\n{nameof(EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
                 }
 
                 this.IterationService.UpdateConcept(transaction, engineeringModelPartition, updatedIteration,

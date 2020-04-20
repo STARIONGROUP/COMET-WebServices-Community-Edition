@@ -166,9 +166,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
-            this.optionSideEffect.BeforeDelete(
+            this.optionSideEffect.AfterDelete(
                 this.option1,
                 this.iteration,
+                this.option1,
                 this.npgsqlTransaction,
                 this.iterationPartition,
                 this.securityContext.Object);
@@ -187,9 +188,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
-            this.optionSideEffect.BeforeDelete(
+            this.optionSideEffect.AfterDelete(
                 this.option2,
                 this.iteration,
+                this.option2,
                 this.npgsqlTransaction,
                 this.iterationPartition,
                 this.securityContext.Object);
@@ -208,9 +210,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             this.updatedIteration.DefaultOption = null;
 
-            this.optionSideEffect.BeforeDelete(
+            this.optionSideEffect.AfterDelete(
                 this.option1,
                 this.iteration,
+                this.option1,
                 this.npgsqlTransaction,
                 this.iterationPartition,
                 this.securityContext.Object);
