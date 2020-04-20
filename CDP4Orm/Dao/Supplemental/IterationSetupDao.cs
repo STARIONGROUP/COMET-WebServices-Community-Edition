@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupDao.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -105,6 +105,33 @@ namespace CDP4Orm.Dao
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Execute additional logic before each delete function call.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The thing DTO id that is to be deleted.
+        /// </param>
+        /// <param name="isHandled">
+        /// Logic flag that can be set to true to skip the generated deleted logic
+        /// </param>
+        /// <returns>
+        /// True if the concept was deleted.
+        /// </returns>
+        /// <remarks>
+        /// IterationSetups cannot be deleted at all.
+        /// </remarks>>
+        public override bool BeforeDelete(NpgsqlTransaction transaction, string partition, Guid iid, out bool isHandled)
+        {
+            isHandled = true;
+            return true;
         }
     }
 }

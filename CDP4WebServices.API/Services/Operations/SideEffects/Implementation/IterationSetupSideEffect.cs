@@ -203,11 +203,26 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (thing.FrozenOn == null)
+            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new [] {thing.Iid}, securityContext).OfType<IterationSetup>();
+            var iterationSetup = iterationSetups.SingleOrDefault();
+
+            if (iterationSetup == null)
+            {
+                throw new InvalidOperationException("IterationSetup is null.");
+            }
+
+            if (iterationSetup.FrozenOn == null)
             {
                 throw new InvalidOperationException("It is not possible to delete the current iteration.");
             }
 
+            if (iterationSetup.IsDeleted)
+            {
+                return;
+            }
+
+            iterationSetup.IsDeleted = true;
+            this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
         }
 
         /// <summary>
