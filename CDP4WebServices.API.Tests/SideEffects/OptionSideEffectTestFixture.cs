@@ -43,7 +43,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
         private Iteration updatedIteration;
 
-        private Option option;
+        private Option option1;
+
+        private Option option2;
 
         private List<Option> options;
 
@@ -68,22 +70,11 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.requestUtils = new Mock<IRequestUtils>();
             this.npgsqlTransaction = null;
 
-
-            this.optionSideEffect = new OptionSideEffect
-            {
-                OptionService = this.optionService.Object,
-                EngineeringModelSetupService = this.engineeringModelSetupService.Object,
-                IterationSetupService = this.iterationSetupService.Object
-            };
-
-            this.option = new Option(Guid.NewGuid(), 0);
+            this.option1 = new Option(Guid.NewGuid(), 0);
+            this.option2 = new Option(Guid.NewGuid(), 0);
             this.options = new List<Option>();
             this.optionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(options);
-
-            //this.iteration = new Iteration(Guid.NewGuid(), 0);
-            //this.iteration.IterationSetup = Guid.NewGuid();
-
 
             this.iterationSetup = new IterationSetup
             {
@@ -96,13 +87,16 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 IterationSetup = this.iterationSetup.Iid
             };
 
-            this.updatedIteration = this.iteration.DeepClone<Iteration>();
+            this.iteration.DefaultOption = this.option1.Iid;
+
             this.iterationSetup.IterationIid = this.iteration.Iid;
+            
+            this.updatedIteration = this.iteration.DeepClone<Iteration>();
 
             this.engineeringModelSetup = new EngineeringModelSetup
             {
                 Iid = Guid.NewGuid(),
-                IterationSetup = new List<Guid> { this.iteration.IterationSetup }
+                IterationSetup = new List<Guid> { this.iterationSetup.Iid },
             };
 
             this.engineeringModel = new EngineeringModel
@@ -111,69 +105,112 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 EngineeringModelSetup = this.engineeringModelSetup.Iid
             };
             this.engineeringModelSetup.EngineeringModelIid = this.engineeringModel.Iid;
+
+
+            this.optionSideEffect = new OptionSideEffect
+            {
+                OptionService = this.optionService.Object,
+                EngineeringModelSetupService = this.engineeringModelSetupService.Object,
+                EngineeringModelService = this.engineeringModelService.Object,
+                IterationService = this.iterationService.Object,
+                IterationSetupService = this.iterationSetupService.Object,
+                RequestUtils = this.requestUtils.Object
+            };
         }
 
         [Test]
         public void Verify_that_when_an_iteration_contains_no_options_an_option_can_be_added()
         {
-            Assert.That(this.optionSideEffect.BeforeCreate(this.option, this.iteration, null, null, null),
+            Assert.That(this.optionSideEffect.BeforeCreate(this.option1, this.iteration, null, null, null),
                 Is.True);
         }
 
         [Test]
         public void Verify_that_after_delete_option_everything_an_EngineeringModel_is_a_catalogue_no_more_than_one_option_can_be_added()
         {
-            this.options.Add(new Option(Guid.NewGuid(), 0));
+            this.engineeringModelSetup.Kind= CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE;
+            this.options.Add(this.option1);
+            this.options.Add(this.option2);
 
-            var iterationSetup = new IterationSetup(Guid.NewGuid(), 0) { IterationIid = this.iteration.Iid };
-
-            this.iterationSetupService.Setup(x =>
-                x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<ISecurityContext>())).Returns(new List<IterationSetup>() { iterationSetup });
-
-            var engineeringModelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
-            engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
-            engineeringModelSetup.Kind = CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE;
-
-            this.engineeringModelSetupService.Setup(x =>
-                x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<ISecurityContext>())).Returns(new List<EngineeringModelSetup>() { engineeringModelSetup });
+            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
 
             Assert.Throws<InvalidOperationException>(() =>
-                this.optionSideEffect.BeforeCreate(this.option, this.iteration, null, null, null));
+                this.optionSideEffect.BeforeCreate(
+                    this.option1,
+                    this.iteration,
+                    this.npgsqlTransaction,
+                    this.iterationPartition,
+                    this.securityContext.Object)
+            );
         }
 
         [Test]
         public void Verify_that_when_an_EngineeringModel_is_not_a_Catalogue_more_than_one_option_can_be_added()
         {
-            this.options.Add(new Option(Guid.NewGuid(), 0));
+            this.engineeringModelSetup.Kind = CDP4Common.SiteDirectoryData.EngineeringModelKind.STUDY_MODEL;
+            this.options.Add(this.option1);
+            this.options.Add(this.option2);
+            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
 
-            var iterationSetup = new IterationSetup(Guid.NewGuid(), 0) { IterationIid = this.iteration.Iid };
-
-            this.iterationSetupService.Setup(x =>
-                x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<ISecurityContext>())).Returns(new List<IterationSetup>() { iterationSetup });
-
-            var engineeringModelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
-            engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
-            engineeringModelSetup.Kind = CDP4Common.SiteDirectoryData.EngineeringModelKind.STUDY_MODEL;
-
-            this.engineeringModelSetupService.Setup(x =>
-                x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<ISecurityContext>())).Returns(new List<EngineeringModelSetup>() { engineeringModelSetup });
-
-            Assert.That(this.optionSideEffect.BeforeCreate(this.option, this.iteration, null, null, null), Is.True);
+            Assert.That(
+                this.optionSideEffect.BeforeCreate(
+                    this.option1,
+                    this.iteration,
+                    this.npgsqlTransaction,
+                    this.iterationPartition,
+                    this.securityContext.Object), Is.True
+            );
         }
 
         [Test]
-        public void
-            Verify_that_reset_0f_default_option_is_not_set_and_not_saved_when_DefaultOption_is_deleted_and_DefautOption_was_already_reset_earlier()
+        public void Verify_that_DefaultOption_is_not_set_and_not_saved_when_Option_is_deleted()
         {
             this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+
+            this.optionSideEffect.BeforeDelete(
+                this.option1,
+                this.iteration,
+                this.npgsqlTransaction,
+                this.iterationPartition,
+                this.securityContext.Object);
+
+            Assert.IsNotNull(this.iteration.DefaultOption);
+            Assert.IsNull(this.updatedIteration.DefaultOption);
+
+            this.iterationService
+                .Verify(
+                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                        this.engineeringModel), Times.Once);
+        }
+
+        [Test]
+        public void Verify_that_DefaultOption_is_set_and_saved_when_Option_is_deleted()
+        {
+            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+
+            this.optionSideEffect.BeforeDelete(
+                this.option2,
+                this.iteration,
+                this.npgsqlTransaction,
+                this.iterationPartition,
+                this.securityContext.Object);
+
+            Assert.IsNotNull(this.updatedIteration.DefaultOption);
+            this.iterationService
+                .Verify(
+                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                        this.engineeringModel), Times.Never);
+        }
+
+        [Test]
+        public void Verify_that_DefaultOption_is_not_set_and_not_saved_when_DefaultOption_is_deleted_and_DefautOption_was_already_reset_earlier()
+        {
+            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
+
             this.updatedIteration.DefaultOption = null;
 
             this.optionSideEffect.BeforeDelete(
-                this.option,
+                this.option1,
                 this.iteration,
                 this.npgsqlTransaction,
                 this.iterationPartition,
@@ -184,46 +221,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 .Verify(
                     x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
-        }
-
-        [Test]
-        public void Verify_that_reset_of_DefaultOption_is_not_set_and_not_saved_when_is_deleted()
-        {
-
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
-            this.updatedIteration.DefaultOption = null;
-
-            this.optionSideEffect.BeforeDelete(
-                this.option,
-                this.iteration,
-                this.npgsqlTransaction,
-                this.iterationPartition,
-                this.securityContext.Object);
-
-            Assert.IsNull(this.iteration.DefaultOption);
-
-            this.iterationService
-                .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
-                        this.engineeringModel), Times.Never);
-        }
-
-        [Test] public void Verify_that_reset_of_DefaultOption_is_set_and_saved_when_DefaultOption_is_deleted()
-        {
-            this.SetupMethodCallsForDeleteOptionTest(SetupMethodCallsForOptionTestScenario.All);
-
-            this.optionSideEffect.BeforeDelete(
-                this.option,
-                this.iteration,
-                this.npgsqlTransaction,
-                this.iterationPartition,
-                this.securityContext.Object);
-
-            Assert.IsNull(this.updatedIteration.DefaultOption);
-            this.iterationService
-                .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
-                        this.engineeringModel), Times.Once);
         }
 
         /// <summary>
@@ -239,10 +236,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             EngineeringModelSetup = 2,
             Iteration = 4,
             EngineeringModel = 8,
-            IterationSetupNotFound = EngineeringModelSetup | Iteration | EngineeringModel,
-            EngineeringModelSetupNotFound = IterationSetup | Iteration | EngineeringModel,
-            IterationNotFound = IterationSetup | EngineeringModelSetup | EngineeringModel,
-            EngineeringModelNotFound = IterationSetup | EngineeringModelSetup | Iteration,
             All = IterationSetup | EngineeringModelSetup | Iteration | EngineeringModel
         }
 
@@ -261,11 +254,11 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 .Setup(x => x.GetEngineeringModelPartitionString(this.engineeringModelSetup.EngineeringModelIid))
                 .Returns(this.engineeringModelPartition);
 
-            var iterationSetups = new List<Iteration>();
+            var iterationSetups = new List<IterationSetup>();
             if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario
                 .IterationSetup))
             {
-                iterationSetups.Add(this.iteration);
+                iterationSetups.Add(this.iterationSetup);
             }
 
             this.iterationSetupService
@@ -274,8 +267,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 .Returns(iterationSetups);
 
             var engineeringModelSetups = new List<EngineeringModelSetup>();
-            if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario
-                .EngineeringModelSetup))
+            if (setupMethodCallsForOptionTestScenario.HasFlag(SetupMethodCallsForOptionTestScenario.EngineeringModel))
             {
                 engineeringModelSetups.Add(this.engineeringModelSetup);
             }
