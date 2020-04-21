@@ -137,7 +137,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyBeforeDeleteIsIterationIsCurrentIteration()
+        public void VerifyBeforeDeleteWhenIterationIsCurrentIteration()
         {
             var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
 
@@ -153,7 +153,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyBeforeDeleteIsIterationIsFrozenAndDelete()
+        public void VerifyBeforeDeleteWhenIterationIsFrozenAndDeleted()
         {
             var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
             iterationSetup.FrozenOn=DateTime.Now;
@@ -174,7 +174,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyBeforeDeleteIsIterationIsFrozenAndDeleteIt()
+        public void VerifyBeforeDeleteWhenIterationIsFrozenAndMarkItLikeIsDeleted()
         {
             var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
             iterationSetup.FrozenOn = DateTime.Now;
