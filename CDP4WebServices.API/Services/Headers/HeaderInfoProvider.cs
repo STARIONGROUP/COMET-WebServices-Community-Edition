@@ -44,13 +44,23 @@ namespace CDP4WebServices.API.Services
         private readonly Dictionary<string, string> responseHeaders = new Dictionary<string, string>();
 
         /// <summary>
+        /// The version of the <see cref="Cdp4ServerHeader"/>
+        /// </summary>
+        private static readonly Lazy<string> Cdp4ServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(AppConfig)));
+
+        /// <summary>
+        /// The version of the <see cref="Cdp4CommonHeader"/>
+        /// </summary>
+        private static readonly Lazy<string> Cdp4CommonHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(CDP4Common.DTO.Thing)));
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HeaderInfoProvider"/> class.
         /// </summary>
         public HeaderInfoProvider()
         {
             // setup version info at runtime bootstrap
-            this.responseHeaders.Add(this.Cdp4ServerHeader, this.GetAssemblyVersion(typeof(AppConfig)));
-            this.responseHeaders.Add(this.Cdp4CommonHeader, this.GetAssemblyVersion(typeof(CDP4Common.DTO.Thing)));
+            this.responseHeaders.Add(this.Cdp4ServerHeader, Cdp4ServerHeaderVersion.Value);
+            this.responseHeaders.Add(this.Cdp4CommonHeader, Cdp4CommonHeaderVersion.Value);
             this.responseHeaders.Add(this.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
         }
 
@@ -160,17 +170,18 @@ namespace CDP4WebServices.API.Services
         /// <returns>
         /// The formatted version string (i.e. [Major].[Minor].[Build].
         /// </returns>
-        private string GetAssemblyVersion(Type type)
+        private static string GetAssemblyVersion(Type type)
         {
             var asm = Assembly.GetAssembly(type);
-            if (asm != null)
+
+            if (asm == null)
             {
-                var version = asm.GetName().Version;
-                return string.Format("{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+                // return default if there was an error loading the assembly
+                return "0.0.0";
             }
 
-            // return default if there was an error loading the assembly
-            return "0.0.0";
+            var version = asm.GetName().Version;
+            return $"{version.Major}.{version.Minor}.{version.Build}";
         }
     }
 }
