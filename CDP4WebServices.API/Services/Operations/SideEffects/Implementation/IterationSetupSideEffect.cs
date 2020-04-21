@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2018 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -216,7 +216,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 throw new InvalidOperationException("It is not possible to delete the current iteration.");
             }
 
-            if (iterationSetup.IsDeleted)
+            if (iterationSetup.IsDeleted != false)
             {
                 return;
             }

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffectTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
 // </copyright>
 // <summary>
 //   IterationSetup Side Effect test class
@@ -11,6 +11,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using CDP4Authentication;
 
@@ -133,6 +134,61 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
             this.mockedIterationService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.Is<string>(s => s.Contains("EngineeringModel")), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>()), Times.Never);
+        }
+
+        [Test]
+        public void VerifyBeforeDeleteIsIterationIsCurrentIteration()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+
+            Assert.Throws<InvalidOperationException>(() => 
+                this.iterationSetupSideEffect.BeforeDelete(
+                    iterationSetup,
+                    this.engineeringModelSetup, 
+                    this.npgsqlTransaction, 
+                    "siteDirectory", 
+                    this.mockedSecurityContext.Object));
+
+            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup , this.engineeringModelSetup), Times.Never);
+        }
+
+        [Test]
+        public void VerifyBeforeDeleteIsIterationIsFrozenAndDelete()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            iterationSetup.FrozenOn=DateTime.Now;
+            iterationSetup.IsDeleted = true;
+
+            var originalThing = iterationSetup.DeepClone<Thing>();
+
+            this.iterationSetupSideEffect.BeforeDelete(
+                    iterationSetup,
+                    this.engineeringModelSetup,
+                    this.npgsqlTransaction,
+                    "siteDirectory",
+                    this.mockedSecurityContext.Object);
+
+            Assert.AreEqual(iterationSetup.Iid,originalThing.Iid);
+
+            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Never);
+        }
+
+        [Test]
+        public void VerifyBeforeDeleteIsIterationIsFrozenAndDeleteIt()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            iterationSetup.FrozenOn = DateTime.Now;
+
+            this.iterationSetupSideEffect.BeforeDelete(
+                iterationSetup,
+                this.engineeringModelSetup,
+                this.npgsqlTransaction,
+                "siteDirectory",
+                this.mockedSecurityContext.Object);
+
+            Assert.AreEqual(iterationSetup.IsDeleted, true);
+           
+            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
         }
     }
 }
