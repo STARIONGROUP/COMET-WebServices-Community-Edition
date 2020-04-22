@@ -16,8 +16,8 @@
     "DatabaseManage": "cdp4manage",
     "StatementTimeout": 180,
     "LogSqlCommands": false,
-    "IsDbSeedEnabled": true,
-    "IsDbRestoreEnabled": true
+    "IsDbSeedEnabled": false,
+    "IsDbRestoreEnabled": false
   },
   "Defaults": {
     "PersonPassword": "pass",
