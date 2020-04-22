@@ -901,6 +901,7 @@ namespace CDP4WebServices.API.Modules
                 binaryContent.Headers.Add(
                     ContentDispositionHeader,
                     $"attachment; filename={folderPath + ".zip"}");
+
                 binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
 
@@ -918,7 +919,10 @@ namespace CDP4WebServices.API.Modules
         /// <summary>
         /// add ending line according to https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html
         /// </summary>
-        /// <param name="targetStream">The <see cref="Stream"/>where to add the end poit to</param>
+        /// <param name="targetStream">The <see cref="Stream"/>where to add the end point to</param>
+        /// <remarks>
+        /// Changes the <param name="targetStream"></param>
+        /// </remarks>
         private void AddMultiPartMimeEndpoint(Stream targetStream)
         {
             var endLine = Encoding.Default.GetBytes($"\r\n--{BoundaryString}--");
