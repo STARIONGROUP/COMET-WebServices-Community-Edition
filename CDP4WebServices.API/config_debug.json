@@ -7,7 +7,7 @@
     "FileStorageDirectory": "storage"
   },
   "Backtier": {
-    "HostName": "localhost",
+    "HostName": "cdp4-postgresql",
     "Port": 5432,
     "UserName": "cdp4",
     "Password": "cdp4",
