@@ -177,6 +177,12 @@ namespace CDP4WebServices.API.Modules
 
                     // gather all Things as indicated by the request URI 
                     resourceResponse.AddRange(this.GetContainmentResponse(processor, partition, modelSetup, routeSegments));
+
+                    if (!resourceResponse.Any())
+                    {
+                        var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
+                        return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
+                    }
                 }
 
                 transaction.Commit();
