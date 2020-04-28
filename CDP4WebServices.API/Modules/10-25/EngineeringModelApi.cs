@@ -181,7 +181,7 @@ namespace CDP4WebServices.API.Modules
                     if (!resourceResponse.Any())
                     {
                         var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
-                        return invalidRequest.WithStatusCode(HttpStatusCode.NotFound);
+                        return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                     }
                 }
 
