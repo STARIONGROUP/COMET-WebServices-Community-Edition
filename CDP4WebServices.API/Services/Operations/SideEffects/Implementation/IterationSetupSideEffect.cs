@@ -223,7 +223,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new [] {thing.Iid}, securityContext).OfType<IterationSetup>();
+            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new [] {thing.Iid}, securityContext)
+                                                            .OfType<IterationSetup>();
+
             var iterationSetup = iterationSetups.SingleOrDefault();
 
             if (iterationSetup == null)
@@ -250,13 +252,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
             this.PermissionService.Credentials = credentials;
 
-            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new [] {iterationSetup.IterationIid}, securityContext).Cast<Iteration>().SingleOrDefault();
+            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new [] {iterationSetup.IterationIid}, securityContext)
+                                                 .Cast<Iteration>()
+                                                 .SingleOrDefault();
+
             this.IterationService.DeleteConcept(transaction, engineeringModelPartition, iteration, container);
-
-            var iteration2 = this.IterationService.GetShallow(transaction, engineeringModelPartition, new[] { iterationSetup.IterationIid }, securityContext).Cast<Iteration>().SingleOrDefault();
-
-            iterationSetup.IsDeleted = true;
-            this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
         }
 
         /// <summary>
@@ -282,88 +282,30 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void AfterDelete(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new[] { thing.Iid }, securityContext).OfType<IterationSetup>();
-            var iterationSetup = iterationSetups.SingleOrDefault();
+            var iterationSetup = this.IterationSetupService.GetShallow(transaction, partition, new[] { thing.Iid }, securityContext)
+                                                           .OfType<IterationSetup>()
+                                                           .SingleOrDefault();
 
-            var engineeringModelSetup = (EngineeringModelSetup)container;
-            var iterationSetupIidsToUpdate = engineeringModelSetup.IterationSetup.Except(new[] { thing.Iid });
-            var iterationSetupsToUpdate = this.IterationSetupService.GetShallow(transaction, partition, iterationSetupIidsToUpdate, securityContext).OfType<IterationSetup>();
+            if (iterationSetup!=null)
+            {
+                iterationSetup.IsDeleted = true;
+                this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
 
-            // Create the iteration for the IterationSetup
-            var engineeringModelIid = engineeringModelSetup.EngineeringModelIid;
+                var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
+                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
-            // switch partition to engineeringModel
-            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
+                // Create revisions for created Iteration and updated EngineeringModel
+                var actor = credentials.Person.Iid;
 
-            // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
-            credentials.EngineeringModelSetup = engineeringModelSetup;
-            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-            this.PermissionService.Credentials = credentials;
-
-            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new[] { engineeringModelIid }, securityContext)
-                                                               .SingleOrDefault() as EngineeringModel;
-
-            var sourceIterationSetups = this.IterationSetupService.GetShallow(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, engineeringModelSetup.IterationSetup, securityContext)
-                                                                  .Where(x => x.Iid != thing.Iid)
-                                                                  .Cast<IterationSetup>()
-                                                                  .ToList();
-
-            // update iteration partition with source data if applicable
-
-                var sourceIterationSetup = sourceIterationSetups.SingleOrDefault();
-                if (sourceIterationSetup == null)
-                {
-                    throw new InvalidOperationException("The source iteration-setup could not be found.");
-                }
-
-                var lastIterationNumber = sourceIterationSetups.Max(x => x.IterationNumber);
-                var iterationPartition = $"{Cdp4TransactionManager.ITERATION_PARTITION_PREFIX}{engineeringModelIid.ToString().Replace("-", "_")}";
-                if (sourceIterationSetup.IterationNumber != lastIterationNumber)
-                {
-                    this.IterationService.PopulateDataFromOlderIteration(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
-                }
-                else
-                {
-                    this.IterationService.PopulateDataFromLastIteration(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
-                }
-
-
-            // Create revisions for created Iteration and updated EngineeringModel
-            var actor = credentials.Person.Iid;
-
-            this.TransactionManager.SetDefaultContext(transaction);
-            this.TransactionManager.SetCachedDtoReadEnabled(false);
-            var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
-            this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
-
-            //var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new[] { thing.Iid }, securityContext).OfType<IterationSetup>();
-            //var iterationSetup = iterationSetups.SingleOrDefault();
-
-            //var baseErrorString = $"Could not find {nameof(Iteration)}.";
-
-            //if (iterationSetup == null)
-            //{
-            //    throw new KeyNotFoundException($"{baseErrorString}\n{nameof(IterationSetup)} with iid {iterationSetup.Iid} could not be found.");
-            //}
-
-            //var engineeringModelSetup = (EngineeringModelSetup)container;
-
-            //var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
-
-            //var updatedIteration = this.IterationService
-            //    .GetShallow(transaction, engineeringModelPartition, new[] { iterationSetup.IterationIid }, securityContext)
-            //    .Cast<Iteration>()
-            //    .SingleOrDefault();
-
-            //var engineeringModel = this.EngineeringModelService
-            //    .GetShallow(transaction, engineeringModelPartition,
-            //        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
-            //    .SingleOrDefault();
-
-
-            //this.EngineeringModelService.UpdateConcept(transaction, engineeringModelPartition, engineeringModel, container);
-
+                this.TransactionManager.SetDefaultContext(transaction);
+                this.TransactionManager.SetCachedDtoReadEnabled(false);
+                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
+                this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+            }
+            else 
+            {
+                throw new InvalidOperationException("IterationSetup is null.");
+            }
         }
 
         /// <summary>
