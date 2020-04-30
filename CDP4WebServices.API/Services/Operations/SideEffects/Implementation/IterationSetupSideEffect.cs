@@ -294,11 +294,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
                 var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
-                // Create revisions for created Iteration and updated EngineeringModel
+                // Create revisions for deleted Iteration and updated EngineeringModel
                 var actor = credentials.Person.Iid;
-
-                this.TransactionManager.SetDefaultContext(transaction);
-                this.TransactionManager.SetCachedDtoReadEnabled(false);
                 var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
                 this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
             }
