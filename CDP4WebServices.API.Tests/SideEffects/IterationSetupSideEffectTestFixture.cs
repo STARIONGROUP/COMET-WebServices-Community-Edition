@@ -195,6 +195,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         public void VerifyBeforeDeleteWhenIterationIsFrozenAndMarkItLikeIsDeleted()
         {
             var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            var originalThing = iterationSetup.DeepClone<Thing>();
             iterationSetup.FrozenOn = DateTime.Now;
 
             this.iterationSetupSideEffect.BeforeDelete(
@@ -204,8 +205,18 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 "siteDirectory",
                 this.mockedSecurityContext.Object);
 
+            Assert.AreEqual(iterationSetup.IsDeleted, false);
+
+            this.iterationSetupSideEffect.AfterDelete(
+                iterationSetup,
+                this.engineeringModelSetup,
+                originalThing,
+                this.npgsqlTransaction,
+                "siteDirectory",
+                this.mockedSecurityContext.Object);
+
             Assert.AreEqual(iterationSetup.IsDeleted, true);
-           
+
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
         }
     }
