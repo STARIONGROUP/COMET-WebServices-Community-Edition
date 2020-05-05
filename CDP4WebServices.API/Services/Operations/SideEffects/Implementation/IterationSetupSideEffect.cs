@@ -291,10 +291,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 iterationSetup.IsDeleted = true;
                 this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
 
+                // Swtitch partition to EngineeringModel
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
-                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
                 // Create revisions for deleted Iteration and updated EngineeringModel
+                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
                 var actor = credentials.Person.Iid;
                 var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
                 this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
