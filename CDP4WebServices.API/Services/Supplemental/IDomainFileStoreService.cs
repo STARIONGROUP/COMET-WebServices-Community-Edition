@@ -45,6 +45,6 @@ namespace CDP4WebServices.API.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        void CheckSecurity<T>(T thing, IDbTransaction transaction, string partition) where T : Thing;
+        void CheckSecurity(Thing thing, IDbTransaction transaction, string partition);
     }
 }

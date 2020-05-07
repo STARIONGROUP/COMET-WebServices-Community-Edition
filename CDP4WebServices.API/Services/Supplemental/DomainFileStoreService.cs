@@ -48,7 +48,8 @@ namespace CDP4WebServices.API.Services
         public IIterationService IterationService { get; set; }
 
         /// <summary>
-        /// 
+        /// <see cref="Dictionary{TKey,TValue}"/> that uses a <see cref="Type"/> as it's key and a <see cref="Func{TResult}"/> that returns a <see cref="Func{TResult}"/>
+        /// that can be used as a predicate on a list of <see cref="DomainFileStore"/>s.
         /// </summary>
         private readonly Dictionary<Type, Func<Guid, Func<DomainFileStore, bool>>> domainFileStoreSelectors = new Dictionary<Type, Func<Guid, Func<DomainFileStore, bool>>>
         {
@@ -160,7 +161,9 @@ namespace CDP4WebServices.API.Services
         /// <param name="thing">
         /// The <see cref="Thing"/> to check.
         /// </param>
-        /// <returns></returns>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
         public bool IsAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing)
         {
             if (thing is DomainFileStore domainFileStore)
@@ -186,7 +189,12 @@ namespace CDP4WebServices.API.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        public void CheckSecurity<T>(T thing, IDbTransaction transaction, string partition) where T : Thing
+        /// <remarks>
+        /// Without a domainFileStoreSelector, SingleOrDefault(domainFileStoreSelector) could fail, because multiple <see cref="DomainFileStore"/>s could exist.
+        /// Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
+        /// the to be created <see cref="DomainFileStore"/>. The isHidden check will then be ignored.
+        /// </remarks>
+        public void CheckSecurity(Thing thing, IDbTransaction transaction, string partition)
         {
             //am I owner of the file?
             if (!this.PermissionService.IsOwner(transaction as NpgsqlTransaction, thing))
@@ -196,10 +204,14 @@ namespace CDP4WebServices.API.Services
 
             if (partition.Contains("Iteration"))
             {
-                if (!this.domainFileStoreSelectors.ContainsKey(typeof(T)))
+                var thingType = thing.GetType();
+                
+                if (!this.domainFileStoreSelectors.ContainsKey(thingType))
                 {
-                    throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {typeof(T).Name}");
+                    throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {thingType.Name}");
                 }
+
+                var domainFileStoreSelector = this.domainFileStoreSelectors[thingType].Invoke(thing.Iid);
 
                 //is DomainFileStore hidden
                 var engineeringModelPartition = partition.Replace(
@@ -208,13 +220,10 @@ namespace CDP4WebServices.API.Services
 
                 var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
 
-                var domainFileStoreSelector = this.domainFileStoreSelectors[typeof(T)];
-                var iid = domainFileStoreSelector.Invoke(thing.Iid);
-
                 var domainFileStore =
                     this.GetShallow(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext { ContainerReadAllowed = true })
                         .Cast<DomainFileStore>()
-                        .SingleOrDefault();
+                        .SingleOrDefault(domainFileStoreSelector);
 
                 if (domainFileStore != null && !this.IsAllowedAccordingToIsHidden(transaction, domainFileStore))
                 {
