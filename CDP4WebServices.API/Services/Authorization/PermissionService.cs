@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -9,12 +27,18 @@ namespace CDP4WebServices.API.Services.Authorization
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    
     using Authentication;
+
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
+    
     using CDP4Orm.Dao;
+    
     using NLog;
+    
     using Npgsql;
+    
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
@@ -388,9 +412,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <returns>True if it is own <see cref="Person"/>.</returns>
         private bool IsOwnPerson(Thing thing)
         {
-            var person = thing as Person;
-
-            if (person != null)
+            if (thing is Person person)
             {
                 return person.Iid == this.Credentials.Person.Iid;
             }
@@ -435,7 +457,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// </param>
         /// <param name="thing">The <see cref="Thing"/> to check whether it is own <see cref="Person"/>.</param>
         /// <returns>True if a supplied <see cref="Thing"/> is owned by the current <see cref="Participant"/>.</returns>
-        private bool IsOwner(NpgsqlTransaction transaction, Thing thing)
+        public bool IsOwner(NpgsqlTransaction transaction, Thing thing)
         {
             // Check if owned thing
             var ownedThing = thing as IOwnedThing;

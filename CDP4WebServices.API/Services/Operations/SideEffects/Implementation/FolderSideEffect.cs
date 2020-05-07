@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FolderSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -27,6 +45,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IFolderService"/>
         /// </summary>
         public IFolderService FolderService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDomainFileStoreService"/>.
+        /// </summary>
+        public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
         /// Allows derived classes to override and execute additional logic before a create operation.
@@ -101,6 +124,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (rawUpdateInfo.ContainsKey("ContainingFolder"))
             {
                 var containingFolderId = (Guid)rawUpdateInfo["ContainingFolder"];
+
                 this.ValidateContainingFolder(
                     thing,
                     container,
@@ -109,6 +133,31 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                     securityContext,
                     containingFolderId);
             }
+
+            this.CheckSecurity(thing, transaction, partition);
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic before a delete operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void BeforeDelete(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            this.CheckSecurity(thing, transaction, partition);
         }
 
         /// <summary>
@@ -144,17 +193,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (containingFolderId == thing.Iid)
             {
                 throw new AcyclicValidationException(
-                    string.Format("Folder {0} {1} cannot have itself as a containing Folder.", thing.Name, thing.Iid));
+                    $"Folder {thing.Name} {thing.Iid} cannot have itself as a containing Folder.");
             }
 
             // Check that containing folder is from the same file store
             if (!((FileStore)container).Folder.Contains(containingFolderId))
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "Folder {0} {1} cannot have a Folder from outside the current file store.",
-                        thing.Name,
-                        thing.Iid));
+                    $"Folder {thing.Name} {thing.Iid} cannot have a Folder from outside the current file store.");
             }
 
             // Get all folders from the container
@@ -165,11 +211,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             if (!this.IsFolderAcyclic(folders, containingFolderId, thing.Iid))
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "Folder {0} {1} cannot have a containing Folder {2} that leads to cyclic dependency",
-                        thing.Name,
-                        thing.Iid,
-                        containingFolderId));
+                    $"Folder {thing.Name} {thing.Iid} cannot have a containing Folder {containingFolderId} that leads to cyclic dependency");
             }
         }
 
@@ -203,6 +245,26 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Checks the <see cref="DomainFileStore"/> security
+        /// </summary>
+        /// <param name="folder">
+        /// The instance of the <see cref="Folder"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        private void CheckSecurity(Folder folder, NpgsqlTransaction transaction, string partition)
+        {
+            this.DomainFileStoreService.CheckSecurity(
+                folder,
+                transaction,
+                partition);
         }
     }
 }
