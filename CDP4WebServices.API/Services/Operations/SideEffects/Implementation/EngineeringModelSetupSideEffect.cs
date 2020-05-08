@@ -65,11 +65,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IParticipantService ParticipantService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IDomainFileStoreService"/>
-        /// </summary>
-        public IDomainFileStoreService DomainFileStoreService { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IOptionService"/>
         /// </summary>
         public IOptionService OptionService { get; set; }
@@ -237,84 +232,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         }
 
         /// <summary>
-        /// Allows derived classes to override and execute additional logic after a successful update operation.
-        /// </summary>
-        /// <param name="thing">
-        /// The <see cref="Thing"/> instance that will be inspected.
-        /// </param>
-        /// <param name="container">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
-        /// </param>
-        /// <param name="originalThing">
-        /// The original Thing.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="securityContext">
-        /// The security Context used for permission checking.
-        /// </param>
-        public override void AfterUpdate(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
-        {
-            var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
-            var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
-            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, thing.IterationSetup, securityContext).Cast<IterationSetup>();
-            var iterations = this.IterationService.GetShallow(transaction, newEngineeringModelPartition, iterationSetups.Select(i => i.IterationIid), securityContext).Cast<Iteration>();
-
-            // determine which domains have been added and removed
-            var removedDomains = originalThing.ActiveDomain.Except(thing.ActiveDomain).ToList();
-            var addedDomains = thing.ActiveDomain.Except(originalThing.ActiveDomain).ToList();
-
-            foreach (var iteration in iterations)
-            {
-                var domainFileStores = this.DomainFileStoreService.GetShallow(transaction, newIterationPartition, iteration.DomainFileStore, securityContext).Cast<DomainFileStore>().ToList();
-
-                // if domain was removed, remove the DomainFileStore as well
-                foreach (var removedDomain in removedDomains)
-                {
-                    // see if one already exists
-                    var domainFileStore = domainFileStores.SingleOrDefault(dfs => dfs.Owner.Equals(removedDomain));
-
-                    if (domainFileStore == null)
-                    {
-                        // indicates that the model is in a broken state (no DomainFileStore for the given DomainOfExpertise). Be forgiving and allow the code to return to a steady state.
-                        continue;
-                    }
-
-                    if (!this.DomainFileStoreService.DeleteConcept(transaction, newIterationPartition, domainFileStore, iteration))
-                    {
-                        throw new InvalidOperationException($"There was a problem deleting the DomainFileStore: {domainFileStore.Iid} contained by Iteration: {iteration.Iid}");
-                    }
-                }
-
-                // create domain file store for every added domain
-                foreach (var addedDomain in addedDomains)
-                {
-                    // see if one already exists
-                    if (domainFileStores.Any(dfs => dfs.Owner.Equals(addedDomain)))
-                    {
-                        // indicates the model is in a broken state (a DomainFileStore was not cleaned up previously). Be forgiving and allow the domain to relink to it.
-                        continue;
-                    }
-
-                    var newDomainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
-                    {
-                        Owner = addedDomain,
-                        CreatedOn = DateTime.UtcNow
-                    };
-
-                    if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, iteration))
-                    {
-                        throw new InvalidOperationException($"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {iteration.Iid}");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Creates a new <see cref="EngineeringModel"/> from a source
         /// </summary>
         /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
@@ -366,20 +283,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // switch to iteration partition:
             var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
-
-            // Create a Domain FileStore for the current domain in the first iteration
-            var newDomainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
-            {
-                Owner = thing.ActiveDomain.Single(),
-                CreatedOn = DateTime.UtcNow
-            };
-
-            if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, firstIteration))
-            {
-                var errorMessage = $"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {firstIteration.Iid}";
-                Logger.Error(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
 
             this.CreateDefaultOption(firstIteration, transaction, newIterationPartition);
         }
