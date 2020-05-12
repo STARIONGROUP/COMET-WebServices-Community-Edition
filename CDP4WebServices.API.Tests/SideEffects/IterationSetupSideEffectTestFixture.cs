@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffectTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Kamil Wojnowski, Nathanael Smiechowski.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // <summary>
 //   IterationSetup Side Effect test class
@@ -11,6 +29,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using CDP4Authentication;
 
@@ -133,6 +152,72 @@ namespace CDP4WebServices.API.Tests.SideEffects
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
             this.mockedIterationService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.Is<string>(s => s.Contains("EngineeringModel")), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>()), Times.Never);
+        }
+
+        [Test]
+        public void VerifyBeforeDeleteWhenIterationIsCurrentIteration()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+
+            Assert.Throws<InvalidOperationException>(() => 
+                this.iterationSetupSideEffect.BeforeDelete(
+                    iterationSetup,
+                    this.engineeringModelSetup, 
+                    this.npgsqlTransaction, 
+                    "siteDirectory", 
+                    this.mockedSecurityContext.Object));
+
+            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup , this.engineeringModelSetup), Times.Never);
+        }
+
+        [Test]
+        public void VerifyBeforeDeleteWhenIterationIsFrozenAndDeleted()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            iterationSetup.FrozenOn=DateTime.Now;
+            iterationSetup.IsDeleted = true;
+
+            var originalThing = iterationSetup.DeepClone<Thing>();
+
+            this.iterationSetupSideEffect.BeforeDelete(
+                    iterationSetup,
+                    this.engineeringModelSetup,
+                    this.npgsqlTransaction,
+                    "siteDirectory",
+                    this.mockedSecurityContext.Object);
+
+            Assert.AreEqual(iterationSetup.Iid,originalThing.Iid);
+
+            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Never);
+        }
+
+        [Test]
+        public void VerifyBeforeDeleteWhenIterationIsFrozenAndMarkItLikeIsDeleted()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            var originalThing = iterationSetup.DeepClone<Thing>();
+            iterationSetup.FrozenOn = DateTime.Now;
+
+            this.iterationSetupSideEffect.BeforeDelete(
+                iterationSetup,
+                this.engineeringModelSetup,
+                this.npgsqlTransaction,
+                "siteDirectory",
+                this.mockedSecurityContext.Object);
+
+            Assert.AreEqual(iterationSetup.IsDeleted, false);
+
+            this.iterationSetupSideEffect.AfterDelete(
+                iterationSetup,
+                this.engineeringModelSetup,
+                originalThing,
+                this.npgsqlTransaction,
+                "siteDirectory",
+                this.mockedSecurityContext.Object);
+
+            Assert.AreEqual(iterationSetup.IsDeleted, true);
+
+            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
         }
     }
 }

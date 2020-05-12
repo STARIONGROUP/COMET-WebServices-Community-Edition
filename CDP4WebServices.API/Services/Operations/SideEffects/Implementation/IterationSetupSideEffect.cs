@@ -1,6 +1,25 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2018 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Kamil Wojnowski, Nathanael Smiechowski.
+//
+//    This file is part of CDP4-IME Community Edition. 
+//    The CDP4-IME Community Edition is the RHEA Concurrent Design Desktop Application and Excel Integration
+//    compliant with ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4-IME Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or any later version.
+//
+//    The CDP4-IME Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -8,6 +27,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Drawing;
     using System.Linq;
     using Authorization;
     using CDP4Common.DTO;
@@ -203,11 +223,87 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (thing.FrozenOn == null)
+            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new [] {thing.Iid}, securityContext)
+                                                            .OfType<IterationSetup>();
+
+            var iterationSetup = iterationSetups.SingleOrDefault();
+
+            if (iterationSetup == null)
+            {
+                throw new InvalidOperationException("IterationSetup is null.");
+            }
+
+            if (iterationSetup.FrozenOn == null)
             {
                 throw new InvalidOperationException("It is not possible to delete the current iteration.");
             }
 
+            if (iterationSetup.IsDeleted != false)
+            {
+                return;
+            }
+
+            // Swtitch partition to EngineeringModel
+            var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
+
+            // Make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
+            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            credentials.EngineeringModelSetup = (EngineeringModelSetup)container;
+            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
+            this.PermissionService.Credentials = credentials;
+
+            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new [] {iterationSetup.IterationIid}, securityContext)
+                                                 .Cast<Iteration>()
+                                                 .SingleOrDefault();
+
+            this.IterationService.DeleteConcept(transaction, engineeringModelPartition, iteration, container);
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic after a successful delete operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original Thing.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void AfterDelete(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            var iterationSetup = this.IterationSetupService.GetShallow(transaction, partition, new[] { thing.Iid }, securityContext)
+                                                           .OfType<IterationSetup>()
+                                                           .SingleOrDefault();
+
+            if (iterationSetup!=null)
+            {
+                iterationSetup.IsDeleted = true;
+                this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
+
+                // Swtitch partition to EngineeringModel
+                var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
+
+                // Create revisions for deleted Iteration and updated EngineeringModel
+                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                var actor = credentials.Person.Iid;
+                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
+                this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+            }
+            else 
+            {
+                throw new InvalidOperationException("IterationSetup is null.");
+            }
         }
 
         /// <summary>
