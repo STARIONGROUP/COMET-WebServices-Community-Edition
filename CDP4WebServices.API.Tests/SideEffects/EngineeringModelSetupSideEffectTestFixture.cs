@@ -40,7 +40,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IIterationSetupService> iterationSetupService;
         private Mock<IEngineeringModelService> engineeringModelService;
         private Mock<IEngineeringModelSetupService> engineeringModelSetupService;
-        private Mock<IDomainFileStoreService> domainFileStoreService;
         private Mock<IParticipantService> participantService;
         private Mock<IOptionService> optionService;
         private Mock<ISecurityContext> securityContext;
@@ -70,7 +69,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.iterationSetupService = new Mock<IIterationSetupService>();
             this.engineeringModelService = new Mock<IEngineeringModelService>();
             this.engineeringModelSetupService = new Mock<IEngineeringModelSetupService>();
-            this.domainFileStoreService = new Mock<IDomainFileStoreService>();
             this.participantService = new Mock<IParticipantService>();
             this.optionService = new Mock<IOptionService>();
             this.securityContext = new Mock<ISecurityContext>();
@@ -90,7 +88,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 IterationService = this.iterationService.Object,
                 IterationSetupService = this.iterationSetupService.Object,
                 ParticipantService = this.participantService.Object,
-                DomainFileStoreService = this.domainFileStoreService.Object,
                 OptionService = this.optionService.Object,
                 RequestUtils = this.requestUtils,
                 ModelCreatorManager = this.modelCreatorManager,
@@ -168,17 +165,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     this.securityContext.Object)).Returns(new[] { participant });
-            
-            this.domainFileStoreService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<DomainFileStore>(), It.IsAny<Iteration>(), -1)).Returns(true);
-            this.domainFileStoreService.Setup(
-                x =>
-                x.GetShallow(
-                    It.IsAny<NpgsqlTransaction>(),
-                    It.IsAny<string>(),
-                    It.IsAny<IEnumerable<Guid>>(),
-                    this.securityContext.Object)).Returns(new[] { domainFileStore });
-
-            this.domainFileStoreService.Setup(x => x.DeleteConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<DomainFileStore>(), It.IsAny<Iteration>())).Returns(true);
 
             this.optionService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Option>(), It.IsAny<Iteration>(), -1)).Returns(true);
             this.optionService.Setup(x => x.GetShallow(
@@ -198,29 +184,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyAfterCreate()
-        {
-            var originalThing = this.engineeringModelSetup.DeepClone<Thing>();
-
-            this.engineeringModelSetupSideEffect.AfterCreate(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
-
-            // Check that the iteration setup is created in the EngineeringModelSetup
-            this.iterationSetupService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "siteDirectory", It.IsAny<IterationSetup>(), It.IsAny<EngineeringModelSetup>(), -1), Times.Once);
-
-            // Check that the engineering model is created in the newEngineeringModelPartition
-            this.engineeringModelService.Verify(x => x.CreateConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<EngineeringModel>(), It.IsAny<SiteDirectory>(), -1), Times.Once);
-
-            // Check that the iteration is created in the EngineeringModel
-            this.iterationService.Verify(x => x.CreateConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1), Times.Once);
-
-            // Check that the DomainFileStore is created in the Iteration
-            this.domainFileStoreService.Verify(x => x.CreateConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<DomainFileStore>(), It.IsAny<Iteration>(), -1), Times.Once);
-
-            // Check that the Option is created in the Iteration
-            this.optionService.Verify(x => x.CreateConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<Option>(), It.IsAny<Iteration>(), -1), Times.Once);
-        }
-
-        [Test]
         public void VerifyAfterUpdate()
         {
             var originalThing = this.engineeringModelSetup.DeepClone<Thing>();
@@ -230,12 +193,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.engineeringModelSetup.ActiveDomain.Add(domainOfExpertise2.Iid);
             
             this.engineeringModelSetupSideEffect.AfterUpdate(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
-            
-            // Check that the DomainFileStore is created in the Iteration
-            this.domainFileStoreService.Verify(x => x.CreateConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<DomainFileStore>(), It.IsAny<Iteration>(), -1), Times.Once);
-
-            // Check that the DomainFileStore is deleted in the Iteration
-            this.domainFileStoreService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<DomainFileStore>(), It.IsAny<Iteration>()), Times.Once);
         }
 
         [Test]

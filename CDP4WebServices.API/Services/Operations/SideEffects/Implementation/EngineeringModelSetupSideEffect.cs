@@ -1,6 +1,26 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2018 RHEA System S.A.
+//   Copyright (c) 2016-2020 RHEA System S.A.
+
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Kamil Wojnowski
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// </copyright>
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -63,11 +83,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IParticipantService"/>.
         /// </summary>
         public IParticipantService ParticipantService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDomainFileStoreService"/>
-        /// </summary>
-        public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IOptionService"/>
@@ -237,84 +252,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         }
 
         /// <summary>
-        /// Allows derived classes to override and execute additional logic after a successful update operation.
-        /// </summary>
-        /// <param name="thing">
-        /// The <see cref="Thing"/> instance that will be inspected.
-        /// </param>
-        /// <param name="container">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
-        /// </param>
-        /// <param name="originalThing">
-        /// The original Thing.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="securityContext">
-        /// The security Context used for permission checking.
-        /// </param>
-        public override void AfterUpdate(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
-        {
-            var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
-            var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
-            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, thing.IterationSetup, securityContext).Cast<IterationSetup>();
-            var iterations = this.IterationService.GetShallow(transaction, newEngineeringModelPartition, iterationSetups.Select(i => i.IterationIid), securityContext).Cast<Iteration>();
-
-            // determine which domains have been added and removed
-            var removedDomains = originalThing.ActiveDomain.Except(thing.ActiveDomain).ToList();
-            var addedDomains = thing.ActiveDomain.Except(originalThing.ActiveDomain).ToList();
-
-            foreach (var iteration in iterations)
-            {
-                var domainFileStores = this.DomainFileStoreService.GetShallow(transaction, newIterationPartition, iteration.DomainFileStore, securityContext).Cast<DomainFileStore>().ToList();
-
-                // if domain was removed, remove the DomainFileStore as well
-                foreach (var removedDomain in removedDomains)
-                {
-                    // see if one already exists
-                    var domainFileStore = domainFileStores.SingleOrDefault(dfs => dfs.Owner.Equals(removedDomain));
-
-                    if (domainFileStore == null)
-                    {
-                        // indicates that the model is in a broken state (no DomainFileStore for the given DomainOfExpertise). Be forgiving and allow the code to return to a steady state.
-                        continue;
-                    }
-
-                    if (!this.DomainFileStoreService.DeleteConcept(transaction, newIterationPartition, domainFileStore, iteration))
-                    {
-                        throw new InvalidOperationException($"There was a problem deleting the DomainFileStore: {domainFileStore.Iid} contained by Iteration: {iteration.Iid}");
-                    }
-                }
-
-                // create domain file store for every added domain
-                foreach (var addedDomain in addedDomains)
-                {
-                    // see if one already exists
-                    if (domainFileStores.Any(dfs => dfs.Owner.Equals(addedDomain)))
-                    {
-                        // indicates the model is in a broken state (a DomainFileStore was not cleaned up previously). Be forgiving and allow the domain to relink to it.
-                        continue;
-                    }
-
-                    var newDomainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
-                    {
-                        Owner = addedDomain,
-                        CreatedOn = DateTime.UtcNow
-                    };
-
-                    if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, iteration))
-                    {
-                        throw new InvalidOperationException($"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {iteration.Iid}");
-                    }
-                }
-            }
-        }
-
-        /// <summary>
         /// Creates a new <see cref="EngineeringModel"/> from a source
         /// </summary>
         /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
@@ -366,20 +303,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             // switch to iteration partition:
             var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
-
-            // Create a Domain FileStore for the current domain in the first iteration
-            var newDomainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
-            {
-                Owner = thing.ActiveDomain.Single(),
-                CreatedOn = DateTime.UtcNow
-            };
-
-            if (!this.DomainFileStoreService.CreateConcept(transaction, newIterationPartition, newDomainFileStore, firstIteration))
-            {
-                var errorMessage = $"There was a problem creating the new DomainFileStore: {newDomainFileStore.Iid} contained by Iteration: {firstIteration.Iid}";
-                Logger.Error(errorMessage);
-                throw new InvalidOperationException(errorMessage);
-            }
 
             this.CreateDefaultOption(firstIteration, transaction, newIterationPartition);
         }
