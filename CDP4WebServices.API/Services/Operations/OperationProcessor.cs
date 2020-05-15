@@ -635,6 +635,8 @@ namespace CDP4WebServices.API.Services.Operations
 
                         return true;
                     }
+
+                    continue;
                 }
 
                 // Check if the found container property includes the supplied id.
