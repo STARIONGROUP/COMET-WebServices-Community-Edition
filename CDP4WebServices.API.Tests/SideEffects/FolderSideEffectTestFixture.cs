@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FolderSideEffectTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -30,25 +48,16 @@ namespace CDP4WebServices.API.Tests.SideEffects
     public class FolderSideEffectTestFixture
     {
         private NpgsqlTransaction npgsqlTransaction;
-
         private Mock<ISecurityContext> securityContext;
-
         private Mock<IFolderService> folderService;
-
+        private Mock<IDomainFileStoreService> domainFileStoreService;
         private FolderSideEffect sideEffect;
-
         private Folder folderA;
-
         private Folder folderB;
-
         private Folder folderC;
-
         private Folder folderD;
-
         private DomainFileStore fileStore;
-
         private ClasslessDTO rawUpdateInfo;
-
         private const string TestKey = "ContainingFolder";
 
         [SetUp]
@@ -71,7 +80,9 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                               }
                                  };
 
+            this.domainFileStoreService = new Mock<IDomainFileStoreService>();
             this.folderService = new Mock<IFolderService>();
+
             this.folderService
                 .Setup(
                     x => x.Get(
@@ -80,14 +91,18 @@ namespace CDP4WebServices.API.Tests.SideEffects
                         new List<Guid> { this.folderA.Iid, this.folderB.Iid, this.folderC.Iid },
                         It.IsAny<ISecurityContext>()))
                 .Returns(new List<Folder> { this.folderA, this.folderB, this.folderC });
+
+            this.sideEffect = new FolderSideEffect
+            {
+                FolderService = this.folderService.Object,
+                DomainFileStoreService = this.domainFileStoreService.Object
+            };
         }
 
         [Test]
         public void VerifyThatExceptionIsThrownWhenContainingFolderIsFolderItselfOnUpdate()
         {
-            this.sideEffect = new FolderSideEffect() { FolderService = this.folderService.Object };
-
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.folderA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.folderA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -102,8 +117,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenContainingFolderIsFolderItselfOnCreate()
         {
-            this.sideEffect = new FolderSideEffect() { FolderService = this.folderService.Object };
-
             var id = this.folderA.Iid;
             this.folderA.ContainingFolder = id;
 
@@ -119,10 +132,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenContainingFolderIsOutOfChainOrLeadsToCircularDependencyOnUpdate()
         {
-            this.sideEffect = new FolderSideEffect() { FolderService = this.folderService.Object };
-
             // Out of the store
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.folderD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.folderD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -134,7 +145,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.rawUpdateInfo));
 
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.folderA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.folderA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -149,8 +160,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsThrownWhenContainingFolderIsOutOfChainOrLeadsToCircularDependencyOnCreate()
         {
-            this.sideEffect = new FolderSideEffect() { FolderService = this.folderService.Object };
-
             // Out of the store
             var id = this.folderD.Iid;
             this.folderA.ContainingFolder = id;
@@ -162,6 +171,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.npgsqlTransaction,
                     "partition",
                     this.securityContext.Object));
+
             this.folderA.ContainingFolder = this.folderB.Iid;
 
             // Leads to circular dependency
@@ -175,6 +185,32 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.npgsqlTransaction,
                     "partition",
                     this.securityContext.Object));
+        }
+
+        [Test]
+        public void VerifyThatBeforeDeleteCheckSecurityWorks()
+        {
+           this.sideEffect.BeforeDelete(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+
+            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public void VerifyThatBeforeUpdateCheckSecurityWorks()
+        {
+            this.rawUpdateInfo = new ClasslessDTO();
+
+            this.sideEffect.BeforeUpdate(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), this.rawUpdateInfo);
+
+            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
+        }
+
+        [Test]
+        public void VerifyThatBeforeCreateCheckSecurityWorks()
+        {
+            this.sideEffect.BeforeCreate(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+
+            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Never);
         }
     }
 }

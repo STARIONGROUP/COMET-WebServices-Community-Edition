@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -12,20 +30,29 @@ namespace CDP4WebServices.API.Modules
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
+
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
+    
     using CDP4Orm.Dao;
+    
     using CDP4WebServices.API.Services.Authentication;
+    
     using Helpers;
+    
     using Nancy;
     using Nancy.Responses;
     using Nancy.Security;
+    
     using NLog;
+    
     using Npgsql;
+    
     using Services;
     using Services.Authorization;
     using Services.Operations;
     using Services.Protocol;
+    
     using Thing = CDP4Common.DTO.Thing;
     using Utils = CDP4WebServices.API.Services.Utils;
 
@@ -196,13 +223,20 @@ namespace CDP4WebServices.API.Modules
                     return this.GetMultipartResponse(fileRevisions, resourceResponse);
                 }
 
-                if (this.RequestUtils.QueryParameters.IncludeFileData 
-                    && ((routeSegments.Length == 4 && routeSegments[2] == "commonFileStore") || (routeSegments.Length == 6 && routeSegments[4] == "domainFileStore") 
-                    || (routeSegments[2] == "commonFileStore" && (routeSegments.Length == 6 && routeSegments[4] == "folder"))
-                    || (routeSegments[4] == "domainFileStore" && (routeSegments.Length == 8 && routeSegments[6] == "folder"))))
+                if (this.RequestUtils.QueryParameters.IncludeFileData)
                 {
-                    // return archived response including file binaries and appropriate folder structure
-                    return this.GetArchivedResponse(resourceResponse, partition, routeSegments);
+                    var routeSegmentList = routeSegments.ToList();
+
+                    if (this.IsValidDomainFileStoreArchiveRoute(routeSegmentList))
+                    {
+                        var iterationPartition = this.RequestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
+                        return this.GetArchivedResponse(resourceResponse, iterationPartition, routeSegments);
+                    }
+
+                    if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
+                    {
+                        return this.GetArchivedResponse(resourceResponse, partition, routeSegments);
+                    }
                 }
 
                 return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
@@ -245,11 +279,10 @@ namespace CDP4WebServices.API.Modules
             var sw = new Stopwatch();
             sw.Start();
             var requestToken = this.GenerateRandomToken();
-            string logMessage;
 
             try
             {
-                logMessage = $"{requestToken} started";
+                var logMessage = $"{requestToken} started";
                 Logger.Info(this.ConstructLog(logMessage));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedPostQueryParameter);
@@ -510,6 +543,67 @@ namespace CDP4WebServices.API.Modules
             this.RequestUtils.OverrideQueryParameters = null;
 
             return (EngineeringModelSetup)modelSetups.Single();
+        }
+
+        /// <summary>
+        /// Checks if a route is a valid route for returning a filearchive response for a <see cref="DomainFileStore"/>
+        /// </summary>
+        /// <param name="routeSegmentList"><see cref="IEnumerable{String}"/> that contains the route segments</param>
+        /// <returns>True if the route is valid, otherwise false</returns>
+        public bool IsValidDomainFileStoreArchiveRoute(IList<string> routeSegmentList)
+        {
+            var domainFileStoreRouteSegment = routeSegmentList.IndexOf("domainFileStore");
+
+            if (domainFileStoreRouteSegment < 0)
+            {
+                return false;
+            }
+
+            if (routeSegmentList[domainFileStoreRouteSegment - 2] != "iteration")
+            {
+                return false;
+            }
+
+            if (routeSegmentList.Count == domainFileStoreRouteSegment + 2)
+            {
+                return true;
+            }
+
+            if (routeSegmentList.Count == domainFileStoreRouteSegment + 4 && routeSegmentList[domainFileStoreRouteSegment + 2] == "folder"
+            )
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if a route is a valid route for returning a filearchive response for a <see cref="CommonFileStore"/>
+        /// </summary>
+        /// <param name="routeSegmentList"><see cref="IEnumerable{String}"/> that contains the route segments</param>
+        /// <returns>True if the route is valid, otherwise false</returns>
+        public bool IsValidCommonFileStoreArchiveRoute(IList<string> routeSegmentList)
+        {
+            var commonFileStoreRouteSegment = routeSegmentList.IndexOf("commonFileStore");
+
+            if (commonFileStoreRouteSegment < 0)
+            {
+                return false;
+            }
+
+            if (routeSegmentList.Count == commonFileStoreRouteSegment + 2)
+            {
+                return true;
+            }
+
+            if (routeSegmentList.Count == commonFileStoreRouteSegment + 4 && routeSegmentList[commonFileStoreRouteSegment + 2] == "folder"
+            )
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

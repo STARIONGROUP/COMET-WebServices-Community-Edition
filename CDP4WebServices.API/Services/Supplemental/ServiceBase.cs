@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ServiceBase.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2019 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -213,7 +231,7 @@ namespace CDP4WebServices.API.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected bool IsInstanceReadAllowed(NpgsqlTransaction transaction, Thing thing, string partition)
+        protected virtual bool IsInstanceReadAllowed(NpgsqlTransaction transaction, Thing thing, string partition)
         {
             return this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanRead(transaction, thing, partition);
         }
@@ -236,7 +254,7 @@ namespace CDP4WebServices.API.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected bool IsInstanceModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
+        protected virtual bool IsInstanceModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
         {
             return this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanWrite(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true });
         }
