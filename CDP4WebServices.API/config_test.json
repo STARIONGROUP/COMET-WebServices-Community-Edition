@@ -1,7 +1,7 @@
 {
   "Midtier": {
     "Protocol": "http",
-    "HostName": "localhost",
+    "HostName": "*",
     "Port": 5000,
     "UploadDirectory": "upload",
     "FileStorageDirectory": "storage"
