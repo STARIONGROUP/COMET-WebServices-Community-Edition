@@ -5,7 +5,9 @@ RUN apt-get update -yq && apt-get upgrade -yq && apt-get install -yq nano netcat
 WORKDIR /app
 COPY CDP4WebServer/bin/Release/net472 /app
 COPY LICENSE /app
-COPY wait-for.sh /app
+
+RUN mkdir /app/wait-for
+COPY wait-for /app/wait-for
 COPY entrypoint.sh /app
 
 RUN mkdir /app/logs; exit 0
@@ -21,4 +23,3 @@ VOLUME /app/upload
 EXPOSE 5000
 
 CMD ["/bin/bash", "/app/entrypoint.sh"]
-#CMD ["mono", "./CDP4WebServer.exe"]
