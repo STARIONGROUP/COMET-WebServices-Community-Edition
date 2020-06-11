@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-echo "ENTRYPOINT RUNNING"
+echo "CDP 4 ENTRYPOINT RUNNING"
 
 echo "Waiting for db to Bootup"
 
