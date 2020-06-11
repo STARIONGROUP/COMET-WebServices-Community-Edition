@@ -46,17 +46,37 @@ The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctne
 
 ### Introduction
 
-TBD
+This repository includes a handy script to run the webservices in a dockerized fashion. This is intended for development use. For docker compose installations of the webservices, including in production environments, refer to [CDP4-Docker-Compose](https://github.com/RHEAGROUP/CDP4-Docker-Compose) which uses the officially released images.
+
+The script makes a release build of the source code, creates an image, pulls the latest database image and fires up the containers in a linked fashion.
 
 ### Prerequisites
 
-You will need to have standalone msbuild installed for ease of use from here: https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16 Make sure to install `.NET Desktop Build Tools` when presented with the choice.
+MSBuild should be available through command line on your system. If you have Visual Studio installed this means you simply need to add a path to it (e.g. `C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin`) to your user Environmental Variables.
 
-Add the tool installation path (e.g. `C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin`) to your PATH environmental variable.
+You can also have standalone msbuild installed if you dont have Visual Studio for ease of use from here: https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16 Make sure to install `.NET Desktop Build Tools` when presented with the choice.
+
+Add the tool installation path (e.g. `C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin`) to your PATH environmental variable, and restart your command line.
 
 ### Usage
 
-TBD
+To compose the containers use the provided `compose.bat` file in a cmd environment like so:
+
+```
+C:\path\to\CDP4-WebServices-Community-Edition>compose.bat [command]
+```
+
+Available commands:
+
+- `build` - (default) builds the solution, creates the images and runs the containers.
+- `strt` - starts the containers if they already have been run and stopped.
+- `stp` - stops the running containers without removing them.
+- `up` - runs containers without rebuilding them.
+- `down` - stops and removes the containers. Volume information is not lost.
+- `reboot` - performs the `down` and `up` commands in sequence.
+- `rebuild` - performs the `down` and `rebuild` commands in sequence.
+
+To verify that the services are running navigate to `localhost:5000/SiteDirectory` you should be prompted for standard credentials which are `admin/pass`.
 
 ## License
 
