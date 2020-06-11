@@ -4,7 +4,7 @@ echo "CDP 4 ENTRYPOINT RUNNING"
 
 echo "Waiting for db to Bootup"
 
-./wait-for cdp4-database-community-edition:5432 -t 30 -- echo "Database Ready"
+./wait-for.sh cdp4-database-community-edition:5432 -t 30 -- echo "Database Ready"
 
 run_cmd="mono CDP4WebServer.exe"
 
