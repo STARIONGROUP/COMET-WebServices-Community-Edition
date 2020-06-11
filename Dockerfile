@@ -5,7 +5,7 @@ RUN apt-get update -yq && apt-get upgrade -yq && apt-get install -yq nano netcat
 WORKDIR /app
 COPY CDP4WebServer/bin/Release/net472 /app
 COPY LICENSE /app
-COPY wait-for /app
+COPY wait-for.sh /app
 COPY entrypoint.sh /app
 
 RUN mkdir /app/logs; exit 0
