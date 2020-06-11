@@ -1,6 +1,5 @@
 version: '3.8'
 services:
-  
   cdp4_db:
     image: rheagroup/cdp4-database-community-edition:latest
     hostname: cdp4-postgresql
@@ -19,34 +18,12 @@ services:
     expose:
       - '5432'
     volumes:
-      - cdpdbdata:/var/lib/postgresql/data
+      - cdpdbvolume:/var/lib/postgresql/data
       - cdpdblogs:/logs
-
-  cdp4_webservices:
-    hostname: cdp4-webservices
-    restart: always
-    build: .
-    networks:
-      cdp4:
-        aliases:
-          - cdp4-webservices
-    depends_on:
-      - cdp4_db
-    ports:
-      - "${WEBSERVICES_HOSTPORT}:5000"
-    expose:
-      - '5000'
-    volumes:
-      - cdpwslogs:/app/logs
-      - cdpwsstorage:/app/storage
-      - cdpwsupload:/app/upload
 
 networks:
   cdp4:
 
 volumes:
-  cdpdbdata:
+  cdpdbvolume:
   cdpdblogs:
-  cdpwslogs:
-  cdpwsstorage:
-  cdpwsupload:

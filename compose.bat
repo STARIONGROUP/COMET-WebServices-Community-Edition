@@ -12,6 +12,12 @@ IF %1==strt GOTO Strt
 IF %1==stp GOTO Stp
 IF %1==reboot GOTO Reboot
 IF %1==rebuild GOTO Rebuild
+IF %1==dev GOTO Dev
+IF %1==devbg GOTO DevBg
+IF %1==devtest GOTO DevTest
+IF %1==devtestbg GOTO DevTestBg
+IF %1==devdown GOTO DevDown
+IF %1==devtestdown GOTO DevTestDown
 
 GOTO End
 
@@ -48,5 +54,34 @@ rem Need to build the application in Release before making the image
 START /B MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
 START /B docker-compose up --build -d
 GOTO End
+
+:Dev
+START /B docker-compose -f docker-compose-dev.yml down --remove-orphans
+START /B docker-compose -f docker-compose-dev.yml up --build
+GOTO End
+
+:DevBg
+START /B docker-compose -f docker-compose-dev.yml down --remove-orphans
+START /B docker-compose -f docker-compose-dev.yml up --build -d
+GOTO End
+
+:DevTest
+START /B docker-compose -f docker-compose-dev-test.yml down --remove-orphans
+START /B docker-compose -f docker-compose-dev-test.yml up --build
+GOTO End
+
+:DevTestBg
+START /B docker-compose -f docker-compose-dev-test.yml down --remove-orphans
+START /B docker-compose -f docker-compose-dev-test.yml up --build -d
+GOTO End
+
+:DevDown
+START /B docker-compose -f docker-compose-dev.yml down --remove-orphans
+GOTO End
+
+:DevTestDown
+START /B docker-compose -f docker-compose-dev-test.yml down --remove-orphans
+GOTO End
+
 
 :End
