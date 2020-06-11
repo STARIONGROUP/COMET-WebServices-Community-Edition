@@ -14,7 +14,7 @@ The Concurrent Design method brings many advantages to the early design phase by
 
 To read more about Concurrent Design and how to use the CDP4 Desktop application to perform concurrent design please read our documentation at http://cdp4docs.rheagroup.com/
 
-## Build status
+## Build Status
 
 AppVeyor is used to build and test the CDP4 Webservices
 
@@ -42,12 +42,28 @@ The CDP4 Webservices are built on top of the [Nancy](http://nancyfx.org/). Nancy
 
 The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctness of the implementation. These integration tests are available on [Github](https://github.com/RHEAGROUP/ecss-10-25-annexc-integration-tests)
 
-# License
+## Docker Compose
+
+### Introduction
+
+TBD
+
+### Prerequisites
+
+You will need to have standalone msbuild installed for ease of use from here: https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=BuildTools&rel=16 Make sure to install `.NET Desktop Build Tools` when presented with the choice.
+
+Add the tool installation path (e.g. `C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin`) to your PATH environmental variable.
+
+### Usage
+
+TBD
+
+## License
 
 The CDP4 Webservices Community Edition are provided to the community under the GNU Affero General Public License. The CDP4 Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
 
 The [RHEA Group](https://www.rheagroup.com) also provides the [CDP4 Web Services Enterprise Edition](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/wiki/CDP4-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.rheagroup.com/contact) us for more details.
 
-# Contributions
+## Contributions
 
 Contributions to the code-base are welcome. However, before we can accept your contributions we ask any contributor to sign the Contributor License Agreement (CLA) and send this digitaly signed to s.gerene@rheagroup.com. You can find the CLA's in the CLA folder.
