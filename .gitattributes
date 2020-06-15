@@ -9,6 +9,9 @@
 *.msbuild text
 *.md      text
 
+# these files should never be normalized
+*.sh      text eol=lf
+
 # Images should be treated as binary
 # (binary is a macro for -text -diff)
 *.png     binary

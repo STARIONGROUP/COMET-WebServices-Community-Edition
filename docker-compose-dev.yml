@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  cdp4_db:
+    image: rheagroup/cdp4-database-community-edition:latest
+    hostname: cdp4-postgresql
+    command: postgres -c max_locks_per_transaction=1024
+    environment:
+      - POSTGRES_PASSWORD=${DB_POSTGRESPASSWORD}
+      - POSTGRES_USER=postgres
+    networks:
+      cdp4:
+        aliases:
+          - cdp4-postgresql
+    container_name: cdp4-database-community-edition
+    restart: always
+    ports:
+      - '${DB_HOSTPORT}:5432'
+    expose:
+      - '5432'
+    volumes:
+      - cdpdbvolume:/var/lib/postgresql/data
+      - cdpdblogs:/logs
+
+networks:
+  cdp4:
+
+volumes:
+  cdpdbvolume:
+  cdpdblogs:
