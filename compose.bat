@@ -24,7 +24,7 @@ GOTO End
 
 :Build
 rem Need to build the application in Release before making the image
-START /B MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
+CALL MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
 START /B docker-compose up --build
 GOTO End
 
