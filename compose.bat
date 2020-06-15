@@ -19,7 +19,19 @@ IF %1==devtest GOTO DevTest
 IF %1==devtestbg GOTO DevTestBg
 IF %1==devdown GOTO DevDown
 IF %1==devtestdown GOTO DevTestDown
+IF %1==nginx GOTO Serv
+IF %1==nginxdown GOTO ServDown
 
+GOTO End
+
+:Serv
+rem Need to build the application in Release before making the image
+CALL MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
+START /B docker-compose -f docker-compose-nginx.yml up --build
+GOTO End
+
+:ServDown
+START /B docker-compose -f docker-compose-nginx.yml down --remove-orphans
 GOTO End
 
 :Build
