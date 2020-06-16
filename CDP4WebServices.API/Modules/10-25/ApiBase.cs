@@ -33,6 +33,7 @@ namespace CDP4WebServices.API.Modules
     using System.Net.Http;
     using System.Security.Cryptography;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -832,7 +833,7 @@ namespace CDP4WebServices.API.Modules
             }
 
             // stream the multipart content to the request contents target stream
-            content.CopyToAsync(targetStream);
+            content.CopyToAsync(targetStream).Wait();
             this.AddMultiPartMimeEndpoint(targetStream);
         }
 
@@ -906,7 +907,7 @@ namespace CDP4WebServices.API.Modules
                 content.Add(binaryContent);
 
                 // stream the multipart content to the request contents target stream
-                content.CopyToAsync(targetStream);
+                content.CopyToAsync(targetStream).Wait();
 
                 this.AddMultiPartMimeEndpoint(targetStream);
             }
@@ -949,7 +950,7 @@ namespace CDP4WebServices.API.Modules
                 var content = new ByteArrayContent(buffer);
 
                 // stream the multipart content to the request contents target stream
-                content.CopyToAsync(targetStream);
+                content.CopyToAsync(targetStream).Wait();
             }
 
             System.IO.File.Delete(path);

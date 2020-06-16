@@ -1,0 +1,65 @@
+version: '3.8'
+services:
+  
+  cdp4_db:
+    image: rheagroup/cdp4-database-community-edition:latest
+    hostname: cdp4-postgresql
+    command: postgres -c max_locks_per_transaction=1024
+    environment:
+      - POSTGRES_PASSWORD=${DB_POSTGRESPASSWORD}
+      - POSTGRES_USER=postgres
+    networks:
+      cdp4:
+        aliases:
+          - cdp4-postgresql
+    container_name: cdp4-database-community-edition
+    restart: always
+    ports:
+      - '${DB_HOSTPORT}:5432'
+    expose:
+      - '5432'
+    volumes:
+      - cdpdbdata:/var/lib/postgresql/data
+      - cdpdblogs:/logs
+
+  cdp4_webservices:
+    hostname: cdp4-webservices
+    restart: always
+    build: .
+    networks:
+      cdp4:
+        aliases:
+          - cdp4-webservices
+    depends_on:
+      - cdp4_db
+    expose:
+      - '5000'
+    volumes:
+      - cdpwslogs:/app/logs
+      - cdpwsstorage:/app/storage
+      - cdpwsupload:/app/upload
+
+  nginx: 
+    image: nginx:latest
+    container_name: cdp4-nginx
+    restart: always
+    depends_on:
+      - cdp4_webservices
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - 8088:80
+    networks:
+      cdp4:
+        aliases:
+          - cdp4-nginx
+
+networks:
+  cdp4:
+
+volumes:
+  cdpdbdata:
+  cdpdblogs:
+  cdpwslogs:
+  cdpwsstorage:
+  cdpwsupload:
