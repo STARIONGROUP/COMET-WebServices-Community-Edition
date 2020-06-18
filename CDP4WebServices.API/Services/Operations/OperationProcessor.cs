@@ -847,12 +847,11 @@ namespace CDP4WebServices.API.Services.Operations
 
                 // check if the delete info has any properties set other than Iid, revision and classkind properties
                 var operationProperties = deleteInfo.Where(x => !this.baseProperties.Contains(x.Key)).ToList();
+
                 if (!operationProperties.Any())
                 {
                     var dtoInfo = deleteInfo.GetInfoPlaceholder();
-                    var resolvedInfo = this.operationThingCache[dtoInfo];
-
-                    this.ExecuteDeleteOperation(dtoInfo.Iid, dtoInfo.TypeName, resolvedInfo, transaction, metaInfo);
+                    this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
                 }
                 else
                 {
@@ -875,9 +874,9 @@ namespace CDP4WebServices.API.Services.Operations
                                     var deletedValueId = (Guid)deletedValue;
 
                                     var childTypeName = this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
-                                    resolvedInfo = this.operationThingCache[new DtoInfo(childTypeName, deletedValueId)];
+                                    var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
-                                    this.ExecuteDeleteOperation(deletedValueId, childTypeName, resolvedInfo, transaction, metaInfo);
+                                    this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
                                     continue;
                                 }
                             
@@ -896,15 +895,16 @@ namespace CDP4WebServices.API.Services.Operations
                         else if (propInfo.PropertyKind == PropertyKind.OrderedList)
                         {
                             var deletedOrderedCollectionItems = (IEnumerable<OrderedItem>)kvp.Value;
+
                             foreach (var deletedOrderedItem in deletedOrderedCollectionItems)
                             {
                                 if (propInfo.Aggregation == AggregationKind.Composite)
                                 {
                                     var deletedValueId = Guid.Parse(deletedOrderedItem.V.ToString());
                                     var childTypeName = this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
-                                    resolvedInfo = this.operationThingCache[new DtoInfo(childTypeName, deletedValueId)];
+                                    var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
-                                    this.ExecuteDeleteOperation(deletedValueId, childTypeName, resolvedInfo, transaction, metaInfo);
+                                    this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
                                     continue;
                                 }
 
@@ -1321,31 +1321,23 @@ namespace CDP4WebServices.API.Services.Operations
         /// <summary>
         /// Execute the delete operation
         /// </summary>
-        /// <param name="deletedValueId">The deleted id</param>
-        /// <param name="type">The deleted type</param>
-        /// <param name="resolvedInfo">The <see cref="DtoResolveHelper"/></param>
+        /// <param name="dtoInfo">The <see cref="DtoInfo"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="metaInfo">The <see cref="IMetaInfo"/> for the deleted object</param>
-        private void ExecuteDeleteOperation(Guid deletedValueId, string type, DtoResolveHelper resolvedInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
+        private void ExecuteDeleteOperation(DtoInfo dtoInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
         {
-            var propertyMetaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(type);
-            var compositeThing = propertyMetaInfo.InstantiateDto(deletedValueId, 0);
-            var propertyService = this.ServiceProvider.MapToPersitableService(type);
-
-            Thing containerInfo = null;
-
-            if (!metaInfo.IsTopContainer)
+            if (!this.operationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
             {
-                containerInfo = this.GetContainerInfo(compositeThing).Thing;
-            }
-
-            var persistedThing = resolvedInfo.Thing ?? compositeThing;
-
-            if (persistedThing == null)
-            {
-                Logger.Info("The item '{0}' with iid: '{1}' was already deleted: continue processing.", type, deletedValueId);
+                Logger.Info("The item '{0}' with iid: '{1}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
                 return;
             }
+
+            var persistedThing = resolvedInfo.Thing;
+
+            var containerInfo = 
+                metaInfo.IsTopContainer 
+                    ? null 
+                    : this.GetContainerInfo(persistedThing).Thing;
 
             // keep a copy of the orginal thing to pass to the after delete hook
             var originalThing = persistedThing.DeepClone<Thing>();
@@ -1355,12 +1347,12 @@ namespace CDP4WebServices.API.Services.Operations
             this.OperationSideEffectProcessor.BeforeDelete(persistedThing, containerInfo, transaction, resolvedInfo.Partition, securityContext);
 
             // delete the item
+            var propertyService = this.ServiceProvider.MapToPersitableService(dtoInfo.TypeName);
             this.DeletePersistedItem(transaction, resolvedInfo.Partition, propertyService, persistedThing);
 
             // call after delete hook
             this.OperationSideEffectProcessor.AfterDelete(persistedThing, containerInfo, originalThing, transaction, resolvedInfo.Partition, securityContext);
         }
-
 
         /// <summary>
         /// Reorder the create list of a <see cref="CdpPostOperation"/>
@@ -1372,6 +1364,7 @@ namespace CDP4WebServices.API.Services.Operations
         private void ReorderCreateOrder(CdpPostOperation postOperation)
         {
             var subscriptions = postOperation.Create.OfType<ParameterSubscription>().ToArray();
+
             foreach (var subscription in subscriptions)
             {
                 postOperation.Create.Remove(subscription);
