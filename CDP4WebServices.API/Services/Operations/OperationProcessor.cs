@@ -1,6 +1,26 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessor.cs" company="RHEA System S.A.">
-//   Copyright (c) 2015-2018 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
+//            Nathanael Smiechowski
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -827,12 +847,11 @@ namespace CDP4WebServices.API.Services.Operations
 
                 // check if the delete info has any properties set other than Iid, revision and classkind properties
                 var operationProperties = deleteInfo.Where(x => !this.baseProperties.Contains(x.Key)).ToList();
+
                 if (!operationProperties.Any())
                 {
                     var dtoInfo = deleteInfo.GetInfoPlaceholder();
-                    var resolvedInfo = this.operationThingCache[dtoInfo];
-
-                    this.ExecuteDeleteOperation(dtoInfo.Iid, dtoInfo.TypeName, resolvedInfo, transaction, metaInfo);
+                    this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
                 }
                 else
                 {
@@ -855,9 +874,9 @@ namespace CDP4WebServices.API.Services.Operations
                                     var deletedValueId = (Guid)deletedValue;
 
                                     var childTypeName = this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
-                                    resolvedInfo = this.operationThingCache[new DtoInfo(childTypeName, deletedValueId)];
+                                    var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
-                                    this.ExecuteDeleteOperation(deletedValueId, childTypeName, resolvedInfo, transaction, metaInfo);
+                                    this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
                                     continue;
                                 }
                             
@@ -876,15 +895,16 @@ namespace CDP4WebServices.API.Services.Operations
                         else if (propInfo.PropertyKind == PropertyKind.OrderedList)
                         {
                             var deletedOrderedCollectionItems = (IEnumerable<OrderedItem>)kvp.Value;
+
                             foreach (var deletedOrderedItem in deletedOrderedCollectionItems)
                             {
                                 if (propInfo.Aggregation == AggregationKind.Composite)
                                 {
                                     var deletedValueId = Guid.Parse(deletedOrderedItem.V.ToString());
                                     var childTypeName = this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
-                                    resolvedInfo = this.operationThingCache[new DtoInfo(childTypeName, deletedValueId)];
+                                    var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
-                                    this.ExecuteDeleteOperation(deletedValueId, childTypeName, resolvedInfo, transaction, metaInfo);
+                                    this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
                                     continue;
                                 }
 
@@ -1301,45 +1321,38 @@ namespace CDP4WebServices.API.Services.Operations
         /// <summary>
         /// Execute the delete operation
         /// </summary>
-        /// <param name="deletedValueId">The deleted id</param>
-        /// <param name="type">The deleted type</param>
-        /// <param name="resolvedInfo">The <see cref="DtoResolveHelper"/></param>
+        /// <param name="dtoInfo">The <see cref="DtoInfo"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="metaInfo">The <see cref="IMetaInfo"/> for the deleted object</param>
-        private void ExecuteDeleteOperation(Guid deletedValueId, string type, DtoResolveHelper resolvedInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
+        private void ExecuteDeleteOperation(DtoInfo dtoInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
         {
-            var propertyMetaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(type);
-            var compositeThing = propertyMetaInfo.InstantiateDto(deletedValueId, 0);
-            var propertyService = this.ServiceProvider.MapToPersitableService(type);
-
-            Thing containerInfo = null;
-            if (!metaInfo.IsTopContainer)
+            if (!this.operationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
             {
-                containerInfo = this.GetContainerInfo(compositeThing).Thing;
-            }
-
-            var persistedThing = compositeThing;
-            if (persistedThing == null)
-            {
-                Logger.Info("The item '{0}' with iid: '{1}' was already deleted: continue processing.", type, deletedValueId);
+                Logger.Info("The item '{0}' with iid: '{1}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
                 return;
             }
+
+            var persistedThing = resolvedInfo.Thing;
+
+            var containerInfo = 
+                metaInfo.IsTopContainer 
+                    ? null 
+                    : this.GetContainerInfo(persistedThing).Thing;
 
             // keep a copy of the orginal thing to pass to the after delete hook
             var originalThing = persistedThing.DeepClone<Thing>();
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
-
             // call before delete hook
             this.OperationSideEffectProcessor.BeforeDelete(persistedThing, containerInfo, transaction, resolvedInfo.Partition, securityContext);
 
             // delete the item
+            var propertyService = this.ServiceProvider.MapToPersitableService(dtoInfo.TypeName);
             this.DeletePersistedItem(transaction, resolvedInfo.Partition, propertyService, persistedThing);
 
             // call after delete hook
             this.OperationSideEffectProcessor.AfterDelete(persistedThing, containerInfo, originalThing, transaction, resolvedInfo.Partition, securityContext);
         }
-
 
         /// <summary>
         /// Reorder the create list of a <see cref="CdpPostOperation"/>
@@ -1351,6 +1364,7 @@ namespace CDP4WebServices.API.Services.Operations
         private void ReorderCreateOrder(CdpPostOperation postOperation)
         {
             var subscriptions = postOperation.Create.OfType<ParameterSubscription>().ToArray();
+
             foreach (var subscription in subscriptions)
             {
                 postOperation.Create.Remove(subscription);
