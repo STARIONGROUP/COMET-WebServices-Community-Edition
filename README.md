@@ -20,10 +20,10 @@ AppVeyor is used to build and test the CDP4 Webservices
 
 Branch | Build Status
 ------- | :------------
-Master |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med/branch/master?svg=true)](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med)
-Development |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med/branch/development?svg=true)](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med)
+Master |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmyvbgvdncq4sd9/branch/master?svg=true)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/branch/master)
+Development |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmyvbgvdncq4sd9/branch/development?svg=true)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/branch/development)
 
-[![Build history](https://buildstats.info/appveyor/chart/samatrhea/cdp4-webservices-community-edition)](https://ci.appveyor.com/project/samatrhea/cdp4-webservices-community-edition/history)
+[![Build history](https://buildstats.info/appveyor/chart/rheagroup/cdp4-webservices-community-edition)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/history)
 
 ## Statistics
 
