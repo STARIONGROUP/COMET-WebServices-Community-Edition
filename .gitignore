@@ -72,3 +72,4 @@ packages/
 CDP4.v12.suo
 
 /CodeGenerator/*
+.idea
