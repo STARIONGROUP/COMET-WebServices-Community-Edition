@@ -2,22 +2,42 @@ image: Visual Studio 2019
 environment:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  TEST_RESULT: 'TestResult.xml'
+  TEST_COVERAGE: 'CoverResults.xml'
+  SONARCLOUD_PROJECT_KEY: RHEAGROUP_CDP4-WebServices-Community-Edition
+  SONARCLOUD_ORGANIZATION: rheagroup
+  SONARCLOUD_TOKEN:
+    secure: Q3ruQ/mMJMZFFa2If84xai1rB2VkTbOO5GAbhmlba6KOx9fhZorISp+SLS8FkIb4
+
+skip_branch_with_pr: true
 configuration:
   - Debug
+install:
+  - choco install opencover.portable
+  - choco install "sonarscanner-msbuild-net46" -y
 before_build:
-  - cmd: nuget install NUnit.Console -Version 3.11.1 -OutputDirectory tools
-  - cmd: nuget install OpenCover -Version 4.6.519 -OutputDirectory tools
+  - cmd: nuget install NUnit.Console -Version 3.11.1 -OutputDirectory testrunner
+  - cmd: nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
   - cmd: nuget restore -verbosity quiet
-  - cmd: choco install codecov
+  - ps: >-
+      if ($env:APPVEYOR_PULL_REQUEST_NUMBER){
+         Write-Host Scanning PR# $env:APPVEYOR_PULL_REQUEST_NUMBER
+         SonarScanner.MSBuild.exe begin /key:$env:SONARCLOUD_PROJECT_KEY /o:$env:SONARCLOUD_ORGANIZATION /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=$env:SONARCLOUD_TOKEN /d:sonar.cs.opencover.reportsPaths=$env:TEST_COVERAGE /d:sonar.cs.nunit.reportsPaths=$env:TEST_RESULT /d:sonar.pullrequest.key=$env:APPVEYOR_PULL_REQUEST_NUMBER /d:sonar.pullrequest.provider=GitHub /d:sonar.pullrequest.github.repository=$env:APPVEYOR_REPO_NAME
+      } else {
+         Write-Host Scanning branch $env:APPVEYOR_REPO_BRANCH
+         SonarScanner.MSBuild.exe begin /key:$env:SONARCLOUD_PROJECT_KEY /o:$env:SONARCLOUD_ORGANIZATION /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login=$env:SONARCLOUD_TOKEN /d:sonar.cs.opencover.reportsPaths=$env:TEST_COVERAGE /d:sonar.cs.nunit.reportsPaths=$env:TEST_RESULT
+      }
 build:
   project: CDP4-Server.sln
-test:
-  assemblies:
-    only:
-      - '**\*.Tests.dll'
-  categories:
-    except:
-      - AppVeyorExclusion
+test_script:
+  - >
+    OpenCover.Console.exe
+    -log:Error
+    -register
+    -target:".\testrunner\NUnit.ConsoleRunner.3.11.1\tools\nunit3-console.exe"
+    -targetargs:"cdp4ws-tests.nunit --where=""cat!=AppVeyorExclusion"""
+    -returntargetcode
+    -hideskipped:All
+    -output:"%TEST_COVERAGE%"
 after_test:
-  - .\tools\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -target:".\tools\NUnit.ConsoleRunner.3.11.1\tools\nunit3-console.exe" -targetargs:".\CDP4Orm.Tests\bin\Debug\net452\CDP4Orm.Tests.dll .\CDP4WebServices.API.Tests\bin\Debug\net452\CDP4WebServices.API.Tests.dll" -output:"coverage.xml"
-  - codecov -f "coverage.xml" -t e4567a09-8a81-4da7-b003-57c8d7d41dbb
+  - ps: SonarScanner.MSBuild.exe end /d:"sonar.login=$env:SONARCLOUD_TOKEN"

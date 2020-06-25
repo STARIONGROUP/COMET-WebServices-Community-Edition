@@ -1,0 +1,6 @@
+﻿<NUnitProject>
+  <Settings activeconfig="Debug" />
+  <Config name="Debug">
+    <assembly path="CDP4WebServices.API.Tests\bin\Debug\net472\CDP4WebServices.API.Tests.dll" />
+  </Config>
+</NUnitProject>
