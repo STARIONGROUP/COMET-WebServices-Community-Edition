@@ -1,7 +1,7 @@
 ﻿<NUnitProject>
   <Settings activeconfig="Debug" />
   <Config name="Debug">
-    <assembly path="CDP4Orm.Tests\bin\Debug\net452\CDP4Orm.Tests.dll" />
-    <assembly path="CDP4WebServices.API.Tests\bin\Debug\net452\CDP4WebServices.API.Tests.dll" />
+    <assembly path="CDP4Orm.Tests\bin\Debug\netcoreapp3.0\CDP4Orm.Tests.dll" />
+    <assembly path="CDP4WebServices.API.Tests\bin\Debug\net472\CDP4WebServices.API.Tests.dll" />
   </Config>
 </NUnitProject>
