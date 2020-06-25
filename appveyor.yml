@@ -29,23 +29,15 @@ before_build:
       }
 build:
   project: CDP4-Server.sln
-test:
-  assemblies:
-    only:
-      - '**\*.Tests.dll'
-  categories:
-    except:
-      - AppVeyorExclusion
 test_script:
   - >
     OpenCover.Console.exe
     -log:Error
     -register
     -target:".\testrunner\NUnit.ConsoleRunner.3.11.1\tools\nunit3-console.exe"
-    -targetargs:"cdp4ime-tests.nunit --where=""cat!=AppVeyorExclusion"""
+    -targetargs:"cdp4ws-tests.nunit --where=""cat!=AppVeyorExclusion"""
     -returntargetcode
     -hideskipped:All
     -output:"%TEST_COVERAGE%"
-    -filter:"+[CDP4*]* -[*.Tests*]* -[*.Views]*"
 after_test:
   - ps: SonarScanner.MSBuild.exe end /d:"sonar.login=$env:SONARCLOUD_TOKEN"
