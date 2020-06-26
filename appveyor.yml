@@ -37,7 +37,7 @@ test_script:
     -target:".\testrunner\NUnit.ConsoleRunner.3.11.1\tools\nunit3-console.exe"
     -targetargs:"cdp4ws-tests.nunit --where=""cat!=AppVeyorExclusion"""
     -returntargetcode
-    -excludebyfile:*\AutoGen*\*.cs
+    -excludebyfile:**\AutoGen*\**\*.cs
     -hideskipped:All
     -output:"%TEST_COVERAGE%"
 after_test:
