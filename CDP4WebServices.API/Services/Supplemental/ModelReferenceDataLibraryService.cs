@@ -1,7 +1,30 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelReferenceDataLibraryService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2019 RHEA System S.A.
+//    Copyright (c) 2015-2020 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
+//            Nathanael Smiechowski
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
+// <summary>
+//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
+// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4WebServices.API.Services
@@ -9,8 +32,11 @@ namespace CDP4WebServices.API.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using Npgsql;
 
     /// <summary>
@@ -37,18 +63,20 @@ namespace CDP4WebServices.API.Services
         public IEnumerable<ReferenceDataLibrary> QueryReferenceDataLibrary(NpgsqlTransaction transaction, Iteration iteration)
         {
             var engineeringModelSetup = this.EngineeringModelSetupDao.Read(transaction, typeof(SiteDirectory).Name).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
+
             if (engineeringModelSetup == null)
             {
                 throw new InvalidOperationException($"Could not find the associated engineering-modem-setup for iteration {iteration.Iid}");
             }
 
             var mrdl = this.ModelReferenceDataLibraryDao.Read(transaction, typeof(SiteDirectory).Name, engineeringModelSetup.RequiredRdl).FirstOrDefault();
+
             if (mrdl == null)
             {
                 throw new InvalidOperationException($"Could not find the associated reference-data-library for iteration {iteration.Iid}");
             }
 
-            var list = new List<ReferenceDataLibrary> {mrdl};
+            var list = new List<ReferenceDataLibrary> { mrdl };
             list.AddRange(this.GetRequiredRdl(transaction, mrdl));
             return list;
         }
@@ -68,22 +96,33 @@ namespace CDP4WebServices.API.Services
                 return requiredRdls;
             }
 
-            var requiredRdl = (ReferenceDataLibrary)this.ModelReferenceDataLibraryDao.Read(transaction, typeof(SiteDirectory).Name, new [] { rdl.RequiredRdl.Value }).FirstOrDefault();
+            var requiredRdl =
+                this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }).FirstOrDefault() as ReferenceDataLibrary
+                ?? this.SiteReferenceDataLibraryDato.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }).FirstOrDefault();
+
             if (requiredRdl != null)
             {
-                requiredRdls.Add(requiredRdl);
-                requiredRdls.AddRange(this.GetRequiredRdl(transaction, requiredRdl));
-            }
-            else
-            {
-                requiredRdl = this.SiteReferenceDataLibraryDato.Read(transaction, typeof(SiteDirectory).Name, new[] { rdl.RequiredRdl.Value }).FirstOrDefault();
-                if (requiredRdl != null)
-                {
-                    requiredRdls.Add(requiredRdl);
-                }
+                this.TryCopyToRequiredRdls(new[] { requiredRdl }, requiredRdls);
+                this.TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, requiredRdl), requiredRdls);
             }
 
             return requiredRdls;
+        }
+
+        /// <summary>
+        /// Tries to copy inidividual <see cref="ReferenceDataLibrary"/>s from an <see cref="IEnumerable{ReferenceDataLibrary}"/> to an <see cref="ICollection{ReferenceDataLibrary}"/>
+        /// </summary>
+        /// <param name="source">The source <see cref="IEnumerable{ReferenceDataLibrary}"/></param>
+        /// <param name="target">The target <see cref="ICollection{ReferenceDataLibrary}"/></param>
+        private void TryCopyToRequiredRdls(IEnumerable<ReferenceDataLibrary> source, ICollection<ReferenceDataLibrary> target)
+        {
+            foreach (var possibleAdditionalRdl in source)
+            {
+                if (target.All(x => x.Iid != possibleAdditionalRdl.Iid))
+                {
+                    target.Add(possibleAdditionalRdl);
+                }
+            }
         }
     }
 }
