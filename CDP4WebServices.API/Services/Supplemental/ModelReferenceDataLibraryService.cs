@@ -58,23 +58,24 @@ namespace CDP4WebServices.API.Services
         /// <returns>The <see cref="ReferenceDataLibrary"/></returns>
         public IEnumerable<ReferenceDataLibrary> QueryReferenceDataLibrary(NpgsqlTransaction transaction, Iteration iteration)
         {
-            var engineeringModelSetup = this.EngineeringModelSetupDao.Read(transaction, typeof(SiteDirectory).Name).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
+            var engineeringModelSetup = this.EngineeringModelSetupDao.Read(transaction, nameof(SiteDirectory)).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
 
             if (engineeringModelSetup == null)
             {
                 throw new InvalidOperationException($"Could not find the associated engineering-modem-setup for iteration {iteration.Iid}");
             }
 
-            var mrdl = this.ModelReferenceDataLibraryDao.Read(transaction, typeof(SiteDirectory).Name, engineeringModelSetup.RequiredRdl).FirstOrDefault();
+            var mrdl = this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), engineeringModelSetup.RequiredRdl).FirstOrDefault();
 
             if (mrdl == null)
             {
                 throw new InvalidOperationException($"Could not find the associated reference-data-library for iteration {iteration.Iid}");
             }
 
-            var list = new List<ReferenceDataLibrary> { mrdl };
-            list.AddRange(this.GetRequiredRdl(transaction, mrdl));
-            return list;
+            var requiredRdls = new List<ReferenceDataLibrary> { mrdl };
+            this.TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, mrdl), requiredRdls);
+
+            return requiredRdls;
         }
 
         /// <summary>
