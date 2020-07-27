@@ -20,15 +20,30 @@ AppVeyor is used to build and test the CDP4 Webservices
 
 Branch | Build Status
 ------- | :------------
-Master |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med/branch/master?svg=true)](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med)
-Development |  [![Build Status](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med/branch/development?svg=true)](https://ci.appveyor.com/api/projects/status/ojrxyxsnwtfd6med)
+Master |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmyvbgvdncq4sd9/branch/master?svg=true)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/branch/master)
+Development |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmyvbgvdncq4sd9/branch/development?svg=true)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/branch/development)
 
-[![Build history](https://buildstats.info/appveyor/chart/samatrhea/cdp4-webservices-community-edition)](https://ci.appveyor.com/project/samatrhea/cdp4-webservices-community-edition/history)
+[![Build history](https://buildstats.info/appveyor/chart/rheagroup/cdp4-webservices-community-edition)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/history)
 
 ## Statistics
 
   - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/RHEAGROUP/CDP4-WebServices-Community-Edition/total.svg)
   - Issues:![GitHub issues](https://img.shields.io/github/issues/RHEAGROUP/CDP4-WebServices-Community-Edition.svg)
+
+## SonarQube Status:
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=coverage)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=ncloc)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=sqale_index)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+
 
 ## CDP4-SDK
 
