@@ -12,6 +12,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."RevisionRegistry"
   "Actor" uuid
 );
 
+ALTER TABLE "EngineeringModel_REPLACE"."RevisionRegistry" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RevisionRegistry" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RevisionRegistry" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RevisionRegistry" SET (autovacuum_analyze_threshold = 2500);  
+
 CREATE OR REPLACE FUNCTION "EngineeringModel_REPLACE".get_current_revision() RETURNS INTEGER 
   LANGUAGE plpgsql
   AS $$
@@ -64,6 +72,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."IterationRevisionLog"
   "ToRevision" integer
 );
 
+ALTER TABLE "EngineeringModel_REPLACE"."IterationRevisionLog" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."IterationRevisionLog" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."IterationRevisionLog" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."IterationRevisionLog" SET (autovacuum_analyze_threshold = 2500);  
+
 CREATE VIEW "EngineeringModel_REPLACE"."IterationRevisionLog_View" AS
 SELECT 
   iteration_log."IterationIid", 
@@ -86,6 +102,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Thing" (
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Thing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing" SET (autovacuum_analyze_threshold = 2500);
 CREATE TRIGGER thing_apply_revision
   BEFORE INSERT 
   ON "EngineeringModel_REPLACE"."Thing"
@@ -97,12 +121,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."TopContainer" (
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "TopContainer_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EngineeringModel (which derives from: TopContainer)
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModel" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EngineeringModel_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EngineeringModel
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModel_Revision" (
   "Iid" uuid NOT NULL,
@@ -112,6 +152,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModel_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EngineeringModel_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EngineeringModel
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModel_Cache" (
   "Iid" uuid NOT NULL,
@@ -120,18 +168,42 @@ CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModel_Cache" (
   CONSTRAINT "EngineeringModel_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EngineeringModelCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class FileStore (which derives from: Thing and implements: NamedThing, TimeStampedThing, OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."FileStore" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "FileStore_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class CommonFileStore (which derives from: FileStore)
 CREATE TABLE "EngineeringModel_REPLACE"."CommonFileStore" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "CommonFileStore_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for CommonFileStore
 CREATE TABLE "EngineeringModel_REPLACE"."CommonFileStore_Revision" (
   "Iid" uuid NOT NULL,
@@ -141,6 +213,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."CommonFileStore_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "CommonFileStore_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for CommonFileStore
 CREATE TABLE "EngineeringModel_REPLACE"."CommonFileStore_Cache" (
   "Iid" uuid NOT NULL,
@@ -149,12 +229,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."CommonFileStore_Cache" (
   CONSTRAINT "CommonFileStore_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "CommonFileStoreCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Folder (which derives from: Thing and implements: OwnedThing, NamedThing, TimeStampedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Folder" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Folder_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Folder
 CREATE TABLE "EngineeringModel_REPLACE"."Folder_Revision" (
   "Iid" uuid NOT NULL,
@@ -164,6 +260,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Folder_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Folder_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Folder
 CREATE TABLE "EngineeringModel_REPLACE"."Folder_Cache" (
   "Iid" uuid NOT NULL,
@@ -172,12 +276,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."Folder_Cache" (
   CONSTRAINT "Folder_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FolderCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class File (which derives from: Thing and implements: OwnedThing, CategorizableThing)
 CREATE TABLE "EngineeringModel_REPLACE"."File" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "File_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."File" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for File
 CREATE TABLE "EngineeringModel_REPLACE"."File_Revision" (
   "Iid" uuid NOT NULL,
@@ -187,6 +307,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."File_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "File_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for File
 CREATE TABLE "EngineeringModel_REPLACE"."File_Cache" (
   "Iid" uuid NOT NULL,
@@ -195,12 +323,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."File_Cache" (
   CONSTRAINT "File_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FileCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class FileRevision (which derives from: Thing and implements: TimeStampedThing, NamedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."FileRevision" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "FileRevision_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for FileRevision
 CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_Revision" (
   "Iid" uuid NOT NULL,
@@ -210,6 +354,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "FileRevision_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for FileRevision
 CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_Cache" (
   "Iid" uuid NOT NULL,
@@ -218,12 +370,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_Cache" (
   CONSTRAINT "FileRevision_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FileRevisionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ModelLogEntry (which derives from: Thing and implements: Annotation, TimeStampedThing, CategorizableThing, LogEntry)
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ModelLogEntry_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ModelLogEntry
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Revision" (
   "Iid" uuid NOT NULL,
@@ -233,6 +401,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ModelLogEntry_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ModelLogEntry
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Cache" (
   "Iid" uuid NOT NULL,
@@ -241,12 +417,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Cache" (
   CONSTRAINT "ModelLogEntry_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ModelLogEntryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Iteration (which derives from: Thing)
 CREATE TABLE "EngineeringModel_REPLACE"."Iteration" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Iteration_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Iteration
 CREATE TABLE "EngineeringModel_REPLACE"."Iteration_Revision" (
   "Iid" uuid NOT NULL,
@@ -256,6 +448,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Iteration_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Iteration_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Iteration
 CREATE TABLE "EngineeringModel_REPLACE"."Iteration_Cache" (
   "Iid" uuid NOT NULL,
@@ -264,12 +464,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."Iteration_Cache" (
   CONSTRAINT "Iteration_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "IterationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Book (which derives from: Thing and implements: ShortNamedThing, NamedThing, CategorizableThing, TimeStampedThing, OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Book" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Book_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Book
 CREATE TABLE "EngineeringModel_REPLACE"."Book_Revision" (
   "Iid" uuid NOT NULL,
@@ -279,6 +495,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Book_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Book_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Book
 CREATE TABLE "EngineeringModel_REPLACE"."Book_Cache" (
   "Iid" uuid NOT NULL,
@@ -287,12 +511,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."Book_Cache" (
   CONSTRAINT "Book_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BookCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Section (which derives from: Thing and implements: ShortNamedThing, NamedThing, CategorizableThing, TimeStampedThing, OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Section" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Section_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Section
 CREATE TABLE "EngineeringModel_REPLACE"."Section_Revision" (
   "Iid" uuid NOT NULL,
@@ -302,6 +542,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Section_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Section_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Section
 CREATE TABLE "EngineeringModel_REPLACE"."Section_Cache" (
   "Iid" uuid NOT NULL,
@@ -310,12 +558,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."Section_Cache" (
   CONSTRAINT "Section_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SectionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Page (which derives from: Thing and implements: ShortNamedThing, NamedThing, CategorizableThing, TimeStampedThing, OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Page" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Page_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Page
 CREATE TABLE "EngineeringModel_REPLACE"."Page_Revision" (
   "Iid" uuid NOT NULL,
@@ -325,6 +589,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Page_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Page_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Page
 CREATE TABLE "EngineeringModel_REPLACE"."Page_Cache" (
   "Iid" uuid NOT NULL,
@@ -333,18 +605,42 @@ CREATE TABLE "EngineeringModel_REPLACE"."Page_Cache" (
   CONSTRAINT "Page_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PageCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Note (which derives from: Thing and implements: ShortNamedThing, NamedThing, CategorizableThing, TimeStampedThing, OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Note" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Note_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class BinaryNote (which derives from: Note)
 CREATE TABLE "EngineeringModel_REPLACE"."BinaryNote" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "BinaryNote_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for BinaryNote
 CREATE TABLE "EngineeringModel_REPLACE"."BinaryNote_Revision" (
   "Iid" uuid NOT NULL,
@@ -354,6 +650,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."BinaryNote_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "BinaryNote_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for BinaryNote
 CREATE TABLE "EngineeringModel_REPLACE"."BinaryNote_Cache" (
   "Iid" uuid NOT NULL,
@@ -362,12 +666,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."BinaryNote_Cache" (
   CONSTRAINT "BinaryNote_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BinaryNoteCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class TextualNote (which derives from: Note)
 CREATE TABLE "EngineeringModel_REPLACE"."TextualNote" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "TextualNote_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for TextualNote
 CREATE TABLE "EngineeringModel_REPLACE"."TextualNote_Revision" (
   "Iid" uuid NOT NULL,
@@ -377,6 +697,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."TextualNote_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "TextualNote_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for TextualNote
 CREATE TABLE "EngineeringModel_REPLACE"."TextualNote_Cache" (
   "Iid" uuid NOT NULL,
@@ -385,24 +713,56 @@ CREATE TABLE "EngineeringModel_REPLACE"."TextualNote_Cache" (
   CONSTRAINT "TextualNote_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "TextualNoteCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class GenericAnnotation (which derives from: Thing and implements: Annotation, TimeStampedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."GenericAnnotation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "GenericAnnotation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EngineeringModelDataAnnotation (which derives from: GenericAnnotation)
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EngineeringModelDataAnnotation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EngineeringModelDataNote (which derives from: EngineeringModelDataAnnotation)
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EngineeringModelDataNote_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EngineeringModelDataNote
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Revision" (
   "Iid" uuid NOT NULL,
@@ -412,6 +772,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EngineeringModelDataNote_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EngineeringModelDataNote
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Cache" (
   "Iid" uuid NOT NULL,
@@ -420,18 +788,42 @@ CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Cache" (
   CONSTRAINT "EngineeringModelDataNote_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EngineeringModelDataNoteCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ThingReference (which derives from: Thing)
 CREATE TABLE "EngineeringModel_REPLACE"."ThingReference" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ThingReference_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ModellingThingReference (which derives from: ThingReference)
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingThingReference" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ModellingThingReference_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ModellingThingReference
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Revision" (
   "Iid" uuid NOT NULL,
@@ -441,6 +833,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ModellingThingReference_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ModellingThingReference
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Cache" (
   "Iid" uuid NOT NULL,
@@ -449,18 +849,42 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Cache" (
   CONSTRAINT "ModellingThingReference_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ModellingThingReferenceCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiscussionItem (which derives from: GenericAnnotation)
 CREATE TABLE "EngineeringModel_REPLACE"."DiscussionItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiscussionItem_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EngineeringModelDataDiscussionItem (which derives from: DiscussionItem)
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EngineeringModelDataDiscussionItem_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EngineeringModelDataDiscussionItem
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Revision" (
   "Iid" uuid NOT NULL,
@@ -470,6 +894,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Revi
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EngineeringModelDataDiscussionItem_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EngineeringModelDataDiscussionItem
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Cache" (
   "Iid" uuid NOT NULL,
@@ -478,24 +910,56 @@ CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Cach
   CONSTRAINT "EngineeringModelDataDiscussionItem_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EngineeringModelDataDiscussionItemCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ModellingAnnotationItem (which derives from: EngineeringModelDataAnnotation and implements: OwnedThing, ShortNamedThing, CategorizableThing)
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ModellingAnnotationItem_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ContractDeviation (which derives from: ModellingAnnotationItem)
 CREATE TABLE "EngineeringModel_REPLACE"."ContractDeviation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ContractDeviation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RequestForWaiver (which derives from: ContractDeviation)
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForWaiver" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RequestForWaiver_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RequestForWaiver
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Revision" (
   "Iid" uuid NOT NULL,
@@ -505,6 +969,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RequestForWaiver_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RequestForWaiver
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Cache" (
   "Iid" uuid NOT NULL,
@@ -513,12 +985,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Cache" (
   CONSTRAINT "RequestForWaiver_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RequestForWaiverCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Approval (which derives from: GenericAnnotation and implements: OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Approval" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Approval_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Approval
 CREATE TABLE "EngineeringModel_REPLACE"."Approval_Revision" (
   "Iid" uuid NOT NULL,
@@ -528,6 +1016,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Approval_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Approval_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Approval
 CREATE TABLE "EngineeringModel_REPLACE"."Approval_Cache" (
   "Iid" uuid NOT NULL,
@@ -536,12 +1032,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."Approval_Cache" (
   CONSTRAINT "Approval_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ApprovalCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RequestForDeviation (which derives from: ContractDeviation)
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForDeviation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RequestForDeviation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RequestForDeviation
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Revision" (
   "Iid" uuid NOT NULL,
@@ -551,6 +1063,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RequestForDeviation_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RequestForDeviation
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Cache" (
   "Iid" uuid NOT NULL,
@@ -559,12 +1079,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Cache" (
   CONSTRAINT "RequestForDeviation_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RequestForDeviationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ChangeRequest (which derives from: ContractDeviation)
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeRequest" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ChangeRequest_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ChangeRequest
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeRequest_Revision" (
   "Iid" uuid NOT NULL,
@@ -574,6 +1110,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ChangeRequest_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ChangeRequest_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ChangeRequest
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeRequest_Cache" (
   "Iid" uuid NOT NULL,
@@ -582,12 +1126,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."ChangeRequest_Cache" (
   CONSTRAINT "ChangeRequest_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ChangeRequestCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ReviewItemDiscrepancy (which derives from: ModellingAnnotationItem)
 CREATE TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ReviewItemDiscrepancy_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ReviewItemDiscrepancy
 CREATE TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Revision" (
   "Iid" uuid NOT NULL,
@@ -597,6 +1157,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ReviewItemDiscrepancy_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ReviewItemDiscrepancy
 CREATE TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Cache" (
   "Iid" uuid NOT NULL,
@@ -605,12 +1173,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Cache" (
   CONSTRAINT "ReviewItemDiscrepancy_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ReviewItemDiscrepancyCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Solution (which derives from: GenericAnnotation and implements: OwnedThing)
 CREATE TABLE "EngineeringModel_REPLACE"."Solution" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Solution_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Solution
 CREATE TABLE "EngineeringModel_REPLACE"."Solution_Revision" (
   "Iid" uuid NOT NULL,
@@ -620,6 +1204,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."Solution_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Solution_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Solution
 CREATE TABLE "EngineeringModel_REPLACE"."Solution_Cache" (
   "Iid" uuid NOT NULL,
@@ -628,12 +1220,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."Solution_Cache" (
   CONSTRAINT "Solution_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SolutionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ActionItem (which derives from: ModellingAnnotationItem)
 CREATE TABLE "EngineeringModel_REPLACE"."ActionItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ActionItem_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ActionItem
 CREATE TABLE "EngineeringModel_REPLACE"."ActionItem_Revision" (
   "Iid" uuid NOT NULL,
@@ -643,6 +1251,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ActionItem_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ActionItem_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ActionItem
 CREATE TABLE "EngineeringModel_REPLACE"."ActionItem_Cache" (
   "Iid" uuid NOT NULL,
@@ -651,12 +1267,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."ActionItem_Cache" (
   CONSTRAINT "ActionItem_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ActionItemCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ChangeProposal (which derives from: ModellingAnnotationItem)
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeProposal" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ChangeProposal_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ChangeProposal
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeProposal_Revision" (
   "Iid" uuid NOT NULL,
@@ -666,6 +1298,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ChangeProposal_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ChangeProposal_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ChangeProposal
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeProposal_Cache" (
   "Iid" uuid NOT NULL,
@@ -674,12 +1314,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."ChangeProposal_Cache" (
   CONSTRAINT "ChangeProposal_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ChangeProposalCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ContractChangeNotice (which derives from: ModellingAnnotationItem)
 CREATE TABLE "EngineeringModel_REPLACE"."ContractChangeNotice" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ContractChangeNotice_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ContractChangeNotice
 CREATE TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Revision" (
   "Iid" uuid NOT NULL,
@@ -689,6 +1345,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ContractChangeNotice_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ContractChangeNotice
 CREATE TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Cache" (
   "Iid" uuid NOT NULL,
@@ -697,12 +1361,28 @@ CREATE TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Cache" (
   CONSTRAINT "ContractChangeNotice_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ContractChangeNoticeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Thing
 CREATE TABLE "Iteration_REPLACE"."Thing" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Thing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Thing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Thing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing" SET (autovacuum_analyze_threshold = 2500);
 CREATE TRIGGER thing_apply_revision
   BEFORE INSERT 
   ON "Iteration_REPLACE"."Thing"
@@ -714,12 +1394,28 @@ CREATE TABLE "Iteration_REPLACE"."DefinedThing" (
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DefinedThing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Option (which derives from: DefinedThing and implements: CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."Option" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Option_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Option" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Option" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Option
 CREATE TABLE "Iteration_REPLACE"."Option_Revision" (
   "Iid" uuid NOT NULL,
@@ -729,6 +1425,14 @@ CREATE TABLE "Iteration_REPLACE"."Option_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Option_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Option_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Option
 CREATE TABLE "Iteration_REPLACE"."Option_Cache" (
   "Iid" uuid NOT NULL,
@@ -737,12 +1441,28 @@ CREATE TABLE "Iteration_REPLACE"."Option_Cache" (
   CONSTRAINT "Option_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "OptionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Option_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Alias (which derives from: Thing and implements: Annotation)
 CREATE TABLE "Iteration_REPLACE"."Alias" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Alias_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Alias" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Alias" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Alias
 CREATE TABLE "Iteration_REPLACE"."Alias_Revision" (
   "Iid" uuid NOT NULL,
@@ -752,6 +1472,14 @@ CREATE TABLE "Iteration_REPLACE"."Alias_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Alias_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Alias
 CREATE TABLE "Iteration_REPLACE"."Alias_Cache" (
   "Iid" uuid NOT NULL,
@@ -760,12 +1488,28 @@ CREATE TABLE "Iteration_REPLACE"."Alias_Cache" (
   CONSTRAINT "Alias_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "AliasCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Definition (which derives from: Thing and implements: Annotation)
 CREATE TABLE "Iteration_REPLACE"."Definition" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Definition_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Definition" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Definition
 CREATE TABLE "Iteration_REPLACE"."Definition_Revision" (
   "Iid" uuid NOT NULL,
@@ -775,6 +1519,14 @@ CREATE TABLE "Iteration_REPLACE"."Definition_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Definition_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Definition
 CREATE TABLE "Iteration_REPLACE"."Definition_Cache" (
   "Iid" uuid NOT NULL,
@@ -783,12 +1535,28 @@ CREATE TABLE "Iteration_REPLACE"."Definition_Cache" (
   CONSTRAINT "Definition_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DefinitionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Citation (which derives from: Thing and implements: ShortNamedThing)
 CREATE TABLE "Iteration_REPLACE"."Citation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Citation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Citation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Citation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Citation
 CREATE TABLE "Iteration_REPLACE"."Citation_Revision" (
   "Iid" uuid NOT NULL,
@@ -798,6 +1566,14 @@ CREATE TABLE "Iteration_REPLACE"."Citation_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Citation_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Citation
 CREATE TABLE "Iteration_REPLACE"."Citation_Cache" (
   "Iid" uuid NOT NULL,
@@ -806,12 +1582,28 @@ CREATE TABLE "Iteration_REPLACE"."Citation_Cache" (
   CONSTRAINT "Citation_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "CitationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class HyperLink (which derives from: Thing and implements: Annotation)
 CREATE TABLE "Iteration_REPLACE"."HyperLink" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "HyperLink_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for HyperLink
 CREATE TABLE "Iteration_REPLACE"."HyperLink_Revision" (
   "Iid" uuid NOT NULL,
@@ -821,6 +1613,14 @@ CREATE TABLE "Iteration_REPLACE"."HyperLink_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "HyperLink_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for HyperLink
 CREATE TABLE "Iteration_REPLACE"."HyperLink_Cache" (
   "Iid" uuid NOT NULL,
@@ -829,12 +1629,28 @@ CREATE TABLE "Iteration_REPLACE"."HyperLink_Cache" (
   CONSTRAINT "HyperLink_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "HyperLinkCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class NestedElement (which derives from: Thing and implements: NamedThing, ShortNamedThing, OwnedThing, VolatileThing)
 CREATE TABLE "Iteration_REPLACE"."NestedElement" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "NestedElement_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for NestedElement
 CREATE TABLE "Iteration_REPLACE"."NestedElement_Revision" (
   "Iid" uuid NOT NULL,
@@ -844,6 +1660,14 @@ CREATE TABLE "Iteration_REPLACE"."NestedElement_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "NestedElement_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for NestedElement
 CREATE TABLE "Iteration_REPLACE"."NestedElement_Cache" (
   "Iid" uuid NOT NULL,
@@ -852,12 +1676,28 @@ CREATE TABLE "Iteration_REPLACE"."NestedElement_Cache" (
   CONSTRAINT "NestedElement_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "NestedElementCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class NestedParameter (which derives from: Thing and implements: OwnedThing, VolatileThing)
 CREATE TABLE "Iteration_REPLACE"."NestedParameter" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "NestedParameter_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for NestedParameter
 CREATE TABLE "Iteration_REPLACE"."NestedParameter_Revision" (
   "Iid" uuid NOT NULL,
@@ -867,6 +1707,14 @@ CREATE TABLE "Iteration_REPLACE"."NestedParameter_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "NestedParameter_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for NestedParameter
 CREATE TABLE "Iteration_REPLACE"."NestedParameter_Cache" (
   "Iid" uuid NOT NULL,
@@ -875,12 +1723,28 @@ CREATE TABLE "Iteration_REPLACE"."NestedParameter_Cache" (
   CONSTRAINT "NestedParameter_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "NestedParameterCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Publication (which derives from: Thing and implements: TimeStampedThing)
 CREATE TABLE "Iteration_REPLACE"."Publication" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Publication_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Publication" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Publication
 CREATE TABLE "Iteration_REPLACE"."Publication_Revision" (
   "Iid" uuid NOT NULL,
@@ -890,6 +1754,14 @@ CREATE TABLE "Iteration_REPLACE"."Publication_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Publication_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Publication
 CREATE TABLE "Iteration_REPLACE"."Publication_Cache" (
   "Iid" uuid NOT NULL,
@@ -898,12 +1770,28 @@ CREATE TABLE "Iteration_REPLACE"."Publication_Cache" (
   CONSTRAINT "Publication_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PublicationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class PossibleFiniteStateList (which derives from: DefinedThing and implements: CategorizableThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "PossibleFiniteStateList_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for PossibleFiniteStateList
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Revision" (
   "Iid" uuid NOT NULL,
@@ -913,6 +1801,14 @@ CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "PossibleFiniteStateList_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for PossibleFiniteStateList
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Cache" (
   "Iid" uuid NOT NULL,
@@ -921,12 +1817,28 @@ CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Cache" (
   CONSTRAINT "PossibleFiniteStateList_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PossibleFiniteStateListCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class PossibleFiniteState (which derives from: DefinedThing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteState" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "PossibleFiniteState_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for PossibleFiniteState
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteState_Revision" (
   "Iid" uuid NOT NULL,
@@ -936,6 +1848,14 @@ CREATE TABLE "Iteration_REPLACE"."PossibleFiniteState_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "PossibleFiniteState_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for PossibleFiniteState
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteState_Cache" (
   "Iid" uuid NOT NULL,
@@ -944,18 +1864,42 @@ CREATE TABLE "Iteration_REPLACE"."PossibleFiniteState_Cache" (
   CONSTRAINT "PossibleFiniteState_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PossibleFiniteStateCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ElementBase (which derives from: DefinedThing and implements: CategorizableThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ElementBase" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ElementBase_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ElementDefinition (which derives from: ElementBase)
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ElementDefinition_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ElementDefinition
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition_Revision" (
   "Iid" uuid NOT NULL,
@@ -965,6 +1909,14 @@ CREATE TABLE "Iteration_REPLACE"."ElementDefinition_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ElementDefinition_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ElementDefinition
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition_Cache" (
   "Iid" uuid NOT NULL,
@@ -973,12 +1925,28 @@ CREATE TABLE "Iteration_REPLACE"."ElementDefinition_Cache" (
   CONSTRAINT "ElementDefinition_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ElementDefinitionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ElementUsage (which derives from: ElementBase and implements: OptionDependentThing)
 CREATE TABLE "Iteration_REPLACE"."ElementUsage" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ElementUsage_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ElementUsage
 CREATE TABLE "Iteration_REPLACE"."ElementUsage_Revision" (
   "Iid" uuid NOT NULL,
@@ -988,6 +1956,14 @@ CREATE TABLE "Iteration_REPLACE"."ElementUsage_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ElementUsage_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ElementUsage
 CREATE TABLE "Iteration_REPLACE"."ElementUsage_Cache" (
   "Iid" uuid NOT NULL,
@@ -996,24 +1972,56 @@ CREATE TABLE "Iteration_REPLACE"."ElementUsage_Cache" (
   CONSTRAINT "ElementUsage_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ElementUsageCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterBase (which derives from: Thing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ParameterBase" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterBase_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterOrOverrideBase (which derives from: ParameterBase)
 CREATE TABLE "Iteration_REPLACE"."ParameterOrOverrideBase" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterOrOverrideBase_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterOverride (which derives from: ParameterOrOverrideBase)
 CREATE TABLE "Iteration_REPLACE"."ParameterOverride" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterOverride_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterOverride
 CREATE TABLE "Iteration_REPLACE"."ParameterOverride_Revision" (
   "Iid" uuid NOT NULL,
@@ -1023,6 +2031,14 @@ CREATE TABLE "Iteration_REPLACE"."ParameterOverride_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterOverride_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterOverride
 CREATE TABLE "Iteration_REPLACE"."ParameterOverride_Cache" (
   "Iid" uuid NOT NULL,
@@ -1031,12 +2047,28 @@ CREATE TABLE "Iteration_REPLACE"."ParameterOverride_Cache" (
   CONSTRAINT "ParameterOverride_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterOverrideCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterSubscription (which derives from: ParameterBase)
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscription" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterSubscription_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterSubscription
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscription_Revision" (
   "Iid" uuid NOT NULL,
@@ -1046,6 +2078,14 @@ CREATE TABLE "Iteration_REPLACE"."ParameterSubscription_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterSubscription_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterSubscription
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscription_Cache" (
   "Iid" uuid NOT NULL,
@@ -1054,12 +2094,28 @@ CREATE TABLE "Iteration_REPLACE"."ParameterSubscription_Cache" (
   CONSTRAINT "ParameterSubscription_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterSubscriptionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterSubscriptionValueSet (which derives from: Thing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterSubscriptionValueSet_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterSubscriptionValueSet
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Revision" (
   "Iid" uuid NOT NULL,
@@ -1069,6 +2125,14 @@ CREATE TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterSubscriptionValueSet_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterSubscriptionValueSet
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Cache" (
   "Iid" uuid NOT NULL,
@@ -1077,18 +2141,42 @@ CREATE TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Cache" (
   CONSTRAINT "ParameterSubscriptionValueSet_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterSubscriptionValueSetCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterValueSetBase (which derives from: Thing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ParameterValueSetBase" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterValueSetBase_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterOverrideValueSet (which derives from: ParameterValueSetBase)
 CREATE TABLE "Iteration_REPLACE"."ParameterOverrideValueSet" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterOverrideValueSet_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterOverrideValueSet
 CREATE TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Revision" (
   "Iid" uuid NOT NULL,
@@ -1098,6 +2186,14 @@ CREATE TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterOverrideValueSet_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterOverrideValueSet
 CREATE TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Cache" (
   "Iid" uuid NOT NULL,
@@ -1106,12 +2202,28 @@ CREATE TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Cache" (
   CONSTRAINT "ParameterOverrideValueSet_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterOverrideValueSetCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Parameter (which derives from: ParameterOrOverrideBase)
 CREATE TABLE "Iteration_REPLACE"."Parameter" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Parameter_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Parameter" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Parameter
 CREATE TABLE "Iteration_REPLACE"."Parameter_Revision" (
   "Iid" uuid NOT NULL,
@@ -1121,6 +2233,14 @@ CREATE TABLE "Iteration_REPLACE"."Parameter_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Parameter_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Parameter
 CREATE TABLE "Iteration_REPLACE"."Parameter_Cache" (
   "Iid" uuid NOT NULL,
@@ -1129,12 +2249,28 @@ CREATE TABLE "Iteration_REPLACE"."Parameter_Cache" (
   CONSTRAINT "Parameter_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterValueSet (which derives from: ParameterValueSetBase)
 CREATE TABLE "Iteration_REPLACE"."ParameterValueSet" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterValueSet_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterValueSet
 CREATE TABLE "Iteration_REPLACE"."ParameterValueSet_Revision" (
   "Iid" uuid NOT NULL,
@@ -1144,6 +2280,14 @@ CREATE TABLE "Iteration_REPLACE"."ParameterValueSet_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterValueSet_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterValueSet
 CREATE TABLE "Iteration_REPLACE"."ParameterValueSet_Cache" (
   "Iid" uuid NOT NULL,
@@ -1152,12 +2296,28 @@ CREATE TABLE "Iteration_REPLACE"."ParameterValueSet_Cache" (
   CONSTRAINT "ParameterValueSet_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterValueSetCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterGroup (which derives from: Thing and implements: NamedThing)
 CREATE TABLE "Iteration_REPLACE"."ParameterGroup" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterGroup_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterGroup
 CREATE TABLE "Iteration_REPLACE"."ParameterGroup_Revision" (
   "Iid" uuid NOT NULL,
@@ -1167,6 +2327,14 @@ CREATE TABLE "Iteration_REPLACE"."ParameterGroup_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterGroup_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterGroup
 CREATE TABLE "Iteration_REPLACE"."ParameterGroup_Cache" (
   "Iid" uuid NOT NULL,
@@ -1175,18 +2343,42 @@ CREATE TABLE "Iteration_REPLACE"."ParameterGroup_Cache" (
   CONSTRAINT "ParameterGroup_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterGroupCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Relationship (which derives from: Thing and implements: CategorizableThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."Relationship" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Relationship_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Relationship" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class MultiRelationship (which derives from: Relationship)
 CREATE TABLE "Iteration_REPLACE"."MultiRelationship" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "MultiRelationship_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for MultiRelationship
 CREATE TABLE "Iteration_REPLACE"."MultiRelationship_Revision" (
   "Iid" uuid NOT NULL,
@@ -1196,6 +2388,14 @@ CREATE TABLE "Iteration_REPLACE"."MultiRelationship_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "MultiRelationship_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for MultiRelationship
 CREATE TABLE "Iteration_REPLACE"."MultiRelationship_Cache" (
   "Iid" uuid NOT NULL,
@@ -1204,18 +2404,42 @@ CREATE TABLE "Iteration_REPLACE"."MultiRelationship_Cache" (
   CONSTRAINT "MultiRelationship_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "MultiRelationshipCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterValue (which derives from: Thing)
 CREATE TABLE "Iteration_REPLACE"."ParameterValue" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterValue_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RelationshipParameterValue (which derives from: ParameterValue)
 CREATE TABLE "Iteration_REPLACE"."RelationshipParameterValue" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RelationshipParameterValue_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RelationshipParameterValue
 CREATE TABLE "Iteration_REPLACE"."RelationshipParameterValue_Revision" (
   "Iid" uuid NOT NULL,
@@ -1225,6 +2449,14 @@ CREATE TABLE "Iteration_REPLACE"."RelationshipParameterValue_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RelationshipParameterValue_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RelationshipParameterValue
 CREATE TABLE "Iteration_REPLACE"."RelationshipParameterValue_Cache" (
   "Iid" uuid NOT NULL,
@@ -1233,12 +2465,28 @@ CREATE TABLE "Iteration_REPLACE"."RelationshipParameterValue_Cache" (
   CONSTRAINT "RelationshipParameterValue_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RelationshipParameterValueCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class BinaryRelationship (which derives from: Relationship)
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "BinaryRelationship_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for BinaryRelationship
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" (
   "Iid" uuid NOT NULL,
@@ -1248,6 +2496,14 @@ CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "BinaryRelationship_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for BinaryRelationship
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" (
   "Iid" uuid NOT NULL,
@@ -1256,12 +2512,28 @@ CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" (
   CONSTRAINT "BinaryRelationship_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BinaryRelationshipCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ExternalIdentifierMap (which derives from: Thing and implements: NamedThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ExternalIdentifierMap" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ExternalIdentifierMap_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ExternalIdentifierMap
 CREATE TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Revision" (
   "Iid" uuid NOT NULL,
@@ -1271,6 +2543,14 @@ CREATE TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ExternalIdentifierMap_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ExternalIdentifierMap
 CREATE TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Cache" (
   "Iid" uuid NOT NULL,
@@ -1279,12 +2559,28 @@ CREATE TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Cache" (
   CONSTRAINT "ExternalIdentifierMap_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ExternalIdentifierMapCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class IdCorrespondence (which derives from: Thing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."IdCorrespondence" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "IdCorrespondence_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for IdCorrespondence
 CREATE TABLE "Iteration_REPLACE"."IdCorrespondence_Revision" (
   "Iid" uuid NOT NULL,
@@ -1294,6 +2590,14 @@ CREATE TABLE "Iteration_REPLACE"."IdCorrespondence_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "IdCorrespondence_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for IdCorrespondence
 CREATE TABLE "Iteration_REPLACE"."IdCorrespondence_Cache" (
   "Iid" uuid NOT NULL,
@@ -1302,18 +2606,42 @@ CREATE TABLE "Iteration_REPLACE"."IdCorrespondence_Cache" (
   CONSTRAINT "IdCorrespondence_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "IdCorrespondenceCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RequirementsContainer (which derives from: DefinedThing and implements: OwnedThing, CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainer" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RequirementsContainer_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RequirementsSpecification (which derives from: RequirementsContainer and implements: DeprecatableThing)
 CREATE TABLE "Iteration_REPLACE"."RequirementsSpecification" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RequirementsSpecification_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RequirementsSpecification
 CREATE TABLE "Iteration_REPLACE"."RequirementsSpecification_Revision" (
   "Iid" uuid NOT NULL,
@@ -1323,6 +2651,14 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsSpecification_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RequirementsSpecification_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RequirementsSpecification
 CREATE TABLE "Iteration_REPLACE"."RequirementsSpecification_Cache" (
   "Iid" uuid NOT NULL,
@@ -1331,12 +2667,28 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsSpecification_Cache" (
   CONSTRAINT "RequirementsSpecification_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RequirementsSpecificationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RequirementsGroup (which derives from: RequirementsContainer)
 CREATE TABLE "Iteration_REPLACE"."RequirementsGroup" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RequirementsGroup_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RequirementsGroup
 CREATE TABLE "Iteration_REPLACE"."RequirementsGroup_Revision" (
   "Iid" uuid NOT NULL,
@@ -1346,6 +2698,14 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsGroup_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RequirementsGroup_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RequirementsGroup
 CREATE TABLE "Iteration_REPLACE"."RequirementsGroup_Cache" (
   "Iid" uuid NOT NULL,
@@ -1354,12 +2714,28 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsGroup_Cache" (
   CONSTRAINT "RequirementsGroup_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RequirementsGroupCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RequirementsContainerParameterValue (which derives from: ParameterValue)
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RequirementsContainerParameterValue_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RequirementsContainerParameterValue
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Revision" (
   "Iid" uuid NOT NULL,
@@ -1369,6 +2745,14 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Revision" 
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RequirementsContainerParameterValue_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RequirementsContainerParameterValue
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Cache" (
   "Iid" uuid NOT NULL,
@@ -1377,18 +2761,42 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Cache" (
   CONSTRAINT "RequirementsContainerParameterValue_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RequirementsContainerParameterValueCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SimpleParameterizableThing (which derives from: DefinedThing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."SimpleParameterizableThing" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SimpleParameterizableThing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Requirement (which derives from: SimpleParameterizableThing and implements: CategorizableThing, DeprecatableThing)
 CREATE TABLE "Iteration_REPLACE"."Requirement" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Requirement_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Requirement" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Requirement
 CREATE TABLE "Iteration_REPLACE"."Requirement_Revision" (
   "Iid" uuid NOT NULL,
@@ -1398,6 +2806,14 @@ CREATE TABLE "Iteration_REPLACE"."Requirement_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Requirement_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Requirement
 CREATE TABLE "Iteration_REPLACE"."Requirement_Cache" (
   "Iid" uuid NOT NULL,
@@ -1406,12 +2822,28 @@ CREATE TABLE "Iteration_REPLACE"."Requirement_Cache" (
   CONSTRAINT "Requirement_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RequirementCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SimpleParameterValue (which derives from: Thing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."SimpleParameterValue" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SimpleParameterValue_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SimpleParameterValue
 CREATE TABLE "Iteration_REPLACE"."SimpleParameterValue_Revision" (
   "Iid" uuid NOT NULL,
@@ -1421,6 +2853,14 @@ CREATE TABLE "Iteration_REPLACE"."SimpleParameterValue_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SimpleParameterValue_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SimpleParameterValue
 CREATE TABLE "Iteration_REPLACE"."SimpleParameterValue_Cache" (
   "Iid" uuid NOT NULL,
@@ -1429,12 +2869,28 @@ CREATE TABLE "Iteration_REPLACE"."SimpleParameterValue_Cache" (
   CONSTRAINT "SimpleParameterValue_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SimpleParameterValueCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParametricConstraint (which derives from: Thing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ParametricConstraint" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParametricConstraint_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParametricConstraint
 CREATE TABLE "Iteration_REPLACE"."ParametricConstraint_Revision" (
   "Iid" uuid NOT NULL,
@@ -1444,6 +2900,14 @@ CREATE TABLE "Iteration_REPLACE"."ParametricConstraint_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParametricConstraint_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParametricConstraint
 CREATE TABLE "Iteration_REPLACE"."ParametricConstraint_Cache" (
   "Iid" uuid NOT NULL,
@@ -1452,18 +2916,42 @@ CREATE TABLE "Iteration_REPLACE"."ParametricConstraint_Cache" (
   CONSTRAINT "ParametricConstraint_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParametricConstraintCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class BooleanExpression (which derives from: Thing)
 CREATE TABLE "Iteration_REPLACE"."BooleanExpression" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "BooleanExpression_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class OrExpression (which derives from: BooleanExpression)
 CREATE TABLE "Iteration_REPLACE"."OrExpression" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "OrExpression_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for OrExpression
 CREATE TABLE "Iteration_REPLACE"."OrExpression_Revision" (
   "Iid" uuid NOT NULL,
@@ -1473,6 +2961,14 @@ CREATE TABLE "Iteration_REPLACE"."OrExpression_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "OrExpression_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for OrExpression
 CREATE TABLE "Iteration_REPLACE"."OrExpression_Cache" (
   "Iid" uuid NOT NULL,
@@ -1481,12 +2977,28 @@ CREATE TABLE "Iteration_REPLACE"."OrExpression_Cache" (
   CONSTRAINT "OrExpression_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "OrExpressionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class NotExpression (which derives from: BooleanExpression)
 CREATE TABLE "Iteration_REPLACE"."NotExpression" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "NotExpression_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for NotExpression
 CREATE TABLE "Iteration_REPLACE"."NotExpression_Revision" (
   "Iid" uuid NOT NULL,
@@ -1496,6 +3008,14 @@ CREATE TABLE "Iteration_REPLACE"."NotExpression_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "NotExpression_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for NotExpression
 CREATE TABLE "Iteration_REPLACE"."NotExpression_Cache" (
   "Iid" uuid NOT NULL,
@@ -1504,12 +3024,28 @@ CREATE TABLE "Iteration_REPLACE"."NotExpression_Cache" (
   CONSTRAINT "NotExpression_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "NotExpressionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class AndExpression (which derives from: BooleanExpression)
 CREATE TABLE "Iteration_REPLACE"."AndExpression" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "AndExpression_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for AndExpression
 CREATE TABLE "Iteration_REPLACE"."AndExpression_Revision" (
   "Iid" uuid NOT NULL,
@@ -1519,6 +3055,14 @@ CREATE TABLE "Iteration_REPLACE"."AndExpression_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "AndExpression_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for AndExpression
 CREATE TABLE "Iteration_REPLACE"."AndExpression_Cache" (
   "Iid" uuid NOT NULL,
@@ -1527,12 +3071,28 @@ CREATE TABLE "Iteration_REPLACE"."AndExpression_Cache" (
   CONSTRAINT "AndExpression_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "AndExpressionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ExclusiveOrExpression (which derives from: BooleanExpression)
 CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ExclusiveOrExpression_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ExclusiveOrExpression
 CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Revision" (
   "Iid" uuid NOT NULL,
@@ -1542,6 +3102,14 @@ CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ExclusiveOrExpression_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ExclusiveOrExpression
 CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Cache" (
   "Iid" uuid NOT NULL,
@@ -1550,12 +3118,28 @@ CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Cache" (
   CONSTRAINT "ExclusiveOrExpression_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ExclusiveOrExpressionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RelationalExpression (which derives from: BooleanExpression)
 CREATE TABLE "Iteration_REPLACE"."RelationalExpression" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RelationalExpression_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RelationalExpression
 CREATE TABLE "Iteration_REPLACE"."RelationalExpression_Revision" (
   "Iid" uuid NOT NULL,
@@ -1565,6 +3149,14 @@ CREATE TABLE "Iteration_REPLACE"."RelationalExpression_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RelationalExpression_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RelationalExpression
 CREATE TABLE "Iteration_REPLACE"."RelationalExpression_Cache" (
   "Iid" uuid NOT NULL,
@@ -1573,18 +3165,42 @@ CREATE TABLE "Iteration_REPLACE"."RelationalExpression_Cache" (
   CONSTRAINT "RelationalExpression_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RelationalExpressionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class FileStore (which derives from: Thing and implements: NamedThing, TimeStampedThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."FileStore" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "FileStore_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."FileStore" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileStore" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileStore" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileStore" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DomainFileStore (which derives from: FileStore)
 CREATE TABLE "Iteration_REPLACE"."DomainFileStore" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DomainFileStore_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DomainFileStore
 CREATE TABLE "Iteration_REPLACE"."DomainFileStore_Revision" (
   "Iid" uuid NOT NULL,
@@ -1594,6 +3210,14 @@ CREATE TABLE "Iteration_REPLACE"."DomainFileStore_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DomainFileStore_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DomainFileStore
 CREATE TABLE "Iteration_REPLACE"."DomainFileStore_Cache" (
   "Iid" uuid NOT NULL,
@@ -1602,12 +3226,28 @@ CREATE TABLE "Iteration_REPLACE"."DomainFileStore_Cache" (
   CONSTRAINT "DomainFileStore_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DomainFileStoreCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Folder (which derives from: Thing and implements: OwnedThing, NamedThing, TimeStampedThing)
 CREATE TABLE "Iteration_REPLACE"."Folder" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Folder_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Folder" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Folder" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Folder
 CREATE TABLE "Iteration_REPLACE"."Folder_Revision" (
   "Iid" uuid NOT NULL,
@@ -1617,6 +3257,14 @@ CREATE TABLE "Iteration_REPLACE"."Folder_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Folder_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Folder
 CREATE TABLE "Iteration_REPLACE"."Folder_Cache" (
   "Iid" uuid NOT NULL,
@@ -1625,12 +3273,28 @@ CREATE TABLE "Iteration_REPLACE"."Folder_Cache" (
   CONSTRAINT "Folder_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FolderCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class File (which derives from: Thing and implements: OwnedThing, CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."File" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "File_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."File" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."File" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for File
 CREATE TABLE "Iteration_REPLACE"."File_Revision" (
   "Iid" uuid NOT NULL,
@@ -1640,6 +3304,14 @@ CREATE TABLE "Iteration_REPLACE"."File_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "File_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."File_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."File_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for File
 CREATE TABLE "Iteration_REPLACE"."File_Cache" (
   "Iid" uuid NOT NULL,
@@ -1648,12 +3320,28 @@ CREATE TABLE "Iteration_REPLACE"."File_Cache" (
   CONSTRAINT "File_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FileCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."File_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."File_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class FileRevision (which derives from: Thing and implements: TimeStampedThing, NamedThing)
 CREATE TABLE "Iteration_REPLACE"."FileRevision" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "FileRevision_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for FileRevision
 CREATE TABLE "Iteration_REPLACE"."FileRevision_Revision" (
   "Iid" uuid NOT NULL,
@@ -1663,6 +3351,14 @@ CREATE TABLE "Iteration_REPLACE"."FileRevision_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "FileRevision_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for FileRevision
 CREATE TABLE "Iteration_REPLACE"."FileRevision_Cache" (
   "Iid" uuid NOT NULL,
@@ -1671,12 +3367,28 @@ CREATE TABLE "Iteration_REPLACE"."FileRevision_Cache" (
   CONSTRAINT "FileRevision_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FileRevisionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ActualFiniteStateList (which derives from: Thing and implements: OptionDependentThing, OwnedThing, NamedThing, ShortNamedThing)
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ActualFiniteStateList_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ActualFiniteStateList
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_Revision" (
   "Iid" uuid NOT NULL,
@@ -1686,6 +3398,14 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ActualFiniteStateList_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ActualFiniteStateList
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_Cache" (
   "Iid" uuid NOT NULL,
@@ -1694,12 +3414,28 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_Cache" (
   CONSTRAINT "ActualFiniteStateList_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ActualFiniteStateListCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ActualFiniteState (which derives from: Thing and implements: NamedThing, ShortNamedThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteState" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ActualFiniteState_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ActualFiniteState
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_Revision" (
   "Iid" uuid NOT NULL,
@@ -1709,6 +3445,14 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ActualFiniteState_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ActualFiniteState
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_Cache" (
   "Iid" uuid NOT NULL,
@@ -1717,12 +3461,28 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_Cache" (
   CONSTRAINT "ActualFiniteState_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ActualFiniteStateCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RuleVerificationList (which derives from: DefinedThing and implements: OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."RuleVerificationList" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RuleVerificationList_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RuleVerificationList
 CREATE TABLE "Iteration_REPLACE"."RuleVerificationList_Revision" (
   "Iid" uuid NOT NULL,
@@ -1732,6 +3492,14 @@ CREATE TABLE "Iteration_REPLACE"."RuleVerificationList_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RuleVerificationList_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RuleVerificationList
 CREATE TABLE "Iteration_REPLACE"."RuleVerificationList_Cache" (
   "Iid" uuid NOT NULL,
@@ -1740,18 +3508,42 @@ CREATE TABLE "Iteration_REPLACE"."RuleVerificationList_Cache" (
   CONSTRAINT "RuleVerificationList_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RuleVerificationListCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RuleVerification (which derives from: Thing and implements: NamedThing, OwnedThing)
 CREATE TABLE "Iteration_REPLACE"."RuleVerification" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RuleVerification_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class UserRuleVerification (which derives from: RuleVerification)
 CREATE TABLE "Iteration_REPLACE"."UserRuleVerification" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "UserRuleVerification_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for UserRuleVerification
 CREATE TABLE "Iteration_REPLACE"."UserRuleVerification_Revision" (
   "Iid" uuid NOT NULL,
@@ -1761,6 +3553,14 @@ CREATE TABLE "Iteration_REPLACE"."UserRuleVerification_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "UserRuleVerification_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for UserRuleVerification
 CREATE TABLE "Iteration_REPLACE"."UserRuleVerification_Cache" (
   "Iid" uuid NOT NULL,
@@ -1769,12 +3569,28 @@ CREATE TABLE "Iteration_REPLACE"."UserRuleVerification_Cache" (
   CONSTRAINT "UserRuleVerification_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "UserRuleVerificationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RuleViolation (which derives from: Thing)
 CREATE TABLE "Iteration_REPLACE"."RuleViolation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RuleViolation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RuleViolation
 CREATE TABLE "Iteration_REPLACE"."RuleViolation_Revision" (
   "Iid" uuid NOT NULL,
@@ -1784,6 +3600,14 @@ CREATE TABLE "Iteration_REPLACE"."RuleViolation_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RuleViolation_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RuleViolation
 CREATE TABLE "Iteration_REPLACE"."RuleViolation_Cache" (
   "Iid" uuid NOT NULL,
@@ -1792,12 +3616,28 @@ CREATE TABLE "Iteration_REPLACE"."RuleViolation_Cache" (
   CONSTRAINT "RuleViolation_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RuleViolationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class BuiltInRuleVerification (which derives from: RuleVerification)
 CREATE TABLE "Iteration_REPLACE"."BuiltInRuleVerification" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "BuiltInRuleVerification_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for BuiltInRuleVerification
 CREATE TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Revision" (
   "Iid" uuid NOT NULL,
@@ -1807,6 +3647,14 @@ CREATE TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "BuiltInRuleVerification_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for BuiltInRuleVerification
 CREATE TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Cache" (
   "Iid" uuid NOT NULL,
@@ -1815,12 +3663,28 @@ CREATE TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Cache" (
   CONSTRAINT "BuiltInRuleVerification_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BuiltInRuleVerificationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Stakeholder (which derives from: DefinedThing and implements: CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."Stakeholder" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Stakeholder_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Stakeholder
 CREATE TABLE "Iteration_REPLACE"."Stakeholder_Revision" (
   "Iid" uuid NOT NULL,
@@ -1830,6 +3694,14 @@ CREATE TABLE "Iteration_REPLACE"."Stakeholder_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Stakeholder_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Stakeholder
 CREATE TABLE "Iteration_REPLACE"."Stakeholder_Cache" (
   "Iid" uuid NOT NULL,
@@ -1838,12 +3710,28 @@ CREATE TABLE "Iteration_REPLACE"."Stakeholder_Cache" (
   CONSTRAINT "Stakeholder_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "StakeholderCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Goal (which derives from: DefinedThing and implements: CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."Goal" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Goal_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Goal" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Goal" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Goal
 CREATE TABLE "Iteration_REPLACE"."Goal_Revision" (
   "Iid" uuid NOT NULL,
@@ -1853,6 +3741,14 @@ CREATE TABLE "Iteration_REPLACE"."Goal_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Goal_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Goal
 CREATE TABLE "Iteration_REPLACE"."Goal_Cache" (
   "Iid" uuid NOT NULL,
@@ -1861,12 +3757,28 @@ CREATE TABLE "Iteration_REPLACE"."Goal_Cache" (
   CONSTRAINT "Goal_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "GoalCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ValueGroup (which derives from: DefinedThing and implements: CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."ValueGroup" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ValueGroup_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ValueGroup
 CREATE TABLE "Iteration_REPLACE"."ValueGroup_Revision" (
   "Iid" uuid NOT NULL,
@@ -1876,6 +3788,14 @@ CREATE TABLE "Iteration_REPLACE"."ValueGroup_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ValueGroup_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ValueGroup
 CREATE TABLE "Iteration_REPLACE"."ValueGroup_Cache" (
   "Iid" uuid NOT NULL,
@@ -1884,12 +3804,28 @@ CREATE TABLE "Iteration_REPLACE"."ValueGroup_Cache" (
   CONSTRAINT "ValueGroup_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ValueGroupCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class StakeholderValue (which derives from: DefinedThing and implements: CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."StakeholderValue" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "StakeholderValue_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for StakeholderValue
 CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Revision" (
   "Iid" uuid NOT NULL,
@@ -1899,6 +3835,14 @@ CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "StakeholderValue_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for StakeholderValue
 CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Cache" (
   "Iid" uuid NOT NULL,
@@ -1907,12 +3851,28 @@ CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Cache" (
   CONSTRAINT "StakeholderValue_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "StakeholderValueCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class StakeHolderValueMap (which derives from: DefinedThing and implements: CategorizableThing)
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "StakeHolderValueMap_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for StakeHolderValueMap
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Revision" (
   "Iid" uuid NOT NULL,
@@ -1922,6 +3882,14 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "StakeHolderValueMap_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for StakeHolderValueMap
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Cache" (
   "Iid" uuid NOT NULL,
@@ -1930,12 +3898,28 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Cache" (
   CONSTRAINT "StakeHolderValueMap_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "StakeHolderValueMapCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class StakeHolderValueMapSettings (which derives from: Thing)
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "StakeHolderValueMapSettings_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for StakeHolderValueMapSettings
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Revision" (
   "Iid" uuid NOT NULL,
@@ -1945,6 +3929,14 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "StakeHolderValueMapSettings_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for StakeHolderValueMapSettings
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Cache" (
   "Iid" uuid NOT NULL,
@@ -1953,24 +3945,56 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Cache" (
   CONSTRAINT "StakeHolderValueMapSettings_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "StakeHolderValueMapSettingsCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramThingBase (which derives from: Thing and implements: NamedThing)
 CREATE TABLE "Iteration_REPLACE"."DiagramThingBase" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramThingBase_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagrammingStyle (which derives from: DiagramThingBase)
 CREATE TABLE "Iteration_REPLACE"."DiagrammingStyle" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagrammingStyle_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SharedStyle (which derives from: DiagrammingStyle)
 CREATE TABLE "Iteration_REPLACE"."SharedStyle" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SharedStyle_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SharedStyle
 CREATE TABLE "Iteration_REPLACE"."SharedStyle_Revision" (
   "Iid" uuid NOT NULL,
@@ -1980,6 +4004,14 @@ CREATE TABLE "Iteration_REPLACE"."SharedStyle_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SharedStyle_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SharedStyle
 CREATE TABLE "Iteration_REPLACE"."SharedStyle_Cache" (
   "Iid" uuid NOT NULL,
@@ -1988,12 +4020,28 @@ CREATE TABLE "Iteration_REPLACE"."SharedStyle_Cache" (
   CONSTRAINT "SharedStyle_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SharedStyleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Color (which derives from: DiagramThingBase)
 CREATE TABLE "Iteration_REPLACE"."Color" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Color_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Color" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Color" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Color
 CREATE TABLE "Iteration_REPLACE"."Color_Revision" (
   "Iid" uuid NOT NULL,
@@ -2003,6 +4051,14 @@ CREATE TABLE "Iteration_REPLACE"."Color_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Color_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Color_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Color
 CREATE TABLE "Iteration_REPLACE"."Color_Cache" (
   "Iid" uuid NOT NULL,
@@ -2011,18 +4067,42 @@ CREATE TABLE "Iteration_REPLACE"."Color_Cache" (
   CONSTRAINT "Color_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ColorCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Color_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramElementContainer (which derives from: DiagramThingBase)
 CREATE TABLE "Iteration_REPLACE"."DiagramElementContainer" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramElementContainer_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramCanvas (which derives from: DiagramElementContainer and implements: TimeStampedThing)
 CREATE TABLE "Iteration_REPLACE"."DiagramCanvas" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramCanvas_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DiagramCanvas
 CREATE TABLE "Iteration_REPLACE"."DiagramCanvas_Revision" (
   "Iid" uuid NOT NULL,
@@ -2032,6 +4112,14 @@ CREATE TABLE "Iteration_REPLACE"."DiagramCanvas_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DiagramCanvas_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DiagramCanvas
 CREATE TABLE "Iteration_REPLACE"."DiagramCanvas_Cache" (
   "Iid" uuid NOT NULL,
@@ -2040,18 +4128,42 @@ CREATE TABLE "Iteration_REPLACE"."DiagramCanvas_Cache" (
   CONSTRAINT "DiagramCanvas_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DiagramCanvasCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramElementThing (which derives from: DiagramElementContainer)
 CREATE TABLE "Iteration_REPLACE"."DiagramElementThing" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramElementThing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramEdge (which derives from: DiagramElementThing)
 CREATE TABLE "Iteration_REPLACE"."DiagramEdge" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramEdge_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DiagramEdge
 CREATE TABLE "Iteration_REPLACE"."DiagramEdge_Revision" (
   "Iid" uuid NOT NULL,
@@ -2061,6 +4173,14 @@ CREATE TABLE "Iteration_REPLACE"."DiagramEdge_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DiagramEdge_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DiagramEdge
 CREATE TABLE "Iteration_REPLACE"."DiagramEdge_Cache" (
   "Iid" uuid NOT NULL,
@@ -2069,12 +4189,28 @@ CREATE TABLE "Iteration_REPLACE"."DiagramEdge_Cache" (
   CONSTRAINT "DiagramEdge_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DiagramEdgeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Bounds (which derives from: DiagramThingBase)
 CREATE TABLE "Iteration_REPLACE"."Bounds" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Bounds_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Bounds" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Bounds
 CREATE TABLE "Iteration_REPLACE"."Bounds_Revision" (
   "Iid" uuid NOT NULL,
@@ -2084,6 +4220,14 @@ CREATE TABLE "Iteration_REPLACE"."Bounds_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Bounds_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Bounds
 CREATE TABLE "Iteration_REPLACE"."Bounds_Cache" (
   "Iid" uuid NOT NULL,
@@ -2092,12 +4236,28 @@ CREATE TABLE "Iteration_REPLACE"."Bounds_Cache" (
   CONSTRAINT "Bounds_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BoundsCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class OwnedStyle (which derives from: DiagrammingStyle)
 CREATE TABLE "Iteration_REPLACE"."OwnedStyle" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "OwnedStyle_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for OwnedStyle
 CREATE TABLE "Iteration_REPLACE"."OwnedStyle_Revision" (
   "Iid" uuid NOT NULL,
@@ -2107,6 +4267,14 @@ CREATE TABLE "Iteration_REPLACE"."OwnedStyle_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "OwnedStyle_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for OwnedStyle
 CREATE TABLE "Iteration_REPLACE"."OwnedStyle_Cache" (
   "Iid" uuid NOT NULL,
@@ -2115,12 +4283,28 @@ CREATE TABLE "Iteration_REPLACE"."OwnedStyle_Cache" (
   CONSTRAINT "OwnedStyle_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "OwnedStyleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Point (which derives from: DiagramThingBase)
 CREATE TABLE "Iteration_REPLACE"."Point" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Point_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Point" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Point" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Point
 CREATE TABLE "Iteration_REPLACE"."Point_Revision" (
   "Iid" uuid NOT NULL,
@@ -2130,6 +4314,14 @@ CREATE TABLE "Iteration_REPLACE"."Point_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Point_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."Point_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Point
 CREATE TABLE "Iteration_REPLACE"."Point_Cache" (
   "Iid" uuid NOT NULL,
@@ -2138,18 +4330,42 @@ CREATE TABLE "Iteration_REPLACE"."Point_Cache" (
   CONSTRAINT "Point_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PointCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Point_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramShape (which derives from: DiagramElementThing)
 CREATE TABLE "Iteration_REPLACE"."DiagramShape" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramShape_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiagramObject (which derives from: DiagramShape)
 CREATE TABLE "Iteration_REPLACE"."DiagramObject" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiagramObject_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DiagramObject
 CREATE TABLE "Iteration_REPLACE"."DiagramObject_Revision" (
   "Iid" uuid NOT NULL,
@@ -2159,6 +4375,14 @@ CREATE TABLE "Iteration_REPLACE"."DiagramObject_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DiagramObject_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DiagramObject
 CREATE TABLE "Iteration_REPLACE"."DiagramObject_Cache" (
   "Iid" uuid NOT NULL,
@@ -2167,6 +4391,14 @@ CREATE TABLE "Iteration_REPLACE"."DiagramObject_Cache" (
   CONSTRAINT "DiagramObject_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DiagramObjectCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- ExcludedPerson is a collection property (many to many) of class Thing: [0..*]-[1..1]
 CREATE TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson" (
   "Thing" uuid NOT NULL,
@@ -2175,6 +4407,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson" (
   CONSTRAINT "Thing_ExcludedPerson_FK_Source" FOREIGN KEY ("Thing") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Thing_ExcludedPerson_FK_Target" FOREIGN KEY ("ExcludedPerson") REFERENCES "SiteDirectory"."Person" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2182,6 +4423,15 @@ CREATE INDEX "Idx_Thing_ExcludedPerson_ValidFrom" ON "EngineeringModel_REPLACE".
 CREATE INDEX "Idx_Thing_ExcludedPerson_ValidTo" ON "EngineeringModel_REPLACE"."Thing_ExcludedPerson" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson_Audit" (LIKE "EngineeringModel_REPLACE"."Thing_ExcludedPerson");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedPerson_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2210,6 +4460,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain" (
   CONSTRAINT "Thing_ExcludedDomain_FK_Source" FOREIGN KEY ("Thing") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Thing_ExcludedDomain_FK_Target" FOREIGN KEY ("ExcludedDomain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2217,6 +4476,15 @@ CREATE INDEX "Idx_Thing_ExcludedDomain_ValidFrom" ON "EngineeringModel_REPLACE".
 CREATE INDEX "Idx_Thing_ExcludedDomain_ValidTo" ON "EngineeringModel_REPLACE"."Thing_ExcludedDomain" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain_Audit" (LIKE "EngineeringModel_REPLACE"."Thing_ExcludedDomain");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Thing_ExcludedDomain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2368,6 +4636,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."File_Category" (
   CONSTRAINT "File_Category_FK_Source" FOREIGN KEY ("File") REFERENCES "EngineeringModel_REPLACE"."File" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "File_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."File_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2375,6 +4652,15 @@ CREATE INDEX "Idx_File_Category_ValidFrom" ON "EngineeringModel_REPLACE"."File_C
 CREATE INDEX "Idx_File_Category_ValidTo" ON "EngineeringModel_REPLACE"."File_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."File_Category_Audit" (LIKE "EngineeringModel_REPLACE"."File_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."File_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2412,6 +4698,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_FileType" (
   CONSTRAINT "FileRevision_FileType_FK_Source" FOREIGN KEY ("FileRevision") REFERENCES "EngineeringModel_REPLACE"."FileRevision" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "FileRevision_FileType_FK_Target" FOREIGN KEY ("FileType") REFERENCES "SiteDirectory"."FileType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2419,6 +4714,15 @@ CREATE INDEX "Idx_FileRevision_FileType_ValidFrom" ON "EngineeringModel_REPLACE"
 CREATE INDEX "Idx_FileRevision_FileType_ValidTo" ON "EngineeringModel_REPLACE"."FileRevision_FileType" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" (LIKE "EngineeringModel_REPLACE"."FileRevision_FileType");
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2449,6 +4753,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category" (
   CONSTRAINT "ModelLogEntry_Category_FK_Source" FOREIGN KEY ("ModelLogEntry") REFERENCES "EngineeringModel_REPLACE"."ModelLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ModelLogEntry_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2456,6 +4769,15 @@ CREATE INDEX "Idx_ModelLogEntry_Category_ValidFrom" ON "EngineeringModel_REPLACE
 CREATE INDEX "Idx_ModelLogEntry_Category_ValidTo" ON "EngineeringModel_REPLACE"."ModelLogEntry_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category_Audit" (LIKE "EngineeringModel_REPLACE"."ModelLogEntry_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2486,6 +4808,14 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" (
   CONSTRAINT "ModelLogEntry_AffectedItemIid_PK" PRIMARY KEY("ModelLogEntry","AffectedItemIid"),
   CONSTRAINT "ModelLogEntry_AffectedItemIid_FK_Source" FOREIGN KEY ("ModelLogEntry") REFERENCES "EngineeringModel_REPLACE"."ModelLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2493,6 +4823,15 @@ CREATE INDEX "Idx_ModelLogEntry_AffectedItemIid_ValidFrom" ON "EngineeringModel_
 CREATE INDEX "Idx_ModelLogEntry_AffectedItemIid_ValidTo" ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" (LIKE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2713,6 +5052,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."Book_Category" (
   CONSTRAINT "Book_Category_FK_Source" FOREIGN KEY ("Book") REFERENCES "EngineeringModel_REPLACE"."Book" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Book_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."Book_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2720,6 +5068,15 @@ CREATE INDEX "Idx_Book_Category_ValidFrom" ON "EngineeringModel_REPLACE"."Book_C
 CREATE INDEX "Idx_Book_Category_ValidTo" ON "EngineeringModel_REPLACE"."Book_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Book_Category_Audit" (LIKE "EngineeringModel_REPLACE"."Book_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Book_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2764,6 +5121,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."Section_Category" (
   CONSTRAINT "Section_Category_FK_Source" FOREIGN KEY ("Section") REFERENCES "EngineeringModel_REPLACE"."Section" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Section_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."Section_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2771,6 +5137,15 @@ CREATE INDEX "Idx_Section_Category_ValidFrom" ON "EngineeringModel_REPLACE"."Sec
 CREATE INDEX "Idx_Section_Category_ValidTo" ON "EngineeringModel_REPLACE"."Section_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Section_Category_Audit" (LIKE "EngineeringModel_REPLACE"."Section_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Section_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2815,6 +5190,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."Page_Category" (
   CONSTRAINT "Page_Category_FK_Source" FOREIGN KEY ("Page") REFERENCES "EngineeringModel_REPLACE"."Page" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Page_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."Page_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2822,6 +5206,15 @@ CREATE INDEX "Idx_Page_Category_ValidFrom" ON "EngineeringModel_REPLACE"."Page_C
 CREATE INDEX "Idx_Page_Category_ValidTo" ON "EngineeringModel_REPLACE"."Page_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Page_Category_Audit" (LIKE "EngineeringModel_REPLACE"."Page_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Page_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2855,6 +5248,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."Note_Category" (
   CONSTRAINT "Note_Category_FK_Source" FOREIGN KEY ("Note") REFERENCES "EngineeringModel_REPLACE"."Note" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Note_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."Note_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2862,6 +5264,15 @@ CREATE INDEX "Idx_Note_Category_ValidFrom" ON "EngineeringModel_REPLACE"."Note_C
 CREATE INDEX "Idx_Note_Category_ValidTo" ON "EngineeringModel_REPLACE"."Note_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Note_Category_Audit" (LIKE "EngineeringModel_REPLACE"."Note_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Note_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2960,6 +5371,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotatio
   CONSTRAINT "ModellingAnnotationItem_SourceAnnotation_FK_Source" FOREIGN KEY ("ModellingAnnotationItem") REFERENCES "EngineeringModel_REPLACE"."ModellingAnnotationItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ModellingAnnotationItem_SourceAnnotation_FK_Target" FOREIGN KEY ("SourceAnnotation") REFERENCES "EngineeringModel_REPLACE"."ModellingAnnotationItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2967,6 +5387,15 @@ CREATE INDEX "Idx_ModellingAnnotationItem_SourceAnnotation_ValidFrom" ON "Engine
 CREATE INDEX "Idx_ModellingAnnotationItem_SourceAnnotation_ValidTo" ON "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation_Audit" (LIKE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2998,6 +5427,15 @@ CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" (
   CONSTRAINT "ModellingAnnotationItem_Category_FK_Source" FOREIGN KEY ("ModellingAnnotationItem") REFERENCES "EngineeringModel_REPLACE"."ModellingAnnotationItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ModellingAnnotationItem_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3005,6 +5443,15 @@ CREATE INDEX "Idx_ModellingAnnotationItem_Category_ValidFrom" ON "EngineeringMod
 CREATE INDEX "Idx_ModellingAnnotationItem_Category_ValidTo" ON "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" (LIKE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3084,6 +5531,15 @@ CREATE TABLE "Iteration_REPLACE"."Thing_ExcludedPerson" (
   CONSTRAINT "Thing_ExcludedPerson_FK_Source" FOREIGN KEY ("Thing") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Thing_ExcludedPerson_FK_Target" FOREIGN KEY ("ExcludedPerson") REFERENCES "SiteDirectory"."Person" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3091,6 +5547,15 @@ CREATE INDEX "Idx_Thing_ExcludedPerson_ValidFrom" ON "Iteration_REPLACE"."Thing_
 CREATE INDEX "Idx_Thing_ExcludedPerson_ValidTo" ON "Iteration_REPLACE"."Thing_ExcludedPerson" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Thing_ExcludedPerson_Audit" (LIKE "Iteration_REPLACE"."Thing_ExcludedPerson");
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedPerson_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3119,6 +5584,15 @@ CREATE TABLE "Iteration_REPLACE"."Thing_ExcludedDomain" (
   CONSTRAINT "Thing_ExcludedDomain_FK_Source" FOREIGN KEY ("Thing") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Thing_ExcludedDomain_FK_Target" FOREIGN KEY ("ExcludedDomain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3126,6 +5600,15 @@ CREATE INDEX "Idx_Thing_ExcludedDomain_ValidFrom" ON "Iteration_REPLACE"."Thing_
 CREATE INDEX "Idx_Thing_ExcludedDomain_ValidTo" ON "Iteration_REPLACE"."Thing_ExcludedDomain" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Thing_ExcludedDomain_Audit" (LIKE "Iteration_REPLACE"."Thing_ExcludedDomain");
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Thing_ExcludedDomain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3198,6 +5681,15 @@ CREATE TABLE "Iteration_REPLACE"."Option_Category" (
   CONSTRAINT "Option_Category_FK_Source" FOREIGN KEY ("Option") REFERENCES "Iteration_REPLACE"."Option" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Option_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Option_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3205,6 +5697,15 @@ CREATE INDEX "Idx_Option_Category_ValidFrom" ON "Iteration_REPLACE"."Option_Cate
 CREATE INDEX "Idx_Option_Category_ValidTo" ON "Iteration_REPLACE"."Option_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Option_Category_Audit" (LIKE "Iteration_REPLACE"."Option_Category");
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Option_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3247,6 +5748,14 @@ CREATE TABLE "Iteration_REPLACE"."Definition_Note" (
   CONSTRAINT "Definition_Note_PK" PRIMARY KEY("Definition","Note"),
   CONSTRAINT "Definition_Note_FK_Source" FOREIGN KEY ("Definition") REFERENCES "Iteration_REPLACE"."Definition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "Iteration_REPLACE"."Definition_Note"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3254,6 +5763,15 @@ CREATE INDEX "Idx_Definition_Note_ValidFrom" ON "Iteration_REPLACE"."Definition_
 CREATE INDEX "Idx_Definition_Note_ValidTo" ON "Iteration_REPLACE"."Definition_Note" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Definition_Note_Audit" (LIKE "Iteration_REPLACE"."Definition_Note");
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Note_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Definition_Note_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3282,6 +5800,14 @@ CREATE TABLE "Iteration_REPLACE"."Definition_Example" (
   CONSTRAINT "Definition_Example_PK" PRIMARY KEY("Definition","Example"),
   CONSTRAINT "Definition_Example_FK_Source" FOREIGN KEY ("Definition") REFERENCES "Iteration_REPLACE"."Definition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "Iteration_REPLACE"."Definition_Example"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3289,6 +5815,15 @@ CREATE INDEX "Idx_Definition_Example_ValidFrom" ON "Iteration_REPLACE"."Definiti
 CREATE INDEX "Idx_Definition_Example_ValidTo" ON "Iteration_REPLACE"."Definition_Example" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Definition_Example_Audit" (LIKE "Iteration_REPLACE"."Definition_Example");
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Example_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Definition_Example_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3330,6 +5865,15 @@ CREATE TABLE "Iteration_REPLACE"."NestedElement_ElementUsage" (
   CONSTRAINT "NestedElement_ElementUsage_FK_Source" FOREIGN KEY ("NestedElement") REFERENCES "Iteration_REPLACE"."NestedElement" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "NestedElement_ElementUsage_FK_Target" FOREIGN KEY ("ElementUsage") REFERENCES "Iteration_REPLACE"."ElementUsage" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3337,6 +5881,15 @@ CREATE INDEX "Idx_NestedElement_ElementUsage_ValidFrom" ON "Iteration_REPLACE"."
 CREATE INDEX "Idx_NestedElement_ElementUsage_ValidTo" ON "Iteration_REPLACE"."NestedElement_ElementUsage" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."NestedElement_ElementUsage_Audit" (LIKE "Iteration_REPLACE"."NestedElement_ElementUsage");
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."NestedElement_ElementUsage_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3388,6 +5941,15 @@ CREATE TABLE "Iteration_REPLACE"."Publication_Domain" (
   CONSTRAINT "Publication_Domain_FK_Source" FOREIGN KEY ("Publication") REFERENCES "Iteration_REPLACE"."Publication" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Publication_Domain_FK_Target" FOREIGN KEY ("Domain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Publication_Domain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3395,6 +5957,15 @@ CREATE INDEX "Idx_Publication_Domain_ValidFrom" ON "Iteration_REPLACE"."Publicat
 CREATE INDEX "Idx_Publication_Domain_ValidTo" ON "Iteration_REPLACE"."Publication_Domain" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Publication_Domain_Audit" (LIKE "Iteration_REPLACE"."Publication_Domain");
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Domain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Publication_Domain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3423,6 +5994,15 @@ CREATE TABLE "Iteration_REPLACE"."Publication_PublishedParameter" (
   CONSTRAINT "Publication_PublishedParameter_FK_Source" FOREIGN KEY ("Publication") REFERENCES "Iteration_REPLACE"."Publication" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Publication_PublishedParameter_FK_Target" FOREIGN KEY ("PublishedParameter") REFERENCES "Iteration_REPLACE"."ParameterOrOverrideBase" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3430,6 +6010,15 @@ CREATE INDEX "Idx_Publication_PublishedParameter_ValidFrom" ON "Iteration_REPLAC
 CREATE INDEX "Idx_Publication_PublishedParameter_ValidTo" ON "Iteration_REPLACE"."Publication_PublishedParameter" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Publication_PublishedParameter_Audit" (LIKE "Iteration_REPLACE"."Publication_PublishedParameter");
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Publication_PublishedParameter_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3474,6 +6063,15 @@ CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category" (
   CONSTRAINT "PossibleFiniteStateList_Category_FK_Source" FOREIGN KEY ("PossibleFiniteStateList") REFERENCES "Iteration_REPLACE"."PossibleFiniteStateList" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "PossibleFiniteStateList_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3481,6 +6079,15 @@ CREATE INDEX "Idx_PossibleFiniteStateList_Category_ValidFrom" ON "Iteration_REPL
 CREATE INDEX "Idx_PossibleFiniteStateList_Category_ValidTo" ON "Iteration_REPLACE"."PossibleFiniteStateList_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category_Audit" (LIKE "Iteration_REPLACE"."PossibleFiniteStateList_Category");
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3516,6 +6123,15 @@ CREATE TABLE "Iteration_REPLACE"."ElementBase_Category" (
   CONSTRAINT "ElementBase_Category_FK_Source" FOREIGN KEY ("ElementBase") REFERENCES "Iteration_REPLACE"."ElementBase" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ElementBase_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ElementBase_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3523,6 +6139,15 @@ CREATE INDEX "Idx_ElementBase_Category_ValidFrom" ON "Iteration_REPLACE"."Elemen
 CREATE INDEX "Idx_ElementBase_Category_ValidTo" ON "Iteration_REPLACE"."ElementBase_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" (LIKE "Iteration_REPLACE"."ElementBase_Category");
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3586,6 +6211,15 @@ CREATE TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement" (
   CONSTRAINT "ElementDefinition_ReferencedElement_FK_Source" FOREIGN KEY ("ElementDefinition") REFERENCES "Iteration_REPLACE"."ElementDefinition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ElementDefinition_ReferencedElement_FK_Target" FOREIGN KEY ("ReferencedElement") REFERENCES "Iteration_REPLACE"."NestedElement" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3593,6 +6227,15 @@ CREATE INDEX "Idx_ElementDefinition_ReferencedElement_ValidFrom" ON "Iteration_R
 CREATE INDEX "Idx_ElementDefinition_ReferencedElement_ValidTo" ON "Iteration_REPLACE"."ElementDefinition_ReferencedElement" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" (LIKE "Iteration_REPLACE"."ElementDefinition_ReferencedElement");
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3636,6 +6279,15 @@ CREATE TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption" (
   CONSTRAINT "ElementUsage_ExcludeOption_FK_Source" FOREIGN KEY ("ElementUsage") REFERENCES "Iteration_REPLACE"."ElementUsage" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ElementUsage_ExcludeOption_FK_Target" FOREIGN KEY ("ExcludeOption") REFERENCES "Iteration_REPLACE"."Option" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3643,6 +6295,15 @@ CREATE INDEX "Idx_ElementUsage_ExcludeOption_ValidFrom" ON "Iteration_REPLACE"."
 CREATE INDEX "Idx_ElementUsage_ExcludeOption_ValidTo" ON "Iteration_REPLACE"."ElementUsage_ExcludeOption" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption_Audit" (LIKE "Iteration_REPLACE"."ElementUsage_ExcludeOption");
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ElementUsage_ExcludeOption_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3779,6 +6440,15 @@ CREATE TABLE "Iteration_REPLACE"."Relationship_Category" (
   CONSTRAINT "Relationship_Category_FK_Source" FOREIGN KEY ("Relationship") REFERENCES "Iteration_REPLACE"."Relationship" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Relationship_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Relationship_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3786,6 +6456,15 @@ CREATE INDEX "Idx_Relationship_Category_ValidFrom" ON "Iteration_REPLACE"."Relat
 CREATE INDEX "Idx_Relationship_Category_ValidTo" ON "Iteration_REPLACE"."Relationship_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Relationship_Category_Audit" (LIKE "Iteration_REPLACE"."Relationship_Category");
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Relationship_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3819,6 +6498,15 @@ CREATE TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing" (
   CONSTRAINT "MultiRelationship_RelatedThing_FK_Source" FOREIGN KEY ("MultiRelationship") REFERENCES "Iteration_REPLACE"."MultiRelationship" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "MultiRelationship_RelatedThing_FK_Target" FOREIGN KEY ("RelatedThing") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3826,6 +6514,15 @@ CREATE INDEX "Idx_MultiRelationship_RelatedThing_ValidFrom" ON "Iteration_REPLAC
 CREATE INDEX "Idx_MultiRelationship_RelatedThing_ValidTo" ON "Iteration_REPLACE"."MultiRelationship_RelatedThing" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing_Audit" (LIKE "Iteration_REPLACE"."MultiRelationship_RelatedThing");
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."MultiRelationship_RelatedThing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3917,6 +6614,15 @@ CREATE TABLE "Iteration_REPLACE"."RequirementsContainer_Category" (
   CONSTRAINT "RequirementsContainer_Category_FK_Source" FOREIGN KEY ("RequirementsContainer") REFERENCES "Iteration_REPLACE"."RequirementsContainer" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "RequirementsContainer_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3924,6 +6630,15 @@ CREATE INDEX "Idx_RequirementsContainer_Category_ValidFrom" ON "Iteration_REPLAC
 CREATE INDEX "Idx_RequirementsContainer_Category_ValidTo" ON "Iteration_REPLACE"."RequirementsContainer_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainer_Category_Audit" (LIKE "Iteration_REPLACE"."RequirementsContainer_Category");
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3999,6 +6714,15 @@ CREATE TABLE "Iteration_REPLACE"."Requirement_Category" (
   CONSTRAINT "Requirement_Category_FK_Source" FOREIGN KEY ("Requirement") REFERENCES "Iteration_REPLACE"."Requirement" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Requirement_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Requirement_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4006,6 +6730,15 @@ CREATE INDEX "Idx_Requirement_Category_ValidFrom" ON "Iteration_REPLACE"."Requir
 CREATE INDEX "Idx_Requirement_Category_ValidTo" ON "Iteration_REPLACE"."Requirement_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Requirement_Category_Audit" (LIKE "Iteration_REPLACE"."Requirement_Category");
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Requirement_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4061,6 +6794,15 @@ CREATE TABLE "Iteration_REPLACE"."OrExpression_Term" (
   CONSTRAINT "OrExpression_Term_FK_Source" FOREIGN KEY ("OrExpression") REFERENCES "Iteration_REPLACE"."OrExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "OrExpression_Term_FK_Target" FOREIGN KEY ("Term") REFERENCES "Iteration_REPLACE"."BooleanExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."OrExpression_Term"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4068,6 +6810,15 @@ CREATE INDEX "Idx_OrExpression_Term_ValidFrom" ON "Iteration_REPLACE"."OrExpress
 CREATE INDEX "Idx_OrExpression_Term_ValidTo" ON "Iteration_REPLACE"."OrExpression_Term" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."OrExpression_Term_Audit" (LIKE "Iteration_REPLACE"."OrExpression_Term");
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Term_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."OrExpression_Term_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4103,6 +6854,15 @@ CREATE TABLE "Iteration_REPLACE"."AndExpression_Term" (
   CONSTRAINT "AndExpression_Term_FK_Source" FOREIGN KEY ("AndExpression") REFERENCES "Iteration_REPLACE"."AndExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "AndExpression_Term_FK_Target" FOREIGN KEY ("Term") REFERENCES "Iteration_REPLACE"."BooleanExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Term"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4110,6 +6870,15 @@ CREATE INDEX "Idx_AndExpression_Term_ValidFrom" ON "Iteration_REPLACE"."AndExpre
 CREATE INDEX "Idx_AndExpression_Term_ValidTo" ON "Iteration_REPLACE"."AndExpression_Term" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" (LIKE "Iteration_REPLACE"."AndExpression_Term");
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4140,6 +6909,15 @@ CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term" (
   CONSTRAINT "ExclusiveOrExpression_Term_FK_Source" FOREIGN KEY ("ExclusiveOrExpression") REFERENCES "Iteration_REPLACE"."ExclusiveOrExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ExclusiveOrExpression_Term_FK_Target" FOREIGN KEY ("Term") REFERENCES "Iteration_REPLACE"."BooleanExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4147,6 +6925,15 @@ CREATE INDEX "Idx_ExclusiveOrExpression_Term_ValidFrom" ON "Iteration_REPLACE"."
 CREATE INDEX "Idx_ExclusiveOrExpression_Term_ValidTo" ON "Iteration_REPLACE"."ExclusiveOrExpression_Term" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term_Audit" (LIKE "Iteration_REPLACE"."ExclusiveOrExpression_Term");
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Term_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4239,6 +7026,15 @@ CREATE TABLE "Iteration_REPLACE"."File_Category" (
   CONSTRAINT "File_Category_FK_Source" FOREIGN KEY ("File") REFERENCES "Iteration_REPLACE"."File" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "File_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."File_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."File_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."File_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4246,6 +7042,15 @@ CREATE INDEX "Idx_File_Category_ValidFrom" ON "Iteration_REPLACE"."File_Category
 CREATE INDEX "Idx_File_Category_ValidTo" ON "Iteration_REPLACE"."File_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."File_Category_Audit" (LIKE "Iteration_REPLACE"."File_Category");
+
+ALTER TABLE "Iteration_REPLACE"."File_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."File_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."File_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4283,6 +7088,15 @@ CREATE TABLE "Iteration_REPLACE"."FileRevision_FileType" (
   CONSTRAINT "FileRevision_FileType_FK_Source" FOREIGN KEY ("FileRevision") REFERENCES "Iteration_REPLACE"."FileRevision" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "FileRevision_FileType_FK_Target" FOREIGN KEY ("FileType") REFERENCES "SiteDirectory"."FileType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4290,6 +7104,15 @@ CREATE INDEX "Idx_FileRevision_FileType_ValidFrom" ON "Iteration_REPLACE"."FileR
 CREATE INDEX "Idx_FileRevision_FileType_ValidTo" ON "Iteration_REPLACE"."FileRevision_FileType" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."FileRevision_FileType_Audit" (LIKE "Iteration_REPLACE"."FileRevision_FileType");
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."FileRevision_FileType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4321,6 +7144,15 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList"
   CONSTRAINT "ActualFiniteStateList_PossibleFiniteStateList_FK_Source" FOREIGN KEY ("ActualFiniteStateList") REFERENCES "Iteration_REPLACE"."ActualFiniteStateList" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ActualFiniteStateList_PossibleFiniteStateList_FK_Target" FOREIGN KEY ("PossibleFiniteStateList") REFERENCES "Iteration_REPLACE"."PossibleFiniteStateList" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4328,6 +7160,15 @@ CREATE INDEX "Idx_ActualFiniteStateList_PossibleFiniteStateList_ValidFrom" ON "I
 CREATE INDEX "Idx_ActualFiniteStateList_PossibleFiniteStateList_ValidTo" ON "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList_Audit" (LIKE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList");
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_PossibleFiniteStateList_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4366,6 +7207,15 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption" (
   CONSTRAINT "ActualFiniteStateList_ExcludeOption_FK_Source" FOREIGN KEY ("ActualFiniteStateList") REFERENCES "Iteration_REPLACE"."ActualFiniteStateList" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ActualFiniteStateList_ExcludeOption_FK_Target" FOREIGN KEY ("ExcludeOption") REFERENCES "Iteration_REPLACE"."Option" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4373,6 +7223,15 @@ CREATE INDEX "Idx_ActualFiniteStateList_ExcludeOption_ValidFrom" ON "Iteration_R
 CREATE INDEX "Idx_ActualFiniteStateList_ExcludeOption_ValidTo" ON "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption_Audit" (LIKE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption");
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_ExcludeOption_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4406,6 +7265,15 @@ CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState" (
   CONSTRAINT "ActualFiniteState_PossibleState_FK_Source" FOREIGN KEY ("ActualFiniteState") REFERENCES "Iteration_REPLACE"."ActualFiniteState" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ActualFiniteState_PossibleState_FK_Target" FOREIGN KEY ("PossibleState") REFERENCES "Iteration_REPLACE"."PossibleFiniteState" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4413,6 +7281,15 @@ CREATE INDEX "Idx_ActualFiniteState_PossibleState_ValidFrom" ON "Iteration_REPLA
 CREATE INDEX "Idx_ActualFiniteState_PossibleState_ValidTo" ON "Iteration_REPLACE"."ActualFiniteState_PossibleState" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState_Audit" (LIKE "Iteration_REPLACE"."ActualFiniteState_PossibleState");
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_PossibleState_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4475,6 +7352,14 @@ CREATE TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing" (
   CONSTRAINT "RuleViolation_ViolatingThing_PK" PRIMARY KEY("RuleViolation","ViolatingThing"),
   CONSTRAINT "RuleViolation_ViolatingThing_FK_Source" FOREIGN KEY ("RuleViolation") REFERENCES "Iteration_REPLACE"."RuleViolation" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4482,6 +7367,15 @@ CREATE INDEX "Idx_RuleViolation_ViolatingThing_ValidFrom" ON "Iteration_REPLACE"
 CREATE INDEX "Idx_RuleViolation_ViolatingThing_ValidTo" ON "Iteration_REPLACE"."RuleViolation_ViolatingThing" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing_Audit" (LIKE "Iteration_REPLACE"."RuleViolation_ViolatingThing");
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RuleViolation_ViolatingThing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4514,6 +7408,15 @@ CREATE TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue" (
   CONSTRAINT "Stakeholder_StakeholderValue_FK_Source" FOREIGN KEY ("Stakeholder") REFERENCES "Iteration_REPLACE"."Stakeholder" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Stakeholder_StakeholderValue_FK_Target" FOREIGN KEY ("StakeholderValue") REFERENCES "Iteration_REPLACE"."StakeholderValue" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4521,6 +7424,15 @@ CREATE INDEX "Idx_Stakeholder_StakeholderValue_ValidFrom" ON "Iteration_REPLACE"
 CREATE INDEX "Idx_Stakeholder_StakeholderValue_ValidTo" ON "Iteration_REPLACE"."Stakeholder_StakeholderValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue_Audit" (LIKE "Iteration_REPLACE"."Stakeholder_StakeholderValue");
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Stakeholder_StakeholderValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4549,6 +7461,15 @@ CREATE TABLE "Iteration_REPLACE"."Stakeholder_Category" (
   CONSTRAINT "Stakeholder_Category_FK_Source" FOREIGN KEY ("Stakeholder") REFERENCES "Iteration_REPLACE"."Stakeholder" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Stakeholder_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4556,6 +7477,15 @@ CREATE INDEX "Idx_Stakeholder_Category_ValidFrom" ON "Iteration_REPLACE"."Stakeh
 CREATE INDEX "Idx_Stakeholder_Category_ValidTo" ON "Iteration_REPLACE"."Stakeholder_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Stakeholder_Category_Audit" (LIKE "Iteration_REPLACE"."Stakeholder_Category");
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Stakeholder_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4586,6 +7516,15 @@ CREATE TABLE "Iteration_REPLACE"."Goal_Category" (
   CONSTRAINT "Goal_Category_FK_Source" FOREIGN KEY ("Goal") REFERENCES "Iteration_REPLACE"."Goal" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Goal_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."Goal_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4593,6 +7532,15 @@ CREATE INDEX "Idx_Goal_Category_ValidFrom" ON "Iteration_REPLACE"."Goal_Category
 CREATE INDEX "Idx_Goal_Category_ValidTo" ON "Iteration_REPLACE"."Goal_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Goal_Category_Audit" (LIKE "Iteration_REPLACE"."Goal_Category");
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Goal_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4623,6 +7571,15 @@ CREATE TABLE "Iteration_REPLACE"."ValueGroup_Category" (
   CONSTRAINT "ValueGroup_Category_FK_Source" FOREIGN KEY ("ValueGroup") REFERENCES "Iteration_REPLACE"."ValueGroup" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ValueGroup_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4630,6 +7587,15 @@ CREATE INDEX "Idx_ValueGroup_Category_ValidFrom" ON "Iteration_REPLACE"."ValueGr
 CREATE INDEX "Idx_ValueGroup_Category_ValidTo" ON "Iteration_REPLACE"."ValueGroup_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ValueGroup_Category_Audit" (LIKE "Iteration_REPLACE"."ValueGroup_Category");
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ValueGroup_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4660,6 +7626,15 @@ CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Category" (
   CONSTRAINT "StakeholderValue_Category_FK_Source" FOREIGN KEY ("StakeholderValue") REFERENCES "Iteration_REPLACE"."StakeholderValue" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "StakeholderValue_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4667,6 +7642,15 @@ CREATE INDEX "Idx_StakeholderValue_Category_ValidFrom" ON "Iteration_REPLACE"."S
 CREATE INDEX "Idx_StakeholderValue_Category_ValidTo" ON "Iteration_REPLACE"."StakeholderValue_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Category_Audit" (LIKE "Iteration_REPLACE"."StakeholderValue_Category");
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4697,6 +7681,15 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal" (
   CONSTRAINT "StakeHolderValueMap_Goal_FK_Source" FOREIGN KEY ("StakeHolderValueMap") REFERENCES "Iteration_REPLACE"."StakeHolderValueMap" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "StakeHolderValueMap_Goal_FK_Target" FOREIGN KEY ("Goal") REFERENCES "Iteration_REPLACE"."Goal" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4704,6 +7697,15 @@ CREATE INDEX "Idx_StakeHolderValueMap_Goal_ValidFrom" ON "Iteration_REPLACE"."St
 CREATE INDEX "Idx_StakeHolderValueMap_Goal_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMap_Goal" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMap_Goal");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Goal_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4732,6 +7734,15 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup" (
   CONSTRAINT "StakeHolderValueMap_ValueGroup_FK_Source" FOREIGN KEY ("StakeHolderValueMap") REFERENCES "Iteration_REPLACE"."StakeHolderValueMap" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "StakeHolderValueMap_ValueGroup_FK_Target" FOREIGN KEY ("ValueGroup") REFERENCES "Iteration_REPLACE"."ValueGroup" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4739,6 +7750,15 @@ CREATE INDEX "Idx_StakeHolderValueMap_ValueGroup_ValidFrom" ON "Iteration_REPLAC
 CREATE INDEX "Idx_StakeHolderValueMap_ValueGroup_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_ValueGroup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4767,6 +7787,15 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue" (
   CONSTRAINT "StakeHolderValueMap_StakeholderValue_FK_Source" FOREIGN KEY ("StakeHolderValueMap") REFERENCES "Iteration_REPLACE"."StakeHolderValueMap" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "StakeHolderValueMap_StakeholderValue_FK_Target" FOREIGN KEY ("StakeholderValue") REFERENCES "Iteration_REPLACE"."StakeholderValue" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4774,6 +7803,15 @@ CREATE INDEX "Idx_StakeHolderValueMap_StakeholderValue_ValidFrom" ON "Iteration_
 CREATE INDEX "Idx_StakeHolderValueMap_StakeholderValue_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_StakeholderValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4812,6 +7850,15 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement" (
   CONSTRAINT "StakeHolderValueMap_Requirement_FK_Source" FOREIGN KEY ("StakeHolderValueMap") REFERENCES "Iteration_REPLACE"."StakeHolderValueMap" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "StakeHolderValueMap_Requirement_FK_Target" FOREIGN KEY ("Requirement") REFERENCES "Iteration_REPLACE"."Requirement" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4819,6 +7866,15 @@ CREATE INDEX "Idx_StakeHolderValueMap_Requirement_ValidFrom" ON "Iteration_REPLA
 CREATE INDEX "Idx_StakeHolderValueMap_Requirement_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMap_Requirement" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMap_Requirement");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Requirement_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4847,6 +7903,15 @@ CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category" (
   CONSTRAINT "StakeHolderValueMap_Category_FK_Source" FOREIGN KEY ("StakeHolderValueMap") REFERENCES "Iteration_REPLACE"."StakeHolderValueMap" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "StakeHolderValueMap_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -4854,6 +7919,15 @@ CREATE INDEX "Idx_StakeHolderValueMap_Category_ValidFrom" ON "Iteration_REPLACE"
 CREATE INDEX "Idx_StakeHolderValueMap_Category_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMap_Category" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMap_Category");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4990,6 +8064,15 @@ CREATE INDEX "Idx_Thing_ValidFrom" ON "EngineeringModel_REPLACE"."Thing" ("Valid
 CREATE INDEX "Idx_Thing_ValidTo" ON "EngineeringModel_REPLACE"."Thing" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Thing_Audit" (LIKE "EngineeringModel_REPLACE"."Thing");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Thing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Thing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5012,6 +8095,15 @@ CREATE INDEX "Idx_TopContainer_ValidFrom" ON "EngineeringModel_REPLACE"."TopCont
 CREATE INDEX "Idx_TopContainer_ValidTo" ON "EngineeringModel_REPLACE"."TopContainer" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."TopContainer_Audit" (LIKE "EngineeringModel_REPLACE"."TopContainer");
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TopContainer_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."TopContainer_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5034,6 +8126,15 @@ CREATE INDEX "Idx_EngineeringModel_ValidFrom" ON "EngineeringModel_REPLACE"."Eng
 CREATE INDEX "Idx_EngineeringModel_ValidTo" ON "EngineeringModel_REPLACE"."EngineeringModel" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModel_Audit" (LIKE "EngineeringModel_REPLACE"."EngineeringModel");
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModel_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5056,6 +8157,15 @@ CREATE INDEX "Idx_FileStore_ValidFrom" ON "EngineeringModel_REPLACE"."FileStore"
 CREATE INDEX "Idx_FileStore_ValidTo" ON "EngineeringModel_REPLACE"."FileStore" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."FileStore_Audit" (LIKE "EngineeringModel_REPLACE"."FileStore");
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileStore_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."FileStore_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5078,6 +8188,15 @@ CREATE INDEX "Idx_CommonFileStore_ValidFrom" ON "EngineeringModel_REPLACE"."Comm
 CREATE INDEX "Idx_CommonFileStore_ValidTo" ON "EngineeringModel_REPLACE"."CommonFileStore" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."CommonFileStore_Audit" (LIKE "EngineeringModel_REPLACE"."CommonFileStore");
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."CommonFileStore_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5100,6 +8219,15 @@ CREATE INDEX "Idx_Folder_ValidFrom" ON "EngineeringModel_REPLACE"."Folder" ("Val
 CREATE INDEX "Idx_Folder_ValidTo" ON "EngineeringModel_REPLACE"."Folder" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Folder_Audit" (LIKE "EngineeringModel_REPLACE"."Folder");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Folder_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Folder_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5122,6 +8250,15 @@ CREATE INDEX "Idx_File_ValidFrom" ON "EngineeringModel_REPLACE"."File" ("ValidFr
 CREATE INDEX "Idx_File_ValidTo" ON "EngineeringModel_REPLACE"."File" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."File_Audit" (LIKE "EngineeringModel_REPLACE"."File");
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."File_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."File_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5144,6 +8281,15 @@ CREATE INDEX "Idx_FileRevision_ValidFrom" ON "EngineeringModel_REPLACE"."FileRev
 CREATE INDEX "Idx_FileRevision_ValidTo" ON "EngineeringModel_REPLACE"."FileRevision" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."FileRevision_Audit" (LIKE "EngineeringModel_REPLACE"."FileRevision");
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5166,6 +8312,15 @@ CREATE INDEX "Idx_ModelLogEntry_ValidFrom" ON "EngineeringModel_REPLACE"."ModelL
 CREATE INDEX "Idx_ModelLogEntry_ValidTo" ON "EngineeringModel_REPLACE"."ModelLogEntry" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Audit" (LIKE "EngineeringModel_REPLACE"."ModelLogEntry");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5188,6 +8343,15 @@ CREATE INDEX "Idx_Iteration_ValidFrom" ON "EngineeringModel_REPLACE"."Iteration"
 CREATE INDEX "Idx_Iteration_ValidTo" ON "EngineeringModel_REPLACE"."Iteration" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Iteration_Audit" (LIKE "EngineeringModel_REPLACE"."Iteration");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5210,6 +8374,15 @@ CREATE INDEX "Idx_Book_ValidFrom" ON "EngineeringModel_REPLACE"."Book" ("ValidFr
 CREATE INDEX "Idx_Book_ValidTo" ON "EngineeringModel_REPLACE"."Book" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Book_Audit" (LIKE "EngineeringModel_REPLACE"."Book");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Book_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Book_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5232,6 +8405,15 @@ CREATE INDEX "Idx_Section_ValidFrom" ON "EngineeringModel_REPLACE"."Section" ("V
 CREATE INDEX "Idx_Section_ValidTo" ON "EngineeringModel_REPLACE"."Section" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Section_Audit" (LIKE "EngineeringModel_REPLACE"."Section");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Section_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Section_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5254,6 +8436,15 @@ CREATE INDEX "Idx_Page_ValidFrom" ON "EngineeringModel_REPLACE"."Page" ("ValidFr
 CREATE INDEX "Idx_Page_ValidTo" ON "EngineeringModel_REPLACE"."Page" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Page_Audit" (LIKE "EngineeringModel_REPLACE"."Page");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Page_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Page_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5276,6 +8467,15 @@ CREATE INDEX "Idx_Note_ValidFrom" ON "EngineeringModel_REPLACE"."Note" ("ValidFr
 CREATE INDEX "Idx_Note_ValidTo" ON "EngineeringModel_REPLACE"."Note" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Note_Audit" (LIKE "EngineeringModel_REPLACE"."Note");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Note_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Note_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5298,6 +8498,15 @@ CREATE INDEX "Idx_BinaryNote_ValidFrom" ON "EngineeringModel_REPLACE"."BinaryNot
 CREATE INDEX "Idx_BinaryNote_ValidTo" ON "EngineeringModel_REPLACE"."BinaryNote" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."BinaryNote_Audit" (LIKE "EngineeringModel_REPLACE"."BinaryNote");
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."BinaryNote_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5320,6 +8529,15 @@ CREATE INDEX "Idx_TextualNote_ValidFrom" ON "EngineeringModel_REPLACE"."TextualN
 CREATE INDEX "Idx_TextualNote_ValidTo" ON "EngineeringModel_REPLACE"."TextualNote" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."TextualNote_Audit" (LIKE "EngineeringModel_REPLACE"."TextualNote");
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."TextualNote_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5342,6 +8560,15 @@ CREATE INDEX "Idx_GenericAnnotation_ValidFrom" ON "EngineeringModel_REPLACE"."Ge
 CREATE INDEX "Idx_GenericAnnotation_ValidTo" ON "EngineeringModel_REPLACE"."GenericAnnotation" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."GenericAnnotation_Audit" (LIKE "EngineeringModel_REPLACE"."GenericAnnotation");
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5364,6 +8591,15 @@ CREATE INDEX "Idx_EngineeringModelDataAnnotation_ValidFrom" ON "EngineeringModel
 CREATE INDEX "Idx_EngineeringModelDataAnnotation_ValidTo" ON "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation_Audit" (LIKE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation");
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5386,6 +8622,15 @@ CREATE INDEX "Idx_EngineeringModelDataNote_ValidFrom" ON "EngineeringModel_REPLA
 CREATE INDEX "Idx_EngineeringModelDataNote_ValidTo" ON "EngineeringModel_REPLACE"."EngineeringModelDataNote" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Audit" (LIKE "EngineeringModel_REPLACE"."EngineeringModelDataNote");
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataNote_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5408,6 +8653,15 @@ CREATE INDEX "Idx_ThingReference_ValidFrom" ON "EngineeringModel_REPLACE"."Thing
 CREATE INDEX "Idx_ThingReference_ValidTo" ON "EngineeringModel_REPLACE"."ThingReference" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ThingReference_Audit" (LIKE "EngineeringModel_REPLACE"."ThingReference");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ThingReference_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ThingReference_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5430,6 +8684,15 @@ CREATE INDEX "Idx_ModellingThingReference_ValidFrom" ON "EngineeringModel_REPLAC
 CREATE INDEX "Idx_ModellingThingReference_ValidTo" ON "EngineeringModel_REPLACE"."ModellingThingReference" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Audit" (LIKE "EngineeringModel_REPLACE"."ModellingThingReference");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingThingReference_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5452,6 +8715,15 @@ CREATE INDEX "Idx_DiscussionItem_ValidFrom" ON "EngineeringModel_REPLACE"."Discu
 CREATE INDEX "Idx_DiscussionItem_ValidTo" ON "EngineeringModel_REPLACE"."DiscussionItem" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."DiscussionItem_Audit" (LIKE "EngineeringModel_REPLACE"."DiscussionItem");
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."DiscussionItem_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5474,6 +8746,15 @@ CREATE INDEX "Idx_EngineeringModelDataDiscussionItem_ValidFrom" ON "EngineeringM
 CREATE INDEX "Idx_EngineeringModelDataDiscussionItem_ValidTo" ON "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Audit" (LIKE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem");
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."EngineeringModelDataDiscussionItem_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5496,6 +8777,15 @@ CREATE INDEX "Idx_ModellingAnnotationItem_ValidFrom" ON "EngineeringModel_REPLAC
 CREATE INDEX "Idx_ModellingAnnotationItem_ValidTo" ON "EngineeringModel_REPLACE"."ModellingAnnotationItem" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" (LIKE "EngineeringModel_REPLACE"."ModellingAnnotationItem");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5518,6 +8808,15 @@ CREATE INDEX "Idx_ContractDeviation_ValidFrom" ON "EngineeringModel_REPLACE"."Co
 CREATE INDEX "Idx_ContractDeviation_ValidTo" ON "EngineeringModel_REPLACE"."ContractDeviation" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ContractDeviation_Audit" (LIKE "EngineeringModel_REPLACE"."ContractDeviation");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ContractDeviation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5540,6 +8839,15 @@ CREATE INDEX "Idx_RequestForWaiver_ValidFrom" ON "EngineeringModel_REPLACE"."Req
 CREATE INDEX "Idx_RequestForWaiver_ValidTo" ON "EngineeringModel_REPLACE"."RequestForWaiver" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Audit" (LIKE "EngineeringModel_REPLACE"."RequestForWaiver");
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."RequestForWaiver_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5562,6 +8870,15 @@ CREATE INDEX "Idx_Approval_ValidFrom" ON "EngineeringModel_REPLACE"."Approval" (
 CREATE INDEX "Idx_Approval_ValidTo" ON "EngineeringModel_REPLACE"."Approval" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Approval_Audit" (LIKE "EngineeringModel_REPLACE"."Approval");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Approval_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Approval_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5584,6 +8901,15 @@ CREATE INDEX "Idx_RequestForDeviation_ValidFrom" ON "EngineeringModel_REPLACE"."
 CREATE INDEX "Idx_RequestForDeviation_ValidTo" ON "EngineeringModel_REPLACE"."RequestForDeviation" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Audit" (LIKE "EngineeringModel_REPLACE"."RequestForDeviation");
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."RequestForDeviation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5606,6 +8932,15 @@ CREATE INDEX "Idx_ChangeRequest_ValidFrom" ON "EngineeringModel_REPLACE"."Change
 CREATE INDEX "Idx_ChangeRequest_ValidTo" ON "EngineeringModel_REPLACE"."ChangeRequest" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeRequest_Audit" (LIKE "EngineeringModel_REPLACE"."ChangeRequest");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ChangeRequest_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5628,6 +8963,15 @@ CREATE INDEX "Idx_ReviewItemDiscrepancy_ValidFrom" ON "EngineeringModel_REPLACE"
 CREATE INDEX "Idx_ReviewItemDiscrepancy_ValidTo" ON "EngineeringModel_REPLACE"."ReviewItemDiscrepancy" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Audit" (LIKE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ReviewItemDiscrepancy_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5650,6 +8994,15 @@ CREATE INDEX "Idx_Solution_ValidFrom" ON "EngineeringModel_REPLACE"."Solution" (
 CREATE INDEX "Idx_Solution_ValidTo" ON "EngineeringModel_REPLACE"."Solution" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."Solution_Audit" (LIKE "EngineeringModel_REPLACE"."Solution");
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."Solution_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."Solution_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5672,6 +9025,15 @@ CREATE INDEX "Idx_ActionItem_ValidFrom" ON "EngineeringModel_REPLACE"."ActionIte
 CREATE INDEX "Idx_ActionItem_ValidTo" ON "EngineeringModel_REPLACE"."ActionItem" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ActionItem_Audit" (LIKE "EngineeringModel_REPLACE"."ActionItem");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ActionItem_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5694,6 +9056,15 @@ CREATE INDEX "Idx_ChangeProposal_ValidFrom" ON "EngineeringModel_REPLACE"."Chang
 CREATE INDEX "Idx_ChangeProposal_ValidTo" ON "EngineeringModel_REPLACE"."ChangeProposal" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ChangeProposal_Audit" (LIKE "EngineeringModel_REPLACE"."ChangeProposal");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ChangeProposal_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5716,6 +9087,15 @@ CREATE INDEX "Idx_ContractChangeNotice_ValidFrom" ON "EngineeringModel_REPLACE".
 CREATE INDEX "Idx_ContractChangeNotice_ValidTo" ON "EngineeringModel_REPLACE"."ContractChangeNotice" ("ValidTo");
 
 CREATE TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Audit" (LIKE "EngineeringModel_REPLACE"."ContractChangeNotice");
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "EngineeringModel_REPLACE"."ContractChangeNotice_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5738,6 +9118,15 @@ CREATE INDEX "Idx_Thing_ValidFrom" ON "Iteration_REPLACE"."Thing" ("ValidFrom");
 CREATE INDEX "Idx_Thing_ValidTo" ON "Iteration_REPLACE"."Thing" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Thing_Audit" (LIKE "Iteration_REPLACE"."Thing");
+
+ALTER TABLE "Iteration_REPLACE"."Thing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Thing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Thing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5760,6 +9149,15 @@ CREATE INDEX "Idx_DefinedThing_ValidFrom" ON "Iteration_REPLACE"."DefinedThing" 
 CREATE INDEX "Idx_DefinedThing_ValidTo" ON "Iteration_REPLACE"."DefinedThing" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DefinedThing_Audit" (LIKE "Iteration_REPLACE"."DefinedThing");
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DefinedThing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DefinedThing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5782,6 +9180,15 @@ CREATE INDEX "Idx_Option_ValidFrom" ON "Iteration_REPLACE"."Option" ("ValidFrom"
 CREATE INDEX "Idx_Option_ValidTo" ON "Iteration_REPLACE"."Option" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Option_Audit" (LIKE "Iteration_REPLACE"."Option");
+
+ALTER TABLE "Iteration_REPLACE"."Option_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Option_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Option_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5804,6 +9211,15 @@ CREATE INDEX "Idx_Alias_ValidFrom" ON "Iteration_REPLACE"."Alias" ("ValidFrom");
 CREATE INDEX "Idx_Alias_ValidTo" ON "Iteration_REPLACE"."Alias" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Alias_Audit" (LIKE "Iteration_REPLACE"."Alias");
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Alias_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Alias_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5826,6 +9242,15 @@ CREATE INDEX "Idx_Definition_ValidFrom" ON "Iteration_REPLACE"."Definition" ("Va
 CREATE INDEX "Idx_Definition_ValidTo" ON "Iteration_REPLACE"."Definition" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Definition_Audit" (LIKE "Iteration_REPLACE"."Definition");
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Definition_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Definition_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5848,6 +9273,15 @@ CREATE INDEX "Idx_Citation_ValidFrom" ON "Iteration_REPLACE"."Citation" ("ValidF
 CREATE INDEX "Idx_Citation_ValidTo" ON "Iteration_REPLACE"."Citation" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Citation_Audit" (LIKE "Iteration_REPLACE"."Citation");
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Citation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Citation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5870,6 +9304,15 @@ CREATE INDEX "Idx_HyperLink_ValidFrom" ON "Iteration_REPLACE"."HyperLink" ("Vali
 CREATE INDEX "Idx_HyperLink_ValidTo" ON "Iteration_REPLACE"."HyperLink" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."HyperLink_Audit" (LIKE "Iteration_REPLACE"."HyperLink");
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."HyperLink_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."HyperLink_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5892,6 +9335,15 @@ CREATE INDEX "Idx_NestedElement_ValidFrom" ON "Iteration_REPLACE"."NestedElement
 CREATE INDEX "Idx_NestedElement_ValidTo" ON "Iteration_REPLACE"."NestedElement" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."NestedElement_Audit" (LIKE "Iteration_REPLACE"."NestedElement");
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedElement_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."NestedElement_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5914,6 +9366,15 @@ CREATE INDEX "Idx_NestedParameter_ValidFrom" ON "Iteration_REPLACE"."NestedParam
 CREATE INDEX "Idx_NestedParameter_ValidTo" ON "Iteration_REPLACE"."NestedParameter" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."NestedParameter_Audit" (LIKE "Iteration_REPLACE"."NestedParameter");
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NestedParameter_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."NestedParameter_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5936,6 +9397,15 @@ CREATE INDEX "Idx_Publication_ValidFrom" ON "Iteration_REPLACE"."Publication" ("
 CREATE INDEX "Idx_Publication_ValidTo" ON "Iteration_REPLACE"."Publication" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Publication_Audit" (LIKE "Iteration_REPLACE"."Publication");
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Publication_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Publication_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5958,6 +9428,15 @@ CREATE INDEX "Idx_PossibleFiniteStateList_ValidFrom" ON "Iteration_REPLACE"."Pos
 CREATE INDEX "Idx_PossibleFiniteStateList_ValidTo" ON "Iteration_REPLACE"."PossibleFiniteStateList" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Audit" (LIKE "Iteration_REPLACE"."PossibleFiniteStateList");
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."PossibleFiniteStateList_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5980,6 +9459,15 @@ CREATE INDEX "Idx_PossibleFiniteState_ValidFrom" ON "Iteration_REPLACE"."Possibl
 CREATE INDEX "Idx_PossibleFiniteState_ValidTo" ON "Iteration_REPLACE"."PossibleFiniteState" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."PossibleFiniteState_Audit" (LIKE "Iteration_REPLACE"."PossibleFiniteState");
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."PossibleFiniteState_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6002,6 +9490,15 @@ CREATE INDEX "Idx_ElementBase_ValidFrom" ON "Iteration_REPLACE"."ElementBase" ("
 CREATE INDEX "Idx_ElementBase_ValidTo" ON "Iteration_REPLACE"."ElementBase" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ElementBase_Audit" (LIKE "Iteration_REPLACE"."ElementBase");
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementBase_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ElementBase_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6024,6 +9521,15 @@ CREATE INDEX "Idx_ElementDefinition_ValidFrom" ON "Iteration_REPLACE"."ElementDe
 CREATE INDEX "Idx_ElementDefinition_ValidTo" ON "Iteration_REPLACE"."ElementDefinition" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition_Audit" (LIKE "Iteration_REPLACE"."ElementDefinition");
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ElementDefinition_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6046,6 +9552,15 @@ CREATE INDEX "Idx_ElementUsage_ValidFrom" ON "Iteration_REPLACE"."ElementUsage" 
 CREATE INDEX "Idx_ElementUsage_ValidTo" ON "Iteration_REPLACE"."ElementUsage" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ElementUsage_Audit" (LIKE "Iteration_REPLACE"."ElementUsage");
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ElementUsage_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ElementUsage_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6068,6 +9583,15 @@ CREATE INDEX "Idx_ParameterBase_ValidFrom" ON "Iteration_REPLACE"."ParameterBase
 CREATE INDEX "Idx_ParameterBase_ValidTo" ON "Iteration_REPLACE"."ParameterBase" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterBase_Audit" (LIKE "Iteration_REPLACE"."ParameterBase");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterBase_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterBase_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6090,6 +9614,15 @@ CREATE INDEX "Idx_ParameterOrOverrideBase_ValidFrom" ON "Iteration_REPLACE"."Par
 CREATE INDEX "Idx_ParameterOrOverrideBase_ValidTo" ON "Iteration_REPLACE"."ParameterOrOverrideBase" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterOrOverrideBase_Audit" (LIKE "Iteration_REPLACE"."ParameterOrOverrideBase");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterOrOverrideBase_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6112,6 +9645,15 @@ CREATE INDEX "Idx_ParameterOverride_ValidFrom" ON "Iteration_REPLACE"."Parameter
 CREATE INDEX "Idx_ParameterOverride_ValidTo" ON "Iteration_REPLACE"."ParameterOverride" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterOverride_Audit" (LIKE "Iteration_REPLACE"."ParameterOverride");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterOverride_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6134,6 +9676,15 @@ CREATE INDEX "Idx_ParameterSubscription_ValidFrom" ON "Iteration_REPLACE"."Param
 CREATE INDEX "Idx_ParameterSubscription_ValidTo" ON "Iteration_REPLACE"."ParameterSubscription" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscription_Audit" (LIKE "Iteration_REPLACE"."ParameterSubscription");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterSubscription_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6156,6 +9707,15 @@ CREATE INDEX "Idx_ParameterSubscriptionValueSet_ValidFrom" ON "Iteration_REPLACE
 CREATE INDEX "Idx_ParameterSubscriptionValueSet_ValidTo" ON "Iteration_REPLACE"."ParameterSubscriptionValueSet" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Audit" (LIKE "Iteration_REPLACE"."ParameterSubscriptionValueSet");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterSubscriptionValueSet_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6178,6 +9738,15 @@ CREATE INDEX "Idx_ParameterValueSetBase_ValidFrom" ON "Iteration_REPLACE"."Param
 CREATE INDEX "Idx_ParameterValueSetBase_ValidTo" ON "Iteration_REPLACE"."ParameterValueSetBase" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterValueSetBase_Audit" (LIKE "Iteration_REPLACE"."ParameterValueSetBase");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterValueSetBase_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6200,6 +9769,15 @@ CREATE INDEX "Idx_ParameterOverrideValueSet_ValidFrom" ON "Iteration_REPLACE"."P
 CREATE INDEX "Idx_ParameterOverrideValueSet_ValidTo" ON "Iteration_REPLACE"."ParameterOverrideValueSet" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Audit" (LIKE "Iteration_REPLACE"."ParameterOverrideValueSet");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterOverrideValueSet_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6222,6 +9800,15 @@ CREATE INDEX "Idx_Parameter_ValidFrom" ON "Iteration_REPLACE"."Parameter" ("Vali
 CREATE INDEX "Idx_Parameter_ValidTo" ON "Iteration_REPLACE"."Parameter" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Parameter_Audit" (LIKE "Iteration_REPLACE"."Parameter");
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Parameter_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Parameter_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6244,6 +9831,15 @@ CREATE INDEX "Idx_ParameterValueSet_ValidFrom" ON "Iteration_REPLACE"."Parameter
 CREATE INDEX "Idx_ParameterValueSet_ValidTo" ON "Iteration_REPLACE"."ParameterValueSet" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterValueSet_Audit" (LIKE "Iteration_REPLACE"."ParameterValueSet");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterValueSet_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6266,6 +9862,15 @@ CREATE INDEX "Idx_ParameterGroup_ValidFrom" ON "Iteration_REPLACE"."ParameterGro
 CREATE INDEX "Idx_ParameterGroup_ValidTo" ON "Iteration_REPLACE"."ParameterGroup" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterGroup_Audit" (LIKE "Iteration_REPLACE"."ParameterGroup");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterGroup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6288,6 +9893,15 @@ CREATE INDEX "Idx_Relationship_ValidFrom" ON "Iteration_REPLACE"."Relationship" 
 CREATE INDEX "Idx_Relationship_ValidTo" ON "Iteration_REPLACE"."Relationship" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Relationship_Audit" (LIKE "Iteration_REPLACE"."Relationship");
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Relationship_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Relationship_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6310,6 +9924,15 @@ CREATE INDEX "Idx_MultiRelationship_ValidFrom" ON "Iteration_REPLACE"."MultiRela
 CREATE INDEX "Idx_MultiRelationship_ValidTo" ON "Iteration_REPLACE"."MultiRelationship" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."MultiRelationship_Audit" (LIKE "Iteration_REPLACE"."MultiRelationship");
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."MultiRelationship_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6332,6 +9955,15 @@ CREATE INDEX "Idx_ParameterValue_ValidFrom" ON "Iteration_REPLACE"."ParameterVal
 CREATE INDEX "Idx_ParameterValue_ValidTo" ON "Iteration_REPLACE"."ParameterValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParameterValue_Audit" (LIKE "Iteration_REPLACE"."ParameterValue");
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParameterValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParameterValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6354,6 +9986,15 @@ CREATE INDEX "Idx_RelationshipParameterValue_ValidFrom" ON "Iteration_REPLACE"."
 CREATE INDEX "Idx_RelationshipParameterValue_ValidTo" ON "Iteration_REPLACE"."RelationshipParameterValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RelationshipParameterValue_Audit" (LIKE "Iteration_REPLACE"."RelationshipParameterValue");
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RelationshipParameterValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6376,6 +10017,15 @@ CREATE INDEX "Idx_BinaryRelationship_ValidFrom" ON "Iteration_REPLACE"."BinaryRe
 CREATE INDEX "Idx_BinaryRelationship_ValidTo" ON "Iteration_REPLACE"."BinaryRelationship" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" (LIKE "Iteration_REPLACE"."BinaryRelationship");
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6398,6 +10048,15 @@ CREATE INDEX "Idx_ExternalIdentifierMap_ValidFrom" ON "Iteration_REPLACE"."Exter
 CREATE INDEX "Idx_ExternalIdentifierMap_ValidTo" ON "Iteration_REPLACE"."ExternalIdentifierMap" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Audit" (LIKE "Iteration_REPLACE"."ExternalIdentifierMap");
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ExternalIdentifierMap_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6420,6 +10079,15 @@ CREATE INDEX "Idx_IdCorrespondence_ValidFrom" ON "Iteration_REPLACE"."IdCorrespo
 CREATE INDEX "Idx_IdCorrespondence_ValidTo" ON "Iteration_REPLACE"."IdCorrespondence" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."IdCorrespondence_Audit" (LIKE "Iteration_REPLACE"."IdCorrespondence");
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."IdCorrespondence_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6442,6 +10110,15 @@ CREATE INDEX "Idx_RequirementsContainer_ValidFrom" ON "Iteration_REPLACE"."Requi
 CREATE INDEX "Idx_RequirementsContainer_ValidTo" ON "Iteration_REPLACE"."RequirementsContainer" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainer_Audit" (LIKE "Iteration_REPLACE"."RequirementsContainer");
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RequirementsContainer_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6464,6 +10141,15 @@ CREATE INDEX "Idx_RequirementsSpecification_ValidFrom" ON "Iteration_REPLACE"."R
 CREATE INDEX "Idx_RequirementsSpecification_ValidTo" ON "Iteration_REPLACE"."RequirementsSpecification" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RequirementsSpecification_Audit" (LIKE "Iteration_REPLACE"."RequirementsSpecification");
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RequirementsSpecification_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6486,6 +10172,15 @@ CREATE INDEX "Idx_RequirementsGroup_ValidFrom" ON "Iteration_REPLACE"."Requireme
 CREATE INDEX "Idx_RequirementsGroup_ValidTo" ON "Iteration_REPLACE"."RequirementsGroup" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RequirementsGroup_Audit" (LIKE "Iteration_REPLACE"."RequirementsGroup");
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RequirementsGroup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6508,6 +10203,15 @@ CREATE INDEX "Idx_RequirementsContainerParameterValue_ValidFrom" ON "Iteration_R
 CREATE INDEX "Idx_RequirementsContainerParameterValue_ValidTo" ON "Iteration_REPLACE"."RequirementsContainerParameterValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Audit" (LIKE "Iteration_REPLACE"."RequirementsContainerParameterValue");
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RequirementsContainerParameterValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6530,6 +10234,15 @@ CREATE INDEX "Idx_SimpleParameterizableThing_ValidFrom" ON "Iteration_REPLACE"."
 CREATE INDEX "Idx_SimpleParameterizableThing_ValidTo" ON "Iteration_REPLACE"."SimpleParameterizableThing" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."SimpleParameterizableThing_Audit" (LIKE "Iteration_REPLACE"."SimpleParameterizableThing");
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."SimpleParameterizableThing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6552,6 +10265,15 @@ CREATE INDEX "Idx_Requirement_ValidFrom" ON "Iteration_REPLACE"."Requirement" ("
 CREATE INDEX "Idx_Requirement_ValidTo" ON "Iteration_REPLACE"."Requirement" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Requirement_Audit" (LIKE "Iteration_REPLACE"."Requirement");
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Requirement_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Requirement_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6574,6 +10296,15 @@ CREATE INDEX "Idx_SimpleParameterValue_ValidFrom" ON "Iteration_REPLACE"."Simple
 CREATE INDEX "Idx_SimpleParameterValue_ValidTo" ON "Iteration_REPLACE"."SimpleParameterValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."SimpleParameterValue_Audit" (LIKE "Iteration_REPLACE"."SimpleParameterValue");
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."SimpleParameterValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6596,6 +10327,15 @@ CREATE INDEX "Idx_ParametricConstraint_ValidFrom" ON "Iteration_REPLACE"."Parame
 CREATE INDEX "Idx_ParametricConstraint_ValidTo" ON "Iteration_REPLACE"."ParametricConstraint" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ParametricConstraint_Audit" (LIKE "Iteration_REPLACE"."ParametricConstraint");
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ParametricConstraint_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6618,6 +10358,15 @@ CREATE INDEX "Idx_BooleanExpression_ValidFrom" ON "Iteration_REPLACE"."BooleanEx
 CREATE INDEX "Idx_BooleanExpression_ValidTo" ON "Iteration_REPLACE"."BooleanExpression" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."BooleanExpression_Audit" (LIKE "Iteration_REPLACE"."BooleanExpression");
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BooleanExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."BooleanExpression_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6640,6 +10389,15 @@ CREATE INDEX "Idx_OrExpression_ValidFrom" ON "Iteration_REPLACE"."OrExpression" 
 CREATE INDEX "Idx_OrExpression_ValidTo" ON "Iteration_REPLACE"."OrExpression" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."OrExpression_Audit" (LIKE "Iteration_REPLACE"."OrExpression");
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OrExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."OrExpression_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6662,6 +10420,15 @@ CREATE INDEX "Idx_NotExpression_ValidFrom" ON "Iteration_REPLACE"."NotExpression
 CREATE INDEX "Idx_NotExpression_ValidTo" ON "Iteration_REPLACE"."NotExpression" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."NotExpression_Audit" (LIKE "Iteration_REPLACE"."NotExpression");
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."NotExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."NotExpression_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6684,6 +10451,15 @@ CREATE INDEX "Idx_AndExpression_ValidFrom" ON "Iteration_REPLACE"."AndExpression
 CREATE INDEX "Idx_AndExpression_ValidTo" ON "Iteration_REPLACE"."AndExpression" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."AndExpression_Audit" (LIKE "Iteration_REPLACE"."AndExpression");
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6706,6 +10482,15 @@ CREATE INDEX "Idx_ExclusiveOrExpression_ValidFrom" ON "Iteration_REPLACE"."Exclu
 CREATE INDEX "Idx_ExclusiveOrExpression_ValidTo" ON "Iteration_REPLACE"."ExclusiveOrExpression" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Audit" (LIKE "Iteration_REPLACE"."ExclusiveOrExpression");
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ExclusiveOrExpression_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6728,6 +10513,15 @@ CREATE INDEX "Idx_RelationalExpression_ValidFrom" ON "Iteration_REPLACE"."Relati
 CREATE INDEX "Idx_RelationalExpression_ValidTo" ON "Iteration_REPLACE"."RelationalExpression" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RelationalExpression_Audit" (LIKE "Iteration_REPLACE"."RelationalExpression");
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RelationalExpression_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6750,6 +10544,15 @@ CREATE INDEX "Idx_FileStore_ValidFrom" ON "Iteration_REPLACE"."FileStore" ("Vali
 CREATE INDEX "Idx_FileStore_ValidTo" ON "Iteration_REPLACE"."FileStore" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."FileStore_Audit" (LIKE "Iteration_REPLACE"."FileStore");
+
+ALTER TABLE "Iteration_REPLACE"."FileStore_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileStore_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileStore_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileStore_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."FileStore_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6772,6 +10575,15 @@ CREATE INDEX "Idx_DomainFileStore_ValidFrom" ON "Iteration_REPLACE"."DomainFileS
 CREATE INDEX "Idx_DomainFileStore_ValidTo" ON "Iteration_REPLACE"."DomainFileStore" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DomainFileStore_Audit" (LIKE "Iteration_REPLACE"."DomainFileStore");
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DomainFileStore_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6794,6 +10606,15 @@ CREATE INDEX "Idx_Folder_ValidFrom" ON "Iteration_REPLACE"."Folder" ("ValidFrom"
 CREATE INDEX "Idx_Folder_ValidTo" ON "Iteration_REPLACE"."Folder" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Folder_Audit" (LIKE "Iteration_REPLACE"."Folder");
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Folder_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Folder_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6816,6 +10637,15 @@ CREATE INDEX "Idx_File_ValidFrom" ON "Iteration_REPLACE"."File" ("ValidFrom");
 CREATE INDEX "Idx_File_ValidTo" ON "Iteration_REPLACE"."File" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."File_Audit" (LIKE "Iteration_REPLACE"."File");
+
+ALTER TABLE "Iteration_REPLACE"."File_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."File_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."File_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."File_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6838,6 +10668,15 @@ CREATE INDEX "Idx_FileRevision_ValidFrom" ON "Iteration_REPLACE"."FileRevision" 
 CREATE INDEX "Idx_FileRevision_ValidTo" ON "Iteration_REPLACE"."FileRevision" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."FileRevision_Audit" (LIKE "Iteration_REPLACE"."FileRevision");
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."FileRevision_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."FileRevision_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6860,6 +10699,15 @@ CREATE INDEX "Idx_ActualFiniteStateList_ValidFrom" ON "Iteration_REPLACE"."Actua
 CREATE INDEX "Idx_ActualFiniteStateList_ValidTo" ON "Iteration_REPLACE"."ActualFiniteStateList" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteStateList_Audit" (LIKE "Iteration_REPLACE"."ActualFiniteStateList");
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteStateList_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6882,6 +10730,15 @@ CREATE INDEX "Idx_ActualFiniteState_ValidFrom" ON "Iteration_REPLACE"."ActualFin
 CREATE INDEX "Idx_ActualFiniteState_ValidTo" ON "Iteration_REPLACE"."ActualFiniteState" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ActualFiniteState_Audit" (LIKE "Iteration_REPLACE"."ActualFiniteState");
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ActualFiniteState_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6904,6 +10761,15 @@ CREATE INDEX "Idx_RuleVerificationList_ValidFrom" ON "Iteration_REPLACE"."RuleVe
 CREATE INDEX "Idx_RuleVerificationList_ValidTo" ON "Iteration_REPLACE"."RuleVerificationList" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RuleVerificationList_Audit" (LIKE "Iteration_REPLACE"."RuleVerificationList");
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RuleVerificationList_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6926,6 +10792,15 @@ CREATE INDEX "Idx_RuleVerification_ValidFrom" ON "Iteration_REPLACE"."RuleVerifi
 CREATE INDEX "Idx_RuleVerification_ValidTo" ON "Iteration_REPLACE"."RuleVerification" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RuleVerification_Audit" (LIKE "Iteration_REPLACE"."RuleVerification");
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleVerification_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RuleVerification_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6948,6 +10823,15 @@ CREATE INDEX "Idx_UserRuleVerification_ValidFrom" ON "Iteration_REPLACE"."UserRu
 CREATE INDEX "Idx_UserRuleVerification_ValidTo" ON "Iteration_REPLACE"."UserRuleVerification" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."UserRuleVerification_Audit" (LIKE "Iteration_REPLACE"."UserRuleVerification");
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."UserRuleVerification_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6970,6 +10854,15 @@ CREATE INDEX "Idx_RuleViolation_ValidFrom" ON "Iteration_REPLACE"."RuleViolation
 CREATE INDEX "Idx_RuleViolation_ValidTo" ON "Iteration_REPLACE"."RuleViolation" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."RuleViolation_Audit" (LIKE "Iteration_REPLACE"."RuleViolation");
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."RuleViolation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."RuleViolation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -6992,6 +10885,15 @@ CREATE INDEX "Idx_BuiltInRuleVerification_ValidFrom" ON "Iteration_REPLACE"."Bui
 CREATE INDEX "Idx_BuiltInRuleVerification_ValidTo" ON "Iteration_REPLACE"."BuiltInRuleVerification" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Audit" (LIKE "Iteration_REPLACE"."BuiltInRuleVerification");
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."BuiltInRuleVerification_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7014,6 +10916,15 @@ CREATE INDEX "Idx_Stakeholder_ValidFrom" ON "Iteration_REPLACE"."Stakeholder" ("
 CREATE INDEX "Idx_Stakeholder_ValidTo" ON "Iteration_REPLACE"."Stakeholder" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Stakeholder_Audit" (LIKE "Iteration_REPLACE"."Stakeholder");
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Stakeholder_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Stakeholder_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7036,6 +10947,15 @@ CREATE INDEX "Idx_Goal_ValidFrom" ON "Iteration_REPLACE"."Goal" ("ValidFrom");
 CREATE INDEX "Idx_Goal_ValidTo" ON "Iteration_REPLACE"."Goal" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Goal_Audit" (LIKE "Iteration_REPLACE"."Goal");
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Goal_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Goal_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7058,6 +10978,15 @@ CREATE INDEX "Idx_ValueGroup_ValidFrom" ON "Iteration_REPLACE"."ValueGroup" ("Va
 CREATE INDEX "Idx_ValueGroup_ValidTo" ON "Iteration_REPLACE"."ValueGroup" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."ValueGroup_Audit" (LIKE "Iteration_REPLACE"."ValueGroup");
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."ValueGroup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."ValueGroup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7080,6 +11009,15 @@ CREATE INDEX "Idx_StakeholderValue_ValidFrom" ON "Iteration_REPLACE"."Stakeholde
 CREATE INDEX "Idx_StakeholderValue_ValidTo" ON "Iteration_REPLACE"."StakeholderValue" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeholderValue_Audit" (LIKE "Iteration_REPLACE"."StakeholderValue");
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeholderValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7102,6 +11040,15 @@ CREATE INDEX "Idx_StakeHolderValueMap_ValidFrom" ON "Iteration_REPLACE"."StakeHo
 CREATE INDEX "Idx_StakeHolderValueMap_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMap" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMap_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMap");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMap_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7124,6 +11071,15 @@ CREATE INDEX "Idx_StakeHolderValueMapSettings_ValidFrom" ON "Iteration_REPLACE".
 CREATE INDEX "Idx_StakeHolderValueMapSettings_ValidTo" ON "Iteration_REPLACE"."StakeHolderValueMapSettings" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Audit" (LIKE "Iteration_REPLACE"."StakeHolderValueMapSettings");
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."StakeHolderValueMapSettings_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7146,6 +11102,15 @@ CREATE INDEX "Idx_DiagramThingBase_ValidFrom" ON "Iteration_REPLACE"."DiagramThi
 CREATE INDEX "Idx_DiagramThingBase_ValidTo" ON "Iteration_REPLACE"."DiagramThingBase" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramThingBase_Audit" (LIKE "Iteration_REPLACE"."DiagramThingBase");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramThingBase_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramThingBase_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7168,6 +11133,15 @@ CREATE INDEX "Idx_DiagrammingStyle_ValidFrom" ON "Iteration_REPLACE"."Diagrammin
 CREATE INDEX "Idx_DiagrammingStyle_ValidTo" ON "Iteration_REPLACE"."DiagrammingStyle" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" (LIKE "Iteration_REPLACE"."DiagrammingStyle");
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7190,6 +11164,15 @@ CREATE INDEX "Idx_SharedStyle_ValidFrom" ON "Iteration_REPLACE"."SharedStyle" ("
 CREATE INDEX "Idx_SharedStyle_ValidTo" ON "Iteration_REPLACE"."SharedStyle" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."SharedStyle_Audit" (LIKE "Iteration_REPLACE"."SharedStyle");
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."SharedStyle_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."SharedStyle_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7212,6 +11195,15 @@ CREATE INDEX "Idx_Color_ValidFrom" ON "Iteration_REPLACE"."Color" ("ValidFrom");
 CREATE INDEX "Idx_Color_ValidTo" ON "Iteration_REPLACE"."Color" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Color_Audit" (LIKE "Iteration_REPLACE"."Color");
+
+ALTER TABLE "Iteration_REPLACE"."Color_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Color_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Color_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7234,6 +11226,15 @@ CREATE INDEX "Idx_DiagramElementContainer_ValidFrom" ON "Iteration_REPLACE"."Dia
 CREATE INDEX "Idx_DiagramElementContainer_ValidTo" ON "Iteration_REPLACE"."DiagramElementContainer" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramElementContainer_Audit" (LIKE "Iteration_REPLACE"."DiagramElementContainer");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7256,6 +11257,15 @@ CREATE INDEX "Idx_DiagramCanvas_ValidFrom" ON "Iteration_REPLACE"."DiagramCanvas
 CREATE INDEX "Idx_DiagramCanvas_ValidTo" ON "Iteration_REPLACE"."DiagramCanvas" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramCanvas_Audit" (LIKE "Iteration_REPLACE"."DiagramCanvas");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramCanvas_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7278,6 +11288,15 @@ CREATE INDEX "Idx_DiagramElementThing_ValidFrom" ON "Iteration_REPLACE"."Diagram
 CREATE INDEX "Idx_DiagramElementThing_ValidTo" ON "Iteration_REPLACE"."DiagramElementThing" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" (LIKE "Iteration_REPLACE"."DiagramElementThing");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7300,6 +11319,15 @@ CREATE INDEX "Idx_DiagramEdge_ValidFrom" ON "Iteration_REPLACE"."DiagramEdge" ("
 CREATE INDEX "Idx_DiagramEdge_ValidTo" ON "Iteration_REPLACE"."DiagramEdge" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramEdge_Audit" (LIKE "Iteration_REPLACE"."DiagramEdge");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7322,6 +11350,15 @@ CREATE INDEX "Idx_Bounds_ValidFrom" ON "Iteration_REPLACE"."Bounds" ("ValidFrom"
 CREATE INDEX "Idx_Bounds_ValidTo" ON "Iteration_REPLACE"."Bounds" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Bounds_Audit" (LIKE "Iteration_REPLACE"."Bounds");
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Bounds_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Bounds_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7344,6 +11381,15 @@ CREATE INDEX "Idx_OwnedStyle_ValidFrom" ON "Iteration_REPLACE"."OwnedStyle" ("Va
 CREATE INDEX "Idx_OwnedStyle_ValidTo" ON "Iteration_REPLACE"."OwnedStyle" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."OwnedStyle_Audit" (LIKE "Iteration_REPLACE"."OwnedStyle");
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."OwnedStyle_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7366,6 +11412,15 @@ CREATE INDEX "Idx_Point_ValidFrom" ON "Iteration_REPLACE"."Point" ("ValidFrom");
 CREATE INDEX "Idx_Point_ValidTo" ON "Iteration_REPLACE"."Point" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."Point_Audit" (LIKE "Iteration_REPLACE"."Point");
+
+ALTER TABLE "Iteration_REPLACE"."Point_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."Point_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."Point_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7388,6 +11443,15 @@ CREATE INDEX "Idx_DiagramShape_ValidFrom" ON "Iteration_REPLACE"."DiagramShape" 
 CREATE INDEX "Idx_DiagramShape_ValidTo" ON "Iteration_REPLACE"."DiagramShape" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramShape_Audit" (LIKE "Iteration_REPLACE"."DiagramShape");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramShape_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramShape_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -7410,6 +11474,15 @@ CREATE INDEX "Idx_DiagramObject_ValidFrom" ON "Iteration_REPLACE"."DiagramObject
 CREATE INDEX "Idx_DiagramObject_ValidTo" ON "Iteration_REPLACE"."DiagramObject" ("ValidTo");
 
 CREATE TABLE "Iteration_REPLACE"."DiagramObject_Audit" (LIKE "Iteration_REPLACE"."DiagramObject");
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
