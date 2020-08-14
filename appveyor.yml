@@ -16,6 +16,8 @@ for:
     except:
       - /\d*\.\d*\.\d*/
       - /\d*\.\d*\.\d*\-rc\d*/
+
+  skip_tags: true
   configuration:
     - Debug
   install:
@@ -58,6 +60,8 @@ for:
     only:
       - /\d*\.\d*\.\d*/
       - /\d*\.\d*\.\d*\-rc\d*/
+
+  skip_non_tags: true
 
   configuration: Release
   install:
