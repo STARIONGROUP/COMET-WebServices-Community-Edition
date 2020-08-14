@@ -10,6 +10,8 @@ environment:
     secure: Q3ruQ/mMJMZFFa2If84xai1rB2VkTbOO5GAbhmlba6KOx9fhZorISp+SLS8FkIb4
 
 skip_branch_with_pr: true
+skip_tags: false
+
 for:
 
 # configuration for tags
@@ -38,7 +40,6 @@ for:
     name: CDP4WebServices %APPVEYOR_REPO_TAG_NAME%
 
 -
-  skip_tags: true
   configuration:
     - Debug
   install:
