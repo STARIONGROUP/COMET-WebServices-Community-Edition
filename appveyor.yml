@@ -30,7 +30,7 @@ for:
   build_script:
     - cmd: msbuild CDP4-Server.sln -p:Configuration=Release /logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll"
   after_build:
-    - cmd: 7z a CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip %APPVEYOR_BUILD_FOLDER%\CDP4WebServer\bin\Release\net472\**\*.*
+    - cmd: 7z a CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip %APPVEYOR_BUILD_FOLDER%\CDP4WebServer\bin\Release\net472\*
 
   artifacts:
   - path: CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip
