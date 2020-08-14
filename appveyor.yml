@@ -12,12 +12,11 @@ environment:
 skip_branch_with_pr: true
 for:
 
-
 # configuration for tags
 -
   branches:
     only:
-      - /\d*\.\d*\.\d*(-rc\d*)?/
+      - /^\d*\.\d*\.\d*.*$/
 
   skip_non_tags: true
 
