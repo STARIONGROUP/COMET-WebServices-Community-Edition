@@ -11,6 +11,33 @@ environment:
 
 skip_branch_with_pr: true
 for:
+
+
+# configuration for tags
+-
+  branches:
+    only:
+      - /\d*\.\d*\.\d*(-rc\d*)?/
+
+  skip_non_tags: true
+
+  configuration: Release
+  install:
+  before_build:
+    - ps: >-
+          Write-Host Tag Encountered. Producing Artifact
+    - cmd: nuget restore -verbosity quiet
+  build:
+    project: CDP4-Server.sln
+  after_build:
+    - cmd: 7z a CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip %APPVEYOR_BUILD_FOLDER%\CDP4WebServer\bin\Release\net472\**\*.*
+  test_script:
+  after_test:
+
+  artifacts:
+  - path: CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip
+    name: CDP4WebServices %APPVEYOR_REPO_TAG_NAME%
+
 -
   skip_tags: true
   configuration:
@@ -48,24 +75,3 @@ for:
       -output:"%TEST_COVERAGE%"
   after_test:
     - ps: SonarScanner.MSBuild.exe end /d:"sonar.login=$env:SONARCLOUD_TOKEN"
-
-# configuration for tags
--
-  skip_non_tags: true
-
-  configuration: Release
-  install:
-  before_build:
-    - ps: >-
-          Write-Host Tag Encountered. Producing Artifact
-    - cmd: nuget restore -verbosity quiet
-  build:
-    project: CDP4-Server.sln
-  after_build:
-    - cmd: 7z a CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip %APPVEYOR_BUILD_FOLDER%\CDP4WebServer\bin\Release\net472\**\*.*
-  test_script:
-  after_test:
-
-  artifacts:
-  - path: CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip
-    name: CDP4WebServices %APPVEYOR_REPO_TAG_NAME%
