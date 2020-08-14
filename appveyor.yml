@@ -12,11 +12,6 @@ environment:
 skip_branch_with_pr: true
 for:
 -
-  branches:
-    except:
-      - /\d*\.\d*\.\d*/
-      - /\d*\.\d*\.\d*\-rc\d*/
-
   skip_tags: true
   configuration:
     - Debug
@@ -56,11 +51,6 @@ for:
 
 # configuration for tags
 -
-  branches:
-    only:
-      - /\d*\.\d*\.\d*/
-      - /\d*\.\d*\.\d*\-rc\d*/
-
   skip_non_tags: true
 
   configuration: Release
