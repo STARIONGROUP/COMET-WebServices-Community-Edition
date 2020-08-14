@@ -1,24 +1,24 @@
 image: Visual Studio 2019
 environment:
-  DOTNET_CLI_TELEMETRY_OPTOUT: true
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
-  TEST_RESULT: 'TestResult.xml'
-  TEST_COVERAGE: 'CoverResults.xml'
-  SONARCLOUD_PROJECT_KEY: RHEAGROUP_CDP4-WebServices-Community-Edition
-  SONARCLOUD_ORGANIZATION: rheagroup
-  SONARCLOUD_TOKEN:
-    secure: Q3ruQ/mMJMZFFa2If84xai1rB2VkTbOO5GAbhmlba6KOx9fhZorISp+SLS8FkIb4
+  matrix:
+    - TAG_SCENARIO: true
+    - DOTNET_CLI_TELEMETRY_OPTOUT: true
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+      TEST_RESULT: 'TestResult.xml'
+      TEST_COVERAGE: 'CoverResults.xml'
+      SONARCLOUD_PROJECT_KEY: RHEAGROUP_CDP4-WebServices-Community-Edition
+      SONARCLOUD_ORGANIZATION: rheagroup
+      SONARCLOUD_TOKEN:
+        secure: Q3ruQ/mMJMZFFa2If84xai1rB2VkTbOO5GAbhmlba6KOx9fhZorISp+SLS8FkIb4
+      TAG_SCENARIO: false
 
 skip_branch_with_pr: true
-skip_tags: false
 
 for:
-
-# configuration for tags
 -
-  branches:
+  matrix:
     only:
-      - /\d*\.\d*\.\d*.*/
+      - TAG_SCENARIO: true
 
   skip_non_tags: true
 
@@ -37,6 +37,12 @@ for:
     name: CDP4WebServices %APPVEYOR_REPO_TAG_NAME%
 
 -
+  matrix:
+    only:
+      - TAG_SCENARIO: false
+
+  skip_tags: true
+
   configuration:
     - Debug
   install:
