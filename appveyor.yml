@@ -45,3 +45,23 @@ test_script:
     -output:"%TEST_COVERAGE%"
 after_test:
   - ps: SonarScanner.MSBuild.exe end /d:"sonar.login=$env:SONARCLOUD_TOKEN"
+
+# configuration for tags
+for:
+-
+  branches:
+    only:
+      - /\d*\.\d*\.\d*/
+      - /\d*\.\d*\.\d*-rc\d*/
+
+  configuration: Release
+  before_build:
+    - ps: >-
+          Write-Host Tag Encountered. Producing Artifact
+    - cmd: nuget restore -verbosity quiet
+  build:
+    project: CDP4-Server.sln
+  after_build:
+    - cmd: 7z a CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip %APPVEYOR_BUILD_FOLDER%\CDP4WebServer\bin\Release\net472\**\*.*
+  test_script:
+  after_test:
