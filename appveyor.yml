@@ -75,3 +75,7 @@ for:
     - cmd: 7z a CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip %APPVEYOR_BUILD_FOLDER%\CDP4WebServer\bin\Release\net472\**\*.*
   test_script:
   after_test:
+
+  artifacts:
+  - path: CDP4WebServices-%APPVEYOR_REPO_TAG_NAME%.zip
+    name: CDP4WebServices %APPVEYOR_REPO_TAG_NAME%
