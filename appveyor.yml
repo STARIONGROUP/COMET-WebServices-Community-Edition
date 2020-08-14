@@ -15,7 +15,7 @@ for:
   branches:
     except:
       - /\d*\.\d*\.\d*/
-      - /\d*\.\d*\.\d*-rc\d*/
+      - /\d*\.\d*\.\d*\-rc\d*/
   configuration:
     - Debug
   install:
@@ -57,7 +57,7 @@ for:
   branches:
     only:
       - /\d*\.\d*\.\d*/
-      - /\d*\.\d*\.\d*-rc\d*/
+      - /\d*\.\d*\.\d*\-rc\d*/
 
   configuration: Release
   install:
