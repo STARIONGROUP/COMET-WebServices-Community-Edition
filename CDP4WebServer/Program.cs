@@ -7,6 +7,7 @@
 namespace CDP4WebServer
 {
     using System;
+    using System.Reflection;
 
     using CDP4WebServices.API.Configuration;
 
@@ -39,7 +40,8 @@ namespace CDP4WebServer
         {
             try
             {
-                Logger.Info("Starting CDP4 Services");
+                Logger.Info("################################################################");
+                Logger.Info($"Starting CDP4 Services v{Assembly.GetEntryAssembly().GetName().Version}");
 
                 // load application configuration from file
                 AppConfig.Load();
