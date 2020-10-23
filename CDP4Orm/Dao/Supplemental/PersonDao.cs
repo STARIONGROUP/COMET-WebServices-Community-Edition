@@ -12,6 +12,7 @@ namespace CDP4Orm.Dao
     using CDP4Authentication;
     using CDP4Common.DTO;
     using Npgsql;
+    using NpgsqlTypes;
 
     /// <summary>
     /// The Person Data Access Object which acts as an ORM layer to the SQL database.
@@ -56,7 +57,7 @@ namespace CDP4Orm.Dao
         /// This dictionary instance can be used to add additional value (non reference) variables that are to be persisted as a HSTORE implementation together with the supplied <see cref="Thing"/> instance.
         /// Developers are required to take care to add property keys that are not already in the ValueTypeDictionary that is managed in the respective generated partial class.
         /// The supplied values will be persisted as is and thus must be in a valid format (escaped) that can be persisted to SQL.
-        /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again. 
+        /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again.
         /// </param>
         /// <returns>
         /// The <see cref="bool"/>.
@@ -65,7 +66,7 @@ namespace CDP4Orm.Dao
         {
             var person = (Person)thing;
             var isPasswordChangeRequest = person.Password.StartsWith(this.passwordChangeToken) && person.Password.EndsWith(this.passwordChangeToken);
-            
+
             if (isPasswordChangeRequest)
             {
                 this.ExtractPasswordFromTokenizedString(person);
@@ -98,7 +99,7 @@ namespace CDP4Orm.Dao
         /// This dictionary instance can be used to add additional value (non reference) variables that are to be persisted as a HSTORE implementation together with the supplied <see cref="Thing"/> instance.
         /// Developers are required to take care to add property keys that are not already in the ValueTypeDictionary that is managed in the respective generated partial class.
         /// The supplied values will be persisted as is and thus must be in a valid format (escaped) that can be persisted to SQL.
-        /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again. 
+        /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again.
         /// </param>
         /// <returns>
         /// True if the concept was persisted.
@@ -169,6 +170,54 @@ namespace CDP4Orm.Dao
 
             // add the salt as a valuetype addition for persistence
             valueTypeDictionaryAdditions.Add("Salt", salt);
+        }
+
+        /// <summary>
+        /// Update user credentials after migration
+        /// </summary>
+        /// <param name="transaction">The database transaction.</param>
+        /// <param name="partition">The database schema</param>
+        /// <param name="person">The person <see cref="CDP4Common.DTO.Person" /></param>
+        /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
+        /// <returns>
+        /// The true if operation finished with success
+        /// </returns>
+        public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials)
+        {
+            var operationSuccess = true;
+            var valueTypeDictionaryContents = new Dictionary<string, string>();
+
+            //this.ApplyPasswordChange(person, valueTypeDictionaryContents);
+
+            // Update password and salt fields
+            valueTypeDictionaryContents["password"] = credentials.Password;
+            valueTypeDictionaryContents["salt"] = credentials.Salt;
+
+            try
+            {
+                using (var command = new NpgsqlCommand())
+                {
+                    var sqlBuilder = new System.Text.StringBuilder();
+
+                    sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Person\"", partition);
+                    sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\" = :valueTypeDictionary");
+                    sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = credentials.Iid;
+                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+
+                    command.CommandText = sqlBuilder.ToString();
+                    command.Connection = transaction.Connection;
+                    command.Transaction = transaction;
+
+                    this.ExecuteAndLogCommand(command);
+                }
+            }
+            catch
+            {
+                operationSuccess = false;
+            }
+
+            return operationSuccess;
         }
     }
 }
