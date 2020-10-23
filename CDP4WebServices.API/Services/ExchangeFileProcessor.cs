@@ -15,8 +15,13 @@ namespace CDP4WebServices.API.Services
     using CDP4Common.CommonData;
 
     using CDP4JsonSerializer;
+    using CDP4Orm.Dao;
+    using CDP4WebServices.API.Modules;
 
     using Ionic.Zip;
+
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     using NLog;
 
@@ -155,6 +160,7 @@ namespace CDP4WebServices.API.Services
         private MemoryStream ReadFileToMemory(string filePath)
         {
             var memoryStream = new MemoryStream();
+
             using (Stream input = File.OpenRead(filePath))
             {
                 input.CopyTo(memoryStream);
@@ -189,11 +195,13 @@ namespace CDP4WebServices.API.Services
                     // read site directory info from file
                     var siteDirectoryZipEntry =
                         zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
+
                     var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(siteDirectoryZipEntry, password);
                     Logger.Info("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
 
                     var returned = new List<Thing>(returnedSiteDirectory);
                     var processedRdls = new List<string>();
+
                     foreach (
                         var engineeringModelSetup in
                         returnedSiteDirectory.Where(x => x.ClassKind == ClassKind.EngineeringModelSetup)
@@ -220,6 +228,7 @@ namespace CDP4WebServices.API.Services
                         while (requiredRdl != null)
                         {
                             Logger.Info("Required Reference Data Library encountered: {0}", requiredRdl);
+
                             var siteRdlDto =
                                 (SiteReferenceDataLibrary)
                                 returnedSiteDirectory.Single(
@@ -231,6 +240,7 @@ namespace CDP4WebServices.API.Services
                             {
                                 var siteRdlZipEntry =
                                     zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(siteRdlFilePath));
+
                                 var siteRdlItems = this.ReadInfoFromArchiveEntry(siteRdlZipEntry, password);
 
                                 Logger.Info("{0} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
@@ -374,6 +384,7 @@ namespace CDP4WebServices.API.Services
             {
                 // select file binary from the archive archive
                 var fileZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(hash));
+
                 using (var stream = this.ReadStreamFromArchive(fileZipEntry, archivePassword))
                 {
                     Logger.Info("Store file binary with hash {0}", hash);
@@ -403,6 +414,7 @@ namespace CDP4WebServices.API.Services
 
             // the extracted stream is closed thus needs to be reinitialized from the buffer of the old one
             IEnumerable<Thing> returned;
+
             using (var stream = this.ReadStreamFromArchive(zipEntry, archivePassword))
             {
                 this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
@@ -457,6 +469,104 @@ namespace CDP4WebServices.API.Services
             Logger.Info("JSONFile GET completed in {0} ", watch.Elapsed);
 
             return new MemoryStream(extractStream.ToArray());
+        }
+
+        /// <summary>
+        /// Get the migration.json file from archive.
+        /// </summary>
+        /// <param name="filePath">
+        /// The file path.
+        /// </param>
+        /// <param name="password">
+        /// The password.
+        /// </param>
+        /// <returns>
+        /// The site directory contained <see cref="Thing"/> collection.
+        /// </returns>
+        public IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password)
+        {
+            var memoryStream = this.ReadFileToMemory(filePath);
+            return this.ReadMigrationJsonFromStream(memoryStream, password);
+        }
+
+        /// <summary>
+        /// Read migration.json file from stream
+        /// </summary>
+        /// <param name="memoryStream">The zip archive stream <see cref="MemoryStream" /></param>
+        /// <param name="password">The password</param>
+        /// <returns></returns>
+        private IList<MigrationPasswordCredentials> ReadMigrationJsonFromStream(MemoryStream memoryStream, string password)
+        {
+            var credentials = new List<MigrationPasswordCredentials>();
+
+            try
+            {
+                using (var zip = ZipFile.Read(memoryStream))
+                {
+                    var migrationJsonZipEntry =
+                        zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("migration.json"));
+
+                    if (migrationJsonZipEntry != null)
+                    {
+                        using (var stream = this.ReadStreamFromArchive(migrationJsonZipEntry, password))
+                        {
+                            credentials = CreateCredentialsList(stream);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                var msg = $"Failed to load file. Error: {ex.Message}";
+                Logger.Error(msg);
+            }
+
+            return credentials;
+        }
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="stream"></param>
+        /// <returns></returns>
+        private static List<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
+        {
+            var credentialsList = new List<MigrationPasswordCredentials>();
+
+            using (var reader = new StreamReader(stream))
+            {
+                try
+                {
+                    var content = reader.ReadToEnd();
+                    var parsedContent = JObject.Parse(content);
+
+                    if (parsedContent?["credentials"] != null)
+                    {
+                        foreach (var children in parsedContent["credentials"].Children())
+                        {
+                            if (!(children is JProperty property))
+                            {
+                                continue;
+                            }
+
+                            var password = (property.First["password"] as JValue)?.Value.ToString();
+                            var salt = (property.First["salt"] as JValue)?.Value.ToString();
+
+                            credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt));
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Failed to load file. Error: {ex.Message}");
+                }
+                finally
+                {
+                    reader.Close();
+                }
+            }
+
+            return credentialsList;
         }
     }
 }

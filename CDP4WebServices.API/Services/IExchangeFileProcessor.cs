@@ -7,9 +7,9 @@
 namespace CDP4WebServices.API.Services
 {
     using System.Collections.Generic;
-
     using CDP4Common.DTO;
     using CDP4JsonSerializer;
+    using CDP4Orm.Dao;
 
     /// <summary>
     /// The ExchangeFileProcessor interface.
@@ -63,6 +63,14 @@ namespace CDP4WebServices.API.Services
         /// The deserialized iteration contained <see cref="Thing"/> collection.
         /// </returns>
         IEnumerable<Thing> ReadModelIterationFromFile(string filePath, string password, IterationSetup iterationSetup);
+
+        /// <summary>
+        /// Get user credentials from migration.json if exists
+        /// </summary>
+        /// <param name="filePath">The file path</param>
+        /// <param name="password">The password</param>
+        /// <returns>The deserialized collection that contains hashed password and salt</returns>
+        IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password);
 
         /// <summary>
         /// Gets or sets the <see cref="ICdp4JsonSerializer"/>
