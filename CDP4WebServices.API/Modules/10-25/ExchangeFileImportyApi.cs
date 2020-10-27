@@ -6,14 +6,6 @@
 
 namespace CDP4WebServices.API.Modules
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
@@ -34,7 +26,13 @@ namespace CDP4WebServices.API.Modules
     using Nancy.Responses;
     using NLog;
     using Npgsql;
-
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
     using TopContainer = CDP4Common.DTO.TopContainer;
@@ -419,7 +417,9 @@ namespace CDP4WebServices.API.Modules
 
                 if (result)
                 {
-                    // get users credentials from migration.json file
+                    this.RequestUtils.QueryParameters = new QueryParameters();
+
+                    // Get users credentials from migration.json file
                     var migrationCredentials = this.ExchangeFileProcessor.ReadMigrationJsonFromFile(fileName, password).ToList();
 
                     foreach (var person in items.OfType<Person>())
@@ -430,8 +430,6 @@ namespace CDP4WebServices.API.Modules
                             this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
                         }
                     }
-
-                    this.RequestUtils.QueryParameters = new QueryParameters();
 
                     // Add missing Person permissions
                     this.CreateMissingPersonPermissions(transaction);

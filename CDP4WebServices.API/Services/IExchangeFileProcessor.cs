@@ -6,10 +6,10 @@
 
 namespace CDP4WebServices.API.Services
 {
-    using System.Collections.Generic;
     using CDP4Common.DTO;
     using CDP4JsonSerializer;
     using CDP4Orm.Dao;
+    using System.Collections.Generic;
 
     /// <summary>
     /// The ExchangeFileProcessor interface.

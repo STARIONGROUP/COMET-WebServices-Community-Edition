@@ -6,25 +6,17 @@
 
 namespace CDP4WebServices.API.Services
 {
+    using CDP4Common.CommonData;
+    using CDP4JsonSerializer;
+    using CDP4Orm.Dao;
+    using Ionic.Zip;
+    using Newtonsoft.Json.Linq;
+    using NLog;
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
-
-    using CDP4Common.CommonData;
-
-    using CDP4JsonSerializer;
-    using CDP4Orm.Dao;
-    using CDP4WebServices.API.Modules;
-
-    using Ionic.Zip;
-
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-
-    using NLog;
-
     using EngineeringModelSetup = CDP4Common.DTO.EngineeringModelSetup;
     using IterationSetup = CDP4Common.DTO.IterationSetup;
     using ModelReferenceDataLibrary = CDP4Common.DTO.ModelReferenceDataLibrary;
