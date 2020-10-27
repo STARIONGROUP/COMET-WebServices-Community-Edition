@@ -279,7 +279,7 @@ namespace CDP4WebServices.API.Modules
             this.DropDataStoreAndPrepareNew();
 
             // handle exchange processing
-            if (!this.InsertModelData(filePath, exchangeFileRequest.Password))
+            if (!this.InsertModelData(filePath, exchangeFileRequest.Password, AppConfig.Current.Backtier.IsDbSeedEnabled))
             {
                 var errorResponse = new NotAcceptableResponse();
                 this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
