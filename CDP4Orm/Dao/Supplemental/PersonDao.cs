@@ -185,13 +185,17 @@ namespace CDP4Orm.Dao
         public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials)
         {
             var operationSuccess = true;
-            var valueTypeDictionaryContents = new Dictionary<string, string>();
-
-            //this.ApplyPasswordChange(person, valueTypeDictionaryContents);
-
-            // Update password and salt fields
-            valueTypeDictionaryContents["password"] = credentials.Password;
-            valueTypeDictionaryContents["salt"] = credentials.Salt;
+            var valueTypeDictionaryContents = new Dictionary<string, string>
+            {
+                { "GivenName", !this.IsDerived(person, "GivenName") ? person.GivenName.Escape() : string.Empty },
+                { "IsActive", !this.IsDerived(person, "IsActive") ? person.IsActive.ToString() : string.Empty },
+                { "IsDeprecated", !this.IsDerived(person, "IsDeprecated") ? person.IsDeprecated.ToString() : string.Empty },
+                { "OrganizationalUnit", !this.IsDerived(person, "OrganizationalUnit") ? person.OrganizationalUnit.Escape() : null },
+                { "Password", !this.IsDerived(person, "Password") ? credentials.Password.Escape() : null },
+                { "Salt", !this.IsDerived(person, "Salt") ? credentials.Salt.Escape() : null },
+                { "ShortName", !this.IsDerived(person, "ShortName") ? person.ShortName.Escape() : string.Empty },
+                { "Surname", !this.IsDerived(person, "Surname") ? person.Surname.Escape() : string.Empty },
+            };
 
             try
             {
