@@ -48,16 +48,23 @@ namespace CDP4Orm.Dao
         public string Salt { get; private set; }
 
         /// <summary>
+        /// Gets or sets the server salt
+        /// </summary>
+        public string ServerSalt { get; private set; }
+
+        /// <summary>
         ///
         /// </summary>
         /// <param name="iid"></param>
         /// <param name="password"></param>
         /// <param name="salt"></param>
-        public MigrationPasswordCredentials(Guid iid, string password, string salt)
+        /// <param name="serverSalt">Server salt string</param>
+        public MigrationPasswordCredentials(Guid iid, string password, string salt, string serverSalt)
         {
             this.Iid = iid;
             this.Password = password;
             this.Salt = salt;
+            this.ServerSalt = serverSalt;
         }
     }
 }
