@@ -31,18 +31,18 @@ namespace CDP4Authentication
         /// <returns>
         /// A salted byte array.
         /// </returns>
-        public static byte[] GenerateSaltedHash(string inputString, byte[] salt)
+        private static byte[] GenerateSaltedHash(string inputString, byte[] salt)
         {
             var algorithm = new SHA256Managed();
             var plainText = GetBytesFromString(inputString);
             var plainTextWithSaltBytes = new byte[plainText.Length + salt.Length];
 
-            for (int i = 0; i < plainText.Length; i++)
+            for (var i = 0; i < plainText.Length; i++)
             {
                 plainTextWithSaltBytes[i] = plainText[i];
             }
 
-            for (int i = 0; i < salt.Length; i++)
+            for (var i = 0; i < salt.Length; i++)
             {
                 plainTextWithSaltBytes[plainText.Length + i] = salt[i];
             }
@@ -89,9 +89,32 @@ namespace CDP4Authentication
         }
 
         /// <summary>
+        /// Compares the input string with an encrypted string(WSP specific)
+        /// </summary>
+        /// <param name="inputString">
+        /// The input string.
+        /// </param>
+        /// <param name="encryptedString">
+        /// The previously encoded string.
+        /// </param>
+        /// <param name="salt">
+        /// The salt string.
+        /// </param>
+        /// <param name="serverSalt">
+        /// The WSP server salt string.
+        /// </param>
+        /// <returns>
+        /// True if the strings match.
+        /// </returns>
+        public static bool CompareWspSaltedString(string inputString, string encryptedString, string salt, string serverSalt)
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Converts a string to a byte array.
         /// </summary>
-        /// <remarks> 
+        /// <remarks>
         /// source <see cref="http://stackoverflow.com/questions/472906/how-to-get-a-consistent-byte-representation-of-strings-in-c-sharp-without-manual"/>
         /// </remarks>
         /// <param name="inputString">

@@ -33,5 +33,10 @@ namespace CDP4Authentication
         /// Gets or sets the description.
         /// </summary>
         string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the server salts(WSP specific).
+        /// </summary>
+        string[] ServerSalts { get; set; }
     }
 }

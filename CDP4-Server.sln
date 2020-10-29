@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2008
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30309.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4Orm", "CDP4Orm\CDP4Orm.csproj", "{D2466CAE-984C-4450-A2C2-3A5FC2CC0275}"
 EndProject
@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WebServer", "CDP4WebSer
 	ProjectSection(ProjectDependencies) = postProject
 		{59581438-2CD6-4498-B000-53125BEF5958} = {59581438-2CD6-4498-B000-53125BEF5958}
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WspDatabaseAuthentication", "CDP4WSPDatabaseAuthentication\CDP4WspDatabaseAuthentication.csproj", "{E6245C47-96BA-40D3-9D5E-9114E175169F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +79,12 @@ Global
 		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Test|Any CPU.ActiveCfg = Test|Any CPU
 		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Test|Any CPU.Build.0 = Test|Any CPU
+		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Test|Any CPU.ActiveCfg = Test|Any CPU
+		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Test|Any CPU.Build.0 = Test|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
