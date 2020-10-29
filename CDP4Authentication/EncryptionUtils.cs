@@ -8,6 +8,7 @@ namespace CDP4Authentication
 {
     using System;
     using System.Security.Cryptography;
+    using System.Text;
 
     /// <summary>
     /// Provides static helper methods to help with encryption
@@ -17,7 +18,7 @@ namespace CDP4Authentication
         /// <summary>
         /// The maximum number of bytes in a salt byte array.
         /// </summary>
-        public const int SaltMaximumNumberOfBytes = 32;
+        private const int SaltMaximumNumberOfBytes = 32;
 
         /// <summary>
         /// Generates a salted hash from an input string.
@@ -91,11 +92,11 @@ namespace CDP4Authentication
         /// <summary>
         /// Compares the input string with an encrypted string(WSP specific)
         /// </summary>
-        /// <param name="inputString">
-        /// The input string.
+        /// <param name="password">
+        /// The input password string.
         /// </param>
-        /// <param name="encryptedString">
-        /// The previously encoded string.
+        /// <param name="encryptedPassword">
+        /// The previously password encoded string.
         /// </param>
         /// <param name="salt">
         /// The salt string.
@@ -106,9 +107,24 @@ namespace CDP4Authentication
         /// <returns>
         /// True if the strings match.
         /// </returns>
-        public static bool CompareWspSaltedString(string inputString, string encryptedString, string salt, string serverSalt)
+        public static bool CompareWspSaltedString(string password, string encryptedPassword, string salt, string serverSalt)
         {
-            return true;
+            var serverSaltBytes = Encoding.UTF8.GetBytes(serverSalt);
+            var passwordBytes = Encoding.UTF8.GetBytes(password);
+            var saltBytes = Encoding.UTF8.GetBytes(salt);
+            string hashedPassword;
+
+            using (var hasher = SHA256.Create())
+            {
+                hasher.Initialize();
+                hasher.TransformBlock(serverSaltBytes, 0, serverSaltBytes.Length, null, 0);
+                hasher.TransformBlock(passwordBytes, 0, passwordBytes.Length, null, 0);
+                hasher.TransformFinalBlock(saltBytes, 0, saltBytes.Length);
+
+                hashedPassword = BitConverter.ToString(hasher.Hash).Replace("-", "");
+            }
+
+            return hashedPassword.Equals(encryptedPassword);
         }
 
         /// <summary>
@@ -160,7 +176,7 @@ namespace CDP4Authentication
         /// <returns>
         /// A random 32 bytes non zero byte salt.
         /// </returns>
-        public static byte[] GenerateRandomSaltBytes()
+        private static byte[] GenerateRandomSaltBytes()
         {
             var random = new RNGCryptoServiceProvider();
             var salt = new byte[SaltMaximumNumberOfBytes];
@@ -194,7 +210,7 @@ namespace CDP4Authentication
         /// <returns>
         /// A byte array representation of the string.
         /// </returns>
-        public static byte[] GetBytesFromBase64String(string inputString)
+        private static byte[] GetBytesFromBase64String(string inputString)
         {
             return Convert.FromBase64String(inputString);
         }
