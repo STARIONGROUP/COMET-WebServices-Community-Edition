@@ -6,8 +6,6 @@
 
 namespace CDP4WspDatabaseAuthentication
 {
-    using System.Runtime.CompilerServices;
-
     using CDP4Authentication;
     using CDP4Authentication.Contracts;
 
@@ -93,6 +91,11 @@ namespace CDP4WspDatabaseAuthentication
             foreach (var serverSalt in this.Properties.ServerSalts)
             {
                 result = EncryptionUtils.CompareWspSaltedString(password, person.Password, person.Salt, serverSalt);
+
+                if (result)
+                {
+                    break;
+                }
             }
 
             return result;
