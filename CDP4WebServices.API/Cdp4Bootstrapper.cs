@@ -6,28 +6,18 @@
 
 namespace CDP4WebServices.API
 {
-    using System;
-    using System.Diagnostics;
-    using System.IO;
-
     using Autofac;
-
     using CDP4Authentication;
-
     using CDP4Common.Helpers;
     using CDP4Common.MetaInfo;
-
     using CDP4JsonSerializer;
-
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Authentication;
     using CDP4Orm.Dao.Cache;
     using CDP4Orm.Dao.Resolve;
     using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
-
     using CDP4WebService.Authentication;
-
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
@@ -39,15 +29,15 @@ namespace CDP4WebServices.API
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Operations.SideEffects;
     using CDP4WebServices.API.Services.Supplemental;
-
     using Nancy;
     using Nancy.Bootstrapper;
     using Nancy.Bootstrappers.Autofac;
     using Nancy.Conventions;
     using Nancy.Responses;
-
     using NLog;
-
+    using System;
+    using System.Diagnostics;
+    using System.IO;
     using IServiceProvider = Services.IServiceProvider;
     using PersonResolver = Services.Authentication.PersonResolver;
 
@@ -104,6 +94,7 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<ParticipantRoleDao, IParticipantRoleDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<DomainOfExpertiseDao, IDomainOfExpertiseDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<ParticipantPermissionDao, IParticipantPermissionDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<PersonService, IPersonService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<AuthenticationPluginInjector, IAuthenticationPluginInjector>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonResolver, IPersonResolver>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<UserValidator, IUserValidator>();
@@ -213,13 +204,37 @@ namespace CDP4WebServices.API
 
                     // wireup PermissionInstanceFilter service
                     builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
+
+                    // wireup PersonService service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<PersonService, IPersonService>();
                 });
 
             // apply logging configuration
             container.Resolve<ICommandLogger>().LoggingEnabled = AppConfig.Current.Backtier.LogSqlCommands;
 
+            // subscribe to changing configuration event
+            container.Resolve<IPersonService>().ConfigurationChangedEvent -= this.SaltConfigurationChanged;
+            container.Resolve<IPersonService>().ConfigurationChangedEvent += this.SaltConfigurationChanged;
+
             sw.Stop();
             Logger.Debug("Request Boostrapping completed in {0} [ms]", sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Handling configuration changed event and update salt
+        /// </summary>
+        /// <param name="salt">WSP server salt value</param>
+        private void SaltConfigurationChanged(string salt)
+        {
+            var plugins = this.ApplicationContainer.Resolve<IUserValidator>().AuthenticationPluginInjector.Plugins;
+
+            foreach (var plugin in plugins)
+            {
+                if (plugin is IUpdateConfiguration wspPlugin)
+                {
+                    wspPlugin.UpdateSaltList(salt);
+                }
+            }
         }
 
         /// <summary>
@@ -270,7 +285,7 @@ namespace CDP4WebServices.API
 
         protected override void RequestStartup(ILifetimeScope container, IPipelines pipelines, NancyContext context)
         {
-            //Enable CORS 
+            //Enable CORS
             pipelines.AfterRequest.AddItemToEndOfPipeline((ctx) =>
             {
                 ctx.Response

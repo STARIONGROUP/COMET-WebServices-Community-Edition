@@ -29,10 +29,28 @@ namespace CDP4WebServices.API.Services
     using Npgsql;
 
     /// <summary>
+    /// Delegate used for notifying configuration changes
+    /// </summary>
+    public delegate void ConfigurationChangedDelegate(string salt);
+
+    /// <summary>
     /// The Person Service Interface which uses the ORM layer to interact with the data model.
     /// </summary>
     partial interface IPersonService
     {
+        /// <summary>
+        /// Update user credentials after migration
+        /// </summary>
+        /// <param name="transaction">The database transaction.</param>
+        /// <param name="partition">The database schema</param>
+        /// <param name="thing">The person <see cref="Thing" /></param>
+        /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
+        /// <returns>True if opperation succeeded</returns>
         bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials);
+
+        /// <summary>
+        /// Associated event with the <see cref="ConfigurationChangedDelegate"/>
+        /// </summary>
+        event ConfigurationChangedDelegate ConfigurationChangedEvent;
     }
 }

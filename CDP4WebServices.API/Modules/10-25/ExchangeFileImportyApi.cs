@@ -33,6 +33,7 @@ namespace CDP4WebServices.API.Modules
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
     using TopContainer = CDP4Common.DTO.TopContainer;
@@ -543,10 +544,7 @@ namespace CDP4WebServices.API.Modules
                 // clean log (will happen at end of request as well due to IOC lifetime
                 this.TransactionManager.CommandLogger.ClearLog();
 
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
+                transaction?.Dispose();
 
                 if (connection != null)
                 {

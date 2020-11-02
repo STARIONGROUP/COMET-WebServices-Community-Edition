@@ -24,10 +24,12 @@
 
 namespace CDP4WebServices.API.Services
 {
-    using System.Security;
     using CDP4Common.DTO;
     using CDP4Orm.Dao;
+
     using Npgsql;
+
+    using System.Security;
 
     /// <summary>
     /// Extension for the code-generated <see cref="PersonService"/>
@@ -35,13 +37,26 @@ namespace CDP4WebServices.API.Services
     public sealed partial class PersonService : IPersonService
     {
         /// <summary>
+        /// Associated event with the <see cref="ConfigurationChangedDelegate"/>
+        /// </summary>
+        public event ConfigurationChangedDelegate ConfigurationChangedEvent;
+
+        /// <summary>
+        /// Invoke ConfigurationChangedDelegate
+        /// </summary>
+        private void NotifyConfigurationChanged(string salt)
+        {
+            this.ConfigurationChangedEvent?.Invoke(salt);
+        }
+
+        /// <summary>
         /// Update user credentials after migration
         /// </summary>
         /// <param name="transaction">The database transaction.</param>
         /// <param name="partition">The database schema</param>
         /// <param name="thing">The person <see cref="Thing" /></param>
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
-        /// <returns></returns>
+        /// <returns>True if opperation succeeded</returns>
         public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials)
         {
             if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
@@ -49,7 +64,14 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException($"The person {this.PermissionService.Credentials.Person.UserName} does not have an appropriate update permission for {thing.GetType().Name}.");
             }
 
-            return this.PersonDao.UpdateCredentials(transaction, partition, thing as Person, credentials);
+            var result = this.PersonDao.UpdateCredentials(transaction, partition, thing as Person, credentials);
+
+            if (result && !string.IsNullOrEmpty(credentials.ServerSalt))
+            {
+                this.NotifyConfigurationChanged(credentials.ServerSalt);
+            }
+
+            return result;
         }
     }
 }
