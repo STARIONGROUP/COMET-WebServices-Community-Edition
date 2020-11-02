@@ -6,11 +6,12 @@
 
 namespace CDP4Authentication.Contracts
 {
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
     using System;
     using System.Collections.Generic;
-    using System.Configuration;
     using System.IO;
-    using Newtonsoft.Json;
+    using System.Linq;
 
     /// <summary>
     /// Generic abstract Authentication plugin definition.
@@ -23,10 +24,10 @@ namespace CDP4Authentication.Contracts
     /// </typeparam>
     public abstract class AuthenticatorPlugin<TProperties, TConnector> : IAuthenticatorPlugin
         where TProperties : IAuthenticatorProperties
-        where TConnector : AuthenticatorConnector<TProperties> 
+        where TConnector : AuthenticatorConnector<TProperties>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthenticatorPlugin{TProperties, TConnector}"/> class. 
+        /// Initializes a new instance of the <see cref="AuthenticatorPlugin{TProperties, TConnector}"/> class.
         /// </summary>
         protected AuthenticatorPlugin()
         {
@@ -53,7 +54,7 @@ namespace CDP4Authentication.Contracts
         /// <summary>
         /// Gets or sets the <see cref="AuthenticatorConfig{T}"/> which holds all configuration data.
         /// </summary>
-        private AuthenticatorConfig<TProperties> AuthenticatorConfig { get; set; }
+        protected AuthenticatorConfig<TProperties> AuthenticatorConfig { get; set; }
 
         /// <summary>
         /// Read configuration from file.
@@ -85,6 +86,63 @@ namespace CDP4Authentication.Contracts
         }
 
         /// <summary>
+        /// Write server salt value to config.json
+        /// </summary>
+        /// <param name="propertyName">property name that will be updated</param>
+        /// <param name="propertyValue">property value</param>
+        /// <returns>True if operation finished with success</returns>
+        protected void WriteConfig(string propertyName, string propertyValue)
+        {
+            var assemblyPath = Path.GetDirectoryName(this.GetType().Assembly.Location);
+
+            if (assemblyPath == null)
+            {
+                throw new DirectoryNotFoundException("The assembly path could not be resolved.");
+            }
+
+            var configLocation = Path.Combine(assemblyPath, this.Configpath);
+
+            if (!File.Exists(configLocation))
+            {
+                throw new FileNotFoundException("Configuration file not found.", configLocation);
+            }
+
+            var connectorProperties = this.AuthenticatorConfig.AuthenticatorConnectorProperties.Select(connectorProperty =>
+            {
+                if (!(JToken.FromObject(connectorProperty) is JObject o))
+                {
+                    return connectorProperty;
+                }
+
+                foreach (var property in o.Properties())
+                {
+                    if (property.Name != propertyName)
+                    {
+                        continue;
+                    }
+
+                    if (property.Value.GetType() == typeof(JArray))
+                    {
+                        property.Value = new JArray(propertyValue);
+                    }
+                    else
+                    {
+                        property.Value = propertyValue;
+                    }
+
+                    connectorProperty = (TProperties)o.ToObject(typeof(AuthenticatorProperties));
+
+                    break;
+                }
+
+                return connectorProperty;
+            }).ToList();
+
+            this.AuthenticatorConfig.AuthenticatorConnectorProperties = connectorProperties;
+            File.WriteAllText(configLocation, JsonConvert.SerializeObject(this.AuthenticatorConfig, Formatting.Indented));
+        }
+
+        /// <summary>
         /// Deserialize the configuration file into <see cref="AuthenticatorConfig{T}"/>.
         /// </summary>
         /// <param name="json">
@@ -112,13 +170,13 @@ namespace CDP4Authentication.Contracts
         /// <summary>
         /// Initializes all the connectors defined in this plugin configuration.
         /// </summary>
-        private void InitializeConnectors()
+        protected void InitializeConnectors()
         {
             this.Connectors = new List<IAuthenticatorConnector>();
 
             foreach (var authenticatorProperties in this.AuthenticatorConfig.AuthenticatorConnectorProperties)
             {
-                var connector = (TConnector)Activator.CreateInstance(typeof(TConnector), authenticatorProperties);
+                var connector = (TConnector) Activator.CreateInstance(typeof(TConnector), authenticatorProperties);
                 this.Connectors.Add(connector);
             }
         }

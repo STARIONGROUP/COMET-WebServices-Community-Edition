@@ -124,7 +124,7 @@ namespace CDP4Authentication
                 hashedPassword = BitConverter.ToString(hasher.Hash).Replace("-", "");
             }
 
-            return hashedPassword.Equals(encryptedPassword);
+            return hashedPassword.ToLower().Equals(encryptedPassword.ToLower());
         }
 
         /// <summary>
