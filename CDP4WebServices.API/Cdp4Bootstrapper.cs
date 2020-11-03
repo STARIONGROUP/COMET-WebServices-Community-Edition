@@ -6,18 +6,28 @@
 
 namespace CDP4WebServices.API
 {
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+
     using Autofac;
+
     using CDP4Authentication;
+
     using CDP4Common.Helpers;
     using CDP4Common.MetaInfo;
+
     using CDP4JsonSerializer;
+
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Authentication;
     using CDP4Orm.Dao.Cache;
     using CDP4Orm.Dao.Resolve;
     using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
+
     using CDP4WebService.Authentication;
+
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
@@ -29,15 +39,15 @@ namespace CDP4WebServices.API
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Operations.SideEffects;
     using CDP4WebServices.API.Services.Supplemental;
+
     using Nancy;
     using Nancy.Bootstrapper;
     using Nancy.Bootstrappers.Autofac;
     using Nancy.Conventions;
     using Nancy.Responses;
+
     using NLog;
-    using System;
-    using System.Diagnostics;
-    using System.IO;
+
     using IServiceProvider = Services.IServiceProvider;
     using PersonResolver = Services.Authentication.PersonResolver;
 
@@ -213,7 +223,6 @@ namespace CDP4WebServices.API
             container.Resolve<ICommandLogger>().LoggingEnabled = AppConfig.Current.Backtier.LogSqlCommands;
 
             // subscribe to changing configuration event
-            container.Resolve<IPersonService>().ConfigurationChangedEvent -= this.SaltConfigurationChanged;
             container.Resolve<IPersonService>().ConfigurationChangedEvent += this.SaltConfigurationChanged;
 
             sw.Stop();
@@ -226,7 +235,7 @@ namespace CDP4WebServices.API
         /// <param name="salt">WSP server salt value</param>
         private void SaltConfigurationChanged(string salt)
         {
-            var plugins = this.ApplicationContainer.Resolve<IUserValidator>().AuthenticationPluginInjector.Plugins;
+            var plugins = this.ApplicationContainer.Resolve<UserValidator>().AuthenticationPluginInjector.Plugins;
 
             foreach (var plugin in plugins)
             {
