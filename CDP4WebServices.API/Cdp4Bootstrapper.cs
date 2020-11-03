@@ -222,28 +222,8 @@ namespace CDP4WebServices.API
             // apply logging configuration
             container.Resolve<ICommandLogger>().LoggingEnabled = AppConfig.Current.Backtier.LogSqlCommands;
 
-            // subscribe to changing configuration event
-            container.Resolve<IPersonService>().ConfigurationChangedEvent += this.SaltConfigurationChanged;
-
             sw.Stop();
             Logger.Debug("Request Boostrapping completed in {0} [ms]", sw.ElapsedMilliseconds);
-        }
-
-        /// <summary>
-        /// Handling configuration changed event and update salt
-        /// </summary>
-        /// <param name="salt">WSP server salt value</param>
-        private void SaltConfigurationChanged(string salt)
-        {
-            var plugins = this.ApplicationContainer.Resolve<IUserValidator>().AuthenticationPluginInjector.Plugins;
-
-            foreach (var plugin in plugins)
-            {
-                if (plugin is IUpdateConfiguration wspPlugin)
-                {
-                    wspPlugin.UpdateSaltList(salt);
-                }
-            }
         }
 
         /// <summary>

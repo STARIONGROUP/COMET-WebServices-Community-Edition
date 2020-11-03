@@ -25,13 +25,10 @@
 namespace CDP4WebServices.API.Services
 {
     using CDP4Common.DTO;
-    using CDP4Orm.Dao;
-    using Npgsql;
 
-    /// <summary>
-    /// Delegate used for notifying configuration changes
-    /// </summary>
-    public delegate void ConfigurationChangedDelegate(string salt);
+    using CDP4Orm.Dao;
+
+    using Npgsql;
 
     /// <summary>
     /// The Person Service Interface which uses the ORM layer to interact with the data model.
@@ -47,10 +44,5 @@ namespace CDP4WebServices.API.Services
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
         /// <returns>True if opperation succeeded</returns>
         bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials);
-
-        /// <summary>
-        /// Associated event with the <see cref="ConfigurationChangedDelegate"/>
-        /// </summary>
-        event ConfigurationChangedDelegate ConfigurationChangedEvent;
     }
 }

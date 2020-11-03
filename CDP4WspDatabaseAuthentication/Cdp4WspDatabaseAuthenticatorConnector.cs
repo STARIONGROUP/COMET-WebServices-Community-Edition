@@ -52,7 +52,7 @@ namespace CDP4WspDatabaseAuthentication
         /// </summary>
         public override string Name
         {
-            get { return "CDP4 Database Authenticator"; }
+            get { return "CDP4 Wsp Database Authenticator"; }
         }
 
         /// <summary>

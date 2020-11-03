@@ -25,6 +25,7 @@
 namespace CDP4WebServices.API.Services
 {
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
 
     using Npgsql;
@@ -34,21 +35,8 @@ namespace CDP4WebServices.API.Services
     /// <summary>
     /// Extension for the code-generated <see cref="PersonService"/>
     /// </summary>
-    public sealed partial class PersonService : IPersonService
+    public sealed partial class PersonService
     {
-        /// <summary>
-        /// Associated event with the <see cref="ConfigurationChangedDelegate"/>
-        /// </summary>
-        public event ConfigurationChangedDelegate ConfigurationChangedEvent;
-
-        /// <summary>
-        /// Invoke ConfigurationChangedDelegate
-        /// </summary>
-        private void NotifyConfigurationChanged(string salt)
-        {
-            this.ConfigurationChangedEvent?.Invoke(salt);
-        }
-
         /// <summary>
         /// Update user credentials after migration
         /// </summary>
@@ -64,14 +52,7 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException($"The person {this.PermissionService.Credentials.Person.UserName} does not have an appropriate update permission for {thing.GetType().Name}.");
             }
 
-            var result = this.PersonDao.UpdateCredentials(transaction, partition, thing as Person, credentials);
-
-            if (result && !string.IsNullOrEmpty(credentials.ServerSalt))
-            {
-                this.NotifyConfigurationChanged(credentials.ServerSalt);
-            }
-
-            return result;
+            return this.PersonDao.UpdateCredentials(transaction, partition, thing as Person, credentials);
         }
     }
 }
