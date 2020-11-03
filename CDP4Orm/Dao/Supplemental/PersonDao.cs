@@ -6,13 +6,18 @@
 
 namespace CDP4Orm.Dao
 {
-    using CDP4Authentication;
-    using CDP4Common.DTO;
-    using Npgsql;
-    using NpgsqlTypes;
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
+    using CDP4Authentication;
+
+    using CDP4Common.DTO;
+
+    using Npgsql;
+
+    using NpgsqlTypes;
+
 
     /// <summary>
     /// The Person Data Access Object which acts as an ORM layer to the SQL database.
