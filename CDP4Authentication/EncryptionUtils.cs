@@ -90,7 +90,7 @@ namespace CDP4Authentication
         }
 
         /// <summary>
-        /// Compares the input string with an encrypted string(WSP specific)
+        /// Compares the input string with an encrypted string. (WSP specific)
         /// </summary>
         /// <param name="password">
         /// The input password string.
@@ -109,9 +109,30 @@ namespace CDP4Authentication
         /// </returns>
         public static bool CompareWspSaltedString(string password, string encryptedPassword, string salt, string serverSalt)
         {
-            var serverSaltBytes = Encoding.UTF8.GetBytes(serverSalt);
+            return BuildWspSaltedString(password, salt, serverSalt).ToLower().Equals(encryptedPassword.ToLower());
+        }
+
+        /// <summary>
+        /// Generates a base 64 salted string from an input string and a byte array salt. (WSP specific)
+        /// </summary>
+        /// <param name="password">
+        /// The input password string.
+        /// </param>
+        /// <param name="salt">
+        /// The salt string.
+        /// </param>
+        /// <param name="serverSalt">
+        /// The WSP server salt string.
+        /// </param>
+        /// <returns>
+        /// Salted base 64 string.
+        /// </returns>
+        public static string BuildWspSaltedString(string password, string salt, string serverSalt)
+        {
             var passwordBytes = Encoding.UTF8.GetBytes(password);
             var saltBytes = Encoding.UTF8.GetBytes(salt);
+            var serverSaltBytes = Encoding.UTF8.GetBytes(serverSalt);
+
             string hashedPassword;
 
             using (var hasher = SHA256.Create())
@@ -124,7 +145,7 @@ namespace CDP4Authentication
                 hashedPassword = BitConverter.ToString(hasher.Hash).Replace("-", "");
             }
 
-            return hashedPassword.ToLower().Equals(encryptedPassword.ToLower());
+            return hashedPassword;
         }
 
         /// <summary>

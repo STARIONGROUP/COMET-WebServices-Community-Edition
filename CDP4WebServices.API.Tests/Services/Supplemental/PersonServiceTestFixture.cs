@@ -24,6 +24,10 @@
 
 namespace CDP4WebServices.API.Tests.Services.Supplemental
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Security;
+
     using API.Services;
     using API.Services.Authorization;
     using CDP4Authentication;
@@ -34,10 +38,6 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
     using Moq;
     using Npgsql;
     using NUnit.Framework;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Security;
 
     /// <summary>
     /// Suite of tests for the <see cref="PersonService"/>
@@ -59,7 +59,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.personDao = new Mock<IPersonDao>();
             this.permissionService = new Mock<IPermissionService>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.schemaName = "Iteration_" + Guid.NewGuid();
+            this.schemaName = Cdp4TransactionManager.SITE_DIRECTORY_PARTITION;
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
 
@@ -71,15 +71,15 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
                 }
             });
 
+            this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
+                .Returns(new[] { this.person });
+
             this.personService = new PersonService
             {
                 PermissionService = this.permissionService.Object,
                 PersonDao = this.personDao.Object,
                 TransactionManager = this.transactionManager.Object
             };
-
-            this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
-                .Returns(new[] { this.person });
         }
 
         [Test]
@@ -88,6 +88,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt", "serversalt");
             Assert.AreEqual("hashedpassword", credentials.Password);
             Assert.AreEqual("salt", credentials.Salt);
+            Assert.AreEqual("serversalt", credentials.ServerSalt);
             Assert.AreEqual(this.person.Iid, credentials.Iid);
         }
 
@@ -105,6 +106,8 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt", "serversalt");
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
+
+            this.personDao.Setup(x => x.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, this.person, credentials)).Returns(true);
 
             Assert.DoesNotThrow(() => this.personService.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, credentials));
         }
