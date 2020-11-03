@@ -18,10 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="System.Runtime.Caching" />
   </ItemGroup>
   

@@ -6,8 +6,6 @@
 
 namespace CDP4WebService.Authentication
 {
-    using CDP4Authentication;
-
     using Nancy.Security;
 
     /// <summary>
@@ -22,10 +20,5 @@ namespace CDP4WebService.Authentication
         /// <param name="password">The Password</param>
         /// <returns>A value representing the authenticated user, null if the user was not authenticated.</returns>
         IUserIdentity Validate(string username, string password);
-
-        /// <summary>
-        /// Gets or sets the authentication plugin injector that holds all the authentication plugins.
-        /// </summary>
-        IAuthenticationPluginInjector AuthenticationPluginInjector { get; set; }
     }
 }
