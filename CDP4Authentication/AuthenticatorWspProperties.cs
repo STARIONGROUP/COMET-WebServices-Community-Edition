@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="AuthenticatorProperties.cs" company="RHEA System S.A.">
+// <copyright file="AuthenticatorWspProperties.cs" company="RHEA System S.A.">
 //   Copyright (c) 2016 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
@@ -7,9 +7,9 @@
 namespace CDP4Authentication
 {
     /// <summary>
-    /// Base class for standard authenticator properties that all <see cref="IAuthenticatorPlugin"/>s use.
+    /// Specific class for wsp authenticator properties that all <see cref="IAuthenticatorWspProperties"/>s use.
     /// </summary>
-    public class AuthenticatorProperties : IAuthenticatorProperties
+    public class AuthenticatorWspProperties : IAuthenticatorWspProperties
     {
         /// <summary>
         /// Gets or sets the rank.
@@ -33,5 +33,10 @@ namespace CDP4Authentication
         /// Gets or sets the description.
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// Gets or sets the server salts (WSP specific).
+        /// </summary>
+        public string[] ServerSalts { get; set; }
     }
 }

@@ -6,12 +6,13 @@
 
 namespace CDP4Authentication.Contracts
 {
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// Generic abstract Authentication plugin definition.
@@ -59,7 +60,7 @@ namespace CDP4Authentication.Contracts
         /// <summary>
         /// Read configuration from file.
         /// </summary>
-        protected virtual void LoadConfig()
+        protected void LoadConfig()
         {
             var assemblyPath = Path.GetDirectoryName(this.GetType().Assembly.Location);
 
@@ -83,63 +84,6 @@ namespace CDP4Authentication.Contracts
             }
 
             this.AuthenticatorConfig = this.DeserializeConfigFile(json, configLocation);
-        }
-
-        /// <summary>
-        /// Write server salt value to config.json
-        /// </summary>
-        /// <param name="propertyName">property name that will be updated</param>
-        /// <param name="propertyValue">property value</param>
-        /// <returns>True if operation finished with success</returns>
-        protected void WriteConfig(string propertyName, string propertyValue)
-        {
-            var assemblyPath = Path.GetDirectoryName(this.GetType().Assembly.Location);
-
-            if (assemblyPath == null)
-            {
-                throw new DirectoryNotFoundException("The assembly path could not be resolved.");
-            }
-
-            var configLocation = Path.Combine(assemblyPath, this.Configpath);
-
-            if (!File.Exists(configLocation))
-            {
-                throw new FileNotFoundException("Configuration file not found.", configLocation);
-            }
-
-            var connectorProperties = this.AuthenticatorConfig.AuthenticatorConnectorProperties.Select(connectorProperty =>
-            {
-                if (!(JToken.FromObject(connectorProperty) is JObject o))
-                {
-                    return connectorProperty;
-                }
-
-                foreach (var property in o.Properties())
-                {
-                    if (property.Name != propertyName)
-                    {
-                        continue;
-                    }
-
-                    if (property.Value.GetType() == typeof(JArray))
-                    {
-                        property.Value = new JArray(propertyValue);
-                    }
-                    else
-                    {
-                        property.Value = propertyValue;
-                    }
-
-                    connectorProperty = (TProperties)o.ToObject(typeof(AuthenticatorProperties));
-
-                    break;
-                }
-
-                return connectorProperty;
-            }).ToList();
-
-            this.AuthenticatorConfig.AuthenticatorConnectorProperties = connectorProperties;
-            File.WriteAllText(configLocation, JsonConvert.SerializeObject(this.AuthenticatorConfig, Formatting.Indented));
         }
 
         /// <summary>

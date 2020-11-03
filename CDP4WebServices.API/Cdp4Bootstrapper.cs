@@ -235,7 +235,7 @@ namespace CDP4WebServices.API
         /// <param name="salt">WSP server salt value</param>
         private void SaltConfigurationChanged(string salt)
         {
-            var plugins = this.ApplicationContainer.Resolve<UserValidator>().AuthenticationPluginInjector.Plugins;
+            var plugins = this.ApplicationContainer.Resolve<IUserValidator>().AuthenticationPluginInjector.Plugins;
 
             foreach (var plugin in plugins)
             {

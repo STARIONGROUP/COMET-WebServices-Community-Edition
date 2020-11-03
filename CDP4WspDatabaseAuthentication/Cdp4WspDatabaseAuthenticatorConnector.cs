@@ -12,7 +12,7 @@ namespace CDP4WspDatabaseAuthentication
     /// <summary>
     /// A connector for WSP basic authentication against a CDP4 database.
     /// </summary>
-    public class Cdp4WspDatabaseAuthenticatorConnector : AuthenticatorConnector<AuthenticatorProperties>
+    public class Cdp4WspDatabaseAuthenticatorConnector : AuthenticatorConnector<AuthenticatorWspProperties>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Cdp4WspDatabaseAuthenticatorConnector"/> class.
@@ -20,7 +20,7 @@ namespace CDP4WspDatabaseAuthentication
         /// <param name="properties">
         /// The properties.
         /// </param>
-        public Cdp4WspDatabaseAuthenticatorConnector(AuthenticatorProperties properties)
+        public Cdp4WspDatabaseAuthenticatorConnector(AuthenticatorWspProperties properties)
             : base(properties)
         {
         }
@@ -88,7 +88,14 @@ namespace CDP4WspDatabaseAuthentication
         {
             var result = false;
 
-            foreach (var serverSalt in this.Properties.ServerSalts)
+            var serverSalts = (this.Properties as IAuthenticatorWspProperties)?.ServerSalts;
+
+            if (serverSalts == null)
+            {
+                return false;
+            }
+
+            foreach (var serverSalt in serverSalts)
             {
                 result = EncryptionUtils.CompareWspSaltedString(password, person.Password, person.Salt, serverSalt);
 
