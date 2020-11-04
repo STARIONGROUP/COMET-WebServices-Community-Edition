@@ -57,22 +57,5 @@ namespace CDP4Orm.Tests
 
             Assert.AreEqual(password, returned);
         }
-
-        [Test]
-        public void VerifyThatWspPasswordCompareWorks()
-        {
-            const string password = "pass";
-            var salt = EncryptionUtils.GenerateRandomSaltString();
-            var serverSalt = EncryptionUtils.GenerateRandomSaltString();
-
-            var encryptedPassword = CDP4WspDatabaseAuthentication.EncryptionUtils.BuildWspSaltedString(password,
-                salt, serverSalt);
-
-            const string passwordToTest = "pass";
-            const string wrongPasswordToTest = "pass1";
-
-            Assert.IsTrue(CDP4WspDatabaseAuthentication.EncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt));
-            Assert.IsFalse(CDP4WspDatabaseAuthentication.EncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt));
-        }
     }
 }
