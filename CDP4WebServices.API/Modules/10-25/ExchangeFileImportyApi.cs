@@ -6,12 +6,23 @@
 
 namespace CDP4WebServices.API.Modules
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Data;
+    using System.Diagnostics;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
+
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
+
     using CDP4WebService.Authentication;
+
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
@@ -21,18 +32,14 @@ namespace CDP4WebServices.API.Modules
     using CDP4WebServices.API.Services.FileHandling;
     using CDP4WebServices.API.Services.Operations.SideEffects;
     using CDP4WebServices.API.Services.Protocol;
+
     using Nancy;
     using Nancy.ModelBinding;
     using Nancy.Responses;
+
     using NLog;
+
     using Npgsql;
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
