@@ -7,7 +7,7 @@
 namespace CDP4Authentication
 {
     /// <summary>
-    /// Specific class for wsp authenticator properties that all <see cref="IAuthenticatorWspProperties"/>s use.
+    /// Specific class for wsp authenticator properties that <see cref="IAuthenticatorPlugin"/>s might use.
     /// </summary>
     public class AuthenticatorWspProperties : IAuthenticatorWspProperties
     {

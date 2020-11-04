@@ -7,7 +7,7 @@
 namespace CDP4Authentication
 {
     /// <summary>
-    /// Base class for standard authenticator properties that all <see cref="IAuthenticatorPlugin"/>s use.
+    /// Base class for standard authenticator properties that <see cref="IAuthenticatorPlugin"/>s might use.
     /// </summary>
     public class AuthenticatorProperties : IAuthenticatorProperties
     {
