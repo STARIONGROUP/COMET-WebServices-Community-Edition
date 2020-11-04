@@ -26,6 +26,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
+    <ProjectReference Include="..\CDP4WSPDatabaseAuthentication\CDP4WspDatabaseAuthentication.csproj" />
   </ItemGroup>
  
 </Project>

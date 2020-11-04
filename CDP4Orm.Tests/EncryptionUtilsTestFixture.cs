@@ -37,6 +37,7 @@ namespace CDP4Orm.Tests
 
             var passwordTest = "pass";
             var wrongPasswordTest = "testPassword121";
+
             var encryptedPassword = EncryptionUtils.GenerateSaltedString(password,
                 salt);
 
@@ -64,14 +65,14 @@ namespace CDP4Orm.Tests
             var salt = EncryptionUtils.GenerateRandomSaltString();
             var serverSalt = EncryptionUtils.GenerateRandomSaltString();
 
-            var encryptedPassword = EncryptionUtils.BuildWspSaltedString(password,
+            var encryptedPassword = CDP4WspDatabaseAuthentication.EncryptionUtils.BuildWspSaltedString(password,
                 salt, serverSalt);
 
             const string passwordToTest = "pass";
             const string wrongPasswordToTest = "pass1";
 
-            Assert.IsTrue(EncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt));
-            Assert.IsFalse(EncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt));
+            Assert.IsTrue(CDP4WspDatabaseAuthentication.EncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt));
+            Assert.IsFalse(CDP4WspDatabaseAuthentication.EncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt));
         }
     }
 }
