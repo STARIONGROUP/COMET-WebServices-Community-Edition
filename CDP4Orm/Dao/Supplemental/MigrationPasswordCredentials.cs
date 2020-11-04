@@ -50,9 +50,9 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// Initializes a new instance of the <see cref="MigrationPasswordCredentials"/> class.
         /// </summary>
-        /// <param name="iid"></param>
-        /// <param name="password"></param>
-        /// <param name="salt"></param>
+        /// <param name="iid">Migrated user identifier</param>
+        /// <param name="password">Migrated user password</param>
+        /// <param name="salt">Migrated user salt</param>
         public MigrationPasswordCredentials(Guid iid, string password, string salt)
         {
             this.Iid = iid;
