@@ -516,18 +516,17 @@ namespace CDP4WebServices.API.Services
             }
             catch (Exception ex)
             {
-                var msg = $"Failed to load file. Error: {ex.Message}";
-                Logger.Error(msg);
+                Logger.Error($"Failed to load file. Error: {ex.Message}");
             }
 
             return credentials;
         }
 
         /// <summary>
-        ///
+        /// Create credentials list with the data extracted from migration.json
         /// </summary>
-        /// <param name="stream"></param>
-        /// <returns></returns>
+        /// <param name="stream">Input stream <see cref="Stream"/></param>
+        /// <returns>List of <see cref="MigrationPasswordCredentials"/></returns>
         private static List<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
         {
             var credentialsList = new List<MigrationPasswordCredentials>();
