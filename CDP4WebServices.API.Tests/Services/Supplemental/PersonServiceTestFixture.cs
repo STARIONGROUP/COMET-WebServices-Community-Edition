@@ -85,10 +85,9 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         [Test]
         public void VerifyUpdateCredentials_Initialization()
         {
-            var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt", "serversalt");
+            var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt");
             Assert.AreEqual("hashedpassword", credentials.Password);
             Assert.AreEqual("salt", credentials.Salt);
-            Assert.AreEqual("serversalt", credentials.ServerSalt);
             Assert.AreEqual(this.person.Iid, credentials.Iid);
         }
 
@@ -103,7 +102,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         [Test]
         public void VerifyUpdateCredentials_FullAccess()
         {
-            var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt", "serversalt");
+            var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt");
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
 

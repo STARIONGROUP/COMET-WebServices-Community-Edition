@@ -549,8 +549,7 @@ namespace CDP4WebServices.API.Services
 
                             var password = (property.First["password"] as JValue)?.Value.ToString();
                             var salt = (property.First["salt"] as JValue)?.Value.ToString();
-                            var serverSalt = parsedContent?["server"] != null ? (parsedContent?["server"]["salt"] as JValue)?.Value.ToString() : string.Empty;
-                            credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt, serverSalt));
+                            credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt));
                         }
                     }
                 }
