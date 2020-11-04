@@ -16,13 +16,13 @@
     "DatabaseManage": "cdp4manage",
     "StatementTimeout": 180,
     "LogSqlCommands": false,
-    "IsDbSeedEnabled": false,
+    "IsDbSeedEnabled": true,
     "IsDbRestoreEnabled": false
   },
   "Defaults": {
     "PersonPassword": "pass",
     "DevServerPath": "http://localhost:4200/app",
     "LocationServicePath": "http://freegeoip.io/json/",
-    "ContributorsCacheTimeout":  60 
-  } 
+    "ContributorsCacheTimeout":  60
+  }
 }

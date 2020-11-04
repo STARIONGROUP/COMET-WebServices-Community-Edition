@@ -13,7 +13,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
-  <ItemGroup>    
+  <ItemGroup>
     <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="1.4.1" />
     <PackageReference Include="Nancy.Owin" Version="1.4.1" />
     <PackageReference Include="Owin" Version="1.0" />
@@ -29,18 +29,22 @@
   </ItemGroup>
 
   <Target Name="PostcompileScript" AfterTargets="Build">
-    
-    <!-- Copy API config -->    
+
+    <!-- Copy API config -->
     <Copy SourceFiles="..\CDP4WebServices.API\config_debug.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Debug'" />
     <Copy SourceFiles="..\CDP4WebServices.API\config_release.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Release'" />
     <Copy SourceFiles="..\CDP4WebServices.API\config_test.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Test'" />
 
-    <!-- Copy nlog config -->    
+    <!-- Copy nlog config -->
     <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
-    
-    <!-- Copy Database Authentication plugin -->    
+
+    <!-- Copy Database Authentication plugin -->
     <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
     <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
-    
+
+    <!-- Copy WSP Database Authentication plugin -->
+    <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\CDP4WspDatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
+    <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
+
   </Target>
 </Project>

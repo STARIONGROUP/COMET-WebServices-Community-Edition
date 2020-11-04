@@ -32,10 +32,10 @@ namespace CDP4WebServices.API.Services.Authentication
         public IAuthenticationPluginInjector AuthenticationPluginInjector { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IPersonResolver"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database. 
+        /// Gets or sets the <see cref="IPersonResolver"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database.
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
-       
+
         /// <summary>
         /// Validates the username and password
         /// </summary>
@@ -85,10 +85,7 @@ namespace CDP4WebServices.API.Services.Authentication
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
+                transaction?.Dispose();
 
                 if (connection != null)
                 {
@@ -103,7 +100,7 @@ namespace CDP4WebServices.API.Services.Authentication
         /// </summary>
         /// <param name="credentials">The resolved user credentials.</param>
         /// <param name="password">The password.</param>
-        /// <returns>Try if any authenticator passes.</returns>
+        /// <returns>True if any authenticator passes.</returns>
         private bool Authenticate(Credentials credentials, string password)
         {
             return

@@ -37,6 +37,7 @@ namespace CDP4Orm.Tests
 
             var passwordTest = "pass";
             var wrongPasswordTest = "testPassword121";
+
             var encryptedPassword = EncryptionUtils.GenerateSaltedString(password,
                 salt);
 
