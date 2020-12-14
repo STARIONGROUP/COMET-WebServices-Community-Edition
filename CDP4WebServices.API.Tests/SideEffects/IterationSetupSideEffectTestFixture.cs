@@ -27,12 +27,9 @@
 
 namespace CDP4WebServices.API.Tests.SideEffects
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
     using CDP4Authentication;
 
+    using CDP4Common;
     using CDP4Common.DTO;
 
     using CDP4WebServices.API.Helpers;
@@ -40,9 +37,16 @@ namespace CDP4WebServices.API.Tests.SideEffects
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
+
     using Moq;
+
     using Npgsql;
+
     using NUnit.Framework;
+
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
 
     [TestFixture]
     internal class IterationSetupSideEffectTestFixture
@@ -132,7 +136,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
             var originalThing = iterationSetup.DeepClone<Thing>();
 
-            
             this.iterationSetupSideEffect.AfterCreate(iterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
 
             // Check that the other iterationSetups get frozen when creating the iterationSetup
@@ -218,6 +221,75 @@ namespace CDP4WebServices.API.Tests.SideEffects
             Assert.AreEqual(iterationSetup.IsDeleted, true);
 
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
+        }
+
+        [Test]
+        public void VerifySelfReferenceError()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+
+            this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
+
+            var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup.Iid } };
+
+            Assert.Throws<AcyclicValidationException>(
+                () => this.iterationSetupSideEffect.BeforeUpdate(
+                    iterationSetup,
+                    this.engineeringModelSetup,
+                    this.npgsqlTransaction,
+                    "siteDirectory",
+                    this.mockedSecurityContext.Object,
+                    rawUpdateInfo));
+        }
+
+        [Test]
+        public void VerifyOutOfModelError()
+        {
+            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+
+            this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
+
+            var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", Guid.NewGuid() } };
+
+            Assert.Throws<AcyclicValidationException>(
+                () => this.iterationSetupSideEffect.BeforeUpdate(
+                    iterationSetup,
+                    this.engineeringModelSetup,
+                    this.npgsqlTransaction,
+                    "siteDirectory",
+                    this.mockedSecurityContext.Object,
+                    rawUpdateInfo));
+        }
+
+        [Test]
+        public void VerifyCircularDependencyError()
+        {
+            var iterationSetup1 = new IterationSetup(Guid.NewGuid(), 1);
+            var iterationSetup2 = new IterationSetup(Guid.NewGuid(), 1) { SourceIterationSetup = iterationSetup1.Iid };
+            var iterationSetup3 = new IterationSetup(Guid.NewGuid(), 1) { SourceIterationSetup = iterationSetup2.Iid };
+
+            this.engineeringModelSetup.IterationSetup.Add(iterationSetup1.Iid);
+            this.engineeringModelSetup.IterationSetup.Add(iterationSetup2.Iid);
+            this.engineeringModelSetup.IterationSetup.Add(iterationSetup3.Iid);
+
+            this.mockedIterationSetupService
+                .Setup(x => x.Get(
+                    this.npgsqlTransaction,
+                    It.IsAny<string>(),
+                    It.IsAny<IEnumerable<Guid>>(),
+                    this.mockedSecurityContext.Object))
+                .Returns(new[] { iterationSetup1, iterationSetup2, iterationSetup3 });
+
+            var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup3.Iid } };
+
+            Assert.Throws<AcyclicValidationException>(
+                () => this.iterationSetupSideEffect.BeforeUpdate(
+                    iterationSetup1,
+                    this.engineeringModelSetup,
+                    this.npgsqlTransaction,
+                    "siteDirectory",
+                    this.mockedSecurityContext.Object,
+                    rawUpdateInfo));
         }
     }
 }

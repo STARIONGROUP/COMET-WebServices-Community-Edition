@@ -70,10 +70,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
                                          Iid = Guid.NewGuid(),
                                          SiteReferenceDataLibrary =
                                              {
-                                                 this.siteReferenceDataLibraryA
-                                                     .Iid,
-                                                 this.siteReferenceDataLibraryB
-                                                     .Iid,
+                                                 this.siteReferenceDataLibraryA.Iid,
+                                                 this.siteReferenceDataLibraryB.Iid,
                                                  this.siteReferenceDataLibraryC.Iid
                                              }
                                      };
