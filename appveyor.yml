@@ -9,7 +9,7 @@ environment:
       SONARCLOUD_PROJECT_KEY: RHEAGROUP_CDP4-WebServices-Community-Edition
       SONARCLOUD_ORGANIZATION: rheagroup
       SONARCLOUD_TOKEN:
-        secure: Q3ruQ/mMJMZFFa2If84xai1rB2VkTbOO5GAbhmlba6KOx9fhZorISp+SLS8FkIb4
+        secure: 67KNIhsvMPwHylkTvfGtu39hYkK94X8svR0pxSBeqbm92ffGeViAv7SVDHnC+kbv
       TAG_SCENARIO: false
 
 skip_branch_with_pr: true
