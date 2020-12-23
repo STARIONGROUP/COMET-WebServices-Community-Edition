@@ -75,19 +75,25 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.specializedQuantityKindE = new SpecializedQuantityKind { Iid = Guid.NewGuid() };
 
             // There is a chain librayA -> LibraryB
-            this.referenceDataLibraryB =
-                new SiteReferenceDataLibrary { Iid = Guid.NewGuid(), ParameterType = { this.specializedQuantityKindD.Iid } };
+            this.referenceDataLibraryB = new SiteReferenceDataLibrary
+            {
+                Iid = Guid.NewGuid(),
+                ParameterType =
+                {
+                    this.specializedQuantityKindD.Iid
+                }
+            };
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
-                                             {
-                                                 Iid = Guid.NewGuid(),
-                                                 ParameterType =
-                                                     {
-                                                         this.specializedQuantityKindA.Iid,
-                                                         this.specializedQuantityKindB.Iid,
-                                                         this.specializedQuantityKindC.Iid
-                                                     },
-                                                 RequiredRdl = this.referenceDataLibraryB.Iid
-                                             };
+            {
+                Iid = Guid.NewGuid(),
+                ParameterType =
+                {
+                    this.specializedQuantityKindA.Iid,
+                    this.specializedQuantityKindB.Iid,
+                    this.specializedQuantityKindC.Iid
+                },
+                RequiredRdl = this.referenceDataLibraryB.Iid
+            };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
@@ -120,20 +126,18 @@ namespace CDP4WebServices.API.Tests.SideEffects
                             this.specializedQuantityKindB,
                             this.specializedQuantityKindC
                         });
+
+            this.sideEffect = new SpecializedQuantityKindSideEffect
+            {
+                SpecializedQuantityKindService = this.specializedQuantityKindService.Object,
+                SiteReferenceDataLibraryService = this.siteReferenceDataLibraryService.Object
+            };
         }
 
         [Test]
         public void VerifyThatExceptionIsThrownWhenGeneralReferenceIsKindItself()
         {
-            this.sideEffect = new SpecializedQuantityKindSideEffect
-                                  {
-                                      SpecializedQuantityKindService =
-                                          this.specializedQuantityKindService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
-
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.specializedQuantityKindA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -146,18 +150,10 @@ namespace CDP4WebServices.API.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyThatExceptionIsThrownWhenGeneralReferenceIsOutOfChainOrLeadsToCircularDependency()
+        public void VerifyThatExceptionIsThrownWhenGeneralReferenceIsOutOfChain()
         {
-            this.sideEffect = new SpecializedQuantityKindSideEffect
-                                  {
-                                      SpecializedQuantityKindService =
-                                          this.specializedQuantityKindService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
-
             // Out of chain
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.specializedQuantityKindE.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindE.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -167,9 +163,13 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     "partition",
                     this.securityContext.Object,
                     this.rawUpdateInfo));
+        }
 
+        [Test]
+        public void VerifyThatExceptionIsThrownWhenGeneralReferenceLeadsToCircularDependency()
+        {
             // Leads to circular dependency
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.specializedQuantityKindA.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -184,16 +184,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
         [Test]
         public void VerifyThatExceptionIsNotThrownWhenGeneralReferenceDoesNotLeadToCircularDependency()
         {
-            this.sideEffect = new SpecializedQuantityKindSideEffect
-                                  {
-                                      SpecializedQuantityKindService =
-                                          this.specializedQuantityKindService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
-
             // There is a chain a -> b -> c
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.specializedQuantityKindD.Iid } };
+            this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindD.Iid } };
 
             Assert.DoesNotThrow(
                 () => this.sideEffect.BeforeUpdate(
