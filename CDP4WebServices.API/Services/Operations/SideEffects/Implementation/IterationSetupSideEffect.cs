@@ -25,17 +25,23 @@
 
 namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Drawing;
-    using System.Linq;
     using Authorization;
+
+    using CDP4Common;
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CDP4WebServices.API.Services.Authentication;
+
     using Helpers;
+
     using NLog;
+
     using Npgsql;
+
+    using System;
+    using System.Linq;
 
     /// <summary>
     /// The iteration setup side effect.
@@ -201,6 +207,71 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.TransactionManager.SetCachedDtoReadEnabled(false);
             var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
             this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic before an update operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="IterationSetup"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <paramref name="thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        /// <param name="rawUpdateInfo">
+        /// The raw update info that was serialized from the user posted request.
+        /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
+        /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
+        /// </param>
+        public override void BeforeUpdate(
+            IterationSetup thing,
+            Thing container,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext,
+            ClasslessDTO rawUpdateInfo)
+        {
+            if (!rawUpdateInfo.ContainsKey("SourceIterationSetup"))
+            {
+                return;
+            }
+
+            var sourceIterationSetupIid = (Guid)rawUpdateInfo["SourceIterationSetup"];
+            var engineeringModelSetup = (EngineeringModelSetup)container;
+
+            // Check that sourceIterationSetup is from the same EngineeringModelSetup
+            if (!engineeringModelSetup.IterationSetup.Contains(sourceIterationSetupIid))
+            {
+                throw new AcyclicValidationException($"IterationSetup {thing.Iid} cannot have " +
+                                                     $"a source IterationSetup from outside the current EngineeringModelSetup.");
+            }
+
+            var iterationSetups = this.IterationSetupService
+                .Get(transaction, partition, engineeringModelSetup.IterationSetup, securityContext)
+                .Cast<IterationSetup>()
+                .ToList();
+
+            Guid? next = sourceIterationSetupIid;
+
+            do
+            {
+                if (next == thing.Iid)
+                {
+                    throw new AcyclicValidationException($"IterationSetup {thing.Iid} cannot have " +
+                                                         $"a source IterationSetup that leads to cyclic dependency.");
+                }
+
+                next = iterationSetups.FirstOrDefault(x => x.Iid == next)?.SourceIterationSetup;
+            } while(next != null);
         }
 
         /// <summary>

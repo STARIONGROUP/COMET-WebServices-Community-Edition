@@ -104,6 +104,7 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<ParticipantRoleDao, IParticipantRoleDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<DomainOfExpertiseDao, IDomainOfExpertiseDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<ParticipantPermissionDao, IParticipantPermissionDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<PersonService, IPersonService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<AuthenticationPluginInjector, IAuthenticationPluginInjector>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonResolver, IPersonResolver>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<UserValidator, IUserValidator>();
@@ -213,6 +214,9 @@ namespace CDP4WebServices.API
 
                     // wireup PermissionInstanceFilter service
                     builder.RegisterTypeAsPropertyInjectedSingleton<PermissionInstanceFilterService, IPermissionInstanceFilterService>();
+
+                    // wireup PersonService service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<PersonService, IPersonService>();
                 });
 
             // apply logging configuration
@@ -270,7 +274,7 @@ namespace CDP4WebServices.API
 
         protected override void RequestStartup(ILifetimeScope container, IPipelines pipelines, NancyContext context)
         {
-            //Enable CORS 
+            //Enable CORS
             pipelines.AfterRequest.AddItemToEndOfPipeline((ctx) =>
             {
                 ctx.Response

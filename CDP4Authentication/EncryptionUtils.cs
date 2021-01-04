@@ -17,7 +17,7 @@ namespace CDP4Authentication
         /// <summary>
         /// The maximum number of bytes in a salt byte array.
         /// </summary>
-        public const int SaltMaximumNumberOfBytes = 32;
+        private const int SaltMaximumNumberOfBytes = 32;
 
         /// <summary>
         /// Generates a salted hash from an input string.
@@ -31,18 +31,18 @@ namespace CDP4Authentication
         /// <returns>
         /// A salted byte array.
         /// </returns>
-        public static byte[] GenerateSaltedHash(string inputString, byte[] salt)
+        private static byte[] GenerateSaltedHash(string inputString, byte[] salt)
         {
             var algorithm = new SHA256Managed();
             var plainText = GetBytesFromString(inputString);
             var plainTextWithSaltBytes = new byte[plainText.Length + salt.Length];
 
-            for (int i = 0; i < plainText.Length; i++)
+            for (var i = 0; i < plainText.Length; i++)
             {
                 plainTextWithSaltBytes[i] = plainText[i];
             }
 
-            for (int i = 0; i < salt.Length; i++)
+            for (var i = 0; i < salt.Length; i++)
             {
                 plainTextWithSaltBytes[plainText.Length + i] = salt[i];
             }
@@ -91,7 +91,7 @@ namespace CDP4Authentication
         /// <summary>
         /// Converts a string to a byte array.
         /// </summary>
-        /// <remarks> 
+        /// <remarks>
         /// source <see cref="http://stackoverflow.com/questions/472906/how-to-get-a-consistent-byte-representation-of-strings-in-c-sharp-without-manual"/>
         /// </remarks>
         /// <param name="inputString">
@@ -137,7 +137,7 @@ namespace CDP4Authentication
         /// <returns>
         /// A random 32 bytes non zero byte salt.
         /// </returns>
-        public static byte[] GenerateRandomSaltBytes()
+        private static byte[] GenerateRandomSaltBytes()
         {
             var random = new RNGCryptoServiceProvider();
             var salt = new byte[SaltMaximumNumberOfBytes];
@@ -171,7 +171,7 @@ namespace CDP4Authentication
         /// <returns>
         /// A byte array representation of the string.
         /// </returns>
-        public static byte[] GetBytesFromBase64String(string inputString)
+        private static byte[] GetBytesFromBase64String(string inputString)
         {
             return Convert.FromBase64String(inputString);
         }

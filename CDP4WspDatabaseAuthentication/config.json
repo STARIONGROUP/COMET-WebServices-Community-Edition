@@ -1,0 +1,11 @@
+{
+  "AuthenticatorConnectorProperties": [
+    {
+      "Rank": 1,
+      "IsEnabled": true,
+      "Name": "Basic WSP Authentication",
+      "Description": "Provides WSP basic password authentication(WSP hashing algorithm) against the Person retrieved from the database.",
+      "ServerSalts":  []
+    }
+  ]
+}

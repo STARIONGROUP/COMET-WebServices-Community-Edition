@@ -8,9 +8,11 @@ namespace CDP4Authentication.Contracts
 {
     using System;
     using System.Collections.Generic;
-    using System.Configuration;
     using System.IO;
+    using System.Linq;
+
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// Generic abstract Authentication plugin definition.
@@ -23,10 +25,10 @@ namespace CDP4Authentication.Contracts
     /// </typeparam>
     public abstract class AuthenticatorPlugin<TProperties, TConnector> : IAuthenticatorPlugin
         where TProperties : IAuthenticatorProperties
-        where TConnector : AuthenticatorConnector<TProperties> 
+        where TConnector : AuthenticatorConnector<TProperties>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthenticatorPlugin{TProperties, TConnector}"/> class. 
+        /// Initializes a new instance of the <see cref="AuthenticatorPlugin{TProperties, TConnector}"/> class.
         /// </summary>
         protected AuthenticatorPlugin()
         {
@@ -53,12 +55,12 @@ namespace CDP4Authentication.Contracts
         /// <summary>
         /// Gets or sets the <see cref="AuthenticatorConfig{T}"/> which holds all configuration data.
         /// </summary>
-        private AuthenticatorConfig<TProperties> AuthenticatorConfig { get; set; }
+        protected AuthenticatorConfig<TProperties> AuthenticatorConfig { get; set; }
 
         /// <summary>
         /// Read configuration from file.
         /// </summary>
-        protected virtual void LoadConfig()
+        protected void LoadConfig()
         {
             var assemblyPath = Path.GetDirectoryName(this.GetType().Assembly.Location);
 
@@ -112,13 +114,13 @@ namespace CDP4Authentication.Contracts
         /// <summary>
         /// Initializes all the connectors defined in this plugin configuration.
         /// </summary>
-        private void InitializeConnectors()
+        protected void InitializeConnectors()
         {
             this.Connectors = new List<IAuthenticatorConnector>();
 
             foreach (var authenticatorProperties in this.AuthenticatorConfig.AuthenticatorConnectorProperties)
             {
-                var connector = (TConnector)Activator.CreateInstance(typeof(TConnector), authenticatorProperties);
+                var connector = (TConnector) Activator.CreateInstance(typeof(TConnector), authenticatorProperties);
                 this.Connectors.Add(connector);
             }
         }

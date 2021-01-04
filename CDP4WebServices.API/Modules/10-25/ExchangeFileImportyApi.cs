@@ -13,12 +13,16 @@ namespace CDP4WebServices.API.Modules
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
+
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
+
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
+
     using CDP4WebService.Authentication;
+
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services;
@@ -28,10 +32,13 @@ namespace CDP4WebServices.API.Modules
     using CDP4WebServices.API.Services.FileHandling;
     using CDP4WebServices.API.Services.Operations.SideEffects;
     using CDP4WebServices.API.Services.Protocol;
+
     using Nancy;
     using Nancy.ModelBinding;
     using Nancy.Responses;
+
     using NLog;
+
     using Npgsql;
 
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
@@ -60,7 +67,7 @@ namespace CDP4WebServices.API.Modules
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the <see cref="IPersonResolver"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database. 
+        /// Gets or sets the <see cref="IPersonResolver"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database.
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
 
@@ -278,7 +285,7 @@ namespace CDP4WebServices.API.Modules
             this.DropDataStoreAndPrepareNew();
 
             // handle exchange processing
-            if (!this.InsertModelData(filePath, exchangeFileRequest.Password))
+            if (!this.InsertModelData(filePath, exchangeFileRequest.Password, AppConfig.Current.Backtier.IsDbSeedEnabled))
             {
                 var errorResponse = new NotAcceptableResponse();
                 this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
@@ -301,7 +308,7 @@ namespace CDP4WebServices.API.Modules
                 // Create a jsonb for each entry in the database
                 this.CreateRevisionHistoryForEachEntry();
 
-                // database was succesfully seeded 
+                // database was succesfully seeded
                 this.DataStoreController
                     .CloneDataStore(); // create a clone of the data store for future restore support
 
@@ -338,7 +345,7 @@ namespace CDP4WebServices.API.Modules
         /// <returns>
         /// True if successful
         /// </returns>
-        internal bool InsertModelData(string fileName, string password = null, bool seed = true)
+        private bool InsertModelData(string fileName, string password = null, bool seed = true)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -354,6 +361,9 @@ namespace CDP4WebServices.API.Modules
                     this.TransactionManager.SetFullAccessState(true);
                     this.ClearDatabaseSchemas(transaction);
                     transaction.Commit();
+
+                    // Flushes the type cache and reload the types for this connection
+                    connection.ReloadTypes();
                 }
 
                 sw.Start();
@@ -417,6 +427,18 @@ namespace CDP4WebServices.API.Modules
                 {
                     this.RequestUtils.QueryParameters = new QueryParameters();
 
+                    // Get users credentials from migration.json file
+                    var migrationCredentials = this.ExchangeFileProcessor.ReadMigrationJsonFromFile(fileName, password).ToList();
+
+                    foreach (var person in items.OfType<Person>())
+                    {
+                        var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
+                        if (credential != null)
+                        {
+                            this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
+                        }
+                    }
+
                     // Add missing Person permissions
                     this.CreateMissingPersonPermissions(transaction);
 
@@ -436,7 +458,7 @@ namespace CDP4WebServices.API.Modules
                         var engineeringModelItems = this.ExchangeFileProcessor
                             .ReadEngineeringModelFromfile(fileName, password, engineeringModelSetup).ToList();
 
-                        // should return one engineeringmodel topcontainer 
+                        // should return one engineeringmodel topcontainer
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
                         if (engineeringModel == null)
                         {
@@ -529,10 +551,7 @@ namespace CDP4WebServices.API.Modules
                 // clean log (will happen at end of request as well due to IOC lifetime
                 this.TransactionManager.CommandLogger.ClearLog();
 
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
+                transaction?.Dispose();
 
                 if (connection != null)
                 {
@@ -569,7 +588,7 @@ namespace CDP4WebServices.API.Modules
         /// <summary>
         /// Fix single iteration setups in the export.
         /// An exchange file can contain one or all iteration setups of a site directory.
-        /// Make sure that incase one iteration setup is supplied it is unfrozen and has no source iteration set 
+        /// Make sure that incase one iteration setup is supplied it is unfrozen and has no source iteration set
         /// </summary>
         /// <param name="items">
         /// The read in items.
@@ -634,7 +653,7 @@ namespace CDP4WebServices.API.Modules
         {
             Logger.Info("start dropping existing data stores");
 
-            // Drop the existing databases 
+            // Drop the existing databases
             using (var connection = new NpgsqlConnection(
                 Services.Utils.GetConnectionString(AppConfig.Current.Backtier.DatabaseManage)))
             {
@@ -800,7 +819,7 @@ namespace CDP4WebServices.API.Modules
                 TopContainer,
                 participantRole.ParticipantPermission,
                 new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantPermission>().ToList();
-            
+
             foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
             {
                 var defaultPermission = this.DefaultPermissionProvider.GetDefaultParticipantPermission(classKind);
@@ -822,7 +841,7 @@ namespace CDP4WebServices.API.Modules
                         participantRole.ParticipantPermission.Add(permission.Iid);
                         this.ParticipantPermissionService.CreateConcept(transaction, TopContainer, permission, participantRole);
                     }
-                }   
+                }
             }
         }
 
@@ -863,7 +882,7 @@ namespace CDP4WebServices.API.Modules
                 TopContainer,
                 personRole.PersonPermission,
                 new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonPermission>().ToList();
-            
+
             foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
             {
                 var defaultPermission = this.DefaultPermissionProvider.GetDefaultPersonPermission(classKind);
@@ -886,7 +905,7 @@ namespace CDP4WebServices.API.Modules
                         this.PersonPermissionService.CreateConcept(transaction, TopContainer, permission, personRole);
                     }
                 }
-            }   
+            }
         }
     }
 }

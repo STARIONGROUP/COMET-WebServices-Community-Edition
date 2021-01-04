@@ -33,5 +33,15 @@ namespace CDP4Orm.Dao
         /// The <see cref="string"/>.
         /// </returns>
         string GivenName(NpgsqlTransaction transaction, Guid personIid);
+
+        /// <summary>
+        /// Update user credentials after migration
+        /// </summary>
+        /// <param name="transaction">The database transaction.</param>
+        /// <param name="partition">The database schema</param>
+        /// <param name="person">The person <see cref="CDP4Common.DTO.Person" /></param>
+        /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
+        /// <returns></returns>
+        bool UpdateCredentials(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials);
     }
 }
