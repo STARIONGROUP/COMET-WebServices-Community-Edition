@@ -6,10 +6,6 @@ environment:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
       TEST_RESULT: 'TestResult.xml'
       TEST_COVERAGE: 'CoverResults.xml'
-      SONARCLOUD_PROJECT_KEY: RHEAGROUP_CDP4-WebServices-Community-Edition
-      SONARCLOUD_ORGANIZATION: rheagroup
-      SONARCLOUD_TOKEN:
-        secure: 67KNIhsvMPwHylkTvfGtu39hYkK94X8svR0pxSBeqbm92ffGeViAv7SVDHnC+kbv
       TAG_SCENARIO: false
 
 skip_branch_with_pr: true
