@@ -141,6 +141,7 @@ namespace CDP4Orm.Dao
         {
             string tempModifiedOn;
             string tempSourceIterationIid;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -178,6 +179,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("SourceIterationIid", out tempSourceIterationIid) && tempSourceIterationIid != null)
             {
                 dto.SourceIterationIid = Guid.Parse(tempSourceIterationIid);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;

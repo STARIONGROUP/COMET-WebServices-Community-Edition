@@ -150,6 +150,7 @@ namespace CDP4Orm.Dao
             string tempName;
             string tempStrokeOpacity;
             string tempStrokeWidth;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -216,6 +217,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("StrokeWidth", out tempStrokeWidth) && tempStrokeWidth != null)
             {
                 dto.StrokeWidth = float.Parse(tempStrokeWidth);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;

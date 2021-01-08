@@ -143,6 +143,7 @@ namespace CDP4Orm.Dao
             string tempIsDeprecated;
             string tempModifiedOn;
             string tempObjectClass;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -170,6 +171,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ObjectClass", out tempObjectClass))
             {
                 dto.ObjectClass = Utils.ParseEnum<CDP4Common.CommonData.ClassKind>(tempObjectClass);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;

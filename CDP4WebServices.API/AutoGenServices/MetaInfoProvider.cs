@@ -202,6 +202,11 @@ namespace CDP4WebServices.API.Services
         public IDefinitionMetaInfo DefinitionMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the dependentParameterTypeAssignment meta info.
+        /// </summary>
+        public IDependentParameterTypeAssignmentMetaInfo DependentParameterTypeAssignmentMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the derivedQuantityKind meta info.
         /// </summary>
         public IDerivedQuantityKindMetaInfo DerivedQuantityKindMetaInfo { get; set; }
@@ -387,6 +392,11 @@ namespace CDP4WebServices.API.Services
         public IIdCorrespondenceMetaInfo IdCorrespondenceMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the independentParameterTypeAssignment meta info.
+        /// </summary>
+        public IIndependentParameterTypeAssignmentMetaInfo IndependentParameterTypeAssignmentMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the intervalScale meta info.
         /// </summary>
         public IIntervalScaleMetaInfo IntervalScaleMetaInfo { get; set; }
@@ -410,6 +420,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the logarithmicScale meta info.
         /// </summary>
         public ILogarithmicScaleMetaInfo LogarithmicScaleMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the logEntryChangelogItem meta info.
+        /// </summary>
+        public ILogEntryChangelogItemMetaInfo LogEntryChangelogItemMetaInfo { get; set; }
 
         /// <summary>
         /// Gets or sets the mappingToReferenceScale meta info.
@@ -747,6 +762,11 @@ namespace CDP4WebServices.API.Services
         public IRuleViolationMetaInfo RuleViolationMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the sampledFunctionParameterType meta info.
+        /// </summary>
+        public ISampledFunctionParameterTypeMetaInfo SampledFunctionParameterTypeMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the scalarParameterType meta info.
         /// </summary>
         public IScalarParameterTypeMetaInfo ScalarParameterTypeMetaInfo { get; set; }
@@ -959,6 +979,7 @@ namespace CDP4WebServices.API.Services
                             { "DecompositionRule", this.DecompositionRuleMetaInfo },
                             { "DefinedThing", this.DefinedThingMetaInfo },
                             { "Definition", this.DefinitionMetaInfo },
+                            { "DependentParameterTypeAssignment", this.DependentParameterTypeAssignmentMetaInfo },
                             { "DerivedQuantityKind", this.DerivedQuantityKindMetaInfo },
                             { "DerivedUnit", this.DerivedUnitMetaInfo },
                             { "DiagramCanvas", this.DiagramCanvasMetaInfo },
@@ -996,11 +1017,13 @@ namespace CDP4WebServices.API.Services
                             { "Goal", this.GoalMetaInfo },
                             { "HyperLink", this.HyperLinkMetaInfo },
                             { "IdCorrespondence", this.IdCorrespondenceMetaInfo },
+                            { "IndependentParameterTypeAssignment", this.IndependentParameterTypeAssignmentMetaInfo },
                             { "IntervalScale", this.IntervalScaleMetaInfo },
                             { "Iteration", this.IterationMetaInfo },
                             { "IterationSetup", this.IterationSetupMetaInfo },
                             { "LinearConversionUnit", this.LinearConversionUnitMetaInfo },
                             { "LogarithmicScale", this.LogarithmicScaleMetaInfo },
+                            { "LogEntryChangelogItem", this.LogEntryChangelogItemMetaInfo },
                             { "MappingToReferenceScale", this.MappingToReferenceScaleMetaInfo },
                             { "MeasurementScale", this.MeasurementScaleMetaInfo },
                             { "MeasurementUnit", this.MeasurementUnitMetaInfo },
@@ -1068,6 +1091,7 @@ namespace CDP4WebServices.API.Services
                             { "RuleVerification", this.RuleVerificationMetaInfo },
                             { "RuleVerificationList", this.RuleVerificationListMetaInfo },
                             { "RuleViolation", this.RuleViolationMetaInfo },
+                            { "SampledFunctionParameterType", this.SampledFunctionParameterTypeMetaInfo },
                             { "ScalarParameterType", this.ScalarParameterTypeMetaInfo },
                             { "ScaleReferenceQuantityValue", this.ScaleReferenceQuantityValueMetaInfo },
                             { "ScaleValueDefinition", this.ScaleValueDefinitionMetaInfo },

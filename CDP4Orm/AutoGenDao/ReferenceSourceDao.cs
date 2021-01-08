@@ -146,6 +146,7 @@ namespace CDP4Orm.Dao
             string tempName;
             string tempPublicationYear;
             string tempShortName;
+            string tempThingPreference;
             string tempVersionDate;
             string tempVersionIdentifier;
 
@@ -196,6 +197,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ShortName", out tempShortName))
             {
                 dto.ShortName = tempShortName.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             if (valueDict.TryGetValue("VersionDate", out tempVersionDate) && tempVersionDate != null)

@@ -147,6 +147,7 @@ namespace CDP4Orm.Dao
             string tempPassword;
             string tempShortName;
             string tempSurname;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -202,6 +203,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Surname", out tempSurname))
             {
                 dto.Surname = tempSurname.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;
