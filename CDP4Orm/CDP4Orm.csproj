@@ -27,12 +27,14 @@
     <None Remove="MigrationScript\SiteDirectory_20190117_3_3_0_1_Update_All_Table.sql" />
     <None Remove="MigrationScript\SiteDirectory_20191121_4_0_0_2_Update_Revision_Management.sql" />
     <None Remove="MigrationScript\SiteDirectory_20200612_6_1_0_0_reset_statement_timeout.sql" />
+    <None Remove="MigrationScript\SiteDirectory_20210108_6_3_0_0_Model_Updates.sql" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="AutoGenStructure\EngineeringModelDefinition.sql" />
     <EmbeddedResource Include="AutoGenStructure\SiteDirectoryDefinition.sql" />
     <EmbeddedResource Include="MigrationScript\All_20180919_0_0_0_4_RevisionRegistryPK.sql" />
+    <EmbeddedResource Include="MigrationScript\SiteDirectory_20210108_6_3_0_0_Model_Updates.sql" />
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20200612_6_1_0_0_reset_statement_timeout.sql" />
     <EmbeddedResource Include="MigrationScript\All_OnStartUpOnly_20200810_6_2_0_0_Autovacuum.sql" />
     <EmbeddedResource Include="MigrationScript\Iteration_20000101_0_0_0_6_FiniteStateDeleteSupport.sql" />
