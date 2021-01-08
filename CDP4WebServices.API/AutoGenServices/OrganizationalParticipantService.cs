@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EngineeringModelSetupService.cs" company="RHEA System S.A.">
+// <copyright file="OrganizationalParticipantService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2019 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
@@ -35,52 +35,17 @@ namespace CDP4WebServices.API.Services
     using Npgsql;
 
     /// <summary>
-    /// The <see cref="EngineeringModelSetup"/> Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="OrganizationalParticipant"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
-    public sealed partial class EngineeringModelSetupService : ServiceBase, IEngineeringModelSetupService
+    public sealed partial class OrganizationalParticipantService : ServiceBase, IOrganizationalParticipantService
     {
         /// <summary>
-        /// Gets or sets the <see cref="IAliasService"/>.
+        /// Gets or sets the <see cref="IOrganizationalParticipantDao"/>.
         /// </summary>
-        public IAliasService AliasService { get; set; }
+        public IOrganizationalParticipantDao OrganizationalParticipantDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IDefinitionService"/>.
-        /// </summary>
-        public IDefinitionService DefinitionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IHyperLinkService"/>.
-        /// </summary>
-        public IHyperLinkService HyperLinkService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IIterationSetupService"/>.
-        /// </summary>
-        public IIterationSetupService IterationSetupService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IOrganizationalParticipantService"/>.
-        /// </summary>
-        public IOrganizationalParticipantService OrganizationalParticipantService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IParticipantService"/>.
-        /// </summary>
-        public IParticipantService ParticipantService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IModelReferenceDataLibraryService"/>.
-        /// </summary>
-        public IModelReferenceDataLibraryService RequiredRdlService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IEngineeringModelSetupDao"/>.
-        /// </summary>
-        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
-
-        /// <summary>
-        /// Get the requested <see cref="EngineeringModelSetup"/>s from the ORM layer.
+        /// Get the requested <see cref="OrganizationalParticipant"/>s from the ORM layer.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -95,7 +60,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="EngineeringModelSetup"/>, optionally with contained <see cref="Thing"/>s.
+        /// List of instances of <see cref="OrganizationalParticipant"/>, optionally with contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -117,7 +82,7 @@ namespace CDP4WebServices.API.Services
         /// The association property name that will be persisted.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="EngineeringModelSetup"/> id that will be the source for each link table record.
+        /// The <see cref="OrganizationalParticipant"/> id that will be the source for each link table record.
         /// </param>
         /// <param name="value">
         /// A value for which a link table record will be created.
@@ -127,7 +92,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.EngineeringModelSetupDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return this.OrganizationalParticipantDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -143,7 +108,7 @@ namespace CDP4WebServices.API.Services
         /// The association property from where the supplied value will be removed.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="EngineeringModelSetup"/> id that is the source of the link table records.
+        /// The <see cref="OrganizationalParticipant"/> id that is the source of the link table records.
         /// </param>
         /// <param name="value">
         /// A value for which the link table record will be removed.
@@ -153,7 +118,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.EngineeringModelSetupDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return this.OrganizationalParticipantDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -169,7 +134,7 @@ namespace CDP4WebServices.API.Services
         /// The association property name that will be reordered.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="EngineeringModelSetup"/> id that is the source for the reordered link table record.
+        /// The <see cref="OrganizationalParticipant"/> id that is the source for the reordered link table record.
         /// </param>
         /// <param name="orderUpdate">
         /// The order update information containing the new order key.
@@ -179,7 +144,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.EngineeringModelSetupDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return this.OrganizationalParticipantDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -203,7 +168,7 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Delete the supplied <see cref="EngineeringModelSetup"/> instance.
+        /// Delete the supplied <see cref="OrganizationalParticipant"/> instance.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -212,10 +177,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) from where the requested resource will be removed.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="EngineeringModelSetup"/> to delete.
+        /// The <see cref="OrganizationalParticipant"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="EngineeringModelSetup"/> to be removed.
+        /// The container instance of the <see cref="OrganizationalParticipant"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -227,11 +192,11 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.EngineeringModelSetupDao.Delete(transaction, partition, thing.Iid);
+            return this.OrganizationalParticipantDao.Delete(transaction, partition, thing.Iid);
         }
 
         /// <summary>
-        /// Update the supplied <see cref="EngineeringModelSetup"/> instance.
+        /// Update the supplied <see cref="OrganizationalParticipant"/> instance.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -240,10 +205,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="EngineeringModelSetup"/> <see cref="Thing"/> to update.
+        /// The <see cref="OrganizationalParticipant"/> <see cref="Thing"/> to update.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="EngineeringModelSetup"/> to be updated.
+        /// The container instance of the <see cref="OrganizationalParticipant"/> to be updated.
         /// </param>
         /// <returns>
         /// True if the update was successful.
@@ -255,12 +220,12 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
-            var engineeringModelSetup = thing as EngineeringModelSetup;
-            return this.EngineeringModelSetupDao.Update(transaction, partition, engineeringModelSetup, container);
+            var organizationalParticipant = thing as OrganizationalParticipant;
+            return this.OrganizationalParticipantDao.Update(transaction, partition, organizationalParticipant, container);
         }
 
         /// <summary>
-        /// Persist the supplied <see cref="EngineeringModelSetup"/> instance.
+        /// Persist the supplied <see cref="OrganizationalParticipant"/> instance.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -269,10 +234,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="EngineeringModelSetup"/> <see cref="Thing"/> to create.
+        /// The <see cref="OrganizationalParticipant"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="EngineeringModelSetup"/> to be persisted.
+        /// The container instance of the <see cref="OrganizationalParticipant"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -287,10 +252,8 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
-            this.TransactionManager.SetFullAccessState(true);
-            var engineeringModelSetup = thing as EngineeringModelSetup;
-            var createSuccesful = this.EngineeringModelSetupDao.Write(transaction, partition, engineeringModelSetup, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, engineeringModelSetup);
+            var organizationalParticipant = thing as OrganizationalParticipant;
+            return this.OrganizationalParticipantDao.Write(transaction, partition, organizationalParticipant, container);
         }
 
         /// <summary>
@@ -309,21 +272,21 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="EngineeringModelSetup"/>.
+        /// List of instances of <see cref="OrganizationalParticipant"/>.
         /// </returns>
         public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
-            var authorizedContext = this.AuthorizeReadRequest("EngineeringModelSetup", containerSecurityContext, partition);
+            var authorizedContext = this.AuthorizeReadRequest("OrganizationalParticipant", containerSecurityContext, partition);
             var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var engineeringModelSetupColl = new List<Thing>(this.EngineeringModelSetupDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
+            var organizationalParticipantColl = new List<Thing>(this.OrganizationalParticipantDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
 
-            return this.AfterGet(engineeringModelSetupColl, transaction, partition, idFilter);
+            return this.AfterGet(organizationalParticipantColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -342,7 +305,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="EngineeringModelSetup"/> and contained <see cref="Thing"/>s.
+        /// List of instances of <see cref="OrganizationalParticipant"/> and contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -352,18 +315,7 @@ namespace CDP4WebServices.API.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
-            var engineeringModelSetupColl = results.Where(i => i.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>().ToList();
-
-            results.AddRange(this.AliasService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Alias), containerSecurityContext));
-            results.AddRange(this.DefinitionService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Definition), containerSecurityContext));
-            results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.HyperLink), containerSecurityContext));
-            results.AddRange(this.IterationSetupService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.IterationSetup), containerSecurityContext));
-            results.AddRange(this.OrganizationalParticipantService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.OrganizationalParticipant), containerSecurityContext));
-            results.AddRange(this.ParticipantService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Participant), containerSecurityContext));
-            results.AddRange(this.RequiredRdlService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.RequiredRdl), containerSecurityContext));
-
-            return results;
+            return this.GetShallow(transaction, partition, idFilter, containerSecurityContext);
         }
 
         /// <summary>
@@ -403,63 +355,6 @@ namespace CDP4WebServices.API.Services
             }
 
             return filteredCollection;
-        }
-
-        /// <summary>
-        /// Persist the <see cref="EngineeringModelSetup"/> containment tree to the ORM layer.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="engineeringModelSetup">
-        /// The <see cref="EngineeringModelSetup"/> instance to persist.
-        /// </param>
-        /// <returns>
-        /// True if the persistence was successful.
-        /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, EngineeringModelSetup engineeringModelSetup)
-        {
-            var results = new List<bool>();
-
-            foreach (var alias in this.ResolveFromRequestCache(engineeringModelSetup.Alias))
-            {
-                results.Add(this.AliasService.CreateConcept(transaction, partition, alias, engineeringModelSetup));
-            }
-
-            foreach (var definition in this.ResolveFromRequestCache(engineeringModelSetup.Definition))
-            {
-                results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, engineeringModelSetup));
-            }
-
-            foreach (var hyperLink in this.ResolveFromRequestCache(engineeringModelSetup.HyperLink))
-            {
-                results.Add(this.HyperLinkService.CreateConcept(transaction, partition, hyperLink, engineeringModelSetup));
-            }
-
-            foreach (var iterationSetup in this.ResolveFromRequestCache(engineeringModelSetup.IterationSetup))
-            {
-                results.Add(this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, engineeringModelSetup));
-            }
-
-            foreach (var organizationalParticipant in this.ResolveFromRequestCache(engineeringModelSetup.OrganizationalParticipant))
-            {
-                results.Add(this.OrganizationalParticipantService.CreateConcept(transaction, partition, organizationalParticipant, engineeringModelSetup));
-            }
-
-            foreach (var participant in this.ResolveFromRequestCache(engineeringModelSetup.Participant))
-            {
-                results.Add(this.ParticipantService.CreateConcept(transaction, partition, participant, engineeringModelSetup));
-            }
-
-            foreach (var requiredRdl in this.ResolveFromRequestCache(engineeringModelSetup.RequiredRdl))
-            {
-                results.Add(this.RequiredRdlService.CreateConcept(transaction, partition, requiredRdl, engineeringModelSetup));
-            }
-
-            return results.All(x => x);
         }
     }
 }

@@ -156,6 +156,7 @@ namespace CDP4Orm.Dao
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
             dto.HyperLink.AddRange(Array.ConvertAll((string[])reader["HyperLink"], Guid.Parse));
+            dto.OrganizationalParticipant.AddRange(Array.ConvertAll((string[])reader["OrganizationalParticipant"], Guid.Parse));
             dto.Owner = Guid.Parse(reader["Owner"].ToString());
             dto.Parameter.AddRange(Array.ConvertAll((string[])reader["Parameter"], Guid.Parse));
             dto.ParameterGroup.AddRange(Array.ConvertAll((string[])reader["ParameterGroup"], Guid.Parse));
@@ -228,6 +229,7 @@ namespace CDP4Orm.Dao
 
                     this.ExecuteAndLogCommand(command);
                 }
+                elementDefinition.OrganizationalParticipant.ForEach(x => this.AddOrganizationalParticipant(transaction, partition, elementDefinition.Iid, x));
                 elementDefinition.ReferencedElement.ForEach(x => this.AddReferencedElement(transaction, partition, elementDefinition.Iid, x));
             }
 
@@ -261,6 +263,12 @@ namespace CDP4Orm.Dao
 
             switch (propertyName)
             {
+                case "OrganizationalParticipant":
+                    {
+                        isCreated = this.AddOrganizationalParticipant(transaction, partition, iid, (Guid)value);
+                        break;
+                    }
+
                 case "ReferencedElement":
                     {
                         isCreated = this.AddReferencedElement(transaction, partition, iid, (Guid)value);
@@ -276,6 +284,43 @@ namespace CDP4Orm.Dao
             return isCreated;
         }
 
+        /// <summary>
+        /// Insert a new association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ElementDefinition"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="organizationalParticipant">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool AddOrganizationalParticipant(NpgsqlTransaction transaction, string partition, Guid iid, Guid organizationalParticipant)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_OrganizationalParticipant\"", partition);
+                sqlBuilder.AppendFormat(" (\"ElementDefinition\", \"OrganizationalParticipant\")");
+                sqlBuilder.Append(" VALUES (:elementDefinition, :organizationalParticipant);");
+
+                command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("organizationalParticipant", NpgsqlDbType.Uuid).Value = organizationalParticipant;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -417,6 +462,12 @@ namespace CDP4Orm.Dao
 
             switch (propertyName)
             {
+                case "OrganizationalParticipant":
+                    {
+                        isDeleted = this.DeleteOrganizationalParticipant(transaction, partition, iid, (Guid)value);
+                        break;
+                    }
+
                 case "ReferencedElement":
                     {
                         isDeleted = this.DeleteReferencedElement(transaction, partition, iid, (Guid)value);
@@ -430,6 +481,44 @@ namespace CDP4Orm.Dao
             }
 
             return isDeleted;
+        }
+
+        /// <summary>
+        /// Delete an association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ElementDefinition"/> id that is the source for each link table record.
+        /// </param> 
+        /// <param name="organizationalParticipant">
+        /// A value for which a link table record wil be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully removed.
+        /// </returns>
+        public bool DeleteOrganizationalParticipant(NpgsqlTransaction transaction, string partition, Guid iid, Guid organizationalParticipant)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"ElementDefinition_OrganizationalParticipant\"", partition);
+                sqlBuilder.Append(" WHERE \"ElementDefinition\" = :elementDefinition");
+                sqlBuilder.Append(" AND \"OrganizationalParticipant\" = :organizationalParticipant;");
+
+                command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("organizationalParticipant", NpgsqlDbType.Uuid).Value = organizationalParticipant;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
         }
 
         /// <summary>
