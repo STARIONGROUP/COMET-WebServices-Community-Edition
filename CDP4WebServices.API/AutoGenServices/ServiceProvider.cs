@@ -521,6 +521,11 @@ namespace CDP4WebServices.API.Services
         public IOrganizationService OrganizationService { get; set; }
 
         /// <summary>
+        /// Gets or sets the organizationalParticipant service.
+        /// </summary>
+        public IOrganizationalParticipantService OrganizationalParticipantService { get; set; }
+
+        /// <summary>
         /// Gets or sets the ownedStyle service.
         /// </summary>
         public IOwnedStyleService OwnedStyleService { get; set; }
@@ -1046,6 +1051,7 @@ namespace CDP4WebServices.API.Services
                             { "OrdinalScale", this.OrdinalScaleService },
                             { "OrExpression", this.OrExpressionService },
                             { "Organization", this.OrganizationService },
+                            { "OrganizationalParticipant", this.OrganizationalParticipantService },
                             { "OwnedStyle", this.OwnedStyleService },
                             { "Page", this.PageService },
                             { "Parameter", this.ParameterService },
@@ -1243,6 +1249,7 @@ namespace CDP4WebServices.API.Services
                             { "OrdinalScale", this.OrdinalScaleService },
                             { "OrExpression", this.OrExpressionService },
                             { "Organization", this.OrganizationService },
+                            { "OrganizationalParticipant", this.OrganizationalParticipantService },
                             { "OwnedStyle", this.OwnedStyleService },
                             { "Page", this.PageService },
                             { "Parameter", this.ParameterService },

@@ -517,6 +517,11 @@ namespace CDP4WebServices.API.Services
         public IOrganizationMetaInfo OrganizationMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the organizationalParticipant meta info.
+        /// </summary>
+        public IOrganizationalParticipantMetaInfo OrganizationalParticipantMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the ownedStyle meta info.
         /// </summary>
         public IOwnedStyleMetaInfo OwnedStyleMetaInfo { get; set; }
@@ -1042,6 +1047,7 @@ namespace CDP4WebServices.API.Services
                             { "OrdinalScale", this.OrdinalScaleMetaInfo },
                             { "OrExpression", this.OrExpressionMetaInfo },
                             { "Organization", this.OrganizationMetaInfo },
+                            { "OrganizationalParticipant", this.OrganizationalParticipantMetaInfo },
                             { "OwnedStyle", this.OwnedStyleMetaInfo },
                             { "Page", this.PageMetaInfo },
                             { "Parameter", this.ParameterMetaInfo },

@@ -190,6 +190,11 @@ namespace CDP4WebServices.API.Services
         public IOrganizationService OrganizationService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IOrganizationalParticipantService"/>.
+        /// </summary>
+        public IOrganizationalParticipantService OrganizationalParticipantService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IPageService"/>.
         /// </summary>
         public IPageService PageService { get; set; }
@@ -578,6 +583,7 @@ namespace CDP4WebServices.API.Services
             thingColl.AddRange(this.NestedParameterService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.NoteService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.OrganizationService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.OrganizationalParticipantService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.PageService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ParameterBaseService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ParameterGroupService.GetShallow(transaction, partition, idFilter, authorizedContext));
@@ -666,6 +672,7 @@ namespace CDP4WebServices.API.Services
             results.AddRange(this.NestedParameterService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.NoteService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.OrganizationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.OrganizationalParticipantService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.PageService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ParameterBaseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ParameterGroupService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
