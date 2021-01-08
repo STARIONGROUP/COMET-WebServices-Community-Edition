@@ -140,6 +140,7 @@ namespace CDP4Orm.Dao
         public virtual CDP4Common.DTO.EmailAddress MapToDto(NpgsqlDataReader reader)
         {
             string tempModifiedOn;
+            string tempThingPreference;
             string tempValue;
             string tempVcardType;
 
@@ -154,6 +155,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             if (valueDict.TryGetValue("Value", out tempValue))

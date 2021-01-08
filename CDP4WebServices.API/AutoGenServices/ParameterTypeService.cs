@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public ICompoundParameterTypeService CompoundParameterTypeService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="ISampledFunctionParameterTypeService"/>.
+        /// </summary>
+        public ISampledFunctionParameterTypeService SampledFunctionParameterTypeService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IScalarParameterTypeService"/>.
         /// </summary>
         public IScalarParameterTypeService ScalarParameterTypeService { get; set; }
@@ -226,6 +231,11 @@ namespace CDP4WebServices.API.Services
                 return this.CompoundParameterTypeService.UpdateConcept(transaction, partition, parameterType, container);
             }
 
+            if (parameterType.IsSameOrDerivedClass<SampledFunctionParameterType>())
+            {
+                return this.SampledFunctionParameterTypeService.UpdateConcept(transaction, partition, parameterType, container);
+            }
+
             if (parameterType.IsSameOrDerivedClass<ScalarParameterType>())
             {
                 return this.ScalarParameterTypeService.UpdateConcept(transaction, partition, parameterType, container);
@@ -267,6 +277,11 @@ namespace CDP4WebServices.API.Services
                 return this.CompoundParameterTypeService.CreateConcept(transaction, partition, parameterType, container);
             }
 
+            if (parameterType.IsSameOrDerivedClass<SampledFunctionParameterType>())
+            {
+                return this.SampledFunctionParameterTypeService.CreateConcept(transaction, partition, parameterType, container);
+            }
+
             if (parameterType.IsSameOrDerivedClass<ScalarParameterType>())
             {
                 return this.ScalarParameterTypeService.CreateConcept(transaction, partition, parameterType, container);
@@ -304,6 +319,7 @@ namespace CDP4WebServices.API.Services
 
             var parameterTypeColl = new List<Thing>();
             parameterTypeColl.AddRange(this.CompoundParameterTypeService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            parameterTypeColl.AddRange(this.SampledFunctionParameterTypeService.GetShallow(transaction, partition, idFilter, authorizedContext));
             parameterTypeColl.AddRange(this.ScalarParameterTypeService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(parameterTypeColl, transaction, partition, idFilter);
@@ -337,6 +353,7 @@ namespace CDP4WebServices.API.Services
 
             var results = new List<Thing>();
             results.AddRange(this.CompoundParameterTypeService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.SampledFunctionParameterTypeService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ScalarParameterTypeService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             return results;
         }
