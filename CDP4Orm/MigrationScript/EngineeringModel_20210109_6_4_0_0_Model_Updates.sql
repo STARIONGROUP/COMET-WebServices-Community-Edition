@@ -193,8 +193,6 @@ CREATE TRIGGER LogEntryChangelogItem_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
-$BODY$
-  LANGUAGE plpgsql VOLATILE;
 CREATE OR REPLACE FUNCTION "SchemaName_Replace"."LogEntryChangelogItem_Data" ()
     RETURNS SETOF "SchemaName_Replace"."LogEntryChangelogItem" AS
 $BODY$
@@ -226,9 +224,9 @@ ELSE
 END IF;
 
 END
-
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid_Data" ()
     RETURNS SETOF "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" AS
 $BODY$
@@ -262,6 +260,7 @@ END IF;
 END
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid_Data" ()
     RETURNS SETOF "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" AS
 $BODY$
@@ -293,6 +292,10 @@ ELSE
 END IF;
 
 END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+DROP VIEW "SchemaName_Replace"."ModelLogEntry_View";
 
 CREATE OR REPLACE VIEW "SchemaName_Replace"."ModelLogEntry_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ModelLogEntry"."ValueTypeDictionary" AS "ValueTypeSet",

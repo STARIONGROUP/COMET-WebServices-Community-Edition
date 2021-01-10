@@ -572,8 +572,6 @@ CREATE TRIGGER LogEntryChangelogItem_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
-$BODY$
-  LANGUAGE plpgsql VOLATILE;
 CREATE OR REPLACE FUNCTION "SiteDirectory"."SampledFunctionParameterType_Data" ()
     RETURNS SETOF "SiteDirectory"."SampledFunctionParameterType" AS
 $BODY$
@@ -607,6 +605,7 @@ END IF;
 END
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."IndependentParameterTypeAssignment_Data" ()
     RETURNS SETOF "SiteDirectory"."IndependentParameterTypeAssignment" AS
 $BODY$
@@ -640,6 +639,7 @@ END IF;
 END
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."DependentParameterTypeAssignment_Data" ()
     RETURNS SETOF "SiteDirectory"."DependentParameterTypeAssignment" AS
 $BODY$
@@ -671,9 +671,9 @@ ELSE
 END IF;
 
 END
-
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."EngineeringModelSetup_Data" ()
     RETURNS SETOF "SiteDirectory"."EngineeringModelSetup" AS
 $BODY$
@@ -705,9 +705,9 @@ ELSE
 END IF;
 
 END
-
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."OrganizationalParticipant_Data" ()
     RETURNS SETOF "SiteDirectory"."OrganizationalParticipant" AS
 $BODY$
@@ -739,9 +739,9 @@ ELSE
 END IF;
 
 END
-
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."LogEntryChangelogItem_Data" ()
     RETURNS SETOF "SiteDirectory"."LogEntryChangelogItem" AS
 $BODY$
@@ -773,9 +773,9 @@ ELSE
 END IF;
 
 END
-
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Data" ()
     RETURNS SETOF "SiteDirectory"."SiteLogEntry_AffectedDomainIid" AS
 $BODY$
@@ -809,6 +809,7 @@ END IF;
 END
 $BODY$
   LANGUAGE plpgsql VOLATILE;
+
 CREATE OR REPLACE FUNCTION "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Data" ()
     RETURNS SETOF "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" AS
 $BODY$
@@ -840,6 +841,8 @@ ELSE
 END IF;
 
 END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
 
 CREATE VIEW "SiteDirectory"."SampledFunctionParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "SampledFunctionParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
@@ -928,7 +931,9 @@ CREATE VIEW "SiteDirectory"."DependentParameterTypeAssignment_View" AS
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid");
 
- CREATE OR REPLACE VIEW "SiteDirectory"."EngineeringModelSetup_View" AS
+DROP VIEW "SiteDirectory"."EngineeringModelSetup_View";
+
+CREATE OR REPLACE VIEW "SiteDirectory"."EngineeringModelSetup_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "EngineeringModelSetup"."ValueTypeDictionary" AS "ValueTypeSet",
 	"EngineeringModelSetup"."Container",
 	NULL::bigint AS "Sequence",
@@ -1005,7 +1010,9 @@ CREATE VIEW "SiteDirectory"."OrganizationalParticipant_View" AS
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid");
 
-CREATE OR RELACE VIEW "SiteDirectory"."SiteLogEntry_View" AS
+DROP VIEW "SiteDirectory"."SiteLogEntry_View";
+
+CREATE OR REPLACE VIEW "SiteDirectory"."SiteLogEntry_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "SiteLogEntry"."ValueTypeDictionary" AS "ValueTypeSet",
 	"SiteLogEntry"."Container",
 	NULL::bigint AS "Sequence",

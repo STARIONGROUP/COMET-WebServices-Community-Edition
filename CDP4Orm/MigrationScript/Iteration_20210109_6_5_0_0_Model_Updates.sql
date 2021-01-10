@@ -52,8 +52,6 @@ CREATE TRIGGER elementdefinition_organizationalparticipant_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('ElementDefinition', 'SchemaName_Replace');
 
-$BODY$
-  LANGUAGE plpgsql VOLATILE;
 CREATE OR REPLACE FUNCTION "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant_Data" ()
     RETURNS SETOF "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" AS
 $BODY$
@@ -85,6 +83,10 @@ ELSE
 END IF;
 
 END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+DROP VIEW "SchemaName_Replace"."ElementDefinition_View";
 
 CREATE OR REPLACE VIEW "SchemaName_Replace"."ElementDefinition_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ElementBase"."ValueTypeDictionary" || "ElementDefinition"."ValueTypeDictionary" AS "ValueTypeSet",
