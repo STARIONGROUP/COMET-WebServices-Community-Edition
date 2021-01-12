@@ -293,6 +293,9 @@ CREATE TRIGGER organizationalparticipant_apply_revision
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup" ADD COLUMN "DefaultOrganizationalParticipant" uuid;
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup" ADD CONSTRAINT "EngineeringModelSetup_FK_DefaultOrganizationalParticipant" FOREIGN KEY ("DefaultOrganizationalParticipant") REFERENCES "SiteDirectory"."OrganizationalParticipant" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
 
+-- update audit table
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" ADD COLUMN "DefaultOrganizationalParticipant" uuid;
+
 -- Class OrganizationalParticipant derives from Thing
 ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD CONSTRAINT "OrganizationalParticipantDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 -- OrganizationalParticipant.Organization is an association to Organization: [1..1]-[1..1]
