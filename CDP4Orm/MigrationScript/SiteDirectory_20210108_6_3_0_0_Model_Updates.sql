@@ -295,6 +295,17 @@ ALTER TABLE "SiteDirectory"."EngineeringModelSetup" ADD CONSTRAINT "EngineeringM
 
 -- update audit table
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" ADD COLUMN "DefaultOrganizationalParticipant" uuid;
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" 
+  ADD COLUMN "Action_New" character(1),
+  ADD COLUMN "Actor_New" uuid;
+
+UPDATE "SiteDirectory"."EngineeringModelSetup_Audit" SET "Action_New"="Action", "Actor_New"="Actor";
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" DROP COLUMN "Action" CASCADE, DROP COLUMN "Actor" CASCADE;
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" RENAME COLUMN "Action_New" to "Action";
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" RENAME COLUMN "Actor_New" to "Actor";
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" ALTER COLUMN "Action" SET NOT NULL;
 
 -- Class OrganizationalParticipant derives from Thing
 ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD CONSTRAINT "OrganizationalParticipantDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
