@@ -71,15 +71,21 @@ namespace CDP4Orm.Dao
             {
                 beforeWrite = beforeWrite && base.Write(transaction, partition, relationship, container);
 
+                var valueTypeDictionaryContents = new Dictionary<string, string>
+                {
+                    { "Name", !this.IsDerived(relationship, "Name") ? relationship.Name.Escape() : null },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Relationship\"", partition);
-                    sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"Owner\")");
-                    sqlBuilder.AppendFormat(" VALUES (:iid, :container, :owner);");
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"Owner\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :owner);");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = relationship.Iid;
+                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                     command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(relationship, "Owner") ? relationship.Owner : Utils.NullableValue(null);
 
@@ -202,15 +208,21 @@ namespace CDP4Orm.Dao
             {
                 beforeUpdate = beforeUpdate && base.Update(transaction, partition, relationship, container);
 
+                var valueTypeDictionaryContents = new Dictionary<string, string>
+                {
+                    { "Name", !this.IsDerived(relationship, "Name") ? relationship.Name.Escape() : null },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Relationship\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"Container\", \"Owner\")");
-                    sqlBuilder.AppendFormat(" = (:container, :owner)");
+                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Owner\")");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :owner)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = relationship.Iid;
+                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                     command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(relationship, "Owner") ? relationship.Owner : Utils.NullableValue(null);
 

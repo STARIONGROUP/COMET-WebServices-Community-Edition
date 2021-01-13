@@ -140,6 +140,7 @@ namespace CDP4Orm.Dao
         public virtual CDP4Common.DTO.BinaryRelationship MapToDto(NpgsqlDataReader reader)
         {
             string tempModifiedOn;
+            string tempName;
             string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -158,6 +159,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
+            }
+
+            if (valueDict.TryGetValue("Name", out tempName) && tempName != null)
+            {
+                dto.Name = tempName.UnEscape();
             }
 
             if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
