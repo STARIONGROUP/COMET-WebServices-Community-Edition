@@ -160,10 +160,15 @@ namespace CDP4Orm.Dao
         /// </param>
         private void ExtractExistingSaltToValueDictionary(NpgsqlTransaction transaction, string partition, Person person, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
+            if(person == null)
+            {
+                throw new ArgumentNullException(nameof(person));
+            }
+
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Person_View\"", partition);
+                sqlBuilder.AppendFormat("SELECT \"ValueTypeSet\" FROM \"{0}\".\"Person_View\"", partition);
 
                 if (person != null)
                 {
