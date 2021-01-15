@@ -77,6 +77,11 @@ namespace CDP4Orm.Dao
                 this.ExtractPasswordFromTokenizedString(person);
                 this.ApplyPasswordChange(person, valueTypeDictionaryAdditions);
             }
+            else
+            {
+                // if password is not being changed, salt should be re-persisted
+                this.ExtractExistingSaltToValueDictionary(transaction, partition, person, valueTypeDictionaryAdditions);
+            }
 
             isHandled = false;
             return true;
@@ -135,6 +140,64 @@ namespace CDP4Orm.Dao
             var personObject = this.Read(transaction, partition).SingleOrDefault(person => person.Iid == personIid);
 
             return personObject != null ? personObject.GivenName : null;
+        }
+
+        /// <summary>
+        /// Extracts the salt property from the hstore in the <see cref="Person"/> beiung updated and adds it to the the valueType dictionary
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="person">The relevant <see cref="Person"/></param>
+        /// <param name="valueTypeDictionaryAdditions">
+        /// This dictionary instance can be used to add additional value (non reference) variables that are to be persisted as a HSTORE implementation together with the supplied <see cref="Thing"/> instance.
+        /// Developers are required to take care to add property keys that are not already in the ValueTypeDictionary that is managed in the respective generated partial class.
+        /// The supplied values will be persisted as is and thus must be in a valid format (escaped) that can be persisted to SQL.
+        /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again.
+        /// </param>
+        private void ExtractExistingSaltToValueDictionary(NpgsqlTransaction transaction, string partition, Person person, Dictionary<string, string> valueTypeDictionaryAdditions)
+        {
+            if(person == null)
+            {
+                throw new ArgumentNullException(nameof(person));
+            }
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("SELECT \"ValueTypeSet\" FROM \"{0}\".\"Person_View\"", partition);
+
+                if (person != null)
+                {
+                    sqlBuilder.Append(" WHERE \"Iid\" =:id");
+                    command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = person.Iid;
+                }
+
+                sqlBuilder.Append(";");
+
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+                command.CommandText = sqlBuilder.ToString();
+
+                // log the sql command 
+                this.LogCommand(command);
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var valueDict = (Dictionary<string, string>) reader["ValueTypeSet"];
+
+                        if (valueDict.TryGetValue("Salt", out var existingSalt))
+                        {
+                            valueTypeDictionaryAdditions.Add("Salt", existingSalt.UnEscape());
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
