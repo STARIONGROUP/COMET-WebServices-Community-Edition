@@ -67,6 +67,11 @@ namespace CDP4WebServices.API.Services.Authentication
         public IParticipantPermissionDao ParticipantPermissionDao { get; set; }
 
         /// <summary>
+        /// Gets or sets the OrganizationalParticipationDao
+        /// </summary>
+        public IOrganizationalParticipantDao OrganizationalParticipantDao { get; set; }
+
+        /// <summary>
         /// Gets or sets the authentication dao.
         /// </summary>
         public IAuthenticationDao AuthenticationDao { get; set; }
@@ -109,7 +114,7 @@ namespace CDP4WebServices.API.Services.Authentication
         {
             var creds = credentials as Credentials;
 
-            if (creds == null || creds.Person == null || creds.EngineeringModelSetup == null)
+            if (creds?.Person == null || creds.EngineeringModelSetup == null)
             {
                 return;
             }
@@ -124,6 +129,26 @@ namespace CDP4WebServices.API.Services.Authentication
             creds.ParticipantPermissions = this.GetParticipantPermissions(transaction, participant);
             creds.DomainOfExpertise = this.GetSelectedDomain(transaction, participant);
             creds.IsParticipant = true;
+
+            // take care of organizational participation
+            // reset to default
+            creds.OrganizationalParticipant = null;
+            creds.IsDefaultOrganizationalParticipant = false;
+
+            if (creds.EngineeringModelSetup.OrganizationalParticipant.Any() && creds.OrganizationIid != null && creds.OrganizationalParticipants.Any())
+            {
+                // transient settings for the particular EMS
+                // find the org participant
+                var organizationalParticipantIid = creds.EngineeringModelSetup.OrganizationalParticipant.Intersect(creds.OrganizationalParticipants.Select(op => op.Iid)).SingleOrDefault();
+
+                if (organizationalParticipantIid == Guid.Empty)
+                {
+                    return;
+                }
+
+                creds.OrganizationalParticipant = creds.OrganizationalParticipants.First(op => op.Iid.Equals(organizationalParticipantIid));
+                creds.IsDefaultOrganizationalParticipant = creds.OrganizationalParticipant.Iid.Equals(creds.EngineeringModelSetup.DefaultOrganizationalParticipant);
+            }
         }
 
         /// <summary>
@@ -190,7 +215,7 @@ namespace CDP4WebServices.API.Services.Authentication
         /// The <see cref="Participant"/> to resolve permissions for.
         /// </param>
         /// <returns>
-        /// The <see cref="IEnumerable{ParticipantPermission}"/> of the <see cref="ParticipantRole"/> connected to this 
+        /// The <see cref="IEnumerable{ParticipantPermission}"/> of the <see cref="ParticipantRole"/> connected to this
         /// <see cref="AuthenticationPerson"/> in the supplied <see cref="EngineeringModelSetup"/>.
         /// </returns>
         private IEnumerable<ParticipantPermission> GetParticipantPermissions(NpgsqlTransaction transaction, Participant participant)
@@ -233,14 +258,46 @@ namespace CDP4WebServices.API.Services.Authentication
 
             Logger.Trace("Info {0} was authenticated", person.UserName);
 
+            var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
+
+            var personOrganizationalParticipants = new List<OrganizationalParticipant>();
+
+            // get org participation if the models have it enabled and person is part of an organization
+            if (allOrganizationalParticipants.Any() && person.Organization != null)
+            {
+                personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(person.Organization.Value, allOrganizationalParticipants, transaction);
+            }
+
             return new Credentials
             {
                 UserName = person.UserName,
                 Person = person,
                 PersonPermissions = personPermissions,
                 ParticipantPermissions = new List<ParticipantPermission>(),
-                EngineeringModelSetups = engineeringModelSetups
+                EngineeringModelSetups = engineeringModelSetups,
+                OrganizationIid = person.Organization,
+                OrganizationalParticipants = personOrganizationalParticipants
             };
+        }
+
+        /// <summary>
+        /// Returns the list of OrganizationalParticipants relevant to the Person for all EngineeringModelSetups.
+        /// </summary>
+        /// <param name="personOrganization">The organization of the person.</param>
+        /// <param name="allOrganizationalParticipants">The list of all Organizationa Participant Iids</param>
+        /// <param name="transaction">The transaction</param>
+        /// <returns>The list of all applicable OrganizationalParticipations</returns>
+        private List<OrganizationalParticipant> GetPersonOrganizationalParticipants(Guid personOrganization, List<Guid> allOrganizationalParticipants, NpgsqlTransaction transaction)
+        {
+            try
+            {
+                return this.OrganizationalParticipantDao.Read(transaction, "SiteDirectory", allOrganizationalParticipants).Where(op => op.Organization.Equals(personOrganization)).ToList();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "There was an error while retrieving the person's organizational participation");
+                return null;
+            }
         }
 
         /// <summary>

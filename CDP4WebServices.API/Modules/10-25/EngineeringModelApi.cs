@@ -114,6 +114,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the person resolver service.
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
+
+        /// <summary>
+        /// Gets or sets the obfuscation service.
+        /// </summary>
+        public IObfuscationService ObfuscationService { get; set; }
         
         /// <summary>
         /// Parse the url segments and return the data as serialized JSON
@@ -213,8 +218,20 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 transaction.Commit();
-                
+
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+
+                // obfuscate if needed
+                if (modelSetup.OrganizationalParticipant.Any())
+                {
+                    sw = new Stopwatch();
+                    sw.Start();
+                    Logger.Info("Model has Organizational Participation assigned. Obfuscation enabled.", requestToken, sw.ElapsedMilliseconds);
+
+                    this.ObfuscationService.ObfuscateResponse(resourceResponse, credentials);
+
+                    Logger.Info("{0} obfuscation completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                }
 
                 var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
                 if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
