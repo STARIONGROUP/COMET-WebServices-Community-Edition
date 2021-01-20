@@ -3,7 +3,7 @@
 //    Copyright (c) 2015-2021 RHEA System S.A.
 // 
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski,
-//    Ahmed Ahmed
+//                 Ahmed Abulwafa Ahmed
 // 
 //    This file is part of CDP4 Web Services Community Edition.
 //    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -78,13 +78,15 @@ namespace CDP4WebServices.API.Services.Authorization
             var parameterGroups = resourceResponse.OfType<ParameterGroup>().ToList();
             var definitions = resourceResponse.OfType<Definition>().ToList();
             var citations = resourceResponse.OfType<Citation>().ToList();
+            var aliases = resourceResponse.OfType<Alias>().ToList();
+            var hyperlinks = resourceResponse.OfType<HyperLink>().ToList();
 
             if (credentials.OrganizationalParticipant == null)
             {
                 // the member is not part of any included organizations and thus all element definitions are obscured
                 foreach (var elementDefinition in elementDefinitions)
                 {
-                    this.ObfuscateElementDefinition(elementDefinition, parameters, parameterSubscriptions, parameterValueSets, parameterSubscriptionValueSets, elementUsages, parameterOverrides, parameterOverrideValueSets, parameterGroups, new List<Guid>(), definitions, citations);
+                    this.ObfuscateElementDefinition(elementDefinition, parameters, parameterSubscriptions, parameterValueSets, parameterSubscriptionValueSets, elementUsages, parameterOverrides, parameterOverrideValueSets, parameterGroups, new List<Guid>(), definitions, citations, aliases, hyperlinks);
                 }
 
                 return;
@@ -95,7 +97,7 @@ namespace CDP4WebServices.API.Services.Authorization
 
             foreach (var forbiddenElementDefinition in forbiddenElementDefinitions)
             {
-                this.ObfuscateElementDefinition(forbiddenElementDefinition, parameters, parameterSubscriptions, parameterValueSets, parameterSubscriptionValueSets, elementUsages, parameterOverrides, parameterOverrideValueSets, parameterGroups, allowedElementDefinitions, definitions, citations);
+                this.ObfuscateElementDefinition(forbiddenElementDefinition, parameters, parameterSubscriptions, parameterValueSets, parameterSubscriptionValueSets, elementUsages, parameterOverrides, parameterOverrideValueSets, parameterGroups, allowedElementDefinitions, definitions, citations, aliases, hyperlinks);
             }
         }
 
@@ -117,6 +119,8 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <param name="allowedElementDefinitions">The list of allowed <see cref="ElementDefinition" /> Iids</param>
         /// <param name="definitions">The list of all <see cref="Definition" />s in the response</param>
         /// <param name="citations">The list of all <see cref="Citation" />s in the response</param>
+        /// <param name="aliases">The list of all <see cref="Alias" />s in the response</param>
+        /// <param name="hyperlinks">The list of all <see cref="HyperLink" />s in the response</param>
         private void ObfuscateElementDefinition(
             ElementDefinition thing,
             List<Parameter> parameters,
@@ -129,7 +133,9 @@ namespace CDP4WebServices.API.Services.Authorization
             List<ParameterGroup> parameterGroups,
             List<Guid> allowedElementDefinitions,
             List<Definition> definitions,
-            List<Citation> citations)
+            List<Citation> citations,
+            List<Alias> aliases,
+            List<HyperLink> hyperlinks)
         {
             // obfuscate own properties
             thing.Name = "Hidden Element Definition";
@@ -192,7 +198,7 @@ namespace CDP4WebServices.API.Services.Authorization
                     continue;
                 }
 
-                this.ObfuscateElementUsage(usage, parameterOverrides, parameterOverrideValueSets, definitions, citations);
+                this.ObfuscateElementUsage(usage, parameterOverrides, parameterOverrideValueSets, definitions, citations, aliases, hyperlinks);
             }
 
             // obfuscate definitions
@@ -206,6 +212,32 @@ namespace CDP4WebServices.API.Services.Authorization
                 }
 
                 this.ObfuscateDefinition(definition, citations);
+            }
+
+            // obfuscate alias
+            foreach (var aliasIid in thing.Alias)
+            {
+                var alias = aliases.FirstOrDefault(d => d.Iid.Equals(aliasIid));
+
+                if (alias == null)
+                {
+                    continue;
+                }
+
+                this.ObfuscateAlias(alias);
+            }
+
+            // obfuscate hyperlink
+            foreach (var hyperlinkIid in thing.HyperLink)
+            {
+                var hyperlink = hyperlinks.FirstOrDefault(d => d.Iid.Equals(hyperlinkIid));
+
+                if (hyperlink == null)
+                {
+                    continue;
+                }
+
+                this.ObfuscateHyperlink(hyperlink);
             }
 
             // obfuscate parameter groups
@@ -232,6 +264,25 @@ namespace CDP4WebServices.API.Services.Authorization
         }
 
         /// <summary>
+        /// Obfuscates an <see cref="Alias" /> object
+        /// </summary>
+        /// <param name="thing">The <see cref="Alias" /> to obfuscate.</param>
+        private void ObfuscateAlias(Alias thing)
+        {
+            thing.Content = "Hidden Alias";
+        }
+
+        /// <summary>
+        /// Obfuscates an <see cref="HyperLink" /> object
+        /// </summary>
+        /// <param name="thing">The <see cref="HyperLink" /> to obfuscate.</param>
+        private void ObfuscateHyperlink(HyperLink thing)
+        {
+            thing.Content = "Hidden Alias";
+            thing.Uri = "Hidden Uri";
+        }
+
+        /// <summary>
         /// Obfuscates an <see cref="CDP4Common.DTO.ElementUsage" /> object
         /// </summary>
         /// <param name="thing">The <see cref="CDP4Common.DTO.ElementUsage" /> to obfuscate.</param>
@@ -239,11 +290,15 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <param name="parameterOverrideValueSets">The list of all <see cref="ParameterOverrideValueSet" />s in the response</param>
         /// <param name="definitions">The list of all <see cref="Definition" />s in the response</param>
         /// <param name="citations">The list of all <see cref="Citation" />s in the response</param>
+        /// <param name="aliases">The list of all <see cref="Alias" />s in the response</param>
+        /// <param name="hyperlinks">The list of all <see cref="HyperLink" />s in the response</param>
         private void ObfuscateElementUsage(ElementUsage thing,
             List<ParameterOverride> parameterOverrides,
             List<ParameterOverrideValueSet> parameterOverrideValueSets,
             List<Definition> definitions,
-            List<Citation> citations)
+            List<Citation> citations,
+            List<Alias> aliases,
+            List<HyperLink> hyperlinks)
         {
             thing.Name = "Hidden Element Usage";
             thing.ShortName = "hiddenElementUsage";
@@ -282,6 +337,32 @@ namespace CDP4WebServices.API.Services.Authorization
                 }
 
                 this.ObfuscateDefinition(definition, citations);
+            }
+
+            // obfuscate alias
+            foreach (var aliasIid in thing.Alias)
+            {
+                var alias = aliases.FirstOrDefault(d => d.Iid.Equals(aliasIid));
+
+                if (alias == null)
+                {
+                    continue;
+                }
+
+                this.ObfuscateAlias(alias);
+            }
+
+            // obfuscate hyperlink
+            foreach (var hyperlinkIid in thing.HyperLink)
+            {
+                var hyperlink = hyperlinks.FirstOrDefault(d => d.Iid.Equals(hyperlinkIid));
+
+                if (hyperlink == null)
+                {
+                    continue;
+                }
+
+                this.ObfuscateHyperlink(hyperlink);
             }
         }
 
