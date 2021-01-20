@@ -38,7 +38,8 @@ namespace CDP4WebServices.API.Services.Authorization
     using NLog;
     
     using Npgsql;
-    
+
+    using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
@@ -70,6 +71,16 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets or sets the request utils for this request.
         /// </summary>
         public IRequestUtils RequestUtils { get; set; }
+
+        /// <summary>
+        /// Gets or sets the service registry.
+        /// </summary>
+        public IServiceProvider ServiceProvider { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IOrganizationalParticipationResolverService"/>.
+        /// </summary>
+        public IOrganizationalParticipationResolverService OrganizationalParticipationResolverService { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="IAccessRightKindService"/> for this request
@@ -350,7 +361,52 @@ namespace CDP4WebServices.API.Services.Authorization
                 return false;
             }
 
-            // Get the person's permission and if found use it. If not, use the default.
+            // obfuscation check. Regardless of other things, if a Thing is obfuscated for person, disallow write
+            if (this.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && (
+                    thing.ClassKind == ClassKind.ElementDefinition ||
+                    thing.ClassKind == ClassKind.ElementUsage ||
+                    thing.ClassKind == ClassKind.Parameter ||
+                    thing.ClassKind == ClassKind.ParameterValueSet ||
+                    thing.ClassKind == ClassKind.ParameterSubscription ||
+                    thing.ClassKind == ClassKind.ParameterSubscriptionValueSet ||
+                    thing.ClassKind == ClassKind.ParameterOverride ||
+                    thing.ClassKind == ClassKind.ParameterOverrideValueSet ||
+                    thing.ClassKind == ClassKind.Definition ||
+                    thing.ClassKind == ClassKind.Citation ||
+                    thing.ClassKind == ClassKind.Alias ||
+                    thing.ClassKind == ClassKind.HyperLink))
+            {
+                // you have no access to any element definitions or contained thing
+                if (this.Credentials.OrganizationalParticipant == null)
+                {
+                    return false;
+                }
+
+                // model is protected
+                if (!this.Credentials.IsDefaultOrganizationalParticipant)
+                {
+                    // is not default organizational participant
+                    if(thing.ClassKind == ClassKind.ElementDefinition)
+                    {
+                        // directly get the participation
+                        return ((ElementDefinition) thing).OrganizationalParticipant.Contains(this.Credentials.OrganizationalParticipant.Iid);
+                    }
+                    else
+                    {
+                        // walk up the container chain until the ElementDefinition is found
+                        var isOrganizationallyAllowed = this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipations(transaction, partition, this.Credentials.Iteration, thing, this.Credentials.OrganizationalParticipant.Iid);
+
+                        if (!isOrganizationallyAllowed)
+                        {
+                            return false;
+                        }
+
+                        // if check passes carry on with other checks
+                    }
+                }
+            }
+
+            // Get the person's participant permission and if found use it. If not, use the default.
             var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.Credentials, typeName);
 
             switch (participantAccessRightKind)

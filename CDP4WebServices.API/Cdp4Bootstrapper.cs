@@ -163,6 +163,9 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindService, IAccessRightKindService>();
 
                     // wireup permission service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<OrganizationalParticipationResolverService, IOrganizationalParticipationResolverService>();
+
+                    // wireup permission service
                     builder.RegisterTypeAsPropertyInjectedSingleton<PermissionService, IPermissionService>();
 
                     // wireup util classes

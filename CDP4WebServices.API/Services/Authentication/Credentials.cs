@@ -60,6 +60,11 @@ namespace CDP4WebServices.API.Services.Authentication
         public EngineeringModelSetup EngineeringModelSetup { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="Iteration"/>
+        /// </summary>
+        public Iteration Iteration { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="OrganizationalParticipant"/>
         /// </summary>
         public OrganizationalParticipant OrganizationalParticipant { get; set; }

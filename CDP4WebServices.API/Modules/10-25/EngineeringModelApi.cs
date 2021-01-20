@@ -354,7 +354,7 @@ namespace CDP4WebServices.API.Modules
                 // get prepared data source transaction
                 var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
-                
+
                 // the route pattern enforces that there is atleast one route segment
                 string[] routeSegments = string.Format("{0}/{1}", TopContainer, routeParams.uri)
                     .Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
@@ -365,11 +365,15 @@ namespace CDP4WebServices.API.Modules
                     this.RequestUtils);
 
                 var modelSetup = this.DetermineEngineeringModelSetup(resourceProcessor, routeSegments);
+
                 var partition = this.RequestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
+
+                var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
 
                 if (credentials != null)
                 {
                     credentials.EngineeringModelSetup = modelSetup;
+                    credentials.Iteration = iteration;
                     this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
                     credentials.IsParticipant = true;
 
@@ -544,7 +548,7 @@ namespace CDP4WebServices.API.Modules
 
             // set the transaction to default context to retrieve SiteDirectory data
             this.TransactionManager.SetDefaultContext(processor.Transaction);
-            
+
             // take first segment and try to resolve the engineering model setup for further processing
             var siteDir = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
             var requestedModelId = Utils.ParseIdentifier(routeSegments[1]);
@@ -560,6 +564,39 @@ namespace CDP4WebServices.API.Modules
             this.RequestUtils.OverrideQueryParameters = null;
 
             return (EngineeringModelSetup)modelSetups.Single();
+        }
+
+        /// <summary>
+        /// Determine the iteration based on the supplied routeSegments.
+        /// </summary>
+        /// <param name="processor">
+        /// The processor instance.
+        /// </param>
+        /// <param name="partition">The partition of the search.</param>
+        /// <param name="routeSegments">
+        /// The route segments constructed from the request path.
+        /// </param>
+        /// <returns>
+        /// The resolved <see cref="Iteration"/>.
+        /// </returns>
+        private Iteration DetermineIteration(IProcessor processor, string partition, string[] routeSegments)
+        {
+            if (routeSegments.Length >= 4 && routeSegments[2] == "iteration")
+            {
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
+
+                var requestedIterationId = Utils.ParseIdentifier(routeSegments[3]);
+                var iterations = processor.GetResource("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext).ToList();
+
+                if (iterations.Count != 1)
+                {
+                    throw new Exception("Iteration could not be resolved");
+                }
+
+                return (Iteration)iterations.Single();
+            }
+
+            return null;
         }
 
         /// <summary>
