@@ -27,7 +27,8 @@ namespace CDP4WebServices.API.Services.Authorization
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    
+    using System.Net;
+
     using Authentication;
 
     using CDP4Common.CommonData;
@@ -376,32 +377,43 @@ namespace CDP4WebServices.API.Services.Authorization
                     thing.ClassKind == ClassKind.Alias ||
                     thing.ClassKind == ClassKind.HyperLink))
             {
-                // you have no access to any element definitions or contained thing
-                if (this.Credentials.OrganizationalParticipant == null)
+                if (modifyOperation != CreateOperation)
                 {
-                    return false;
-                }
-
-                // model is protected
-                if (!this.Credentials.IsDefaultOrganizationalParticipant)
-                {
-                    // is not default organizational participant
-                    if(thing.ClassKind == ClassKind.ElementDefinition)
+                    // you have no access to any element definitions or contained thing
+                    if (this.Credentials.OrganizationalParticipant == null)
                     {
-                        // directly get the participation
-                        return ((ElementDefinition) thing).OrganizationalParticipant.Contains(this.Credentials.OrganizationalParticipant.Iid);
+                        return false;
                     }
-                    else
+
+                    // model is protected
+                    if (!this.Credentials.IsDefaultOrganizationalParticipant)
                     {
-                        // walk up the container chain until the ElementDefinition is found
-                        var isOrganizationallyAllowed = this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipations(transaction, partition, this.Credentials.Iteration, thing, this.Credentials.OrganizationalParticipant.Iid);
-
-                        if (!isOrganizationallyAllowed)
+                        // is not default organizational participant
+                        if (thing.ClassKind == ClassKind.ElementDefinition)
                         {
-                            return false;
+                            // directly get the participation
+                            return ((ElementDefinition)thing).OrganizationalParticipant.Contains(this.Credentials.OrganizationalParticipant.Iid);
                         }
+                        else
+                        {
+                            // walk up the container chain until the ElementDefinition is found
+                            var isOrganizationallyAllowed = this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipations(transaction, partition, this.Credentials.Iteration, thing, this.Credentials.OrganizationalParticipant.Iid);
 
-                        // if check passes carry on with other checks
+                            if (!isOrganizationallyAllowed)
+                            {
+                                return false;
+                            }
+
+                            // if check passes carry on with other checks
+                        }
+                    }
+                }
+                else
+                {
+                    // when creating a thing, the containment tree has to be checked, whether creation takes place in an allowed subtree. Element Definition creation is sckipped as it follows normal rules
+                    if(thing.ClassKind != ClassKind.ElementDefinition)
+                    {
+                        
                     }
                 }
             }

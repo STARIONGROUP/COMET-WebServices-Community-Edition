@@ -29,9 +29,12 @@ namespace CDP4WebServices.API.Services.Authorization
     using System;
     using System.Linq;
 
+    using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
     using Npgsql;
+
+    using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
     /// Aids in resolving the applicable <see cref="OrganizationalParticipant"/>
@@ -44,31 +47,57 @@ namespace CDP4WebServices.API.Services.Authorization
         public IElementDefinitionService ElementDefinitionService { get; set; }
 
         /// <summary>
-        /// Resolves the applicable <see cref="OrganizationalParticipant"/>s needed to edit a particulat <see cref="Thing"/>
+        /// Gets or sets the <see cref="IElementUsageService"/>
+        /// </summary>
+        public IElementUsageService ElementUsageService { get; set; }
+
+        /// <summary>
+        /// Resolves the applicable <see cref="OrganizationalParticipant"/>s needed to edit a particulat <see cref="CDP4Common.DTO.Thing"/>
         /// </summary>
         /// <param name="transaction">
         /// The transaction object.
         /// </param>
         /// <param name="iteration">The <see cref="Iteration"/></param>
-        /// <param name="thing">The <see cref="Thing"/> to compute permissions for.</param>
+        /// <param name="thing">The <see cref="CDP4Common.DTO.Thing"/> to compute permissions for.</param>
         /// <param name="organizationalParticipantIid">The Iid of OrganizationalParticipant to validate</param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        /// <returns>The list of the applicable <see cref="OrganizationalParticipant"/>s needed to edit a particulat <see cref="Thing"/></returns>
+        /// <returns>The list of the applicable <see cref="OrganizationalParticipant"/>s needed to edit a particulat <see cref="CDP4Common.DTO.Thing"/></returns>
         public bool ResolveApplicableOrganizationalParticipations(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid)
         {
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             // get all ED's shallow to determine relevant
-            var elementDefinitions = this.ElementDefinitionService.Get(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>();
+            var elementDefinitions = this.ElementDefinitionService.Get(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>().ToList();
 
             // given a participation, select only allowed EDs
-            var relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid));
+            var relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid)).ToList();
 
-            // get deep expansions only of relevant Element Definitions 
+            // get deep expansions only of relevant Element Definitions
             var fullTree = this.ElementDefinitionService.GetDeep(transaction, partition, relevantOpenDefinitions.Select(ed => ed.Iid), securityContext);
 
+            // add also element usages of allowed EDs and their contained items to list
+            var elementUsages = this.ElementUsageService.Get(transaction, partition, elementDefinitions.SelectMany(ed => ed.ContainedElement), securityContext).Cast<ElementUsage>();
+
+            // only perform usage checks if certain classkinds are checked
+            if (thing.ClassKind == ClassKind.ElementUsage ||
+                thing.ClassKind == ClassKind.ParameterOverride ||
+                thing.ClassKind == ClassKind.ParameterOverrideValueSet ||
+                thing.ClassKind == ClassKind.Definition ||
+                thing.ClassKind == ClassKind.Alias ||
+                thing.ClassKind == ClassKind.HyperLink ||
+                thing.ClassKind == ClassKind.Citation)
+            {
+                // select relevant
+                var relevatElementUsages = elementUsages.Where(eu => relevantOpenDefinitions.Select(ed => ed.Iid).Contains(eu.ElementDefinition));
+
+                // get subtrees
+                var relevantUsageSubtrees = this.ElementUsageService.GetDeep(transaction, partition, relevatElementUsages.Select(eu => eu.Iid), securityContext);
+
+                //concat to ed trees
+                fullTree = fullTree.Concat(relevantUsageSubtrees);
+            }
             // if the thing we are checking exists in the trees of allowed EDs, allow it to pass
             var result = fullTree.FirstOrDefault(t => t.Iid.Equals(thing.Iid)) != null;
 
