@@ -410,10 +410,11 @@ namespace CDP4WebServices.API.Services.Authorization
                 }
                 else
                 {
-                    // when creating a thing, the containment tree has to be checked, whether creation takes place in an allowed subtree. Element Definition creation is sckipped as it follows normal rules
-                    if(thing.ClassKind != ClassKind.ElementDefinition)
+                    // on create the 
+                    // you have no access to any element definitions or contained thing, cant create anything
+                    if (this.Credentials.OrganizationalParticipant == null)
                     {
-                        
+                        return false;
                     }
                 }
             }

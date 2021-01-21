@@ -6,6 +6,8 @@
 
 namespace CDP4WebServices.API.Services.Authorization
 {
+    using CDP4WebServices.API.Services.Authentication;
+
     /// <summary>
     /// The Request Security Context interface.
     /// </summary>
@@ -25,5 +27,10 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets or sets the top container for this request context.
         /// </summary>
         string TopContainer { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Credentials
+        /// </summary>
+        Credentials Credentials { get; set; }
     }
 }

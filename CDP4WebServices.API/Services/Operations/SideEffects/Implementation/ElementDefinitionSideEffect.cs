@@ -53,6 +53,41 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
 
         /// <summary>
+        /// Allows derived classes to override and execute additional logic before a create operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        /// <returns>
+        /// Returns true if the create operation may continue, otherwise it shall be skipped.
+        /// </returns>
+        public override bool BeforeCreate(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            // inject the organizational participant of the creator to the ED before creating
+            if (securityContext.Credentials != null && securityContext.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !securityContext.Credentials.IsDefaultOrganizationalParticipant)
+            {
+                if (!thing.OrganizationalParticipant.Contains(securityContext.Credentials.OrganizationalParticipant.Iid))
+                {
+                    thing.OrganizationalParticipant.Add(securityContext.Credentials.OrganizationalParticipant.Iid);
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Allows derived classes to override and execute additional logic before a delete operation.
         /// </summary>
         /// <param name="thing">
