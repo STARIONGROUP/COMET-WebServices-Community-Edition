@@ -6,6 +6,8 @@
 
 namespace CDP4WebServices.API.Services.Authorization
 {
+    using System;
+
     using CDP4WebServices.API.Services.Authentication;
 
     /// <summary>
@@ -36,6 +38,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <summary>
         /// Gets or sets the top container for this request context.
         /// </summary>
+        [Obsolete]
         public string TopContainer { get; set; }
 
         /// <summary>

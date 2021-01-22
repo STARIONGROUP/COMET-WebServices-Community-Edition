@@ -144,6 +144,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             setupToCreate.Name = modelSetupBeforeResolve.Name;
             setupToCreate.ShortName = modelSetupBeforeResolve.ShortName;
 
+            // make sure organizationa participation is reset yet again
+            setupToCreate.OrganizationalParticipant = new List<Guid>();
+            setupToCreate.DefaultOrganizationalParticipant = null;
+
             foreach (var iterationSetup in this.originalToCopyMap.Keys.OfType<IterationSetup>().OrderBy(x => x.IterationNumber))
             {
                 var copy = (IterationSetup)this.originalToCopyMap[iterationSetup];
@@ -186,6 +190,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);            
             Logger.Debug("Copy Iteration data from {0} to {1}", sourceIterationPartition, targetIterationPartition);
             this.IterationService.CopyIteration(transaction, sourceIterationPartition, targetIterationPartition);
+
+            // wipe the organizational participations
+            this.IterationService.DeleteAllrganizationalParticipantThings(transaction, targetIterationPartition);
 
             // change id on Thing table for all other things
             Logger.Debug("Modify Identifiers of EngineeringModel {0} data", targetPartition);

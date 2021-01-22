@@ -372,6 +372,7 @@ namespace CDP4WebServices.API.Services.Authorization
                     thing.ClassKind == ClassKind.ParameterSubscriptionValueSet ||
                     thing.ClassKind == ClassKind.ParameterOverride ||
                     thing.ClassKind == ClassKind.ParameterOverrideValueSet ||
+                    thing.ClassKind == ClassKind.ParameterGroup ||
                     thing.ClassKind == ClassKind.Definition ||
                     thing.ClassKind == ClassKind.Citation ||
                     thing.ClassKind == ClassKind.Alias ||

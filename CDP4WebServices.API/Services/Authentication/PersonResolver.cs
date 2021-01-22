@@ -135,6 +135,17 @@ namespace CDP4WebServices.API.Services.Authentication
             creds.OrganizationalParticipant = null;
             creds.IsDefaultOrganizationalParticipant = false;
 
+            // recompute organizational participation
+            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, creds.Person).ToList();
+            var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
+
+            // get org participation if the models have it enabled and person is part of an organization
+            if (allOrganizationalParticipants.Any() && creds.OrganizationIid != null)
+            {
+                var personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(creds.OrganizationIid.Value, allOrganizationalParticipants, transaction);
+                creds.OrganizationalParticipants = personOrganizationalParticipants;
+            }
+
             if (creds.EngineeringModelSetup.OrganizationalParticipant.Any() && creds.OrganizationIid != null && creds.OrganizationalParticipants.Any())
             {
                 // transient settings for the particular EMS

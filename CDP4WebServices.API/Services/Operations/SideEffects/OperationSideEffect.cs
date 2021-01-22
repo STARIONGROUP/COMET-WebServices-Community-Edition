@@ -71,6 +71,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 return null;
             }
         }
+        /// <summary>
+        /// Gets or sets the <see cref="IIterationService" />
+        /// </summary>
+        public IOrganizationalParticipationResolverService OrganizationalParticipationResolverService { get; set; }
 
         /// <summary>
         /// Predicate to determine if a property will be validated.

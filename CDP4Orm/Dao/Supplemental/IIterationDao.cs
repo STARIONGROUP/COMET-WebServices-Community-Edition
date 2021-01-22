@@ -66,6 +66,13 @@ namespace CDP4Orm.Dao
         void DeleteAllIterationThings(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
+        /// Deletes all OrganizationalParticipant links
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The iteration partition</param>
+        void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string partition);
+
+        /// <summary>
         /// Move the database to the next iteration.
         /// </summary>
         /// <param name="transaction">

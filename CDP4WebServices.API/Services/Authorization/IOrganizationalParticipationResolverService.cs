@@ -54,5 +54,19 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <see cref="Thing" />
         /// </returns>
         bool ResolveApplicableOrganizationalParticipations(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid);
+
+        /// <summary>
+        /// Validates whether a create of some <see cref="Thing"/>  is allowed based on Organizational Participation
+        /// </summary>
+        /// <param name="thing">The <see cref="Thing"/> being created.</param>
+        /// <param name="container">The container of the new <see cref="Thing"/></param>
+        /// <param name="securityContext">The security context</param>
+        /// <param name="transaction">
+        /// The transaction object.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        void ValidateCreateOrganizationalParticipation(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition);
     }
 }
