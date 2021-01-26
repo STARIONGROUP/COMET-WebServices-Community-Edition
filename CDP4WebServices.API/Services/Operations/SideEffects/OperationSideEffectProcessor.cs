@@ -84,7 +84,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </returns>
         public IOperationSideEffect GetOperationSideEffect(Thing thing)
         {
-            return this.operationSideEffectMap[this.GetTypeName(thing)];
+            return this.operationSideEffectMap[GetTypeName(thing)];
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </returns>
         public bool IsSideEffectRegistered(Thing thing)
         {
-            return this.operationSideEffectMap.ContainsKey(this.GetTypeName(thing));
+            return this.operationSideEffectMap.ContainsKey(GetTypeName(thing));
         }
 
         /// <summary>
@@ -318,9 +318,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <returns>
         /// The type name of a <see cref="Thing"/>.
         /// </returns>
-        private string GetTypeName(Thing thing)
+        private static string GetTypeName(Thing thing)
         {
-            return thing != null ? thing.GetType().Name : null;
+            return thing?.GetType().Name;
         }
     }
 }
