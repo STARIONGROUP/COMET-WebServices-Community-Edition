@@ -31,6 +31,7 @@ namespace CDP4WebServices.API.Configuration
             this.Backtier = new BacktierConfig();
             this.Defaults = new DefaultsConfig();
             this.Midtier = new MidtierConfig();
+            this.EmailService = new EmailConfig();
         }
 
         /// <summary>
@@ -47,6 +48,11 @@ namespace CDP4WebServices.API.Configuration
         /// Gets or sets the back tier configuration.
         /// </summary>
         public BacktierConfig Backtier { get; set; }
+
+        /// <summary>
+        /// Gets or sets the email service configuration.
+        /// </summary>
+        public EmailConfig EmailService { get; set; }
 
         /// <summary>
         /// Gets or sets the default settings configuration.
@@ -98,6 +104,11 @@ namespace CDP4WebServices.API.Configuration
             if (appConfig.Midtier == null)
             {
                 throw new ConfigurationErrorsException("The Midtier configuration is missing.", Configpath, 0);
+            }
+
+            if (appConfig.EmailService == null)
+            {
+                throw new ConfigurationErrorsException("The Email service configuration is missing.", Configpath, 0);
             }
 
             if (appConfig.Defaults == null)

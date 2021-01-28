@@ -35,6 +35,7 @@ namespace CDP4WebServices.API
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.ContributorsLocation;
     using CDP4WebServices.API.Services.DataStore;
+    using CDP4WebServices.API.Services.Email;
     using CDP4WebServices.API.Services.FileHandling;
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -110,6 +111,7 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<UserValidator, IUserValidator>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<CDP4WebServiceAuthentication, ICDP4WebServiceAuthentication>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<MigrationService, IMigrationService>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<EmailAddressService, IEmailAddressService>();
                 });
         }
 
