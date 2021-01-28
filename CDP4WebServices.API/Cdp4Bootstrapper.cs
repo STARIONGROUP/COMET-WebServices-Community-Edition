@@ -105,9 +105,11 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<ParticipantRoleDao, IParticipantRoleDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<DomainOfExpertiseDao, IDomainOfExpertiseDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<ParticipantPermissionDao, IParticipantPermissionDao>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<OrganizationalParticipantDao, IOrganizationalParticipantDao>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonService, IPersonService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<AuthenticationPluginInjector, IAuthenticationPluginInjector>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonResolver, IPersonResolver>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ObfuscationService, IObfuscationService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<UserValidator, IUserValidator>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<CDP4WebServiceAuthentication, ICDP4WebServiceAuthentication>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<MigrationService, IMigrationService>();
@@ -161,6 +163,9 @@ namespace CDP4WebServices.API
 
                     // wireup AccessRightKind service
                     builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindService, IAccessRightKindService>();
+
+                    // wireup permission service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<OrganizationalParticipationResolverService, IOrganizationalParticipationResolverService>();
 
                     // wireup permission service
                     builder.RegisterTypeAsPropertyInjectedSingleton<PermissionService, IPermissionService>();

@@ -157,6 +157,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 }
             }
 
+            // make sure organizationa participation is not provided in the create
+            thing.OrganizationalParticipant = new List<Guid>();
+            thing.DefaultOrganizationalParticipant = null;
+
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
                 if (thing.RequiredRdl.Any())
@@ -174,7 +178,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             this.TransactionManager.SetFullAccessState(false);
 
-            // TODO set default participant(s) iids (which are not contained) for engineeringmodelsetup (task T2818 CDP4WEBSERVICES)
             return true;
         }
 
