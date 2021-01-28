@@ -87,6 +87,7 @@ namespace CDP4Orm.Dao.Authentication
 
             dto.Role = reader["Role"] is DBNull ? (Guid?)null : Guid.Parse(reader["Role"].ToString());
             dto.DefaultDomain = reader["DefaultDomain"] is DBNull? (Guid?)null : Guid.Parse(reader["DefaultDomain"].ToString());
+            dto.Organization = reader["Organization"] is DBNull ? (Guid?)null : Guid.Parse(reader["Organization"].ToString());
 
             if (valueDict.TryGetValue("IsActive", out tempIsActive))
             {

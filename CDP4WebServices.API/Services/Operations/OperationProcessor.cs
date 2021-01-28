@@ -946,6 +946,8 @@ namespace CDP4WebServices.API.Services.Operations
                 var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
+                securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+
                 var resolvedInfo = this.operationThingCache[createInfo];
 
                 // check that item doen not exist:
@@ -1099,6 +1101,7 @@ namespace CDP4WebServices.API.Services.Operations
                 var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(updateInfoKey.TypeName);
                 var service = this.ServiceProvider.MapToPersitableService(updateInfoKey.TypeName);
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
+                securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
                 var resolvedInfo = this.operationThingCache[updateInfoKey];
 

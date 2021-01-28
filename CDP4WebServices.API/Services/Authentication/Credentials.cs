@@ -6,6 +6,7 @@
 
 namespace CDP4WebServices.API.Services.Authentication
 {
+    using System;
     using System.Collections.Generic;
     using CDP4Authentication;
     using CDP4Common.DTO;
@@ -59,6 +60,22 @@ namespace CDP4WebServices.API.Services.Authentication
         public EngineeringModelSetup EngineeringModelSetup { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="Iteration"/>
+        /// </summary>
+        public Iteration Iteration { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="OrganizationalParticipant"/>
+        /// </summary>
+        public OrganizationalParticipant OrganizationalParticipant { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the <see cref="Person"/> has a <see cref="OrganizationalParticipant"/> connected to his/her <see cref="Organization"/> and that
+        /// <see cref="OrganizationalParticipant"/> being the default for the <see cref="EngineeringModelSetup"/>.
+        /// </summary>
+        public bool IsDefaultOrganizationalParticipant { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether the <see cref="Person"/> has a <see cref="Participant"/> connected to himself for the <see cref="EngineeringModelSetup"/>.
         /// </summary>
         public bool IsParticipant { get; set; }
@@ -75,6 +92,16 @@ namespace CDP4WebServices.API.Services.Authentication
         /// Gets or sets the active <see cref="DomainOfExpertise"/> that this <see cref="Participant"/> has.
         /// </summary>
         public DomainOfExpertise DomainOfExpertise { get; set; }
+
+        /// <summary>
+        /// Gets or sets the active <see cref="Guid"/> of the <see cref="Organization"/> this <see cref="Person"/> belongs to.
+        /// </summary>
+        public Guid? OrganizationIid { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="List{T}"/> of <see cref="OrganizationalParticipant"/>s that this <see cref="Person"/> is applicable to.
+        /// </summary>
+        public List<OrganizationalParticipant> OrganizationalParticipants { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="List{T}"/> of <see cref="EngineeringModelSetup"/>s that this <see cref="Person"/> is a <see cref="Participant"/> of.

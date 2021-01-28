@@ -67,5 +67,10 @@ namespace CDP4Authentication
         /// Gets or sets the default domain.
         /// </summary>
         public Guid? DefaultDomain { get; set; }
+
+        /// <summary>
+        /// Gets or sets the organization.
+        /// </summary>
+        public Guid? Organization { get; set; }
     }
 }

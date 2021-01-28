@@ -80,6 +80,26 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Deletes all OrganizationalParticipant links
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The iteration partition</param>
+        public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string partition)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+
+                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"ElementDefinition_OrganizationalParticipant\";", partition);
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+                this.ExecuteAndLogCommand(command);
+            }
+        }
+
+        /// <summary>
         /// Move the database to the next iteration.
         /// </summary>
         /// <param name="transaction">
