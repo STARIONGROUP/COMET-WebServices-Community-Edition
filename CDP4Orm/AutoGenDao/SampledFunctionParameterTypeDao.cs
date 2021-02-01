@@ -161,8 +161,6 @@ namespace CDP4Orm.Dao
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
             dto.HyperLink.AddRange(Array.ConvertAll((string[])reader["HyperLink"], Guid.Parse));
             dto.IndependentParameterType.AddRange(Utils.ParseOrderedList<Guid>(reader["IndependentParameterType"] as string[,]));
-            dto.InterpolationPeriod.AddRange((string[])reader["InterpolationPeriod"]);
-            
 
             if (valueDict.TryGetValue("DegreeOfInterpolation", out tempDegreeOfInterpolation) && tempDegreeOfInterpolation != null)
             {
