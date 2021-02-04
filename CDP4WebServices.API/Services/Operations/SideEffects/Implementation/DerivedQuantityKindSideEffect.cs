@@ -31,6 +31,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.Types;
 
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Authorization;
@@ -94,7 +95,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 return;
             }
 
-            var quantityKindFactorIids = (List<Guid>)rawUpdateInfo["QuantityKindFactor"];
+            var quantityKindFactorIids = (List<OrderedItem>)rawUpdateInfo["QuantityKindFactor"];
             var referenceDataLibrary = (ReferenceDataLibrary)container;
 
             // Check that all referenced QuantityKinds are from the same RDL chain
@@ -109,7 +110,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
                 .Select(x => x.Iid));
 
             var quantityKindFactors = this.QuantityKindFactorService
-                .Get(transaction, partition, quantityKindFactorIids, securityContext)
+                .Get(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext)
                 .Cast<QuantityKindFactor>();
 
             var quantityKinds = this.QuantityKindService
