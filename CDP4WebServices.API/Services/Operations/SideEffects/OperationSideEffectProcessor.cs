@@ -8,9 +8,12 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.MetaInfo;
+
     using CDP4WebServices.API.Services.Authorization;
     using NLog;
     using Npgsql;
@@ -29,6 +32,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// The operation side effect map.
         /// </summary>
         private readonly Dictionary<string, IOperationSideEffect> operationSideEffectMap = new Dictionary<string, IOperationSideEffect>();
+
+        /// <summary>
+        /// Gets or sets the <see cref="IRequestUtils"/>.
+        /// </summary>
+        public IRequestUtils RequestUtils { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="OperationSideEffectProcessor"/> class. 
@@ -84,7 +92,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </returns>
         public IOperationSideEffect GetOperationSideEffect(Thing thing)
         {
-            return this.operationSideEffectMap[this.GetTypeName(thing)];
+            return this.operationSideEffectMap[GetTypeName(thing)];
         }
 
         /// <summary>
@@ -112,7 +120,35 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </returns>
         public bool IsSideEffectRegistered(Thing thing)
         {
-            return this.operationSideEffectMap.ContainsKey(this.GetTypeName(thing));
+            return this.operationSideEffectMap.ContainsKey(GetTypeName(thing));
+        }
+
+        /// <summary>
+        /// Gets all applicable side effects for the given <paramref name="thing"/> by going up the inheritance chain
+        /// and returning the associated <see cref="IOperationSideEffect"/> for each class that has defined one.
+        /// Note that this list includes the <see cref="IOperationSideEffect"/> for the given <paramref name="thing"/>
+        /// as well.
+        /// </summary>
+        /// <param name="thing">
+        /// The given <see cref="Thing"/>.
+        /// </param>
+        /// <returns>
+        /// An <see cref="IEnumerable{T}"/> of all applicable side effects.
+        /// </returns>
+        private IEnumerable<IOperationSideEffect> SideEffects(Thing thing)
+        {
+            var type = GetTypeName(thing);
+
+            do
+            {
+                if (this.IsSideEffectRegistered(type))
+                {
+                    yield return this.GetOperationSideEffect(type);
+                }
+
+                var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(type);
+                type = metaInfo.BaseType;
+            } while (!string.IsNullOrEmpty(type));
         }
 
         /// <summary>
@@ -125,12 +161,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// The property name.
         /// </param>
         /// <returns>
-        /// true if the passed in property name is to be validated,
-        /// false to skip validation
+        /// True if the passed in property name is to be validated, false to skip validation.
         /// </returns>
         public bool ValidateProperty(Thing thing, string propertyName)
         {
-            return !this.IsSideEffectRegistered(thing) || this.GetOperationSideEffect(thing).ValidateProperty(thing, propertyName);
+            return this.SideEffects(thing).All(sideEffect => sideEffect.ValidateProperty(thing, propertyName));
         }
 
         /// <summary>
@@ -152,17 +187,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// The security Context used for permission checking.
         /// </param>
         /// <returns>
-        /// Return a boolean specifying whether the operation shall be executed
+        /// Returns a boolean specifying whether the operation shall be executed.
         /// </returns>
         public bool BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (this.IsSideEffectRegistered(thing))
-            {
-                return this.GetOperationSideEffect(thing).BeforeCreate(thing, container, transaction, partition, securityContext);
-            }
-
-            // if no side-effect just return true
-            return true;
+            return this.SideEffects(thing).All(sideEffect => sideEffect.BeforeCreate(thing, container, transaction, partition, securityContext));
         }
 
         /// <summary>
@@ -188,9 +217,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public void AfterCreate(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (this.IsSideEffectRegistered(thing))
+            foreach (var sideEffect in this.SideEffects(thing))
             {
-                this.GetOperationSideEffect(thing).AfterCreate(thing, container, originalThing, transaction, partition, securityContext);
+                sideEffect.AfterCreate(thing, container, originalThing, transaction, partition, securityContext);
             }
         }
 
@@ -219,9 +248,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public void BeforeUpdate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            if (this.IsSideEffectRegistered(thing))
+            foreach (var sideEffect in this.SideEffects(thing))
             {
-                this.GetOperationSideEffect(thing).BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+                sideEffect.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
             }
         }
 
@@ -248,9 +277,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public void AfterUpdate(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (this.IsSideEffectRegistered(thing))
+            foreach (var sideEffect in this.SideEffects(thing))
             {
-                this.GetOperationSideEffect(thing).AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+                sideEffect.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
             }
         }
 
@@ -274,9 +303,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public void BeforeDelete(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (this.IsSideEffectRegistered(thing))
+            foreach (var sideEffect in this.SideEffects(thing))
             {
-                this.GetOperationSideEffect(thing).BeforeDelete(thing, container, transaction, partition, securityContext);
+                sideEffect.BeforeDelete(thing, container, transaction, partition, securityContext);
             }
         }
 
@@ -303,9 +332,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public void AfterDelete(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            if (this.IsSideEffectRegistered(thing))
+            foreach (var sideEffect in this.SideEffects(thing))
             {
-                this.GetOperationSideEffect(thing).AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
+                sideEffect.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
             }
         }
 
@@ -318,9 +347,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <returns>
         /// The type name of a <see cref="Thing"/>.
         /// </returns>
-        private string GetTypeName(Thing thing)
+        private static string GetTypeName(Thing thing)
         {
-            return thing != null ? thing.GetType().Name : null;
+            return thing?.GetType().Name;
         }
     }
 }
