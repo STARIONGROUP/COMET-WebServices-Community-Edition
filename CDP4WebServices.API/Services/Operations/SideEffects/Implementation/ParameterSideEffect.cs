@@ -185,6 +185,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
+            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
+
             this.ValidateParameterTypeAndScale(thing, transaction, securityContext);
             return true;
         }

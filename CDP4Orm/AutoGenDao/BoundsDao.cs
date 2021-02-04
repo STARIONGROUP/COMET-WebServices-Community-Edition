@@ -142,6 +142,7 @@ namespace CDP4Orm.Dao
             string tempHeight;
             string tempModifiedOn;
             string tempName;
+            string tempThingPreference;
             string tempWidth;
             string tempX;
             string tempY;
@@ -167,6 +168,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Name", out tempName))
             {
                 dto.Name = tempName.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             if (valueDict.TryGetValue("Width", out tempWidth))

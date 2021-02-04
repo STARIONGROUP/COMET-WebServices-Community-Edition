@@ -146,6 +146,7 @@ namespace CDP4Orm.Dao
             string tempShortName;
             string tempSourceEngineeringModelSetupIid;
             string tempStudyPhase;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -154,11 +155,13 @@ namespace CDP4Orm.Dao
             var dto = new CDP4Common.DTO.EngineeringModelSetup(iid, revisionNumber);
             dto.ActiveDomain.AddRange(Array.ConvertAll((string[])reader["ActiveDomain"], Guid.Parse));
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
+            dto.DefaultOrganizationalParticipant = reader["DefaultOrganizationalParticipant"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultOrganizationalParticipant"].ToString());
             dto.Definition.AddRange(Array.ConvertAll((string[])reader["Definition"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
             dto.HyperLink.AddRange(Array.ConvertAll((string[])reader["HyperLink"], Guid.Parse));
             dto.IterationSetup.AddRange(Array.ConvertAll((string[])reader["IterationSetup"], Guid.Parse));
+            dto.OrganizationalParticipant.AddRange(Array.ConvertAll((string[])reader["OrganizationalParticipant"], Guid.Parse));
             dto.Participant.AddRange(Array.ConvertAll((string[])reader["Participant"], Guid.Parse));
             dto.RequiredRdl.AddRange(Array.ConvertAll((string[])reader["RequiredRdl"], Guid.Parse));
 
@@ -195,6 +198,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("StudyPhase", out tempStudyPhase))
             {
                 dto.StudyPhase = Utils.ParseEnum<CDP4Common.SiteDirectoryData.StudyPhaseKind>(tempStudyPhase);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;
@@ -240,12 +248,13 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"EngineeringModelSetup\"", partition);
-                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultOrganizationalParticipant);");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModelSetup.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                    command.Parameters.Add("defaultOrganizationalParticipant", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelSetup, "DefaultOrganizationalParticipant") ? Utils.NullableValue(engineeringModelSetup.DefaultOrganizationalParticipant) : Utils.NullableValue(null);
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
@@ -378,13 +387,14 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"EngineeringModelSetup\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container)");
+                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\")");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :defaultOrganizationalParticipant)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModelSetup.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                    command.Parameters.Add("defaultOrganizationalParticipant", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelSetup, "DefaultOrganizationalParticipant") ? Utils.NullableValue(engineeringModelSetup.DefaultOrganizationalParticipant) : Utils.NullableValue(null);
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;

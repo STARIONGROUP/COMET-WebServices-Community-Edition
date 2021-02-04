@@ -12,6 +12,14 @@ CREATE TABLE "SiteDirectory"."RevisionRegistry"
   "Actor" uuid
 );
 
+ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_analyze_threshold = 2500);  
+
 CREATE OR REPLACE FUNCTION "SiteDirectory".get_current_revision() RETURNS INTEGER 
   LANGUAGE plpgsql
   AS $$
@@ -323,6 +331,14 @@ CREATE TABLE "SiteDirectory"."Thing" (
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Thing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Thing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Thing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing" SET (autovacuum_analyze_threshold = 2500);
 CREATE TRIGGER thing_apply_revision
   BEFORE INSERT 
   ON "SiteDirectory"."Thing"
@@ -334,12 +350,28 @@ CREATE TABLE "SiteDirectory"."TopContainer" (
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "TopContainer_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."TopContainer" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TopContainer" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TopContainer" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TopContainer" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SiteDirectory (which derives from: TopContainer and implements: TimeStampedThing, NamedThing, ShortNamedThing)
 CREATE TABLE "SiteDirectory"."SiteDirectory" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SiteDirectory_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectory" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SiteDirectory
 CREATE TABLE "SiteDirectory"."SiteDirectory_Revision" (
   "Iid" uuid NOT NULL,
@@ -349,6 +381,14 @@ CREATE TABLE "SiteDirectory"."SiteDirectory_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SiteDirectory_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SiteDirectory
 CREATE TABLE "SiteDirectory"."SiteDirectory_Cache" (
   "Iid" uuid NOT NULL,
@@ -357,12 +397,28 @@ CREATE TABLE "SiteDirectory"."SiteDirectory_Cache" (
   CONSTRAINT "SiteDirectory_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SiteDirectoryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Organization (which derives from: Thing and implements: NamedThing, ShortNamedThing, DeprecatableThing)
 CREATE TABLE "SiteDirectory"."Organization" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Organization_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Organization
 CREATE TABLE "SiteDirectory"."Organization_Revision" (
   "Iid" uuid NOT NULL,
@@ -372,6 +428,14 @@ CREATE TABLE "SiteDirectory"."Organization_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Organization_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Organization
 CREATE TABLE "SiteDirectory"."Organization_Cache" (
   "Iid" uuid NOT NULL,
@@ -380,12 +444,28 @@ CREATE TABLE "SiteDirectory"."Organization_Cache" (
   CONSTRAINT "Organization_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "OrganizationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Person (which derives from: Thing and implements: ShortNamedThing, NamedThing, DeprecatableThing)
 CREATE TABLE "SiteDirectory"."Person" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Person_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Person" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Person" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Person
 CREATE TABLE "SiteDirectory"."Person_Revision" (
   "Iid" uuid NOT NULL,
@@ -395,6 +475,14 @@ CREATE TABLE "SiteDirectory"."Person_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Person_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Person_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Person_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Person
 CREATE TABLE "SiteDirectory"."Person_Cache" (
   "Iid" uuid NOT NULL,
@@ -403,12 +491,28 @@ CREATE TABLE "SiteDirectory"."Person_Cache" (
   CONSTRAINT "Person_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PersonCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Person_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Person_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EmailAddress (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."EmailAddress" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EmailAddress_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."EmailAddress" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EmailAddress" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EmailAddress
 CREATE TABLE "SiteDirectory"."EmailAddress_Revision" (
   "Iid" uuid NOT NULL,
@@ -418,6 +522,14 @@ CREATE TABLE "SiteDirectory"."EmailAddress_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EmailAddress_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EmailAddress
 CREATE TABLE "SiteDirectory"."EmailAddress_Cache" (
   "Iid" uuid NOT NULL,
@@ -426,12 +538,28 @@ CREATE TABLE "SiteDirectory"."EmailAddress_Cache" (
   CONSTRAINT "EmailAddress_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EmailAddressCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class TelephoneNumber (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."TelephoneNumber" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "TelephoneNumber_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for TelephoneNumber
 CREATE TABLE "SiteDirectory"."TelephoneNumber_Revision" (
   "Iid" uuid NOT NULL,
@@ -441,6 +569,14 @@ CREATE TABLE "SiteDirectory"."TelephoneNumber_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "TelephoneNumber_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for TelephoneNumber
 CREATE TABLE "SiteDirectory"."TelephoneNumber_Cache" (
   "Iid" uuid NOT NULL,
@@ -449,12 +585,28 @@ CREATE TABLE "SiteDirectory"."TelephoneNumber_Cache" (
   CONSTRAINT "TelephoneNumber_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "TelephoneNumberCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class UserPreference (which derives from: Thing and implements: ShortNamedThing)
 CREATE TABLE "SiteDirectory"."UserPreference" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "UserPreference_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."UserPreference" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UserPreference" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for UserPreference
 CREATE TABLE "SiteDirectory"."UserPreference_Revision" (
   "Iid" uuid NOT NULL,
@@ -464,6 +616,14 @@ CREATE TABLE "SiteDirectory"."UserPreference_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "UserPreference_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."UserPreference_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for UserPreference
 CREATE TABLE "SiteDirectory"."UserPreference_Cache" (
   "Iid" uuid NOT NULL,
@@ -472,18 +632,42 @@ CREATE TABLE "SiteDirectory"."UserPreference_Cache" (
   CONSTRAINT "UserPreference_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "UserPreferenceCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."UserPreference_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DefinedThing (which derives from: Thing and implements: NamedThing, ShortNamedThing)
 CREATE TABLE "SiteDirectory"."DefinedThing" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DefinedThing_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DefinedThing" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DefinedThing" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DefinedThing" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DefinedThing" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParticipantRole (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."ParticipantRole" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParticipantRole_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ParticipantRole" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParticipantRole
 CREATE TABLE "SiteDirectory"."ParticipantRole_Revision" (
   "Iid" uuid NOT NULL,
@@ -493,6 +677,14 @@ CREATE TABLE "SiteDirectory"."ParticipantRole_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParticipantRole_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParticipantRole
 CREATE TABLE "SiteDirectory"."ParticipantRole_Cache" (
   "Iid" uuid NOT NULL,
@@ -501,12 +693,28 @@ CREATE TABLE "SiteDirectory"."ParticipantRole_Cache" (
   CONSTRAINT "ParticipantRole_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParticipantRoleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Alias (which derives from: Thing and implements: Annotation)
 CREATE TABLE "SiteDirectory"."Alias" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Alias_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Alias" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Alias" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Alias
 CREATE TABLE "SiteDirectory"."Alias_Revision" (
   "Iid" uuid NOT NULL,
@@ -516,6 +724,14 @@ CREATE TABLE "SiteDirectory"."Alias_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Alias_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Alias_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Alias_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Alias
 CREATE TABLE "SiteDirectory"."Alias_Cache" (
   "Iid" uuid NOT NULL,
@@ -524,12 +740,28 @@ CREATE TABLE "SiteDirectory"."Alias_Cache" (
   CONSTRAINT "Alias_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "AliasCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Alias_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Alias_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Definition (which derives from: Thing and implements: Annotation)
 CREATE TABLE "SiteDirectory"."Definition" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Definition_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Definition
 CREATE TABLE "SiteDirectory"."Definition_Revision" (
   "Iid" uuid NOT NULL,
@@ -539,6 +771,14 @@ CREATE TABLE "SiteDirectory"."Definition_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Definition_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Definition
 CREATE TABLE "SiteDirectory"."Definition_Cache" (
   "Iid" uuid NOT NULL,
@@ -547,12 +787,28 @@ CREATE TABLE "SiteDirectory"."Definition_Cache" (
   CONSTRAINT "Definition_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DefinitionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Citation (which derives from: Thing and implements: ShortNamedThing)
 CREATE TABLE "SiteDirectory"."Citation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Citation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Citation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Citation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Citation
 CREATE TABLE "SiteDirectory"."Citation_Revision" (
   "Iid" uuid NOT NULL,
@@ -562,6 +818,14 @@ CREATE TABLE "SiteDirectory"."Citation_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Citation_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Citation_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Citation_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Citation
 CREATE TABLE "SiteDirectory"."Citation_Cache" (
   "Iid" uuid NOT NULL,
@@ -570,12 +834,28 @@ CREATE TABLE "SiteDirectory"."Citation_Cache" (
   CONSTRAINT "Citation_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "CitationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Citation_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Citation_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class HyperLink (which derives from: Thing and implements: Annotation)
 CREATE TABLE "SiteDirectory"."HyperLink" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "HyperLink_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for HyperLink
 CREATE TABLE "SiteDirectory"."HyperLink_Revision" (
   "Iid" uuid NOT NULL,
@@ -585,6 +865,14 @@ CREATE TABLE "SiteDirectory"."HyperLink_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "HyperLink_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for HyperLink
 CREATE TABLE "SiteDirectory"."HyperLink_Cache" (
   "Iid" uuid NOT NULL,
@@ -593,12 +881,28 @@ CREATE TABLE "SiteDirectory"."HyperLink_Cache" (
   CONSTRAINT "HyperLink_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "HyperLinkCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParticipantPermission (which derives from: Thing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."ParticipantPermission" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParticipantPermission_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParticipantPermission
 CREATE TABLE "SiteDirectory"."ParticipantPermission_Revision" (
   "Iid" uuid NOT NULL,
@@ -608,6 +912,14 @@ CREATE TABLE "SiteDirectory"."ParticipantPermission_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParticipantPermission_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParticipantPermission
 CREATE TABLE "SiteDirectory"."ParticipantPermission_Cache" (
   "Iid" uuid NOT NULL,
@@ -616,18 +928,42 @@ CREATE TABLE "SiteDirectory"."ParticipantPermission_Cache" (
   CONSTRAINT "ParticipantPermission_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParticipantPermissionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ReferenceDataLibrary (which derives from: DefinedThing and implements: ParticipantAffectedAccessThing)
 CREATE TABLE "SiteDirectory"."ReferenceDataLibrary" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ReferenceDataLibrary_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SiteReferenceDataLibrary (which derives from: ReferenceDataLibrary and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."SiteReferenceDataLibrary" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SiteReferenceDataLibrary_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SiteReferenceDataLibrary
 CREATE TABLE "SiteDirectory"."SiteReferenceDataLibrary_Revision" (
   "Iid" uuid NOT NULL,
@@ -637,6 +973,14 @@ CREATE TABLE "SiteDirectory"."SiteReferenceDataLibrary_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SiteReferenceDataLibrary_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SiteReferenceDataLibrary
 CREATE TABLE "SiteDirectory"."SiteReferenceDataLibrary_Cache" (
   "Iid" uuid NOT NULL,
@@ -645,12 +989,28 @@ CREATE TABLE "SiteDirectory"."SiteReferenceDataLibrary_Cache" (
   CONSTRAINT "SiteReferenceDataLibrary_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SiteReferenceDataLibraryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Category (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."Category" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Category_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Category
 CREATE TABLE "SiteDirectory"."Category_Revision" (
   "Iid" uuid NOT NULL,
@@ -660,6 +1020,14 @@ CREATE TABLE "SiteDirectory"."Category_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Category_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Category_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Category
 CREATE TABLE "SiteDirectory"."Category_Cache" (
   "Iid" uuid NOT NULL,
@@ -668,18 +1036,42 @@ CREATE TABLE "SiteDirectory"."Category_Cache" (
   CONSTRAINT "Category_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "CategoryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Category_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterType (which derives from: DefinedThing and implements: DeprecatableThing, CategorizableThing)
 CREATE TABLE "SiteDirectory"."ParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class CompoundParameterType (which derives from: ParameterType)
 CREATE TABLE "SiteDirectory"."CompoundParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "CompoundParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for CompoundParameterType
 CREATE TABLE "SiteDirectory"."CompoundParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -689,6 +1081,14 @@ CREATE TABLE "SiteDirectory"."CompoundParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "CompoundParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for CompoundParameterType
 CREATE TABLE "SiteDirectory"."CompoundParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -697,12 +1097,28 @@ CREATE TABLE "SiteDirectory"."CompoundParameterType_Cache" (
   CONSTRAINT "CompoundParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "CompoundParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ArrayParameterType (which derives from: CompoundParameterType)
 CREATE TABLE "SiteDirectory"."ArrayParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ArrayParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ArrayParameterType
 CREATE TABLE "SiteDirectory"."ArrayParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -712,6 +1128,14 @@ CREATE TABLE "SiteDirectory"."ArrayParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ArrayParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ArrayParameterType
 CREATE TABLE "SiteDirectory"."ArrayParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -720,12 +1144,28 @@ CREATE TABLE "SiteDirectory"."ArrayParameterType_Cache" (
   CONSTRAINT "ArrayParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ArrayParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterTypeComponent (which derives from: Thing and implements: ShortNamedThing)
 CREATE TABLE "SiteDirectory"."ParameterTypeComponent" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterTypeComponent_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterTypeComponent
 CREATE TABLE "SiteDirectory"."ParameterTypeComponent_Revision" (
   "Iid" uuid NOT NULL,
@@ -735,6 +1175,14 @@ CREATE TABLE "SiteDirectory"."ParameterTypeComponent_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterTypeComponent_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterTypeComponent
 CREATE TABLE "SiteDirectory"."ParameterTypeComponent_Cache" (
   "Iid" uuid NOT NULL,
@@ -743,18 +1191,42 @@ CREATE TABLE "SiteDirectory"."ParameterTypeComponent_Cache" (
   CONSTRAINT "ParameterTypeComponent_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterTypeComponentCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ScalarParameterType (which derives from: ParameterType)
 CREATE TABLE "SiteDirectory"."ScalarParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ScalarParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EnumerationParameterType (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."EnumerationParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EnumerationParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EnumerationParameterType
 CREATE TABLE "SiteDirectory"."EnumerationParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -764,6 +1236,14 @@ CREATE TABLE "SiteDirectory"."EnumerationParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EnumerationParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EnumerationParameterType
 CREATE TABLE "SiteDirectory"."EnumerationParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -772,12 +1252,28 @@ CREATE TABLE "SiteDirectory"."EnumerationParameterType_Cache" (
   CONSTRAINT "EnumerationParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EnumerationParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EnumerationValueDefinition (which derives from: DefinedThing)
 CREATE TABLE "SiteDirectory"."EnumerationValueDefinition" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EnumerationValueDefinition_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EnumerationValueDefinition
 CREATE TABLE "SiteDirectory"."EnumerationValueDefinition_Revision" (
   "Iid" uuid NOT NULL,
@@ -787,6 +1283,14 @@ CREATE TABLE "SiteDirectory"."EnumerationValueDefinition_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EnumerationValueDefinition_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EnumerationValueDefinition
 CREATE TABLE "SiteDirectory"."EnumerationValueDefinition_Cache" (
   "Iid" uuid NOT NULL,
@@ -795,12 +1299,28 @@ CREATE TABLE "SiteDirectory"."EnumerationValueDefinition_Cache" (
   CONSTRAINT "EnumerationValueDefinition_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EnumerationValueDefinitionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class BooleanParameterType (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."BooleanParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "BooleanParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for BooleanParameterType
 CREATE TABLE "SiteDirectory"."BooleanParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -810,6 +1330,14 @@ CREATE TABLE "SiteDirectory"."BooleanParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "BooleanParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for BooleanParameterType
 CREATE TABLE "SiteDirectory"."BooleanParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -818,12 +1346,28 @@ CREATE TABLE "SiteDirectory"."BooleanParameterType_Cache" (
   CONSTRAINT "BooleanParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BooleanParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DateParameterType (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."DateParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DateParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DateParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DateParameterType
 CREATE TABLE "SiteDirectory"."DateParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -833,6 +1377,14 @@ CREATE TABLE "SiteDirectory"."DateParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DateParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DateParameterType
 CREATE TABLE "SiteDirectory"."DateParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -841,12 +1393,28 @@ CREATE TABLE "SiteDirectory"."DateParameterType_Cache" (
   CONSTRAINT "DateParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DateParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class TextParameterType (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."TextParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "TextParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."TextParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TextParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for TextParameterType
 CREATE TABLE "SiteDirectory"."TextParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -856,6 +1424,14 @@ CREATE TABLE "SiteDirectory"."TextParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "TextParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for TextParameterType
 CREATE TABLE "SiteDirectory"."TextParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -864,12 +1440,28 @@ CREATE TABLE "SiteDirectory"."TextParameterType_Cache" (
   CONSTRAINT "TextParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "TextParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DateTimeParameterType (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."DateTimeParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DateTimeParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DateTimeParameterType
 CREATE TABLE "SiteDirectory"."DateTimeParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -879,6 +1471,14 @@ CREATE TABLE "SiteDirectory"."DateTimeParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DateTimeParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DateTimeParameterType
 CREATE TABLE "SiteDirectory"."DateTimeParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -887,12 +1487,28 @@ CREATE TABLE "SiteDirectory"."DateTimeParameterType_Cache" (
   CONSTRAINT "DateTimeParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DateTimeParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class TimeOfDayParameterType (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."TimeOfDayParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "TimeOfDayParameterType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for TimeOfDayParameterType
 CREATE TABLE "SiteDirectory"."TimeOfDayParameterType_Revision" (
   "Iid" uuid NOT NULL,
@@ -902,6 +1518,14 @@ CREATE TABLE "SiteDirectory"."TimeOfDayParameterType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "TimeOfDayParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for TimeOfDayParameterType
 CREATE TABLE "SiteDirectory"."TimeOfDayParameterType_Cache" (
   "Iid" uuid NOT NULL,
@@ -910,18 +1534,42 @@ CREATE TABLE "SiteDirectory"."TimeOfDayParameterType_Cache" (
   CONSTRAINT "TimeOfDayParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "TimeOfDayParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class QuantityKind (which derives from: ScalarParameterType)
 CREATE TABLE "SiteDirectory"."QuantityKind" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "QuantityKind_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."QuantityKind" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKind" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SpecializedQuantityKind (which derives from: QuantityKind)
 CREATE TABLE "SiteDirectory"."SpecializedQuantityKind" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SpecializedQuantityKind_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SpecializedQuantityKind
 CREATE TABLE "SiteDirectory"."SpecializedQuantityKind_Revision" (
   "Iid" uuid NOT NULL,
@@ -931,6 +1579,14 @@ CREATE TABLE "SiteDirectory"."SpecializedQuantityKind_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SpecializedQuantityKind_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SpecializedQuantityKind
 CREATE TABLE "SiteDirectory"."SpecializedQuantityKind_Cache" (
   "Iid" uuid NOT NULL,
@@ -939,12 +1595,28 @@ CREATE TABLE "SiteDirectory"."SpecializedQuantityKind_Cache" (
   CONSTRAINT "SpecializedQuantityKind_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SpecializedQuantityKindCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SimpleQuantityKind (which derives from: QuantityKind)
 CREATE TABLE "SiteDirectory"."SimpleQuantityKind" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SimpleQuantityKind_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SimpleQuantityKind
 CREATE TABLE "SiteDirectory"."SimpleQuantityKind_Revision" (
   "Iid" uuid NOT NULL,
@@ -954,6 +1626,14 @@ CREATE TABLE "SiteDirectory"."SimpleQuantityKind_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SimpleQuantityKind_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SimpleQuantityKind
 CREATE TABLE "SiteDirectory"."SimpleQuantityKind_Cache" (
   "Iid" uuid NOT NULL,
@@ -962,12 +1642,28 @@ CREATE TABLE "SiteDirectory"."SimpleQuantityKind_Cache" (
   CONSTRAINT "SimpleQuantityKind_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SimpleQuantityKindCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DerivedQuantityKind (which derives from: QuantityKind)
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DerivedQuantityKind_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DerivedQuantityKind
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Revision" (
   "Iid" uuid NOT NULL,
@@ -977,6 +1673,14 @@ CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DerivedQuantityKind_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DerivedQuantityKind
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Cache" (
   "Iid" uuid NOT NULL,
@@ -985,12 +1689,28 @@ CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Cache" (
   CONSTRAINT "DerivedQuantityKind_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DerivedQuantityKindCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class QuantityKindFactor (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."QuantityKindFactor" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "QuantityKindFactor_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for QuantityKindFactor
 CREATE TABLE "SiteDirectory"."QuantityKindFactor_Revision" (
   "Iid" uuid NOT NULL,
@@ -1000,6 +1720,14 @@ CREATE TABLE "SiteDirectory"."QuantityKindFactor_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "QuantityKindFactor_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for QuantityKindFactor
 CREATE TABLE "SiteDirectory"."QuantityKindFactor_Cache" (
   "Iid" uuid NOT NULL,
@@ -1008,18 +1736,42 @@ CREATE TABLE "SiteDirectory"."QuantityKindFactor_Cache" (
   CONSTRAINT "QuantityKindFactor_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "QuantityKindFactorCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class MeasurementScale (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."MeasurementScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "MeasurementScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."MeasurementScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MeasurementScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementScale" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class OrdinalScale (which derives from: MeasurementScale)
 CREATE TABLE "SiteDirectory"."OrdinalScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "OrdinalScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."OrdinalScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for OrdinalScale
 CREATE TABLE "SiteDirectory"."OrdinalScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -1029,6 +1781,14 @@ CREATE TABLE "SiteDirectory"."OrdinalScale_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "OrdinalScale_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for OrdinalScale
 CREATE TABLE "SiteDirectory"."OrdinalScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -1037,12 +1797,28 @@ CREATE TABLE "SiteDirectory"."OrdinalScale_Cache" (
   CONSTRAINT "OrdinalScale_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "OrdinalScaleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ScaleValueDefinition (which derives from: DefinedThing)
 CREATE TABLE "SiteDirectory"."ScaleValueDefinition" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ScaleValueDefinition_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ScaleValueDefinition
 CREATE TABLE "SiteDirectory"."ScaleValueDefinition_Revision" (
   "Iid" uuid NOT NULL,
@@ -1052,6 +1828,14 @@ CREATE TABLE "SiteDirectory"."ScaleValueDefinition_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ScaleValueDefinition_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ScaleValueDefinition
 CREATE TABLE "SiteDirectory"."ScaleValueDefinition_Cache" (
   "Iid" uuid NOT NULL,
@@ -1060,12 +1844,28 @@ CREATE TABLE "SiteDirectory"."ScaleValueDefinition_Cache" (
   CONSTRAINT "ScaleValueDefinition_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ScaleValueDefinitionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class MappingToReferenceScale (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "MappingToReferenceScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for MappingToReferenceScale
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -1075,6 +1875,14 @@ CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "MappingToReferenceScale_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for MappingToReferenceScale
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -1083,12 +1891,28 @@ CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Cache" (
   CONSTRAINT "MappingToReferenceScale_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "MappingToReferenceScaleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class RatioScale (which derives from: MeasurementScale)
 CREATE TABLE "SiteDirectory"."RatioScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "RatioScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."RatioScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."RatioScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for RatioScale
 CREATE TABLE "SiteDirectory"."RatioScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -1098,6 +1922,14 @@ CREATE TABLE "SiteDirectory"."RatioScale_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "RatioScale_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."RatioScale_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for RatioScale
 CREATE TABLE "SiteDirectory"."RatioScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -1106,12 +1938,28 @@ CREATE TABLE "SiteDirectory"."RatioScale_Cache" (
   CONSTRAINT "RatioScale_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "RatioScaleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."RatioScale_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class CyclicRatioScale (which derives from: RatioScale)
 CREATE TABLE "SiteDirectory"."CyclicRatioScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "CyclicRatioScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for CyclicRatioScale
 CREATE TABLE "SiteDirectory"."CyclicRatioScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -1121,6 +1969,14 @@ CREATE TABLE "SiteDirectory"."CyclicRatioScale_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "CyclicRatioScale_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for CyclicRatioScale
 CREATE TABLE "SiteDirectory"."CyclicRatioScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -1129,12 +1985,28 @@ CREATE TABLE "SiteDirectory"."CyclicRatioScale_Cache" (
   CONSTRAINT "CyclicRatioScale_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "CyclicRatioScaleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class IntervalScale (which derives from: MeasurementScale)
 CREATE TABLE "SiteDirectory"."IntervalScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "IntervalScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."IntervalScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IntervalScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for IntervalScale
 CREATE TABLE "SiteDirectory"."IntervalScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -1144,6 +2016,14 @@ CREATE TABLE "SiteDirectory"."IntervalScale_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "IntervalScale_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for IntervalScale
 CREATE TABLE "SiteDirectory"."IntervalScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -1152,12 +2032,28 @@ CREATE TABLE "SiteDirectory"."IntervalScale_Cache" (
   CONSTRAINT "IntervalScale_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "IntervalScaleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class LogarithmicScale (which derives from: MeasurementScale)
 CREATE TABLE "SiteDirectory"."LogarithmicScale" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "LogarithmicScale_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for LogarithmicScale
 CREATE TABLE "SiteDirectory"."LogarithmicScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -1167,6 +2063,14 @@ CREATE TABLE "SiteDirectory"."LogarithmicScale_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "LogarithmicScale_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for LogarithmicScale
 CREATE TABLE "SiteDirectory"."LogarithmicScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -1175,12 +2079,28 @@ CREATE TABLE "SiteDirectory"."LogarithmicScale_Cache" (
   CONSTRAINT "LogarithmicScale_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "LogarithmicScaleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ScaleReferenceQuantityValue (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."ScaleReferenceQuantityValue" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ScaleReferenceQuantityValue_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ScaleReferenceQuantityValue
 CREATE TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Revision" (
   "Iid" uuid NOT NULL,
@@ -1190,6 +2110,14 @@ CREATE TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ScaleReferenceQuantityValue_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ScaleReferenceQuantityValue
 CREATE TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Cache" (
   "Iid" uuid NOT NULL,
@@ -1198,12 +2126,28 @@ CREATE TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Cache" (
   CONSTRAINT "ScaleReferenceQuantityValue_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ScaleReferenceQuantityValueCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class UnitPrefix (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."UnitPrefix" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "UnitPrefix_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."UnitPrefix" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for UnitPrefix
 CREATE TABLE "SiteDirectory"."UnitPrefix_Revision" (
   "Iid" uuid NOT NULL,
@@ -1213,6 +2157,14 @@ CREATE TABLE "SiteDirectory"."UnitPrefix_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "UnitPrefix_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for UnitPrefix
 CREATE TABLE "SiteDirectory"."UnitPrefix_Cache" (
   "Iid" uuid NOT NULL,
@@ -1221,18 +2173,42 @@ CREATE TABLE "SiteDirectory"."UnitPrefix_Cache" (
   CONSTRAINT "UnitPrefix_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "UnitPrefixCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class MeasurementUnit (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."MeasurementUnit" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "MeasurementUnit_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DerivedUnit (which derives from: MeasurementUnit)
 CREATE TABLE "SiteDirectory"."DerivedUnit" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DerivedUnit_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DerivedUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DerivedUnit
 CREATE TABLE "SiteDirectory"."DerivedUnit_Revision" (
   "Iid" uuid NOT NULL,
@@ -1242,6 +2218,14 @@ CREATE TABLE "SiteDirectory"."DerivedUnit_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DerivedUnit_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DerivedUnit
 CREATE TABLE "SiteDirectory"."DerivedUnit_Cache" (
   "Iid" uuid NOT NULL,
@@ -1250,12 +2234,28 @@ CREATE TABLE "SiteDirectory"."DerivedUnit_Cache" (
   CONSTRAINT "DerivedUnit_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DerivedUnitCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class UnitFactor (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."UnitFactor" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "UnitFactor_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."UnitFactor" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitFactor" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for UnitFactor
 CREATE TABLE "SiteDirectory"."UnitFactor_Revision" (
   "Iid" uuid NOT NULL,
@@ -1265,6 +2265,14 @@ CREATE TABLE "SiteDirectory"."UnitFactor_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "UnitFactor_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for UnitFactor
 CREATE TABLE "SiteDirectory"."UnitFactor_Cache" (
   "Iid" uuid NOT NULL,
@@ -1273,18 +2281,42 @@ CREATE TABLE "SiteDirectory"."UnitFactor_Cache" (
   CONSTRAINT "UnitFactor_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "UnitFactorCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ConversionBasedUnit (which derives from: MeasurementUnit)
 CREATE TABLE "SiteDirectory"."ConversionBasedUnit" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ConversionBasedUnit_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class LinearConversionUnit (which derives from: ConversionBasedUnit)
 CREATE TABLE "SiteDirectory"."LinearConversionUnit" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "LinearConversionUnit_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for LinearConversionUnit
 CREATE TABLE "SiteDirectory"."LinearConversionUnit_Revision" (
   "Iid" uuid NOT NULL,
@@ -1294,6 +2326,14 @@ CREATE TABLE "SiteDirectory"."LinearConversionUnit_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "LinearConversionUnit_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for LinearConversionUnit
 CREATE TABLE "SiteDirectory"."LinearConversionUnit_Cache" (
   "Iid" uuid NOT NULL,
@@ -1302,12 +2342,28 @@ CREATE TABLE "SiteDirectory"."LinearConversionUnit_Cache" (
   CONSTRAINT "LinearConversionUnit_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "LinearConversionUnitCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class PrefixedUnit (which derives from: ConversionBasedUnit)
 CREATE TABLE "SiteDirectory"."PrefixedUnit" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "PrefixedUnit_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for PrefixedUnit
 CREATE TABLE "SiteDirectory"."PrefixedUnit_Revision" (
   "Iid" uuid NOT NULL,
@@ -1317,6 +2373,14 @@ CREATE TABLE "SiteDirectory"."PrefixedUnit_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "PrefixedUnit_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for PrefixedUnit
 CREATE TABLE "SiteDirectory"."PrefixedUnit_Cache" (
   "Iid" uuid NOT NULL,
@@ -1325,12 +2389,28 @@ CREATE TABLE "SiteDirectory"."PrefixedUnit_Cache" (
   CONSTRAINT "PrefixedUnit_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PrefixedUnitCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SimpleUnit (which derives from: MeasurementUnit)
 CREATE TABLE "SiteDirectory"."SimpleUnit" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SimpleUnit_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SimpleUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SimpleUnit
 CREATE TABLE "SiteDirectory"."SimpleUnit_Revision" (
   "Iid" uuid NOT NULL,
@@ -1340,6 +2420,14 @@ CREATE TABLE "SiteDirectory"."SimpleUnit_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SimpleUnit_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SimpleUnit
 CREATE TABLE "SiteDirectory"."SimpleUnit_Cache" (
   "Iid" uuid NOT NULL,
@@ -1348,12 +2436,28 @@ CREATE TABLE "SiteDirectory"."SimpleUnit_Cache" (
   CONSTRAINT "SimpleUnit_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SimpleUnitCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class FileType (which derives from: DefinedThing and implements: CategorizableThing, DeprecatableThing)
 CREATE TABLE "SiteDirectory"."FileType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "FileType_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."FileType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."FileType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for FileType
 CREATE TABLE "SiteDirectory"."FileType_Revision" (
   "Iid" uuid NOT NULL,
@@ -1363,6 +2467,14 @@ CREATE TABLE "SiteDirectory"."FileType_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "FileType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."FileType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."FileType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for FileType
 CREATE TABLE "SiteDirectory"."FileType_Cache" (
   "Iid" uuid NOT NULL,
@@ -1371,12 +2483,28 @@ CREATE TABLE "SiteDirectory"."FileType_Cache" (
   CONSTRAINT "FileType_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "FileTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."FileType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."FileType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Glossary (which derives from: DefinedThing and implements: CategorizableThing, DeprecatableThing)
 CREATE TABLE "SiteDirectory"."Glossary" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Glossary_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Glossary" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Glossary" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Glossary
 CREATE TABLE "SiteDirectory"."Glossary_Revision" (
   "Iid" uuid NOT NULL,
@@ -1386,6 +2514,14 @@ CREATE TABLE "SiteDirectory"."Glossary_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Glossary_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Glossary_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Glossary_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Glossary
 CREATE TABLE "SiteDirectory"."Glossary_Cache" (
   "Iid" uuid NOT NULL,
@@ -1394,12 +2530,28 @@ CREATE TABLE "SiteDirectory"."Glossary_Cache" (
   CONSTRAINT "Glossary_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "GlossaryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Glossary_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Glossary_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Term (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."Term" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Term_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Term" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Term" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Term
 CREATE TABLE "SiteDirectory"."Term_Revision" (
   "Iid" uuid NOT NULL,
@@ -1409,6 +2561,14 @@ CREATE TABLE "SiteDirectory"."Term_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Term_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Term_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Term_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Term
 CREATE TABLE "SiteDirectory"."Term_Cache" (
   "Iid" uuid NOT NULL,
@@ -1417,12 +2577,28 @@ CREATE TABLE "SiteDirectory"."Term_Cache" (
   CONSTRAINT "Term_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "TermCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Term_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Term_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ReferenceSource (which derives from: DefinedThing and implements: CategorizableThing, DeprecatableThing)
 CREATE TABLE "SiteDirectory"."ReferenceSource" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ReferenceSource_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceSource" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ReferenceSource
 CREATE TABLE "SiteDirectory"."ReferenceSource_Revision" (
   "Iid" uuid NOT NULL,
@@ -1432,6 +2608,14 @@ CREATE TABLE "SiteDirectory"."ReferenceSource_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ReferenceSource_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ReferenceSource
 CREATE TABLE "SiteDirectory"."ReferenceSource_Cache" (
   "Iid" uuid NOT NULL,
@@ -1440,18 +2624,42 @@ CREATE TABLE "SiteDirectory"."ReferenceSource_Cache" (
   CONSTRAINT "ReferenceSource_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ReferenceSourceCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Rule (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."Rule" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Rule_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ReferencerRule (which derives from: Rule)
 CREATE TABLE "SiteDirectory"."ReferencerRule" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ReferencerRule_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ReferencerRule" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ReferencerRule
 CREATE TABLE "SiteDirectory"."ReferencerRule_Revision" (
   "Iid" uuid NOT NULL,
@@ -1461,6 +2669,14 @@ CREATE TABLE "SiteDirectory"."ReferencerRule_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ReferencerRule_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ReferencerRule
 CREATE TABLE "SiteDirectory"."ReferencerRule_Cache" (
   "Iid" uuid NOT NULL,
@@ -1469,12 +2685,28 @@ CREATE TABLE "SiteDirectory"."ReferencerRule_Cache" (
   CONSTRAINT "ReferencerRule_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ReferencerRuleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class BinaryRelationshipRule (which derives from: Rule)
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "BinaryRelationshipRule_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for BinaryRelationshipRule
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" (
   "Iid" uuid NOT NULL,
@@ -1484,6 +2716,14 @@ CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "BinaryRelationshipRule_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for BinaryRelationshipRule
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" (
   "Iid" uuid NOT NULL,
@@ -1492,12 +2732,28 @@ CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" (
   CONSTRAINT "BinaryRelationshipRule_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "BinaryRelationshipRuleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class MultiRelationshipRule (which derives from: Rule)
 CREATE TABLE "SiteDirectory"."MultiRelationshipRule" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "MultiRelationshipRule_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for MultiRelationshipRule
 CREATE TABLE "SiteDirectory"."MultiRelationshipRule_Revision" (
   "Iid" uuid NOT NULL,
@@ -1507,6 +2763,14 @@ CREATE TABLE "SiteDirectory"."MultiRelationshipRule_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "MultiRelationshipRule_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for MultiRelationshipRule
 CREATE TABLE "SiteDirectory"."MultiRelationshipRule_Cache" (
   "Iid" uuid NOT NULL,
@@ -1515,12 +2779,28 @@ CREATE TABLE "SiteDirectory"."MultiRelationshipRule_Cache" (
   CONSTRAINT "MultiRelationshipRule_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "MultiRelationshipRuleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DecompositionRule (which derives from: Rule)
 CREATE TABLE "SiteDirectory"."DecompositionRule" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DecompositionRule_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DecompositionRule" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DecompositionRule
 CREATE TABLE "SiteDirectory"."DecompositionRule_Revision" (
   "Iid" uuid NOT NULL,
@@ -1530,6 +2810,14 @@ CREATE TABLE "SiteDirectory"."DecompositionRule_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DecompositionRule_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DecompositionRule
 CREATE TABLE "SiteDirectory"."DecompositionRule_Cache" (
   "Iid" uuid NOT NULL,
@@ -1538,12 +2826,28 @@ CREATE TABLE "SiteDirectory"."DecompositionRule_Cache" (
   CONSTRAINT "DecompositionRule_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DecompositionRuleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ParameterizedCategoryRule (which derives from: Rule)
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ParameterizedCategoryRule_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ParameterizedCategoryRule
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" (
   "Iid" uuid NOT NULL,
@@ -1553,6 +2857,14 @@ CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ParameterizedCategoryRule_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ParameterizedCategoryRule
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" (
   "Iid" uuid NOT NULL,
@@ -1561,12 +2873,28 @@ CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" (
   CONSTRAINT "ParameterizedCategoryRule_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParameterizedCategoryRuleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Constant (which derives from: DefinedThing and implements: DeprecatableThing, CategorizableThing)
 CREATE TABLE "SiteDirectory"."Constant" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Constant_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Constant" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Constant" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Constant
 CREATE TABLE "SiteDirectory"."Constant_Revision" (
   "Iid" uuid NOT NULL,
@@ -1576,6 +2904,14 @@ CREATE TABLE "SiteDirectory"."Constant_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Constant_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Constant_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Constant_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Constant
 CREATE TABLE "SiteDirectory"."Constant_Cache" (
   "Iid" uuid NOT NULL,
@@ -1584,12 +2920,28 @@ CREATE TABLE "SiteDirectory"."Constant_Cache" (
   CONSTRAINT "Constant_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ConstantCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Constant_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Constant_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class EngineeringModelSetup (which derives from: DefinedThing and implements: ParticipantAffectedAccessThing)
 CREATE TABLE "SiteDirectory"."EngineeringModelSetup" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "EngineeringModelSetup_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for EngineeringModelSetup
 CREATE TABLE "SiteDirectory"."EngineeringModelSetup_Revision" (
   "Iid" uuid NOT NULL,
@@ -1599,6 +2951,14 @@ CREATE TABLE "SiteDirectory"."EngineeringModelSetup_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "EngineeringModelSetup_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for EngineeringModelSetup
 CREATE TABLE "SiteDirectory"."EngineeringModelSetup_Cache" (
   "Iid" uuid NOT NULL,
@@ -1607,12 +2967,28 @@ CREATE TABLE "SiteDirectory"."EngineeringModelSetup_Cache" (
   CONSTRAINT "EngineeringModelSetup_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "EngineeringModelSetupCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class Participant (which derives from: Thing and implements: ParticipantAffectedAccessThing)
 CREATE TABLE "SiteDirectory"."Participant" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "Participant_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."Participant" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Participant" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for Participant
 CREATE TABLE "SiteDirectory"."Participant_Revision" (
   "Iid" uuid NOT NULL,
@@ -1622,6 +2998,14 @@ CREATE TABLE "SiteDirectory"."Participant_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "Participant_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."Participant_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Participant_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for Participant
 CREATE TABLE "SiteDirectory"."Participant_Cache" (
   "Iid" uuid NOT NULL,
@@ -1630,12 +3014,28 @@ CREATE TABLE "SiteDirectory"."Participant_Cache" (
   CONSTRAINT "Participant_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ParticipantCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Participant_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Participant_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ModelReferenceDataLibrary (which derives from: ReferenceDataLibrary)
 CREATE TABLE "SiteDirectory"."ModelReferenceDataLibrary" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ModelReferenceDataLibrary_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for ModelReferenceDataLibrary
 CREATE TABLE "SiteDirectory"."ModelReferenceDataLibrary_Revision" (
   "Iid" uuid NOT NULL,
@@ -1645,6 +3045,14 @@ CREATE TABLE "SiteDirectory"."ModelReferenceDataLibrary_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "ModelReferenceDataLibrary_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for ModelReferenceDataLibrary
 CREATE TABLE "SiteDirectory"."ModelReferenceDataLibrary_Cache" (
   "Iid" uuid NOT NULL,
@@ -1653,12 +3061,28 @@ CREATE TABLE "SiteDirectory"."ModelReferenceDataLibrary_Cache" (
   CONSTRAINT "ModelReferenceDataLibrary_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "ModelReferenceDataLibraryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class IterationSetup (which derives from: Thing and implements: TimeStampedThing, ParticipantAffectedAccessThing)
 CREATE TABLE "SiteDirectory"."IterationSetup" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "IterationSetup_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."IterationSetup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IterationSetup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for IterationSetup
 CREATE TABLE "SiteDirectory"."IterationSetup_Revision" (
   "Iid" uuid NOT NULL,
@@ -1668,6 +3092,14 @@ CREATE TABLE "SiteDirectory"."IterationSetup_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "IterationSetup_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for IterationSetup
 CREATE TABLE "SiteDirectory"."IterationSetup_Cache" (
   "Iid" uuid NOT NULL,
@@ -1676,12 +3108,29 @@ CREATE TABLE "SiteDirectory"."IterationSetup_Cache" (
   CONSTRAINT "IterationSetup_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "IterationSetupCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Cache" SET (autovacuum_analyze_threshold = 2500);
+
 -- Create table for class PersonRole (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."PersonRole" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "PersonRole_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."PersonRole" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonRole" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for PersonRole
 CREATE TABLE "SiteDirectory"."PersonRole_Revision" (
   "Iid" uuid NOT NULL,
@@ -1691,6 +3140,14 @@ CREATE TABLE "SiteDirectory"."PersonRole_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "PersonRole_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."PersonRole_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for PersonRole
 CREATE TABLE "SiteDirectory"."PersonRole_Cache" (
   "Iid" uuid NOT NULL,
@@ -1699,12 +3156,28 @@ CREATE TABLE "SiteDirectory"."PersonRole_Cache" (
   CONSTRAINT "PersonRole_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PersonRoleCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."PersonRole_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class PersonPermission (which derives from: Thing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."PersonPermission" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "PersonPermission_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."PersonPermission" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonPermission" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for PersonPermission
 CREATE TABLE "SiteDirectory"."PersonPermission_Revision" (
   "Iid" uuid NOT NULL,
@@ -1714,6 +3187,14 @@ CREATE TABLE "SiteDirectory"."PersonPermission_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "PersonPermission_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for PersonPermission
 CREATE TABLE "SiteDirectory"."PersonPermission_Cache" (
   "Iid" uuid NOT NULL,
@@ -1722,12 +3203,28 @@ CREATE TABLE "SiteDirectory"."PersonPermission_Cache" (
   CONSTRAINT "PersonPermission_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "PersonPermissionCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SiteLogEntry (which derives from: Thing and implements: TimeStampedThing, Annotation, CategorizableThing, LogEntry)
 CREATE TABLE "SiteDirectory"."SiteLogEntry" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SiteLogEntry_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SiteLogEntry
 CREATE TABLE "SiteDirectory"."SiteLogEntry_Revision" (
   "Iid" uuid NOT NULL,
@@ -1737,6 +3234,14 @@ CREATE TABLE "SiteDirectory"."SiteLogEntry_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SiteLogEntry_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SiteLogEntry
 CREATE TABLE "SiteDirectory"."SiteLogEntry_Cache" (
   "Iid" uuid NOT NULL,
@@ -1745,12 +3250,28 @@ CREATE TABLE "SiteDirectory"."SiteLogEntry_Cache" (
   CONSTRAINT "SiteLogEntry_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SiteLogEntryCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DomainOfExpertiseGroup (which derives from: DefinedThing and implements: DeprecatableThing)
 CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DomainOfExpertiseGroup_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DomainOfExpertiseGroup
 CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Revision" (
   "Iid" uuid NOT NULL,
@@ -1760,6 +3281,14 @@ CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DomainOfExpertiseGroup_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DomainOfExpertiseGroup
 CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Cache" (
   "Iid" uuid NOT NULL,
@@ -1768,12 +3297,28 @@ CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Cache" (
   CONSTRAINT "DomainOfExpertiseGroup_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DomainOfExpertiseGroupCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DomainOfExpertise (which derives from: DefinedThing and implements: DeprecatableThing, CategorizableThing)
 CREATE TABLE "SiteDirectory"."DomainOfExpertise" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DomainOfExpertise_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for DomainOfExpertise
 CREATE TABLE "SiteDirectory"."DomainOfExpertise_Revision" (
   "Iid" uuid NOT NULL,
@@ -1783,6 +3328,14 @@ CREATE TABLE "SiteDirectory"."DomainOfExpertise_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "DomainOfExpertise_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for DomainOfExpertise
 CREATE TABLE "SiteDirectory"."DomainOfExpertise_Cache" (
   "Iid" uuid NOT NULL,
@@ -1791,12 +3344,28 @@ CREATE TABLE "SiteDirectory"."DomainOfExpertise_Cache" (
   CONSTRAINT "DomainOfExpertise_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "DomainOfExpertiseCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class NaturalLanguage (which derives from: Thing and implements: NamedThing)
 CREATE TABLE "SiteDirectory"."NaturalLanguage" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "NaturalLanguage_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for NaturalLanguage
 CREATE TABLE "SiteDirectory"."NaturalLanguage_Revision" (
   "Iid" uuid NOT NULL,
@@ -1806,6 +3375,14 @@ CREATE TABLE "SiteDirectory"."NaturalLanguage_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "NaturalLanguage_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for NaturalLanguage
 CREATE TABLE "SiteDirectory"."NaturalLanguage_Cache" (
   "Iid" uuid NOT NULL,
@@ -1814,18 +3391,42 @@ CREATE TABLE "SiteDirectory"."NaturalLanguage_Cache" (
   CONSTRAINT "NaturalLanguage_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "NaturalLanguageCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class GenericAnnotation (which derives from: Thing and implements: Annotation, TimeStampedThing)
 CREATE TABLE "SiteDirectory"."GenericAnnotation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "GenericAnnotation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SiteDirectoryDataAnnotation (which derives from: GenericAnnotation)
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataAnnotation" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SiteDirectoryDataAnnotation_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SiteDirectoryDataAnnotation
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Revision" (
   "Iid" uuid NOT NULL,
@@ -1835,6 +3436,14 @@ CREATE TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SiteDirectoryDataAnnotation_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SiteDirectoryDataAnnotation
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Cache" (
   "Iid" uuid NOT NULL,
@@ -1843,18 +3452,42 @@ CREATE TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Cache" (
   CONSTRAINT "SiteDirectoryDataAnnotation_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SiteDirectoryDataAnnotationCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class ThingReference (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."ThingReference" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "ThingReference_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."ThingReference" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ThingReference" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ThingReference" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ThingReference" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SiteDirectoryThingReference (which derives from: ThingReference)
 CREATE TABLE "SiteDirectory"."SiteDirectoryThingReference" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SiteDirectoryThingReference_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SiteDirectoryThingReference
 CREATE TABLE "SiteDirectory"."SiteDirectoryThingReference_Revision" (
   "Iid" uuid NOT NULL,
@@ -1864,6 +3497,14 @@ CREATE TABLE "SiteDirectory"."SiteDirectoryThingReference_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SiteDirectoryThingReference_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SiteDirectoryThingReference
 CREATE TABLE "SiteDirectory"."SiteDirectoryThingReference_Cache" (
   "Iid" uuid NOT NULL,
@@ -1872,18 +3513,42 @@ CREATE TABLE "SiteDirectory"."SiteDirectoryThingReference_Cache" (
   CONSTRAINT "SiteDirectoryThingReference_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SiteDirectoryThingReferenceCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class DiscussionItem (which derives from: GenericAnnotation)
 CREATE TABLE "SiteDirectory"."DiscussionItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "DiscussionItem_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."DiscussionItem" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DiscussionItem" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DiscussionItem" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DiscussionItem" SET (autovacuum_analyze_threshold = 2500);
 -- Create table for class SiteDirectoryDataDiscussionItem (which derives from: DiscussionItem)
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
   CONSTRAINT "SiteDirectoryDataDiscussionItem_PK" PRIMARY KEY ("Iid")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem" SET (autovacuum_analyze_threshold = 2500);
 -- create revision-history table for SiteDirectoryDataDiscussionItem
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Revision" (
   "Iid" uuid NOT NULL,
@@ -1893,6 +3558,14 @@ CREATE TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Revision" (
   "Jsonb" jsonb NOT NULL,
   CONSTRAINT "SiteDirectoryDataDiscussionItem_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Revision" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Revision" SET (autovacuum_analyze_threshold = 2500);
 -- create cache table for SiteDirectoryDataDiscussionItem
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Cache" (
   "Iid" uuid NOT NULL,
@@ -1901,6 +3574,14 @@ CREATE TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Cache" (
   CONSTRAINT "SiteDirectoryDataDiscussionItem_CACHE_PK" PRIMARY KEY ("Iid"),
   CONSTRAINT "SiteDirectoryDataDiscussionItemCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Cache" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Cache" SET (autovacuum_analyze_threshold = 2500);
 -- ExcludedPerson is a collection property (many to many) of class Thing: [0..*]-[1..1]
 CREATE TABLE "SiteDirectory"."Thing_ExcludedPerson" (
   "Thing" uuid NOT NULL,
@@ -1909,6 +3590,15 @@ CREATE TABLE "SiteDirectory"."Thing_ExcludedPerson" (
   CONSTRAINT "Thing_ExcludedPerson_FK_Source" FOREIGN KEY ("Thing") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Thing_ExcludedPerson_FK_Target" FOREIGN KEY ("ExcludedPerson") REFERENCES "SiteDirectory"."Person" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -1916,6 +3606,15 @@ CREATE INDEX "Idx_Thing_ExcludedPerson_ValidFrom" ON "SiteDirectory"."Thing_Excl
 CREATE INDEX "Idx_Thing_ExcludedPerson_ValidTo" ON "SiteDirectory"."Thing_ExcludedPerson" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Thing_ExcludedPerson_Audit" (LIKE "SiteDirectory"."Thing_ExcludedPerson");
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Thing_ExcludedPerson_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -1944,6 +3643,15 @@ CREATE TABLE "SiteDirectory"."Thing_ExcludedDomain" (
   CONSTRAINT "Thing_ExcludedDomain_FK_Source" FOREIGN KEY ("Thing") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Thing_ExcludedDomain_FK_Target" FOREIGN KEY ("ExcludedDomain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -1951,6 +3659,15 @@ CREATE INDEX "Idx_Thing_ExcludedDomain_ValidFrom" ON "SiteDirectory"."Thing_Excl
 CREATE INDEX "Idx_Thing_ExcludedDomain_ValidTo" ON "SiteDirectory"."Thing_ExcludedDomain" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Thing_ExcludedDomain_Audit" (LIKE "SiteDirectory"."Thing_ExcludedDomain");
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Thing_ExcludedDomain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2151,6 +3868,14 @@ CREATE TABLE "SiteDirectory"."TelephoneNumber_VcardType" (
   CONSTRAINT "TelephoneNumber_VcardType_PK" PRIMARY KEY("TelephoneNumber","VcardType"),
   CONSTRAINT "TelephoneNumber_VcardType_FK_Source" FOREIGN KEY ("TelephoneNumber") REFERENCES "SiteDirectory"."TelephoneNumber" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2158,6 +3883,15 @@ CREATE INDEX "Idx_TelephoneNumber_VcardType_ValidFrom" ON "SiteDirectory"."Telep
 CREATE INDEX "Idx_TelephoneNumber_VcardType_ValidTo" ON "SiteDirectory"."TelephoneNumber_VcardType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."TelephoneNumber_VcardType_Audit" (LIKE "SiteDirectory"."TelephoneNumber_VcardType");
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."TelephoneNumber_VcardType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2246,6 +3980,14 @@ CREATE TABLE "SiteDirectory"."Definition_Note" (
   CONSTRAINT "Definition_Note_PK" PRIMARY KEY("Definition","Note"),
   CONSTRAINT "Definition_Note_FK_Source" FOREIGN KEY ("Definition") REFERENCES "SiteDirectory"."Definition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "SiteDirectory"."Definition_Note"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2253,6 +3995,15 @@ CREATE INDEX "Idx_Definition_Note_ValidFrom" ON "SiteDirectory"."Definition_Note
 CREATE INDEX "Idx_Definition_Note_ValidTo" ON "SiteDirectory"."Definition_Note" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Definition_Note_Audit" (LIKE "SiteDirectory"."Definition_Note");
+
+ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Definition_Note_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2281,6 +4032,14 @@ CREATE TABLE "SiteDirectory"."Definition_Example" (
   CONSTRAINT "Definition_Example_PK" PRIMARY KEY("Definition","Example"),
   CONSTRAINT "Definition_Example_FK_Source" FOREIGN KEY ("Definition") REFERENCES "SiteDirectory"."Definition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Definition_Example" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Example" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Example" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Example" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "SiteDirectory"."Definition_Example"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2288,6 +4047,15 @@ CREATE INDEX "Idx_Definition_Example_ValidFrom" ON "SiteDirectory"."Definition_E
 CREATE INDEX "Idx_Definition_Example_ValidTo" ON "SiteDirectory"."Definition_Example" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Definition_Example_Audit" (LIKE "SiteDirectory"."Definition_Example");
+
+ALTER TABLE "SiteDirectory"."Definition_Example_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Example_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Example_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Example_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Definition_Example_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2348,6 +4116,15 @@ CREATE TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind" (
   CONSTRAINT "ReferenceDataLibrary_BaseQuantityKind_FK_Source" FOREIGN KEY ("ReferenceDataLibrary") REFERENCES "SiteDirectory"."ReferenceDataLibrary" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ReferenceDataLibrary_BaseQuantityKind_FK_Target" FOREIGN KEY ("BaseQuantityKind") REFERENCES "SiteDirectory"."QuantityKind" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2355,6 +4132,15 @@ CREATE INDEX "Idx_ReferenceDataLibrary_BaseQuantityKind_ValidFrom" ON "SiteDirec
 CREATE INDEX "Idx_ReferenceDataLibrary_BaseQuantityKind_ValidTo" ON "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind_Audit" (LIKE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind");
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseQuantityKind_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2413,6 +4199,15 @@ CREATE TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit" (
   CONSTRAINT "ReferenceDataLibrary_BaseUnit_FK_Source" FOREIGN KEY ("ReferenceDataLibrary") REFERENCES "SiteDirectory"."ReferenceDataLibrary" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ReferenceDataLibrary_BaseUnit_FK_Target" FOREIGN KEY ("BaseUnit") REFERENCES "SiteDirectory"."MeasurementUnit" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2420,6 +4215,15 @@ CREATE INDEX "Idx_ReferenceDataLibrary_BaseUnit_ValidFrom" ON "SiteDirectory"."R
 CREATE INDEX "Idx_ReferenceDataLibrary_BaseUnit_ValidTo" ON "SiteDirectory"."ReferenceDataLibrary_BaseUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Audit" (LIKE "SiteDirectory"."ReferenceDataLibrary_BaseUnit");
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2505,6 +4309,15 @@ CREATE TABLE "SiteDirectory"."Category_SuperCategory" (
   CONSTRAINT "Category_SuperCategory_FK_Source" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Category_SuperCategory_FK_Target" FOREIGN KEY ("SuperCategory") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."Category_SuperCategory"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2512,6 +4325,15 @@ CREATE INDEX "Idx_Category_SuperCategory_ValidFrom" ON "SiteDirectory"."Category
 CREATE INDEX "Idx_Category_SuperCategory_ValidTo" ON "SiteDirectory"."Category_SuperCategory" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Category_SuperCategory_Audit" (LIKE "SiteDirectory"."Category_SuperCategory");
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_SuperCategory_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Category_SuperCategory_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2539,6 +4361,14 @@ CREATE TABLE "SiteDirectory"."Category_PermissibleClass" (
   CONSTRAINT "Category_PermissibleClass_PK" PRIMARY KEY("Category","PermissibleClass"),
   CONSTRAINT "Category_PermissibleClass_FK_Source" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "SiteDirectory"."Category_PermissibleClass"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2546,6 +4376,15 @@ CREATE INDEX "Idx_Category_PermissibleClass_ValidFrom" ON "SiteDirectory"."Categ
 CREATE INDEX "Idx_Category_PermissibleClass_ValidTo" ON "SiteDirectory"."Category_PermissibleClass" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Category_PermissibleClass_Audit" (LIKE "SiteDirectory"."Category_PermissibleClass");
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_PermissibleClass_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Category_PermissibleClass_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2576,6 +4415,15 @@ CREATE TABLE "SiteDirectory"."ParameterType_Category" (
   CONSTRAINT "ParameterType_Category_FK_Source" FOREIGN KEY ("ParameterType") REFERENCES "SiteDirectory"."ParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ParameterType_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."ParameterType_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2583,6 +4431,15 @@ CREATE INDEX "Idx_ParameterType_Category_ValidFrom" ON "SiteDirectory"."Paramete
 CREATE INDEX "Idx_ParameterType_Category_ValidTo" ON "SiteDirectory"."ParameterType_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParameterType_Category_Audit" (LIKE "SiteDirectory"."ParameterType_Category");
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParameterType_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2625,6 +4482,14 @@ CREATE TABLE "SiteDirectory"."ArrayParameterType_Dimension" (
   "Sequence" bigint NOT NULL,
   CONSTRAINT "ArrayParameterType_Dimension_FK_Source" FOREIGN KEY ("ArrayParameterType") REFERENCES "SiteDirectory"."ArrayParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2632,6 +4497,15 @@ CREATE INDEX "Idx_ArrayParameterType_Dimension_ValidFrom" ON "SiteDirectory"."Ar
 CREATE INDEX "Idx_ArrayParameterType_Dimension_ValidTo" ON "SiteDirectory"."ArrayParameterType_Dimension" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" (LIKE "SiteDirectory"."ArrayParameterType_Dimension");
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2697,6 +4571,15 @@ CREATE TABLE "SiteDirectory"."QuantityKind_PossibleScale" (
   CONSTRAINT "QuantityKind_PossibleScale_FK_Source" FOREIGN KEY ("QuantityKind") REFERENCES "SiteDirectory"."QuantityKind" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "QuantityKind_PossibleScale_FK_Target" FOREIGN KEY ("PossibleScale") REFERENCES "SiteDirectory"."MeasurementScale" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2704,6 +4587,15 @@ CREATE INDEX "Idx_QuantityKind_PossibleScale_ValidFrom" ON "SiteDirectory"."Quan
 CREATE INDEX "Idx_QuantityKind_PossibleScale_ValidTo" ON "SiteDirectory"."QuantityKind_PossibleScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."QuantityKind_PossibleScale_Audit" (LIKE "SiteDirectory"."QuantityKind_PossibleScale");
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."QuantityKind_PossibleScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2861,6 +4753,15 @@ CREATE TABLE "SiteDirectory"."FileType_Category" (
   CONSTRAINT "FileType_Category_FK_Source" FOREIGN KEY ("FileType") REFERENCES "SiteDirectory"."FileType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "FileType_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."FileType_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."FileType_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."FileType_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2868,6 +4769,15 @@ CREATE INDEX "Idx_FileType_Category_ValidFrom" ON "SiteDirectory"."FileType_Cate
 CREATE INDEX "Idx_FileType_Category_ValidTo" ON "SiteDirectory"."FileType_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."FileType_Category_Audit" (LIKE "SiteDirectory"."FileType_Category");
+
+ALTER TABLE "SiteDirectory"."FileType_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."FileType_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."FileType_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2908,6 +4818,15 @@ CREATE TABLE "SiteDirectory"."Glossary_Category" (
   CONSTRAINT "Glossary_Category_FK_Source" FOREIGN KEY ("Glossary") REFERENCES "SiteDirectory"."Glossary" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Glossary_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."Glossary_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Glossary_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."Glossary_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2915,6 +4834,15 @@ CREATE INDEX "Idx_Glossary_Category_ValidFrom" ON "SiteDirectory"."Glossary_Cate
 CREATE INDEX "Idx_Glossary_Category_ValidTo" ON "SiteDirectory"."Glossary_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Glossary_Category_Audit" (LIKE "SiteDirectory"."Glossary_Category");
+
+ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2953,6 +4881,15 @@ CREATE TABLE "SiteDirectory"."ReferenceSource_Category" (
   CONSTRAINT "ReferenceSource_Category_FK_Source" FOREIGN KEY ("ReferenceSource") REFERENCES "SiteDirectory"."ReferenceSource" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ReferenceSource_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."ReferenceSource_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -2960,6 +4897,15 @@ CREATE INDEX "Idx_ReferenceSource_Category_ValidFrom" ON "SiteDirectory"."Refere
 CREATE INDEX "Idx_ReferenceSource_Category_ValidTo" ON "SiteDirectory"."ReferenceSource_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferenceSource_Category_Audit" (LIKE "SiteDirectory"."ReferenceSource_Category");
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -2995,6 +4941,15 @@ CREATE TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory" (
   CONSTRAINT "ReferencerRule_ReferencedCategory_FK_Source" FOREIGN KEY ("ReferencerRule") REFERENCES "SiteDirectory"."ReferencerRule" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ReferencerRule_ReferencedCategory_FK_Target" FOREIGN KEY ("ReferencedCategory") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3002,6 +4957,15 @@ CREATE INDEX "Idx_ReferencerRule_ReferencedCategory_ValidFrom" ON "SiteDirectory
 CREATE INDEX "Idx_ReferencerRule_ReferencedCategory_ValidTo" ON "SiteDirectory"."ReferencerRule_ReferencedCategory" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory_Audit" (LIKE "SiteDirectory"."ReferencerRule_ReferencedCategory");
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferencerRule_ReferencedCategory_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3046,6 +5010,15 @@ CREATE TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory" (
   CONSTRAINT "MultiRelationshipRule_RelatedCategory_FK_Source" FOREIGN KEY ("MultiRelationshipRule") REFERENCES "SiteDirectory"."MultiRelationshipRule" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "MultiRelationshipRule_RelatedCategory_FK_Target" FOREIGN KEY ("RelatedCategory") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3053,6 +5026,15 @@ CREATE INDEX "Idx_MultiRelationshipRule_RelatedCategory_ValidFrom" ON "SiteDirec
 CREATE INDEX "Idx_MultiRelationshipRule_RelatedCategory_ValidTo" ON "SiteDirectory"."MultiRelationshipRule_RelatedCategory" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" (LIKE "SiteDirectory"."MultiRelationshipRule_RelatedCategory");
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3086,6 +5068,15 @@ CREATE TABLE "SiteDirectory"."DecompositionRule_ContainedCategory" (
   CONSTRAINT "DecompositionRule_ContainedCategory_FK_Source" FOREIGN KEY ("DecompositionRule") REFERENCES "SiteDirectory"."DecompositionRule" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "DecompositionRule_ContainedCategory_FK_Target" FOREIGN KEY ("ContainedCategory") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3093,6 +5084,15 @@ CREATE INDEX "Idx_DecompositionRule_ContainedCategory_ValidFrom" ON "SiteDirecto
 CREATE INDEX "Idx_DecompositionRule_ContainedCategory_ValidTo" ON "SiteDirectory"."DecompositionRule_ContainedCategory" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DecompositionRule_ContainedCategory_Audit" (LIKE "SiteDirectory"."DecompositionRule_ContainedCategory");
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DecompositionRule_ContainedCategory_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3126,6 +5126,15 @@ CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType" (
   CONSTRAINT "ParameterizedCategoryRule_ParameterType_FK_Source" FOREIGN KEY ("ParameterizedCategoryRule") REFERENCES "SiteDirectory"."ParameterizedCategoryRule" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ParameterizedCategoryRule_ParameterType_FK_Target" FOREIGN KEY ("ParameterType") REFERENCES "SiteDirectory"."ParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3133,6 +5142,15 @@ CREATE INDEX "Idx_ParameterizedCategoryRule_ParameterType_ValidFrom" ON "SiteDir
 CREATE INDEX "Idx_ParameterizedCategoryRule_ParameterType_ValidTo" ON "SiteDirectory"."ParameterizedCategoryRule_ParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Audit" (LIKE "SiteDirectory"."ParameterizedCategoryRule_ParameterType");
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3169,6 +5187,15 @@ CREATE TABLE "SiteDirectory"."Constant_Category" (
   CONSTRAINT "Constant_Category_FK_Source" FOREIGN KEY ("Constant") REFERENCES "SiteDirectory"."Constant" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Constant_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."Constant_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Constant_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."Constant_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3176,6 +5203,15 @@ CREATE INDEX "Idx_Constant_Category_ValidFrom" ON "SiteDirectory"."Constant_Cate
 CREATE INDEX "Idx_Constant_Category_ValidTo" ON "SiteDirectory"."Constant_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Constant_Category_Audit" (LIKE "SiteDirectory"."Constant_Category");
+
+ALTER TABLE "SiteDirectory"."Constant_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Constant_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Constant_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3216,6 +5252,15 @@ CREATE TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" (
   CONSTRAINT "EngineeringModelSetup_ActiveDomain_FK_Source" FOREIGN KEY ("EngineeringModelSetup") REFERENCES "SiteDirectory"."EngineeringModelSetup" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "EngineeringModelSetup_ActiveDomain_FK_Target" FOREIGN KEY ("ActiveDomain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3223,6 +5268,15 @@ CREATE INDEX "Idx_EngineeringModelSetup_ActiveDomain_ValidFrom" ON "SiteDirector
 CREATE INDEX "Idx_EngineeringModelSetup_ActiveDomain_ValidTo" ON "SiteDirectory"."EngineeringModelSetup_ActiveDomain" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Audit" (LIKE "SiteDirectory"."EngineeringModelSetup_ActiveDomain");
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3279,6 +5333,15 @@ CREATE TABLE "SiteDirectory"."Participant_Domain" (
   CONSTRAINT "Participant_Domain_FK_Source" FOREIGN KEY ("Participant") REFERENCES "SiteDirectory"."Participant" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "Participant_Domain_FK_Target" FOREIGN KEY ("Domain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."Participant_Domain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Domain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Participant_Domain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Domain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."Participant_Domain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3286,6 +5349,15 @@ CREATE INDEX "Idx_Participant_Domain_ValidFrom" ON "SiteDirectory"."Participant_
 CREATE INDEX "Idx_Participant_Domain_ValidTo" ON "SiteDirectory"."Participant_Domain" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Participant_Domain_Audit" (LIKE "SiteDirectory"."Participant_Domain");
+
+ALTER TABLE "SiteDirectory"."Participant_Domain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Domain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Participant_Domain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Domain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Participant_Domain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3340,6 +5412,15 @@ CREATE TABLE "SiteDirectory"."SiteLogEntry_Category" (
   CONSTRAINT "SiteLogEntry_Category_FK_Source" FOREIGN KEY ("SiteLogEntry") REFERENCES "SiteDirectory"."SiteLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "SiteLogEntry_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."SiteLogEntry_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3347,6 +5428,15 @@ CREATE INDEX "Idx_SiteLogEntry_Category_ValidFrom" ON "SiteDirectory"."SiteLogEn
 CREATE INDEX "Idx_SiteLogEntry_Category_ValidTo" ON "SiteDirectory"."SiteLogEntry_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteLogEntry_Category_Audit" (LIKE "SiteDirectory"."SiteLogEntry_Category");
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteLogEntry_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3377,6 +5467,14 @@ CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid" (
   CONSTRAINT "SiteLogEntry_AffectedItemIid_PK" PRIMARY KEY("SiteLogEntry","AffectedItemIid"),
   CONSTRAINT "SiteLogEntry_AffectedItemIid_FK_Source" FOREIGN KEY ("SiteLogEntry") REFERENCES "SiteDirectory"."SiteLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid" SET (autovacuum_analyze_threshold = 2500);  
 ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3384,6 +5482,15 @@ CREATE INDEX "Idx_SiteLogEntry_AffectedItemIid_ValidFrom" ON "SiteDirectory"."Si
 CREATE INDEX "Idx_SiteLogEntry_AffectedItemIid_ValidTo" ON "SiteDirectory"."SiteLogEntry_AffectedItemIid" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" (LIKE "SiteDirectory"."SiteLogEntry_AffectedItemIid");
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3414,6 +5521,15 @@ CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain" (
   CONSTRAINT "DomainOfExpertiseGroup_Domain_FK_Source" FOREIGN KEY ("DomainOfExpertiseGroup") REFERENCES "SiteDirectory"."DomainOfExpertiseGroup" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "DomainOfExpertiseGroup_Domain_FK_Target" FOREIGN KEY ("Domain") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3421,6 +5537,15 @@ CREATE INDEX "Idx_DomainOfExpertiseGroup_Domain_ValidFrom" ON "SiteDirectory"."D
 CREATE INDEX "Idx_DomainOfExpertiseGroup_Domain_ValidTo" ON "SiteDirectory"."DomainOfExpertiseGroup_Domain" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain_Audit" (LIKE "SiteDirectory"."DomainOfExpertiseGroup_Domain");
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Domain_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3451,6 +5576,15 @@ CREATE TABLE "SiteDirectory"."DomainOfExpertise_Category" (
   CONSTRAINT "DomainOfExpertise_Category_FK_Source" FOREIGN KEY ("DomainOfExpertise") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "DomainOfExpertise_Category_FK_Target" FOREIGN KEY ("Category") REFERENCES "SiteDirectory"."Category" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category" SET (autovacuum_analyze_threshold = 2500);  
+
 ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -3458,6 +5592,15 @@ CREATE INDEX "Idx_DomainOfExpertise_Category_ValidFrom" ON "SiteDirectory"."Doma
 CREATE INDEX "Idx_DomainOfExpertise_Category_ValidTo" ON "SiteDirectory"."DomainOfExpertise_Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DomainOfExpertise_Category_Audit" (LIKE "SiteDirectory"."DomainOfExpertise_Category");
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DomainOfExpertise_Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3533,6 +5676,15 @@ CREATE INDEX "Idx_Thing_ValidFrom" ON "SiteDirectory"."Thing" ("ValidFrom");
 CREATE INDEX "Idx_Thing_ValidTo" ON "SiteDirectory"."Thing" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Thing_Audit" (LIKE "SiteDirectory"."Thing");
+
+ALTER TABLE "SiteDirectory"."Thing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Thing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Thing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Thing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3555,6 +5707,15 @@ CREATE INDEX "Idx_TopContainer_ValidFrom" ON "SiteDirectory"."TopContainer" ("Va
 CREATE INDEX "Idx_TopContainer_ValidTo" ON "SiteDirectory"."TopContainer" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."TopContainer_Audit" (LIKE "SiteDirectory"."TopContainer");
+
+ALTER TABLE "SiteDirectory"."TopContainer_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TopContainer_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TopContainer_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TopContainer_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."TopContainer_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3577,6 +5738,15 @@ CREATE INDEX "Idx_SiteDirectory_ValidFrom" ON "SiteDirectory"."SiteDirectory" ("
 CREATE INDEX "Idx_SiteDirectory_ValidTo" ON "SiteDirectory"."SiteDirectory" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteDirectory_Audit" (LIKE "SiteDirectory"."SiteDirectory");
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectory_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteDirectory_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3599,6 +5769,15 @@ CREATE INDEX "Idx_Organization_ValidFrom" ON "SiteDirectory"."Organization" ("Va
 CREATE INDEX "Idx_Organization_ValidTo" ON "SiteDirectory"."Organization" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Organization_Audit" (LIKE "SiteDirectory"."Organization");
+
+ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Organization_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3621,6 +5800,15 @@ CREATE INDEX "Idx_Person_ValidFrom" ON "SiteDirectory"."Person" ("ValidFrom");
 CREATE INDEX "Idx_Person_ValidTo" ON "SiteDirectory"."Person" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Person_Audit" (LIKE "SiteDirectory"."Person");
+
+ALTER TABLE "SiteDirectory"."Person_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Person_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Person_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Person_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3643,6 +5831,15 @@ CREATE INDEX "Idx_EmailAddress_ValidFrom" ON "SiteDirectory"."EmailAddress" ("Va
 CREATE INDEX "Idx_EmailAddress_ValidTo" ON "SiteDirectory"."EmailAddress" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."EmailAddress_Audit" (LIKE "SiteDirectory"."EmailAddress");
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EmailAddress_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."EmailAddress_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3665,6 +5862,15 @@ CREATE INDEX "Idx_TelephoneNumber_ValidFrom" ON "SiteDirectory"."TelephoneNumber
 CREATE INDEX "Idx_TelephoneNumber_ValidTo" ON "SiteDirectory"."TelephoneNumber" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."TelephoneNumber_Audit" (LIKE "SiteDirectory"."TelephoneNumber");
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TelephoneNumber_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."TelephoneNumber_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3687,6 +5893,15 @@ CREATE INDEX "Idx_UserPreference_ValidFrom" ON "SiteDirectory"."UserPreference" 
 CREATE INDEX "Idx_UserPreference_ValidTo" ON "SiteDirectory"."UserPreference" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."UserPreference_Audit" (LIKE "SiteDirectory"."UserPreference");
+
+ALTER TABLE "SiteDirectory"."UserPreference_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UserPreference_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."UserPreference_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3709,6 +5924,15 @@ CREATE INDEX "Idx_DefinedThing_ValidFrom" ON "SiteDirectory"."DefinedThing" ("Va
 CREATE INDEX "Idx_DefinedThing_ValidTo" ON "SiteDirectory"."DefinedThing" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DefinedThing_Audit" (LIKE "SiteDirectory"."DefinedThing");
+
+ALTER TABLE "SiteDirectory"."DefinedThing_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DefinedThing_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DefinedThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DefinedThing_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DefinedThing_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3731,6 +5955,15 @@ CREATE INDEX "Idx_ParticipantRole_ValidFrom" ON "SiteDirectory"."ParticipantRole
 CREATE INDEX "Idx_ParticipantRole_ValidTo" ON "SiteDirectory"."ParticipantRole" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParticipantRole_Audit" (LIKE "SiteDirectory"."ParticipantRole");
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantRole_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParticipantRole_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3753,6 +5986,15 @@ CREATE INDEX "Idx_Alias_ValidFrom" ON "SiteDirectory"."Alias" ("ValidFrom");
 CREATE INDEX "Idx_Alias_ValidTo" ON "SiteDirectory"."Alias" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Alias_Audit" (LIKE "SiteDirectory"."Alias");
+
+ALTER TABLE "SiteDirectory"."Alias_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Alias_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Alias_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Alias_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3775,6 +6017,15 @@ CREATE INDEX "Idx_Definition_ValidFrom" ON "SiteDirectory"."Definition" ("ValidF
 CREATE INDEX "Idx_Definition_ValidTo" ON "SiteDirectory"."Definition" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Definition_Audit" (LIKE "SiteDirectory"."Definition");
+
+ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Definition_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3797,6 +6048,15 @@ CREATE INDEX "Idx_Citation_ValidFrom" ON "SiteDirectory"."Citation" ("ValidFrom"
 CREATE INDEX "Idx_Citation_ValidTo" ON "SiteDirectory"."Citation" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Citation_Audit" (LIKE "SiteDirectory"."Citation");
+
+ALTER TABLE "SiteDirectory"."Citation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Citation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Citation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Citation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3819,6 +6079,15 @@ CREATE INDEX "Idx_HyperLink_ValidFrom" ON "SiteDirectory"."HyperLink" ("ValidFro
 CREATE INDEX "Idx_HyperLink_ValidTo" ON "SiteDirectory"."HyperLink" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."HyperLink_Audit" (LIKE "SiteDirectory"."HyperLink");
+
+ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."HyperLink_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3841,6 +6110,15 @@ CREATE INDEX "Idx_ParticipantPermission_ValidFrom" ON "SiteDirectory"."Participa
 CREATE INDEX "Idx_ParticipantPermission_ValidTo" ON "SiteDirectory"."ParticipantPermission" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParticipantPermission_Audit" (LIKE "SiteDirectory"."ParticipantPermission");
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParticipantPermission_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParticipantPermission_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3863,6 +6141,15 @@ CREATE INDEX "Idx_ReferenceDataLibrary_ValidFrom" ON "SiteDirectory"."ReferenceD
 CREATE INDEX "Idx_ReferenceDataLibrary_ValidTo" ON "SiteDirectory"."ReferenceDataLibrary" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferenceDataLibrary_Audit" (LIKE "SiteDirectory"."ReferenceDataLibrary");
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferenceDataLibrary_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3885,6 +6172,15 @@ CREATE INDEX "Idx_SiteReferenceDataLibrary_ValidFrom" ON "SiteDirectory"."SiteRe
 CREATE INDEX "Idx_SiteReferenceDataLibrary_ValidTo" ON "SiteDirectory"."SiteReferenceDataLibrary" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteReferenceDataLibrary_Audit" (LIKE "SiteDirectory"."SiteReferenceDataLibrary");
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteReferenceDataLibrary_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3907,6 +6203,15 @@ CREATE INDEX "Idx_Category_ValidFrom" ON "SiteDirectory"."Category" ("ValidFrom"
 CREATE INDEX "Idx_Category_ValidTo" ON "SiteDirectory"."Category" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Category_Audit" (LIKE "SiteDirectory"."Category");
+
+ALTER TABLE "SiteDirectory"."Category_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Category_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Category_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Category_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3929,6 +6234,15 @@ CREATE INDEX "Idx_ParameterType_ValidFrom" ON "SiteDirectory"."ParameterType" ("
 CREATE INDEX "Idx_ParameterType_ValidTo" ON "SiteDirectory"."ParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParameterType_Audit" (LIKE "SiteDirectory"."ParameterType");
+
+ALTER TABLE "SiteDirectory"."ParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3951,6 +6265,15 @@ CREATE INDEX "Idx_CompoundParameterType_ValidFrom" ON "SiteDirectory"."CompoundP
 CREATE INDEX "Idx_CompoundParameterType_ValidTo" ON "SiteDirectory"."CompoundParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."CompoundParameterType_Audit" (LIKE "SiteDirectory"."CompoundParameterType");
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CompoundParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."CompoundParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3973,6 +6296,15 @@ CREATE INDEX "Idx_ArrayParameterType_ValidFrom" ON "SiteDirectory"."ArrayParamet
 CREATE INDEX "Idx_ArrayParameterType_ValidTo" ON "SiteDirectory"."ArrayParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ArrayParameterType_Audit" (LIKE "SiteDirectory"."ArrayParameterType");
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -3995,6 +6327,15 @@ CREATE INDEX "Idx_ParameterTypeComponent_ValidFrom" ON "SiteDirectory"."Paramete
 CREATE INDEX "Idx_ParameterTypeComponent_ValidTo" ON "SiteDirectory"."ParameterTypeComponent" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParameterTypeComponent_Audit" (LIKE "SiteDirectory"."ParameterTypeComponent");
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParameterTypeComponent_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4017,6 +6358,15 @@ CREATE INDEX "Idx_ScalarParameterType_ValidFrom" ON "SiteDirectory"."ScalarParam
 CREATE INDEX "Idx_ScalarParameterType_ValidTo" ON "SiteDirectory"."ScalarParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ScalarParameterType_Audit" (LIKE "SiteDirectory"."ScalarParameterType");
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScalarParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ScalarParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4039,6 +6389,15 @@ CREATE INDEX "Idx_EnumerationParameterType_ValidFrom" ON "SiteDirectory"."Enumer
 CREATE INDEX "Idx_EnumerationParameterType_ValidTo" ON "SiteDirectory"."EnumerationParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."EnumerationParameterType_Audit" (LIKE "SiteDirectory"."EnumerationParameterType");
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."EnumerationParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4061,6 +6420,15 @@ CREATE INDEX "Idx_EnumerationValueDefinition_ValidFrom" ON "SiteDirectory"."Enum
 CREATE INDEX "Idx_EnumerationValueDefinition_ValidTo" ON "SiteDirectory"."EnumerationValueDefinition" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."EnumerationValueDefinition_Audit" (LIKE "SiteDirectory"."EnumerationValueDefinition");
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."EnumerationValueDefinition_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4083,6 +6451,15 @@ CREATE INDEX "Idx_BooleanParameterType_ValidFrom" ON "SiteDirectory"."BooleanPar
 CREATE INDEX "Idx_BooleanParameterType_ValidTo" ON "SiteDirectory"."BooleanParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."BooleanParameterType_Audit" (LIKE "SiteDirectory"."BooleanParameterType");
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BooleanParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."BooleanParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4105,6 +6482,15 @@ CREATE INDEX "Idx_DateParameterType_ValidFrom" ON "SiteDirectory"."DateParameter
 CREATE INDEX "Idx_DateParameterType_ValidTo" ON "SiteDirectory"."DateParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DateParameterType_Audit" (LIKE "SiteDirectory"."DateParameterType");
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DateParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4127,6 +6513,15 @@ CREATE INDEX "Idx_TextParameterType_ValidFrom" ON "SiteDirectory"."TextParameter
 CREATE INDEX "Idx_TextParameterType_ValidTo" ON "SiteDirectory"."TextParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."TextParameterType_Audit" (LIKE "SiteDirectory"."TextParameterType");
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TextParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."TextParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4149,6 +6544,15 @@ CREATE INDEX "Idx_DateTimeParameterType_ValidFrom" ON "SiteDirectory"."DateTimeP
 CREATE INDEX "Idx_DateTimeParameterType_ValidTo" ON "SiteDirectory"."DateTimeParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DateTimeParameterType_Audit" (LIKE "SiteDirectory"."DateTimeParameterType");
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DateTimeParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DateTimeParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4171,6 +6575,15 @@ CREATE INDEX "Idx_TimeOfDayParameterType_ValidFrom" ON "SiteDirectory"."TimeOfDa
 CREATE INDEX "Idx_TimeOfDayParameterType_ValidTo" ON "SiteDirectory"."TimeOfDayParameterType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."TimeOfDayParameterType_Audit" (LIKE "SiteDirectory"."TimeOfDayParameterType");
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."TimeOfDayParameterType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4193,6 +6606,15 @@ CREATE INDEX "Idx_QuantityKind_ValidFrom" ON "SiteDirectory"."QuantityKind" ("Va
 CREATE INDEX "Idx_QuantityKind_ValidTo" ON "SiteDirectory"."QuantityKind" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."QuantityKind_Audit" (LIKE "SiteDirectory"."QuantityKind");
+
+ALTER TABLE "SiteDirectory"."QuantityKind_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKind_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."QuantityKind_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4215,6 +6637,15 @@ CREATE INDEX "Idx_SpecializedQuantityKind_ValidFrom" ON "SiteDirectory"."Special
 CREATE INDEX "Idx_SpecializedQuantityKind_ValidTo" ON "SiteDirectory"."SpecializedQuantityKind" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SpecializedQuantityKind_Audit" (LIKE "SiteDirectory"."SpecializedQuantityKind");
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SpecializedQuantityKind_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4237,6 +6668,15 @@ CREATE INDEX "Idx_SimpleQuantityKind_ValidFrom" ON "SiteDirectory"."SimpleQuanti
 CREATE INDEX "Idx_SimpleQuantityKind_ValidTo" ON "SiteDirectory"."SimpleQuantityKind" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SimpleQuantityKind_Audit" (LIKE "SiteDirectory"."SimpleQuantityKind");
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SimpleQuantityKind_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4259,6 +6699,15 @@ CREATE INDEX "Idx_DerivedQuantityKind_ValidFrom" ON "SiteDirectory"."DerivedQuan
 CREATE INDEX "Idx_DerivedQuantityKind_ValidTo" ON "SiteDirectory"."DerivedQuantityKind" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Audit" (LIKE "SiteDirectory"."DerivedQuantityKind");
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DerivedQuantityKind_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4281,6 +6730,15 @@ CREATE INDEX "Idx_QuantityKindFactor_ValidFrom" ON "SiteDirectory"."QuantityKind
 CREATE INDEX "Idx_QuantityKindFactor_ValidTo" ON "SiteDirectory"."QuantityKindFactor" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."QuantityKindFactor_Audit" (LIKE "SiteDirectory"."QuantityKindFactor");
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."QuantityKindFactor_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."QuantityKindFactor_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4294,7 +6752,7 @@ CREATE TRIGGER QuantityKindFactor_audit_prepare
 
 CREATE TRIGGER QuantityKindFactor_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."QuantityKindFactor"
-  FOR EACH ROW 
+  FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 ALTER TABLE "SiteDirectory"."MeasurementScale"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
@@ -4303,6 +6761,15 @@ CREATE INDEX "Idx_MeasurementScale_ValidFrom" ON "SiteDirectory"."MeasurementSca
 CREATE INDEX "Idx_MeasurementScale_ValidTo" ON "SiteDirectory"."MeasurementScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."MeasurementScale_Audit" (LIKE "SiteDirectory"."MeasurementScale");
+
+ALTER TABLE "SiteDirectory"."MeasurementScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MeasurementScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."MeasurementScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4325,6 +6792,15 @@ CREATE INDEX "Idx_OrdinalScale_ValidFrom" ON "SiteDirectory"."OrdinalScale" ("Va
 CREATE INDEX "Idx_OrdinalScale_ValidTo" ON "SiteDirectory"."OrdinalScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."OrdinalScale_Audit" (LIKE "SiteDirectory"."OrdinalScale");
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."OrdinalScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."OrdinalScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4347,6 +6823,15 @@ CREATE INDEX "Idx_ScaleValueDefinition_ValidFrom" ON "SiteDirectory"."ScaleValue
 CREATE INDEX "Idx_ScaleValueDefinition_ValidTo" ON "SiteDirectory"."ScaleValueDefinition" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ScaleValueDefinition_Audit" (LIKE "SiteDirectory"."ScaleValueDefinition");
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ScaleValueDefinition_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4369,6 +6854,15 @@ CREATE INDEX "Idx_MappingToReferenceScale_ValidFrom" ON "SiteDirectory"."Mapping
 CREATE INDEX "Idx_MappingToReferenceScale_ValidTo" ON "SiteDirectory"."MappingToReferenceScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Audit" (LIKE "SiteDirectory"."MappingToReferenceScale");
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."MappingToReferenceScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4391,6 +6885,15 @@ CREATE INDEX "Idx_RatioScale_ValidFrom" ON "SiteDirectory"."RatioScale" ("ValidF
 CREATE INDEX "Idx_RatioScale_ValidTo" ON "SiteDirectory"."RatioScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."RatioScale_Audit" (LIKE "SiteDirectory"."RatioScale");
+
+ALTER TABLE "SiteDirectory"."RatioScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."RatioScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."RatioScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4413,6 +6916,15 @@ CREATE INDEX "Idx_CyclicRatioScale_ValidFrom" ON "SiteDirectory"."CyclicRatioSca
 CREATE INDEX "Idx_CyclicRatioScale_ValidTo" ON "SiteDirectory"."CyclicRatioScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."CyclicRatioScale_Audit" (LIKE "SiteDirectory"."CyclicRatioScale");
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."CyclicRatioScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."CyclicRatioScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4435,6 +6947,15 @@ CREATE INDEX "Idx_IntervalScale_ValidFrom" ON "SiteDirectory"."IntervalScale" ("
 CREATE INDEX "Idx_IntervalScale_ValidTo" ON "SiteDirectory"."IntervalScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."IntervalScale_Audit" (LIKE "SiteDirectory"."IntervalScale");
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IntervalScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."IntervalScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4457,6 +6978,15 @@ CREATE INDEX "Idx_LogarithmicScale_ValidFrom" ON "SiteDirectory"."LogarithmicSca
 CREATE INDEX "Idx_LogarithmicScale_ValidTo" ON "SiteDirectory"."LogarithmicScale" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."LogarithmicScale_Audit" (LIKE "SiteDirectory"."LogarithmicScale");
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4479,6 +7009,15 @@ CREATE INDEX "Idx_ScaleReferenceQuantityValue_ValidFrom" ON "SiteDirectory"."Sca
 CREATE INDEX "Idx_ScaleReferenceQuantityValue_ValidTo" ON "SiteDirectory"."ScaleReferenceQuantityValue" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Audit" (LIKE "SiteDirectory"."ScaleReferenceQuantityValue");
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ScaleReferenceQuantityValue_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4501,6 +7040,15 @@ CREATE INDEX "Idx_UnitPrefix_ValidFrom" ON "SiteDirectory"."UnitPrefix" ("ValidF
 CREATE INDEX "Idx_UnitPrefix_ValidTo" ON "SiteDirectory"."UnitPrefix" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."UnitPrefix_Audit" (LIKE "SiteDirectory"."UnitPrefix");
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitPrefix_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."UnitPrefix_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4523,6 +7071,15 @@ CREATE INDEX "Idx_MeasurementUnit_ValidFrom" ON "SiteDirectory"."MeasurementUnit
 CREATE INDEX "Idx_MeasurementUnit_ValidTo" ON "SiteDirectory"."MeasurementUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."MeasurementUnit_Audit" (LIKE "SiteDirectory"."MeasurementUnit");
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MeasurementUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."MeasurementUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4545,6 +7102,15 @@ CREATE INDEX "Idx_DerivedUnit_ValidFrom" ON "SiteDirectory"."DerivedUnit" ("Vali
 CREATE INDEX "Idx_DerivedUnit_ValidTo" ON "SiteDirectory"."DerivedUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DerivedUnit_Audit" (LIKE "SiteDirectory"."DerivedUnit");
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DerivedUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DerivedUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4567,6 +7133,15 @@ CREATE INDEX "Idx_UnitFactor_ValidFrom" ON "SiteDirectory"."UnitFactor" ("ValidF
 CREATE INDEX "Idx_UnitFactor_ValidTo" ON "SiteDirectory"."UnitFactor" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."UnitFactor_Audit" (LIKE "SiteDirectory"."UnitFactor");
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."UnitFactor_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."UnitFactor_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4589,6 +7164,15 @@ CREATE INDEX "Idx_ConversionBasedUnit_ValidFrom" ON "SiteDirectory"."ConversionB
 CREATE INDEX "Idx_ConversionBasedUnit_ValidTo" ON "SiteDirectory"."ConversionBasedUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ConversionBasedUnit_Audit" (LIKE "SiteDirectory"."ConversionBasedUnit");
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ConversionBasedUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ConversionBasedUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4611,6 +7195,15 @@ CREATE INDEX "Idx_LinearConversionUnit_ValidFrom" ON "SiteDirectory"."LinearConv
 CREATE INDEX "Idx_LinearConversionUnit_ValidTo" ON "SiteDirectory"."LinearConversionUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."LinearConversionUnit_Audit" (LIKE "SiteDirectory"."LinearConversionUnit");
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."LinearConversionUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."LinearConversionUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4633,6 +7226,15 @@ CREATE INDEX "Idx_PrefixedUnit_ValidFrom" ON "SiteDirectory"."PrefixedUnit" ("Va
 CREATE INDEX "Idx_PrefixedUnit_ValidTo" ON "SiteDirectory"."PrefixedUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."PrefixedUnit_Audit" (LIKE "SiteDirectory"."PrefixedUnit");
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PrefixedUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."PrefixedUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4655,6 +7257,15 @@ CREATE INDEX "Idx_SimpleUnit_ValidFrom" ON "SiteDirectory"."SimpleUnit" ("ValidF
 CREATE INDEX "Idx_SimpleUnit_ValidTo" ON "SiteDirectory"."SimpleUnit" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SimpleUnit_Audit" (LIKE "SiteDirectory"."SimpleUnit");
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SimpleUnit_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SimpleUnit_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4677,6 +7288,15 @@ CREATE INDEX "Idx_FileType_ValidFrom" ON "SiteDirectory"."FileType" ("ValidFrom"
 CREATE INDEX "Idx_FileType_ValidTo" ON "SiteDirectory"."FileType" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."FileType_Audit" (LIKE "SiteDirectory"."FileType");
+
+ALTER TABLE "SiteDirectory"."FileType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."FileType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."FileType_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."FileType_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4699,6 +7319,15 @@ CREATE INDEX "Idx_Glossary_ValidFrom" ON "SiteDirectory"."Glossary" ("ValidFrom"
 CREATE INDEX "Idx_Glossary_ValidTo" ON "SiteDirectory"."Glossary" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Glossary_Audit" (LIKE "SiteDirectory"."Glossary");
+
+ALTER TABLE "SiteDirectory"."Glossary_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Glossary_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Glossary_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Glossary_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4721,6 +7350,15 @@ CREATE INDEX "Idx_Term_ValidFrom" ON "SiteDirectory"."Term" ("ValidFrom");
 CREATE INDEX "Idx_Term_ValidTo" ON "SiteDirectory"."Term" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Term_Audit" (LIKE "SiteDirectory"."Term");
+
+ALTER TABLE "SiteDirectory"."Term_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Term_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Term_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Term_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4743,6 +7381,15 @@ CREATE INDEX "Idx_ReferenceSource_ValidFrom" ON "SiteDirectory"."ReferenceSource
 CREATE INDEX "Idx_ReferenceSource_ValidTo" ON "SiteDirectory"."ReferenceSource" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferenceSource_Audit" (LIKE "SiteDirectory"."ReferenceSource");
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferenceSource_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferenceSource_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4765,6 +7412,15 @@ CREATE INDEX "Idx_Rule_ValidFrom" ON "SiteDirectory"."Rule" ("ValidFrom");
 CREATE INDEX "Idx_Rule_ValidTo" ON "SiteDirectory"."Rule" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Rule_Audit" (LIKE "SiteDirectory"."Rule");
+
+ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Rule_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4787,6 +7443,15 @@ CREATE INDEX "Idx_ReferencerRule_ValidFrom" ON "SiteDirectory"."ReferencerRule" 
 CREATE INDEX "Idx_ReferencerRule_ValidTo" ON "SiteDirectory"."ReferencerRule" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ReferencerRule_Audit" (LIKE "SiteDirectory"."ReferencerRule");
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ReferencerRule_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ReferencerRule_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4809,6 +7474,15 @@ CREATE INDEX "Idx_BinaryRelationshipRule_ValidFrom" ON "SiteDirectory"."BinaryRe
 CREATE INDEX "Idx_BinaryRelationshipRule_ValidTo" ON "SiteDirectory"."BinaryRelationshipRule" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" (LIKE "SiteDirectory"."BinaryRelationshipRule");
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4831,6 +7505,15 @@ CREATE INDEX "Idx_MultiRelationshipRule_ValidFrom" ON "SiteDirectory"."MultiRela
 CREATE INDEX "Idx_MultiRelationshipRule_ValidTo" ON "SiteDirectory"."MultiRelationshipRule" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."MultiRelationshipRule_Audit" (LIKE "SiteDirectory"."MultiRelationshipRule");
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."MultiRelationshipRule_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4853,6 +7536,15 @@ CREATE INDEX "Idx_DecompositionRule_ValidFrom" ON "SiteDirectory"."Decomposition
 CREATE INDEX "Idx_DecompositionRule_ValidTo" ON "SiteDirectory"."DecompositionRule" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DecompositionRule_Audit" (LIKE "SiteDirectory"."DecompositionRule");
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DecompositionRule_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DecompositionRule_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4875,6 +7567,15 @@ CREATE INDEX "Idx_ParameterizedCategoryRule_ValidFrom" ON "SiteDirectory"."Param
 CREATE INDEX "Idx_ParameterizedCategoryRule_ValidTo" ON "SiteDirectory"."ParameterizedCategoryRule" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" (LIKE "SiteDirectory"."ParameterizedCategoryRule");
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4897,6 +7598,15 @@ CREATE INDEX "Idx_Constant_ValidFrom" ON "SiteDirectory"."Constant" ("ValidFrom"
 CREATE INDEX "Idx_Constant_ValidTo" ON "SiteDirectory"."Constant" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Constant_Audit" (LIKE "SiteDirectory"."Constant");
+
+ALTER TABLE "SiteDirectory"."Constant_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Constant_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Constant_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Constant_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4919,6 +7629,15 @@ CREATE INDEX "Idx_EngineeringModelSetup_ValidFrom" ON "SiteDirectory"."Engineeri
 CREATE INDEX "Idx_EngineeringModelSetup_ValidTo" ON "SiteDirectory"."EngineeringModelSetup" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."EngineeringModelSetup_Audit" (LIKE "SiteDirectory"."EngineeringModelSetup");
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4941,6 +7660,15 @@ CREATE INDEX "Idx_Participant_ValidFrom" ON "SiteDirectory"."Participant" ("Vali
 CREATE INDEX "Idx_Participant_ValidTo" ON "SiteDirectory"."Participant" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."Participant_Audit" (LIKE "SiteDirectory"."Participant");
+
+ALTER TABLE "SiteDirectory"."Participant_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."Participant_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."Participant_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."Participant_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4963,6 +7691,15 @@ CREATE INDEX "Idx_ModelReferenceDataLibrary_ValidFrom" ON "SiteDirectory"."Model
 CREATE INDEX "Idx_ModelReferenceDataLibrary_ValidTo" ON "SiteDirectory"."ModelReferenceDataLibrary" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ModelReferenceDataLibrary_Audit" (LIKE "SiteDirectory"."ModelReferenceDataLibrary");
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ModelReferenceDataLibrary_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -4985,6 +7722,15 @@ CREATE INDEX "Idx_IterationSetup_ValidFrom" ON "SiteDirectory"."IterationSetup" 
 CREATE INDEX "Idx_IterationSetup_ValidTo" ON "SiteDirectory"."IterationSetup" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."IterationSetup_Audit" (LIKE "SiteDirectory"."IterationSetup");
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."IterationSetup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."IterationSetup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5007,6 +7753,15 @@ CREATE INDEX "Idx_PersonRole_ValidFrom" ON "SiteDirectory"."PersonRole" ("ValidF
 CREATE INDEX "Idx_PersonRole_ValidTo" ON "SiteDirectory"."PersonRole" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."PersonRole_Audit" (LIKE "SiteDirectory"."PersonRole");
+
+ALTER TABLE "SiteDirectory"."PersonRole_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonRole_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."PersonRole_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5029,6 +7784,15 @@ CREATE INDEX "Idx_PersonPermission_ValidFrom" ON "SiteDirectory"."PersonPermissi
 CREATE INDEX "Idx_PersonPermission_ValidTo" ON "SiteDirectory"."PersonPermission" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."PersonPermission_Audit" (LIKE "SiteDirectory"."PersonPermission");
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."PersonPermission_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."PersonPermission_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5051,6 +7815,15 @@ CREATE INDEX "Idx_SiteLogEntry_ValidFrom" ON "SiteDirectory"."SiteLogEntry" ("Va
 CREATE INDEX "Idx_SiteLogEntry_ValidTo" ON "SiteDirectory"."SiteLogEntry" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteLogEntry_Audit" (LIKE "SiteDirectory"."SiteLogEntry");
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteLogEntry_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteLogEntry_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5073,6 +7846,15 @@ CREATE INDEX "Idx_DomainOfExpertiseGroup_ValidFrom" ON "SiteDirectory"."DomainOf
 CREATE INDEX "Idx_DomainOfExpertiseGroup_ValidTo" ON "SiteDirectory"."DomainOfExpertiseGroup" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DomainOfExpertiseGroup_Audit" (LIKE "SiteDirectory"."DomainOfExpertiseGroup");
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DomainOfExpertiseGroup_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5095,6 +7877,15 @@ CREATE INDEX "Idx_DomainOfExpertise_ValidFrom" ON "SiteDirectory"."DomainOfExper
 CREATE INDEX "Idx_DomainOfExpertise_ValidTo" ON "SiteDirectory"."DomainOfExpertise" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DomainOfExpertise_Audit" (LIKE "SiteDirectory"."DomainOfExpertise");
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DomainOfExpertise_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DomainOfExpertise_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5117,6 +7908,15 @@ CREATE INDEX "Idx_NaturalLanguage_ValidFrom" ON "SiteDirectory"."NaturalLanguage
 CREATE INDEX "Idx_NaturalLanguage_ValidTo" ON "SiteDirectory"."NaturalLanguage" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."NaturalLanguage_Audit" (LIKE "SiteDirectory"."NaturalLanguage");
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."NaturalLanguage_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."NaturalLanguage_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5139,6 +7939,15 @@ CREATE INDEX "Idx_GenericAnnotation_ValidFrom" ON "SiteDirectory"."GenericAnnota
 CREATE INDEX "Idx_GenericAnnotation_ValidTo" ON "SiteDirectory"."GenericAnnotation" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."GenericAnnotation_Audit" (LIKE "SiteDirectory"."GenericAnnotation");
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."GenericAnnotation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."GenericAnnotation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5161,6 +7970,15 @@ CREATE INDEX "Idx_SiteDirectoryDataAnnotation_ValidFrom" ON "SiteDirectory"."Sit
 CREATE INDEX "Idx_SiteDirectoryDataAnnotation_ValidTo" ON "SiteDirectory"."SiteDirectoryDataAnnotation" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Audit" (LIKE "SiteDirectory"."SiteDirectoryDataAnnotation");
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteDirectoryDataAnnotation_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5183,6 +8001,15 @@ CREATE INDEX "Idx_ThingReference_ValidFrom" ON "SiteDirectory"."ThingReference" 
 CREATE INDEX "Idx_ThingReference_ValidTo" ON "SiteDirectory"."ThingReference" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."ThingReference_Audit" (LIKE "SiteDirectory"."ThingReference");
+
+ALTER TABLE "SiteDirectory"."ThingReference_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ThingReference_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."ThingReference_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."ThingReference_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."ThingReference_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5205,6 +8032,15 @@ CREATE INDEX "Idx_SiteDirectoryThingReference_ValidFrom" ON "SiteDirectory"."Sit
 CREATE INDEX "Idx_SiteDirectoryThingReference_ValidTo" ON "SiteDirectory"."SiteDirectoryThingReference" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteDirectoryThingReference_Audit" (LIKE "SiteDirectory"."SiteDirectoryThingReference");
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteDirectoryThingReference_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5227,6 +8063,15 @@ CREATE INDEX "Idx_DiscussionItem_ValidFrom" ON "SiteDirectory"."DiscussionItem" 
 CREATE INDEX "Idx_DiscussionItem_ValidTo" ON "SiteDirectory"."DiscussionItem" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DiscussionItem_Audit" (LIKE "SiteDirectory"."DiscussionItem");
+
+ALTER TABLE "SiteDirectory"."DiscussionItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DiscussionItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."DiscussionItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."DiscussionItem_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."DiscussionItem_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;
@@ -5249,6 +8094,15 @@ CREATE INDEX "Idx_SiteDirectoryDataDiscussionItem_ValidFrom" ON "SiteDirectory".
 CREATE INDEX "Idx_SiteDirectoryDataDiscussionItem_ValidTo" ON "SiteDirectory"."SiteDirectoryDataDiscussionItem" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Audit" (LIKE "SiteDirectory"."SiteDirectoryDataDiscussionItem");
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Audit" SET (autovacuum_analyze_threshold = 2500);
+
 ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem_Audit" 
   ADD COLUMN "Action" character(1) NOT NULL,
   ADD COLUMN "Actor" uuid;

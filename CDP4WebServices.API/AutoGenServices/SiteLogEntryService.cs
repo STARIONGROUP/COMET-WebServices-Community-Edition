@@ -40,6 +40,11 @@ namespace CDP4WebServices.API.Services
     public sealed partial class SiteLogEntryService : ServiceBase, ISiteLogEntryService
     {
         /// <summary>
+        /// Gets or sets the <see cref="ILogEntryChangelogItemService"/>.
+        /// </summary>
+        public ILogEntryChangelogItemService LogEntryChangelogItemService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="ISiteLogEntryDao"/>.
         /// </summary>
         public ISiteLogEntryDao SiteLogEntryDao { get; set; }
@@ -253,7 +258,8 @@ namespace CDP4WebServices.API.Services
             }
 
             var siteLogEntry = thing as SiteLogEntry;
-            return this.SiteLogEntryDao.Write(transaction, partition, siteLogEntry, container);
+            var createSuccesful = this.SiteLogEntryDao.Write(transaction, partition, siteLogEntry, container);
+            return createSuccesful && this.CreateContainment(transaction, partition, siteLogEntry);
         }
 
         /// <summary>
@@ -315,7 +321,12 @@ namespace CDP4WebServices.API.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            return this.GetShallow(transaction, partition, idFilter, containerSecurityContext);
+            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var siteLogEntryColl = results.Where(i => i.GetType() == typeof(SiteLogEntry)).Cast<SiteLogEntry>().ToList();
+
+            results.AddRange(this.LogEntryChangelogItemService.GetDeep(transaction, partition, siteLogEntryColl.SelectMany(x => x.LogEntryChangelogItem), containerSecurityContext));
+
+            return results;
         }
 
         /// <summary>
@@ -355,6 +366,33 @@ namespace CDP4WebServices.API.Services
             }
 
             return filteredCollection;
+        }
+
+        /// <summary>
+        /// Persist the <see cref="SiteLogEntry"/> containment tree to the ORM layer.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="siteLogEntry">
+        /// The <see cref="SiteLogEntry"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool CreateContainment(NpgsqlTransaction transaction, string partition, SiteLogEntry siteLogEntry)
+        {
+            var results = new List<bool>();
+
+            foreach (var logEntryChangelogItem in this.ResolveFromRequestCache(siteLogEntry.LogEntryChangelogItem))
+            {
+                results.Add(this.LogEntryChangelogItemService.CreateConcept(transaction, partition, logEntryChangelogItem, siteLogEntry));
+            }
+
+            return results.All(x => x);
         }
     }
 }

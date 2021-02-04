@@ -141,6 +141,7 @@ namespace CDP4Orm.Dao
         {
             string tempLastModifiedOn;
             string tempModifiedOn;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -165,6 +166,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;
@@ -353,6 +359,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"GenericAnnotation\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Iteration\" SELECT * FROM \"{1}\".\"Iteration\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Iteration\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"LogEntryChangelogItem\" SELECT * FROM \"{1}\".\"LogEntryChangelogItem\";", targetPartition, sourcePartition);
+                sqlBuilder.AppendFormat("UPDATE \"{0}\".\"LogEntryChangelogItem\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModellingAnnotationItem\" SELECT * FROM \"{1}\".\"ModellingAnnotationItem\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ModellingAnnotationItem\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModellingThingReference\" SELECT * FROM \"{1}\".\"ModellingThingReference\";", targetPartition, sourcePartition);
@@ -450,6 +458,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"Folder\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"GenericAnnotation\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"Iteration\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
+                sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"LogEntryChangelogItem\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ModellingAnnotationItem\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ModellingThingReference\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ModelLogEntry\" {1} TRIGGER USER;", sourcePartition, triggerStatus);

@@ -145,6 +145,7 @@ namespace CDP4Orm.Dao
             string tempModifiedOn;
             string tempPublished;
             string tempReference;
+            string tempThingPreference;
             string tempValueSwitch;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -184,6 +185,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Reference", out tempReference))
             {
                 dto.Reference = tempReference.FromHstoreToValueArray<string>();
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             if (valueDict.TryGetValue("ValueSwitch", out tempValueSwitch))

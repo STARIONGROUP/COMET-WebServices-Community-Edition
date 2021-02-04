@@ -145,6 +145,7 @@ namespace CDP4Orm.Dao
             string tempQuantityDimensionSymbol;
             string tempShortName;
             string tempSymbol;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -189,6 +190,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Symbol", out tempSymbol))
             {
                 dto.Symbol = tempSymbol.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;

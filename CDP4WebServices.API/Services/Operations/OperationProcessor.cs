@@ -26,25 +26,30 @@
 
 namespace CDP4WebServices.API.Services.Operations
 {
+    using CDP4Common;
+    using CDP4Common.CommonData;
+    using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
+    using CDP4Common.MetaInfo;
+    using CDP4Common.Types;
+
+    using CDP4Orm.Dao;
+    using CDP4Orm.Dao.Resolve;
+
+    using CDP4WebServices.API.Services.Authorization;
+    using CDP4WebServices.API.Services.Operations.SideEffects;
+
+    using NLog;
+
+    using Npgsql;
+
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Security;
-    using CDP4Common;
-    using CDP4Common.CommonData;
-    using CDP4Common.Dto;
-    using CDP4Common.DTO;
-    using CDP4Common.Exceptions;
-    using CDP4Common.MetaInfo;
-    using CDP4Common.Types;
-    using CDP4Orm.Dao;
-    using CDP4Orm.Dao.Resolve;
-    using CDP4WebServices.API.Services.Authorization;
-    using CDP4WebServices.API.Services.Operations.SideEffects;
-    using NLog;
-    using Npgsql;
+
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
@@ -946,6 +951,8 @@ namespace CDP4WebServices.API.Services.Operations
                 var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
+                securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+
                 var resolvedInfo = this.operationThingCache[createInfo];
 
                 // check that item doen not exist:
@@ -1099,6 +1106,7 @@ namespace CDP4WebServices.API.Services.Operations
                 var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(updateInfoKey.TypeName);
                 var service = this.ServiceProvider.MapToPersitableService(updateInfoKey.TypeName);
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
+                securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
                 var resolvedInfo = this.operationThingCache[updateInfoKey];
 

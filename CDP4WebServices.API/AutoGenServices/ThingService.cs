@@ -80,6 +80,11 @@ namespace CDP4WebServices.API.Services
         public IDefinitionService DefinitionService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IDependentParameterTypeAssignmentService"/>.
+        /// </summary>
+        public IDependentParameterTypeAssignmentService DependentParameterTypeAssignmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDiagramThingBaseService"/>.
         /// </summary>
         public IDiagramThingBaseService DiagramThingBaseService { get; set; }
@@ -130,6 +135,11 @@ namespace CDP4WebServices.API.Services
         public IIdCorrespondenceService IdCorrespondenceService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IIndependentParameterTypeAssignmentService"/>.
+        /// </summary>
+        public IIndependentParameterTypeAssignmentService IndependentParameterTypeAssignmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IIterationService"/>.
         /// </summary>
         public IIterationService IterationService { get; set; }
@@ -138,6 +148,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the <see cref="IIterationSetupService"/>.
         /// </summary>
         public IIterationSetupService IterationSetupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ILogEntryChangelogItemService"/>.
+        /// </summary>
+        public ILogEntryChangelogItemService LogEntryChangelogItemService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IMappingToReferenceScaleService"/>.
@@ -173,6 +188,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the <see cref="IOrganizationService"/>.
         /// </summary>
         public IOrganizationService OrganizationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IOrganizationalParticipantService"/>.
+        /// </summary>
+        public IOrganizationalParticipantService OrganizationalParticipantService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IPageService"/>.
@@ -541,6 +561,7 @@ namespace CDP4WebServices.API.Services
             thingColl.AddRange(this.CitationService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.DefinedThingService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.DefinitionService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.DependentParameterTypeAssignmentService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.DiagramThingBaseService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.EmailAddressService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ExternalIdentifierMapService.GetShallow(transaction, partition, idFilter, authorizedContext));
@@ -551,8 +572,10 @@ namespace CDP4WebServices.API.Services
             thingColl.AddRange(this.GenericAnnotationService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.HyperLinkService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.IdCorrespondenceService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.IndependentParameterTypeAssignmentService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.IterationService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.IterationSetupService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.LogEntryChangelogItemService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.MappingToReferenceScaleService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ModelLogEntryService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.NaturalLanguageService.GetShallow(transaction, partition, idFilter, authorizedContext));
@@ -560,6 +583,7 @@ namespace CDP4WebServices.API.Services
             thingColl.AddRange(this.NestedParameterService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.NoteService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.OrganizationService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.OrganizationalParticipantService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.PageService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ParameterBaseService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ParameterGroupService.GetShallow(transaction, partition, idFilter, authorizedContext));
@@ -626,6 +650,7 @@ namespace CDP4WebServices.API.Services
             results.AddRange(this.CitationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.DefinedThingService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.DependentParameterTypeAssignmentService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.DiagramThingBaseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.EmailAddressService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ExternalIdentifierMapService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
@@ -636,8 +661,10 @@ namespace CDP4WebServices.API.Services
             results.AddRange(this.GenericAnnotationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.IdCorrespondenceService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.IndependentParameterTypeAssignmentService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.IterationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.IterationSetupService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.LogEntryChangelogItemService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.MappingToReferenceScaleService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ModelLogEntryService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.NaturalLanguageService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
@@ -645,6 +672,7 @@ namespace CDP4WebServices.API.Services
             results.AddRange(this.NestedParameterService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.NoteService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.OrganizationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.OrganizationalParticipantService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.PageService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ParameterBaseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ParameterGroupService.GetDeep(transaction, partition, idFilter, containerSecurityContext));

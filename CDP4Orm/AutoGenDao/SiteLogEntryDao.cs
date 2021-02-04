@@ -144,18 +144,22 @@ namespace CDP4Orm.Dao
             string tempLanguageCode;
             string tempLevel;
             string tempModifiedOn;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.SiteLogEntry(iid, revisionNumber);
+            dto.AffectedDomainIid.AddRange(Array.ConvertAll((string[])reader["AffectedDomainIid"], Guid.Parse));
+            
             dto.AffectedItemIid.AddRange(Array.ConvertAll((string[])reader["AffectedItemIid"], Guid.Parse));
             
             dto.Author = reader["Author"] is DBNull ? (Guid?)null : Guid.Parse(reader["Author"].ToString());
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
+            dto.LogEntryChangelogItem.AddRange(Array.ConvertAll((string[])reader["LogEntryChangelogItem"], Guid.Parse));
 
             if (valueDict.TryGetValue("Content", out tempContent))
             {
@@ -180,6 +184,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;
@@ -240,6 +249,8 @@ namespace CDP4Orm.Dao
                     this.ExecuteAndLogCommand(command);
                 }
 
+                siteLogEntry.AffectedDomainIid.ForEach(x => this.AddAffectedDomainIid(transaction, partition, siteLogEntry.Iid, x));
+
                 siteLogEntry.AffectedItemIid.ForEach(x => this.AddAffectedItemIid(transaction, partition, siteLogEntry.Iid, x));
                 siteLogEntry.Category.ForEach(x => this.AddCategory(transaction, partition, siteLogEntry.Iid, x));
             }
@@ -274,6 +285,12 @@ namespace CDP4Orm.Dao
 
             switch (propertyName)
             {
+                case "AffectedDomainIid":
+                    {
+                        isCreated = this.AddAffectedDomainIid(transaction, partition, iid, (Guid)value);
+                        break;
+                    }
+
                 case "AffectedItemIid":
                     {
                         isCreated = this.AddAffectedItemIid(transaction, partition, iid, (Guid)value);
@@ -295,6 +312,43 @@ namespace CDP4Orm.Dao
             return isCreated;
         }
 
+        /// <summary>
+        /// Insert a new association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.SiteLogEntry"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="affectedDomainIid">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool AddAffectedDomainIid(NpgsqlTransaction transaction, string partition, Guid iid, Guid affectedDomainIid)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteLogEntry_AffectedDomainIid\"", partition);
+                sqlBuilder.AppendFormat(" (\"SiteLogEntry\", \"AffectedDomainIid\")");
+                sqlBuilder.Append(" VALUES (:siteLogEntry, :affectedDomainIid);");
+
+                command.Parameters.Add("siteLogEntry", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("affectedDomainIid", NpgsqlDbType.Uuid).Value = affectedDomainIid;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -484,6 +538,12 @@ namespace CDP4Orm.Dao
 
             switch (propertyName)
             {
+                case "AffectedDomainIid":
+                    {
+                        isDeleted = this.DeleteAffectedDomainIid(transaction, partition, iid, (Guid)value);
+                        break;
+                    }
+
                 case "AffectedItemIid":
                     {
                         isDeleted = this.DeleteAffectedItemIid(transaction, partition, iid, (Guid)value);
@@ -503,6 +563,44 @@ namespace CDP4Orm.Dao
             }
 
             return isDeleted;
+        }
+
+        /// <summary>
+        /// Delete an association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.SiteLogEntry"/> id that is the source for each link table record.
+        /// </param> 
+        /// <param name="affectedDomainIid">
+        /// A value for which a link table record wil be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully removed.
+        /// </returns>
+        public bool DeleteAffectedDomainIid(NpgsqlTransaction transaction, string partition, Guid iid, Guid affectedDomainIid)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"SiteLogEntry_AffectedDomainIid\"", partition);
+                sqlBuilder.Append(" WHERE \"SiteLogEntry\" = :siteLogEntry");
+                sqlBuilder.Append(" AND \"AffectedDomainIid\" = :affectedDomainIid;");
+
+                command.Parameters.Add("siteLogEntry", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("affectedDomainIid", NpgsqlDbType.Uuid).Value = affectedDomainIid;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
         }
 
         /// <summary>
