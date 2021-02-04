@@ -33,8 +33,6 @@ namespace CDP4WebServices.API.Services.Authorization
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
-    using Nancy;
-
     using Npgsql;
 
     using Definition = CDP4Common.DTO.Definition;
@@ -107,33 +105,6 @@ namespace CDP4WebServices.API.Services.Authorization
         }
 
         /// <summary>
-        /// Resolves the ElementDefinition tree
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction object.
-        /// </param>
-        /// <param name="iteration">The <see cref="Iteration" /></param>=
-        /// <param name="organizationalParticipantIid">The Iid of OrganizationalParticipant to validate</param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource is stored.
-        /// </param>
-        /// <param name="securityContext">The security context</param>
-        /// <param name="elementDefinitions">The list of all element definitions</param>
-        /// <param name="relevantOpenDefinitions">The list of element definitions that are allowed to be seen by the organizational participant</param>
-        /// <param name="fullTree">The full tree of allowed element definitions</param>
-        private void ResolveElementDefinitionTree(NpgsqlTransaction transaction, string partition, Iteration iteration, Guid organizationalParticipantIid, RequestSecurityContext securityContext, out List<ElementDefinition> elementDefinitions, out List<ElementDefinition> relevantOpenDefinitions, out IEnumerable<Thing> fullTree)
-        {
-            // get all ED's shallow to determine relevant
-            elementDefinitions = this.ElementDefinitionService.Get(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>().ToList();
-
-            // given a participation, select only allowed EDs
-            relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid)).ToList();
-
-            // get deep expansions only of relevant Element Definitions
-            fullTree = this.ElementDefinitionService.GetDeep(transaction, partition, relevantOpenDefinitions.Select(ed => ed.Iid), securityContext);
-        }
-
-        /// <summary>
         /// Validates whether a create of some <see cref="Thing" />  is allowed based on Organizational Participation
         /// </summary>
         /// <param name="thing">The <see cref="Thing" /> being created.</param>
@@ -150,6 +121,11 @@ namespace CDP4WebServices.API.Services.Authorization
         /// </remarks>
         public void ValidateCreateOrganizationalParticipation(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
+            if (partition == "SiteDirectory")
+            {
+                return;
+            }
+
             if (securityContext.Credentials != null && securityContext.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !securityContext.Credentials.IsDefaultOrganizationalParticipant)
             {
                 if (securityContext.Credentials.OrganizationalParticipant == null)
@@ -194,7 +170,39 @@ namespace CDP4WebServices.API.Services.Authorization
         }
 
         /// <summary>
-        /// Validates whether a create of some <see cref="Thing" /> that is directly contained in a Parameter or ParameterOverride is allowed
+        /// Resolves the ElementDefinition tree
+        /// </summary>
+        /// <param name="transaction">
+        /// The transaction object.
+        /// </param>
+        /// <param name="iteration">The <see cref="Iteration" /></param>
+        /// =
+        /// <param name="organizationalParticipantIid">The Iid of OrganizationalParticipant to validate</param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="securityContext">The security context</param>
+        /// <param name="elementDefinitions">The list of all element definitions</param>
+        /// <param name="relevantOpenDefinitions">
+        /// The list of element definitions that are allowed to be seen by the organizational
+        /// participant
+        /// </param>
+        /// <param name="fullTree">The full tree of allowed element definitions</param>
+        private void ResolveElementDefinitionTree(NpgsqlTransaction transaction, string partition, Iteration iteration, Guid organizationalParticipantIid, RequestSecurityContext securityContext, out List<ElementDefinition> elementDefinitions, out List<ElementDefinition> relevantOpenDefinitions, out IEnumerable<Thing> fullTree)
+        {
+            // get all ED's shallow to determine relevant
+            elementDefinitions = this.ElementDefinitionService.Get(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>().ToList();
+
+            // given a participation, select only allowed EDs
+            relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid)).ToList();
+
+            // get deep expansions only of relevant Element Definitions
+            fullTree = this.ElementDefinitionService.GetDeep(transaction, partition, relevantOpenDefinitions.Select(ed => ed.Iid), securityContext);
+        }
+
+        /// <summary>
+        /// Validates whether a create of some <see cref="Thing" /> that is directly contained in a Parameter or ParameterOverride
+        /// is allowed
         /// based on Organizational Participation
         /// </summary>
         /// <param name="container">The container of the new <see cref="Thing" /></param>
@@ -236,7 +244,7 @@ namespace CDP4WebServices.API.Services.Authorization
             {
                 // the definition container must be inside the the allowed subtree. It has to pass check on being in the ED tree to begin with to prevent blocking unwanted definitions
                 this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext)securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 var allElementDefinitionSubtree = this.ElementDefinitionService.GetDeep(transaction, partition, elementDefinitions.Select(ed => ed.Iid), securityContext);
 
@@ -252,12 +260,12 @@ namespace CDP4WebServices.API.Services.Authorization
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
-
             }
         }
 
         /// <summary>
-        /// Validates whether a create of some <see cref="Thing" /> that is directly contained in an ElementUsage or ElementDefinition is allowed
+        /// Validates whether a create of some <see cref="Thing" /> that is directly contained in an ElementUsage or
+        /// ElementDefinition is allowed
         /// based on Organizational Participation
         /// </summary>
         /// <param name="container">The container of the new <see cref="Thing" /></param>
@@ -299,13 +307,12 @@ namespace CDP4WebServices.API.Services.Authorization
             {
                 // the usage container must ref a ED that is in the allowed tree
                 this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext)securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 if (relevantOpenDefinitions.FirstOrDefault(t => t.Iid.Equals(usage.ElementDefinition)) == null)
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
-
             }
         }
 
@@ -329,7 +336,7 @@ namespace CDP4WebServices.API.Services.Authorization
                 this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
                     (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
-                if(fullTree.FirstOrDefault(t => t.Iid.Equals(parameter.Iid)) == null)
+                if (fullTree.FirstOrDefault(t => t.Iid.Equals(parameter.Iid)) == null)
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
@@ -354,7 +361,7 @@ namespace CDP4WebServices.API.Services.Authorization
             {
                 // the parameter container must be in the allowed tree
                 this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext)securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 // need to resolve element usage that contains it
                 var allElementUsages = this.ElementDefinitionService.GetDeep(transaction, partition, elementDefinitions.Select(ed => ed.Iid), securityContext).OfType<ElementUsage>();

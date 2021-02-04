@@ -368,16 +368,15 @@ namespace CDP4WebServices.API.Modules
 
                 var partition = this.RequestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
-                var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
-
                 if (credentials != null)
                 {
-                    credentials.EngineeringModelSetup = modelSetup;
-                    credentials.Iteration = iteration;
-                    this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-                    credentials.IsParticipant = true;
-
                     this.PermissionService.Credentials = credentials;
+                    this.PermissionService.Credentials.EngineeringModelSetup = modelSetup;
+                    this.PersonResolver.ResolveParticipantCredentials(transaction, this.PermissionService.Credentials);
+                    this.PermissionService.Credentials.IsParticipant = true;
+
+                    var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
+                    this.PermissionService.Credentials.Iteration = iteration;
                 }
 
                 // defer all reference data check until after transaction commit
@@ -390,9 +389,9 @@ namespace CDP4WebServices.API.Modules
                 var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, partition);
 
                 this.OperationProcessor.Process(operationData, transaction, partition, fileDictionary);
-                
+
                 // save revision-history
-                var actor = credentials.Person.Iid;
+                var actor = this.PermissionService.Credentials.Person.Iid;
                 var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision);
 
                 transaction.Commit();
@@ -410,7 +409,7 @@ namespace CDP4WebServices.API.Modules
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
                 var revisionResponse = this.RevisionService.Get(transaction, partition, fromRevision, true).ToArray();
                 transaction.Commit();
-                
+
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
@@ -583,7 +582,7 @@ namespace CDP4WebServices.API.Modules
         {
             if (routeSegments.Length >= 4 && routeSegments[2] == "iteration")
             {
-                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, Credentials = this.PermissionService.Credentials };
 
                 var requestedIterationId = Utils.ParseIdentifier(routeSegments[3]);
                 var iterations = processor.GetResource("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext).ToList();
