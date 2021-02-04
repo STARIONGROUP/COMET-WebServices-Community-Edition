@@ -53,6 +53,16 @@ namespace CDP4Orm.Dao
         public ICommandLogger CommandLogger { get; set; }
 
         /// <summary>
+        /// The <see cref="DateTime"/> of the current <see cref="NpgsqlTransaction"/>
+        /// </summary>
+        private static DateTime currentTransactionDatetime;
+
+        /// <summary>
+        /// The <see cref="NpgsqlTransaction"/> for which <see cref="currentTransactionDatetime"/> was retrieved
+        /// </summary>
+        private static NpgsqlTransaction currentTransactionDataTimeTransaction;
+
+        /// <summary>
         /// Execute additional logic before each update function call.
         /// </summary>
         /// <param name="transaction">
@@ -81,6 +91,9 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual bool BeforeUpdate(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
+            var transactionDateTime = GetTransactionDateTime(transaction);
+            thing.ModifiedOn = transactionDateTime;
+
             isHandled = false;
             return true;
         }
@@ -187,6 +200,8 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
+            thing.ModifiedOn = GetTransactionDateTime(transaction);
+
             isHandled = false;
             return true;
         }
@@ -286,6 +301,29 @@ namespace CDP4Orm.Dao
                 command.Transaction = transaction;
                 this.ExecuteAndLogCommand(command);
             }
+        }
+
+        /// <summary>
+        /// Returns the current transaction time from the server
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        private static DateTime GetTransactionDateTime(NpgsqlTransaction transaction)
+        {
+            if (transaction != null && currentTransactionDataTimeTransaction != transaction)
+            {
+                currentTransactionDataTimeTransaction = transaction;
+
+                using (var command = new NpgsqlCommand(
+                    $"SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
+                    transaction.Connection,
+                    transaction))
+                {
+                    currentTransactionDatetime = (DateTime)command.ExecuteScalar();
+                }
+            }
+
+            return currentTransactionDatetime;
         }
 
         /// <summary>

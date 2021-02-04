@@ -33,6 +33,7 @@ namespace CDP4WebServices.API
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.Authorization;
+    using CDP4WebServices.API.Services.ChangeLog;
     using CDP4WebServices.API.Services.ContributorsLocation;
     using CDP4WebServices.API.Services.DataStore;
     using CDP4WebServices.API.Services.Email;
@@ -154,6 +155,9 @@ namespace CDP4WebServices.API
 
                     // wireup service provider
                     builder.RegisterTypeAsPropertyInjectedSingleton<ServiceProvider, IServiceProvider>();
+
+                    // wireup change log service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ChangeLogService, IChangeLogService>();
 
                     // wireup class meta info provider
                     builder.RegisterTypeAsPropertyInjectedSingleton<MetaInfoProvider, IMetaInfoProvider>();

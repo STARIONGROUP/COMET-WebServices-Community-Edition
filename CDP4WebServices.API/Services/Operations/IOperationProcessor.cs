@@ -9,6 +9,10 @@ namespace CDP4WebServices.API.Services.Operations
     using System.Collections.Generic;
     using System.IO;
 
+    using CDP4Common.DTO;
+
+    using CDP4Orm.Dao.Resolve;
+
     using Npgsql;
 
     /// <summary>
@@ -32,5 +36,10 @@ namespace CDP4WebServices.API.Services.Operations
         /// The optional file binaries that were included in the request.
         /// </param>
         void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
+
+        /// <summary>
+        /// Gets the operation <see cref="Thing"/> instance cache.
+        /// </summary>
+        Dictionary<DtoInfo, DtoResolveHelper> OperationThingCache { get; }
     }
 }

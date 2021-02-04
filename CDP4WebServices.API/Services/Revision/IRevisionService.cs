@@ -118,5 +118,26 @@ namespace CDP4WebServices.API.Services
         /// The current or next available revision number
         /// </returns>
         int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition);
+
+        /// <summary>
+        /// Get the requested revision data from the ORM layer.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="revision">
+        /// The revision number used to retrieve data from the database
+        /// </param>
+        /// <param name="useDefaultContext">
+        /// Indicates whether the default context shall be used. Else use the request context (set at module-level).
+        /// should only be false for engineering-model data
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="Thing"/>.
+        /// </returns>
+        IEnumerable<Thing> GetCurrentChanges(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext);
     }
 }

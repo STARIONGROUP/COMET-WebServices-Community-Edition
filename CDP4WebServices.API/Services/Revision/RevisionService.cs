@@ -75,6 +75,35 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Get the requested revision data from the ORM layer.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="revision">
+        /// The revision number used to retrieve data from the database
+        /// </param>
+        /// <param name="useDefaultContext">
+        /// Indicates whether the default context shall be used. Else use the request context (set at module-level).
+        /// should only be false for engineering-model data
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="Thing"/>.
+        /// </returns>
+        public IEnumerable<Thing> GetCurrentChanges(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext)
+        {
+            if (partition == Cdp4TransactionManager.SITE_DIRECTORY_PARTITION && !useDefaultContext)
+            {
+                throw new ArgumentException("the parameter shall be true for Sitedirectory data", nameof(useDefaultContext));
+            }
+
+            return this.InternalGet(transaction, partition, revision, false, useDefaultContext).Select(x => x.Thing);
+        }
+
+        /// <summary>
         /// Gets the revisions of the <see cref="Thing"/> with the given <paramref name="{Guid}"/>
         /// </summary>
         /// <param name="transaction">

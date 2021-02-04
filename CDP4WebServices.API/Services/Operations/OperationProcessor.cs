@@ -89,9 +89,9 @@ namespace CDP4WebServices.API.Services.Operations
         private readonly string[] topContainerTypes = { "SiteDirectory", "EngineeringModel" };
 
         /// <summary>
-        /// The operation <see cref="Thing"/> instance cache.
+        /// Gets the operation <see cref="Thing"/> instance cache.
         /// </summary>
-        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new Dictionary<DtoInfo, DtoResolveHelper>();
+        public Dictionary<DtoInfo, DtoResolveHelper> OperationThingCache { get; } = new ();
 
         /// <summary>
         /// Gets or sets the service registry.
@@ -189,7 +189,7 @@ namespace CDP4WebServices.API.Services.Operations
             // only using the delete pattern with id/classkind
             foreach (var thingInfo in operation.Delete.Where(x => x.Count == 2).Select(x => x.GetInfoPlaceholder()))
             {
-                this.operationThingCache.Add(thingInfo, new DtoResolveHelper(thingInfo));
+                this.OperationThingCache.Add(thingInfo, new DtoResolveHelper(thingInfo));
             }
 
             // for the other delete pattern using containment property of an object
@@ -210,9 +210,9 @@ namespace CDP4WebServices.API.Services.Operations
                     {
                         // reference delete
                         var deletedDtoInfo = deleteInfo.GetInfoPlaceholder();
-                        if (!this.operationThingCache.ContainsKey(deletedDtoInfo))
+                        if (!this.OperationThingCache.ContainsKey(deletedDtoInfo))
                         {
-                            this.operationThingCache.Add(deletedDtoInfo, new DtoResolveHelper(deletedDtoInfo));
+                            this.OperationThingCache.Add(deletedDtoInfo, new DtoResolveHelper(deletedDtoInfo));
                         }
 
                         continue;
@@ -220,9 +220,9 @@ namespace CDP4WebServices.API.Services.Operations
 
                     // object delete via containing property
                     var containerInfo = new ContainerInfo(typeName, iid);
-                    if (!this.operationThingCache.ContainsKey(containerInfo))
+                    if (!this.OperationThingCache.ContainsKey(containerInfo))
                     {
-                        this.operationThingCache.Add(containerInfo, new DtoResolveHelper(containerInfo));
+                        this.OperationThingCache.Add(containerInfo, new DtoResolveHelper(containerInfo));
                     }
 
                     if (propInfo.PropertyKind == PropertyKind.List)
@@ -235,9 +235,9 @@ namespace CDP4WebServices.API.Services.Operations
                             var childTypeName = this.ResolveService.ResolveTypeNameByGuid(transaction, partition, deletedValueIid);
                             var dtoInfo = new DtoInfo(childTypeName, deletedValueIid);
 
-                            if (!this.operationThingCache.ContainsKey(dtoInfo))
+                            if (!this.OperationThingCache.ContainsKey(dtoInfo))
                             {
-                                this.operationThingCache.Add(dtoInfo, new DtoResolveHelper(dtoInfo));
+                                this.OperationThingCache.Add(dtoInfo, new DtoResolveHelper(dtoInfo));
                             }
                         }
                     }
@@ -250,9 +250,9 @@ namespace CDP4WebServices.API.Services.Operations
                             var childTypeName = this.ResolveService.ResolveTypeNameByGuid(transaction, partition, Guid.Parse(deletedOrderedItem.V.ToString()));
                             var dtoInfo = new DtoInfo(childTypeName, deletedValueIid);
 
-                            if (!this.operationThingCache.ContainsKey(dtoInfo))
+                            if (!this.OperationThingCache.ContainsKey(dtoInfo))
                             {
-                                this.operationThingCache.Add(dtoInfo, new DtoResolveHelper(dtoInfo));
+                                this.OperationThingCache.Add(dtoInfo, new DtoResolveHelper(dtoInfo));
                             }
                         }
                     }
@@ -287,9 +287,9 @@ namespace CDP4WebServices.API.Services.Operations
             foreach (var thing in operation.Create)
             {
                 var thingInfo = thing.GetInfoPlaceholder();
-                if (!this.operationThingCache.ContainsKey(thingInfo))
+                if (!this.OperationThingCache.ContainsKey(thingInfo))
                 {
-                    this.operationThingCache.Add(thingInfo, new DtoResolveHelper(thing));
+                    this.OperationThingCache.Add(thingInfo, new DtoResolveHelper(thing));
                 }
             }
 
@@ -430,7 +430,7 @@ namespace CDP4WebServices.API.Services.Operations
             // register items for resolvement
             foreach (var thingInfo in operation.Update.Select(x => x.GetInfoPlaceholder()))
             {
-                if (!this.operationThingCache.ContainsKey(thingInfo))
+                if (!this.OperationThingCache.ContainsKey(thingInfo))
                 {
                     var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(thingInfo.TypeName);
                     ContainerInfo containerInfo = null;
@@ -443,7 +443,7 @@ namespace CDP4WebServices.API.Services.Operations
 
                     // register container info for later resolvement
                     var resolveHelper = new DtoResolveHelper(thingInfo) { ContainerInfo = containerInfo };
-                    this.operationThingCache.Add(thingInfo, resolveHelper);
+                    this.OperationThingCache.Add(thingInfo, resolveHelper);
                 }
             }
         }
@@ -583,16 +583,16 @@ namespace CDP4WebServices.API.Services.Operations
                                               ContainerInfo = containerMetaInfo.IsTopContainer ? null : new ContainerInfo()
                                           };
 
-            if (this.operationThingCache.ContainsKey(thingInfo))
+            if (this.OperationThingCache.ContainsKey(thingInfo))
             {
                 // register the container reference
-                this.operationThingCache[thingInfo].ContainerInfo = containerInfo;
+                this.OperationThingCache[thingInfo].ContainerInfo = containerInfo;
             }
 
             // add the container as resolvable
-            if (!this.operationThingCache.ContainsKey(containerInfo))
+            if (!this.OperationThingCache.ContainsKey(containerInfo))
             {
-                this.operationThingCache.Add(containerInfo, containerResolvable);
+                this.OperationThingCache.Add(containerInfo, containerResolvable);
             }
 
             return true;
@@ -646,16 +646,16 @@ namespace CDP4WebServices.API.Services.Operations
                                             createInfo.Iid,
                                             orderedItem.K);
 
-                        if (this.operationThingCache.ContainsKey(thingInfo))
+                        if (this.OperationThingCache.ContainsKey(thingInfo))
                         {
                             // register the container reference
-                            this.operationThingCache[thingInfo].ContainerInfo = containerInfo;
+                            this.OperationThingCache[thingInfo].ContainerInfo = containerInfo;
                         }
 
                         // add the container as resolvable
-                        if (!this.operationThingCache.ContainsKey(containerInfo))
+                        if (!this.OperationThingCache.ContainsKey(containerInfo))
                         {
-                            this.operationThingCache.Add(containerInfo, new DtoResolveHelper(createInfo));
+                            this.OperationThingCache.Add(containerInfo, new DtoResolveHelper(createInfo));
                         }
 
                         return true;
@@ -674,16 +674,16 @@ namespace CDP4WebServices.API.Services.Operations
                 // container found
                 containerInfo = new ContainerInfo(createInfo.ClassKind.ToString(), createInfo.Iid);
 
-                if (this.operationThingCache.ContainsKey(thingInfo))
+                if (this.OperationThingCache.ContainsKey(thingInfo))
                 {
                     // register the container reference
-                    this.operationThingCache[thingInfo].ContainerInfo = containerInfo;
+                    this.OperationThingCache[thingInfo].ContainerInfo = containerInfo;
                 }
 
                 // add the container as resolvable
-                if (!this.operationThingCache.ContainsKey(containerInfo))
+                if (!this.OperationThingCache.ContainsKey(containerInfo))
                 {
-                    this.operationThingCache.Add(containerInfo, new DtoResolveHelper(createInfo));
+                    this.OperationThingCache.Add(containerInfo, new DtoResolveHelper(createInfo));
                 }
 
                 return true;
@@ -707,7 +707,7 @@ namespace CDP4WebServices.API.Services.Operations
         private DtoResolveHelper GetContainerInfo(Thing thing)
         {
             DtoResolveHelper resolvedThing;
-            if (!this.operationThingCache.TryGetValue(thing.GetInfoPlaceholder(), out resolvedThing))
+            if (!this.OperationThingCache.TryGetValue(thing.GetInfoPlaceholder(), out resolvedThing))
             {
                 throw new InvalidOperationException(
                           string.Format(
@@ -726,7 +726,7 @@ namespace CDP4WebServices.API.Services.Operations
             }
 
             DtoResolveHelper resolvedThingContainer;
-            if (!this.operationThingCache.TryGetValue(resolvedThing.ContainerInfo, out resolvedThingContainer))
+            if (!this.OperationThingCache.TryGetValue(resolvedThing.ContainerInfo, out resolvedThingContainer))
             {
                 throw new InvalidOperationException(
                           string.Format(
@@ -760,7 +760,7 @@ namespace CDP4WebServices.API.Services.Operations
             Dictionary<string, Stream> fileStore)
         {
             // resolve any meta data from the persitence store
-            this.ResolveService.ResolveItems(transaction, partition, this.operationThingCache);
+            this.ResolveService.ResolveItems(transaction, partition, this.OperationThingCache);
 
             // apply the operations
             this.ApplyDeleteOperations(operation, transaction, partition);
@@ -865,7 +865,7 @@ namespace CDP4WebServices.API.Services.Operations
                     {
                         var propertyName = kvp.Key;
                         var propInfo = metaInfo.GetPropertyMetaInfo(propertyName);
-                        var resolvedInfo = this.operationThingCache[deleteInfo.GetInfoPlaceholder()];
+                        var resolvedInfo = this.OperationThingCache[deleteInfo.GetInfoPlaceholder()];
 
                         if (propInfo.PropertyKind == PropertyKind.List)
                         {
@@ -953,7 +953,7 @@ namespace CDP4WebServices.API.Services.Operations
 
                 securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
-                var resolvedInfo = this.operationThingCache[createInfo];
+                var resolvedInfo = this.OperationThingCache[createInfo];
 
                 // check that item doen not exist:
                 var persistedItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
@@ -1108,7 +1108,7 @@ namespace CDP4WebServices.API.Services.Operations
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
                 securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
-                var resolvedInfo = this.operationThingCache[updateInfoKey];
+                var resolvedInfo = this.OperationThingCache[updateInfoKey];
 
                 // get persisted thing
                 var updatableThing = resolvedInfo.Thing;
@@ -1334,7 +1334,7 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="metaInfo">The <see cref="IMetaInfo"/> for the deleted object</param>
         private void ExecuteDeleteOperation(DtoInfo dtoInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
         {
-            if (!this.operationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
+            if (!this.OperationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
             {
                 Logger.Info("The item '{0}' with iid: '{1}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
                 return;
