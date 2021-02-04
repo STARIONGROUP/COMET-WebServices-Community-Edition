@@ -50,7 +50,7 @@ CREATE TRIGGER elementdefinition_organizationalparticipant_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
   ON "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant"
   FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('ElementDefinition', 'SchemaName_Replace');
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('ElementDefinition', 'EngineeringModel_Replace');
 
 CREATE OR REPLACE FUNCTION "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant_Data" ()
     RETURNS SETOF "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" AS
