@@ -23,7 +23,12 @@ namespace CDP4Orm.MigrationEngine
         /// The string to replace in the script for schema partition
         /// </summary>
         protected const string SCHEMA_NAME_REPLACE = "SchemaName_Replace";
-        
+
+        /// <summary>
+        /// The string to replace in the script for engineeringModel partition
+        /// </summary>
+        protected const string ENGINEERING_MODEL_REPLACE = "EngineeringModel_Replace";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MigrationBase"/> class
         /// </summary>
