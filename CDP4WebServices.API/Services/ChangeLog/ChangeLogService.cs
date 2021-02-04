@@ -693,6 +693,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
             var engineeringModelPartition = $"EngineeringModel{basePartition}";
             var iterationPartition = $"Iteration{basePartition}";
+            var siteDirectoryPartition = "SiteDirectory";
+
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             switch (thing)
@@ -701,7 +703,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 {
                     this.AddIfNotExists(customData.AffectedItemIds, parameter.ParameterType);
 
-                    if (this.ParameterTypeService.GetShallow(transaction, partition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
+                    if (this.ParameterTypeService.GetShallow(transaction, siteDirectoryPartition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
                     {
                         foreach (var category in parameterType.Category)
                         {
@@ -1110,6 +1112,10 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// </returns>
         private string GetThingDescription(NpgsqlTransaction transaction, string partition, Thing thing)
         {
+            var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
+            var iterationPartition = $"Iteration{basePartition}";
+            var siteDirectoryPartition = "SiteDirectory";
+
             var description = thing.ClassKind.ToString();
 
             if (thing is INamedThing namedThing)
@@ -1125,26 +1131,26 @@ namespace CDP4WebServices.API.Services.ChangeLog
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             if (thing is Iteration iteration
-                && this.IterationSetupService.GetShallow(transaction, "SiteDirectory", new[] { iteration.IterationSetup }, securityContext).Single() is IterationSetup iterationSetup)
+                && this.IterationSetupService.GetShallow(transaction, siteDirectoryPartition, new[] { iteration.IterationSetup }, securityContext).Single() is IterationSetup iterationSetup)
             {
                 description = $"{description} {iterationSetup.IterationNumber}";
             }
 
             if (thing is Parameter parameter
-                && this.ParameterTypeService.GetShallow(transaction, partition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
+                && this.ParameterTypeService.GetShallow(transaction, siteDirectoryPartition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
             {
                 description = $"{description} {this.GetThingDescription(transaction, partition, parameterType)}";
             }
 
             if (thing is ParameterOverride parameterOverride
-                && this.ParameterService.GetShallow(transaction, partition, new[] { parameterOverride.Parameter }, securityContext).Single() is Parameter parameterOverrideParameter)
+                && this.ParameterService.GetShallow(transaction, iterationPartition, new[] { parameterOverride.Parameter }, securityContext).Single() is Parameter parameterOverrideParameter)
             {
                 description = $"ParameterOverride: {this.GetThingDescription(transaction, partition, parameterOverrideParameter)}";
             }
 
             if (thing is ParameterSubscription parameterSubscription
                 && this.ParameterOrOverrideBaseService
-                    .GetShallow(transaction, partition, null, securityContext)
+                    .GetShallow(transaction, iterationPartition, null, securityContext)
                     .Cast<ParameterOrOverrideBase>()
                     .SingleOrDefault(x => x.ParameterSubscription.Contains(parameterSubscription.Iid)) is { } parameterOrOverride)
             {
@@ -1167,6 +1173,9 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// <returns>A string containing the custom descriptions</returns>
         private string GetCustomDescriptions(NpgsqlTransaction transaction, string partition, Thing thing)
         {
+            var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
+            var iterationPartition = $"Iteration{basePartition}";
+
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             var stringBuilder = new StringBuilder();
@@ -1189,7 +1198,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 }
                 case ParameterOverrideValueSet parameterOverrideValueSet:
                 {
-                    if (this.ParameterValueSetService.GetShallow(transaction, partition, new[] { parameterOverrideValueSet.ParameterValueSet }, securityContext).Single() is ParameterValueSet parameterOverrideValueSetParameterValueSet)
+                    if (this.ParameterValueSetService.GetShallow(transaction, iterationPartition, new[] { parameterOverrideValueSet.ParameterValueSet }, securityContext).Single() is ParameterValueSet parameterOverrideValueSetParameterValueSet)
                     {
                         var description = this.GetCustomDescriptions(transaction, partition, parameterOverrideValueSetParameterValueSet);
 
@@ -1203,7 +1212,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 }
                 case ParameterSubscriptionValueSet parameterSubscriptionValueSet:
                 {
-                    if (this.ParameterValueSetBaseService.GetShallow(transaction, partition, new[] { parameterSubscriptionValueSet.SubscribedValueSet }, securityContext).Single() is ParameterValueSetBase parameterSubscriptionValueSetParameterValueSetBase)
+                    if (this.ParameterValueSetBaseService.GetShallow(transaction, iterationPartition, new[] { parameterSubscriptionValueSet.SubscribedValueSet }, securityContext).Single() is ParameterValueSetBase parameterSubscriptionValueSetParameterValueSetBase)
                     {
                         var description = this.GetCustomDescriptions(transaction, partition, parameterSubscriptionValueSetParameterValueSetBase);
 
@@ -1247,17 +1256,20 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// <param name="stringBuilder">The <see cref="StringBuilder"/></param>
         private void TryAddStateLine(NpgsqlTransaction transaction, string partition, Guid stateIid, ISecurityContext securityContext, StringBuilder stringBuilder)
         {
-            if (this.ActualFiniteStateService.GetShallow(transaction, partition, new[] { stateIid }, securityContext).Single() is not ActualFiniteState actualState)
+            var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
+            var iterationPartition = $"Iteration{basePartition}";
+
+            if (this.ActualFiniteStateService.GetShallow(transaction, iterationPartition, new[] { stateIid }, securityContext).Single() is not ActualFiniteState actualState)
             {
                 return;
             }
 
-            if (this.PossibleFiniteStateService.GetShallow(transaction, partition, actualState.PossibleState, securityContext) is not IEnumerable<PossibleFiniteState> possibleFiniteStates)
+            if (this.PossibleFiniteStateService.GetShallow(transaction, iterationPartition, actualState.PossibleState, securityContext).Single() is not PossibleFiniteState possibleFiniteState)
             {
                 return;
             }
 
-            var possibleFiniteStateString = string.Join(" ", possibleFiniteStates.Select(x => x.ShortName));
+            var possibleFiniteStateString = string.Join(" ", possibleFiniteState.ShortName);
 
             stringBuilder.AppendLine($"* ActualFiniteState: {possibleFiniteStateString}");
         }
@@ -1276,7 +1288,10 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// <param name="stringBuilder">The <see cref="StringBuilder"/></param>
         private void TryAddOptionLine(NpgsqlTransaction transaction, string partition, Guid optionIid, ISecurityContext securityContext, StringBuilder stringBuilder)
         {
-            if (this.OptionService.GetShallow(transaction, partition, new[] { optionIid }, securityContext).Single() is Option actualOption)
+            var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
+            var iterationPartition = $"Iteration{basePartition}";
+
+            if (this.OptionService.GetShallow(transaction, iterationPartition, new[] { optionIid }, securityContext).Single() is Option actualOption)
             {
                 stringBuilder.AppendLine($"* Option: {actualOption.Name} ({actualOption.ShortName})");
             }
