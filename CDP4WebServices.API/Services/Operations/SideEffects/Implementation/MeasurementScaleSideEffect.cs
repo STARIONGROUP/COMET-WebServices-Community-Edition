@@ -38,10 +38,11 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     using Npgsql;
 
     /// <summary>
-    /// The purpose of the <see cref="MeasurementScaleSideEffect"/> class is to execute additional logic before and
+    /// The purpose of the <see cref="MeasurementScaleSideEffect{T}"/> class is to execute additional logic before and
     /// after a specific operation is performed.
     /// </summary>
-    public class MeasurementScaleSideEffect : OperationSideEffect<MeasurementScale>
+    public class MeasurementScaleSideEffect<T> : OperationSideEffect<T>
+        where T : MeasurementScale
     {
         /// <summary>
         /// Gets or sets the <see cref="ISiteReferenceDataLibraryService"/>
@@ -87,7 +88,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
         public override void BeforeUpdate(
-            MeasurementScale thing,
+            T thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
