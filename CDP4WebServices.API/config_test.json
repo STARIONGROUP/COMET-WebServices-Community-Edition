@@ -23,5 +23,8 @@
     "PersonPassword": "pass",
     "LocationServicePath": "http://freegeoip.io/json/",
     "ContributorsCacheTimeout": 60
+  },
+  "Changelog": {
+    "CollectChanges": false
   }
 }

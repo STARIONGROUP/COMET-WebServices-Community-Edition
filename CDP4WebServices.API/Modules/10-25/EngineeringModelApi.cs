@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
 //
@@ -35,7 +35,8 @@ namespace CDP4WebServices.API.Modules
     using CDP4Common.DTO;
     
     using CDP4Orm.Dao;
-    
+
+    using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.ChangeLog;
 
@@ -398,8 +399,11 @@ namespace CDP4WebServices.API.Modules
 
                 var actor = this.PermissionService.Credentials.Person.Iid;
 
-                var initiallyChangedThings = this.RevisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
-                this.ChangeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);
+                if (AppConfig.Current.Changelog.CollectChanges)
+                {
+                    var initiallyChangedThings = this.RevisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
+                    this.ChangeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);
+                }
 
                 // save revision-history
                 var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();

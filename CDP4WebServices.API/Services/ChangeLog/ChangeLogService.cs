@@ -477,7 +477,13 @@ namespace CDP4WebServices.API.Services.ChangeLog
             }
 
             stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, createdThing)}");
-            stringBuilder.AppendLine($"* {this.GetCustomDescriptions(transaction, partition, createdThing)}");
+
+            var customDescriptions = this.GetCustomDescriptions(transaction, partition, createdThing);
+
+            if (!string.IsNullOrWhiteSpace(customDescriptions))
+            {
+                stringBuilder.AppendLine($"* {customDescriptions}");
+            }
 
             logEntryChangeLogItem.ChangeDescription = stringBuilder.ToString();
         }

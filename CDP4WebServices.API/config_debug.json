@@ -31,5 +31,8 @@
     "DevServerPath": "http://localhost:4200/app",
     "LocationServicePath": "http://freegeoip.io/json/",
     "ContributorsCacheTimeout": 60
+  },
+  "Changelog": {
+    "CollectChanges": false
   }
 }

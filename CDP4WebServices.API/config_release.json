@@ -23,8 +23,11 @@
     "Password": "cdp4postmaseter-password",
   },
   "Defaults": {
-      "PersonPassword": "pass",
-      "LocationServicePath": "http://freegeoip.io/json/",
-      "ContributorsCacheTimeout": 60
-    }
+    "PersonPassword": "pass",
+    "LocationServicePath": "http://freegeoip.io/json/",
+    "ContributorsCacheTimeout": 60
+  },
+  "Changelog": {
+    "CollectChanges": false
   }
+}
