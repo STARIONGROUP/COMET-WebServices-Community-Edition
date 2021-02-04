@@ -140,6 +140,7 @@ namespace CDP4Orm.Dao
         public virtual CDP4Common.DTO.SampledFunctionParameterType MapToDto(NpgsqlDataReader reader)
         {
             string tempDegreeOfInterpolation;
+            string tempInterpolationPeriod;
             string tempIsDeprecated;
             string tempModifiedOn;
             string tempName;
@@ -160,12 +161,15 @@ namespace CDP4Orm.Dao
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
             dto.HyperLink.AddRange(Array.ConvertAll((string[])reader["HyperLink"], Guid.Parse));
             dto.IndependentParameterType.AddRange(Utils.ParseOrderedList<Guid>(reader["IndependentParameterType"] as string[,]));
-            dto.InterpolationPeriod.AddRange((string[])reader["InterpolationPeriod"]);
-            
 
             if (valueDict.TryGetValue("DegreeOfInterpolation", out tempDegreeOfInterpolation) && tempDegreeOfInterpolation != null)
             {
                 dto.DegreeOfInterpolation = int.Parse(tempDegreeOfInterpolation);
+            }
+
+            if (valueDict.TryGetValue("InterpolationPeriod", out tempInterpolationPeriod))
+            {
+                dto.InterpolationPeriod = tempInterpolationPeriod.FromHstoreToValueArray<string>();
             }
 
             if (valueDict.TryGetValue("IsDeprecated", out tempIsDeprecated))
@@ -231,6 +235,7 @@ namespace CDP4Orm.Dao
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
                     { "DegreeOfInterpolation", !this.IsDerived(sampledFunctionParameterType, "DegreeOfInterpolation") && sampledFunctionParameterType.DegreeOfInterpolation.HasValue ? sampledFunctionParameterType.DegreeOfInterpolation.Value.ToString() : null },
+                    { "InterpolationPeriod", !this.IsDerived(sampledFunctionParameterType, "InterpolationPeriod") ? sampledFunctionParameterType.InterpolationPeriod.ToHstoreString() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
@@ -250,91 +255,9 @@ namespace CDP4Orm.Dao
 
                     this.ExecuteAndLogCommand(command);
                 }
-
-                sampledFunctionParameterType.InterpolationPeriod.ForEach(x => this.AddInterpolationPeriod(transaction, partition, sampledFunctionParameterType.Iid, x));
             }
 
             return this.AfterWrite(beforeWrite, transaction, partition, sampledFunctionParameterType, container);
-        }
-
-        /// <summary>
-        /// Add the supplied value collection to the association link table indicated by the supplied property name
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="propertyName">
-        /// The association property name that will be persisted.
-        /// </param>
-        /// <param name="iid">
-        /// The <see cref="CDP4Common.DTO.SampledFunctionParameterType"/> id that will be the source for each link table record.
-        /// </param> 
-        /// <param name="value">
-        /// A value for which a link table record wil be created.
-        /// </param>
-        /// <returns>
-        /// True if the value link was successfully created.
-        /// </returns>
-        public override bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
-        {
-            var isCreated = base.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
-
-            switch (propertyName)
-            {
-                case "InterpolationPeriod":
-                    {
-                        isCreated = this.AddInterpolationPeriod(transaction, partition, iid, (string)value);
-                        break;
-                    }
-
-                default:
-                    {
-                        break;
-                    }
-            }
-
-            return isCreated;
-        }
-
-        /// <summary>
-        /// Insert a new association record in the link table.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="iid">
-        /// The <see cref="CDP4Common.DTO.SampledFunctionParameterType"/> id that will be the source for each link table record.
-        /// </param> 
-        /// <param name="interpolationPeriod">
-        /// The value for which a link table record wil be created.
-        /// </param>
-        /// <returns>
-        /// True if the value link was successfully created.
-        /// </returns>
-        public bool AddInterpolationPeriod(NpgsqlTransaction transaction, string partition, Guid iid, string interpolationPeriod)
-        {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SampledFunctionParameterType_InterpolationPeriod\"", partition);
-                sqlBuilder.AppendFormat(" (\"SampledFunctionParameterType\", \"InterpolationPeriod\")");
-                sqlBuilder.Append(" VALUES (:sampledFunctionParameterType, :interpolationPeriod);");
-
-                command.Parameters.Add("sampledFunctionParameterType", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("interpolationPeriod", NpgsqlDbType.Text).Value = interpolationPeriod;
-
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-
-                return this.ExecuteAndLogCommand(command) > 0;
-            }
         }
 
         /// <summary>
@@ -367,6 +290,7 @@ namespace CDP4Orm.Dao
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
                     { "DegreeOfInterpolation", !this.IsDerived(sampledFunctionParameterType, "DegreeOfInterpolation") && sampledFunctionParameterType.DegreeOfInterpolation.HasValue ? sampledFunctionParameterType.DegreeOfInterpolation.Value.ToString() : null },
+                    { "InterpolationPeriod", !this.IsDerived(sampledFunctionParameterType, "InterpolationPeriod") ? sampledFunctionParameterType.InterpolationPeriod.ToHstoreString() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
@@ -416,86 +340,6 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
-        }
-
-        /// <summary>
-        /// Delete the supplied value from the association link table indicated by the supplied property name.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be removed.
-        /// </param>
-        /// <param name="propertyName">
-        /// The association property name from where the value is to be removed.
-        /// </param>
-        /// <param name="iid">
-        /// The <see cref="CDP4Common.DTO.SampledFunctionParameterType"/> id that is the source of each link table record.
-        /// </param> 
-        /// <param name="value">
-        /// A value for which a link table record wil be removed.
-        /// </param>
-        /// <returns>
-        /// True if the value link was successfully removed.
-        /// </returns>
-        public override bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
-        {
-            var isDeleted = base.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
-
-            switch (propertyName)
-            {
-                case "InterpolationPeriod":
-                    {
-                        isDeleted = this.DeleteInterpolationPeriod(transaction, partition, iid, (string)value);
-                        break;
-                    }
-
-                default:
-                {
-                    break;
-                }
-            }
-
-            return isDeleted;
-        }
-
-        /// <summary>
-        /// Delete an association record in the link table.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be deleted.
-        /// </param>
-        /// <param name="iid">
-        /// The <see cref="CDP4Common.DTO.SampledFunctionParameterType"/> id that is the source for each link table record.
-        /// </param> 
-        /// <param name="interpolationPeriod">
-        /// A value for which a link table record wil be deleted.
-        /// </param>
-        /// <returns>
-        /// True if the value link was successfully removed.
-        /// </returns>
-        public bool DeleteInterpolationPeriod(NpgsqlTransaction transaction, string partition, Guid iid, string interpolationPeriod)
-        {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"SampledFunctionParameterType_InterpolationPeriod\"", partition);
-                sqlBuilder.Append(" WHERE \"SampledFunctionParameterType\" = :sampledFunctionParameterType");
-                sqlBuilder.Append(" AND \"InterpolationPeriod\" = :interpolationPeriod;");
-
-                command.Parameters.Add("sampledFunctionParameterType", NpgsqlDbType.Uuid).Value = iid;
-                command.Parameters.Add("interpolationPeriod", NpgsqlDbType.Text).Value = interpolationPeriod;
-
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-
-                return this.ExecuteAndLogCommand(command) > 0;
-            }
         }
     }
 }

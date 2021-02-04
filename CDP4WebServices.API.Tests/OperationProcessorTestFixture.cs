@@ -61,11 +61,16 @@ namespace CDP4WebServices.API.Tests
 
         private const string SimpleQuantityKindTypeString = "SimpleQuantityKind";
 
+        private const string QuantityKindTypeString = "QuantityKind";
+
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
 
         private readonly IOperationSideEffectProcessor operationSideEffectProcessor = new OperationSideEffectProcessor(new List<IOperationSideEffect>());
 
         private readonly SimpleQuantityKindMetaInfo simpleQuantityKindMetaInfo = new SimpleQuantityKindMetaInfo();
+
+        private readonly QuantityKindMetaInfo quantityKindMetaInfo = new QuantityKindMetaInfo();
+        private readonly ThingMetaInfo thingMetaInfo = new ThingMetaInfo();
 
         private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new EngineeringModelMetaInfo();
 
@@ -89,6 +94,7 @@ namespace CDP4WebServices.API.Tests
             this.requestUtils.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
             this.operationProcessor = new OperationProcessor();
             this.operationProcessor.RequestUtils = this.requestUtils;
+            this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationProcessor.OperationSideEffectProcessor = this.operationSideEffectProcessor;
             
             this.serviceProvider = new Mock<API.Services.IServiceProvider>();
@@ -174,7 +180,9 @@ namespace CDP4WebServices.API.Tests
         public void VerifyCreateInvalidThingValidation()
         {
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<SimpleQuantityKind>())).Returns(this.simpleQuantityKindMetaInfo);
+            this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<string>())).Returns(this.thingMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
+            this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == QuantityKindTypeString))).Returns(this.quantityKindMetaInfo);
 
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
                                         {
@@ -198,6 +206,7 @@ namespace CDP4WebServices.API.Tests
         public void VerifyTopContainerCreationNotAllowedValidation()
         {
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<EngineeringModel>())).Returns(this.engineeringModelMetaInfo);
+            this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<string>())).Returns(this.thingMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "EngineeringModel"))).Returns(this.engineeringModelMetaInfo);
 
             var newEngineeringModel = new EngineeringModel(Guid.NewGuid(), 0)
@@ -220,6 +229,7 @@ namespace CDP4WebServices.API.Tests
         public void VerifyCreateWithoutContainerUpdateValidation()
         {
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<SimpleQuantityKind>())).Returns(this.simpleQuantityKindMetaInfo);
+            this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<string>())).Returns(this.thingMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
 
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
@@ -248,6 +258,7 @@ namespace CDP4WebServices.API.Tests
 
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<SimpleQuantityKind>())).Returns(this.simpleQuantityKindMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<ModelReferenceDataLibrary>())).Returns(modelReferenceDataLibraryMetaInfo);
+            this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<string>())).Returns(this.thingMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "ModelReferenceDataLibrary"))).Returns(modelReferenceDataLibraryMetaInfo);
 
@@ -285,6 +296,7 @@ namespace CDP4WebServices.API.Tests
 
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<SimpleQuantityKind>())).Returns(this.simpleQuantityKindMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<Alias>())).Returns(aliasMetaInfo);
+            this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<string>())).Returns(this.thingMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.IsAny<ModelReferenceDataLibrary>())).Returns(modelReferenceDataLibraryMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "Alias"))).Returns(aliasMetaInfo);

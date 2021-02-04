@@ -34,8 +34,13 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
 
         private Mock<IParameterTypeService> parameterTypeService;
         private Mock<IParameterTypeComponentService> parameterTypeComponentService;
+        private Mock<IIndependentParameterTypeAssignmentService> independentParameterTypeAssignmentService;
+        private Mock<IDependentParameterTypeAssignmentService> dependentParameterTypeAssignmentService;
         private List<ParameterType> parameterTypes;
         private List<ParameterTypeComponent> parameterTypeComponents;
+
+        private List<IndependentParameterTypeAssignment> independentParameterTypeAssignments;
+        private List<DependentParameterTypeAssignment> dependentParameterTypeAssignments;
         private Mock<ISecurityContext> secutrityContext;
         private NpgsqlTransaction transaction;
 
@@ -53,6 +58,15 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypes);
 
+            this.independentParameterTypeAssignmentService = new Mock<IIndependentParameterTypeAssignmentService>();
+            this.dependentParameterTypeAssignmentService = new Mock<IDependentParameterTypeAssignmentService>();
+
+            this.independentParameterTypeAssignmentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.independentParameterTypeAssignments);
+
+            this.dependentParameterTypeAssignmentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.dependentParameterTypeAssignments);
+
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
             this.parameterTypeComponentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypeComponents);
@@ -60,12 +74,17 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             this.defaultValueArrayFactory = new DefaultValueArrayFactory();
             this.defaultValueArrayFactory.ParameterTypeService = this.parameterTypeService.Object;
             this.defaultValueArrayFactory.ParameterTypeComponentService = this.parameterTypeComponentService.Object;
+
+            this.defaultValueArrayFactory.IndependentParameterTypeAssignmentService = this.independentParameterTypeAssignmentService.Object;
+            this.defaultValueArrayFactory.DependentParameterTypeAssignmentService = this.dependentParameterTypeAssignmentService.Object;
         }
 
         private void PopulateParameterTypes()
         {
             this.parameterTypes = new List<ParameterType>();
             this.parameterTypeComponents = new List<ParameterTypeComponent>();
+            this.independentParameterTypeAssignments = new List<IndependentParameterTypeAssignment>();
+            this.dependentParameterTypeAssignments = new List<DependentParameterTypeAssignment>();
 
             this.massIid = Guid.NewGuid();
             this.lengthIid = Guid.NewGuid();
