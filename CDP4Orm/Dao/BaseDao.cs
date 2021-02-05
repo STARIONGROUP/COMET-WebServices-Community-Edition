@@ -55,12 +55,12 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// The <see cref="DateTime"/> of the current <see cref="NpgsqlTransaction"/>
         /// </summary>
-        private static DateTime currentTransactionDatetime;
+        private DateTime currentTransactionDatetime;
 
         /// <summary>
         /// The <see cref="NpgsqlTransaction"/> for which <see cref="currentTransactionDatetime"/> was retrieved
         /// </summary>
-        private static NpgsqlTransaction currentTransactionDataTimeTransaction;
+        private NpgsqlTransaction currentTransactionDataTimeTransaction;
 
         /// <summary>
         /// Execute additional logic before each update function call.
@@ -91,7 +91,7 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual bool BeforeUpdate(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
-            var transactionDateTime = GetTransactionDateTime(transaction);
+            var transactionDateTime = this.GetTransactionDateTime(transaction);
             thing.ModifiedOn = transactionDateTime;
 
             isHandled = false;
@@ -200,7 +200,7 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
-            thing.ModifiedOn = GetTransactionDateTime(transaction);
+            thing.ModifiedOn = this.GetTransactionDateTime(transaction);
 
             isHandled = false;
             return true;
@@ -308,22 +308,22 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction"></param>
         /// <returns></returns>
-        private static DateTime GetTransactionDateTime(NpgsqlTransaction transaction)
+        private DateTime GetTransactionDateTime(NpgsqlTransaction transaction)
         {
-            if (transaction != null && currentTransactionDataTimeTransaction != transaction)
+            if (transaction != null && this.currentTransactionDataTimeTransaction != transaction)
             {
-                currentTransactionDataTimeTransaction = transaction;
+                this.currentTransactionDataTimeTransaction = transaction;
 
                 using (var command = new NpgsqlCommand(
                     $"SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
                     transaction.Connection,
                     transaction))
                 {
-                    currentTransactionDatetime = (DateTime)command.ExecuteScalar();
+                    this.currentTransactionDatetime = (DateTime)command.ExecuteScalar();
                 }
             }
 
-            return currentTransactionDatetime;
+            return this.currentTransactionDatetime;
         }
 
         /// <summary>

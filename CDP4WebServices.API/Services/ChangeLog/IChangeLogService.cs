@@ -40,7 +40,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
     public interface IChangeLogService
     {
         /// <summary>
-        /// Appends changelog data based on the changed <see cref="Thing"/>s
+        /// Tries to append changelog data based on the changes made to certain <see cref="Thing"/>s.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.

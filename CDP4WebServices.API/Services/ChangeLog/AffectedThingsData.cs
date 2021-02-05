@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="CustomAffectedThingsData.cs" company="RHEA System S.A.">
+// <copyright file="AffectedThingsData.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
@@ -33,7 +33,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
     /// <summary>
     /// This class holds data that should be added to a <see cref="LogEntryChangelogItem"/>, and/or <see cref="ModelLogEntry"/>.
     /// </summary>
-    public class CustomAffectedThingsData
+    public class AffectedThingsData
     {
         /// <summary>
         /// A <see cref="HashSet{T}"/> of type <see cref="Guid"/> that contains <see cref="Thing.Iid"/>s from items that need to be added
@@ -53,24 +53,24 @@ namespace CDP4WebServices.API.Services.ChangeLog
         public List<string> ExtraChangeDescriptions { get; } = new ();
 
         /// <summary>
-        /// Add data from another <see cref="CustomAffectedThingsData"/> to this <see cref="CustomAffectedThingsData"/>
+        /// Add data from another <see cref="AffectedThingsData"/> to this <see cref="AffectedThingsData"/>
         /// </summary>
-        /// <param name="customAffectedThingsData">
-        /// The other <see cref="CustomAffectedThingsData"/>
+        /// <param name="affectedThingsData">
+        /// The other <see cref="AffectedThingsData"/>
         /// </param>
-        public void AddFrom(CustomAffectedThingsData customAffectedThingsData)
+        public void AddFrom(AffectedThingsData affectedThingsData)
         {
-            foreach (var affectedItemId in customAffectedThingsData.AffectedItemIds)
+            foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
                 this.AffectedItemIds.Add(affectedItemId);
             }
 
-            foreach (var affectedDomainId in customAffectedThingsData.AffectedDomainIds)
+            foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
                 this.AffectedDomainIds.Add(affectedDomainId);
             }
 
-            this.ExtraChangeDescriptions.AddRange(customAffectedThingsData.ExtraChangeDescriptions);
+            this.ExtraChangeDescriptions.AddRange(affectedThingsData.ExtraChangeDescriptions);
         }
     }
 }

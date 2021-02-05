@@ -57,7 +57,9 @@ namespace CDP4WebServices.API.Services.Operations
 
         /// <summary>
         /// Gets the operation <see cref="Thing"/> instance cache.
+        /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
+        /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
         /// </summary>
-        Dictionary<DtoInfo, DtoResolveHelper> OperationThingCache { get; }
+        IReadOnlyDictionary<DtoInfo, DtoResolveHelper> OperationThingCache { get; }
     }
 }

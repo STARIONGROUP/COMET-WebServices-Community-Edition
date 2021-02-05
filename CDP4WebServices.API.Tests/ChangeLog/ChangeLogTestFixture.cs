@@ -578,7 +578,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(2));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
         }
 
         [Test]
@@ -603,7 +603,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsFalse(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(0));
 
             things = new Thing[] { this.iteration, this.requirementsSpecification, this.elementDefinition_1, this.engineeringModel };
             postOperation.Create.Add(this.elementDefinition_1);
@@ -623,7 +623,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(2));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
         }

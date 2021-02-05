@@ -25,8 +25,10 @@
 
 namespace CDP4WebServices.API.Configuration
 {
+    using CDP4Common.DTO;
+
     /// <summary>
-    /// The mid tier configuration.
+    /// The change log configuration.
     /// </summary>
     public class ChangelogConfig
     {
@@ -40,7 +42,8 @@ namespace CDP4WebServices.API.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the Changelog collection.
+        /// Gets or sets the Changelog collection setting.
+        /// If set to true, <see cref="ModelLogEntry"/>s will automatically be created for specific changes to <see cref="Thing"/>s.
         /// </summary>
         /// <remarks>
         /// The default value is false

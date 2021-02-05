@@ -154,7 +154,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
         public ICdp4TransactionManager TransactionManager { get; set; }
 
         /// <summary>
-        /// Appends changelog data based on the changed <see cref="CDP4Common.DTO.Thing"/>s
+        /// Tries to append changelog data based on the changes made to certain <see cref="Thing"/>s.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -197,6 +197,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                 if (changedEngineeringModels.Count == 1)
                 {
+                    var addModelLogEntryToOperation = false;
+
                     var engineeringModel = changedEngineeringModels.First();
                     var changedThings = things.Where(x => x.RevisionNumber == transactionRevision).ToList();
 
@@ -211,27 +213,17 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (modelLogEntries.Count != 1)
                     {
-                        var modelLogOperationData = new CdpPostOperation();
-
                         var newModelLogEntry = new ModelLogEntry(Guid.NewGuid(), 0)
                         {
-                            Level = LogLevelKind.USER,
+                            Level = LogLevelKind.INFO,
                             Author = actor,
                             LanguageCode = "en-GB",
                             Content = "-"
                         };
 
+                        addModelLogEntryToOperation = true;
+
                         engineeringModel.LogEntry.Add(newModelLogEntry.Iid);
-
-                        var engineeringModelClasslessDTO = ClasslessDtoFactory
-                            .FromThing(this.RequestUtils.MetaInfoProvider,
-                                engineeringModel);
-
-                        engineeringModelClasslessDTO.Add(nameof(EngineeringModel.LogEntry), new[] { newModelLogEntry.Iid });
-
-                        modelLogOperationData.Update.Add(engineeringModelClasslessDTO);
-                        modelLogOperationData.Create.Add(newModelLogEntry);
-                        this.OperationProcessor.Process(modelLogOperationData, transaction, partition, null);
 
                         modelLogEntry = newModelLogEntry;
                     }
@@ -280,23 +272,37 @@ namespace CDP4WebServices.API.Services.ChangeLog
                         }
                     }
 
-                    var operationData = new CdpPostOperation();
-
                     if (newLogEntryChangelogItems.Any())
                     {
-                        operationData.Create.AddRange(newLogEntryChangelogItems);
-
                         modelLogEntry.LogEntryChangelogItem.AddRange(newLogEntryChangelogItems.Select(x => x.Iid));
 
-                        var modelLogEntryClasslessDTO =
-                            ClasslessDtoFactory
+                        var operationData = new CdpPostOperation();
+
+                        operationData.Create.AddRange(newLogEntryChangelogItems);
+
+                        if (addModelLogEntryToOperation)
+                        {
+                            var engineeringModelClasslessDTO = ClasslessDtoFactory
                                 .FromThing(this.RequestUtils.MetaInfoProvider,
-                                    modelLogEntry,
-                                    new[] { nameof(ModelLogEntry.LogEntryChangelogItem), nameof(ModelLogEntry.AffectedItemIid), nameof(ModelLogEntry.AffectedDomainIid) });
+                                    engineeringModel);
 
-                        operationData.Update.Add(modelLogEntryClasslessDTO);
+                            engineeringModelClasslessDTO.Add(nameof(EngineeringModel.LogEntry), new[] { modelLogEntry.Iid });
 
-                        this.OperationProcessor.Process(operationData, transaction, partition, null);
+                            operationData.Update.Add(engineeringModelClasslessDTO);
+                            operationData.Create.Add(modelLogEntry);
+                        }
+                        else
+                        {
+                            var modelLogEntryClasslessDTO =
+                                ClasslessDtoFactory
+                                    .FromThing(this.RequestUtils.MetaInfoProvider,
+                                        modelLogEntry,
+                                        new[] { nameof(ModelLogEntry.LogEntryChangelogItem), nameof(ModelLogEntry.AffectedItemIid), nameof(ModelLogEntry.AffectedDomainIid) });
+
+                            operationData.Update.Add(modelLogEntryClasslessDTO);
+                        }
+
+                        this.OperationProcessor.Process(operationData, transaction, partition);
 
                         result = true;
                     }
@@ -457,23 +463,23 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
             }
 
-            var customData = this.GetCustomAffectedThingsData(transaction, partition, createdThing, null);
+            var affectedThingsData = this.GetAffectedThingsData(transaction, partition, createdThing, null);
 
-            foreach (var customAffectedItemId in customData.AffectedItemIds)
+            foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, customAffectedItemId);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, customAffectedItemId);
+                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
+                this.AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
             }
 
-            foreach (var customAffectedDomainId in customData.AffectedDomainIds)
+            foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, customAffectedDomainId);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, customAffectedDomainId);
+                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
+                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
             }
 
-            foreach (var customHeaderRow in customData.ExtraChangeDescriptions)
+            foreach (var extraChangeDescription in affectedThingsData.ExtraChangeDescriptions)
             {
-                stringBuilder.AppendLine(customHeaderRow);
+                stringBuilder.AppendLine(extraChangeDescription);
             }
 
             stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, createdThing)}");
@@ -529,25 +535,25 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 }
             }
 
-            var customData = this.GetCustomAffectedThingsData(transaction, partition, updatedThing, updateOperation);
+            var affectedThingsData = this.GetAffectedThingsData(transaction, partition, updatedThing, updateOperation);
 
-            foreach (var customAffectedItemId in customData.AffectedItemIds)
+            foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, customAffectedItemId);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, customAffectedItemId);
+                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
+                this.AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
             }
 
-            foreach (var customAffectedDomainId in customData.AffectedDomainIds)
+            foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, customAffectedDomainId);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, customAffectedDomainId);
+                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
+                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
             }
 
             var stringBuilder = new StringBuilder();
 
-            foreach (var customHeaderRow in customData.ExtraChangeDescriptions)
+            foreach (var extraChangeDescription in affectedThingsData.ExtraChangeDescriptions)
             {
-                stringBuilder.AppendLine(customHeaderRow);
+                stringBuilder.AppendLine(extraChangeDescription);
             }
 
             var containerThing = this.GetContainer(transaction, partition, updatedThing);
@@ -622,25 +628,25 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 }
             }
 
-            var customData = this.GetCustomAffectedThingsData(transaction, partition, deletedThing, deleteOperation, deletedThing);
+            var affectedThingsData = this.GetAffectedThingsData(transaction, partition, deletedThing, deleteOperation, deletedThing);
 
-            foreach (var customAffectedItemId in customData.AffectedItemIds)
+            foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, customAffectedItemId);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, customAffectedItemId);
+                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
+                this.AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
             }
 
-            foreach (var customAffectedDomainId in customData.AffectedDomainIds)
+            foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, customAffectedDomainId);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, customAffectedDomainId);
+                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
+                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
             }
 
             var stringBuilder = new StringBuilder();
 
-            foreach (var customHeaderRow in customData.ExtraChangeDescriptions)
+            foreach (var extraChangeDescription in affectedThingsData.ExtraChangeDescriptions)
             {
-                stringBuilder.AppendLine(customHeaderRow);
+                stringBuilder.AppendLine(extraChangeDescription);
             }
 
             var containerThing = this.GetDeletedThingContainer(deletedThing, changedThings);
@@ -665,8 +671,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
         }
 
         /// <summary>
-        /// Gets custom affected <see cref="Thing"/>s data as a <see cref="CustomAffectedThingsData"/> object.
-        /// <see cref="CustomAffectedThingsData"/> containes AffectedItems, AffectedDomains and extra ChangeDescription text
+        /// Gets custom affected <see cref="Thing"/>s data as a <see cref="AffectedThingsData"/> object.
+        /// <see cref="AffectedThingsData"/> contains AffectedItems, AffectedDomains and extra ChangeDescription text
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -682,12 +688,12 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// The <see cref="Thing"/> we want to get custom data for.
         /// </param>
         /// <returns>
-        /// The <see cref="CustomAffectedThingsData"/>
+        /// The <see cref="AffectedThingsData"/>
         /// </returns>
-        private CustomAffectedThingsData GetCustomAffectedThingsData(NpgsqlTransaction transaction, string partition, Thing rootThing, ClasslessDTO updateOperation, Thing thing = null)
+        private AffectedThingsData GetAffectedThingsData(NpgsqlTransaction transaction, string partition, Thing rootThing, ClasslessDTO updateOperation, Thing thing = null)
         {
             thing ??= rootThing;
-            var customData = new CustomAffectedThingsData();
+            var affectedThingsData = new AffectedThingsData();
             var getContainerReferences = thing != rootThing;
 
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
@@ -701,13 +707,13 @@ namespace CDP4WebServices.API.Services.ChangeLog
             {
                 case Parameter parameter:
                 {
-                    this.AddIfNotExists(customData.AffectedItemIds, parameter.ParameterType);
+                    this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.ParameterType);
 
                     if (this.ParameterTypeService.GetShallow(transaction, siteDirectoryPartition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
                     {
                         foreach (var category in parameterType.Category)
                         {
-                            this.AddIfNotExists(customData.AffectedItemIds, category);
+                            this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
                     }
 
@@ -718,21 +724,21 @@ namespace CDP4WebServices.API.Services.ChangeLog
                         {
                             foreach (var parameterSubscription in parameter.ParameterSubscription)
                             {
-                                this.AddIfNotExists(customData.AffectedItemIds, parameterSubscription);
+                                this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription);
                             }
                         }
                     }
 
                     if (this.GetContainer(transaction, engineeringModelPartition, parameter) is ElementDefinition elementDefinition)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, elementDefinition);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, elementDefinition);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     if (getContainerReferences)
                     {
-                        this.AddIfNotExists(customData.AffectedDomainIds, parameter.Owner);
-                        this.AddIfNotExists(customData.AffectedItemIds, parameter.Iid);
+                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, parameter.Owner);
+                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.Iid);
                     }
 
                     break;
@@ -741,19 +747,19 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 {
                     if (this.GetContainer(transaction, engineeringModelPartition, elementUsage) is ElementDefinition elementDefinition)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, elementDefinition);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, elementDefinition);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     if (getContainerReferences)
                     {
                         foreach (var category in elementUsage.Category)
                         {
-                            this.AddIfNotExists(customData.AffectedItemIds, category);
+                            this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
 
-                        this.AddIfNotExists(customData.AffectedDomainIds, elementUsage.Owner);
-                        this.AddIfNotExists(customData.AffectedItemIds, elementUsage.Iid);
+                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, elementUsage.Owner);
+                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, elementUsage.Iid);
                     }
 
                     break;
@@ -764,11 +770,11 @@ namespace CDP4WebServices.API.Services.ChangeLog
                     {
                         foreach (var category in elementDefinition.Category)
                         {
-                            this.AddIfNotExists(customData.AffectedItemIds, category);
+                            this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
 
-                        this.AddIfNotExists(customData.AffectedDomainIds, elementDefinition.Owner);
-                        this.AddIfNotExists(customData.AffectedItemIds, elementDefinition.Iid);
+                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, elementDefinition.Owner);
+                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, elementDefinition.Iid);
                     }
 
                     break;
@@ -783,7 +789,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                         {
                             foreach (var parameterSubscription in parameterOverride.ParameterSubscription)
                             {
-                                this.AddIfNotExists(customData.AffectedItemIds, parameterSubscription);
+                                this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription);
                             }
                         }
                     }
@@ -794,20 +800,20 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (parameterOverrideParameter != null)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOverrideParameter);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOverrideParameter);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     if (this.GetContainer(transaction, engineeringModelPartition, parameterOverride) is ElementUsage elementUsage)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, elementUsage);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, elementUsage);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     if (getContainerReferences)
                     {
-                        this.AddIfNotExists(customData.AffectedDomainIds, parameterOverride.Owner);
-                        this.AddIfNotExists(customData.AffectedItemIds, parameterOverride.Iid);
+                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, parameterOverride.Owner);
+                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterOverride.Iid);
                     }
 
                     break;
@@ -822,8 +828,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (parameterValueSetParameter != null)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterValueSetParameter);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterValueSetParameter);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     break;
@@ -838,8 +844,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (parameterOverrideValueSetParameterOverride != null)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOverrideValueSetParameterOverride);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOverrideValueSetParameterOverride);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     break;
@@ -854,14 +860,14 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (parameterOrOverrideBase != null)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOrOverrideBase);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOrOverrideBase);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     if (getContainerReferences)
                     {
-                        this.AddIfNotExists(customData.AffectedDomainIds, parameterSubscription.Owner);
-                        this.AddIfNotExists(customData.AffectedItemIds, parameterSubscription.Iid);
+                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, parameterSubscription.Owner);
+                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription.Iid);
                     }
 
                     break;
@@ -876,15 +882,15 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (parameterSubscriptionValueSetParameterSubscription != null)
                     {
-                        var newCustomData = this.GetCustomAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterSubscriptionValueSetParameterSubscription);
-                        customData.AddFrom(newCustomData);
+                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterSubscriptionValueSetParameterSubscription);
+                        affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
                     break;
                 }
             }
 
-            return customData;
+            return affectedThingsData;
         }
 
         /// <summary>
