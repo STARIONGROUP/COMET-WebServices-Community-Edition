@@ -150,6 +150,7 @@ namespace CDP4Orm.Dao
             string tempNumberSet;
             string tempPositiveValueConnotation;
             string tempShortName;
+            string tempThingPreference;
             string tempUseShortNameValues;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -219,6 +220,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ShortName", out tempShortName))
             {
                 dto.ShortName = tempShortName.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             if (valueDict.TryGetValue("UseShortNameValues", out tempUseShortNameValues))

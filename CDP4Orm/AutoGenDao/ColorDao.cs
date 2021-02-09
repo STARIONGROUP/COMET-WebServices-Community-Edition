@@ -144,6 +144,7 @@ namespace CDP4Orm.Dao
             string tempModifiedOn;
             string tempName;
             string tempRed;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -176,6 +177,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Red", out tempRed))
             {
                 dto.Red = int.Parse(tempRed);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;

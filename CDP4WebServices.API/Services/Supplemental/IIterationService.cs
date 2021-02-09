@@ -30,6 +30,17 @@ namespace CDP4WebServices.API.Services
         void CopyIteration(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
 
         /// <summary>
+        /// Delete all organizational participations from element definitions
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="targetPartition">
+        /// The target iteration partition
+        /// </param>
+        void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string targetPartition);
+
+        /// <summary>
         /// Copy the tables from a source to an Iteration partition
         /// </summary>
         /// <param name="transaction">

@@ -141,6 +141,7 @@ namespace CDP4Orm.Dao
         {
             string tempModifiedOn;
             string tempSourceIterationIid;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -178,6 +179,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("SourceIterationIid", out tempSourceIterationIid) && tempSourceIterationIid != null)
             {
                 dto.SourceIterationIid = Guid.Parse(tempSourceIterationIid);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;
@@ -507,6 +513,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"AndExpression_Term\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementBase_Category\" SELECT * FROM \"{1}\".\"ElementBase_Category\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ElementBase_Category\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_OrganizationalParticipant\" SELECT * FROM \"{1}\".\"ElementDefinition_OrganizationalParticipant\";", targetPartition, sourcePartition);
+                sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ElementDefinition_OrganizationalParticipant\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_ReferencedElement\" SELECT * FROM \"{1}\".\"ElementDefinition_ReferencedElement\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ElementDefinition_ReferencedElement\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementUsage_ExcludeOption\" SELECT * FROM \"{1}\".\"ElementUsage_ExcludeOption\";", targetPartition, sourcePartition);
@@ -670,6 +678,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"AndExpression_Term\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementBase_Category\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
+                sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementDefinition_OrganizationalParticipant\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementDefinition_ReferencedElement\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementUsage_ExcludeOption\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ExclusiveOrExpression_Term\" {1} TRIGGER USER;", sourcePartition, triggerStatus);

@@ -59,11 +59,25 @@ namespace CDP4Orm.MigrationEngine
 
             foreach (var applicableSchema in applicableSchemas)
             {
+                var replaceList = new List<Tuple<string, string>>();
+
                 // using the actual schema name in the generic script to execute
                 var replace = new Tuple<string, string>(SCHEMA_NAME_REPLACE, applicableSchema);
+                replaceList.Add(replace);
+
+                // allow possibility of replacing engineeringmodel tokens in iterations
+                if (this.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.Iteration)
+                {
+                    if (applicableSchema.Contains("Iteration_"))
+                    {
+                        var applicableEngineeringModelSchema = applicableSchema.Replace("Iteration_", "EngineeringModel_");
+                        replaceList.Add(new Tuple<string, string>(ENGINEERING_MODEL_REPLACE, applicableEngineeringModelSchema));
+                    }
+                }
+
                 using (var sqlCommand = new NpgsqlCommand())
                 {
-                    sqlCommand.ReadSqlFromResource(this.MigrationMetaData.ResourceName, null, new [] { replace });
+                    sqlCommand.ReadSqlFromResource(this.MigrationMetaData.ResourceName, null, replaceList);
 
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;

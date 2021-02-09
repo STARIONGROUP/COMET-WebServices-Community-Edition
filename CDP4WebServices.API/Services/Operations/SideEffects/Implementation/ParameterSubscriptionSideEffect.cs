@@ -105,6 +105,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             string partition, 
             ISecurityContext securityContext)
         {
+            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
+
             if (thing.Owner == Guid.Empty)
             {
                 throw new InvalidOperationException("The owner cannot be empty.");

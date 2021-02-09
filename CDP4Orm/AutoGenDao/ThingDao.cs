@@ -74,6 +74,7 @@ namespace CDP4Orm.Dao
                     { "ClassKind", thing.ClassKind.ToString() },
                     { "ModifiedOn", !this.IsDerived(thing, "ModifiedOn") ? thing.ModifiedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
                     { "RevisionNumber", thing.RevisionNumber.ToString() },
+                    { "ThingPreference", !this.IsDerived(thing, "ThingPreference") ? thing.ThingPreference.Escape() : null },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
@@ -253,6 +254,7 @@ namespace CDP4Orm.Dao
                     { "ClassKind", thing.ClassKind.ToString() },
                     { "ModifiedOn", !this.IsDerived(thing, "ModifiedOn") ? thing.ModifiedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
                     { "RevisionNumber", thing.RevisionNumber.ToString() },
+                    { "ThingPreference", !this.IsDerived(thing, "ThingPreference") ? thing.ThingPreference.Escape() : null },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())

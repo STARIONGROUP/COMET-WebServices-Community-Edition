@@ -11,5 +11,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     /// </summary>
     public interface IOperationSideEffectProcessor : IOperationSideEffectFunctions
     {
+        /// <summary>
+        /// Gets or sets the <see cref="IRequestUtils" />.
+        /// </summary>
+        IRequestUtils RequestUtils { get; set; }
     }
 }

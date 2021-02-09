@@ -143,6 +143,7 @@ namespace CDP4Orm.Dao
             string tempIsActive;
             string tempModifiedOn;
             string tempStatus;
+            string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
@@ -172,6 +173,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Status", out tempStatus))
             {
                 dto.Status = Utils.ParseEnum<CDP4Common.EngineeringModelData.RuleVerificationStatusKind>(tempStatus);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             return dto;

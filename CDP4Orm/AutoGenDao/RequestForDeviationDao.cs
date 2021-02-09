@@ -146,6 +146,7 @@ namespace CDP4Orm.Dao
             string tempModifiedOn;
             string tempShortName;
             string tempStatus;
+            string tempThingPreference;
             string tempTitle;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -197,6 +198,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Status", out tempStatus))
             {
                 dto.Status = Utils.ParseEnum<CDP4Common.ReportingData.AnnotationStatusKind>(tempStatus);
+            }
+
+            if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
+            {
+                dto.ThingPreference = tempThingPreference.UnEscape();
             }
 
             if (valueDict.TryGetValue("Title", out tempTitle))

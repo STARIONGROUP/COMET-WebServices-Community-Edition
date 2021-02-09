@@ -206,6 +206,11 @@ namespace CDP4WebServices.API.Services
         public IDefinitionService DefinitionService { get; set; }
 
         /// <summary>
+        /// Gets or sets the dependentParameterTypeAssignment service.
+        /// </summary>
+        public IDependentParameterTypeAssignmentService DependentParameterTypeAssignmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the derivedQuantityKind service.
         /// </summary>
         public IDerivedQuantityKindService DerivedQuantityKindService { get; set; }
@@ -391,6 +396,11 @@ namespace CDP4WebServices.API.Services
         public IIdCorrespondenceService IdCorrespondenceService { get; set; }
 
         /// <summary>
+        /// Gets or sets the independentParameterTypeAssignment service.
+        /// </summary>
+        public IIndependentParameterTypeAssignmentService IndependentParameterTypeAssignmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the intervalScale service.
         /// </summary>
         public IIntervalScaleService IntervalScaleService { get; set; }
@@ -414,6 +424,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the logarithmicScale service.
         /// </summary>
         public ILogarithmicScaleService LogarithmicScaleService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the logEntryChangelogItem service.
+        /// </summary>
+        public ILogEntryChangelogItemService LogEntryChangelogItemService { get; set; }
 
         /// <summary>
         /// Gets or sets the mappingToReferenceScale service.
@@ -504,6 +519,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the organization service.
         /// </summary>
         public IOrganizationService OrganizationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the organizationalParticipant service.
+        /// </summary>
+        public IOrganizationalParticipantService OrganizationalParticipantService { get; set; }
 
         /// <summary>
         /// Gets or sets the ownedStyle service.
@@ -751,6 +771,11 @@ namespace CDP4WebServices.API.Services
         public IRuleViolationService RuleViolationService { get; set; }
 
         /// <summary>
+        /// Gets or sets the sampledFunctionParameterType service.
+        /// </summary>
+        public ISampledFunctionParameterTypeService SampledFunctionParameterTypeService { get; set; }
+
+        /// <summary>
         /// Gets or sets the scalarParameterType service.
         /// </summary>
         public IScalarParameterTypeService ScalarParameterTypeService { get; set; }
@@ -963,6 +988,7 @@ namespace CDP4WebServices.API.Services
                             { "DecompositionRule", this.DecompositionRuleService },
                             { "DefinedThing", this.DefinedThingService },
                             { "Definition", this.DefinitionService },
+                            { "DependentParameterTypeAssignment", this.DependentParameterTypeAssignmentService },
                             { "DerivedQuantityKind", this.DerivedQuantityKindService },
                             { "DerivedUnit", this.DerivedUnitService },
                             { "DiagramCanvas", this.DiagramCanvasService },
@@ -1000,11 +1026,13 @@ namespace CDP4WebServices.API.Services
                             { "Goal", this.GoalService },
                             { "HyperLink", this.HyperLinkService },
                             { "IdCorrespondence", this.IdCorrespondenceService },
+                            { "IndependentParameterTypeAssignment", this.IndependentParameterTypeAssignmentService },
                             { "IntervalScale", this.IntervalScaleService },
                             { "Iteration", this.IterationService },
                             { "IterationSetup", this.IterationSetupService },
                             { "LinearConversionUnit", this.LinearConversionUnitService },
                             { "LogarithmicScale", this.LogarithmicScaleService },
+                            { "LogEntryChangelogItem", this.LogEntryChangelogItemService },
                             { "MappingToReferenceScale", this.MappingToReferenceScaleService },
                             { "MeasurementScale", this.MeasurementScaleService },
                             { "MeasurementUnit", this.MeasurementUnitService },
@@ -1023,6 +1051,7 @@ namespace CDP4WebServices.API.Services
                             { "OrdinalScale", this.OrdinalScaleService },
                             { "OrExpression", this.OrExpressionService },
                             { "Organization", this.OrganizationService },
+                            { "OrganizationalParticipant", this.OrganizationalParticipantService },
                             { "OwnedStyle", this.OwnedStyleService },
                             { "Page", this.PageService },
                             { "Parameter", this.ParameterService },
@@ -1072,6 +1101,7 @@ namespace CDP4WebServices.API.Services
                             { "RuleVerification", this.RuleVerificationService },
                             { "RuleVerificationList", this.RuleVerificationListService },
                             { "RuleViolation", this.RuleViolationService },
+                            { "SampledFunctionParameterType", this.SampledFunctionParameterTypeService },
                             { "ScalarParameterType", this.ScalarParameterTypeService },
                             { "ScaleReferenceQuantityValue", this.ScaleReferenceQuantityValueService },
                             { "ScaleValueDefinition", this.ScaleValueDefinitionService },
@@ -1156,6 +1186,7 @@ namespace CDP4WebServices.API.Services
                             { "DecompositionRule", this.DecompositionRuleService },
                             { "DefinedThing", this.DefinedThingService },
                             { "Definition", this.DefinitionService },
+                            { "DependentParameterTypeAssignment", this.DependentParameterTypeAssignmentService },
                             { "DerivedQuantityKind", this.DerivedQuantityKindService },
                             { "DerivedUnit", this.DerivedUnitService },
                             { "DiagramCanvas", this.DiagramCanvasService },
@@ -1193,11 +1224,13 @@ namespace CDP4WebServices.API.Services
                             { "Goal", this.GoalService },
                             { "HyperLink", this.HyperLinkService },
                             { "IdCorrespondence", this.IdCorrespondenceService },
+                            { "IndependentParameterTypeAssignment", this.IndependentParameterTypeAssignmentService },
                             { "IntervalScale", this.IntervalScaleService },
                             { "Iteration", this.IterationService },
                             { "IterationSetup", this.IterationSetupService },
                             { "LinearConversionUnit", this.LinearConversionUnitService },
                             { "LogarithmicScale", this.LogarithmicScaleService },
+                            { "LogEntryChangelogItem", this.LogEntryChangelogItemService },
                             { "MappingToReferenceScale", this.MappingToReferenceScaleService },
                             { "MeasurementScale", this.MeasurementScaleService },
                             { "MeasurementUnit", this.MeasurementUnitService },
@@ -1216,6 +1249,7 @@ namespace CDP4WebServices.API.Services
                             { "OrdinalScale", this.OrdinalScaleService },
                             { "OrExpression", this.OrExpressionService },
                             { "Organization", this.OrganizationService },
+                            { "OrganizationalParticipant", this.OrganizationalParticipantService },
                             { "OwnedStyle", this.OwnedStyleService },
                             { "Page", this.PageService },
                             { "Parameter", this.ParameterService },
@@ -1265,6 +1299,7 @@ namespace CDP4WebServices.API.Services
                             { "RuleVerification", this.RuleVerificationService },
                             { "RuleVerificationList", this.RuleVerificationListService },
                             { "RuleViolation", this.RuleViolationService },
+                            { "SampledFunctionParameterType", this.SampledFunctionParameterTypeService },
                             { "ScalarParameterType", this.ScalarParameterTypeService },
                             { "ScaleReferenceQuantityValue", this.ScaleReferenceQuantityValueService },
                             { "ScaleValueDefinition", this.ScaleValueDefinitionService },

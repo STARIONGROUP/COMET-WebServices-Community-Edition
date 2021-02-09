@@ -40,6 +40,11 @@ namespace CDP4WebServices.API.Services
     public sealed partial class ModelLogEntryService : ServiceBase, IModelLogEntryService
     {
         /// <summary>
+        /// Gets or sets the <see cref="ILogEntryChangelogItemService"/>.
+        /// </summary>
+        public ILogEntryChangelogItemService LogEntryChangelogItemService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IModelLogEntryDao"/>.
         /// </summary>
         public IModelLogEntryDao ModelLogEntryDao { get; set; }
@@ -253,7 +258,8 @@ namespace CDP4WebServices.API.Services
             }
 
             var modelLogEntry = thing as ModelLogEntry;
-            return this.ModelLogEntryDao.Write(transaction, partition, modelLogEntry, container);
+            var createSuccesful = this.ModelLogEntryDao.Write(transaction, partition, modelLogEntry, container);
+            return createSuccesful && this.CreateContainment(transaction, partition, modelLogEntry);
         }
 
         /// <summary>
@@ -315,7 +321,12 @@ namespace CDP4WebServices.API.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            return this.GetShallow(transaction, partition, idFilter, containerSecurityContext);
+            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var modelLogEntryColl = results.Where(i => i.GetType() == typeof(ModelLogEntry)).Cast<ModelLogEntry>().ToList();
+
+            results.AddRange(this.LogEntryChangelogItemService.GetDeep(transaction, partition, modelLogEntryColl.SelectMany(x => x.LogEntryChangelogItem), containerSecurityContext));
+
+            return results;
         }
 
         /// <summary>
@@ -355,6 +366,33 @@ namespace CDP4WebServices.API.Services
             }
 
             return filteredCollection;
+        }
+
+        /// <summary>
+        /// Persist the <see cref="ModelLogEntry"/> containment tree to the ORM layer.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="modelLogEntry">
+        /// The <see cref="ModelLogEntry"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool CreateContainment(NpgsqlTransaction transaction, string partition, ModelLogEntry modelLogEntry)
+        {
+            var results = new List<bool>();
+
+            foreach (var logEntryChangelogItem in this.ResolveFromRequestCache(modelLogEntry.LogEntryChangelogItem))
+            {
+                results.Add(this.LogEntryChangelogItemService.CreateConcept(transaction, partition, logEntryChangelogItem, modelLogEntry));
+            }
+
+            return results.All(x => x);
         }
     }
 }

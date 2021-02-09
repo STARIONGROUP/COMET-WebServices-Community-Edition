@@ -60,6 +60,11 @@ namespace CDP4WebServices.API.Services
         public IIterationSetupService IterationSetupService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IOrganizationalParticipantService"/>.
+        /// </summary>
+        public IOrganizationalParticipantService OrganizationalParticipantService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IParticipantService"/>.
         /// </summary>
         public IParticipantService ParticipantService { get; set; }
@@ -354,6 +359,7 @@ namespace CDP4WebServices.API.Services
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.IterationSetupService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.IterationSetup), containerSecurityContext));
+            results.AddRange(this.OrganizationalParticipantService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.OrganizationalParticipant), containerSecurityContext));
             results.AddRange(this.ParticipantService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Participant), containerSecurityContext));
             results.AddRange(this.RequiredRdlService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.RequiredRdl), containerSecurityContext));
 
@@ -436,6 +442,11 @@ namespace CDP4WebServices.API.Services
             foreach (var iterationSetup in this.ResolveFromRequestCache(engineeringModelSetup.IterationSetup))
             {
                 results.Add(this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, engineeringModelSetup));
+            }
+
+            foreach (var organizationalParticipant in this.ResolveFromRequestCache(engineeringModelSetup.OrganizationalParticipant))
+            {
+                results.Add(this.OrganizationalParticipantService.CreateConcept(transaction, partition, organizationalParticipant, engineeringModelSetup));
             }
 
             foreach (var participant in this.ResolveFromRequestCache(engineeringModelSetup.Participant))

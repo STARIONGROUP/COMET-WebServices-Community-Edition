@@ -76,6 +76,36 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         }
 
         /// <summary>
+        /// Execute additional logic  before a create operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override bool BeforeCreate(
+            ParameterOverride thing,
+            Thing container,
+            NpgsqlTransaction transaction,
+            string partition,
+            ISecurityContext securityContext)
+        {
+            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
+
+            return true;
+        }
+
+        /// <summary>
         /// Execute additional logic after a successful create operation.
         /// </summary>
         /// <param name="thing">
