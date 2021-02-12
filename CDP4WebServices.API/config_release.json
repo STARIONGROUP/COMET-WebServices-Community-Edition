@@ -19,8 +19,8 @@
   "EmailService": {
     "SMTP": "smpt.cdp4.org",
     "Port": 587,
-    "UserName": "cdp4postmaseter-username",
-    "Password": "cdp4postmaseter-password",
+    "UserName": "cdp4postmaster-username",
+    "Password": "cdp4postmaster-password",
   },
   "Defaults": {
     "PersonPassword": "pass",
@@ -28,6 +28,7 @@
     "ContributorsCacheTimeout": 60
   },
   "Changelog": {
-    "CollectChanges": false
+    "CollectChanges": false,
+    "AllowEmailNotification": false
   }
 }

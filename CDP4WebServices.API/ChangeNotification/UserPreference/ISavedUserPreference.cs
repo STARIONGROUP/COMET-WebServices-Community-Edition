@@ -1,56 +1,49 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="Startup.cs" company="RHEA System S.A.">
+// <copyright file="ISavedUserPreference.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
-//
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft.
-//
-//    This file is part of CDP4 Web Services Community Edition. 
+// 
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski,
+//                 Ahmed Abulwafa Ahmed
+// 
+//    This file is part of CDP4 Web Services Community Edition.
 //    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
-//
+// 
 //    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
-//
+// 
 //    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    GNU Affero General Public License for more details.
-//
+//    Lesser General Public License for more details.
+// 
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServer
+namespace CDP4WebServices.API.ChangeNotification.UserPreference
 {
-    using Hangfire;
-    using Hangfire.MemoryStorage;
-
-    using Nancy;
-    using Nancy.Owin;
-
-    using Owin;
-
     /// <summary>
-    /// Provides the entry point for the ASP.NET application
+    /// Definition of the <see cref="ISavedUserPreference"/> used to load user filter preferences from the active user.
     /// </summary>
-    public class Startup
+    public interface ISavedUserPreference
     {
         /// <summary>
-        /// Specifies how the ASP.NET application will respond to individual HTTP requests.
+        /// The name to be stored
         /// </summary>
-        /// <param name="app">
-        /// Application pipeline
-        /// </param>
-        public void Configuration(IAppBuilder app)
-        {
-            GlobalConfiguration.Configuration.UseMemoryStorage();
-            app.UseHangfireDashboard("/hangfire");
-            app.UseHangfireServer();
+        public string Name { get; set; }
 
-            app.UseNancy(options => options.PassThroughWhenStatusCodesAre(HttpStatusCode.NotFound));
-        }
+        /// <summary>
+        /// The description to be stored
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// The value to be stored
+        /// </summary>
+        public string Value { get; set; }
     }
 }

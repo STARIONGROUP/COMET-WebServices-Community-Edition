@@ -20,7 +20,7 @@
     "IsDbRestoreEnabled": false
   },
   "EmailService": {
-    "Sender":  "CDP4" ,
+    "Sender": "CDP4",
     "SMTP": "smpt.cdp4.org",
     "Port": 587,
     "UserName": "cdp4postmaster-username",
@@ -33,6 +33,7 @@
     "ContributorsCacheTimeout": 60
   },
   "Changelog": {
-    "CollectChanges": true
+    "CollectChanges": false,
+    "AllowEmailNotification":  false 
   }
 }
