@@ -109,7 +109,6 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonService, IPersonService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<AuthenticationPluginInjector, IAuthenticationPluginInjector>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<PersonResolver, IPersonResolver>();
-                    builder.RegisterTypeAsPropertyInjectedSingleton<ObfuscationService, IObfuscationService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<UserValidator, IUserValidator>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<CDP4WebServiceAuthentication, ICDP4WebServiceAuthentication>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<MigrationService, IMigrationService>();
@@ -140,6 +139,9 @@ namespace CDP4WebServices.API
             container.Update(
                 builder =>
                 {
+                    // obfuscation service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ObfuscationService, IObfuscationService>();
+
                     // local storage controller to stream binary to disk
                     builder.RegisterTypeAsPropertyInjectedSingleton<LocalFileStorage, ILocalFileStorage>();
 
