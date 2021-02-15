@@ -319,6 +319,11 @@ namespace CDP4WebServices.API.Services
 
             var staticTypeInfo = this.DataModelUtils.GetSourcePartition(typeName);
 
+            if (staticTypeInfo == "SiteDirectory")
+            {
+                return staticTypeInfo;
+            }
+
             if (staticTypeInfo != null)
             {
                 // source partition info found

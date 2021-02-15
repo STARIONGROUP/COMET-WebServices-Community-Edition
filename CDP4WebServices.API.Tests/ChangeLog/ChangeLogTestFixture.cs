@@ -163,6 +163,8 @@ namespace CDP4WebServices.API.Tests.Services
                 DataModelUtils = this.dataModelUtils,
             };
 
+            this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>());
+
             this.requirementsSpecification = new RequirementsSpecification(Guid.NewGuid(), 0);
 
             this.domain_ElementDefinition = new DomainOfExpertise(Guid.NewGuid(), 0)
@@ -742,10 +744,10 @@ namespace CDP4WebServices.API.Tests.Services
             postOperation.Create.Add(this.existingModelLogEntry);
             postOperation.Update.Add(engineeringModelClasslessDto);
 
-            this.operationProcessor.Setup(x => x.OperationThingCache).Returns(new Dictionary<DtoInfo, DtoResolveHelper>
+            this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>
             {
-                { parameterClasslessDto.GetInfoPlaceholder(), new DtoResolveHelper(this.parameter)  },
-                { new ContainerInfo(ClassKind.ElementDefinition.ToString(), this.elementDefinition_1.Iid), new DtoResolveHelper(this.elementDefinition_1)  },
+                this.parameter,
+                this.elementDefinition_1,
             });
 
             var things = new Thing[] { this.elementDefinition_1, this.engineeringModel };
@@ -1079,10 +1081,10 @@ namespace CDP4WebServices.API.Tests.Services
             postOperation.Delete.Add(elementUsageClasslessDto);
             postOperation.Create.Add(this.existingModelLogEntry);
 
-            this.operationProcessor.Setup(x => x.OperationThingCache).Returns(new Dictionary<DtoInfo, DtoResolveHelper>
+            this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>
             {
-                { elementUsageClasslessDto.GetInfoPlaceholder(), new DtoResolveHelper(this.elementUsage_1)  },
-                { new ContainerInfo(ClassKind.ElementDefinition.ToString(), this.elementDefinition_1.Iid), new DtoResolveHelper(this.elementDefinition_1)  },
+                this.elementUsage_1,
+                this.elementDefinition_1,
             });
 
             var things = new Thing[] { this.elementDefinition_1, this.engineeringModel };
@@ -1341,10 +1343,10 @@ namespace CDP4WebServices.API.Tests.Services
             postOperation.Delete.Add(parameterOverrideClasslessDto);
             postOperation.Update.Add(engineeringModelClasslessDto);
 
-            this.operationProcessor.Setup(x => x.OperationThingCache).Returns(new Dictionary<DtoInfo, DtoResolveHelper>
+            this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>
             {
-                { parameterOverrideClasslessDto.GetInfoPlaceholder(), new DtoResolveHelper(this.parameterOverride)  },
-                { new ContainerInfo(ClassKind.ElementUsage.ToString(), this.elementUsage_1.Iid), new DtoResolveHelper(this.elementUsage_1)  },
+                this.parameterOverride,
+                this.elementUsage_1,
             });
 
             var things = new Thing[] { this.elementUsage_1, this.engineeringModel };
@@ -1719,10 +1721,10 @@ namespace CDP4WebServices.API.Tests.Services
             postOperation.Delete.Add(parameterSubscriptionClasslessDto);
             postOperation.Update.Add(engineeringModelClasslessDto);
 
-            this.operationProcessor.Setup(x => x.OperationThingCache).Returns(new Dictionary<DtoInfo, DtoResolveHelper>
+            this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>
             {
-                { parameterSubscriptionClasslessDto.GetInfoPlaceholder(), new DtoResolveHelper(this.parameterSubscription)  },
-                { new ContainerInfo(ClassKind.Parameter.ToString(), this.parameter.Iid), new DtoResolveHelper(this.parameter)  },
+                this.parameterSubscription,
+                this.parameter,
             });
 
             var things = new Thing[] { this.parameter, this.engineeringModel };

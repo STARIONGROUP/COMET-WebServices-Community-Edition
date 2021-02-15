@@ -33,7 +33,7 @@
     "ContributorsCacheTimeout": 60
   },
   "Changelog": {
-    "CollectChanges": false,
+    "CollectChanges": true,
     "AllowEmailNotification":  false 
   }
 }

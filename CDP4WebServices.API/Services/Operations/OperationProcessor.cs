@@ -89,16 +89,21 @@ namespace CDP4WebServices.API.Services.Operations
         private readonly string[] topContainerTypes = { "SiteDirectory", "EngineeringModel" };
 
         /// <summary>
-        /// Backing field for the <see cref="OperationThingCache"/>
-        /// </summary>
-        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new ();
-
-        /// <summary>
         /// Gets the operation <see cref="Thing"/> instance cache.
         /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
         /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
         /// </summary>
-        public IReadOnlyDictionary<DtoInfo, DtoResolveHelper> OperationThingCache => this.operationThingCache;
+        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new ();
+
+        /// <summary>
+        /// Backing field for <see cref="OperationOriginalThingCache"/>
+        /// </summary>
+        private readonly List<Thing> operationOriginalThingCache = new ();
+
+        /// <summary>
+        /// Gets the operation original <see cref="Thing"/> instance cache.
+        /// </summary>
+        public IReadOnlyList<Thing> OperationOriginalThingCache => this.operationOriginalThingCache;
 
         /// <summary>
         /// Gets or sets the service registry.
@@ -977,6 +982,11 @@ namespace CDP4WebServices.API.Services.Operations
                 // keep a copy of the orginal thing to pass to the after create hook
                 var originalThing = resolvedInfo.Thing.DeepClone<Thing>();
 
+                if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
+                {
+                    this.operationOriginalThingCache.Add(originalThing);
+                }
+
                 // call before create hook
                 if (!this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
                 {
@@ -1139,6 +1149,11 @@ namespace CDP4WebServices.API.Services.Operations
 
                 // keep a copy of the orginal thing to pass to the after update hook
                 var originalThing = updatableThing.DeepClone<Thing>();
+
+                if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
+                {
+                    this.operationOriginalThingCache.Add(originalThing);
+                }
 
                 // call before update hook
                 this.OperationSideEffectProcessor.BeforeUpdate(updatableThing, containerInfo, transaction, resolvedInfo.Partition, securityContext, updateInfo);
@@ -1349,24 +1364,36 @@ namespace CDP4WebServices.API.Services.Operations
 
             var persistedThing = resolvedInfo.Thing;
 
-            var containerInfo = 
+            var container = 
                 metaInfo.IsTopContainer 
                     ? null 
                     : this.GetContainerInfo(persistedThing).Thing;
 
+            if (container != null)
+            {
+                var originalContainer = container.DeepClone<Thing>();
+                this.operationOriginalThingCache.Add(originalContainer);
+            }
+
             // keep a copy of the orginal thing to pass to the after delete hook
             var originalThing = persistedThing.DeepClone<Thing>();
+
+            if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
+            {
+                this.operationOriginalThingCache.Add(originalThing);
+            }
+
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             // call before delete hook
-            this.OperationSideEffectProcessor.BeforeDelete(persistedThing, containerInfo, transaction, resolvedInfo.Partition, securityContext);
+            this.OperationSideEffectProcessor.BeforeDelete(persistedThing, container, transaction, resolvedInfo.Partition, securityContext);
 
             // delete the item
             var propertyService = this.ServiceProvider.MapToPersitableService(dtoInfo.TypeName);
             this.DeletePersistedItem(transaction, resolvedInfo.Partition, propertyService, persistedThing);
 
             // call after delete hook
-            this.OperationSideEffectProcessor.AfterDelete(persistedThing, containerInfo, originalThing, transaction, resolvedInfo.Partition, securityContext);
+            this.OperationSideEffectProcessor.AfterDelete(persistedThing, container, originalThing, transaction, resolvedInfo.Partition, securityContext);
         }
 
         /// <summary>

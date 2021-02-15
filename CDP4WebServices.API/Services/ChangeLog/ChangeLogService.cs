@@ -233,7 +233,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                     }
 
                     var newLogEntryChangelogItems = new List<LogEntryChangelogItem>();
-
+                    
                     foreach (var changedThing in changedThings.Where(x => x.ClassKind != ClassKind.ModelLogEntry))
                     {
                         var newLogEntryChangelogItem = this.CreateAddOrUpdateLogEntryChangelogItem(transaction, partition, changedThing, modelLogEntry, operation, changedThings);
@@ -397,11 +397,11 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 var newLogEntryChangelogItem = new LogEntryChangelogItem(Guid.NewGuid(), 0);
                 this.AddIfNotExists(modelLogEntry.AffectedItemIid, (Guid) deleteInfo[nameof(Thing.Iid)]);
 
-                var dtoInfo = deleteInfo.GetInfoPlaceholder();
+                var deletedThing = this.OperationProcessor.OperationOriginalThingCache.FirstOrDefault(x => x.Iid == (Guid) deleteInfo[nameof(Thing.Iid)]);
 
-                if (this.OperationProcessor.OperationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
+                if (deletedThing != null)
                 {
-                    this.SetDeleteLogEntryChangeLogItem(transaction, partition, resolvedInfo.Thing, modelLogEntry, newLogEntryChangelogItem, deleteInfo, changedThings);
+                    this.SetDeleteLogEntryChangeLogItem(transaction, partition, deletedThing, modelLogEntry, newLogEntryChangelogItem, deleteInfo, changedThings);
                 }
 
                 return newLogEntryChangelogItem;
@@ -574,14 +574,140 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 stringBuilder.AppendLine(extraDescriptions);
             }
 
-            var changedValues =
-                updateOperation
-                    .Where(x => !this.excludedPropertyNames.Contains(x.Key))
-                    .Select(x => $" - {x.Key} = {(x.Value is IEnumerable<Guid> enumerable ? $"Added: {string.Join(",", enumerable)}" : x.Value)}");
+            var changedValues = this.BuildUpdateOperationText(transaction, partition, updateOperation);
 
-            stringBuilder.AppendLine(string.Join("\n", changedValues));
+            stringBuilder.AppendLine(changedValues);
 
             logEntryChangeLogItem.ChangeDescription = stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Builds a textual representation of a changed property
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="updateOperation">
+        /// The <see cref="ClasslessDTO"/>
+        /// </param>
+        /// <returns>T <see cref="string"/></returns>
+        private string BuildUpdateOperationText(NpgsqlTransaction transaction, string partition, ClasslessDTO updateOperation)
+        {
+            var relevantOperations = updateOperation.Where(x => !this.excludedPropertyNames.Contains(x.Key)).ToList();
+            var stringBuilder = new StringBuilder();
+
+            foreach (var operation in relevantOperations)
+            {
+                var originalThingIid = (Guid) updateOperation[nameof(Thing.Iid)];
+
+                var originalThing = this.FindOriginalThing(originalThingIid);
+
+                if (originalThing == null)
+                {
+                    stringBuilder.AppendLine($"  - {operation.Key} was changed");
+                    continue;
+                }
+
+                if (operation.Value is Guid changedValue)
+                {
+                    this.AddChangedThingIidLine(transaction, partition, originalThing, operation.Key, changedValue, stringBuilder);
+                }
+                else if (operation.Value is IEnumerable<Guid> guids)
+                {
+                    foreach (var guid in guids)
+                    {
+                        this.AddChangedThingIidLine(transaction, partition, originalThing, operation.Key, guid, stringBuilder);
+                    }
+                }
+                else
+                {
+                    var metaInfoProvider = this.RequestUtils.MetaInfoProvider.GetMetaInfo(originalThing);
+                    var orgValue = metaInfoProvider.GetValue(operation.Key, originalThing);
+                    stringBuilder.AppendLine($"  - {operation.Key}: {orgValue} => {operation.Value}");
+                }
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Adds a line to a <see cref="StringBuilder"/> that holds the textual representation of a changed property that holds a <see cref="Thing.Iid"/>,
+        /// or an <see cref="IEnumerable{T}"/> of type <see cref="Guid"/> that holds <see cref="Thing.Iid"/>s
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original changed <see cref="Thing"/>
+        /// </param>
+        /// <param name="propertyName">
+        /// The name of the changed property
+        /// </param>
+        /// <param name="changedValue">
+        /// The <see cref="Thing.Iid"/> of the <see cref="Thing"/> that was changed in the <see cref="originalThing"/>'s property.
+        /// </param>
+        /// <param name="stringBuilder">
+        /// The <see cref="StringBuilder"/>
+        /// </param>
+        private void AddChangedThingIidLine(NpgsqlTransaction transaction, string partition, Thing originalThing, string propertyName, Guid changedValue, StringBuilder stringBuilder)
+        {
+            var metaInfoProvider = this.RequestUtils.MetaInfoProvider.GetMetaInfo(originalThing);
+            var metaInfo = metaInfoProvider.GetPropertyMetaInfo(propertyName);
+
+            var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
+            var service = this.ServiceProvider.MapToPersitableService(metaInfo.TypeName);
+
+            var dtoInfo = new DtoInfo(metaInfo.TypeName, changedValue);
+            var dtoResolverHelper = new DtoResolveHelper(dtoInfo);
+            var resolverDictionary = new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } };
+            this.ResolveService.ResolveItems(transaction, partition, resolverDictionary);
+
+            var changedValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { changedValue }, securityContext).FirstOrDefault();
+
+            var orgValue = metaInfoProvider.GetValue(propertyName, originalThing);
+
+            var orgValueThing = orgValue == null
+                ? null
+                : service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
+
+            var changedNamedThing = changedValueThing as INamedThing;
+            var orgNamedThing = orgValueThing as INamedThing;
+
+            if ((changedNamedThing ?? orgNamedThing) != null)
+            {
+                stringBuilder.AppendLine($"  - {propertyName}: {orgNamedThing?.Name} => {changedNamedThing?.Name}");
+                return;
+            }
+
+            stringBuilder.AppendLine($"  - {propertyName} was changed");
+        }
+
+        /// <summary>
+        /// Finds a <see cref="Thing"/> in the <see cref="OperationProcessor"/>'s cache by its <see cref="Thing.Iid"/> 
+        /// </summary>
+        /// <param name="guid">
+        /// The <see cref="Thing.Iid"/>
+        /// </param>
+        /// <returns>
+        /// A <see cref="Thing"/> is found, otherwise null.
+        /// </returns>
+        private Thing FindOriginalThing(Guid guid)
+        {
+            foreach (var thing in this.OperationProcessor.OperationOriginalThingCache)
+            {
+                if (thing.Iid.Equals(guid))
+                {
+                    return thing;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -717,7 +843,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                         }
                     }
 
-                    if (!(rootThing is ParameterSubscription) && !(rootThing is ParameterSubscriptionValueSet) &&!(rootThing is ParameterOverride) && !(rootThing is ParameterOverrideValueSet))
+                    if (!(rootThing is ParameterSubscription) && !(rootThing is ParameterSubscriptionValueSet) && !(rootThing is ParameterOverride) && !(rootThing is ParameterOverrideValueSet))
                     {
                         if (updateOperation != null &&
                             (updateOperation.Keys.Count > 3 || !updateOperation.Keys.Contains(nameof(Parameter.ParameterSubscription))))
@@ -753,6 +879,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
                     if (getContainerReferences)
                     {
+                        affectedThingsData.ExtraChangeDescriptions.Add($"* ElementUsage: {elementUsage.Name} ({elementUsage.ShortName})");
+
                         foreach (var category in elementUsage.Category)
                         {
                             this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
@@ -768,6 +896,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 {
                     if (getContainerReferences)
                     {
+                        affectedThingsData.ExtraChangeDescriptions.Add($"* ElementDefinition: {elementDefinition.Name} ({elementDefinition.ShortName})");
+
                         foreach (var category in elementDefinition.Category)
                         {
                             this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
@@ -978,15 +1108,17 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 var containerPropertyName = ContainerPropertyHelper.ContainerPropertyName(deletedThing.ClassKind);
 
                 var possibleContainers =
-                    this.OperationProcessor.OperationThingCache.Where(x => x.Key is ContainerInfo && x.Key.TypeName == containerClassType)
-                        .Select(x => x.Value.Thing)
-                        .ToList();
+                    this.OperationProcessor.OperationOriginalThingCache.Where(x => x.ClassKind.ToString() == containerClassType).ToList();
 
                 if (!possibleContainers.Any())
                 {
                     foreach (var possibleContainerThing in changedThings)
                     {
-                        if (possibleContainerThing.GetType().QueryBaseType()?.Name == containerClassType)
+                        if (possibleContainerThing.GetType().Name == containerClassType)
+                        {
+                            possibleContainers.Add(possibleContainerThing);
+                        }
+                        else if (possibleContainerThing.GetType().QueryBaseType()?.Name == containerClassType)
                         {
                             possibleContainers.Add(possibleContainerThing);
                         }

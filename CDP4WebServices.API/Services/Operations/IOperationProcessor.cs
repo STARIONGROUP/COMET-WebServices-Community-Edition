@@ -56,10 +56,8 @@ namespace CDP4WebServices.API.Services.Operations
         void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
 
         /// <summary>
-        /// Gets the operation <see cref="Thing"/> instance cache.
-        /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
-        /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
+        /// Gets the operation original <see cref="Thing"/> instance cache.
         /// </summary>
-        IReadOnlyDictionary<DtoInfo, DtoResolveHelper> OperationThingCache { get; }
+        IReadOnlyList<Thing> OperationOriginalThingCache { get; }
     }
 }
