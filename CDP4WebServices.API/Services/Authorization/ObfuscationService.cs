@@ -57,7 +57,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <summary>
         /// A cache of obfuscated things to be used to ensure <see cref="ModelLogEntry"/>s are cleaned up.
         /// </summary>
-        private List<Guid> obfuscatedCache;
+        private HashSet<Guid> obfuscatedCache;
 
         /// <summary>
         /// Obfuscates the entire response
@@ -66,7 +66,7 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <param name="credentials">The <see cref="Credentials" /></param>
         public void ObfuscateResponse(List<Thing> resourceResponse, Credentials credentials)
         {
-            this.obfuscatedCache = new List<Guid>();
+            this.obfuscatedCache = new HashSet<Guid>();
 
             if (credentials.IsDefaultOrganizationalParticipant)
             {
@@ -88,8 +88,8 @@ namespace CDP4WebServices.API.Services.Authorization
             var citations = resourceResponse.OfType<Citation>().ToList();
             var aliases = resourceResponse.OfType<Alias>().ToList();
             var hyperlinks = resourceResponse.OfType<HyperLink>().ToList();
-            var modellogitems = resourceResponse.OfType<ModelLogEntry>().ToList();
-            var logentries = resourceResponse.OfType<LogEntryChangelogItem>().ToList();
+            var modelLogEntries = resourceResponse.OfType<ModelLogEntry>().ToList();
+            var logEntryChangelogItems = resourceResponse.OfType<LogEntryChangelogItem>().ToList();
 
             if (credentials.OrganizationalParticipant == null)
             {
@@ -110,22 +110,25 @@ namespace CDP4WebServices.API.Services.Authorization
                 this.ObfuscateElementDefinition(forbiddenElementDefinition, parameters, parameterSubscriptions, parameterValueSets, parameterSubscriptionValueSets, elementUsages, parameterOverrides, parameterOverrideValueSets, parameterGroups, allowedElementDefinitions, definitions, citations, aliases, hyperlinks);
             }
 
-            foreach (var modelLogEntry in modellogitems)
+            foreach (var modelLogEntry in modelLogEntries)
             {
-                if (!modelLogEntry.AffectedItemIid.Intersect(this.obfuscatedCache).Any())
+                var affectedItemHashSet = new HashSet<Guid>(modelLogEntry.AffectedItemIid);
+                affectedItemHashSet.IntersectWith(this.obfuscatedCache);
+
+                if (!affectedItemHashSet.Any())
                 {
                     continue;
                 }
 
-                modelLogEntry.Content = "Hidden Log Entry";
+                modelLogEntry.Content = "Hidden Model Log Entry";
 
                 foreach (var logitem in modelLogEntry.LogEntryChangelogItem)
                 {
-                    var item = logentries.FirstOrDefault(l => l.Iid.Equals(logitem));
+                    var item = logEntryChangelogItems.FirstOrDefault(l => l.Iid.Equals(logitem));
 
                     if (item != null)
                     {
-                        item.ChangeDescription = "Hidden Log Change Entry";
+                        item.ChangeDescription = "Hidden Changelog Entry";
                     }
                 }
             }
