@@ -38,6 +38,7 @@ namespace CDP4WebServices.API.Services.Authorization
 
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
     using ElementUsage = CDP4Common.DTO.ElementUsage;
+    using ModelLogEntry = CDP4Common.DTO.ModelLogEntry;
     using Parameter = CDP4Common.DTO.Parameter;
     using ParameterGroup = CDP4Common.DTO.ParameterGroup;
     using ParameterOverride = CDP4Common.DTO.ParameterOverride;
@@ -54,12 +55,19 @@ namespace CDP4WebServices.API.Services.Authorization
     public class ObfuscationService : IObfuscationService
     {
         /// <summary>
+        /// A cache of obfuscated things to be used to ensure <see cref="ModelLogEntry"/>s are cleaned up.
+        /// </summary>
+        private List<Guid> obfuscatedCache;
+
+        /// <summary>
         /// Obfuscates the entire response
         /// </summary>
         /// <param name="resourceResponse">The list of all <see cref="Thing" /> contained in the response.</param>
         /// <param name="credentials">The <see cref="Credentials" /></param>
         public void ObfuscateResponse(List<Thing> resourceResponse, Credentials credentials)
         {
+            this.obfuscatedCache = new List<Guid>();
+
             if (credentials.IsDefaultOrganizationalParticipant)
             {
                 // if member of the defaultorganization for engineering model, do nothing
@@ -80,6 +88,8 @@ namespace CDP4WebServices.API.Services.Authorization
             var citations = resourceResponse.OfType<Citation>().ToList();
             var aliases = resourceResponse.OfType<Alias>().ToList();
             var hyperlinks = resourceResponse.OfType<HyperLink>().ToList();
+            var modellogitems = resourceResponse.OfType<ModelLogEntry>().ToList();
+            var logentries = resourceResponse.OfType<LogEntryChangelogItem>().ToList();
 
             if (credentials.OrganizationalParticipant == null)
             {
@@ -98,6 +108,26 @@ namespace CDP4WebServices.API.Services.Authorization
             foreach (var forbiddenElementDefinition in forbiddenElementDefinitions)
             {
                 this.ObfuscateElementDefinition(forbiddenElementDefinition, parameters, parameterSubscriptions, parameterValueSets, parameterSubscriptionValueSets, elementUsages, parameterOverrides, parameterOverrideValueSets, parameterGroups, allowedElementDefinitions, definitions, citations, aliases, hyperlinks);
+            }
+
+            foreach (var modelLogEntry in modellogitems)
+            {
+                if (!modelLogEntry.AffectedItemIid.Intersect(this.obfuscatedCache).Any())
+                {
+                    continue;
+                }
+
+                modelLogEntry.Content = "Hidden Log Entry";
+
+                foreach (var logitem in modelLogEntry.LogEntryChangelogItem)
+                {
+                    var item = logentries.FirstOrDefault(l => l.Iid.Equals(logitem));
+
+                    if (item != null)
+                    {
+                        item.ChangeDescription = "Hidden Log Change Entry";
+                    }
+                }
             }
         }
 
@@ -141,9 +171,13 @@ namespace CDP4WebServices.API.Services.Authorization
             thing.Name = "Hidden Element Definition";
             thing.ShortName = "hiddenElementDefinition";
 
+            this.obfuscatedCache.Add(thing.Iid);
+
             // obfuscate all parameter values
             foreach (var paramIid in thing.Parameter)
             {
+                this.obfuscatedCache.Add(paramIid);
+
                 var paramDto = parameters.FirstOrDefault(p => p.Iid.Equals(paramIid));
 
                 if (paramDto == null)
@@ -261,6 +295,7 @@ namespace CDP4WebServices.API.Services.Authorization
         private void ObfuscateParameterGroup(ParameterGroup thing)
         {
             thing.Name = "Hidden Group";
+            this.obfuscatedCache.Add(thing.Iid);
         }
 
         /// <summary>
@@ -270,6 +305,7 @@ namespace CDP4WebServices.API.Services.Authorization
         private void ObfuscateAlias(Alias thing)
         {
             thing.Content = "Hidden Alias";
+            this.obfuscatedCache.Add(thing.Iid);
         }
 
         /// <summary>
@@ -280,6 +316,7 @@ namespace CDP4WebServices.API.Services.Authorization
         {
             thing.Content = "Hidden Alias";
             thing.Uri = "Hidden Uri";
+            this.obfuscatedCache.Add(thing.Iid);
         }
 
         /// <summary>
@@ -302,6 +339,8 @@ namespace CDP4WebServices.API.Services.Authorization
         {
             thing.Name = "Hidden Element Usage";
             thing.ShortName = "hiddenElementUsage";
+
+            this.obfuscatedCache.Add(thing.Iid);
 
             // obfuscate all parameter values
             foreach (var paramIid in thing.ParameterOverride)
@@ -374,6 +413,7 @@ namespace CDP4WebServices.API.Services.Authorization
         private void ObfuscateDefinition(Definition thing, List<Citation> citations)
         {
             thing.Content = "Hidden Definition";
+            this.obfuscatedCache.Add(thing.Iid);
 
             // obfuscate citations
             foreach (var citationIid in thing.Citation)
@@ -398,6 +438,7 @@ namespace CDP4WebServices.API.Services.Authorization
             thing.ShortName = "Hidden Citation";
             thing.Location = "Hidden Location";
             thing.Remark = "Hidden Remark";
+            this.obfuscatedCache.Add(thing.Iid);
         }
 
         /// <summary>
@@ -423,6 +464,8 @@ namespace CDP4WebServices.API.Services.Authorization
             thing.Published = newArray;
             thing.Formula = newArray;
             thing.ValueSwitch = ParameterSwitchKind.MANUAL;
+
+            this.obfuscatedCache.Add(thing.Iid);
         }
 
         /// <summary>
@@ -444,6 +487,7 @@ namespace CDP4WebServices.API.Services.Authorization
 
             thing.Manual = newArray;
             thing.ValueSwitch = ParameterSwitchKind.MANUAL;
+            this.obfuscatedCache.Add(thing.Iid);
         }
     }
 }
