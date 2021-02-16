@@ -25,6 +25,7 @@
 
 namespace CDP4WebServices.API.Services.Email
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -35,7 +36,6 @@ namespace CDP4WebServices.API.Services.Email
     using CDP4WebServices.API.Configuration;
 
     using MimeKit;
-    using MimeKit.Text;
 
     using NLog;
     
@@ -60,11 +60,11 @@ namespace CDP4WebServices.API.Services.Email
         /// <param name="subject">
         /// The subject of the email
         /// </param>
-        /// <param name="body">
-        /// The body of the email
+        /// <param name="textBody">
+        /// The text part for the body of the email
         /// </param>
-        /// <param name="textFormat">
-        /// The <see cref="TextFormat"/> of the body
+        /// <param name="htmlBody">
+        /// The html part for the body of the email
         /// </param>
         /// <param name="filePaths">
         /// An <see cref="IEnumerable{String}"/> of file paths of files that can be attached to the email
@@ -72,37 +72,35 @@ namespace CDP4WebServices.API.Services.Email
         /// <remarks>
         /// an awaitable <see cref="Task"/>
         /// </remarks>
-        public async Task Send(IEnumerable<EmailAddress> emailAddresses, string subject, string body, TextFormat textFormat, IEnumerable<string> filePaths)
+        public async Task Send(IEnumerable<EmailAddress> emailAddresses, string subject, string textBody, string htmlBody, IEnumerable<string> filePaths = null)
         {
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(AppConfig.Current.EmailService.Sender, AppConfig.Current.EmailService.SMTP));
+            
             foreach (var emailAddress in emailAddresses)
             {
                 message.To.Add(new MailboxAddress(emailAddress.Value, emailAddress.Value));
             }
 
             message.Subject = subject;
-            var textPart = new TextPart(TextFormat.Plain)
+
+            var bodyBuilder = new BodyBuilder
             {
-                Text = body
+                HtmlBody = htmlBody, 
+                TextBody = textBody
             };
 
-            if (filePaths != null && filePaths.Any())
+            if ((filePaths ?? Array.Empty<string>()).Any())
             {
-                var multipart = new Multipart("mixed") { textPart };
-
                 var attachments = this.CreateAttachments(filePaths);
+
                 foreach (var attachment in attachments)
                 {
-                    multipart.Add(attachment);
+                    bodyBuilder.Attachments.Add(attachment);
                 }
+            }
 
-                message.Body = multipart;
-            }
-            else
-            {
-                message.Body = textPart;
-            }
+            message.Body = bodyBuilder.ToMessageBody();
 
             using (var smtpClient = new SmtpClient())
             {

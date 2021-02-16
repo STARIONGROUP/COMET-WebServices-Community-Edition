@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
 //
@@ -35,9 +35,11 @@ namespace CDP4WebServices.API.Modules
     using CDP4Common.DTO;
     
     using CDP4Orm.Dao;
-    
+
+    using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Services.Authentication;
-    
+    using CDP4WebServices.API.Services.ChangeLog;
+
     using Helpers;
     
     using Nancy;
@@ -114,6 +116,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the person resolver service.
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
+
+        /// <summary>
+        /// Gets or sets the change log service
+        /// </summary>
+        public IChangeLogService ChangeLogService { get; set; }
 
         /// <summary>
         /// Gets or sets the obfuscation service.
@@ -390,16 +397,23 @@ namespace CDP4WebServices.API.Modules
 
                 this.OperationProcessor.Process(operationData, transaction, partition, fileDictionary);
 
-                // save revision-history
                 var actor = this.PermissionService.Credentials.Person.Iid;
-                var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision);
+
+                if (AppConfig.Current.Changelog.CollectChanges)
+                {
+                    var initiallyChangedThings = this.RevisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
+                    this.ChangeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);
+                }
+
+                // save revision-history
+                var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();
 
                 transaction.Commit();
 
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    return this.GetJsonResponse(changedThings.ToList(), this.RequestUtils.GetRequestDataModelVersion);
+                    return this.GetJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion);
                 }
 
                 Logger.Info(this.ConstructLog());
@@ -408,6 +422,7 @@ namespace CDP4WebServices.API.Modules
                 // use new transaction to include latest database state
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
                 var revisionResponse = this.RevisionService.Get(transaction, partition, fromRevision, true).ToArray();
+
                 transaction.Commit();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);

@@ -20,7 +20,7 @@
     "IsDbRestoreEnabled": false
   },
   "EmailService": {
-    "Sender":  "CDP4" ,
+    "Sender": "CDP4",
     "SMTP": "smpt.cdp4.org",
     "Port": 587,
     "UserName": "cdp4postmaster-username",
@@ -31,5 +31,9 @@
     "DevServerPath": "http://localhost:4200/app",
     "LocationServicePath": "http://freegeoip.io/json/",
     "ContributorsCacheTimeout": 60
+  },
+  "Changelog": {
+    "CollectChanges": true,
+    "AllowEmailNotification":  false 
   }
 }

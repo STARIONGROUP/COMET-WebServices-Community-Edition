@@ -19,12 +19,16 @@
   "EmailService": {
     "SMTP": "smpt.cdp4.org",
     "Port": 587,
-    "UserName": "cdp4postmaseter-username",
-    "Password": "cdp4postmaseter-password",
+    "UserName": "cdp4postmaster-username",
+    "Password": "cdp4postmaster-password",
   },
   "Defaults": {
-      "PersonPassword": "pass",
-      "LocationServicePath": "http://freegeoip.io/json/",
-      "ContributorsCacheTimeout": 60
-    }
+    "PersonPassword": "pass",
+    "LocationServicePath": "http://freegeoip.io/json/",
+    "ContributorsCacheTimeout": 60
+  },
+  "Changelog": {
+    "CollectChanges": false,
+    "AllowEmailNotification": false
   }
+}
