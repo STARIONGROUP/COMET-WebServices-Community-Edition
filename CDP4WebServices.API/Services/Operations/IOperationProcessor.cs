@@ -58,6 +58,10 @@ namespace CDP4WebServices.API.Services.Operations
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.
         /// </summary>
+        /// <remarks>
+        /// Do NOT use this cache for things that influence database concurrency,
+        /// because that could lead to unexpected results.
+        /// </remarks>
         IReadOnlyList<Thing> OperationOriginalThingCache { get; }
     }
 }
