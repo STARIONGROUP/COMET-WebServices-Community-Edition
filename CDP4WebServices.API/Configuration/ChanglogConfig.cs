@@ -1,8 +1,8 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IEmailService.cs" company="RHEA System S.A.">
+// <copyright file="ChangelogConfig.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
 //    This file is part of CDP4 Web Services Community Edition. 
 //    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -23,39 +23,43 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services.Email
+namespace CDP4WebServices.API.Configuration
 {
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-
     using CDP4Common.DTO;
 
     /// <summary>
-    /// Definition of the Email Service responsible for sending automated emails to <see cref="Person"/>s
+    /// The change log configuration.
     /// </summary>
-    public interface IEmailService
+    public class ChangelogConfig
     {
         /// <summary>
-        /// Sends an email with the subject body
+        /// Initializes a new instance of the <see cref="ChangelogConfig"/> class.
         /// </summary>
-        /// <param name="emailAddresses">
-        /// An <see cref="IEnumerable{EmailAddress}"/> of the recipients of the email
-        /// </param>
-        /// <param name="subject">
-        /// The subject of the email
-        /// </param>
-        /// <param name="textBody">
-        /// The text part for the body of the email
-        /// </param>
-        /// <param name="htmlBody">
-        /// The html part for the body of the email
-        /// </param>
-        /// /// <param name="filePaths">
-        /// An <see cref="IEnumerable{String}"/> of file paths of files that can be attached to the email
-        /// </param>
+        public ChangelogConfig()
+        {
+            // set defaults
+            this.CollectChanges = false;
+            this.AllowEmailNotification = false;
+        }
+
+        /// <summary>
+        /// Gets or sets the Changelog collection setting.
+        /// If set to true, <see cref="ModelLogEntry"/>s will automatically be created for specific changes to <see cref="Thing"/>s.
+        /// </summary>
         /// <remarks>
-        /// an awaitable <see cref="Task"/>
+        /// The default value is false
         /// </remarks>
-        Task Send(IEnumerable<EmailAddress> emailAddresses, string subject, string textBody, string htmlBody, IEnumerable<string> filePaths = null);
+        public bool CollectChanges { get; set; }
+
+        /// <summary>
+        /// Gets or sets the AllowEmailNotification setting.
+        /// If set to true, periodical emails are automatically sent to person's that have subscriptions on them
+        /// and have periodical emails set in their UserPreferences.
+        /// </summary>
+        /// <remarks>
+        /// The default value is false
+        /// </remarks>
+        public bool AllowEmailNotification { get; set; }
+
     }
 }

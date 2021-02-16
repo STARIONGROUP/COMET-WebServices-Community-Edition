@@ -1,8 +1,8 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IEmailService.cs" company="RHEA System S.A.">
+// <copyright file="ChangeLogService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
 //
 //    This file is part of CDP4 Web Services Community Edition. 
 //    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -23,39 +23,46 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services.Email
+namespace CDP4WebServices.API.Services.ChangeLog
 {
+    using System;
     using System.Collections.Generic;
-    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
+    using CDP4WebServices.API.Services.Operations;
+
+    using Npgsql;
+
     /// <summary>
-    /// Definition of the Email Service responsible for sending automated emails to <see cref="Person"/>s
+    /// Defines the implementation of the <see cref="IChangeLogService"/> interface
     /// </summary>
-    public interface IEmailService
+    public interface IChangeLogService
     {
         /// <summary>
-        /// Sends an email with the subject body
+        /// Tries to append changelog data based on the changes made to certain <see cref="Thing"/>s.
         /// </summary>
-        /// <param name="emailAddresses">
-        /// An <see cref="IEnumerable{EmailAddress}"/> of the recipients of the email
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
-        /// <param name="subject">
-        /// The subject of the email
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        /// <param name="textBody">
-        /// The text part for the body of the email
+        /// <param name="actor">
+        /// The <see cref="Person.Iid"/> of the person that made the changes.
         /// </param>
-        /// <param name="htmlBody">
-        /// The html part for the body of the email
+        /// <param name="transactionRevision">
+        /// The revisionNumber of the <see cref="transaction"/>
         /// </param>
-        /// /// <param name="filePaths">
-        /// An <see cref="IEnumerable{String}"/> of file paths of files that can be attached to the email
+        /// <param name="operation">
+        /// <see cref="CdpPostOperation"/> that resulted to all the changes.
         /// </param>
-        /// <remarks>
-        /// an awaitable <see cref="Task"/>
-        /// </remarks>
-        Task Send(IEnumerable<EmailAddress> emailAddresses, string subject, string textBody, string htmlBody, IEnumerable<string> filePaths = null);
+        /// <param name="things">
+        /// The <see cref="IReadOnlyList{T}"/> of type <see cref="Thing"/> that contains changed <see cref="Thing"/>
+        /// </param>
+        /// <returns>
+        /// True if change log data was added, otherwise false
+        /// </returns>
+        bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things);
     }
 }

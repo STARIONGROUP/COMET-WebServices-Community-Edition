@@ -65,7 +65,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IScaleValueDefinitionService> scaleValueDefinitionService;
         private Mock<IMeasurementScaleService> measurementScaleService;
 
-        private MeasurementScaleSideEffect<MeasurementScale> sideEffect;
+        private MeasurementScaleSideEffect sideEffect;
 
         [SetUp]
         public void Setup()
@@ -172,7 +172,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     this.containerMeasurementScale
                 });
 
-            this.sideEffect = new MeasurementScaleSideEffect<MeasurementScale>
+            this.sideEffect = new MeasurementScaleSideEffect
             {
                 SiteReferenceDataLibraryService = this.siteReferenceDataLibraryService.Object,
                 MappingToReferenceScaleService = this.mappingToReferenceScaleService.Object,
