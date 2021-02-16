@@ -26,6 +26,7 @@
 namespace CDP4WebServices.API.Services.ChangeLog
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -669,20 +670,37 @@ namespace CDP4WebServices.API.Services.ChangeLog
             this.ResolveService.ResolveItems(transaction, partition, resolverDictionary);
 
             var changedValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { changedValue }, securityContext).FirstOrDefault();
+            var changedNamedThing = changedValueThing as INamedThing;
 
             var orgValue = metaInfoProvider.GetValue(propertyName, originalThing);
 
-            var orgValueThing = orgValue == null
-                ? null
-                : service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
-
-            var changedNamedThing = changedValueThing as INamedThing;
-            var orgNamedThing = orgValueThing as INamedThing;
-
-            if ((changedNamedThing ?? orgNamedThing) != null)
+            if (orgValue is IEnumerable)
             {
-                stringBuilder.AppendLine($"  - {propertyName}: {orgNamedThing?.Name} => {changedNamedThing?.Name}");
-                return;
+                if (changedNamedThing != null)
+                {
+                    stringBuilder.AppendLine($"  - {propertyName}: Added => {changedNamedThing.Name}");
+                    return;
+                }
+                
+                if (changedValueThing != null)
+                {
+                    stringBuilder.AppendLine($"  - {propertyName}: Added => {changedValueThing.ClassKind}");
+                    return;
+                }
+            }
+            else
+            {
+                if (orgValue != null)
+                {
+                    var orgValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
+                    var orgNamedThing = orgValueThing as INamedThing;
+
+                    if ((changedNamedThing ?? orgNamedThing) != null)
+                    {
+                        stringBuilder.AppendLine($"  - {propertyName}: {orgNamedThing?.Name} => {changedNamedThing?.Name}");
+                        return;
+                    }
+                }
             }
 
             stringBuilder.AppendLine($"  - {propertyName} was changed");
