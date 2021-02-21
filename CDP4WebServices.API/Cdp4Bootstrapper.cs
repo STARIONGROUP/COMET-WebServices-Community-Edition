@@ -113,6 +113,10 @@ namespace CDP4WebServices.API
         /// </param>
         protected override void ConfigureApplicationContainer(ILifetimeScope existingContainer)
         {
+            var sw = Stopwatch.StartNew();
+
+            Logger.Info("Start Configuration of Application Container");
+
             // Perform registration that should have an application lifetime
             existingContainer.Update(
                 builder =>
@@ -138,6 +142,8 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<EmailService, IEmailService>();
                 });
 
+            Logger.Info($"Application Container configured in {sw.ElapsedMilliseconds} [ms]");
+
             this.ConfigureRecurringJobs();
         }
 
@@ -146,6 +152,8 @@ namespace CDP4WebServices.API
         /// </summary>
         public void ConfigureRecurringJobs()
         {
+            var sw = Stopwatch.StartNew();
+
             Logger.Info("Configuring cron jobs");
 
             var builder = new ContainerBuilder();
@@ -157,7 +165,7 @@ namespace CDP4WebServices.API
                 RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
             }
 
-            Logger.Info("Cron jobs configured");
+            Logger.Info($"Cron jobs configured in {sw.ElapsedMilliseconds} ms");
         }
 
         /// <summary>
@@ -172,10 +180,9 @@ namespace CDP4WebServices.API
         protected override void ConfigureRequestContainer(ILifetimeScope container, NancyContext context)
         {
             // Perform registrations that should have a request lifetime
-            var sw = new Stopwatch();
-            sw.Start();
+            var sw = Stopwatch.StartNew();
 
-            Logger.Debug("Start Request Boostrapping");
+            Logger.Info("Start Configuration of Request Container");
 
             base.ConfigureRequestContainer(container, context);
 
@@ -278,8 +285,7 @@ namespace CDP4WebServices.API
             // apply logging configuration
             container.Resolve<ICommandLogger>().LoggingEnabled = AppConfig.Current.Backtier.LogSqlCommands;
 
-            sw.Stop();
-            Logger.Debug("Request Boostrapping completed in {0} [ms]", sw.ElapsedMilliseconds);
+            Logger.Info("Request Container configured in {0} [ms]", sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -293,6 +299,11 @@ namespace CDP4WebServices.API
         /// </param>
         protected override void ApplicationStartup(ILifetimeScope container, IPipelines pipelines)
         {
+            var sw = Stopwatch.StartNew();
+
+            Logger.Info("Initiate Application Startup");
+
+            Logger.Debug("Configurating CDP4 Authentication");
             // No registrations should be performed in here, however you may resolve things that are needed during application startup.
             var cdp4WebServiceAuthentication = container.Resolve<ICDP4WebServiceAuthentication>();
 
@@ -303,6 +314,7 @@ namespace CDP4WebServices.API
                 new[] { SiteDirectoryRoute, EngineeringModelRoute });
 
             // hook up the on error handler
+            Logger.Debug("Setting up on error pipeline");
             pipelines.OnError += (ctx, ex) =>
             {
                 // log any uncatched errors
@@ -316,20 +328,24 @@ namespace CDP4WebServices.API
                 return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
             };
 
+            Logger.Debug("Setting view-location conventions");
             // clear all view location conventions (to save on irrelevant locations being visited) and supply the Views convention to use
             this.Conventions.ViewLocationConventions.Clear();
-
-            this.Conventions.ViewLocationConventions.Add(
-                (viewName, model, context) => $"Views/{viewName}");
-
+            this.Conventions.ViewLocationConventions.Add((viewName, model, context) => $"Views/{viewName}");
             // add the folder for the static content containing the compiled app
             this.Conventions.StaticContentsConventions.Add(StaticContentConventionBuilder.AddDirectory("assets"));
 
             MigrationEngine.MigrateAllAtStartUp();
+
+            Logger.Info($"Application Startup Finished in {sw.ElapsedMilliseconds} [ms]");
         }
 
         protected override void RequestStartup(ILifetimeScope container, IPipelines pipelines, NancyContext context)
         {
+            var sw = Stopwatch.StartNew();
+
+            Logger.Info("Initiate Request Startup");
+
             //Enable CORS
             pipelines.AfterRequest.AddItemToEndOfPipeline((ctx) =>
             {
@@ -339,6 +355,8 @@ namespace CDP4WebServices.API
                     .WithHeader("Access-Control-Allow-Headers", "Content-Type, x-requested-with, Authorization, Accept, Origin, user-agent, Accept-CDP, CDP4-Token, CDP4-Common, CDP4-Server")
                     .WithHeader("Access-Control-Expose-Headers", "Content-Type, x-requested-with, Authorization, Accept, Origin, user-agent, Accept-CDP, CDP4-Token, CDP4-Common, CDP4-Server");
             });
+
+            Logger.Info($"Request Startup Finished in {sw.ElapsedMilliseconds} [ms]");
         }
 
         /// <summary>

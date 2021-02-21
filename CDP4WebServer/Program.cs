@@ -46,13 +46,23 @@ namespace CDP4WebServer
                 // load application configuration from file
                 AppConfig.Load();
 
-                Logger.Info("Configuration Loaded");
+                Logger.Info("Configuration Loaded:");
 
-                var hostString = string.Format(
-                    "{0}://{1}:{2}",
-                    AppConfig.Current.Midtier.Protocol,
-                    AppConfig.Current.Midtier.HostName,
-                    AppConfig.Current.Midtier.Port);
+                Logger.Debug($"Midtier-Protocol: {AppConfig.Current.Midtier.Protocol}");
+                Logger.Debug($"Midtier-HostName: {AppConfig.Current.Midtier.HostName}");
+                Logger.Debug($"Midtier-Port: {AppConfig.Current.Midtier.Port}");
+                Logger.Debug($"Midtier-UploadDirectory: {AppConfig.Current.Midtier.UploadDirectory}");
+                Logger.Debug($"Midtier-FileStorageDirectory: {AppConfig.Current.Midtier.FileStorageDirectory}");
+                Logger.Debug($"Backtier-HostName: {AppConfig.Current.Backtier.HostName}" );
+                Logger.Debug($"Backtier-Port: {AppConfig.Current.Backtier.Port}");
+                Logger.Debug($"Backtier-Database: {AppConfig.Current.Backtier.Database}");
+                Logger.Debug($"Backtier-DatabaseRestore: {AppConfig.Current.Backtier.DatabaseRestore}");
+                Logger.Debug($"Backtier-DatabaseManage: {AppConfig.Current.Backtier.DatabaseManage}");
+                Logger.Debug($"Backtier-StatementTimeout: {AppConfig.Current.Backtier.StatementTimeout}");
+                Logger.Debug($"Backtier-IsDbSeedEnabled: {AppConfig.Current.Backtier.IsDbSeedEnabled}");
+                Logger.Debug($"Backtier-IsDbRestoreEnabled: {AppConfig.Current.Backtier.IsDbRestoreEnabled}");
+
+                var hostString = $"{AppConfig.Current.Midtier.Protocol}://{AppConfig.Current.Midtier.HostName}:{AppConfig.Current.Midtier.Port}";
 
                 using (WebApp.Start<Startup>(hostString))
                 {
