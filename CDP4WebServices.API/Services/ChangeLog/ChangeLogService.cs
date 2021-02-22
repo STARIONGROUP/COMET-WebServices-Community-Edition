@@ -1420,13 +1420,17 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 return;
             }
 
-            if (this.PossibleFiniteStateService.GetShallow(transaction, iterationPartition, actualState.PossibleState, securityContext).Single() is not PossibleFiniteState possibleFiniteState)
+            var possibleFiniteStates = 
+                this.PossibleFiniteStateService.GetShallow(transaction, iterationPartition, actualState.PossibleState, securityContext)
+                    .Cast<PossibleFiniteState>()
+                    .ToList(); 
+
+            if (!possibleFiniteStates.Any())
             {
                 return;
             }
 
-            var possibleFiniteStateString = string.Join(" ", possibleFiniteState.ShortName);
-
+            var possibleFiniteStateString = string.Join("->", possibleFiniteStates.Select(x => x.ShortName));
             stringBuilder.AppendLine($"* ActualFiniteState: {possibleFiniteStateString}");
         }
 
