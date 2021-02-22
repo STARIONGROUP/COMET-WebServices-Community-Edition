@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WebServer-CE</Title>
-    <Version>6.1.1</Version>
+    <Version>6.1.2</Version>
     <Description>CDP4 Services Host</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
