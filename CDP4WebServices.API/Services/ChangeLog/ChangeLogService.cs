@@ -28,6 +28,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
     using System.Text;
 
@@ -180,6 +181,9 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// </returns>
         public bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things)
         {
+            var sw = Stopwatch.StartNew();
+            Logger.Info("Starting to append changelog data");
+
             var isFullAccessEnabled = this.TransactionManager.IsFullAccessEnabled();
             var result = false;
 
@@ -234,7 +238,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                     }
 
                     var newLogEntryChangelogItems = new List<LogEntryChangelogItem>();
-                    
+
                     foreach (var changedThing in changedThings.Where(x => x.ClassKind != ClassKind.ModelLogEntry))
                     {
                         var newLogEntryChangelogItem = this.CreateAddOrUpdateLogEntryChangelogItem(transaction, partition, changedThing, modelLogEntry, operation, changedThings);
@@ -309,6 +313,10 @@ namespace CDP4WebServices.API.Services.ChangeLog
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+            }
             finally
             {
                 if (!isFullAccessEnabled)
@@ -316,6 +324,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
                     this.TransactionManager.SetFullAccessState(false);
                 }
             }
+
+            Logger.Info($"Finished appending to changelog data in {sw.ElapsedMilliseconds} [ms]");
 
             return result;
         }
