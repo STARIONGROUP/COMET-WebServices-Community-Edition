@@ -9,15 +9,9 @@ namespace CDP4WebService.Authentication
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Runtime.Caching;
     using System.Text;
-
-    using Nancy;
-    using Nancy.Bootstrapper;
-    using Nancy.Cookies;
-    using Nancy.Cryptography;
-    using Nancy.Extensions;
-    using Nancy.Security;
 
     using NLog;
 

@@ -7,9 +7,7 @@
 namespace CDP4WebService.Authentication
 {
     using System.Collections.Generic;
-    using Nancy;
-    using Nancy.Bootstrapper;
-
+    
     public interface ICDP4WebServiceAuthentication
     {
         /// <summary>

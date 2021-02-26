@@ -8,8 +8,6 @@ namespace CDP4WebService.Authentication
 {
     using System;
 
-    using Nancy.Cryptography;
-
     /// <summary>
     /// The CDP4 web service authentication configuration.
     /// </summary>
