@@ -37,8 +37,6 @@ namespace CDP4WebServices.API.Services
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Services.Protocol;
 
-    using Nancy;
-
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
 

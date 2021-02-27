@@ -13,14 +13,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4Authentication", "CDP4A
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WebService.Authentication", "CDP4WebService.Authentication\CDP4WebService.Authentication.csproj", "{D9B13E2B-642D-4F82-8C79-DEB7832E7A53}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WebServices.API", "CDP4WebServices.API\CDP4WebServices.API.csproj", "{8FC18E8E-D178-4784-A653-973897B57328}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CometServer", "CDP4WebServices.API\CometServer.csproj", "{8FC18E8E-D178-4784-A653-973897B57328}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WebServices.API.Tests", "CDP4WebServices.API.Tests\CDP4WebServices.API.Tests.csproj", "{1E20A4F3-D126-4148-877C-64C33121D2B4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WebServer", "CDP4WebServer\CDP4WebServer.csproj", "{A9C36A4A-D491-4513-B16E-7A08A0929988}"
-	ProjectSection(ProjectDependencies) = postProject
-		{59581438-2CD6-4498-B000-53125BEF5958} = {59581438-2CD6-4498-B000-53125BEF5958}
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CometServer.Tests", "CDP4WebServices.API.Tests\CometServer.Tests.csproj", "{1E20A4F3-D126-4148-877C-64C33121D2B4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WspDatabaseAuthentication", "CDP4WSPDatabaseAuthentication\CDP4WspDatabaseAuthentication.csproj", "{E6245C47-96BA-40D3-9D5E-9114E175169F}"
 EndProject
@@ -75,12 +70,6 @@ Global
 		{1E20A4F3-D126-4148-877C-64C33121D2B4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1E20A4F3-D126-4148-877C-64C33121D2B4}.Test|Any CPU.ActiveCfg = Test|Any CPU
 		{1E20A4F3-D126-4148-877C-64C33121D2B4}.Test|Any CPU.Build.0 = Test|Any CPU
-		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Test|Any CPU.ActiveCfg = Test|Any CPU
-		{A9C36A4A-D491-4513-B16E-7A08A0929988}.Test|Any CPU.Build.0 = Test|Any CPU
 		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6245C47-96BA-40D3-9D5E-9114E175169F}.Release|Any CPU.ActiveCfg = Release|Any CPU

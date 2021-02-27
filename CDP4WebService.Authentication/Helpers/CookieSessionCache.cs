@@ -9,6 +9,8 @@ namespace CDP4WebService.Authentication
     using System.Collections.Specialized;
     using System.Runtime.Caching;
 
+    using Microsoft.Extensions.Caching.Memory;
+
     /// <summary>
     /// Cache of session cookies.
     /// </summary>

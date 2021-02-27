@@ -166,27 +166,6 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// A convenience extension method to register a (concrete) type to its (contract) interface.
-        /// The bound type info is registered for property injection and is exposed as a singleton within the respective container scope.
-        /// </summary>
-        /// <typeparam name="TImplementation">
-        /// The concrete type of the thing that will be registered
-        /// </typeparam>
-        /// <typeparam name="TInterface">
-        /// The interface it will be bound to when injected
-        /// </typeparam>
-        /// <param name="builder">
-        /// The dependency injection container builder used to register the type for injection.
-        /// </param>
-        internal static void RegisterTypeAsPropertyInjectedSingleton<TImplementation, TInterface>(this ContainerBuilder builder)
-        {
-            builder.RegisterType<TImplementation>()
-                .As<TInterface>()
-                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
-                .SingleInstance();
-        }
-
-        /// <summary>
         /// A convenience extension method to register all derived types in the respective assembly as a concrete type, interface type pair (by naming convention)
         /// The bound type info is registered for property injection and is exposed as a singleton within the respective container scope.
         /// </summary>
@@ -202,18 +181,7 @@ namespace CDP4WebServices.API.Services
                         .Where(x => typeof(TParentType).IsAssignableFrom(x))
                         .AsImplementedInterfaces()
                         .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
-                        .SingleInstance();
-        }
-
-        /// <summary>
-        /// Check if hosting from mono.
-        /// </summary>
-        /// <returns>
-        /// true if mono hosted
-        /// </returns>
-        internal static bool IsRunningOnMono()
-        {
-            return Type.GetType("Mono.Runtime") != null;
+                        .InstancePerLifetimeScope();
         }
     }
 }

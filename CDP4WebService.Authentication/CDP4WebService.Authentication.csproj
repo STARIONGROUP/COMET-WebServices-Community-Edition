@@ -18,8 +18,4 @@
     <PackageReference Include="NLog" Version="4.6.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="System.Runtime.Caching" />
-  </ItemGroup>
-  
 </Project>

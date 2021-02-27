@@ -85,31 +85,31 @@ namespace CDP4WebServices.API.ChangeNotification
             var builder = new ContainerBuilder();
 
             //wireup data model utils
-            builder.RegisterTypeAsPropertyInjectedSingleton<DataModelUtils, IDataModelUtils>();
+            builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // wireup command logger for this request
-            builder.RegisterTypeAsPropertyInjectedSingleton<CommandLogger, ICommandLogger>();
+            builder.RegisterType<CommandLogger>().As<ICommandLogger>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // wireup class meta info provider
-            builder.RegisterTypeAsPropertyInjectedSingleton<MetaInfoProvider, IMetaInfoProvider>();
+            builder.RegisterType<MetaInfoProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // wireup class cdp4JsonSerializer
-            builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4JsonSerializer, ICdp4JsonSerializer>();
+            builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // the ResolveDao is used to get type info on any Thing instance based on it's unique identifier
-            builder.RegisterTypeAsPropertyInjectedSingleton<ResolveDao, IResolveDao>();
+            builder.RegisterType<ResolveDao>().As<IResolveDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // The ChanglogRetriever retrieves changelog data from the database
-            builder.RegisterTypeAsPropertyInjectedSingleton<ModelLogEntryDataCreator, IModelLogEntryDataCreator>();
+            builder.RegisterType<ModelLogEntryDataCreator>().As<IModelLogEntryDataCreator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // The ChanglogRetriever retrieves changelog data from the database
-            builder.RegisterTypeAsPropertyInjectedSingleton<ChangelogBodyComposer, IChangelogBodyComposer>();
+            builder.RegisterType<ChangelogBodyComposer>().As<IChangelogBodyComposer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // wireup DAO classes
-            builder.RegisterDerivedTypesAsPropertyInjectedSingleton<BaseDao>();
-
+            builder.RegisterAssemblyTypes(typeof(BaseDao).Assembly).Where(x => typeof(BaseDao).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            
             // Used to send emails
-            builder.RegisterTypeAsPropertyInjectedSingleton<EmailService, IEmailService>();
+            builder.RegisterType<EmailService>().As<IEmailService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             return builder.Build();
         }

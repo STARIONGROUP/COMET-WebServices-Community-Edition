@@ -3,10 +3,10 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
-    <Title>CDP4WebServices-CE.API.Tests</Title>
-    <Description>Unit tests Library for the CDP4 Services API</Description>
+    <Title>CometServer-CE.Tests</Title>
+    <Description>Unit tests Library for the Comet Server</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
-    <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
+    <Authors>Sam, Alex, Alexander</Authors>
     <Configurations>Debug;Release;Test</Configurations>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -31,7 +31,7 @@
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
     <ProjectReference Include="..\CDP4WebService.Authentication\CDP4WebService.Authentication.csproj" />
-    <ProjectReference Include="..\CDP4WebServices.API\CDP4WebServices.API.csproj" />
+    <ProjectReference Include="..\CDP4WebServices.API\CometServer.csproj" />
   </ItemGroup>
   
   <ItemGroup>

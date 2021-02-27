@@ -1,23 +1,16 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
-    <Title>CDP4WebServices-CE.API</Title>
+    <Title>CometServer-CE</Title>
     <Version>7.0.0</Version>
-    <Description>Library that contains the CDP4 Services API</Description>
+    <Description>COMET Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
-    <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
+    <Authors>Sam, Alex, Alexander</Authors>
     <Configurations>Debug;Release;Test</Configurations>
     <LangVersion>latest</LangVersion>
-    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="Exceptions\**" />
-    <EmbeddedResource Remove="Exceptions\**" />
-    <None Remove="Exceptions\**" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Remove="Resources\cdplogo_48x48.ico" />
@@ -33,6 +26,7 @@
     <PackageReference Include="DotNetZip" Version="1.15.0" />
     <PackageReference Include="Hangfire" Version="1.7.19" />
     <PackageReference Include="HangFire.Autofac" Version="2.3.1" />
+    <PackageReference Include="Hangfire.MemoryStorage" Version="1.7.0" />
     <PackageReference Include="Npgsql" Version="5.0.3" />
     <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
     <PackageReference Include="MailKit" Version="2.10.1" />
@@ -41,7 +35,9 @@
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
+    <!-- 
     <ProjectReference Include="..\CDP4WebService.Authentication\CDP4WebService.Authentication.csproj" />
+    -->
   </ItemGroup>
   
   <ItemGroup>
@@ -70,5 +66,25 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="PostcompileScript" AfterTargets="Build">
+
+    <!-- Copy API config -->
+    <Copy SourceFiles="..\CDP4WebServices.API\config_debug.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Debug'" />
+    <Copy SourceFiles="..\CDP4WebServices.API\config_release.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Release'" />
+    <Copy SourceFiles="..\CDP4WebServices.API\config_test.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Test'" />
+
+    <!-- Copy nlog config -->
+    <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
+
+    <!-- Copy Database Authentication plugin -->
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
+    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
+
+    <!-- Copy WSP Database Authentication plugin -->
+    <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\CDP4WspDatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
+    <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
+
+  </Target>
    
 </Project>

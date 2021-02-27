@@ -11,10 +11,14 @@ namespace CDP4WebServices.API
     using System.Data;
     using System.Diagnostics;
     using System.Linq;
+
     using CDP4Orm.MigrationEngine;
+
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Services;
+
     using NLog;
+
     using Npgsql;
 
     /// <summary>
@@ -132,7 +136,7 @@ namespace CDP4WebServices.API
             }
             catch (Exception e)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
                     transaction.Rollback();
                 }
