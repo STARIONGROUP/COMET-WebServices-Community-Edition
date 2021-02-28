@@ -171,24 +171,5 @@ namespace CometServer.Services
         {
             module.PermissionService.Credentials = module.RequestUtils.Context.AuthenticatedCredentials;
         }
-
-        /// <summary>
-        /// A convenience extension method to register all derived types in the respective assembly as a concrete type, interface type pair (by naming convention)
-        /// The bound type info is registered for property injection and is exposed as a singleton within the respective container scope.
-        /// </summary>
-        /// <typeparam name="TParentType">
-        /// The parent type for which to register all derived concepts
-        /// </typeparam>
-        /// <param name="builder">
-        /// The dependency injection container builder used to register the type for injection.
-        /// </param>
-        internal static void RegisterDerivedTypesAsPropertyInjectedSingleton<TParentType>(this ContainerBuilder builder)
-        {
-            builder.RegisterAssemblyTypes(typeof(TParentType).Assembly)
-                        .Where(x => typeof(TParentType).IsAssignableFrom(x))
-                        .AsImplementedInterfaces()
-                        .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
-                        .InstancePerLifetimeScope();
-        }
     }
 }

@@ -26,8 +26,6 @@ namespace CometServer.Helpers
 {
     using CometServer.Services.Authentication;
 
-    using Nancy;
-
     /// <summary>
     /// The RequestContext interface.
     /// </summary>

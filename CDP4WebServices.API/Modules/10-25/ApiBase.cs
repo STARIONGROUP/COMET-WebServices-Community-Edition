@@ -435,16 +435,11 @@ namespace CometServer.Modules
         /// <returns>
         /// A formatted string ready for logging.
         /// </returns>
-        protected string ConstructLog(string message = null, bool success = true)
+        protected string ConstructLog(HttpRequest httpRequest, string message = null, bool success = true)
         {
             var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
-            var request = this.Context.Request;
-            var requestMessage = string.Format(
-                "[{0}][{1}]{2}",
-                request.Method,
-                this.RequestPath,
-                !string.IsNullOrWhiteSpace(message) ? string.Format(" : {0}", message) : string.Empty);
-            return LoggerUtils.GetLogMessage(credentials.Person, request.UserHostAddress, success, requestMessage);
+            var requestMessage = $"[{httpRequest.Method}][{this.RequestPath}]{(!string.IsNullOrWhiteSpace(message) ? $" : {message}" : string.Empty)}";
+            return LoggerUtils.GetLogMessage(credentials.Person, httpRequest.Host.ToString(), success, requestMessage);
         }
 
         /// <summary>
@@ -456,19 +451,22 @@ namespace CometServer.Modules
         /// <returns>
         /// A formatted string ready for logging.
         /// </returns>
-        protected string ConstructFailureLog(string message = null)
+        protected string ConstructFailureLog(HttpRequest httpRequest,string message = null)
         {
-            return this.ConstructLog(message, false);
+            return this.ConstructLog(httpRequest, message, false);
         }
 
         /// <summary>
-        /// Get a JSON response instance from the passed in resource collection.
+        /// Writes <see cref="Thing"/>s to a target <see cref="HttpResponse"/>
         /// </summary>
         /// <param name="resourceResponse">
         /// The resource collection to serialize.
         /// </param>
         /// <param name="requestDataModelVersion">
         /// The data model version of this request to use with serialization.
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
         /// <param name="statusCode">
         /// The optional HTML status Code.
@@ -477,24 +475,15 @@ namespace CometServer.Modules
         /// optional request token
         /// </param>
         /// <returns>
-        /// The <see cref="Response"/>.
+        /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected HttpResponse GetJsonResponse(
-            IReadOnlyList<Thing> resourceResponse,
-            Version requestDataModelVersion,
-            HttpStatusCode statusCode = HttpStatusCode.OK,
-            string requestToken = "")
+        protected async Task WriteJsonResponse(IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
-            // create a new response with contents assigned by stream
-            return new Response
-            {
-                Contents = stream => this.CreateFilteredResponseStream(
-                    resourceResponse,
-                    stream,
-                    requestDataModelVersion,
-                    requestToken),
-                StatusCode = statusCode
-            };
+            var resultStream = new MemoryStream();
+            this.CreateFilteredResponseStream(resourceResponse, resultStream, requestDataModelVersion, requestToken);
+            resultStream.Seek(0, SeekOrigin.Begin);
+            await resultStream.CopyToAsync(httpResponse.Body);
+            httpResponse.StatusCode = (int) statusCode;
         }
 
         /// <summary>
@@ -506,16 +495,16 @@ namespace CometServer.Modules
         /// <param name="resourceResponse">
         /// The resource response.
         /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
         /// <param name="statusCode">
         /// The optional HTML status Code.
         /// </param>
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected HttpResponse GetMultipartResponse(
-            List<FileRevision> fileRevisions,
-            List<Thing> resourceResponse,
-            HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected async Task WriteMultipartResponse(List<FileRevision> fileRevisions, List<Thing> resourceResponse, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             // create a new multipart response with contents assigned by stream
             var response = new Response
@@ -551,11 +540,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected HttpResponse GetArchivedResponse(
-            List<Thing> resourceResponse,
-            string partition,
-            dynamic routeSegments,
-            HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected async Task WriteArchivedResponse(List<Thing> resourceResponse, string partition, string[] routeSegments, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             // create a new archived response with contents assigned by stream
             var response =  new Response
@@ -591,11 +576,7 @@ namespace CometServer.Modules
         /// </returns>
         protected Thing GetTopContainer(NpgsqlTransaction transaction, string partition, string topContainer)
         {
-            return this.ServiceProvider.MapToReadService(topContainer).GetShallow(
-                transaction,
-                partition,
-                null,
-                new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
+            return this.ServiceProvider.MapToReadService(topContainer).GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
         }
 
         /// <summary>
@@ -617,11 +598,7 @@ namespace CometServer.Modules
             var securityContext = this.SetupSecurityContextForLibraryRead();
 
             // retrieve the required model reference data library
-            var modelReferenceDataLibraryData = processor.GetResource(
-                ModelReferenceDataLibraryType,
-                SiteDirectoryData,
-                modelSetup.RequiredRdl,
-                securityContext);
+            var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, modelSetup.RequiredRdl, securityContext);
 
             return this.RetrieveChainedReferenceData(processor, securityContext, modelReferenceDataLibraryData);
         }
@@ -638,18 +615,12 @@ namespace CometServer.Modules
         /// <returns>
         /// IEnumerable collection of data reference library items.
         /// </returns>
-        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(
-            IProcessor processor,
-            ModelReferenceDataLibrary modelReferenceDataLibrary)
+        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IProcessor processor, ModelReferenceDataLibrary modelReferenceDataLibrary)
         {
             var securityContext = this.SetupSecurityContextForLibraryRead();
 
             // retrieve the required model reference data library with extent = deep
-            var modelReferenceDataLibraryData = processor.GetResource(
-                ModelReferenceDataLibraryType,
-                SiteDirectoryData,
-                new[] { modelReferenceDataLibrary.Iid },
-                securityContext);
+            var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, new[] { modelReferenceDataLibrary.Iid }, securityContext);
 
             return this.RetrieveChainedReferenceData(processor, securityContext, modelReferenceDataLibraryData)
                 .Where(x => x.Iid != modelReferenceDataLibrary.Iid);
@@ -690,11 +661,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected HttpResponse GetZippedModelsResponse(
-            Version requestDataModelVersion,
-            List<Guid> modelSetupGuidList,
-            HttpStatusCode statusCode = HttpStatusCode.OK,
-            string requestToken = "")
+        protected HttpResponse GetZippedModelsResponse(Version requestDataModelVersion, List<Guid> modelSetupGuidList, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
             var path = this.EngineeringModelZipExportService.CreateZipExportFile(modelSetupGuidList, null);
 
@@ -720,9 +687,7 @@ namespace CometServer.Modules
             catch (Exception ex)
             {
                 // error handling
-                var errorResponse = new JsonResponse(
-                    string.Format("exception:{0}", ex.Message),
-                    new DefaultJsonSerializer());
+                var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
 
                 if (path != null)
                 {
@@ -748,11 +713,7 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateFilteredResponseStream(
-            IReadOnlyList<Thing> dtos,
-            Stream stream,
-            Version requestDataModelVersion,
-            string requestToken = "")
+        private void CreateFilteredResponseStream(IReadOnlyList<Thing> dtos, Stream stream, Version requestDataModelVersion, string requestToken = "")
         {
             var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
 
@@ -760,9 +721,7 @@ namespace CometServer.Modules
             sw.Start();
             Logger.Debug("{0} start serializing dtos", requestToken);
 
-            this.JsonSerializer.Initialize(
-                this.RequestUtils.MetaInfoProvider,
-                this.RequestUtils.GetRequestDataModelVersion);
+            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
             this.JsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
@@ -784,11 +743,7 @@ namespace CometServer.Modules
         /// <param name="requestDataModelVersion">
         /// The request data model version.
         /// </param>
-        private void PrepareMultiPartResponse(
-            Stream targetStream,
-            List<FileRevision> fileRevisions,
-            List<Thing> resourceResponse,
-            Version requestDataModelVersion)
+        private void PrepareMultiPartResponse(Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
             if (!fileRevisions.Any())
             {
@@ -857,12 +812,7 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void PrepareArchivedResponse(
-            Stream targetStream,
-            List<Thing> resourceResponse,
-            Version requestDataModelVersion,
-            string partition,
-            dynamic routeSegments)
+        private void PrepareArchivedResponse(Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
             string folderPath = this.FileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
 
@@ -901,9 +851,7 @@ namespace CometServer.Modules
                 binaryContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
 
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
-                binaryContent.Headers.Add(
-                    ContentDispositionHeader,
-                    $"attachment; filename={folderPath + ".zip"}");
+                binaryContent.Headers.Add(ContentDispositionHeader, $"attachment; filename={folderPath + ".zip"}");
 
                 binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
@@ -988,10 +936,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A collection of retrieved reference data.
         /// </returns>
-        private IEnumerable<Thing> RetrieveChainedReferenceData(
-            IProcessor processor,
-            ISecurityContext securityContext,
-            IEnumerable<Thing> modelReferenceDataLibraryData)
+        private IEnumerable<Thing> RetrieveChainedReferenceData(IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
         {
             var chainedReferenceDataColl = new List<Thing>();
 

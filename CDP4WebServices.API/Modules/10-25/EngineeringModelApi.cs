@@ -30,7 +30,9 @@ namespace CometServer.Modules
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+
+    using Carter.Response;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -44,6 +46,8 @@ namespace CometServer.Modules
     using Helpers;
 
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Http.Extensions;
+    using Microsoft.AspNetCore.WebUtilities;
 
     using NLog;
     using NLog.Targets;
@@ -100,16 +104,31 @@ namespace CometServer.Modules
         /// </summary>
         public EngineeringModelApi()
         {
-            // enable basic authentication
-            this.RequiresAuthentication();
+            this.Get(TopContainer, async (req, res) =>
+            {
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.WriteAsJsonAsync("not authenticated");
+                }
+                else
+                {
+                    await this.GetResponseData(req, res);
+                }
+            });
 
-            // support path segment processing
-            this.Get[string.Format(this.ApiFormat, TopContainer, this.UrlSegmentMatcher)] = 
-                route => this.GetResponse(route);
-
-            // support trailing or empty segment
-            this.Post[string.Format(this.ApiFormat, TopContainer, this.UrlSegmentMatcher)] =
-                route => this.PostResponse(route);
+            this.Post(TopContainer, async (req, res) =>
+            {
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.WriteAsJsonAsync("not authenticated");
+                }
+                else
+                {
+                    await this.PostResponseData(req, res);
+                }
+            });
         }
 
         /// <summary>
@@ -126,17 +145,34 @@ namespace CometServer.Modules
         /// Gets or sets the obfuscation service.
         /// </summary>
         public IObfuscationService ObfuscationService { get; set; }
-        
+
         /// <summary>
-        /// Parse the url segments and return the data as serialized JSON
+        /// Abstract method contract for get response data processing.
         /// </summary>
         /// <param name="routeParams">
-        /// A dynamic dictionary holding the route parameters
+        /// The route parameters from the request.
         /// </param>
         /// <returns>
-        /// The serialized retrieved data or exception message
+        /// The <see cref="HttpResponse"/>.
         /// </returns>
         protected override HttpResponse GetResponseData(dynamic routeParams)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Handles the GET request
+        /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> that is being handled
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -149,13 +185,13 @@ namespace CometServer.Modules
             
             try
             {
-                Logger.Info(this.ConstructLog($"{requestToken} started"));
+                Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 // validate (and set) the supplied query parameters
-                HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedGetQueryParameters);
+                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest, this.RequestUtils, SupportedGetQueryParameters);
 
                 // the route pattern enforces that there is at least one route segment
-                string[] routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
+                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path, TopContainer);
 
                 var resourceResponse = new List<Thing>();
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
@@ -194,8 +230,9 @@ namespace CometServer.Modules
 
                     if (!Guid.TryParse(iid, out var guid))
                     {
-                        var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
-                        return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
+                        await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
+                        httpResponse.StatusCode = (int) HttpStatusCode.BadRequest;
+                        return;
                     }
                     
                     resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
@@ -219,12 +256,13 @@ namespace CometServer.Modules
 
                     if (!resourceResponse.Any())
                     {
-                        var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
-                        return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
+                        await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
+                        httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        return;
                     }
                 }
 
-                transaction.Commit();
+                await transaction.CommitAsync();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
@@ -244,7 +282,8 @@ namespace CometServer.Modules
                 if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    return this.GetMultipartResponse(fileRevisions, resourceResponse);
+                    await this.WriteMultipartResponse(fileRevisions, resourceResponse, httpResponse);
+                    return;
                 }
 
                 if (this.RequestUtils.QueryParameters.IncludeFileData)
@@ -254,29 +293,32 @@ namespace CometServer.Modules
                     if (this.IsValidDomainFileStoreArchiveRoute(routeSegmentList))
                     {
                         var iterationPartition = this.RequestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
-                        return this.GetArchivedResponse(resourceResponse, iterationPartition, routeSegments);
+
+                        await this.WriteArchivedResponse(resourceResponse, iterationPartition, routeSegments, httpResponse);
+                        return;
                     }
 
                     if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
-                        return this.GetArchivedResponse(resourceResponse, partition, routeSegments);
+                        await this.WriteArchivedResponse(resourceResponse, partition, routeSegments, httpResponse);
+                        return;
                     }
                 }
 
-                return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
+                await this.WriteJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, httpResponse, HttpStatusCode.OK, requestToken);
             }
             catch (Exception ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
-                return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
+                await httpResponse.AsJson($"exception:{ex.Message}");
+                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
             finally
             {
@@ -297,6 +339,23 @@ namespace CometServer.Modules
         /// </returns>
         protected override HttpResponse PostResponseData(dynamic routeParams)
         {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Handles the POST requset
+        /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> that is being handled
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
+        {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
@@ -306,22 +365,19 @@ namespace CometServer.Modules
 
             try
             {
-                var logMessage = $"{requestToken} started";
-                Logger.Info(this.ConstructLog(logMessage));
+                Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
-                HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedPostQueryParameter);
-                
-                var contentTypeRegex = new Regex("^multipart/.*;\\s*boundary=(.*)$", RegexOptions.IgnoreCase);
-                var isMultiPart = contentTypeRegex.IsMatch(this.Request.Headers.ContentType);
+                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest, this.RequestUtils, SupportedPostQueryParameter);
 
-                logMessage = $"Request {requestToken} is mutlipart: {isMultiPart}";
-                Logger.Debug(this.ConstructLog(logMessage));
+                var isMultiPart = httpRequest.GetMultipartBoundary() == string.Empty;
+
+                Logger.Debug(this.ConstructLog(httpRequest, $"Request {requestToken} is mutlipart: {isMultiPart}"));
 
                 Stream bodyStream;
                 Dictionary<string, Stream> fileDictionary = null;
                 if (isMultiPart)
                 {
-                    bodyStream = this.ExtractJsonBodyStreamFromMultiPartMessage();
+                    bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(httpRequest);
 
                     // - New File: 
                     //      create -> File, FileRevision
@@ -338,21 +394,30 @@ namespace CometServer.Modules
                     // - NO matching file hash found in request body and NO matching file hash found on server -> ERROR
                     // - Matching file hash found in request body ??? is allready checked to find binary in request...
                     // - ANY file binary in request without corresponding metadata -> ERROR
+
+                    var boundary = httpRequest.GetMultipartBoundary();
+
+                    var multipartReader = new MultipartReader(boundary, httpRequest.Body);
+
+                    var section = await multipartReader.ReadNextSectionAsync();
+
                     fileDictionary = new Dictionary<string, Stream>();
-                    foreach (var uploadedFile in this.Request.Files.ToList().Where(f => f.ContentType == this.MimeTypeOctetStream))
+                    while (section != null)
                     {
-                        var hash = this.FileBinaryService.CalculateHashFromStream(uploadedFile.Value);
+                        if (section.ContentType == this.MimeTypeOctetStream)
+                        {
+                            var hash = this.FileBinaryService.CalculateHashFromStream(section.Body);
 
-                        logMessage = $"File with hash {hash} present in request: {requestToken}";
-                        Logger.Debug(this.ConstructLog(logMessage));
+                            Logger.Debug(this.ConstructLog(httpRequest, $"File with hash {hash} present in request: {requestToken}"));
 
-                        fileDictionary.Add(hash, uploadedFile.Value);
+                            fileDictionary.Add(hash, section.Body);
+                        }
                     }
                 }
                 else
                 {
                     // use the single request (JSON) stream
-                    bodyStream = this.Request.Body;
+                    bodyStream = httpRequest.Body;
                 }
 
                 this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
@@ -363,13 +428,9 @@ namespace CometServer.Modules
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 // the route pattern enforces that there is atleast one route segment
-                string[] routeSegments = string.Format("{0}/{1}", TopContainer, routeParams.uri)
-                    .Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path, TopContainer);
 
-                var resourceProcessor = new ResourceProcessor(
-                    this.ServiceProvider,
-                    transaction,
-                    this.RequestUtils);
+                var resourceProcessor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
 
                 var modelSetup = this.DetermineEngineeringModelSetup(resourceProcessor, routeSegments);
 
@@ -408,52 +469,53 @@ namespace CometServer.Modules
                 // save revision-history
                 var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();
 
-                transaction.Commit();
+                await transaction.CommitAsync();
 
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    return this.GetJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion);
+                    await this.WriteJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion, httpResponse);
+                    return;
                 }
 
-                Logger.Info(this.ConstructLog());
+                Logger.Info(this.ConstructLog(httpRequest));
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
                 var revisionResponse = this.RevisionService.Get(transaction, partition, fromRevision, true).ToArray();
 
-                transaction.Commit();
+                await transaction.CommitAsync();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                await this.WriteJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion, httpResponse);
             }
             catch (InvalidOperationException ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
-                return errorResponse.WithStatusCode(HttpStatusCode.Forbidden);
+                await httpResponse.AsJson($"exception:{ex.Message}");
+                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
             catch (Exception ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
-                return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
+                await httpResponse.AsJson($"exception:{ex.Message}");
+                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
             finally
             {
@@ -468,30 +530,34 @@ namespace CometServer.Modules
         /// <returns>
         /// A <see cref="Stream"/> that contains the posted JSON
         /// </returns>
-        private Stream ExtractJsonBodyStreamFromMultiPartMessage()
+        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessage(HttpRequest httpRequest)
         {
-            var contentType = this.Request.Headers.ContentType;
-            var boundary = Regex.Match(contentType, @"boundary=""?(?<token>[^\n\;\"" ]*)").Groups["token"].Value;
-            var multipart = new HttpMultipart(this.Request.Body, boundary);
-            var multipartBoundaries = multipart.GetBoundaries();
-            var jsonMultipartBoundary = multipartBoundaries.SingleOrDefault(x => x.ContentType == "application/json");
-            if (jsonMultipartBoundary == null)
+            var boundary = httpRequest.GetMultipartBoundary();
+            
+            var multipartReader = new MultipartReader(boundary, httpRequest.Body);
+            
+            var section = await multipartReader.ReadNextSectionAsync();
+
+            while (section != null)
             {
-                throw new InvalidOperationException("A multipart request must contain a JSON part");
+                if (section.ContentType == "application/json")
+                {
+                    var bodyStream = section.Body;
+
+                    if (Logger.IsTraceEnabled)
+                    {
+                        var streamReader = new StreamReader(bodyStream);
+                        var multipartjson = streamReader.ReadToEnd();
+                        bodyStream.Position = 0;
+
+                        Logger.Trace("multipart post JSON: {0}", multipartjson);
+                    }
+
+                    return bodyStream;
+                }
             }
 
-            var bodyStream = jsonMultipartBoundary.Value;
-
-            if (Logger.IsTraceEnabled)
-            {
-                var reader = new StreamReader(bodyStream);
-                var multipartjson = reader.ReadToEnd();
-                bodyStream.Position = 0;
-
-                Logger.Trace("multipart post JSON: {0}", multipartjson);
-            }
-
-            return bodyStream;
+            throw new InvalidOperationException("A multipart request must contain a JSON part");
         }
 
         /// <summary>
