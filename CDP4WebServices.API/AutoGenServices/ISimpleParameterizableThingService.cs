@@ -7,7 +7,7 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services
+namespace CometServer.Services
 {
     /// <summary>
     /// The SimpleParameterizableThing Service Interface which uses the ORM layer to interact with the data model.

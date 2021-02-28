@@ -23,14 +23,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services
+namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
 
     using CDP4Common.DTO;
 
-    using CDP4WebServices.API.Services.Authorization;
+    using CometServer.Services.Authorization;
 
     using Npgsql;
 

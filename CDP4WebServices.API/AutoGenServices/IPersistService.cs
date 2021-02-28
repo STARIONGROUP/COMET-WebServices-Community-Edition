@@ -23,7 +23,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services
+namespace CometServer.Services
 {
     using System;
 

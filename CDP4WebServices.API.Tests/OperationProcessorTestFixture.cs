@@ -1,21 +1,34 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessorTestFixture.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This the Service operation processor test class
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Tests
+namespace CometServer.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using API.Helpers;
-    using API.Services.Authorization;
-    using API.Services.BusinessLogic;
+
     using CDP4Common;
     using CDP4Common.CommonData;
     using CDP4Common.Dto;
@@ -24,16 +37,22 @@ namespace CDP4WebServices.API.Tests
     using CDP4Common.Exceptions;
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
+
     using CDP4Orm.Dao;
-    using CDP4WebServices.API.Services;
-    using CDP4WebServices.API.Services.Operations;
-    using CDP4WebServices.API.Services.Operations.SideEffects;
-    using CDP4WebServices.API.Services.Protocol;
+
+    using CometServer.Helpers;
+    using CometServer.Services;
+    using CometServer.Services.Authorization;
+    using CometServer.Services.Operations;
+    using CometServer.Services.Operations.SideEffects;
+    using CometServer.Services.Protocol;
 
     using Moq;
+
     using Npgsql;
+
     using NUnit.Framework;
-    using NUnit.Framework.Internal;
+    
     using Alias = CDP4Common.DTO.Alias;
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
     using ElementUsage = CDP4Common.DTO.ElementUsage;
@@ -78,7 +97,7 @@ namespace CDP4WebServices.API.Tests
 
         private Mock<IMetaInfoProvider> mockedMetaInfoProvider;
         private Mock<ICdp4TransactionManager> transactionManager;
-        private Mock<API.Services.IServiceProvider> serviceProvider;
+        private Mock<CometServer.Services.IServiceProvider> serviceProvider;
         private Mock<IResolveService> resolveService;
         private Mock<IPermissionService> permissionService;
 
@@ -97,7 +116,7 @@ namespace CDP4WebServices.API.Tests
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationProcessor.OperationSideEffectProcessor = this.operationSideEffectProcessor;
             
-            this.serviceProvider = new Mock<API.Services.IServiceProvider>();
+            this.serviceProvider = new Mock<CometServer.Services.IServiceProvider>();
             this.resolveService = new Mock<IResolveService>();
 
             var copyservice = new CopySourceService();

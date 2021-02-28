@@ -2,33 +2,34 @@
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    Lesser General Public License for more details.
+//    GNU Affero General Public License for more details.
 //
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Modules
+namespace CometServer.Modules
 {
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Net;
     using System.Text.RegularExpressions;
 
     using CDP4Common.CommonData;
@@ -36,18 +37,17 @@ namespace CDP4WebServices.API.Modules
     
     using CDP4Orm.Dao;
 
-    using CDP4WebServices.API.Configuration;
-    using CDP4WebServices.API.Services.Authentication;
-    using CDP4WebServices.API.Services.ChangeLog;
+    using CometServer.Configuration;
+    using CometServer.Services.Authentication;
+    using CometServer.Services.ChangeLog;
 
     using Helpers;
-    
-    using Nancy;
-    using Nancy.Responses;
-    using Nancy.Security;
-    
+
+    using Microsoft.AspNetCore.Http;
+
     using NLog;
-    
+    using NLog.Targets;
+
     using Npgsql;
     
     using Services;
@@ -56,7 +56,7 @@ namespace CDP4WebServices.API.Modules
     using Services.Protocol;
     
     using Thing = CDP4Common.DTO.Thing;
-    using Utils = CDP4WebServices.API.Services.Utils;
+    using Utils = CometServer.Services.Utils;
 
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
@@ -136,7 +136,7 @@ namespace CDP4WebServices.API.Modules
         /// <returns>
         /// The serialized retrieved data or exception message
         /// </returns>
-        protected override Response GetResponseData(dynamic routeParams)
+        protected override HttpResponse GetResponseData(dynamic routeParams)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -293,9 +293,9 @@ namespace CDP4WebServices.API.Modules
         /// The route parameters.
         /// </param>
         /// <returns>
-        /// The <see cref="Response"/>.
+        /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected override Response PostResponseData(dynamic routeParams)
+        protected override HttpResponse PostResponseData(dynamic routeParams)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -565,7 +565,7 @@ namespace CDP4WebServices.API.Modules
 
             // take first segment and try to resolve the engineering model setup for further processing
             var siteDir = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
-            var requestedModelId = Utils.ParseIdentifier(routeSegments[1]);
+            var requestedModelId = CometServer.Services.Utils.ParseIdentifier(routeSegments[1]);
             var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, siteDir.Model, securityContext);
             var modelSetups = engineeringModelSetups.Where(x => ((EngineeringModelSetup)x).EngineeringModelIid == requestedModelId).ToList();
 
@@ -599,7 +599,7 @@ namespace CDP4WebServices.API.Modules
             {
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, Credentials = this.PermissionService.Credentials };
 
-                var requestedIterationId = Utils.ParseIdentifier(routeSegments[3]);
+                var requestedIterationId = CometServer.Services.Utils.ParseIdentifier(routeSegments[3]);
                 var iterations = processor.GetResource("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext).ToList();
 
                 if (iterations.Count != 1)

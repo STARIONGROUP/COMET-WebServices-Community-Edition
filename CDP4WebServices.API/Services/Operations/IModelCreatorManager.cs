@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services.Operations.SideEffects
+namespace CometServer.Services.Operations
 {
     using System;
     using Authorization;

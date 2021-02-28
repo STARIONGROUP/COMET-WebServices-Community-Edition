@@ -1,30 +1,28 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessor.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
-//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    Lesser General Public License for more details.
+//    GNU Affero General Public License for more details.
 //
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services.Operations
+namespace CometServer.Services.Operations
 {
     using CDP4Common;
     using CDP4Common.CommonData;
@@ -36,8 +34,8 @@ namespace CDP4WebServices.API.Services.Operations
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
-    using CDP4WebServices.API.Services.Authorization;
-    using CDP4WebServices.API.Services.Operations.SideEffects;
+    using CometServer.Services.Authorization;
+    using CometServer.Services.Operations.SideEffects;
 
     using NLog;
 
@@ -50,7 +48,7 @@ namespace CDP4WebServices.API.Services.Operations
     using System.Linq;
     using System.Security;
 
-    using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
+    using IServiceProvider = CometServer.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
@@ -93,12 +91,12 @@ namespace CDP4WebServices.API.Services.Operations
         /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
         /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
         /// </summary>
-        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new ();
+        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new Dictionary<DtoInfo, DtoResolveHelper>();
 
         /// <summary>
         /// Backing field for <see cref="OperationOriginalThingCache"/>
         /// </summary>
-        private readonly List<Thing> operationOriginalThingCache = new ();
+        private readonly List<Thing> operationOriginalThingCache = new List<Thing>();
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.

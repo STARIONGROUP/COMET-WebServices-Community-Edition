@@ -3,9 +3,9 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
-    <Title>CDP4WebService-CE.Authentication</Title>
+    <Title>CometServer-CE.Authentication</Title>
     <Version>3.0.0</Version>
-    <Description>CDP4WebService.Authentication</Description>
+    <Description>CometServer.Authentication</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
     <Configurations>Debug;Release;Test</Configurations>

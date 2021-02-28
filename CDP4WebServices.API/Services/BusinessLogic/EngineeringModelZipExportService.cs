@@ -1,10 +1,28 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelZipExportService.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services
+namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
@@ -19,10 +37,10 @@ namespace CDP4WebServices.API.Services
 
     using CDP4JsonSerializer;
 
-    using CDP4WebServices.API.Helpers;
-    using CDP4WebServices.API.Services.Authentication;
-    using CDP4WebServices.API.Services.Authorization;
-    using CDP4WebServices.API.Services.Protocol;
+    using CometServer.Helpers;
+    using CometServer.Services.Authentication;
+    using CometServer.Services.Authorization;
+    using CometServer.Services.Protocol;
 
     using Ionic.Zip;
 
@@ -968,7 +986,7 @@ namespace CDP4WebServices.API.Services
 
                 if (engineeringModelDtos.Count == 0)
                 {
-                    throw new UnauthorizedAccessException(string.Format("Person {0} is not authorized to access model {1}", this.RequestUtils.Context.AuthenticatedCredentials.Person.UserName, engineeringModelSetup.EngineeringModelIid));
+                    throw new UnauthorizedAccessException($"Person {this.RequestUtils.Context.AuthenticatedCredentials.Person.UserName} is not authorized to access model {engineeringModelSetup.EngineeringModelIid}");
                 }
 
                 var fileRevisions = engineeringModelDtos.Where(x => x.ClassKind == ClassKind.FileRevision)
@@ -1020,12 +1038,7 @@ namespace CDP4WebServices.API.Services
 
                         using (var outputStream = new MemoryStream(iterationMemoryStream.ToArray()))
                         {
-                            var iterationFilename = string.Format(
-                                @"{0}\{1}\{2}\{3}.json",
-                                EngineeringModelZipLocation,
-                                engineeringModelSetup.EngineeringModelIid,
-                                IterationZipLocation,
-                                iterationIid);
+                            var iterationFilename = $@"{EngineeringModelZipLocation}\{engineeringModelSetup.EngineeringModelIid}\{IterationZipLocation}\{iterationIid}.json";
                             zipFile.AddEntry(iterationFilename, outputStream);
                             zipFile.Save(filePath);
                         }
@@ -1035,11 +1048,7 @@ namespace CDP4WebServices.API.Services
                 // Add files to the archive
                 foreach (var fileRevision in fileRevisions)
                 {
-                    var fileRevisionPath = string.Format(
-                        @"{0}\{1}\{2}",
-                        EngineeringModelZipLocation,
-                        engineeringModelSetup.EngineeringModelIid,
-                        FileRevisionZipLocation);
+                    var fileRevisionPath = $@"{EngineeringModelZipLocation}\{engineeringModelSetup.EngineeringModelIid}\{FileRevisionZipLocation}";
 
                     string storageFilePath;
                     this.FileBinaryService.TryGetFileStoragePath(fileRevision.ContentHash, out storageFilePath);

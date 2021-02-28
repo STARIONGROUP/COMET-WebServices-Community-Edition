@@ -1,34 +1,64 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="UsernameModule.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Modules
+namespace CometServer.Modules
 {
-    using Nancy;
-    using Nancy.Security;
+    using Carter;
+
+    using Microsoft.AspNetCore.Http;
 
     /// <summary>
     /// handle request on the logged-in users
     /// </summary>
-    public class UsernameModule : NancyModule
+    public class UsernameModule : CarterModule
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UsernameModule"/> class.
         /// </summary>
         public UsernameModule()
         {
-            this.RequiresAuthentication();
-            this.Get["/username"] = _ =>
+            this.Get("/username", async (req, res) =>
             {
-                if (this.Context.CurrentUser == null)
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
-                    return HttpStatusCode.Unauthorized;
-                }
+                    res.UpdateWithNotAuthenticatedSettings();
 
-                return this.Context.CurrentUser.UserName;
-            };
+                    // TODO: check whether this text should be added
+                    await res.WriteAsync("not authenticated");
+                }
+                else
+                {
+                    if (res.HttpContext.User == null)
+                    {
+                        res.UpdateWithNotAutherizedSettings();
+                        // TODO: check whether this text should be added
+                        await res.WriteAsync("not authorized");
+                    }
+
+                    await res.WriteAsync(res.HttpContext.User.Identity.Name);
+                }
+            });
         }
     }
 }

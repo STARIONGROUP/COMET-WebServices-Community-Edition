@@ -1,13 +1,28 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Utils.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This a utility class for Service functionalities
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services
+namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
@@ -18,8 +33,8 @@ namespace CDP4WebServices.API.Services
 
     using CDP4Common.Types;
 
-    using CDP4WebServices.API.Configuration;
-    using CDP4WebServices.API.Modules;
+    using CometServer.Configuration;
+    using CometServer.Modules;
 
     using Thing = CDP4Common.DTO.Thing;
 
@@ -52,8 +67,7 @@ namespace CDP4WebServices.API.Services
                 throw new ArgumentException("string can't be empty!");
             }
 
-            return string.Format(
-                "{0}{1}", input.First().ToString(CultureInfo.InvariantCulture).ToUpper(), input.Substring(1));
+            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToUpper()}{input.Substring(1)}";
         }
 
         /// <summary>
@@ -110,14 +124,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public static string GetConnectionString(string database)
         {
-            return string.Format(
-                "Server={0};Port={1};User Id={2};Password={3};Database={4};Convert Infinity DateTime=true;CommandTimeout={5};",
-                /*{0}*/ AppConfig.Current.Backtier.HostName,
-                /*{1}*/ AppConfig.Current.Backtier.Port,
-                /*{2}*/ AppConfig.Current.Backtier.UserName,
-                /*{3}*/ AppConfig.Current.Backtier.Password,
-                /*{4}*/ database,
-                /*{5}*/ AppConfig.Current.Backtier.StatementTimeout);
+            return $"Server={AppConfig.Current.Backtier.HostName};Port={AppConfig.Current.Backtier.Port};User Id={AppConfig.Current.Backtier.UserName};Password={AppConfig.Current.Backtier.Password};Database={database};Convert Infinity DateTime=true;CommandTimeout={AppConfig.Current.Backtier.StatementTimeout};";
         }
 
         /// <summary>

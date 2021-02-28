@@ -2,7 +2,7 @@
 // <copyright file="Startup.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft.
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -32,8 +32,8 @@ namespace CometServer
     using Autofac.Extensions.DependencyInjection;
 
     using CDP4WebServices.API;
-    using CDP4WebServices.API.ChangeNotification;
-    using CDP4WebServices.API.Configuration;
+    using CometServer.ChangeNotification;
+    using CometServer.Configuration;
 
     using Hangfire;
 

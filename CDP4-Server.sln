@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4DatabaseAuthentication"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4Authentication", "CDP4Authentication\CDP4Authentication.csproj", "{EDFF68B2-6F44-47F6-9F72-6BC3AFC6A53D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4WebService.Authentication", "CDP4WebService.Authentication\CDP4WebService.Authentication.csproj", "{D9B13E2B-642D-4F82-8C79-DEB7832E7A53}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CometServer.Authentication", "CDP4WebService.Authentication\CometServer.Authentication.csproj", "{D9B13E2B-642D-4F82-8C79-DEB7832E7A53}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CometServer", "CDP4WebServices.API\CometServer.csproj", "{8FC18E8E-D178-4784-A653-973897B57328}"
 EndProject

@@ -2,7 +2,7 @@
 // <copyright file="Startup.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft.
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -46,18 +46,18 @@ namespace CometServer
     using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
 
-    using CDP4WebServices.API.Helpers;
-    using CDP4WebServices.API.Services;
-    using CDP4WebServices.API.Services.Authentication;
-    using CDP4WebServices.API.Services.Authorization;
-    using CDP4WebServices.API.Services.ChangeLog;
-    using CDP4WebServices.API.Services.ContributorsLocation;
-    using CDP4WebServices.API.Services.DataStore;
-    using CDP4WebServices.API.Services.Email;
-    using CDP4WebServices.API.Services.FileHandling;
-    using CDP4WebServices.API.Services.Operations;
-    using CDP4WebServices.API.Services.Operations.SideEffects;
-    using CDP4WebServices.API.Services.Supplemental;
+    using CometServer.Helpers;
+    using CometServer.Services;
+    using CometServer.Services.Authentication;
+    using CometServer.Services.Authorization;
+    using CometServer.Services.ChangeLog;
+    using CometServer.Services.ContributorsLocation;
+    using CometServer.Services.DataStore;
+    using CometServer.Services.Email;
+    using CometServer.Services.FileHandling;
+    using CometServer.Services.Operations;
+    using CometServer.Services.Operations.SideEffects;
+    using CometServer.Services.Supplemental;
 
     using CometServer.Authentication;
 

@@ -1,22 +1,45 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSubscriptionSideEffect.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    GNU Affero General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services.Operations.SideEffects
+namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
     using Authorization;
+
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.EngineeringModelData;
     using CDP4Common.Exceptions;
     using CDP4Common.Types;
+
     using NLog;
+
     using Npgsql;
+
     using ParameterOrOverrideBase = CDP4Common.DTO.ParameterOrOverrideBase;
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
@@ -32,7 +55,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        #region Injected services
         /// <summary>
         /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/>
         /// </summary>
@@ -67,7 +89,6 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IParameterOverrideService"/>
         /// </summary>
         public IParameterOverrideService ParameterOverrideService { get; set; }
-        #endregion
 
         /// <summary>
         /// Gets the list of property names that are to be excluded from validation logic.

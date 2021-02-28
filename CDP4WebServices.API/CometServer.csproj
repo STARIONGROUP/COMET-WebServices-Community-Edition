@@ -35,9 +35,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
-    <!-- 
-    <ProjectReference Include="..\CDP4WebService.Authentication\CDP4WebService.Authentication.csproj" />
-    -->
+    <ProjectReference Include="..\CDP4WebService.Authentication\CometServer.Authentication.csproj" />
   </ItemGroup>
   
   <ItemGroup>
