@@ -677,38 +677,40 @@ namespace CDP4WebServices.API.Services.ChangeLog
             var dtoInfo = new DtoInfo(metaInfo.TypeName, changedValue);
             var dtoResolverHelper = new DtoResolveHelper(dtoInfo);
             var resolverDictionary = new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } };
-            this.ResolveService.ResolveItems(transaction, partition, resolverDictionary);
 
-            var changedValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { changedValue }, securityContext).FirstOrDefault();
-            var changedNamedThing = changedValueThing as INamedThing;
-
-            var orgValue = metaInfoProvider.GetValue(propertyName, originalThing);
-
-            if (orgValue is IEnumerable)
+            if (this.DataModelUtils.GetSourcePartition(metaInfo.TypeName) != null)
             {
-                if (changedNamedThing != null)
-                {
-                    stringBuilder.AppendLine($"  - {propertyName}: Added => {changedNamedThing.Name}");
-                    return;
-                }
-                
-                if (changedValueThing != null)
-                {
-                    stringBuilder.AppendLine($"  - {propertyName}: Added => {changedValueThing.ClassKind}");
-                    return;
-                }
-            }
-            else
-            {
-                if (orgValue != null)
-                {
-                    var orgValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
-                    var orgNamedThing = orgValueThing as INamedThing;
+                this.ResolveService.ResolveItems(transaction, partition, resolverDictionary);
 
-                    if ((changedNamedThing ?? orgNamedThing) != null)
+                var changedValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { changedValue }, securityContext).FirstOrDefault();
+
+                var orgValue = metaInfoProvider.GetValue(propertyName, originalThing);
+
+                if (orgValue is IEnumerable)
+                {
+                    if (this.TryGetName(changedValueThing, out var changedThingName))
                     {
-                        stringBuilder.AppendLine($"  - {propertyName}: {orgNamedThing?.Name} => {changedNamedThing?.Name}");
+                        stringBuilder.AppendLine($"  - {propertyName}: Added => {changedThingName}");
                         return;
+                    }
+                    
+                    if (changedValueThing != null)
+                    {
+                        stringBuilder.AppendLine($"  - {propertyName}: Added => {changedValueThing.ClassKind}");
+                        return;
+                    }
+                }
+                else
+                {
+                    if (orgValue != null)
+                    {
+                        var orgValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
+
+                        if (this.TryGetName(changedValueThing, out var changedThingName) && this.TryGetName(orgValueThing, out var orgThingName))
+                        {
+                            stringBuilder.AppendLine($"  - {propertyName}: {orgThingName} => {changedThingName}");
+                            return;
+                        }
                     }
                 }
             }
@@ -1284,14 +1286,14 @@ namespace CDP4WebServices.API.Services.ChangeLog
 
             var description = thing.ClassKind.ToString();
 
-            if (thing is INamedThing namedThing)
+            if (this.TryGetName(thing, out var namedThingName))
             {
-                description = $"{description} => {namedThing.Name}";
+                description = $"{description} => {namedThingName}";
             }
 
-            if (thing is IShortNamedThing shortNamedThing)
+            if (this.TryGetShortName(thing, out var shortNamedThingShortName))
             {
-                description = $"{description} ({shortNamedThing.ShortName})";
+                description = $"{description} ({shortNamedThingShortName})";
             }
 
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
@@ -1491,6 +1493,58 @@ namespace CDP4WebServices.API.Services.ChangeLog
             };
 
             return relevantClassKinds.Contains(classKind);
+        }
+
+        /// <summary>
+        /// Try to get the name of a <see cref="Thing"/> and return if it has a readable <see cref="INamedThing.Name"/> property.
+        /// </summary>
+        /// <param name="thing">The <see cref="Thing"/></param>
+        /// <param name="name">The <see cref="INamedThing.Name"/></param>
+        /// <returns>True, if the <see cref="Thing"/> has a readable <see cref="INamedThing.Name"/> property, otherwise false</returns>
+        private bool TryGetName(Thing thing, out string name)
+        {
+            name = null;
+
+            if (thing is not INamedThing namedThing)
+            {
+                return false;
+            }
+
+            try
+            {
+                name = namedThing.Name;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Try to get the short name of a <see cref="Thing"/> and return if it has a readable <see cref="IShortNamedThing.ShortName"/> property.
+        /// </summary>
+        /// <param name="thing">The <see cref="Thing"/></param>
+        /// <param name="shortName">The <see cref="IShortNamedThing.ShortName"/></param>
+        /// <returns>True, if the <see cref="Thing"/> has a readable <see cref="IShortNamedThing.ShortName"/> property, otherwise false</returns>
+        private bool TryGetShortName(Thing thing, out string shortName)
+        {
+            shortName = null;
+
+            if (thing is not IShortNamedThing shortNamedThing)
+            {
+                return false;
+            }
+
+            try
+            {
+                shortName = shortNamedThing.ShortName;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }
