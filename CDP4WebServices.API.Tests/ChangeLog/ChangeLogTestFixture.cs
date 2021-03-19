@@ -359,6 +359,7 @@ namespace CDP4WebServices.API.Tests.Services
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterOverride.ToString())).Returns(this.parameterOverrideService.Object);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterOrOverrideBase.ToString())).Returns(this.parameterOrOverrideBaseService.Object);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.DomainOfExpertise.ToString())).Returns(this.domainOfExpertiseService.Object);
+            this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterSubscription.ToString())).Returns(this.parameterSubscriptionService.Object);
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(false);
 
@@ -532,6 +533,14 @@ namespace CDP4WebServices.API.Tests.Services
                         null,
                         It.IsAny<ISecurityContext>()))
                 .Returns(new[] { this.parameterSubscription, this.parameterOverrideSubscription });
+
+            this.parameterSubscriptionService.Setup(
+                    x => x.GetShallow(
+                        null,
+                        It.IsAny<string>(),
+                        new [] { this.parameterSubscription.Iid },
+                        It.IsAny<ISecurityContext>()))
+                .Returns(new[] { this.parameterSubscription });
         }
 
         [Test]
@@ -837,7 +846,9 @@ namespace CDP4WebServices.API.Tests.Services
             {
                 { nameof(Thing.Iid), this.parameter.Iid },
                 { nameof(Thing.ClassKind), ClassKind.Parameter.ToString() },
-                { nameof(Parameter.Owner), this.domain_ElementDefinition.Iid }
+                { nameof(Parameter.Owner), this.domain_ElementDefinition.Iid },
+                { nameof(Parameter.ParameterSubscription), this.parameterSubscription.Iid },
+                { nameof(Parameter.ExpectsOverride), true },
             };
 
             var engineeringModelClasslessDto = new ClasslessDTO
