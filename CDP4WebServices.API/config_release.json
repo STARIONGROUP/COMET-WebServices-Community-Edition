@@ -17,7 +17,7 @@
     "StatementTimeout": 120
   },
   "EmailService": {
-    "SMTP": "smpt.cdp4.org",
+    "SMTP": "smtp.cdp4.org",
     "Port": 587,
     "UserName": "cdp4postmaster-username",
     "Password": "cdp4postmaster-password",
