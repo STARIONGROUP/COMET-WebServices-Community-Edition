@@ -21,7 +21,7 @@
   },
   "EmailService": {
     "Sender": "CDP4",
-    "SMTP": "smpt.cdp4.org",
+    "SMTP": "smtp.cdp4.org",
     "Port": 587,
     "UserName": "cdp4postmaster-username",
     "Password": "cdp4postmaster-password"
@@ -33,7 +33,7 @@
     "ContributorsCacheTimeout": 60
   },
   "Changelog": {
-    "CollectChanges": false,
+    "CollectChanges": true,
     "AllowEmailNotification":  false 
   }
 }

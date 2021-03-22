@@ -81,6 +81,7 @@ namespace CDP4WebServices.API.Tests.Services
         private Mock<IParameterOrOverrideBaseService> parameterOrOverrideBaseService;
         private Mock<IParameterValueSetService> parameterValueSetService;
         private Mock<IParameterValueSetBaseService> parameterValueSetBaseService;
+        private Mock<IDomainOfExpertiseService> domainOfExpertiseService;
         private IDataModelUtils dataModelUtils;
         private string partition;
         private Guid actor;
@@ -138,6 +139,7 @@ namespace CDP4WebServices.API.Tests.Services
             this.iterationSetupService = new Mock<IIterationSetupService>();
             this.parameterOrOverrideBaseService = new Mock<IParameterOrOverrideBaseService>();
             this.parameterValueSetBaseService = new Mock<IParameterValueSetBaseService>();
+            this.domainOfExpertiseService = new Mock<IDomainOfExpertiseService>();
 
             this.metaInfoProvider = new Mock<IMetaInfoProvider>();
             this.dataModelUtils = new DataModelUtils();
@@ -349,12 +351,15 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.EngineeringModel.ToString())).Returns(new EngineeringModelMetaInfo());
             this.metaInfoProvider.Setup(x => x.GetMetaInfo(ClassKind.ModelLogEntry.ToString())).Returns(new ModelLogEntryMetaInfo());
+            this.metaInfoProvider.Setup(x => x.GetMetaInfo(this.parameter)).Returns(new ParameterMetaInfo());
 
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ElementDefinition.ToString())).Returns(this.elementDefinitionService.Object);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.Iteration.ToString())).Returns(this.iterationService.Object);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ElementUsage.ToString())).Returns(this.elementUsageService.Object);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterOverride.ToString())).Returns(this.parameterOverrideService.Object);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterOrOverrideBase.ToString())).Returns(this.parameterOrOverrideBaseService.Object);
+            this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.DomainOfExpertise.ToString())).Returns(this.domainOfExpertiseService.Object);
+            this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterSubscription.ToString())).Returns(this.parameterSubscriptionService.Object);
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(false);
 
@@ -457,6 +462,22 @@ namespace CDP4WebServices.API.Tests.Services
                         It.IsAny<ISecurityContext>()))
                 .Returns(new[] { (ParameterValueSetBase) this.parameterOverrideValueSet_1 });
 
+            this.domainOfExpertiseService.Setup(
+                    x => x.GetShallow(
+                        null,
+                        It.IsAny<string>(),
+                        new[] { this.domain_ElementDefinition.Iid },
+                        It.IsAny<ISecurityContext>()))
+                .Returns(new[] { this.domain_ElementDefinition });
+
+            this.domainOfExpertiseService.Setup(
+                    x => x.GetShallow(
+                        null,
+                        It.IsAny<string>(),
+                        new[] { this.domain_Parameter.Iid },
+                        It.IsAny<ISecurityContext>()))
+                .Returns(new[] { this.domain_Parameter });
+
             this.elementDefinitionService.Setup(
                     x => x.GetShallow(
                         null,
@@ -512,6 +533,14 @@ namespace CDP4WebServices.API.Tests.Services
                         null,
                         It.IsAny<ISecurityContext>()))
                 .Returns(new[] { this.parameterSubscription, this.parameterOverrideSubscription });
+
+            this.parameterSubscriptionService.Setup(
+                    x => x.GetShallow(
+                        null,
+                        It.IsAny<string>(),
+                        new [] { this.parameterSubscription.Iid },
+                        It.IsAny<ISecurityContext>()))
+                .Returns(new[] { this.parameterSubscription });
         }
 
         [Test]
@@ -817,7 +846,9 @@ namespace CDP4WebServices.API.Tests.Services
             {
                 { nameof(Thing.Iid), this.parameter.Iid },
                 { nameof(Thing.ClassKind), ClassKind.Parameter.ToString() },
-                { nameof(Parameter.Owner), this.domain_ElementDefinition.Iid }
+                { nameof(Parameter.Owner), this.domain_ElementDefinition.Iid },
+                { nameof(Parameter.ParameterSubscription), this.parameterSubscription.Iid },
+                { nameof(Parameter.ExpectsOverride), true },
             };
 
             var engineeringModelClasslessDto = new ClasslessDTO
@@ -845,6 +876,8 @@ namespace CDP4WebServices.API.Tests.Services
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
+
+            this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing> {this.parameter});
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
