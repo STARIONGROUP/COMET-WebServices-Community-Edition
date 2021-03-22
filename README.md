@@ -1,10 +1,10 @@
-<img src="https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/raw/master/CDP-Community-Edition.png" width="250">
+<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/master/COMET-Community-Edition.png" width="250">
 
 ## Introduction
 
-The Concurrent Design Platform 4 (CDP4) Webservices is the RHEA Group Concurrent Design REST API. The CDP4 is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. The CDP4 is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
+The COMET Webservices is the RHEA Group Concurrent Design REST API. COMET is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
 
-Read the [Wiki](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
+Read the [Wiki](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
 
 ## Concurrent Design
 
@@ -12,11 +12,11 @@ The Concurrent Design method is an approach to design activities in which all de
 
 The Concurrent Design method brings many advantages to the early design phase by providing a structure for this otherwise chaotic phase. Many design concepts have been implemented in the Concurrent Design method to help a team of stakeholders perform their task. The design work is done in collocated sessions with all stakeholders involved and present, creating an integrated design and enabling good communication and exchange of information between team members.
 
-To read more about Concurrent Design and how to use the CDP4 Desktop application to perform concurrent design please read our documentation at http://cdp4docs.rheagroup.com/
+To read more about Concurrent Design and how to use the COMET IME Desktop application to perform concurrent design please read our documentation at http://cdp4docs.rheagroup.com/
 
 ## Build Status
 
-AppVeyor is used to build and test the CDP4 Webservices
+AppVeyor is used to build and test the COMET Webservices
 
 Branch | Build Status
 ------- | :------------
@@ -45,13 +45,13 @@ Development |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmy
 [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
 
 
-## CDP4-SDK
+## COMET-SDK
 
-The Concurrent Design Platform 4 (CDP4) Webservices make use of the [CDP4-SDK](http://sdk.cdp4.org/).
+The COMET Webservices make use of the [COMET-SDK](http://sdk.cdp4.org/).
 
 ## Web Framework
 
-The CDP4 Webservices are built on top of the [Nancy](http://nancyfx.org/). Nancy is a lightweight, low-ceremony, framework for building HTTP based services on .NET and Mono. 
+The COMET Webservices are built on top of the [Nancy](http://nancyfx.org/). Nancy is a lightweight, low-ceremony, framework for building HTTP based services on .NET and Mono. 
 
 ## ecss-10-25-annexc-integration-tests
 
@@ -59,9 +59,9 @@ The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctne
 
 ## License
 
-The CDP4 Webservices Community Edition are provided to the community under the GNU Affero General Public License. The CDP4 Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
+The COMET Webservices Community Edition are provided to the community under the GNU Affero General Public License. The COMET Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
 
-The [RHEA Group](https://www.rheagroup.com) also provides the [CDP4 Web Services Enterprise Edition](https://github.com/RHEAGROUP/CDP4-WebServices-Community-Edition/wiki/CDP4-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.rheagroup.com/contact) us for more details.
+The [RHEA Group](https://www.rheagroup.com) also provides the [COMET Web Services Enterprise Edition](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/wiki/COMET-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.rheagroup.com/contact) us for more details.
 
 ## Contributions
 
