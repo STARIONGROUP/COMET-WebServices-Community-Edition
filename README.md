@@ -1,4 +1,4 @@
-<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/master/COMET-Community-Edition.png" width="250">
+<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.png" width="250">
 
 ## Introduction
 
