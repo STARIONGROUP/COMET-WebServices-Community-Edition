@@ -36,6 +36,7 @@ namespace CometServer.Modules
     using System.Threading.Tasks;
 
     using Carter;
+    using Carter.Response;
 
     using CDP4Common.DTO;
 
@@ -507,19 +508,10 @@ namespace CometServer.Modules
         protected async Task WriteMultipartResponse(List<FileRevision> fileRevisions, List<Thing> resourceResponse, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             // create a new multipart response with contents assigned by stream
-            var response = new Response
-            {
-                Contents = stream => this.PrepareMultiPartResponse(
-                    stream,
-                    fileRevisions,
-                    resourceResponse,
-                    this.RequestUtils.GetRequestDataModelVersion),
-                StatusCode = statusCode
-            };
+            this.PrepareMultiPartResponse(httpResponse.Body, fileRevisions, resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
 
-            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(response, BoundaryString);
-
-            return response;
+            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+            httpResponse.StatusCode = (int)statusCode;
         }
 
         /// <summary>
@@ -542,21 +534,13 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteArchivedResponse(List<Thing> resourceResponse, string partition, string[] routeSegments, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            // create a new archived response with contents assigned by stream
-            var response =  new Response
-            {
-                Contents = stream => this.PrepareArchivedResponse(
-                    stream,
-                    resourceResponse,
-                    this.RequestUtils.GetRequestDataModelVersion,
-                    partition,
-                    routeSegments),
-                StatusCode = statusCode
-            };
+            await this.PrepareArchivedResponse(httpResponse.Body, resourceResponse,
+                this.RequestUtils.GetRequestDataModelVersion,
+                partition,
+                routeSegments);
 
-            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(response, BoundaryString);
-
-            return response;
+            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+            httpResponse.StatusCode = (int) statusCode;
         }
 
         /// <summary>
@@ -658,10 +642,7 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected HttpResponse GetZippedModelsResponse(Version requestDataModelVersion, List<Guid> modelSetupGuidList, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
+        protected async Task GetZippedModelsResponse(HttpResponse httpResponse, Version requestDataModelVersion, List<Guid> modelSetupGuidList, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
             var path = this.EngineeringModelZipExportService.CreateZipExportFile(modelSetupGuidList, null);
 
@@ -672,29 +653,20 @@ namespace CometServer.Modules
                     throw new Exception("The server was unable to export EngineeringModel. You might not be eligible to export some models, please check your permissions or contact your administrator.");
                 }
 
-                // create a new response with contents assigned by stream
-                var response = new Response
-                {
-                    Contents = stream => this.CreateFileResponseStream(stream, path),
-                    StatusCode = statusCode
-                };
+                httpResponse.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
+                httpResponse.Headers.Add(ContentDispositionHeader, EngineeringModelZipFileName);
 
-                response.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
-                response.Headers.Add(ContentDispositionHeader, EngineeringModelZipFileName);
-
-                return response;
+                await this.CreateFileResponseStream(httpResponse.Body, path);
             }
             catch (Exception ex)
             {
-                // error handling
-                var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
-
                 if (path != null)
                 {
                     System.IO.File.Delete(path);
                 }
 
-                return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
+                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                await httpResponse.AsJson("The zipped content could not be returned");
             }
         }
 
@@ -812,9 +784,9 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void PrepareArchivedResponse(Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
+        private async Task PrepareArchivedResponse(Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
-            string folderPath = this.FileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
+            var folderPath = this.FileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
 
             try
             {
@@ -889,7 +861,7 @@ namespace CometServer.Modules
         /// <param name="path">
         /// The path of the file to put in a stream.
         /// </param>
-        private void CreateFileResponseStream(Stream targetStream, string path)
+        private async Task CreateFileResponseStream(Stream targetStream, string path)
         {
             using (var fileStream = new FileStream(path, FileMode.Open))
             {
@@ -900,7 +872,7 @@ namespace CometServer.Modules
                 var content = new ByteArrayContent(buffer);
 
                 // stream the multipart content to the request contents target stream
-                content.CopyToAsync(targetStream).Wait();
+                await content.CopyToAsync(targetStream);
             }
 
             System.IO.File.Delete(path);

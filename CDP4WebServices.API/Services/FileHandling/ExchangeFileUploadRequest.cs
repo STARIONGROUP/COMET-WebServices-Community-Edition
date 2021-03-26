@@ -24,6 +24,8 @@
 
 namespace CometServer.Services.FileHandling
 {
+    using Microsoft.AspNetCore.Http;
+
     /// <summary>
     /// The exchange file upload request.
     /// </summary>
@@ -42,6 +44,6 @@ namespace CometServer.Services.FileHandling
         /// <summary>
         /// Gets or sets the file.
         /// </summary>
-        public HttpFile File { get; set; }
+        public IFormFile File { get; set; }
     }
 }

@@ -291,7 +291,7 @@ namespace CometServer.Modules
                     // use jsonb for the zipped response
                     this.TransactionManager.SetCachedDtoReadEnabled(true);
 
-                    return this.GetZippedModelsResponse(this.RequestUtils.GetRequestDataModelVersion, modelSetupGuidList, HttpStatusCode.OK, requestToken);
+                    await this.GetZippedModelsResponse(httpResponse, this.RequestUtils.GetRequestDataModelVersion, modelSetupGuidList, HttpStatusCode.OK, requestToken);
                 }
 
                 this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);

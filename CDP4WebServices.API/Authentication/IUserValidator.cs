@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="UserPromptBehaviour.cs" company="RHEA System S.A.">
+// <copyright file="IUserValidator.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -25,23 +25,18 @@
 namespace CometServer.Authentication
 {
     /// <summary>
-    /// Options to control when the browser prompts the user for credentials
+    /// Provides a way to validate the username and password
     /// </summary>
-    public enum UserPromptBehaviour
+    public interface IUserValidator
     {
         /// <summary>
-        /// Never present user with login prompt
+        /// Validates the username and password
         /// </summary>
-        Never,
-
-        /// <summary>
-        /// Always present user with login prompt
-        /// </summary>
-        Always,
-
-        /// <summary>
-        /// Only prompt the user for credentials on non-ajax requests
-        /// </summary>
-        NonAjax
+        /// <param name="username">The Username</param>
+        /// <param name="password">The Password</param>
+        /// <returns>
+        /// A value representing the authenticated user, null if the user was not authenticated.
+        /// </returns>
+        ICredentials Validate(string username, string password);
     }
 }

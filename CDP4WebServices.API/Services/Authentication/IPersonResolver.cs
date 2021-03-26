@@ -45,7 +45,7 @@ namespace CometServer.Services.Authentication
         /// <returns>
         /// A <see cref="IUserIdentity"/> representing the resolved user, null if the user was not found.
         /// </returns>
-        IUserIdentity ResolvePerson(NpgsqlTransaction transaction, string username);
+        ICredentials ResolvePerson(NpgsqlTransaction transaction, string username);
 
         /// <summary>
         /// Resolve and set participant information for the passed in <see cref="ICredentials"/>

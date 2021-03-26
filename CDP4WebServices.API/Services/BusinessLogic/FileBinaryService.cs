@@ -51,19 +51,10 @@ namespace CometServer.Services
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// The root path provider.
-        /// </summary>
-        private readonly IRootPathProvider rootPathProvider;
-        
-        /// <summary>
         /// Initializes a new instance of the <see cref="FileBinaryService"/> class.
         /// </summary>
-        /// <param name="rootPathProvider">
-        /// The (injected) root path provider.
-        /// </param>
-        public FileBinaryService(IRootPathProvider rootPathProvider)
+        public FileBinaryService()
         {
-            this.rootPathProvider = rootPathProvider;
         }
 
         /// <summary>
@@ -206,7 +197,7 @@ namespace CometServer.Services
 
             // using first numberOfFileStorageDistributionLevels hash characters; 
             // create a distributed folder structure numberOfFileStorageDistributionLevels levels deep in the application root of this Webserver
-            var path = Path.Combine(this.rootPathProvider.GetRootPath(), AppConfig.Current.Midtier.FileStorageDirectory);
+            var path = AppConfig.Current.Midtier.FileStorageDirectory;
             foreach (var character in hash.ToLowerInvariant().Substring(0, numberOfFileStorageDistributionLevels).Select(x => x.ToString()))
             {
                 var currentPath = Path.Combine(path, character);

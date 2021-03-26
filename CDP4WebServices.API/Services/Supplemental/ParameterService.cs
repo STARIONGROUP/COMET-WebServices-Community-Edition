@@ -30,8 +30,6 @@ namespace CometServer.Services
 
     using Authorization;
 
-    using BusinessLogic;
-
     using CDP4Common.Dto;
     using CDP4Common.DTO;
 

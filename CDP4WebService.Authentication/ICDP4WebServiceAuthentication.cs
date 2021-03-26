@@ -38,16 +38,13 @@ namespace CometServer.Authentication
         /// <summary>
         /// Enables basic authentication for the application
         /// </summary>
-        /// <param name="pipelines">
-        /// Pipelines to add handlers to (usually "this")
-        /// </param>
         /// <param name="configuration">
         /// Forms authentication configuration
         /// </param>
         /// <param name="basicAuthenticationPaths">
         /// The basic Authentication Paths. Each supplied path shall be preceded by a '/' character.
         /// </param>
-        void Enable(IPipelines pipelines, CDP4WebServiceAuthenticationConfiguration configuration, IEnumerable<string> basicAuthenticationPaths);
+        void Enable(CDP4WebServiceAuthenticationConfiguration configuration, IEnumerable<string> basicAuthenticationPaths);
 
         /// <summary>
         /// Gets the pre request hook for loading the authenticated user's details

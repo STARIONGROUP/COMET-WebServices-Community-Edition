@@ -24,7 +24,6 @@
 
 namespace CometServer
 {
-    using System;
     using System.Diagnostics;
     using System.Linq;
 
@@ -46,6 +45,7 @@ namespace CometServer
     using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
 
+    using CometServer.Authentication;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authentication;
@@ -59,22 +59,17 @@ namespace CometServer
     using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Supplemental;
 
-    using CometServer.Authentication;
-
     using Hangfire;
     using Hangfire.MemoryStorage;
 
     using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Caching.Memory;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
     using NLog;
-    
-    using PersonResolver = CDP4JsonSerializer.PersonResolver;
 
     /// <summary>
     /// The <see cref="Startup"/> used to configure the application
@@ -88,7 +83,7 @@ namespace CometServer
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// The Cookie Scheme used by the Marvin API
+        /// The Cookie Scheme used by the COMET API
         /// </summary>
         public const string CookieScheme = "CDP4";
 
@@ -137,9 +132,9 @@ namespace CometServer
                     });
             });
 
-            services.AddAuthentication("Basic").AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null);
-
-            services.AddAuthorization();
+            services.AddAuthentication("Basic")
+                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null)
+                .AddCookie(CookieScheme);
 
             services.AddScoped<IUserProvider, UserProvider>();
 
@@ -168,8 +163,8 @@ namespace CometServer
             builder.RegisterType<AuthenticationDao>().As<IAuthenticationDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<CDP4WebServices.API.Services.Authentication.PersonResolver>().As<CDP4WebServices.API.Services.Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            
+            builder.RegisterType<CometServer.Services.Authentication.PersonResolver>().As<CometServer.Services.Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+
             //builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             //builder.RegisterType<CDP4WebServiceAuthentication>().As<ICDP4WebServiceAuthentication>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
@@ -184,7 +179,7 @@ namespace CometServer
             builder.RegisterType<LocalFileStorage>().As<ILocalFileStorage>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<DataStoreController>().As<IDataStoreController>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<CommandLogger>().As<ICommandLogger>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<CDP4WebServices.API.Services.ServiceProvider>().As<CDP4WebServices.API.Services.IServiceProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<CometServer.Services.ServiceProvider>().As<CometServer.Services.IServiceProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<ChangeLogService>().As<IChangeLogService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<MetaInfoProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
@@ -247,10 +242,5 @@ namespace CometServer
             app.UseAuthorization();
             app.UseEndpoints(builder => builder.MapCarter());
         }
-
-        /// <summary>
-        /// Configures Hangfire and the recurring jobs
-        /// </summary>
-
     }
 }

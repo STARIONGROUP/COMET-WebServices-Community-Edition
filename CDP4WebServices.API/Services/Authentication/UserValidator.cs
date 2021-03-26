@@ -68,7 +68,7 @@ namespace CometServer.Services.Authentication
         /// <returns>
         /// A value representing the authenticated user, null if the user was not authenticated.
         /// </returns>
-        public IUserIdentity Validate(string username, string password)
+        public ICredentials Validate(string username, string password)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -95,7 +95,7 @@ namespace CometServer.Services.Authentication
             }
             catch (Exception ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
                     transaction.Rollback();
                 }

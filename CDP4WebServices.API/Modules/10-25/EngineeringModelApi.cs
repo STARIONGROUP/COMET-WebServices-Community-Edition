@@ -50,7 +50,6 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.WebUtilities;
 
     using NLog;
-    using NLog.Targets;
 
     using Npgsql;
     
@@ -58,9 +57,8 @@ namespace CometServer.Modules
     using Services.Authorization;
     using Services.Operations;
     using Services.Protocol;
-    
+
     using Thing = CDP4Common.DTO.Thing;
-    using Utils = CometServer.Services.Utils;
 
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
@@ -109,7 +107,7 @@ namespace CometServer.Modules
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
-                    await res.WriteAsJsonAsync("not authenticated");
+                    await res.AsJson("not authenticated");
                 }
                 else
                 {
@@ -122,7 +120,7 @@ namespace CometServer.Modules
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
-                    await res.WriteAsJsonAsync("not authenticated");
+                    await res.AsJson("not authenticated");
                 }
                 else
                 {
@@ -317,8 +315,8 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                await httpResponse.AsJson($"exception:{ex.Message}");
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             finally
             {

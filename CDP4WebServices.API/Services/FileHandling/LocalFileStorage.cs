@@ -39,11 +39,6 @@ namespace CometServer.Services.FileHandling
     public class LocalFileStorage : ILocalFileStorage
     {
         /// <summary>
-        /// The root path provider.
-        /// </summary>
-        private readonly IRootPathProvider rootPathProvider;
-
-        /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -51,12 +46,8 @@ namespace CometServer.Services.FileHandling
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalFileStorage"/> class.
         /// </summary>
-        /// <param name="rootPathProvider">
-        /// The (injected) root path provider.
-        /// </param>
-        public LocalFileStorage(IRootPathProvider rootPathProvider)
+        public LocalFileStorage()
         {
-            this.rootPathProvider = rootPathProvider;
         }
 
         /// <summary>
@@ -105,7 +96,7 @@ namespace CometServer.Services.FileHandling
         /// </returns>
         private string GetDirectory()
         {
-            var uploadDirectory = Path.Combine(this.rootPathProvider.GetRootPath(), AppConfig.Current.Midtier.UploadDirectory);
+            var uploadDirectory = AppConfig.Current.Midtier.UploadDirectory;
 
             if (!Directory.Exists(uploadDirectory))
             {

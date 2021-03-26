@@ -31,7 +31,6 @@ namespace CometServer
     using Autofac;
     using Autofac.Extensions.DependencyInjection;
 
-    using CDP4WebServices.API;
     using CometServer.ChangeNotification;
     using CometServer.Configuration;
 

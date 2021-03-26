@@ -29,8 +29,8 @@ namespace CometServer.Modules
 
     using Carter;
 
-    using CometServer.Services.ContributorsLocation;
-
+    using CometServer.Authentication;
+    
     using Microsoft.AspNetCore.Http;
 
     /// <summary>
@@ -41,10 +41,7 @@ namespace CometServer.Modules
         /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationModule"/> class.
         /// </summary>
-        /// <param name="webServiceAuthentication">
-        /// The web Service Authentication.
-        /// </param>
-        public AuthenticationModule(ICDP4WebServiceAuthentication webServiceAuthentication)
+        public AuthenticationModule()
         {
             this.Get("/login", async (req, res) =>
             {
@@ -54,23 +51,14 @@ namespace CometServer.Modules
                     await res.WriteAsync("not authorized");
                 }
 
-                // Identify user's location and save this data
-                // TODO (ticket T3809)revise geo ip service, it does not work properly, that is why it is commented
-                // this.ContributorLocationResolver.GetLocationDataAndSave();
-
                 res.StatusCode = (int)HttpStatusCode.Accepted;
             });
 
             this.Get("/logout", async (req, res) =>
             {
-                return webServiceAuthentication.LogOutResponse(req.HttpContext);
+                //return webServiceAuthentication.LogOutResponse(req.HttpContext);
                 throw new NotImplementedException();
             });
         }
-
-        /// <summary>
-        /// Gets or sets the contributor location resolver.
-        /// </summary>
-        public IContributorLocationResolver ContributorLocationResolver { get; set; }
     }
 }

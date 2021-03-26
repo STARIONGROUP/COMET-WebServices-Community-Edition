@@ -30,8 +30,6 @@ namespace CometServer.Services.Operations.SideEffects
 
     using Authorization;
 
-    using BusinessLogic;
-
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;

@@ -28,12 +28,15 @@ namespace CometServer.Modules
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Text;
     using System.Threading.Tasks;
 
     using Carter;
+    using Carter.ModelBinding;
+    using Carter.Response;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -42,7 +45,6 @@ namespace CometServer.Modules
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
 
-    using CometServer.Authentication;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
@@ -54,7 +56,6 @@ namespace CometServer.Modules
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
-    using Microsoft.AspNetCore.Identity;
 
     using NLog;
 
@@ -96,11 +97,6 @@ namespace CometServer.Modules
         public IRevisionService RevisionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the cache service.
-        /// </summary>
-        public ICacheService CacheService { get; set; }
-
-        /// <summary>
         /// Gets or sets the permission service.
         /// </summary>
         public IPermissionService PermissionService { get; set; }
@@ -126,11 +122,6 @@ namespace CometServer.Modules
         public IExchangeFileProcessor ExchangeFileProcessor { get; set; }
 
         /// <summary>
-        /// Gets or sets the header info provider.
-        /// </summary>
-        public IHeaderInfoProvider HeaderInfoProvider { get; set; }
-
-        /// <summary>
         /// Gets or sets the transaction manager.
         /// </summary>
         public ICdp4TransactionManager TransactionManager { get; set; }
@@ -151,29 +142,9 @@ namespace CometServer.Modules
         public IDataStoreController DataStoreController { get; set; }
 
         /// <summary>
-        /// Gets or sets the web service authentication.
-        /// </summary>
-        public ICDP4WebServiceAuthentication WebServiceAuthentication { get; set; }
-
-        /// <summary>
         /// Gets or sets the engineeringModel dao.
         /// </summary>
         public IEngineeringModelDao EngineeringModelDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the engineeringModelSetup dao.
-        /// </summary>
-        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the siteDirectory dao.
-        /// </summary>
-        public ISiteDirectoryDao SiteDirectoryDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the user validator
-        /// </summary>
-        public IUserValidator<> UserValidator { get; set; }
 
         /// <summary>
         /// Gets or sets the Person service.
@@ -221,27 +192,40 @@ namespace CometServer.Modules
         public ExchangeFileImportyApi()
         {
             // Seed the data store from the provided (uploaded) exchange file
-            this.Post["/Data/Exchange", true] = async (x, ct) => await this.SeedDataStore();
+            this.Post("/Data/Exchange", async (req, res) =>
+                {
+                    await this.SeedDataStore(req, res);
+                }
+            );
 
             // Restore the data store to the data snapshot created from the inital seed
-            this.Post["/Data/Restore"] = x => this.RestoreDatastore();
+            this.Post("/Data/Restore", async (req, res) =>
+                {
+                    await this.RestoreDatastore(req, res);
+                }
+            );
         }
 
         /// <summary>
         /// Restore the data store.
         /// </summary>
+        /// <param name="request">
+        /// The <see cref="HttpRequest"/> that is being handled
+        /// </param>
+        /// <param name="response">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
         /// <returns>
-        /// The <see cref="HttpResponse"/>.
+        /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal HttpResponse RestoreDatastore()
+        internal async Task RestoreDatastore(HttpRequest request, HttpResponse response)
         {
             if (!AppConfig.Current.Backtier.IsDbRestoreEnabled)
             {
-                Logger.Info(
-                    "Data restore API invoked but it was disabled from configuration, cancel further processing...");
-                var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
-                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
-                return notAcceptableResponse;
+                Logger.Info("Data restore API invoked but it was disabled from configuration, cancel further processing...");
+
+                response.StatusCode = (int)HttpStatusCode.Forbidden;
+                await response.AsJson("restore is not allowed");
             }
 
             try
@@ -249,56 +233,65 @@ namespace CometServer.Modules
                 Logger.Info("Starting data store rollback");
                 this.DataStoreController.RestoreDataStore();
 
+                // TODO: check what to do with this in origianl CDP4 code
                 // reset the credential cache as the underlying datastore was reset
-                this.WebServiceAuthentication.ResetCredentialCache();
+                //this.WebServiceAuthentication.ResetCredentialCache();
 
                 Logger.Info("Finished data store rollback");
-                var response = new HtmlResponse();
-                this.HeaderInfoProvider.RegisterResponseHeaders(response);
-                return response;
+
+                response.StatusCode = (int)HttpStatusCode.OK;
+                await response.AsJson("DataStore restored");
             }
             catch (Exception ex)
             {
                 Logger.Error(ex, "Error occured during data store rollback");
 
-                var errorResponse = new HtmlResponse(HttpStatusCode.InternalServerError);
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
-                return errorResponse;
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await response.AsJson("DataStore restored failed");
             }
         }
 
         /// <summary>
         /// Asynchronously seed the data store.
         /// </summary>
+        /// <param name="request">
+        /// The <see cref="HttpRequest"/> that is being handled
+        /// </param>
+        /// <param name="response">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
         /// <returns>
-        /// The <see cref="Task{Response}"/>.
+        /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task<Response> SeedDataStore()
+        internal async Task SeedDataStore(HttpRequest request, HttpResponse response)
         {
             if (!AppConfig.Current.Backtier.IsDbSeedEnabled)
             {
-                Logger.Info(
-                    "Data store seed API invoked but it was disabled from configuration, cancel further processing...");
-                var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
-                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
-                return notAcceptableResponse;
+                Logger.Info("Data store seed API invoked but it was disabled from configuration, cancel further processing...");
+                
+                response.StatusCode = (int)HttpStatusCode.Forbidden;
+                await response.AsJson("seed is not allowed");
             }
 
             Logger.Info("Starting data store seeding");
 
             // bind the request to the specialized model
-            var exchangeFileRequest = this.Bind<ExchangeFileUploadRequest>();
+            var exchangeFileRequest = await request.Bind<ExchangeFileUploadRequest>() ;
 
             // make sure there is only one file
-            if (exchangeFileRequest.File == null)
+            if (exchangeFileRequest == null)
             {
-                var badRequestResponse = new Response().WithStatusCode(HttpStatusCode.BadRequest);
-                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse);
-                return badRequestResponse;
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                await response.AsJson("seed file not detected");
             }
 
             // stream the file to disk
-            var filePath = await this.LocalFileStorage.StreamFileToDisk(exchangeFileRequest.File.Value);
+            string filePath = string.Empty;
+            using (var memoryStream = new MemoryStream())
+            {
+                await exchangeFileRequest.File.CopyToAsync(memoryStream);
+                filePath = await this.LocalFileStorage.StreamFileToDisk(memoryStream);
+            }
 
             // drop existing data stores
             this.DropDataStoreAndPrepareNew();
@@ -306,9 +299,8 @@ namespace CometServer.Modules
             // handle exchange processing
             if (!this.InsertModelData(filePath, exchangeFileRequest.Password, AppConfig.Current.Backtier.IsDbSeedEnabled))
             {
-                var errorResponse = new NotAcceptableResponse();
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
-                return errorResponse;
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                await response.AsJson("invalid seed file");
             }
 
             // Remove the exchange file after processing (saving space)
@@ -328,24 +320,22 @@ namespace CometServer.Modules
                 this.CreateRevisionHistoryForEachEntry();
 
                 // database was succesfully seeded
-                this.DataStoreController
-                    .CloneDataStore(); // create a clone of the data store for future restore support
+                // create a clone of the data store for future restore support
+                this.DataStoreController.CloneDataStore();
 
+                // TODO: check what to do with this in origianl CDP4 code
                 // reset the credential cache as the underlying datastore was reset
-                this.WebServiceAuthentication.ResetCredentialCache();
-
-                var response = new Response().WithStatusCode(HttpStatusCode.OK);
-                this.HeaderInfoProvider.RegisterResponseHeaders(response);
+                //this.WebServiceAuthentication.ResetCredentialCache();
 
                 Logger.Info("Finished the data store seed");
-                return response;
+
+                response.StatusCode = (int) HttpStatusCode.OK;
+                await response.AsJson("Datastore seeded");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Unable to dump the datastore");
-                var errorResponse = new Response().WithStatusCode(HttpStatusCode.InternalServerError);
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
-                return errorResponse;
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await response.AsJson("DataStore restored failed");
             }
         }
 
@@ -362,7 +352,7 @@ namespace CometServer.Modules
         /// Optional seed indicator which removes any existing data first if true
         /// </param>
         /// <returns>
-        /// True if successful
+        /// True if successful, false if not
         /// </returns>
         private bool InsertModelData(string fileName, string password = null, bool seed = true)
         {
@@ -556,7 +546,7 @@ namespace CometServer.Modules
             }
             catch (Exception ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
                     transaction.Rollback();
                 }

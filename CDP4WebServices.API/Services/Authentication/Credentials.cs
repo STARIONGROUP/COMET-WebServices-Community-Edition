@@ -36,7 +36,7 @@ namespace CometServer.Services.Authentication
     /// <summary>
     /// Contains the authenticated user credentials and basic user information.
     /// </summary>
-    public class Credentials : IUserIdentity, ICredentials
+    public class Credentials : ICredentials
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Credentials"/> class.
@@ -55,14 +55,6 @@ namespace CometServer.Services.Authentication
         /// A string containing the username.
         /// </value>
         public string UserName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the claims of the authenticated user.
-        /// </summary>
-        /// <remarks>
-        /// This is redundant for our implementation but is enforced by the interface.
-        /// </remarks>
-        public IEnumerable<string> Claims { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Person"/>.

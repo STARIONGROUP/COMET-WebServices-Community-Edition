@@ -26,6 +26,8 @@ namespace CometServer.Helpers
 {
     using CometServer.Services.Authentication;
 
+    using Microsoft.AspNetCore.Http;
+
     /// <summary>
     /// The RequestContext interface.
     /// </summary>
@@ -34,7 +36,7 @@ namespace CometServer.Helpers
         /// <summary>
         /// Gets the request context.
         /// </summary>
-        NancyContext Context { get; }
+        HttpContext Context { get; }
 
         /// <summary>
         /// Gets the authenticated person.

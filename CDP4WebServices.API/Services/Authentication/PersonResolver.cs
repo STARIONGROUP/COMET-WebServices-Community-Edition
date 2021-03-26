@@ -108,7 +108,7 @@ namespace CometServer.Services.Authentication
         /// <returns>
         /// A <see cref="IUserIdentity"/> representing the resolved user, null if the user was not found.
         /// </returns>
-        public IUserIdentity ResolvePerson(NpgsqlTransaction transaction, string username)
+        public ICredentials ResolvePerson(NpgsqlTransaction transaction, string username)
         {
             var person = this.AuthenticationDao.Read(transaction, "SiteDirectory", username).SingleOrDefault();
 
@@ -277,7 +277,7 @@ namespace CometServer.Services.Authentication
         /// <returns>
         /// A completely resolved <see cref="Credentials"/> class.
         /// </returns>
-        private IUserIdentity ResolveCredentials(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private ICredentials ResolveCredentials(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             var personPermissions = new List<PersonPermission>();
             var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, person).ToList();
