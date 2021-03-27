@@ -37,7 +37,6 @@ namespace CometServer.Services
 
     using CDP4JsonSerializer;
 
-    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
@@ -194,9 +193,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> path of the created archive.
         /// </returns>
-        public string CreateZipExportFile(
-            IEnumerable<Guid> engineeringModelSetupGuids,
-            IEnumerable<string> files = null)
+        public string CreateZipExportFile(IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files = null)
         {
             // Initialize the json serializer
             this.JsonSerializer.Initialize(
@@ -204,17 +201,24 @@ namespace CometServer.Services
                 this.RequestUtils.GetRequestDataModelVersion);
 
             var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new DtoThingIidComparer());
-            var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
+
+            //TODO: refactor to get current Credentials from request or context
+            // var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
+
+            throw new NotImplementedException("Credentials needs to be refactored");
+
+            var credentials = new Credentials();
+
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             NpgsqlConnection connection = null;
-            NpgsqlTransaction transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+            var transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
             try
             {
                 var siteDirectoryPartition = "SiteDirectory";
 
-                SiteDirectory siteDirectory = this.SiteDirectoryService
+                var siteDirectory = this.SiteDirectoryService
                     .GetShallow(transaction, siteDirectoryPartition, null, authorizedContext).OfType<SiteDirectory>()
                     .ToList()[0];
 

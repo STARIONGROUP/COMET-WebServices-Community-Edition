@@ -129,26 +129,7 @@ namespace CometServer.Services
                     : new Version(DefaultDataModelVersion);
             }
         }
-
-        /// <summary>
-        /// Convenience method to return a Http <see cref="Response"/> object with serialized JSON content.
-        /// </summary>
-        /// <param name="jsonArray">
-        /// A <see cref="JArray"/> instance that is to be serialized into the <see cref="Response"/>.
-        /// </param>
-        /// <returns>
-        /// A HTTP <see cref="Response"/> that can be returned by a web service API endpoint.
-        /// </returns>
-        public HttpResponse GetJsonResponse(JArray jsonArray)
-        {
-            return new Response
-                       {
-                           ContentType = "application/json",
-                           Contents = stream => this.WriteToStream(jsonArray, stream)
-                       };
-        }
-
-
+        
         /// <summary>
         /// Construct the engineering model partition identifier from the passed in engineeringModel id.
         /// </summary>

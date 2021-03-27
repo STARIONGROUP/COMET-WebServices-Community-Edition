@@ -214,7 +214,13 @@ namespace CometServer.Services
             var logMessage = $"File structure creation is started into the temporary folder {folderPath}.";
             Logger.Info(logMessage);
 
-            var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
+            //TODO: refactor to get current Credentials from request or context
+            // var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
+
+            throw new NotImplementedException("Credentials needs to be refactored");
+
+            var credentials = new Credentials();
+
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             NpgsqlConnection connection = null;
