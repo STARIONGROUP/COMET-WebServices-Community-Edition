@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\ascii-art.txt" />
     <None Remove="Resources\cdplogo_48x48.ico" />
   </ItemGroup>
 
@@ -45,6 +46,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <EmbeddedResource Include="Resources\ascii-art.txt" />
     <EmbeddedResource Include="Resources\cdplogo_48x48.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

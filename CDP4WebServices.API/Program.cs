@@ -60,7 +60,7 @@ namespace CometServer
         /// </param>
         public static async Task Main(string[] args)
         {
-            Console.Title = "COMET SERVER - Community Edition";
+            Console.Title = "COMET WebServices - Community Edition";
 
             // ASP.NET Core 3.0+:
             // The UseServiceProviderFactory call attaches the
