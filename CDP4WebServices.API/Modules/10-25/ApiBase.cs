@@ -49,8 +49,7 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Http;
 
     using NLog;
-    using NLog.Targets;
-
+    
     using Npgsql;
 
     using Services;

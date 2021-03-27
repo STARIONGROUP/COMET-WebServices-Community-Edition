@@ -31,6 +31,8 @@ namespace CometServer.Services.Protocol
 
     using CDP4Common.DTO;
 
+    using Microsoft.AspNetCore.Http;
+
     /// <summary>
     /// The query parameters of the current request.
     /// </summary>
@@ -99,22 +101,22 @@ namespace CometServer.Services.Protocol
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryParameters"/> class.
         /// </summary>
-        /// <param name="queryParameters">
+        /// <param name="queryCollection">
         /// The query Parameters.
         /// </param>
-        public QueryParameters(Dictionary<string, object> queryParameters)
+        public QueryParameters(IQueryCollection queryCollection)
         {
             this.SetupQueryParameterDefaults();
 
             // process the query information against the supported query parameters
-            this.ExtentDeep = this.ProcessQueryParameter(queryParameters, ExtentQuery, "deep");
-            this.IncludeReferenceData = this.ProcessQueryParameter(queryParameters, IncludeReferenceDataQuery, "true");
-            this.IncludeAllContainers = this.ProcessQueryParameter(queryParameters, IncludeAllContainersQuery, "true");
-            this.IncludeFileData = this.ProcessQueryParameter(queryParameters, IncludeFileDataQuery, "true");
-            this.Export = this.ProcessQueryParameter(queryParameters, ExportQuery, "true");
-            this.RevisionNumber = this.ProcessQueryParameter(queryParameters, RevisionNumberQuery);
-            this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionFromQuery);
-            this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionToQuery);
+            this.ExtentDeep = this.ProcessQueryParameter(queryCollection, ExtentQuery, "deep");
+            this.IncludeReferenceData = this.ProcessQueryParameter(queryCollection, IncludeReferenceDataQuery, "true");
+            this.IncludeAllContainers = this.ProcessQueryParameter(queryCollection, IncludeAllContainersQuery, "true");
+            this.IncludeFileData = this.ProcessQueryParameter(queryCollection, IncludeFileDataQuery, "true");
+            this.Export = this.ProcessQueryParameter(queryCollection, ExportQuery, "true");
+            this.RevisionNumber = this.ProcessQueryParameter(queryCollection, RevisionNumberQuery);
+            this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryCollection, RevisionFromQuery);
+            this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryCollection, RevisionToQuery);
         }
 
         /// <summary>
@@ -173,7 +175,7 @@ namespace CometServer.Services.Protocol
         {
             if (!this.queryParameterDefinitions.ContainsKey(queryParameter))
             {
-                throw new Exception(string.Format("Query parameter {0} is not supported", queryParameter));
+                throw new Exception($"Query parameter {queryParameter} is not supported");
             }
 
             if (!this.queryParameterDefinitions[queryParameter].Contains(value))
@@ -183,10 +185,10 @@ namespace CometServer.Services.Protocol
         }
 
         /// <summary>
-        /// The process query parameter.
+        /// Extracts a QueryParameter based on the <paramref name="key"/> from the <see cref="IQueryCollection"/>
         /// </summary>
-        /// <param name="queryParameters">
-        /// The query Parameters.
+        /// <param name="queryCollection">
+        /// The <see cref="IQueryCollection"/> that may contain query parameters
         /// </param>
         /// <param name="key">
         /// The key.
@@ -197,72 +199,70 @@ namespace CometServer.Services.Protocol
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected bool ProcessQueryParameter(Dictionary<string, object> queryParameters, string key, string trueValue)
+        protected bool ProcessQueryParameter(IQueryCollection queryCollection, string key, string trueValue)
         {
-            if (!queryParameters.ContainsKey(key))
+            if (!queryCollection.TryGetValue(key, out var queryParameterValue))
             {
                 return false;
             }
 
-            var queryParameterValue = (string)queryParameters[key];
             this.ValidateQueryParameter(key, queryParameterValue);
 
             return queryParameterValue == trueValue;
         }
 
         /// <summary>
-        /// The process query parameter.
+        /// Extracts the Revision QueryParameter from the <see cref="IQueryCollection"/>
         /// </summary>
-        /// <param name="queryParameters">
-        /// The query Parameters.
+        /// <param name="queryCollection">
+        /// The <see cref="IQueryCollection"/> that may contain query parameters
         /// </param>
         /// <param name="key">
-        /// The key.
+        /// The key of the Query Parameter to process
         /// </param>
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected int ProcessQueryParameter(Dictionary<string, object> queryParameters, string key)
+        protected int ProcessQueryParameter(IQueryCollection queryCollection, string key)
         {
-            if (!queryParameters.ContainsKey(key))
+            if (!queryCollection.TryGetValue(key, out var queryParameterValue))
             {
                 return -1;
             }
 
-            int revNumber;
-            if (!int.TryParse(queryParameters[RevisionNumberQuery].ToString(), out revNumber))
+            if (!int.TryParse(queryParameterValue, out var revisionNumber))
             {
                 return -1;
             }
 
-            return revNumber;
+            return revisionNumber;
         }
 
         /// <summary>
-        /// The process query parameter.
+        /// Extracts the RevisionHistory QueryParameter from the <see cref="IQueryCollection"/>
         /// </summary>
-        /// <param name="queryParameters">
-        /// The query Parameters.
+        /// <param name="queryCollection">
+        /// The <see cref="IQueryCollection"/> that may contain query parameters
         /// </param>
         /// <param name="key">
-        /// The key.
+        /// The key of the Query Parameter to process
         /// </param>
         /// <returns>
-        /// The <see cref="bool"/>.
+        /// The revisionhistory query parameter as <see cref="int"/> or as <see cref="DateTime"/>
         /// </returns>
-        protected object ProcessRevisionHistoryQueryParameter(Dictionary<string, object> queryParameters, string key)
+        protected object ProcessRevisionHistoryQueryParameter(IQueryCollection queryCollection, string key)
         {
-            if (!queryParameters.ContainsKey(key))
+            if (!queryCollection.TryGetValue(key, out var queryParameterValue))
             {
                 return null;
             }
 
-            if (int.TryParse(queryParameters[key].ToString(), out var revNumber))
+            if (int.TryParse(queryParameterValue, out var revNumber))
             {
                 return revNumber;
             }
 
-            if (!DateTime.TryParseExact(queryParameters[key].ToString(), "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp))
+            if (!DateTime.TryParseExact(queryParameterValue, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp))
             {
                 throw new ArgumentOutOfRangeException(key);
             }

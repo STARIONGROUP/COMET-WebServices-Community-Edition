@@ -60,8 +60,7 @@ namespace CometServer.Helpers
         /// </exception>
         public static void ValidateSupportedQueryParameter(HttpRequest request, IRequestUtils requestUtil, string[] supportedQueryParameters)
         {
-            var queryParameters = (Dictionary<string, object>)request.Query.ToDictionary();
-            foreach (var kvp in queryParameters)
+            foreach (var kvp in request.Query)
             {
                 if (!supportedQueryParameters.Contains(kvp.Key))
                 {
@@ -70,23 +69,23 @@ namespace CometServer.Helpers
             }
 
             // verify that revisionFrom can only be associated with revisionTo
-            if (queryParameters.Keys.Contains(QueryParameters.RevisionFromQuery))
+            if (request.Query.Keys.Contains(QueryParameters.RevisionFromQuery))
             {
-                if (queryParameters.Keys.Count > 1 && !queryParameters.Keys.Contains(QueryParameters.RevisionToQuery))
+                if (request.Query.Keys.Count > 1 && !request.Query.Keys.Contains(QueryParameters.RevisionToQuery))
                 {
                     throw new InvalidOperationException("revisionFrom may only be associated with revisionTo.");
                 }
             }
-            else if (queryParameters.Keys.Contains(QueryParameters.RevisionToQuery))
+            else if (request.Query.Keys.Contains(QueryParameters.RevisionToQuery))
             {
-                if (queryParameters.Keys.Count > 1 && !queryParameters.Keys.Contains(QueryParameters.RevisionFromQuery))
+                if (request.Query.Keys.Count > 1 && !request.Query.Keys.Contains(QueryParameters.RevisionFromQuery))
                 {
                     throw new InvalidOperationException("revisionTo may only be associated with revisionFrom.");
                 }
             }
 
             // process and set the query parameter info for this request
-            requestUtil.QueryParameters = new QueryParameters(queryParameters);
+            requestUtil.QueryParameters = new QueryParameters(request.Query);
         }
 
         /// <summary>
