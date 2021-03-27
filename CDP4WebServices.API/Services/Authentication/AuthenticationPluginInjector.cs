@@ -73,8 +73,10 @@ namespace CometServer.Services.Authentication
         /// <summary>
         /// Gets the list of folders from which to load the authentication plugins.
         /// </summary>
-        /// <returns>The list of directories which contain the authenticator plugins.</returns>
-        private static List<string> GetFolders()
+        /// <returns>
+        /// The list of directories which contain the authenticator plugins.
+        /// </returns>
+        private IEnumerable<string> GetFolders()
         {
             return Directory.GetDirectories(Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName, AuthenticatorPluginFolder)).ToList();
         }
@@ -85,26 +87,25 @@ namespace CometServer.Services.Authentication
         /// <returns>The <see cref="List{T}"/> of <see cref="IAuthenticatorPlugin"/> modules</returns>
         private IEnumerable<IAuthenticatorPlugin> LoadPlugins()
         {
-            var pluginFolders = GetFolders();
-            var container = new ContainerBuilder().Build();
+            var pluginFolders = this.GetFolders();
+
+            var builder = new ContainerBuilder();
 
             // load all assemblies types encountered in the plugin folders that implement the IAuthenticatorPlugin interface
-            container.Update(
-                builder =>
-                    {
-                        foreach (var pluginFolder in pluginFolders)
-                        {
-                            foreach (var assembly in new DirectoryInfo(pluginFolder).GetFiles().Where(file => file.Extension == ".dll")
-                                    .Select(file => Assembly.LoadFile(file.FullName)))
-                            {
-                                builder.RegisterAssemblyTypes(assembly)
-                                    .Where(x => typeof(IAuthenticatorPlugin).IsAssignableFrom(x))
-                                    .AsImplementedInterfaces()
-                                    .PropertiesAutowired()
-                                    .SingleInstance();
-                            }
-                        }
-                    });
+            foreach (var pluginFolder in pluginFolders)
+            {
+                foreach (var assembly in new DirectoryInfo(pluginFolder).GetFiles().Where(file => file.Extension == ".dll")
+                    .Select(file => Assembly.LoadFile(file.FullName)))
+                {
+                    builder.RegisterAssemblyTypes(assembly)
+                        .Where(x => typeof(IAuthenticatorPlugin).IsAssignableFrom(x))
+                        .AsImplementedInterfaces()
+                        .PropertiesAutowired()
+                        .SingleInstance();
+                }
+            }
+
+            var container = builder.Build();
 
             foreach (var authenticatorPlugin in container.Resolve<IEnumerable<IAuthenticatorPlugin>>())
             {
