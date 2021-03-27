@@ -51,7 +51,6 @@ namespace CometServer
     using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
     using CometServer.Services.ChangeLog;
-    using CometServer.Services.ContributorsLocation;
     using CometServer.Services.DataStore;
     using CometServer.Services.Email;
     using CometServer.Services.FileHandling;
@@ -209,7 +208,6 @@ namespace CometServer
 
             builder.RegisterType<OperationSideEffectProcessor>().As<IOperationSideEffectProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<OperationProcessor>().As<IOperationProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<ContributorLocationResolver>().As<IContributorLocationResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<FileArchiveService>().As<IFileArchiveService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<EngineeringModelZipExportService>().As<IEngineeringModelZipExportService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<AccessRightKindValidationService>().As<IAccessRightKindValidationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();

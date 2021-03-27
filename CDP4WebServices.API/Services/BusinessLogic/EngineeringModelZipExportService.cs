@@ -37,6 +37,7 @@ namespace CometServer.Services
 
     using CDP4JsonSerializer;
 
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
@@ -335,7 +336,7 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
                     transaction.Rollback();
                 }

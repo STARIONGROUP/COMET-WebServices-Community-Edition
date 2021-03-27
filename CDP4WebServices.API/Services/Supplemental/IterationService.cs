@@ -25,12 +25,15 @@
 namespace CometServer.Services
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
 
     using Authorization;
 
     using CDP4Common.DTO;
+
+    using CometServer.Exceptions;
 
     using Helpers;
 
@@ -120,7 +123,8 @@ namespace CometServer.Services
                 var activeIterations = this.GetShallow(transaction, partition, new [] { this.activeIterationId }, securityContext).OfType<Iteration>().ToArray();
                 if (activeIterations.Length != 1)
                 {
-                    throw new ServerException($"The active iteration could not be found for partition {partition}.");
+                    
+                    throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
                 }
 
                 return activeIterations.Single();
@@ -138,13 +142,13 @@ namespace CometServer.Services
 
                 if (activeIterationSetups.Length != 1)
                 {
-                    throw new ServerException($"The active iteration-setup could not be found for partition {partition}.");
+                    throw new ThingNotFoundException($"The active iteration-setup could not be found for partition {partition}.");
                 }
 
                 var activeIterations = iterations.Where(x => x.Iid == activeIterationSetups.Single().IterationIid).ToArray();
                 if (activeIterations.Length != 1)
                 {
-                    throw new ServerException($"The active iteration could not be found for partition {partition}.");
+                    throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
                 }
 
                 var activeIteration = activeIterations.Single();

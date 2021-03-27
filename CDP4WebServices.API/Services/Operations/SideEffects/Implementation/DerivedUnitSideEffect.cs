@@ -32,7 +32,7 @@ namespace CometServer.Services.Operations.SideEffects
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
-    using CometServer.Helpers;
+    using CometServer.Exceptions;
     using CometServer.Services.Authorization;
 
     using Npgsql;

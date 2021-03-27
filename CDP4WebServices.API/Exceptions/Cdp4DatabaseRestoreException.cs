@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Helpers
+namespace CometServer.Exceptions
 {
     using System;
 

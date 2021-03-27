@@ -32,7 +32,7 @@ namespace CometServer.Services
 
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
-    using CDP4JsonSerializer;
+
     using CometServer.Helpers;
     using CometServer.Services.Protocol;
 

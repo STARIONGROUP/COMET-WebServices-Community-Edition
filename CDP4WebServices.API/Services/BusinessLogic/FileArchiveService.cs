@@ -119,17 +119,14 @@ namespace CometServer.Services
                 }
                 catch (Exception exception)
                 {
-                    var logMessage = string.Format(
-                        "An attempt to create a file structure was unsuccsessful. Exited with the error: {0}.",
-                        exception.Message);
+                    var logMessage = $"An attempt to create a file structure was unsuccsessful. Exited with the error: {exception.Message}.";
                     Logger.Error(logMessage);
 
                     this.DeleteFileStructure(folderPath);
                 }
             }
 
-            throw new InvalidOperationException(
-                "It is prohibited to get fileData for " + resourceResponse[0].ClassKind);
+            throw new InvalidOperationException("It is prohibited to get fileData for " + resourceResponse[0].ClassKind);
         }
 
         /// <summary>
@@ -160,10 +157,7 @@ namespace CometServer.Services
             Directory.Delete(folderPath, true);
             System.IO.File.Delete(folderPath + ".zip");
 
-            var logMessage = string.Format(
-                "File structure {0} and archive {1} are deleted.",
-                folderPath,
-                folderPath + ".zip");
+            var logMessage = $"File structure {folderPath} and archive {folderPath + ".zip"} are deleted.";
             Logger.Info(logMessage);
         }
 
@@ -177,7 +171,7 @@ namespace CometServer.Services
         {
             Directory.Delete(folderPath, true);
 
-            var logMessage = string.Format("File structure {0} is deleted.", folderPath);
+            var logMessage = $"File structure {folderPath} is deleted.";
             Logger.Info(logMessage);
         }
 
@@ -194,7 +188,7 @@ namespace CometServer.Services
 
             Directory.CreateDirectory(folderPath);
 
-            var logMessage = string.Format("Temporary folder {0} is created.", folderPath);
+            var logMessage = $"Temporary folder {folderPath} is created.";
             Logger.Info(logMessage);
 
             return folderPath;
@@ -217,9 +211,7 @@ namespace CometServer.Services
         /// </param>
         private void CreateFileStructureOnDisk(Thing thing, string partition, string folderPath, dynamic routeSegments)
         {
-            var logMessage = string.Format(
-                "File structure creation is started into the temporary folder {0}.",
-                folderPath);
+            var logMessage = $"File structure creation is started into the temporary folder {folderPath}.";
             Logger.Info(logMessage);
 
             var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
@@ -294,7 +286,7 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                if (transaction != null && !transaction.IsCompleted)
+                if (transaction != null)
                 {
                     transaction.Rollback();
                 }
@@ -401,10 +393,10 @@ namespace CometServer.Services
             string folderPath,
             List<FileType> fileTypes)
         {
-            var path = folderPath + "\\" + rootFolder.Name;
+            var path = Path.Combine(folderPath, rootFolder.Name);
             Directory.CreateDirectory(path);
 
-            var logMessage = string.Format("Directory {0} is created.", path);
+            var logMessage = $"Directory {path} is created.";
             Logger.Info(logMessage);
 
             // Recursively create all child folders
@@ -475,11 +467,10 @@ namespace CometServer.Services
             // Copy all binary files from disk storage to the current folder
             foreach (var subFileRevision in subFileRevisions)
             {
-                string storageFilePath;
-                this.FileBinaryService.TryGetFileStoragePath(subFileRevision.ContentHash, out storageFilePath);
+                this.FileBinaryService.TryGetFileStoragePath(subFileRevision.ContentHash, out var storageFilePath);
 
                 // Determine an extension for the file
-                string extension = string.Empty;
+                var extension = string.Empty;
                 foreach (var orderedItem in subFileRevision.FileType)
                 {
                     string tempExtension = fileTypes.Single(x => x.Iid == Guid.Parse(orderedItem.V.ToString()))
@@ -489,15 +480,10 @@ namespace CometServer.Services
                 }
 
                 // Use Path class to manipulate file and directory paths.
-                string destFile = Path.Combine(folderPath, subFileRevision.Name + extension);
+                var destFile = Path.Combine(folderPath, subFileRevision.Name + extension);
                 System.IO.File.Copy(storageFilePath, destFile, true);
 
-                var logMessage = string.Format(
-                    "File {0}/{1} is copied from {2} to {3}.",
-                    subFileRevision.ContentHash,
-                    subFileRevision.Name + extension,
-                    storageFilePath,
-                    folderPath);
+                var logMessage = $"File {subFileRevision.ContentHash}/{subFileRevision.Name + extension} is copied from {storageFilePath} to {folderPath}.";
 
                 Logger.Info(logMessage);
             }

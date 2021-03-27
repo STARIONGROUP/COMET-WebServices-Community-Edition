@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="AppModule.cs" company="RHEA System S.A.">
+// <copyright file="Cdp4DatabaseDumpException.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -22,37 +22,45 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Modules
+namespace CometServer.Exceptions
 {
-    using System.Net;
-
-    using Carter;
-
-    using Microsoft.AspNetCore.Http;
+    using System;
 
     /// <summary>
-    /// The root module handler.
+    /// The CDP 4 database dump exception.
     /// </summary>
-    public class AppModule : CarterModule
+    public class Cdp4DatabaseDumpException : Exception
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AppModule"/> class.
+        /// Initializes a new instance of the <see cref="Cdp4DatabaseDumpException"/> class.
         /// </summary>
-        public AppModule() : base("/app")
+        public Cdp4DatabaseDumpException()
         {
-            this.Get("/{*}", async (req, res) =>
-            {
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.WriteAsJsonAsync("not authenticated");
-                }
-                else
-                {
-                    res.StatusCode = (int) HttpStatusCode.NotFound;
-                    await res.WriteAsync("");
-                }
-            });
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Cdp4DatabaseDumpException"/> class.
+        /// </summary>
+        /// <param name="message">
+        /// The exception message
+        /// </param>
+        public Cdp4DatabaseDumpException(string message)
+            : base(message)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Cdp4DatabaseDumpException"/> class.
+        /// </summary>
+        /// <param name="message">
+        /// The exception message
+        /// </param>
+        /// <param name="innerException">
+        /// A reference to the inner <see cref="Exception"/>
+        /// </param>
+        public Cdp4DatabaseDumpException(string message, Exception innerException)
+            : base(message, innerException)
+        {
         }
     }
 }

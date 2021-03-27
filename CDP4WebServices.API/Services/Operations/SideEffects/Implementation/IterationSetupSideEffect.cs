@@ -31,6 +31,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Orm.Dao;
 
+    using CometServer.Exceptions;
     using CometServer.Services.Authentication;
 
     using Helpers;
