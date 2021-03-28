@@ -41,12 +41,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Runtime.Caching" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <EmbeddedResource Include="Resources\ascii-art.txt" />
     <EmbeddedResource Include="Resources\cdplogo_48x48.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

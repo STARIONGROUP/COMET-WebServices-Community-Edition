@@ -45,6 +45,8 @@ namespace CometServer.Tests.SideEffects
     using System.Collections.Generic;
     using System.Linq;
 
+    using CometServer.Exceptions;
+
     [TestFixture]
     internal class IterationSetupSideEffectTestFixture
     {

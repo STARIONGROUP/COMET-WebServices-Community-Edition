@@ -28,7 +28,6 @@ namespace CometServer.Tests.SideEffects
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
-    using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -42,6 +41,8 @@ namespace CometServer.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+
+    using CometServer.Exceptions;
 
     /// <summary>
     /// Suite of tests for the <see cref="DerivedUnitSideEffectTestFixture"/>
