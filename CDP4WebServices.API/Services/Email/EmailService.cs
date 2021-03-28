@@ -51,6 +51,11 @@ namespace CometServer.Services.Email
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Sends an email with the subject body
         /// </summary>
         /// <param name="emailAddresses">
@@ -74,7 +79,7 @@ namespace CometServer.Services.Email
         public async Task Send(IEnumerable<EmailAddress> emailAddresses, string subject, string textBody, string htmlBody, IEnumerable<string> filePaths = null)
         {
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(AppConfig.Current.EmailService.Sender, AppConfig.Current.EmailService.SMTP));
+            message.From.Add(new MailboxAddress(this.AppConfigService.AppConfig.EmailService.Sender, this.AppConfigService.AppConfig.EmailService.SMTP));
             
             foreach (var emailAddress in emailAddresses)
             {
@@ -103,9 +108,9 @@ namespace CometServer.Services.Email
 
             using (var smtpClient = new SmtpClient())
             {
-                await smtpClient.ConnectAsync(AppConfig.Current.EmailService.SMTP, AppConfig.Current.EmailService.Port);
+                await smtpClient.ConnectAsync(this.AppConfigService.AppConfig.EmailService.SMTP, this.AppConfigService.AppConfig.EmailService.Port);
                 smtpClient.AuthenticationMechanisms.Remove("XOAUTH2");
-                await smtpClient.AuthenticateAsync(AppConfig.Current.EmailService.UserName, AppConfig.Current.EmailService.Password);
+                await smtpClient.AuthenticateAsync(this.AppConfigService.AppConfig.EmailService.UserName, this.AppConfigService.AppConfig.EmailService.Password);
                 await smtpClient.SendAsync(message);
                 await smtpClient.DisconnectAsync(true);
             }

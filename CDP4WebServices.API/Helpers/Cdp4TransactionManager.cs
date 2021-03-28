@@ -28,12 +28,19 @@ namespace CometServer.Helpers
     using System.Data;
     using System.Linq;
     using System.Text;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using Configuration;
+
     using Npgsql;
+
     using NpgsqlTypes;
+
     using Services.Authentication;
+
     using ServiceUtils = Services.Utils;
 
     /// <summary>
@@ -110,6 +117,11 @@ namespace CometServer.Helpers
         /// Gets or sets the Command logger.
         /// </summary>
         public ICommandLogger CommandLogger { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
         /// Gets or sets the iteration setup.
@@ -456,7 +468,7 @@ namespace CometServer.Helpers
             // setup connection if not supplied
             if (connection == null)
             {
-                connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(AppConfig.Current.Backtier.Database));
+                connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
             }
             
             // ensure an open connection

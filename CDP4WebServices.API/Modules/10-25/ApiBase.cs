@@ -42,6 +42,7 @@ namespace CometServer.Modules
 
     using CDP4JsonSerializer;
 
+    using CometServer.Configuration;
     using CometServer.Services.Operations;
 
     using Helpers;
@@ -73,16 +74,6 @@ namespace CometServer.Modules
         /// The site directory data.
         /// </summary>
         protected const string SiteDirectoryData = "SiteDirectory";
-
-        /// <summary>
-        /// The url segment matcher.
-        /// </summary>
-        protected readonly string UrlSegmentMatcher = "{uri*}";
-
-        /// <summary>
-        /// The API url format template.
-        /// </summary>
-        protected readonly string ApiFormat = "/{0}/{1}";
 
         /// <summary>
         /// The mime type JSON.
@@ -128,6 +119,11 @@ namespace CometServer.Modules
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
         /// Gets or sets the header info provider.

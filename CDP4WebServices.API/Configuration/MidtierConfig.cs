@@ -24,6 +24,8 @@
 
 namespace CometServer.Configuration
 {
+    using Microsoft.Extensions.Configuration;
+
     /// <summary>
     /// The mid tier configuration.
     /// </summary>
@@ -40,6 +42,21 @@ namespace CometServer.Configuration
             this.Port = 5000;
             this.UploadDirectory = "upload";
             this.FileStorageDirectory = "storage";
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MidtierConfig"/> class.
+        /// </summary>
+        /// <param name="configuration">
+        /// The <see cref="IConfiguration"/> used to set the properties
+        /// </param>
+        public MidtierConfig(IConfiguration configuration)
+        {
+            this.Protocol = configuration["Backtier:Protocol"];
+            this.HostName = configuration["Backtier:HostName"];
+            this.Port = int.Parse(configuration["Backtier:Port"]);
+            this.UploadDirectory = configuration["Backtier:UploadDirectory"];
+            this.FileStorageDirectory = configuration["Backtier:FileStorageDirectory"];
         }
 
         /// <summary>

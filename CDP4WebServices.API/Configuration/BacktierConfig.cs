@@ -24,6 +24,8 @@
 
 namespace CometServer.Configuration
 {
+    using Microsoft.Extensions.Configuration;
+
     /// <summary>
     /// The back tier configuration.
     /// </summary>
@@ -46,6 +48,27 @@ namespace CometServer.Configuration
             this.LogSqlCommands = false;
             this.IsDbSeedEnabled = false;
             this.IsDbRestoreEnabled = false;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BacktierConfig"/> class.
+        /// </summary>
+        /// <param name="configuration">
+        /// The <see cref="IConfiguration"/> used to set the properties
+        /// </param>
+        public BacktierConfig(IConfiguration configuration)
+        {
+            this.HostName = configuration["Backtier:HostName"];
+            this.Port = int.Parse(configuration["Backtier:Port"]);
+            this.UserName = configuration["Backtier:UserName"];
+            this.Password = configuration["Backtier:Password"];
+            this.Database = configuration["Backtier:Database"];
+            this.DatabaseRestore = configuration["Backtier:DatabaseRestore"];
+            this.DatabaseManage = configuration["Backtier:DatabaseManage"];
+            this.StatementTimeout = int.Parse(configuration["Backtier:StatementTimeout"]);
+            this.LogSqlCommands = bool.Parse(configuration["Backtier:LogSqlCommands"]);
+            this.IsDbSeedEnabled = bool.Parse(configuration["Backtier:IsDbSeedEnabled"]);
+            this.IsDbRestoreEnabled = bool.Parse(configuration["Backtier:IsDbRestoreEnabled"]);
         }
 
         /// <summary>

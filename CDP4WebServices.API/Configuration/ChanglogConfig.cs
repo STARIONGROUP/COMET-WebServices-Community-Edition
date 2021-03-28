@@ -26,6 +26,8 @@ namespace CometServer.Configuration
 {
     using CDP4Common.DTO;
 
+    using Microsoft.Extensions.Configuration;
+
     /// <summary>
     /// The change log configuration.
     /// </summary>
@@ -39,6 +41,18 @@ namespace CometServer.Configuration
             // set defaults
             this.CollectChanges = false;
             this.AllowEmailNotification = false;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ChangelogConfig"/> class.
+        /// </summary>
+        /// <param name="configuration">
+        /// The <see cref="IConfiguration"/> used to set the properties
+        /// </param>
+        public ChangelogConfig(IConfiguration configuration)
+        {
+            this.CollectChanges = bool.Parse(configuration["Changelog:CollectChanges"]);
+            this.AllowEmailNotification = bool.Parse(configuration["Changelog:AllowEmailNotification"]);
         }
 
         /// <summary>
@@ -59,6 +73,5 @@ namespace CometServer.Configuration
         /// The default value is false
         /// </remarks>
         public bool AllowEmailNotification { get; set; }
-
     }
 }

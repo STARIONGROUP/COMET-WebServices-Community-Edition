@@ -58,6 +58,11 @@ namespace CometServer.Services
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Check whether the file is already persisted.
         /// </summary>
         /// <param name="hash">
@@ -197,7 +202,7 @@ namespace CometServer.Services
 
             // using first numberOfFileStorageDistributionLevels hash characters; 
             // create a distributed folder structure numberOfFileStorageDistributionLevels levels deep in the application root of this Webserver
-            var path = AppConfig.Current.Midtier.FileStorageDirectory;
+            var path = this.AppConfigService.AppConfig.Midtier.FileStorageDirectory;
             foreach (var character in hash.ToLowerInvariant().Substring(0, numberOfFileStorageDistributionLevels).Select(x => x.ToString()))
             {
                 var currentPath = Path.Combine(path, character);

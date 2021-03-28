@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DefaultsConfig.cs" company="RHEA System S.A.">
+// <copyright file="IAppConfigService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -26,36 +26,22 @@ namespace CometServer.Configuration
 {
     using Microsoft.Extensions.Configuration;
 
-    /// <summary>
-    /// The default properties configuration
-    /// </summary>
-    public class DefaultsConfig
+    public class AppConfigService : IAppConfigService
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultsConfig"/> class.
-        /// </summary>
-        public DefaultsConfig()
-        {
-            this.PersonPassword = "pass";
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DefaultsConfig"/> class.
+        /// Initializes a new instance of the <see cref="AppConfigService"/>
         /// </summary>
         /// <param name="configuration">
         /// The <see cref="IConfiguration"/> used to set the properties
         /// </param>
-        public DefaultsConfig(IConfiguration configuration)
+        public AppConfigService(IConfiguration configuration)
         {
-            this.PersonPassword = configuration["Defaults:PersonPassword"];
+            this.AppConfig = new AppConfig(configuration);
         }
 
         /// <summary>
-        /// Gets or sets the default person password.
+        /// Gets the <see cref="AppConfig"/>
         /// </summary>
-        /// <remarks>
-        /// The default password to assign to new users
-        /// </remarks>
-        public string PersonPassword { get; set; }
+        public AppConfig AppConfig { get; }
     }
 }

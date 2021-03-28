@@ -39,7 +39,6 @@ namespace CometServer.Modules
     
     using CDP4Orm.Dao;
 
-    using CometServer.Configuration;
     using CometServer.Services.Authentication;
     using CometServer.Services.ChangeLog;
 
@@ -79,23 +78,23 @@ namespace CometServer.Modules
         /// The supported get query parameters.
         /// </summary>
         private static readonly string[] SupportedGetQueryParameters =
-            {
-                QueryParameters.ExtentQuery, 
-                QueryParameters.IncludeReferenceDataQuery,
-                QueryParameters.IncludeAllContainersQuery, 
-                QueryParameters.IncludeFileDataQuery,
-                QueryParameters.RevisionNumberQuery, 
-                QueryParameters.RevisionFromQuery, 
-                QueryParameters.RevisionToQuery
-            };
+        {
+            QueryParameters.ExtentQuery, 
+            QueryParameters.IncludeReferenceDataQuery,
+            QueryParameters.IncludeAllContainersQuery, 
+            QueryParameters.IncludeFileDataQuery,
+            QueryParameters.RevisionNumberQuery, 
+            QueryParameters.RevisionFromQuery, 
+            QueryParameters.RevisionToQuery
+        };
 
         /// <summary>
         /// The supported post query parameter.
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
-            {
-                QueryParameters.RevisionNumberQuery
-            };
+        {
+            QueryParameters.RevisionNumberQuery
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class.
@@ -458,7 +457,7 @@ namespace CometServer.Modules
 
                 var actor = this.PermissionService.Credentials.Person.Iid;
 
-                if (AppConfig.Current.Changelog.CollectChanges)
+                if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
                     var initiallyChangedThings = this.RevisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
                     this.ChangeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);

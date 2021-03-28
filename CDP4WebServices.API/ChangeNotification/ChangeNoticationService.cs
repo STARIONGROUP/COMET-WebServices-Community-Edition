@@ -69,6 +69,11 @@ namespace CometServer.ChangeNotification
         private readonly IContainer container;
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ChangeNoticationService"/>
         /// </summary>
         public ChangeNoticationService()
@@ -123,7 +128,7 @@ namespace CometServer.ChangeNotification
         {
             var sw = Stopwatch.StartNew();
 
-            var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(AppConfig.Current.Backtier.Database));
+            var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
 
             // ensure an open connection
             if (connection.State != ConnectionState.Open)
@@ -159,7 +164,7 @@ namespace CometServer.ChangeNotification
                         var startDateTime = endDateTime.AddDays(-7);
                         var htmlStringBuilder = new StringBuilder();
                         var textStringBuilder = new StringBuilder();
-                        var subject = $"Weekly Changelog from server '{AppConfig.Current.Midtier.HostName}'";
+                        var subject = $"Weekly Changelog from server '{this.AppConfigService.AppConfig.Midtier.HostName}'";
                         htmlStringBuilder.AppendLine($"<h3>{subject}<br />{startDateTime:R} - {endDateTime:R}</h3>");
                         textStringBuilder.AppendLine($"{subject}\n{startDateTime:R} - {endDateTime:R}");
 

@@ -24,6 +24,8 @@
 
 namespace CometServer.Configuration
 {
+    using Microsoft.Extensions.Configuration;
+
     /// <summary>
     /// The Email Service configuration.
     /// </summary>
@@ -35,6 +37,18 @@ namespace CometServer.Configuration
         public EmailConfig()
         {
             this.Sender = "CDP4";
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EmailConfig"/> class
+        /// </summary>
+        public EmailConfig(IConfiguration configuration)
+        {
+            this.Sender = configuration["EmailService:Sender"];
+            this.SMTP = configuration["EmailService:SMTP"];
+            this.Port = int.Parse(configuration["EmailService:Port"]);
+            this.UserName = configuration["EmailService:UserName"];
+            this.Password = configuration["EmailService:Password"];
         }
 
         /// <summary>

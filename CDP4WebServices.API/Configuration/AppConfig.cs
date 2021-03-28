@@ -26,10 +26,8 @@ namespace CometServer.Configuration
 {
     using System;
     using System.Configuration;
-    using System.IO;
-    using System.Reflection;
 
-    using Newtonsoft.Json;
+    using Microsoft.Extensions.Configuration;
 
     /// <summary>
     /// The application Configuration.
@@ -37,14 +35,9 @@ namespace CometServer.Configuration
     public class AppConfig
     {
         /// <summary>
-        /// The configuration file path.
-        /// </summary>
-        private const string Configpath = "config.json";
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="AppConfig"/> class.
         /// </summary>
-        protected AppConfig()
+        public AppConfig()
         {
             // make sure there defaults of the configuration sections are present
             this.Backtier = new BacktierConfig();
@@ -55,9 +48,17 @@ namespace CometServer.Configuration
         }
 
         /// <summary>
-        /// Gets the current application configuration.
+        /// Initializes a new instance of the <see cref="AppConfig"/> class.
         /// </summary>
-        public static AppConfig Current { get; private set; }
+        public AppConfig(IConfiguration configuration)
+        {
+            // make sure there defaults of the configuration sections are present
+            this.Backtier = new BacktierConfig(configuration);
+            this.Defaults = new DefaultsConfig(configuration);
+            this.Midtier = new MidtierConfig(configuration);
+            this.Changelog = new ChangelogConfig(configuration);
+            this.EmailService = new EmailConfig(configuration);
+        }
 
         /// <summary>
         /// Gets or sets the mid tier configuration.
@@ -96,77 +97,11 @@ namespace CometServer.Configuration
         /// </remarks>
         public static void Load(string configPath = null)
         {
-            var json = ReadConfigFile(string.IsNullOrEmpty(configPath) ? Configpath : configPath);
+            
+            
 
-            var appConfig = JsonConvert.DeserializeObject<AppConfig>(json);
-
-            ValidateConfiguration(appConfig);
-
-            Current = appConfig;
+            
         }
 
-        /// <summary>
-        /// Validate the loaded application configuration settings.
-        /// </summary>
-        /// <param name="appConfig">
-        /// The app config.
-        /// </param>
-        /// <exception cref="ConfigurationErrorsException">
-        /// If the configuration is invalid
-        /// </exception>
-        private static void ValidateConfiguration(AppConfig appConfig)
-        {
-            if (appConfig == null)
-            {
-                throw new ArgumentNullException("appConfig", "Configuration file holds invalid settings.");
-            }
-
-            if (appConfig.Backtier == null)
-            {
-                throw new ConfigurationErrorsException("The Backtier configuration is missing.", Configpath, 0);
-            }
-
-            if (appConfig.Midtier == null)
-            {
-                throw new ConfigurationErrorsException("The Midtier configuration is missing.", Configpath, 0);
-            }
-
-            if (appConfig.EmailService == null)
-            {
-                throw new ConfigurationErrorsException("The Email service configuration is missing.", Configpath, 0);
-            }
-
-            if (appConfig.Defaults == null)
-            {
-                throw new ConfigurationErrorsException("The Defaults configuration is missing.", Configpath, 0);
-            }
-        }
-
-        /// <summary>
-        /// Reads the configuration file from the provided path
-        /// </summary>
-        /// <param name="configPath">
-        /// The path to the configuration file
-        /// </param>
-        /// <returns>
-        /// A JSON string that contains the contents of the configuration file
-        /// </returns>
-        private static string ReadConfigFile(string configPath)
-        {
-            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configPath);
-
-            if (!File.Exists(path))
-            {
-                throw new FileNotFoundException("Configuration file not found.", Configpath);
-            }
-
-            var json = File.ReadAllText(path);
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                throw new ConfigurationErrorsException("Configuration file is empty.", Configpath, 0);
-            }
-
-            return json;
-        }
     }
 }

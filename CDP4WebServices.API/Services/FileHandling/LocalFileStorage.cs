@@ -51,6 +51,11 @@ namespace CometServer.Services.FileHandling
         }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Save the binary file stream to disk.
         /// </summary>
         /// <param name="stream">
@@ -96,7 +101,7 @@ namespace CometServer.Services.FileHandling
         /// </returns>
         private string GetDirectory()
         {
-            var uploadDirectory = AppConfig.Current.Midtier.UploadDirectory;
+            var uploadDirectory = this.AppConfigService.AppConfig.Midtier.UploadDirectory;
 
             if (!Directory.Exists(uploadDirectory))
             {

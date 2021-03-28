@@ -75,13 +75,15 @@ namespace CometServer
                 })
                 .Build();
 
-            MigrationEngine.MigrateAllAtStartUp();
-            ConfigureRecurringJobs();
+            var appConfigService = host.Services.GetService<IAppConfigService>();
+
+            MigrationEngine.MigrateAllAtStartUp(appConfigService);
+            ConfigureRecurringJobs(appConfigService);
 
             await host.RunAsync();
         }
 
-        public static void ConfigureRecurringJobs()
+        public static void ConfigureRecurringJobs(IAppConfigService appConfigService)
         {
             var sw = Stopwatch.StartNew();
 
@@ -89,7 +91,7 @@ namespace CometServer
             builder.RegisterType<ChangeNoticationService>().InstancePerBackgroundJob();
             GlobalConfiguration.Configuration.UseAutofacActivator(builder.Build());
 
-            if (AppConfig.Current.Changelog.AllowEmailNotification)
+            if (appConfigService.AppConfig.Changelog.AllowEmailNotification)
             {
                 RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
             }

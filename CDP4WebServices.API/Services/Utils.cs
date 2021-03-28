@@ -29,8 +29,6 @@ namespace CometServer.Services
     using System.Globalization;
     using System.Linq;
 
-    using Autofac;
-
     using CDP4Common.Types;
 
     using CometServer.Configuration;
@@ -122,9 +120,9 @@ namespace CometServer.Services
         /// <returns>
         /// The constructed connection string
         /// </returns>
-        public static string GetConnectionString(string database)
+        public static string GetConnectionString(BacktierConfig backtierConfig, string database)
         {
-            return $"Server={AppConfig.Current.Backtier.HostName};Port={AppConfig.Current.Backtier.Port};User Id={AppConfig.Current.Backtier.UserName};Password={AppConfig.Current.Backtier.Password};Database={database};Convert Infinity DateTime=true;CommandTimeout={AppConfig.Current.Backtier.StatementTimeout};";
+            return $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={database};Convert Infinity DateTime=true;CommandTimeout={backtierConfig.StatementTimeout};";
         }
 
         /// <summary>

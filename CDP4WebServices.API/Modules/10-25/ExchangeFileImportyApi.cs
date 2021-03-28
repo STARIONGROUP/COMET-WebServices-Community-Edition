@@ -87,6 +87,11 @@ namespace CometServer.Modules
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IPersonResolver"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database.
         /// </summary>
         public IPersonResolver PersonResolver { get; set; }
@@ -220,7 +225,7 @@ namespace CometServer.Modules
         /// </returns>
         internal async Task RestoreDatastore(HttpRequest request, HttpResponse response)
         {
-            if (!AppConfig.Current.Backtier.IsDbRestoreEnabled)
+            if (!this.AppConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
                 Logger.Info("Data restore API invoked but it was disabled from configuration, cancel further processing...");
 
@@ -265,7 +270,7 @@ namespace CometServer.Modules
         /// </returns>
         internal async Task SeedDataStore(HttpRequest request, HttpResponse response)
         {
-            if (!AppConfig.Current.Backtier.IsDbSeedEnabled)
+            if (!this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled)
             {
                 Logger.Info("Data store seed API invoked but it was disabled from configuration, cancel further processing...");
                 
@@ -297,7 +302,7 @@ namespace CometServer.Modules
             this.DropDataStoreAndPrepareNew();
 
             // handle exchange processing
-            if (!this.InsertModelData(filePath, exchangeFileRequest.Password, AppConfig.Current.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(filePath, exchangeFileRequest.Password, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -395,7 +400,7 @@ namespace CometServer.Modules
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
                 {
-                    person.Password = AppConfig.Current.Defaults.PersonPassword;
+                    person.Password = this.AppConfigService.AppConfig.Defaults.PersonPassword;
                 }
 
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
@@ -662,9 +667,11 @@ namespace CometServer.Modules
         {
             Logger.Info("start dropping existing data stores");
 
+            var backtierConfig = this.AppConfigService.AppConfig.Backtier;
+
             // Drop the existing databases
             using (var connection = new NpgsqlConnection(
-                Services.Utils.GetConnectionString(AppConfig.Current.Backtier.DatabaseManage)))
+                Services.Utils.GetConnectionString(backtierConfig, backtierConfig.DatabaseManage)))
             {
                 connection.Open();
 
@@ -673,14 +680,12 @@ namespace CometServer.Modules
                 {
                     Logger.Debug("Drop the data store");
 
-                    this.DataStoreController.DropDataStoreConnections(AppConfig.Current.Backtier.Database, connection);
+                    this.DataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
 
                     cmd.Connection = connection;
-                    var commandDefinition = "DROP DATABASE IF EXISTS {0};";
-                    cmd.CommandText = string.Format(
-                        commandDefinition,
-                        /*0*/
-                        AppConfig.Current.Backtier.Database);
+                    
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtierConfig.Database};";
+
                     cmd.ExecuteNonQuery();
                 }
 
@@ -690,11 +695,9 @@ namespace CometServer.Modules
                     Logger.Debug("Drop the restore data store");
 
                     cmd.Connection = connection;
-                    var commandDefinition = "DROP DATABASE IF EXISTS {0};";
-                    cmd.CommandText = string.Format(
-                        commandDefinition,
-                        /*0*/
-                        AppConfig.Current.Backtier.DatabaseRestore);
+                    
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtierConfig.DatabaseRestore};";
+
                     cmd.ExecuteNonQuery();
                 }
 
@@ -703,15 +706,9 @@ namespace CometServer.Modules
                 {
                     Logger.Debug("Create the data store");
                     cmd.Connection = connection;
-                    var commandDefinition = "CREATE DATABASE {0} WITH OWNER = {1} TEMPLATE = {2} ENCODING = 'UTF8';";
-                    cmd.CommandText = string.Format(
-                        commandDefinition,
-                        /*0*/
-                        AppConfig.Current.Backtier.Database,
-                        /*1*/
-                        AppConfig.Current.Backtier.UserName,
-                        /*2*/
-                        AppConfig.Current.Backtier.DatabaseManage);
+
+                    cmd.CommandText = $"CREATE DATABASE {backtierConfig.Database} WITH OWNER = {backtierConfig.UserName} TEMPLATE = {backtierConfig.DatabaseManage} ENCODING = 'UTF8';";
+
                     cmd.ExecuteNonQuery();
                 }
 

@@ -57,6 +57,11 @@ namespace CometServer.Services.Authentication
         public IPersonResolver PersonResolver { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Validates the username and password
         /// </summary>
         /// <param name="username">
@@ -75,7 +80,7 @@ namespace CometServer.Services.Authentication
 
             try
             {
-                connection = new NpgsqlConnection(Utils.GetConnectionString(AppConfig.Current.Backtier.Database));
+                connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
                 connection.Open();
                 transaction = connection.BeginTransaction();
 

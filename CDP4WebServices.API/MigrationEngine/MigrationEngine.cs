@@ -52,7 +52,7 @@ namespace CometServer
         /// <summary>
         /// Apply migration scripts at start-up
         /// </summary>
-        public static void MigrateAllAtStartUp()
+        public static void MigrateAllAtStartUp(IAppConfigService appConfigService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -63,7 +63,7 @@ namespace CometServer
             try
             {
                 // setup connection if not supplied
-                connection = new NpgsqlConnection(Utils.GetConnectionString(AppConfig.Current.Backtier.Database));
+                connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
 
                 // ensure an open connection
                 if (connection.State != ConnectionState.Open)
@@ -152,15 +152,14 @@ namespace CometServer
 
                 transaction.Commit();
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
                 if (transaction != null)
                 {
                     transaction.Rollback();
                 }
 
-                Logger.Error("An error occured during migration.");
-                Logger.Error(e.Message);
+                Logger.Error(exception, "An error occured during migration.");
                 throw;
             }
             finally

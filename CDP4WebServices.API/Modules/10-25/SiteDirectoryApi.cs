@@ -69,11 +69,6 @@ namespace CometServer.Modules
         private const string TopContainer = "SiteDirectory";
 
         /// <summary>
-        /// The Site Directory root path format template.
-        /// </summary>
-        private const string SiteDirectoryRootFormat = "/{0}";
-
-        /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -106,25 +101,31 @@ namespace CometServer.Modules
         /// </summary>
         public SiteDirectoryApi()
         {
-            //// enable basic authentication
-            //this.RequiresAuthentication();
+            this.Get(TopContainer, async (req, res) =>
+            {
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.AsJson("not authenticated");
+                }
+                else
+                {
+                    await this.GetResponseData(req, res);
+                }
+            });
 
-            //// support trailing or empty segment
-            //this.Get[string.Format(SiteDirectoryRootFormat, TopContainer)] = 
-            //    route => this.GetResponse(route);
-
-            //// support path segment processing
-            //this.Get[string.Format(this.ApiFormat, TopContainer, this.UrlSegmentMatcher)] =
-            //    route => this.GetResponse(route);
-
-            //// support trailing or empty segment
-            //this.Post[string.Format(SiteDirectoryRootFormat, TopContainer)] = 
-            //    route => this.PostResponse(route);
-
-            //this.Post[string.Format(this.ApiFormat, TopContainer, this.UrlSegmentMatcher)] =
-            //    route => this.PostResponse(route);
-
-
+            this.Post(TopContainer, async (req, res) =>
+            {
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.AsJson("not authenticated");
+                }
+                else
+                {
+                    await this.PostResponseData(req, res);
+                }
+            });
         }
 
         /// <summary>

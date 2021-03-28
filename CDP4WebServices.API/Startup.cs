@@ -46,6 +46,7 @@ namespace CometServer
     using CDP4Orm.MigrationEngine;
 
     using CometServer.Authentication;
+    using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authentication;
@@ -120,6 +121,8 @@ namespace CometServer
         /// </param>
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHangfire(globalConfiguration => globalConfiguration.UseMemoryStorage());
+
             services.AddCors(options =>
             {
                 options.AddDefaultPolicy(
@@ -134,6 +137,8 @@ namespace CometServer
             services.AddAuthentication("Basic")
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null)
                 .AddCookie(CookieScheme);
+
+            services.AddAuthorization();
 
             services.AddScoped<IUserProvider, UserProvider>();
 
@@ -154,6 +159,8 @@ namespace CometServer
             var sw = Stopwatch.StartNew();
             Logger.Info("Start Configuration of Application Container - Instance per Lifetime Scoped Services");
 
+            builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
+
             builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
@@ -164,7 +171,7 @@ namespace CometServer
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<CometServer.Services.Authentication.PersonResolver>().As<CometServer.Services.Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
-            //builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             //builder.RegisterType<CDP4WebServiceAuthentication>().As<ICDP4WebServiceAuthentication>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
             builder.RegisterType<MigrationService>().As<IMigrationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();

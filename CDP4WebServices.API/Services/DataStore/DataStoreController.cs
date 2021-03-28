@@ -43,13 +43,20 @@ namespace CometServer.Services.DataStore
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
         /// Creates a clone of the data store.
         /// </summary>
         public void CloneDataStore()
         {
             Logger.Info("start data store clone process");
 
-            using (var connection = new NpgsqlConnection(Utils.GetConnectionString(AppConfig.Current.Backtier.DatabaseManage)))
+            var backtier = this.AppConfigService.AppConfig.Backtier;
+
+            using (var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage)))
             {
                 connection.Open();
 
@@ -58,15 +65,12 @@ namespace CometServer.Services.DataStore
                 {
                     Logger.Debug("Clone the data store");
 
-                    this.DropDataStoreConnections(AppConfig.Current.Backtier.Database, connection);
+                    this.DropDataStoreConnections(backtier.Database, connection);
 
                     cmd.Connection = connection;
-                    var commandDefinition = "CREATE DATABASE {0} WITH OWNER = {1} TEMPLATE = {2}  ENCODING = 'UTF8';";
-                    cmd.CommandText = string.Format(
-                        commandDefinition,
-                        /*0*/ AppConfig.Current.Backtier.DatabaseRestore,
-                        /*1*/ AppConfig.Current.Backtier.UserName,
-                        /*2*/ AppConfig.Current.Backtier.Database);
+                    
+                    cmd.CommandText = $"CREATE DATABASE {backtier.DatabaseRestore} WITH OWNER = {backtier.UserName} TEMPLATE = {backtier.Database} ENCODING = 'UTF8';";
+
                     cmd.ExecuteNonQuery();
                 }
 
@@ -84,8 +88,10 @@ namespace CometServer.Services.DataStore
         {
             Logger.Info("start data store restore process");
 
+            var backtier = this.AppConfigService.AppConfig.Backtier;
+
             // Connect to the restore database
-            using (var connection = new NpgsqlConnection(Utils.GetConnectionString(AppConfig.Current.Backtier.DatabaseManage)))
+            using (var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage)))
             {
                 connection.Open();
 
@@ -94,13 +100,12 @@ namespace CometServer.Services.DataStore
                 {
                     Logger.Debug("Drop the data store");
 
-                    this.DropDataStoreConnections(AppConfig.Current.Backtier.Database, connection);
+                    this.DropDataStoreConnections(backtier.Database, connection);
 
                     cmd.Connection = connection;
-                    var commandDefinition = "DROP DATABASE IF EXISTS {0};";
-                    cmd.CommandText = string.Format(
-                        commandDefinition,
-                        /*0*/ AppConfig.Current.Backtier.Database);
+                    
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtier.Database};";
+
                     cmd.ExecuteNonQuery();
                 }
 
@@ -110,12 +115,9 @@ namespace CometServer.Services.DataStore
                     Logger.Debug("Clone the restore data store");
 
                     cmd.Connection = connection;
-                    var commandDefinition = "CREATE DATABASE {0} WITH OWNER = {1} TEMPLATE = {2}  ENCODING = 'UTF8';";
-                    cmd.CommandText = string.Format(
-                        commandDefinition,
-                        /*0*/ AppConfig.Current.Backtier.Database,
-                        /*1*/ AppConfig.Current.Backtier.UserName,
-                        /*2*/ AppConfig.Current.Backtier.DatabaseRestore);
+
+                    cmd.CommandText = $"CREATE DATABASE {backtier.Database} WITH OWNER = {backtier.UserName} TEMPLATE = {backtier.DatabaseRestore} ENCODING = 'UTF8';";
+
                     cmd.ExecuteNonQuery();
                 }
 
@@ -138,12 +140,12 @@ namespace CometServer.Services.DataStore
             {
                 Logger.Debug("Drop all connections to the data store");
 
-                NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(dataStoreName)));
+                NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, dataStoreName)));
 
                 cmd.Connection = connection;
-                var commandDefinition =
-                    "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{0}' AND pid <> pg_backend_pid();";
-                cmd.CommandText = string.Format(commandDefinition, dataStoreName);
+
+                cmd.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{dataStoreName}' AND pid <> pg_backend_pid();";
+
                 cmd.ExecuteNonQuery();
             }
         }

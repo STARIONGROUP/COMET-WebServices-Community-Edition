@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="AppModule.cs" company="RHEA System S.A.">
+// <copyright file="IAppConfigService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -22,37 +22,16 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Modules
+namespace CometServer.Configuration
 {
-    using System.Net;
-
-    using Carter;
-
-    using Microsoft.AspNetCore.Http;
-
     /// <summary>
-    /// The root module handler.
+    /// A service used to provide access to the <see cref="AppConfig"/>
     /// </summary>
-    public class AppModule : CarterModule
+    public interface IAppConfigService
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AppModule"/> class.
+        /// Gets the <see cref="AppConfig"/>
         /// </summary>
-        public AppModule() : base("/app")
-        {
-            this.Get("/{*}", async (req, res) =>
-            {
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.WriteAsJsonAsync("not authenticated");
-                }
-                else
-                {
-                    res.StatusCode = (int) HttpStatusCode.NotFound;
-                    await res.WriteAsync("");
-                }
-            });
-        }
+        public AppConfig AppConfig { get; }
     }
 }
