@@ -22,17 +22,19 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authentication
+namespace CometServer.Authentication
 {
     using System;
     using System.Linq;
 
     using CDP4Authentication;
 
-    using CometServer.Authentication;
     using CometServer.Configuration;
 
+    using CometServer.Services;
+
     using NLog;
+
     using Npgsql;
 
     /// <summary>

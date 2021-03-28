@@ -24,10 +24,39 @@
 
 namespace CometServer.Authentication
 {
+    using System.Collections.Generic;
+
+    using CDP4Common.DTO;
+
     /// <summary>
     /// The Credentials interface. Used purely to allow use of the Credentials object within this project without direct knowledge of it.
     /// </summary>
     public interface ICredentials
     {
+        /// <summary>
+        /// Gets or sets the username of the authenticated user.
+        /// </summary>
+        /// <value>
+        /// A string containing the username.
+        /// </value>
+        public string UserName { get; }
+
+        /// <summary>
+        /// Gets or sets the list of <see cref="PersonPermission"/> that this <see cref="Person"/> has.
+        /// </summary>
+        public IEnumerable<PersonPermission> PersonPermissions { get; }
+
+        /// <summary>
+        /// Gets or sets the list of <see cref="ParticipantPermission"/> that this <see cref="Participant"/> has.
+        /// </summary>
+        /// <remarks>
+        /// This property is only set if the request is based on an <see cref="EngineeringModel"/>
+        /// </remarks>
+        public IEnumerable<ParticipantPermission> ParticipantPermissions { get; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="OrganizationalParticipant"/>
+        /// </summary>
+        public OrganizationalParticipant OrganizationalParticipant { get; }
     }
 }

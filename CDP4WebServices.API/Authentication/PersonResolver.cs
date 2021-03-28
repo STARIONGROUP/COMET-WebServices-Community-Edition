@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authentication
+namespace CometServer.Authentication
 {
     using System;
     using System.Collections.Generic;
@@ -35,7 +35,7 @@ namespace CometServer.Services.Authentication
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Authentication;
 
-    using CometServer.Authentication;
+    using CometServer.Services;
 
     using NLog;
 
@@ -106,7 +106,7 @@ namespace CometServer.Services.Authentication
         /// The supplied username
         /// </param>
         /// <returns>
-        /// A <see cref="IUserIdentity"/> representing the resolved user, null if the user was not found.
+        /// A <see cref="ICredentials"/> representing the resolved user, null if the user was not found.
         /// </returns>
         public ICredentials ResolvePerson(NpgsqlTransaction transaction, string username)
         {

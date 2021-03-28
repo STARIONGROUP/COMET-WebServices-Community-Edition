@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authentication
+namespace CometServer.Authentication
 {
     using System;
     using System.Collections.Generic;

@@ -26,7 +26,7 @@ namespace CometServer.Services.Authorization
 {
     using System;
 
-    using CometServer.Services.Authentication;
+    using CometServer.Authentication;
 
     /// <summary>
     /// Request security context class that holds security data relevant for authorization checks

@@ -33,13 +33,13 @@ namespace CometServer.Helpers
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authentication;
+
     using Configuration;
 
     using Npgsql;
 
     using NpgsqlTypes;
-
-    using Services.Authentication;
 
     using ServiceUtils = Services.Utils;
 

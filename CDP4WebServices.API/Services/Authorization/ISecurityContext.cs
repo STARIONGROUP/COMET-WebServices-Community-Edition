@@ -26,7 +26,7 @@ namespace CometServer.Services.Authorization
 {
     using System;
 
-    using CometServer.Services.Authentication;
+    using CometServer.Authentication;
 
     /// <summary>
     /// The Request Security Context interface.

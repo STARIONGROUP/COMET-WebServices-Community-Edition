@@ -33,8 +33,8 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CometServer.Authentication;
     using CometServer.Helpers;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
 
     using Ionic.Zip;

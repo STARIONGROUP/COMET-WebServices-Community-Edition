@@ -32,7 +32,7 @@ namespace CometServer.Services.Authorization
     using CDP4Common.EngineeringModelData;
     using CDP4Common.Types;
 
-    using CometServer.Services.Authentication;
+    using CometServer.Authentication;
 
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
     using ElementUsage = CDP4Common.DTO.ElementUsage;

@@ -40,18 +40,33 @@ namespace CometServer.Authentication
     /// </summary>
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private readonly IUserProvider userProvider;
+        /// <summary>
+        /// The injected <see cref="IUserValidator"/>
+        /// </summary>
+        private readonly IUserValidator userValidator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/> class.
         /// </summary>
-        /// <param name="options"></param>
-        /// <param name="logger"></param>
-        /// <param name="encoder"></param>
-        /// <param name="clock"></param>
-        public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IUserProvider userProvider) : base(options, logger, encoder, clock)
+        /// <param name="options">
+        /// The monitor for the options instance
+        /// </param>
+        /// <param name="logger">
+        /// The <see cref="ILoggerFactory"/>
+        /// </param>
+        /// <param name="encoder">
+        /// >The <see cref="System.Text.Encodings.Web.UrlEncoder"/>
+        /// </param>
+        /// <param name="clock">
+        /// The <see cref="ISystemClock"/>
+        /// </param>
+        /// <param name="userValidator">
+        /// The (injected) <see cref="IUserValidator"/> used to validate (authenticate) the user
+        /// </param>
+        public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IUserValidator userValidator) 
+            : base(options, logger, encoder, clock)
         {
-            this.userProvider = userProvider;
+            this.userValidator = userValidator;
         }
 
         /// <summary>
@@ -68,37 +83,37 @@ namespace CometServer.Authentication
             }
 
             var username = string.Empty;
-            var userId = Guid.Empty;
-
+            ICredentials credentials = null;
+            
             try
             {
                 var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
                 var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
-                var credentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
-                username = credentials[0];
-                var password = credentials[1];
-                userId = await this.userProvider.Authenticate(username, password);
+                var basicAuthcredentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
+                username = basicAuthcredentials[0];
+                var password = basicAuthcredentials[1];
+
+                credentials = this.userValidator.Validate(username, password);
             }
             catch
             {
                 return AuthenticateResult.Fail("Invalid Authorization Header");
             }
 
-            if (userId == Guid.Empty)
+            if (credentials == null)
             {
                 return AuthenticateResult.Fail("Invalid Username or Password");
             }
 
             var claims = new[] {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
                 new Claim(ClaimTypes.Name, username),
             };
 
             var identity = new ClaimsIdentity(claims, this.Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, this.Scheme.Name);
+            var authenticationTicket = new AuthenticationTicket(principal, this.Scheme.Name);
 
-            return AuthenticateResult.Success(ticket);
+            return AuthenticateResult.Success(authenticationTicket);
         }
     }
 }

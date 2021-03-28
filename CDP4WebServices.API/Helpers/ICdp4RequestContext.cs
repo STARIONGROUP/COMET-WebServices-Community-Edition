@@ -24,7 +24,7 @@
 
 namespace CometServer.Helpers
 {
-    using CometServer.Services.Authentication;
+    using CometServer.Authentication;
 
     using Microsoft.AspNetCore.Http;
 

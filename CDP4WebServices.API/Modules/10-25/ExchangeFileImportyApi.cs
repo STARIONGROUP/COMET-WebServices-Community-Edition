@@ -45,10 +45,10 @@ namespace CometServer.Modules
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
 
+    using CometServer.Authentication;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
     using CometServer.Services.DataStore;
     using CometServer.Services.FileHandling;

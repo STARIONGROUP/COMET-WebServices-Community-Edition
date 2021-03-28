@@ -28,7 +28,7 @@ namespace CometServer.Services.Authorization
 
     using CDP4Common.DTO;
 
-    using CometServer.Services.Authentication;
+    using CometServer.Authentication;
 
     /// <summary>
     /// The obfuscation service obscures properties and children of Element Definitions based on OrganizationalParticipation of

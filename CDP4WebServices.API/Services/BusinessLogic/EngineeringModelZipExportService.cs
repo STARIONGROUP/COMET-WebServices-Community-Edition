@@ -37,8 +37,8 @@ namespace CometServer.Services
 
     using CDP4JsonSerializer;
 
+    using CometServer.Authentication;
     using CometServer.Helpers;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
 

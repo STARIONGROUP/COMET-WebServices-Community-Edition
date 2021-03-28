@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authentication
+namespace CometServer.Authentication
 {
     using System;
     using System.Collections.Generic;
@@ -30,8 +30,6 @@ namespace CometServer.Services.Authentication
     using CDP4Authentication;
 
     using CDP4Common.DTO;
-
-    using CometServer.Authentication;
     
     /// <summary>
     /// Contains the authenticated user credentials and basic user information.

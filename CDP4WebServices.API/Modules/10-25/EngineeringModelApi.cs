@@ -39,7 +39,7 @@ namespace CometServer.Modules
     
     using CDP4Orm.Dao;
 
-    using CometServer.Services.Authentication;
+    using CometServer.Authentication;
     using CometServer.Services.ChangeLog;
 
     using Helpers;

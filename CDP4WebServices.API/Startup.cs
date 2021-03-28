@@ -49,7 +49,6 @@ namespace CometServer
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
     using CometServer.Services.ChangeLog;
     using CometServer.Services.DataStore;
@@ -140,8 +139,6 @@ namespace CometServer
 
             services.AddAuthorization();
 
-            services.AddScoped<IUserProvider, UserProvider>();
-
             services.AddCarter(options: options =>
             {
             }, configurator: configurator =>
@@ -160,6 +157,7 @@ namespace CometServer
             Logger.Info("Start Configuration of Application Container - Instance per Lifetime Scoped Services");
 
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
+            builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
             builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
@@ -169,14 +167,10 @@ namespace CometServer
             builder.RegisterType<AuthenticationDao>().As<IAuthenticationDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<CometServer.Services.Authentication.PersonResolver>().As<CometServer.Services.Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<Authentication.PersonResolver>().As<Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
-            builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            //builder.RegisterType<CDP4WebServiceAuthentication>().As<ICDP4WebServiceAuthentication>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-
-            builder.RegisterType<MigrationService>().As<IMigrationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<EmailService>().As<IEmailService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().SingleInstance();
+            builder.RegisterType<EmailService>().As<IEmailService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
             
             var carterModulessInAssembly = typeof(Startup).Assembly.GetExportedTypes().Where(type => typeof(CarterModule).IsAssignableFrom(type)).ToArray();
             builder.RegisterTypes(carterModulessInAssembly).PropertiesAutowired().InstancePerLifetimeScope();

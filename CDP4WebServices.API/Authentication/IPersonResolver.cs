@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IUserProvider.cs" company="RHEA System S.A.">
+// <copyright file="IPersonResolver.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -24,27 +24,36 @@
 
 namespace CometServer.Authentication
 {
-    using System;
-    using System.Threading.Tasks;
+    using Npgsql;
 
     /// <summary>
-    /// The <see cref="IUserProvider"/> is used to authenticate a User based
-    /// on the provided username and password.
+    /// The PersonResolver interface.
     /// </summary>
-    public interface IUserProvider
+    public interface IPersonResolver
     {
         /// <summary>
-        /// Authenticates a user
+        /// Resolves the username to <see cref="IUserIdentity"/>
         /// </summary>
-        /// <param name="username">
-        /// The username used to identify the user
+        /// <param name="transaction">
+        /// The current transaction to the database.
         /// </param>
-        /// <param name="password">
-        /// the password (secret)
+        /// <param name="username">
+        /// The supplied username
         /// </param>
         /// <returns>
-        /// returns true when authenticated, false if not
+        /// A <see cref="IUserIdentity"/> representing the resolved user, null if the user was not found.
         /// </returns>
-        Task<Guid> Authenticate(string username, string password);
+        ICredentials ResolvePerson(NpgsqlTransaction transaction, string username);
+
+        /// <summary>
+        /// Resolve and set participant information for the passed in <see cref="ICredentials"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="credentials">
+        /// The supplied credential class which can hold participant information
+        /// </param>
+        void ResolveParticipantCredentials(NpgsqlTransaction transaction, ICredentials credentials);
     }
 }
