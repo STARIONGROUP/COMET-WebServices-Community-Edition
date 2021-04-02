@@ -43,8 +43,7 @@ namespace CometServer
     using CDP4Orm.Dao.Cache;
     using CDP4Orm.Dao.Resolve;
     using CDP4Orm.Dao.Revision;
-    using CDP4Orm.MigrationEngine;
-
+    
     using CometServer.Authentication;
     using CometServer.Authorization;
     using CometServer.Configuration;
@@ -156,64 +155,67 @@ namespace CometServer
             Logger.Info("Start Configuration of Application Container - Instance per Lifetime Scoped Services");
 
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
-            builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-
-            builder.RegisterType<AuthenticationPersonAuthenticator>().As<IAuthenticationPersonAuthenticator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
             
-            builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            
-            builder.RegisterType<PersonPermissionDao>().As<IPersonPermissionDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<AuthenticationDao>().As<IAuthenticationDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            
-            builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-            builder.RegisterType<Authentication.PersonResolver>().As<Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-
-            builder.RegisterType<EmailService>().As<IEmailService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            // 10-25 helpers
+            builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().SingleInstance();
+            builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().SingleInstance();
+            builder.RegisterAssemblyTypes(typeof(IMetaInfo).Assembly).Where(x => typeof(IMetaInfo).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<MetaInfoProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
-            
+
+            // authentication services
+            builder.RegisterType<AuthenticationDao>().As<IAuthenticationDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<AuthenticationPersonAuthenticator>().As<IAuthenticationPersonAuthenticator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+
+            // authentication services
+            builder.RegisterType<PersonPermissionDao>().As<IPersonPermissionDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<Authentication.PersonResolver>().As<Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+
+            // authorization services
+            builder.RegisterType<PermissionService>().As<IPermissionService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<AccessRightKindService>().As<IAccessRightKindService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<ObfuscationService>().As<IObfuscationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<OrganizationalParticipationResolverService>().As<IOrganizationalParticipationResolverService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<AccessRightKindValidationService>().As<IAccessRightKindValidationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<PermissionInstanceFilterService>().As<IPermissionInstanceFilterService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+
+            // request-response services
+            builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             var carterModulessInAssembly = typeof(Startup).Assembly.GetExportedTypes().Where(type => typeof(CarterModule).IsAssignableFrom(type)).ToArray();
             builder.RegisterTypes(carterModulessInAssembly).PropertiesAutowired().InstancePerLifetimeScope();
-
-            builder.RegisterType<ObfuscationService>().As<IObfuscationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<LocalFileStorage>().As<ILocalFileStorage>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<DataStoreController>().As<IDataStoreController>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<CommandLogger>().As<ICommandLogger>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<CometServer.Services.ServiceProvider>().As<CometServer.Services.IServiceProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<ChangeLogService>().As<IChangeLogService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<MetaInfoProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<AccessRightKindService>().As<IAccessRightKindService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<OrganizationalParticipationResolverService>().As<IOrganizationalParticipationResolverService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<PermissionService>().As<IPermissionService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<RequestUtils>().As<IRequestUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<ExchangeFileProcessor>().As<IExchangeFileProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<OperationSideEffectProcessor>().As<IOperationSideEffectProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<OperationProcessor>().As<IOperationProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+
+            //  database services
+            builder.RegisterType<Cdp4TransactionManager>().As<ICdp4TransactionManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<CommandLogger>().As<ICommandLogger>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterAssemblyTypes(typeof(BaseDao).Assembly).Where(x => typeof(BaseDao).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<RevisionDao>().As<IRevisionDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<RevisionService>().As<IRevisionService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<RevisionResolver>().As<IRevisionResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<CacheDao>().As<ICacheDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<CacheService>().As<ICacheService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<ResolveDao>().As<IResolveDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<ContainerDao>().As<IContainerDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<CacheService>().As<ICacheService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<CacheDao>().As<ICacheDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<DataStoreController>().As<IDataStoreController>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<RevisionService>().As<IRevisionService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<RevisionResolver>().As<IRevisionResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+
+            // COMET services
             builder.RegisterType<ResolveService>().As<IResolveService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<Cdp4TransactionManager>().As<ICdp4TransactionManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            builder.RegisterAssemblyTypes(typeof(IMetaInfo).Assembly).Where(x => typeof(IMetaInfo).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterAssemblyTypes(typeof(BaseDao).Assembly).Where(x => typeof(BaseDao).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterAssemblyTypes(typeof(ServiceBase).Assembly).Where(x => typeof(ServiceBase).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            
-            builder.RegisterType<ModelCreatorManager>().As<IModelCreatorManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
             builder.RegisterAssemblyTypes(typeof(IBusinessLogicService).Assembly).Where(x => typeof(IBusinessLogicService).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterAssemblyTypes(typeof(IOperationSideEffect).Assembly).Where(x => typeof(IOperationSideEffect).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
-            builder.RegisterType<OperationSideEffectProcessor>().As<IOperationSideEffectProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<OperationProcessor>().As<IOperationProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            // COMET extra business logic services
+            builder.RegisterType<EmailService>().As<IEmailService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<ChangeLogService>().As<IChangeLogService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<LocalFileStorage>().As<ILocalFileStorage>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<ExchangeFileProcessor>().As<IExchangeFileProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<FileArchiveService>().As<IFileArchiveService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<EngineeringModelZipExportService>().As<IEngineeringModelZipExportService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<AccessRightKindValidationService>().As<IAccessRightKindValidationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<PermissionInstanceFilterService>().As<IPermissionInstanceFilterService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<ModelCreatorManager>().As<IModelCreatorManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             Logger.Info("Finish Configuration of Application Container in {0} [ms]", sw.ElapsedMilliseconds);
         }
