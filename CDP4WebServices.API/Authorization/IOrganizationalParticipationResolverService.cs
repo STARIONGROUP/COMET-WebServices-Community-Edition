@@ -22,11 +22,13 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authorization
+namespace CometServer.Authorization
 {
     using System;
 
     using CDP4Common.DTO;
+
+    using CometServer.Services.Authorization;
 
     using Npgsql;
 

@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authorization
+namespace CometServer.Authorization
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -30,7 +30,7 @@ namespace CometServer.Services.Authorization
     using CDP4Common.CommonData;
     using CDP4Common.Helpers;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
 
     /// <summary>
     /// The purpose of the <see cref="AccessRightKindService"/> is to provide a service that returns the <see cref="PersonAccessRightKind"/>

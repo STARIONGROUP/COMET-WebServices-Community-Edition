@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authentication
+namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
@@ -34,7 +34,7 @@ namespace CometServer.Authentication
     /// <summary>
     /// Contains the authenticated user credentials and basic user information.
     /// </summary>
-    public class Credentials : ICredentials
+    public class Credentials
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Credentials"/> class.

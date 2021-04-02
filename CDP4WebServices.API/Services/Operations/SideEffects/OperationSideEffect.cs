@@ -29,7 +29,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
-
+    using CometServer.Authorization;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
 

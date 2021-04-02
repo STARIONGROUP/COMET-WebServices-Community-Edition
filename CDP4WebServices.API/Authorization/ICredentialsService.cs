@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IPersonResolver.cs" company="RHEA System S.A.">
+// <copyright file="IICredentialsResolver.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -22,17 +22,24 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authentication
+namespace CometServer.Authorization
 {
+    using System.Threading.Tasks;
+
     using Npgsql;
 
     /// <summary>
-    /// The PersonResolver interface.
+    /// The ICredentialsService interface.
     /// </summary>
-    public interface IPersonResolver
+    public interface ICredentialsService
     {
         /// <summary>
-        /// Resolves the username to <see cref="IUserIdentity"/>
+        /// Gets the resolved <see cref="ICredentials"/>
+        /// </summary>
+        public Credentials Credentials { get; }
+
+        /// <summary>
+        /// Resolves the username to <see cref="ICredentials"/>
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -41,12 +48,12 @@ namespace CometServer.Authentication
         /// The supplied username
         /// </param>
         /// <returns>
-        /// A <see cref="IUserIdentity"/> representing the resolved user, null if the user was not found.
+        /// A <see cref="ICredentials"/> representing the resolved user, null if the user was not found.
         /// </returns>
-        ICredentials ResolvePerson(NpgsqlTransaction transaction, string username);
+        Task ResolveCredentials(NpgsqlTransaction transaction, string username);
 
         /// <summary>
-        /// Resolve and set participant information for the passed in <see cref="ICredentials"/>
+        /// Resolve and set participant information for the current <see cref="Credentials"/>
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -54,6 +61,6 @@ namespace CometServer.Authentication
         /// <param name="credentials">
         /// The supplied credential class which can hold participant information
         /// </param>
-        void ResolveParticipantCredentials(NpgsqlTransaction transaction, ICredentials credentials);
+        void ResolveParticipantCredentials(NpgsqlTransaction transaction);
     }
 }

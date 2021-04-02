@@ -159,16 +159,5 @@ namespace CometServer.Services
             var potentialDescendant = thing.GetType();
             return potentialDescendant.IsSubclassOf(potentialBase) || potentialDescendant == potentialBase;
         }
-
-        /// <summary>
-        /// Extension method to set authenticated credential information to permission service.
-        /// </summary>
-        /// <param name="module">
-        /// The module.
-        /// </param>
-        internal static void CdpAuthorization(this ApiBase module)
-        {
-            module.PermissionService.Credentials = module.RequestUtils.Credentials as Credentials;
-        }
     }
 }

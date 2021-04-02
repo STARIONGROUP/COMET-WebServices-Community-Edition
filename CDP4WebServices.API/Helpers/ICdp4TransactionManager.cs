@@ -30,7 +30,7 @@ namespace CometServer.Helpers
     
     using CDP4Orm.Dao;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
 
     using Npgsql;
 

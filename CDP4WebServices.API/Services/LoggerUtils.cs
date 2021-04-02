@@ -70,18 +70,13 @@ namespace CometServer.Services
             bool success,
             string message)
         {
-            return string.Format(
-                "[{0}{1}] [{2}]|{3}",
-                subject,
-                !string.IsNullOrWhiteSpace(subjectHostAddress) ? string.Format("@{0}", subjectHostAddress) : string.Empty,
-                success ? SuccesLog : FailureLog,
-                message);
+            return $"[{subject}{(!string.IsNullOrWhiteSpace(subjectHostAddress) ? $"@{subjectHostAddress}" : string.Empty)}] [{(success ? SuccesLog : FailureLog)}]|{message}";
         }
 
         /// <summary>
         /// Construct a log message.
         /// </summary>
-        /// <param name="subject">
+        /// <param name="authenticationPerson">
         /// The authenticated subject (user) that triggered the log entry.
         /// </param>
         /// <param name="subjectHostAddress">
@@ -97,14 +92,14 @@ namespace CometServer.Services
         /// The formatted log entry.
         /// </returns>
         public static string GetLogMessage(
-            AuthenticationPerson subject,
+            AuthenticationPerson authenticationPerson,
             string subjectHostAddress,
             bool success, 
             string message)
         {
-            var subjectString = subject == null
+            var subjectString = authenticationPerson == null
                                     ? UnauthenticatedSubject
-                                    : string.Format("{0}({1})", subject.UserName, subject.Iid);
+                                    : $"{authenticationPerson.UserName}({authenticationPerson.Iid})";
             return GetLogMessage(subjectString, subjectHostAddress, success, message);
         }
     }

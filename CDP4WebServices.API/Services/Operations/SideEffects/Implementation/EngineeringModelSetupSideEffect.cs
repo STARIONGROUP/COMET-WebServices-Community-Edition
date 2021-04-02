@@ -28,13 +28,12 @@ namespace CometServer.Services.Operations.SideEffects
     using System.Collections.Generic;
     using System.Linq;
 
-    using Authentication;
-
     using CDP4Common;
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authorization;
     using CometServer.Services.Authorization;
 
     using NLog;
@@ -100,9 +99,9 @@ namespace CometServer.Services.Operations.SideEffects
         public IModelCreatorManager ModelCreatorManager { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IPersonResolver"/> (injected)
+        /// Gets or sets the <see cref="ICredentialsService"/> (injected)
         /// </summary>
-        public IPersonResolver PersonResolver { get; set; }
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IEngineeringModelDao"/>
@@ -154,7 +153,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (!thing.SourceEngineeringModelSetupIid.HasValue && !thing.ActiveDomain.Any())
             {
                 // new engineeringmodelsetup without active domain, set the user's default domain as the active domain
-                var defaultDomain = this.RequestUtils.Credentials.Person.DefaultDomain;
+                var defaultDomain = this.CredentialsService.Credentials.Person.DefaultDomain;
 
                 if (defaultDomain != null)
                 {
@@ -213,7 +212,7 @@ namespace CometServer.Services.Operations.SideEffects
             // reset the cache
             this.RequestUtils.Cache.Clear();
 
-            var credentials = this.RequestUtils.Credentials as Credentials;
+            var credentials = this.CredentialsService.Credentials;
             var actor = credentials.Person.Iid;
             
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
@@ -433,7 +432,7 @@ namespace CometServer.Services.Operations.SideEffects
             // use the default participant role as specified in the SiteDirectort container object
             var defaultRole = container.DefaultParticipantRole.Value;
 
-            var currentPerson = this.RequestUtils.Credentials.Person;
+            var currentPerson = this.CredentialsService.Credentials.Person;
             var defaultDomain = currentPerson.DefaultDomain;
             var participant = new Participant(Guid.NewGuid(), 1) { IsActive = true, Person = currentPerson.Iid, Role = defaultRole };
             if (defaultDomain != null)

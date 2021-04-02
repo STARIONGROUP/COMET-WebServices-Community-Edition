@@ -33,6 +33,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authorization;
     using CometServer.Helpers;
 
     using Npgsql;
@@ -56,6 +57,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IPersonService"/>
         /// </summary>
         public IPersonService PersonService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/> used for authorization
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Allows derived classes to override and execute additional logic before an update operation.
@@ -118,7 +124,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </remarks>
         public override void AfterUpdate(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var authenticatedCredentials = this.RequestUtils.Credentials;
+            var authenticatedCredentials = this.CredentialsService.Credentials;
             if (authenticatedCredentials.Person.Iid == thing.Iid)
             {
                 if (thing.Role != originalThing.Role)

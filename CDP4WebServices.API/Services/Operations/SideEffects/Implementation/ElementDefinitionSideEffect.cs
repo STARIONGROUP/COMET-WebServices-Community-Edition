@@ -33,6 +33,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authorization;
     using CometServer.Exceptions;
     using CometServer.Services.Authorization;
 
@@ -75,6 +76,11 @@ namespace CometServer.Services.Operations.SideEffects
         public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
+
+        /// <summary>
         /// Allows derived classes to override and execute additional logic before a create operation.
         /// </summary>
         /// <param name="thing">
@@ -98,11 +104,11 @@ namespace CometServer.Services.Operations.SideEffects
         public override bool BeforeCreate(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // inject the organizational participant of the creator to the ED before creating
-            if (securityContext.Credentials != null && securityContext.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !securityContext.Credentials.IsDefaultOrganizationalParticipant)
+            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
             {
-                if (!thing.OrganizationalParticipant.Contains(securityContext.Credentials.OrganizationalParticipant.Iid))
+                if (!thing.OrganizationalParticipant.Contains(this.CredentialsService.Credentials.OrganizationalParticipant.Iid))
                 {
-                    thing.OrganizationalParticipant.Add(securityContext.Credentials.OrganizationalParticipant.Iid);
+                    thing.OrganizationalParticipant.Add(this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
                 }
             }
 

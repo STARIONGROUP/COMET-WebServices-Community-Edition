@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authorization
+namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
@@ -31,6 +31,8 @@ namespace CometServer.Services.Authorization
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
+    using CometServer.Services;
+    using CometServer.Services.Authorization;
     using Npgsql;
 
     using Definition = CDP4Common.DTO.Definition;
@@ -50,6 +52,11 @@ namespace CometServer.Services.Authorization
         /// Gets or sets the <see cref="IElementUsageService" />
         /// </summary>
         public IElementUsageService ElementUsageService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Resolves the applicable <see cref="OrganizationalParticipant" />s needed to edit a particulat
@@ -124,9 +131,9 @@ namespace CometServer.Services.Authorization
                 return;
             }
 
-            if (securityContext.Credentials != null && securityContext.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !securityContext.Credentials.IsDefaultOrganizationalParticipant)
+            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
             {
-                if (securityContext.Credentials.OrganizationalParticipant == null)
+                if (this.CredentialsService.Credentials.OrganizationalParticipant == null)
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
@@ -138,7 +145,7 @@ namespace CometServer.Services.Authorization
                     case ClassKind.Parameter:
                     case ClassKind.ParameterGroup:
                     {
-                        this.ValidateCreateElementDefinitionContainedThing(container, securityContext);
+                        this.ValidateCreateElementDefinitionContainedThing(container);
                         break;
                     }
                     case ClassKind.ParameterSubscription:
@@ -241,7 +248,7 @@ namespace CometServer.Services.Authorization
             if (container is Definition definition)
             {
                 // the definition container must be inside the the allowed subtree. It has to pass check on being in the ED tree to begin with to prevent blocking unwanted definitions
-                this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
+                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
                     (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 var allElementDefinitionSubtree = this.ElementDefinitionService.GetDeep(transaction, partition, elementDefinitions.Select(ed => ed.Iid), securityContext);
@@ -279,7 +286,7 @@ namespace CometServer.Services.Authorization
             switch (container.ClassKind)
             {
                 case ClassKind.ElementDefinition:
-                    this.ValidateCreateElementDefinitionContainedThing(container, securityContext);
+                    this.ValidateCreateElementDefinitionContainedThing(container);
                     break;
                 case ClassKind.ElementUsage:
                     this.ValidateCreateElementUsageContainedThing(container, securityContext, transaction, partition);
@@ -304,7 +311,7 @@ namespace CometServer.Services.Authorization
             if (container is ElementUsage usage)
             {
                 // the usage container must ref a ED that is in the allowed tree
-                this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
+                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
                     (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 if (relevantOpenDefinitions.FirstOrDefault(t => t.Iid.Equals(usage.ElementDefinition)) == null)
@@ -331,7 +338,7 @@ namespace CometServer.Services.Authorization
             if (container is Parameter parameter)
             {
                 // the parameter container must be in the allowed tree
-                this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
+                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
                     (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 if (fullTree.FirstOrDefault(t => t.Iid.Equals(parameter.Iid)) == null)
@@ -358,7 +365,7 @@ namespace CometServer.Services.Authorization
             if (container is ParameterOverride parameterOverride)
             {
                 // the parameter container must be in the allowed tree
-                this.ResolveElementDefinitionTree(transaction, partition, securityContext.Credentials.Iteration, securityContext.Credentials.OrganizationalParticipant.Iid,
+                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
                     (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
 
                 // need to resolve element usage that contains it
@@ -378,12 +385,11 @@ namespace CometServer.Services.Authorization
         /// based on Organizational Participation
         /// </summary>
         /// <param name="container">The container of the new <see cref="Thing" /></param>
-        /// <param name="securityContext">The security context</param>
-        private void ValidateCreateElementDefinitionContainedThing(Thing container, ISecurityContext securityContext)
+        private void ValidateCreateElementDefinitionContainedThing(Thing container)
         {
             if (container is ElementDefinition elementDefinition)
             {
-                if (!elementDefinition.OrganizationalParticipant.Contains(securityContext.Credentials.OrganizationalParticipant.Iid))
+                if (!elementDefinition.OrganizationalParticipant.Contains(this.CredentialsService.Credentials.OrganizationalParticipant.Iid))
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }

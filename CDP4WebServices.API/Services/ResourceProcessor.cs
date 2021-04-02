@@ -53,10 +53,7 @@ namespace CometServer.Services
         /// <param name="utils">
         /// The utils helper class for this request.
         /// </param>
-        public ResourceProcessor(
-            IServiceProvider serviceProvider,
-            NpgsqlTransaction transaction,
-            IRequestUtils utils)
+        public ResourceProcessor(IServiceProvider serviceProvider, NpgsqlTransaction transaction, IRequestUtils utils)
         {
             this.ServiceProvider = serviceProvider;
             this.Transaction = transaction;
@@ -97,10 +94,11 @@ namespace CometServer.Services
         {
             if (containment.Count == 0 || !char.IsLower(propertyName.First()))
             {
-                throw new Exception(string.Format("{0} is not a valid containment property", propertyName));
+                throw new ArgumentException($"{propertyName} is not a valid containment property", nameof(propertyName));
             }
 
             var containerTypeName = containment.Last().GetType().Name;
+
             return
                 this.RequestUtils.MetaInfoProvider.GetMetaInfo(containerTypeName)
                     .GetContainmentType(Utils.CapitalizeFirstLetter(propertyName)).TypeName;
@@ -149,6 +147,7 @@ namespace CometServer.Services
             }
 
             var containment = this.GetContainmentProperty(containers.Last(), propertyName);
+
             if (!containment.Contains(id))
             {
                 throw new Exception("Resource not found");

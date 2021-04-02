@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="AuthenticationDao.cs" company="RHEA System S.A.">
+// <copyright file="AuthenticationPersonDao.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -37,7 +37,7 @@ namespace CDP4Orm.Dao.Authentication
     /// <summary>
     /// The authentication dao.
     /// </summary>
-    public class AuthenticationDao : IAuthenticationDao
+    public class AuthenticationPersonDao : IAuthenticationPersonDao
     {
         /// <summary>
         /// Read the data from the database.

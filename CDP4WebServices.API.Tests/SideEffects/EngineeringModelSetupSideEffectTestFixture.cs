@@ -35,6 +35,7 @@ namespace CometServer.Tests.SideEffects
     using CDP4Orm.Dao;
 
     using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
@@ -68,7 +69,7 @@ namespace CometServer.Tests.SideEffects
         private Mock<IParticipantService> participantService;
         private Mock<IOptionService> optionService;
         private Mock<ISecurityContext> securityContext;
-        private Mock<IPersonResolver> personResolver;
+        private Mock<ICredentialsService> mockedCredentialsService;
         private Mock<IPermissionService> permissionService;
         private Mock<IEngineeringModelDao> engineeringModelDao;
 
@@ -95,7 +96,7 @@ namespace CometServer.Tests.SideEffects
             this.optionService = new Mock<IOptionService>();
             this.securityContext = new Mock<ISecurityContext>();
             this.revisionService = new Mock<IRevisionService>();
-            this.personResolver = new Mock<IPersonResolver>();
+            this.mockedCredentialsService = new Mock<ICredentialsService>();
             this.permissionService = new Mock<IPermissionService>();
             this.engineeringModelDao = new Mock<IEngineeringModelDao>();
             this.npgsqlTransaction = null;
@@ -113,7 +114,7 @@ namespace CometServer.Tests.SideEffects
                 OptionService = this.optionService.Object,
                 RequestUtils = this.requestUtils,
                 ModelCreatorManager = this.modelCreatorManager,
-                PersonResolver = this.personResolver.Object,
+                CredentialsService = this.mockedCredentialsService.Object,
                 PermissionService = this.permissionService.Object,
                 RevisionService = this.revisionService.Object,
                 EngineeringModelDao = this.engineeringModelDao.Object

@@ -165,12 +165,11 @@ namespace CometServer
             builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
 
             // authentication services
-            builder.RegisterType<AuthenticationDao>().As<IAuthenticationDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<AuthenticationPersonDao>().As<IAuthenticationPersonDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<AuthenticationPersonAuthenticator>().As<IAuthenticationPersonAuthenticator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // authentication services
-            builder.RegisterType<PersonPermissionDao>().As<IPersonPermissionDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<Authentication.PersonResolver>().As<Authentication.IPersonResolver>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<CredentialsService>().As<ICredentialsService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // authorization services
             builder.RegisterType<PermissionService>().As<IPermissionService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
@@ -179,7 +178,7 @@ namespace CometServer
             builder.RegisterType<OrganizationalParticipationResolverService>().As<IOrganizationalParticipationResolverService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<AccessRightKindValidationService>().As<IAccessRightKindValidationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<PermissionInstanceFilterService>().As<IPermissionInstanceFilterService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
+            
             // request-response services
             builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             var carterModulessInAssembly = typeof(Startup).Assembly.GetExportedTypes().Where(type => typeof(CarterModule).IsAssignableFrom(type)).ToArray();
@@ -241,9 +240,6 @@ namespace CometServer
             app.UseRouting();
             app.UseCors();
             app.UseAuthentication();
-
-            app.UseCometAuhtorization();
-
             app.UseEndpoints(builder => builder.MapCarter());
         }
     }

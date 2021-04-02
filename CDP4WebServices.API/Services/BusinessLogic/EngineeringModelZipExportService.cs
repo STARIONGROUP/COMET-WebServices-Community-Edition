@@ -37,7 +37,7 @@ namespace CometServer.Services
 
     using CDP4JsonSerializer;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
@@ -149,7 +149,7 @@ namespace CometServer.Services
         /// <summary>
         /// Gets or sets the person resolver service.
         /// </summary>
-        public IPersonResolver PersonResolver { get; set; }
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Gets or sets the email address service.
@@ -197,7 +197,7 @@ namespace CometServer.Services
 
             var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new DtoThingIidComparer());
 
-            var credentials = this.RequestUtils.Credentials as Credentials;
+            var credentials = this.CredentialsService.Credentials;
 
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
@@ -267,7 +267,7 @@ namespace CometServer.Services
                     authorizedContext,
                     siteDirectoryPartition);
 
-                var activePersonGuidList = new List<Guid> { this.RequestUtils.Credentials.Person.Iid };
+                var activePersonGuidList = new List<Guid> { this.CredentialsService.Credentials.Person.Iid };
 
                 var activePerson = this.PersonService
                     .GetShallow(transaction, siteDirectoryPartition, activePersonGuidList, authorizedContext)
@@ -954,7 +954,7 @@ namespace CometServer.Services
             Regex rgx = new Regex(pattern);
 
             // Get the state of the current credentials and the participant flag 
-            var credentials = this.RequestUtils.Credentials as Credentials;
+            var credentials = this.CredentialsService.Credentials;
             var currentParticipantFlag = credentials.IsParticipant;
 
             // As EngineeringModel data will be retrieved the participant flag needs to be set to true
@@ -968,7 +968,7 @@ namespace CometServer.Services
 
                 // Get participant permissions as EngineeringModel data will be retrieved
                 credentials.EngineeringModelSetup = engineeringModelSetup;
-                this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
+                this.CredentialsService.ResolveParticipantCredentials(transaction);
                 this.PermissionService.Credentials = credentials;
 
                 // Get all engineeringModel objects
@@ -980,7 +980,7 @@ namespace CometServer.Services
 
                 if (engineeringModelDtos.Count == 0)
                 {
-                    throw new UnauthorizedAccessException($"Person {this.RequestUtils.Credentials.UserName} is not authorized to access model {engineeringModelSetup.EngineeringModelIid}");
+                    throw new UnauthorizedAccessException($"Person {this.CredentialsService.Credentials.UserName} is not authorized to access model {engineeringModelSetup.EngineeringModelIid}");
                 }
 
                 var fileRevisions = engineeringModelDtos.Where(x => x.ClassKind == ClassKind.FileRevision)

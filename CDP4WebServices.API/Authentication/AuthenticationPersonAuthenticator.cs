@@ -63,7 +63,7 @@ namespace CometServer.Authentication
         /// <summary>
         /// Gets or sets the authentication dao.
         /// </summary>
-        public IAuthenticationDao AuthenticationDao { get; set; }
+        public IAuthenticationPersonDao AuthenticationPersonDao { get; set; }
 
         /// <summary>
         /// Authenticates the <see cref="AuthenticationPerson"/> from the E-TM-10-25 datasource
@@ -87,7 +87,7 @@ namespace CometServer.Authentication
                 await connection.OpenAsync();
                 transaction = await connection.BeginTransactionAsync();
 
-                var authenticationPerson = (await this.AuthenticationDao.Read(transaction, "SiteDirectory", username)).SingleOrDefault();
+                var authenticationPerson = (await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username)).SingleOrDefault();
                 
                 await transaction.CommitAsync();
 

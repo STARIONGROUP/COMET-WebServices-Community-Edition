@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentials.cs" company="RHEA System S.A.">
+// <copyright file="AuthorizationException.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -22,48 +22,46 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authentication
+namespace CometServer.Exceptions
 {
-    using System.Collections.Generic;
-
-    using CDP4Authentication;
-
-    using CDP4Common.DTO;
+    using System;
 
     /// <summary>
-    /// The Credentials interface. Used purely to allow use of the Credentials object within this project without direct knowledge of it.
+    /// Exception that is thrown when authorization fails
     /// </summary>
-    public interface ICredentials
+    [Serializable]
+    public class AuthorizationException : Exception
     {
         /// <summary>
-        /// Gets or sets the username of the authenticated user.
+        /// Initializes a new instance of the <see cref="AuthorizationException"/> class.
         /// </summary>
-        /// <value>
-        /// A string containing the username.
-        /// </value>
-        public string UserName { get; }
+        public AuthorizationException()
+        {
+        }
 
         /// <summary>
-        /// Gets or sets the <see cref="Person"/>.
+        /// Initializes a new instance of the <see cref="AuthorizationException"/> class.
         /// </summary>
-        public AuthenticationPerson Person { get; }
+        /// <param name="message">
+        /// The exception message
+        /// </param>
+        public AuthorizationException(string message)
+            : base(message)
+        {
+        }
 
         /// <summary>
-        /// Gets or sets the list of <see cref="PersonPermission"/> that this <see cref="Person"/> has.
+        /// Initializes a new instance of the <see cref="AuthorizationException"/> class.
         /// </summary>
-        public IEnumerable<PersonPermission> PersonPermissions { get; }
-
-        /// <summary>
-        /// Gets or sets the list of <see cref="ParticipantPermission"/> that this <see cref="Participant"/> has.
-        /// </summary>
-        /// <remarks>
-        /// This property is only set if the request is based on an <see cref="EngineeringModel"/>
-        /// </remarks>
-        public IEnumerable<ParticipantPermission> ParticipantPermissions { get; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="OrganizationalParticipant"/>
-        /// </summary>
-        public OrganizationalParticipant OrganizationalParticipant { get; }
+        /// <param name="message">
+        /// The exception message
+        /// </param>
+        /// <param name="innerException">
+        /// A reference to the inner <see cref="Exception"/>
+        /// </param>
+        public AuthorizationException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+        }
     }
 }

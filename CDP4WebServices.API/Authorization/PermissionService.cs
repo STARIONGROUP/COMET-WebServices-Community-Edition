@@ -22,19 +22,20 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authorization
+namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
 
-    using Authentication;
-
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     
     using CDP4Orm.Dao;
-    
+
+    using CometServer.Services;
+    using CometServer.Services.Authorization;
+
     using NLog;
     
     using Npgsql;
@@ -68,14 +69,9 @@ namespace CometServer.Services.Authorization
         public IModelReferenceDataLibraryDao ModelReferenceDataLibraryDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the request utils for this request.
+        /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
         /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service registry.
-        /// </summary>
-        public IServiceProvider ServiceProvider { get; set; }
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IOrganizationalParticipationResolverService"/>.
@@ -135,7 +131,7 @@ namespace CometServer.Services.Authorization
 
                     case PersonAccessRightKind.SAME_AS_SUPERCLASS:
                         {
-                            return this.CanRead(this.RequestUtils.MetaInfoProvider.BaseType(typeName), securityContext, partition);
+                            return this.CanRead(this.MetaInfoProvider.BaseType(typeName), securityContext, partition);
                         }
 
                     case PersonAccessRightKind.READ_IF_PARTICIPANT:
@@ -170,7 +166,7 @@ namespace CometServer.Services.Authorization
 
                 case ParticipantAccessRightKind.SAME_AS_SUPERCLASS:
                     {
-                        return this.CanRead(this.RequestUtils.MetaInfoProvider.BaseType(typeName), securityContext, partition);
+                        return this.CanRead(this.MetaInfoProvider.BaseType(typeName), securityContext, partition);
                     }
 
                 case ParticipantAccessRightKind.MODIFY:
@@ -327,7 +323,7 @@ namespace CometServer.Services.Authorization
 
                     case PersonAccessRightKind.SAME_AS_SUPERCLASS:
                         {
-                            return this.CanWrite(transaction, thing, this.RequestUtils.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
+                            return this.CanWrite(transaction, thing, this.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
                         }
 
                     case PersonAccessRightKind.MODIFY_IF_PARTICIPANT:
@@ -431,7 +427,7 @@ namespace CometServer.Services.Authorization
 
                 case ParticipantAccessRightKind.SAME_AS_SUPERCLASS:
                     {
-                        return this.CanWrite(transaction, thing, this.RequestUtils.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
+                        return this.CanWrite(transaction, thing, this.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
                     }
 
                 case ParticipantAccessRightKind.MODIFY_IF_OWNER:

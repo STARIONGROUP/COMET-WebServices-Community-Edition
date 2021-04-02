@@ -31,7 +31,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Orm.Dao;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Exceptions;
 
     using Helpers;
@@ -74,9 +74,9 @@ namespace CometServer.Services.Operations.SideEffects
         public IRevisionService RevisionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IPersonResolver"/>
+        /// Gets or sets the <see cref="ICredentialsService"/>
         /// </summary>
-        public IPersonResolver PersonResolver { get; set; }
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IEngineeringModelDao"/>
@@ -162,10 +162,8 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
             
             // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
-            var credentials = this.RequestUtils.Credentials as Credentials;
-            credentials.EngineeringModelSetup = engineeringModelSetup;
-            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-            this.PermissionService.Credentials = credentials;
+            this.CredentialsService.Credentials.EngineeringModelSetup = engineeringModelSetup;
+            this.CredentialsService.ResolveParticipantCredentials(transaction);
 
             var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new[] { engineeringModelIid }, securityContext).SingleOrDefault() as EngineeringModel;
 
@@ -201,7 +199,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Create revisions for created Iteration and updated EngineeringModel
-            var actor = credentials.Person.Iid;
+            var actor = this.CredentialsService.Credentials.Person.Iid;
 
             this.TransactionManager.SetDefaultContext(transaction);
             this.TransactionManager.SetCachedDtoReadEnabled(false);
@@ -318,10 +316,8 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
 
             // Make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
-            var credentials = this.RequestUtils.Credentials as Credentials;
-            credentials.EngineeringModelSetup = (EngineeringModelSetup)container;
-            this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-            this.PermissionService.Credentials = credentials;
+            this.CredentialsService.Credentials.EngineeringModelSetup = (EngineeringModelSetup)container;
+            this.CredentialsService.ResolveParticipantCredentials(transaction);
 
             var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new [] {iterationSetup.IterationIid}, securityContext)
                                                  .Cast<Iteration>()
@@ -366,8 +362,7 @@ namespace CometServer.Services.Operations.SideEffects
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
 
                 // Create revisions for deleted Iteration and updated EngineeringModel
-                var credentials = this.RequestUtils.Credentials as Credentials;
-                var actor = credentials.Person.Iid;
+                var actor = this.CredentialsService.Credentials.Person.Iid;
                 var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
                 this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
             }

@@ -29,6 +29,7 @@ namespace CometServer.Tests.SideEffects
 
     using CDP4Common.DTO;
 
+    using CometServer.Authorization;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;

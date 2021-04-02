@@ -24,6 +24,13 @@
 
 namespace CometServer.Services.Operations
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+    using System.Security;
+
     using CDP4Common;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -41,14 +48,7 @@ namespace CometServer.Services.Operations
 
     using Npgsql;
 
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
-    using System.Security;
-
-    using CometServer.Authentication;
+    using CometServer.Authorization;
 
     using IServiceProvider = CometServer.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
@@ -115,9 +115,14 @@ namespace CometServer.Services.Operations
         public IServiceProvider ServiceProvider { get; set; }
 
         /// <summary>
-        /// Gets or sets  the transaction.
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
         /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
+        public ICredentialsService CredentialsService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the revision service.
@@ -216,7 +221,7 @@ namespace CometServer.Services.Operations
                 var operationProperties = deleteInfo.Where(x => !this.baseProperties.Contains(x.Key)).ToList();
                 var typeName = deleteInfo[ClasskindKey].ToString();
                 var iid = (Guid)deleteInfo[IidKey];
-                var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(typeName);
+                var metaInfo = this.MetaInfoProvider.GetMetaInfo(typeName);
 
                 foreach (var kvp in operationProperties)
                 {
@@ -294,7 +299,7 @@ namespace CometServer.Services.Operations
             // defer property validation as per the operationsideeffect
             operation.Create.ForEach(
                 x =>
-                    this.RequestUtils.MetaInfoProvider.GetMetaInfo(x)
+                    this.MetaInfoProvider.GetMetaInfo(x)
                         .Validate(
                             x,
                             propertyName => this.OperationSideEffectProcessor.ValidateProperty(x, propertyName)));
@@ -339,9 +344,7 @@ namespace CometServer.Services.Operations
                 if (string.IsNullOrWhiteSpace(fileRevision.ContentHash))
                 {
                     throw new Cdp4ModelValidationException(
-                              string.Format(
-                                  "The 'ContentHash' property of 'FileRevision' with iid '{0}' is mandatory and cannot be an empty string or null.",
-                                  fileRevision.Iid));
+                        $"The 'ContentHash' property of 'FileRevision' with iid '{fileRevision.Iid}' is mandatory and cannot be an empty string or null.");
                 }
 
                 if (!fileStore.ContainsKey(fileRevision.ContentHash))
@@ -350,10 +353,7 @@ namespace CometServer.Services.Operations
                     if (!this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
                     {
                         throw new InvalidOperationException(
-                                  string.Format(
-                                      "FileRevision with iid:'{0}' with content Hash [{1}] does not exist",
-                                      fileRevision.Iid,
-                                      fileRevision.ContentHash));
+                            $"FileRevision with iid:'{fileRevision.Iid}' with content Hash [{fileRevision.ContentHash}] does not exist");
                     }
                 }
             }
@@ -448,7 +448,7 @@ namespace CometServer.Services.Operations
             {
                 if (!this.operationThingCache.ContainsKey(thingInfo))
                 {
-                    var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(thingInfo.TypeName);
+                    var metaInfo = this.MetaInfoProvider.GetMetaInfo(thingInfo.TypeName);
                     ContainerInfo containerInfo = null;
 
                     // if not topcontainer set containment resolve info to default, forcing data store resolvement
@@ -475,7 +475,7 @@ namespace CometServer.Services.Operations
         /// </returns>
         private IMetaInfo GetTypeMetaInfo(string typeName)
         {
-            return this.RequestUtils.MetaInfoProvider.GetMetaInfo(typeName);
+            return this.MetaInfoProvider.GetMetaInfo(typeName);
         }
 
         /// <summary>
@@ -512,7 +512,7 @@ namespace CometServer.Services.Operations
         private bool IsContainerUpdateIncluded(CdpPostOperation operation, Thing thing)
         {
             var thingType = thing.GetType().Name;
-            var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(thingType);
+            var metaInfo = this.MetaInfoProvider.GetMetaInfo(thingType);
 
             return this.TryFindContainerInUpdates(operation, thing, metaInfo)
                    || this.TryFindContainerInCreateSection(operation, thing, metaInfo);
@@ -591,7 +591,7 @@ namespace CometServer.Services.Operations
                 return false;
             }
 
-            var containerMetaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(containerInfo.TypeName);
+            var containerMetaInfo = this.MetaInfoProvider.GetMetaInfo(containerInfo.TypeName);
 
             // container found
             var containerResolvable = new DtoResolveHelper(containerInfo)
@@ -650,7 +650,7 @@ namespace CometServer.Services.Operations
                 {
                     // check if thing is contained by ordered containment property 
                     var orderedItem =
-                        this.RequestUtils.MetaInfoProvider.GetMetaInfo(createInfo)
+                        this.MetaInfoProvider.GetMetaInfo(createInfo)
                             .GetOrderedContainmentIds(createInfo, containerPropertyInfo.Name)
                             .SingleOrDefault(x => Guid.Parse(x.V.ToString()) == thing.Iid);
 
@@ -681,7 +681,7 @@ namespace CometServer.Services.Operations
                 }
 
                 // Check if the found container property includes the supplied id.
-                var containermetaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(typeInfo);
+                var containermetaInfo = this.MetaInfoProvider.GetMetaInfo(typeInfo);
                 if (!containermetaInfo.GetContainmentIds(createInfo, containerPropertyInfo.Name).Contains(thing.Iid))
                 {
                     continue;
@@ -726,29 +726,20 @@ namespace CometServer.Services.Operations
             if (!this.operationThingCache.TryGetValue(thing.GetInfoPlaceholder(), out resolvedThing))
             {
                 throw new InvalidOperationException(
-                          string.Format(
-                              "The resolved information fo '{0}' with iid: '{1}' was not found.",
-                              thing.GetType().Name,
-                              thing.Iid));
+                    $"The resolved information fo '{thing.GetType().Name}' with iid: '{thing.Iid}' was not found.");
             }
 
             if (resolvedThing.ContainerInfo == null)
             {
                 throw new InvalidOperationException(
-                          string.Format(
-                              "The container information for '{0}' with iid: '{1}' was not found.",
-                              thing.GetType().Name,
-                              thing.Iid));
+                    $"The container information for '{thing.GetType().Name}' with iid: '{thing.Iid}' was not found.");
             }
 
             DtoResolveHelper resolvedThingContainer;
             if (!this.operationThingCache.TryGetValue(resolvedThing.ContainerInfo, out resolvedThingContainer))
             {
                 throw new InvalidOperationException(
-                          string.Format(
-                              "Expected container for '{0}' with iid: '{1}' not found in operation message.",
-                              thing.GetType().Name,
-                              thing.Iid));
+                    $"Expected container for '{thing.GetType().Name}' with iid: '{thing.Iid}' not found in operation message.");
             }
 
             return resolvedThingContainer;
@@ -809,7 +800,7 @@ namespace CometServer.Services.Operations
         /// </param>
         private void DeletePersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Thing persistedThing)
         {
-            // get the persisted thing (full) so that   permission can be checked against potential owner
+            // get the persisted thing (full) so that permission can be checked against potential owner
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
             var thing = service.GetShallow(transaction, partition, new[] {persistedThing.Iid}, securityContext).FirstOrDefault();
             if (thing == null)
@@ -863,7 +854,7 @@ namespace CometServer.Services.Operations
             {
                 var typeName = deleteInfo[ClasskindKey].ToString();
                 var iid = (Guid)deleteInfo[IidKey];
-                var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(typeName);
+                var metaInfo = this.MetaInfoProvider.GetMetaInfo(typeName);
                 var service = this.ServiceProvider.MapToPersitableService(typeName);
 
                 // check if the delete info has any properties set other than Iid, revision and classkind properties
@@ -965,9 +956,11 @@ namespace CometServer.Services.Operations
             foreach (var createInfo in operation.Create.Select(x => x.GetInfoPlaceholder()))
             {
                 var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
-                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
-                securityContext.Credentials = this.RequestUtils.Credentials as Credentials;
+                var securityContext = new RequestSecurityContext
+                {
+                    ContainerReadAllowed = true, 
+                };
 
                 var resolvedInfo = this.operationThingCache[createInfo];
 
@@ -977,7 +970,7 @@ namespace CometServer.Services.Operations
                 if (persistedItem != null)
                 {
                     throw new InvalidOperationException(
-                        string.Format("Item '{0}' with Iid: '{1}' already exists", createInfo.TypeName, createInfo.Iid));
+                        $"Item '{createInfo.TypeName}' with Iid: '{createInfo.Iid}' already exists");
                 }
 
                 // get the (cached) containment information for this create request
@@ -1124,10 +1117,13 @@ namespace CometServer.Services.Operations
             {
                 var updateInfoKey = updateInfo.GetInfoPlaceholder();
 
-                var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(updateInfoKey.TypeName);
+                var metaInfo = this.MetaInfoProvider.GetMetaInfo(updateInfoKey.TypeName);
                 var service = this.ServiceProvider.MapToPersitableService(updateInfoKey.TypeName);
-                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
-                securityContext.Credentials = this.RequestUtils.Credentials as Credentials;
+                var securityContext = new RequestSecurityContext
+                {
+                    ContainerReadAllowed = true, 
+                    ContainerWriteAllowed = true
+                };
 
                 var resolvedInfo = this.operationThingCache[updateInfoKey];
 

@@ -38,7 +38,7 @@ namespace CometServer.Modules
 
     using CDP4Orm.Dao;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
@@ -52,7 +52,6 @@ namespace CometServer.Modules
     using Newtonsoft.Json;
 
     using NLog;
-    using NLog.Targets;
 
     using Npgsql;
 
@@ -97,6 +96,11 @@ namespace CometServer.Modules
             };
 
         /// <summary>
+        /// Gets or sets the model creator manager service.
+        /// </summary>
+        public IModelCreatorManager ModelCreatorManager { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="SiteDirectoryApi"/> class.
         /// </summary>
         public SiteDirectoryApi()
@@ -110,6 +114,8 @@ namespace CometServer.Modules
                 }
                 else
                 {
+                    await this.Authorize(req.HttpContext.User.Identity.Name);
+
                     await this.GetResponseData(req, res);
                 }
             });
@@ -123,19 +129,57 @@ namespace CometServer.Modules
                 }
                 else
                 {
+                    await this.Authorize(req.HttpContext.User.Identity.Name);
+
                     await this.PostResponseData(req, res);
                 }
             });
         }
 
         /// <summary>
-        /// Gets or sets the model creator manager service.
+        /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
+        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
         /// </summary>
-        public IModelCreatorManager ModelCreatorManager { get; set; }
-
-        protected override HttpResponse GetResponseData(string[] routeParams)
+        /// <param name="username">
+        /// The username used to authorize
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        private async Task Authorize(string username)
         {
-            throw new NotImplementedException();
+            NpgsqlConnection connection = null;
+            NpgsqlTransaction transaction = null;
+
+            try
+            {
+                connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+                await connection.OpenAsync();
+
+                transaction = await connection.BeginTransactionAsync();
+
+                await this.CredentialsService.ResolveCredentials(transaction, username);
+            }
+            catch (Exception e)
+            {
+                transaction?.RollbackAsync();
+
+                throw;
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.CloseAsync();
+                    await connection.DisposeAsync();
+                }
+            }
         }
 
         /// <summary>
@@ -172,7 +216,7 @@ namespace CometServer.Modules
                 var resourceResponse = new List<Thing>();
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Credentials as Credentials;
+                var credentials = this.CredentialsService.Credentials as Credentials;
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 if (fromRevision > -1)
@@ -221,29 +265,24 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                await httpResponse.AsJson($"exception:{ex.Message}");
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             finally
             {
                 if (transaction != null)
                 {
-                    transaction.Dispose();
+                    await transaction.DisposeAsync();
                 }
 
                 if (connection != null)
                 {
-                    connection.Dispose();
+                    await connection.DisposeAsync();
                 }
 
                 sw.Stop();
                 Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
-        }
-
-        protected override HttpResponse PostResponseData(dynamic routeParams)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -299,7 +338,7 @@ namespace CometServer.Modules
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Credentials as Credentials;
+                var credentials = this.CredentialsService.Credentials;
 
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
@@ -372,8 +411,8 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                await httpResponse.AsJson($"exception:{ex.Message}");
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             finally
             {
@@ -412,10 +451,10 @@ namespace CometServer.Modules
             else
             {
                 // process containment path
-                var routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
+                //var routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
 
                 List<Thing> resolvedResourcePath;
-                foreach (var thing in this.ProcessRequestPath(processor, TopContainer, partition, routeSegments, out resolvedResourcePath))
+                foreach (var thing in this.ProcessRequestPath(processor, TopContainer, partition, routeParams, out resolvedResourcePath))
                 {
                     yield return thing;
                 }

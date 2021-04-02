@@ -28,8 +28,6 @@ namespace CometServer.Modules
     using System.Net;
 
     using Carter;
-
-    using CometServer.Authentication;
     
     using Microsoft.AspNetCore.Http;
 

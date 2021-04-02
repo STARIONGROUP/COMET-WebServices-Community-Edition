@@ -42,6 +42,7 @@ namespace CometServer.Modules
 
     using CDP4JsonSerializer;
 
+    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Services.Operations;
 
@@ -126,6 +127,11 @@ namespace CometServer.Modules
         public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/> used for authorization
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
+
+        /// <summary>
         /// Gets or sets the header info provider.
         /// </summary>
         public IHeaderInfoProvider HeaderInfoProvider { get; set; }
@@ -191,18 +197,6 @@ namespace CometServer.Modules
         public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
 
         /// <summary>
-        /// Gets the request path.
-        /// </summary>
-        protected string RequestPath
-        {
-            get
-            {
-                throw new NotImplementedException();
-                //return string.Format("{0}{1}", this.Context.Request.Url.Path, this.Context.Request.Url.Query);
-            }
-        }
-
-        /// <summary>
         /// Process the get request and return the requested resources.
         /// </summary>
         /// <param name="processor">
@@ -223,12 +217,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The collection of retrieved <see cref="CDP4Common.DTO.Thing"/>.
         /// </returns>
-        public IEnumerable<Thing> ProcessRequestPath(
-            IProcessor processor,
-            string topContainer,
-            string partition,
-            string[] routeSegments,
-            out List<Thing> resourcePath)
+        public IEnumerable<Thing> ProcessRequestPath(IProcessor processor, string topContainer, string partition, string[] routeSegments, out List<Thing> resourcePath)
         {
             var containmentColl = new List<Thing>();
             var responseColl = new List<Thing>();
@@ -359,67 +348,6 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Abstract method contract for get response data processing.
-        /// </summary>
-        /// <param name="routeParams">
-        /// The route parameters from the request.
-        /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected abstract HttpResponse GetResponseData(string[] routeParams);
-
-        /// <summary>
-        /// Wrapper function to wire up authorization on the get response.
-        /// </summary>
-        /// <param name="routeParams">
-        /// The route parameters from the request
-        /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected virtual HttpResponse GetResponse(string[] routeParams)
-        {
-            // wireup cdp authorization support
-            this.CdpAuthorization();
-            var response = this.GetResponseData(routeParams);
-
-            // Register the required CDP4 headers to every response send
-            this.HeaderInfoProvider.RegisterResponseHeaders(response);
-            return response;
-        }
-
-        /// <summary>
-        /// Abstract method contract for post response data processing.
-        /// </summary>
-        /// <param name="routeParams">
-        /// The route parameters from the request.
-        /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected abstract HttpResponse PostResponseData(dynamic routeParams);
-
-        /// <summary>
-        /// Wrapper function to wire up authorization on the post response.
-        /// </summary>
-        /// <param name="routeParams">
-        /// The route parameters from the request
-        /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected virtual HttpResponse PostResponse(dynamic routeParams)
-        {
-            // wireup cdp authorization support
-            this.CdpAuthorization();
-            var response = this.PostResponseData(routeParams);
-
-            this.HeaderInfoProvider.RegisterResponseHeaders(response);
-            return response;
-        }
-
-        /// <summary>
         /// Construct a request log message.
         /// </summary>
         /// <param name="message">
@@ -433,9 +361,8 @@ namespace CometServer.Modules
         /// </returns>
         protected string ConstructLog(HttpRequest httpRequest, string message = null, bool success = true)
         {
-            var credentials = this.RequestUtils.Credentials;
-            var requestMessage = $"[{httpRequest.Method}][{this.RequestPath}]{(!string.IsNullOrWhiteSpace(message) ? $" : {message}" : string.Empty)}";
-            return LoggerUtils.GetLogMessage(credentials.Person, httpRequest.Host.ToString(), success, requestMessage);
+            var requestMessage = $"[{httpRequest.Method}][{httpRequest.Path}]{(!string.IsNullOrWhiteSpace(message) ? $" : {message}" : string.Empty)}";
+            return LoggerUtils.GetLogMessage(httpRequest.HttpContext.User.Identity.Name, httpRequest.Host.ToString(), success, requestMessage);
         }
 
         /// <summary>
@@ -478,8 +405,8 @@ namespace CometServer.Modules
             var resultStream = new MemoryStream();
             this.CreateFilteredResponseStream(resourceResponse, resultStream, requestDataModelVersion, requestToken);
             resultStream.Seek(0, SeekOrigin.Begin);
+            httpResponse.StatusCode = (int)statusCode;
             await resultStream.CopyToAsync(httpResponse.Body);
-            httpResponse.StatusCode = (int) statusCode;
         }
 
         /// <summary>

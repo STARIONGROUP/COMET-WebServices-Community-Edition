@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authorization
+namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
@@ -31,8 +31,6 @@ namespace CometServer.Services.Authorization
     using CDP4Common.DTO;
     using CDP4Common.EngineeringModelData;
     using CDP4Common.Types;
-
-    using CometServer.Authentication;
 
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
     using ElementUsage = CDP4Common.DTO.ElementUsage;

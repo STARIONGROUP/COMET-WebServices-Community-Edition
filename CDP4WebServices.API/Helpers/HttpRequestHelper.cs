@@ -83,8 +83,8 @@ namespace CometServer.Helpers
         /// <summary>
         /// Utility function to extract the route segments from the URI.
         /// </summary>
-        /// <param name="routeParams">
-        /// The dynamic route parameters from the request.
+        /// <param name="requestPath">
+        /// The path from the request.
         /// </param>
         /// <param name="topContainer">
         /// The top container name.
@@ -92,9 +92,9 @@ namespace CometServer.Helpers
         /// <returns>
         /// The split route parameters as array.
         /// </returns>
-        public static string[] ParseRouteSegments(dynamic routeParams, string topContainer)
+        public static string[] ParseRouteSegments(string requestPath, string topContainer)
         {
-            return string.Format("{0}/{1}", topContainer, routeParams.uri)
+            return $"{topContainer}/{requestPath}"
                 .Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
         }
     }

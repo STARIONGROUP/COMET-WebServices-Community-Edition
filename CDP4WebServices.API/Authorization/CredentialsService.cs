@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PersonResolver.cs" company="RHEA System S.A.">
+// <copyright file="IiCredentialsResolver.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -22,11 +22,12 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authentication
+namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -35,6 +36,7 @@ namespace CometServer.Authentication
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Authentication;
 
+    using CometServer.Exceptions;
     using CometServer.Services;
 
     using NLog;
@@ -42,9 +44,9 @@ namespace CometServer.Authentication
     using Npgsql;
 
     /// <summary>
-    /// Resolves the Person from the database.
+    /// Resolves the <see cref="ICredentials"/>
     /// </summary>
-    public class PersonResolver : IPersonResolver
+    public class CredentialsService : ICredentialsService
     {
         /// <summary>
         /// A <see cref="NLog.Logger"/> instance
@@ -94,10 +96,36 @@ namespace CometServer.Authentication
         /// <summary>
         /// Gets or sets the authentication dao.
         /// </summary>
-        public IAuthenticationDao AuthenticationDao { get; set; }
+        public IAuthenticationPersonDao AuthenticationPersonDao { get; set; }
 
         /// <summary>
-        /// Resolves the username to <see cref="IUserIdentity"/>
+        /// The backing field for the <see cref="ICredentials"/> property
+        /// </summary>
+        private Credentials credentials;
+
+        /// <summary>
+        /// Gets the <see cref="ICredentials"/> that
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// thrown when the <see cref="ICredentials"/> is null
+        /// </exception>
+        public Credentials Credentials
+        {
+            get
+            {
+                if (this.credentials == null)
+                {
+                    throw new InvalidOperationException();
+                }
+                else
+                {
+                    return this.credentials;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Resolves the username to <see cref="ICredentials"/>
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -108,19 +136,66 @@ namespace CometServer.Authentication
         /// <returns>
         /// A <see cref="ICredentials"/> representing the resolved user, null if the user was not found.
         /// </returns>
-        public ICredentials ResolvePerson(NpgsqlTransaction transaction, string username)
+        public async Task ResolveCredentials(NpgsqlTransaction transaction, string username)
         {
-            throw new NotImplementedException();
+            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username);
+            var person = persons.SingleOrDefault();
 
-            //var person = this.AuthenticationDao.Read(transaction, "SiteDirectory", username).SingleOrDefault();
+            if (person == null)
+            {
+                throw new AuthorizationException($"The user {username} could not be authorized");
+            }
 
-            //if (person != null)
-            //{
-            //    return this.ResolveCredentials(transaction, person);
-            //}
+            this.credentials = this.ResolveCredentials(transaction, person);
 
-            //Logger.Warn("User request with username: {0} could not be authenticated", username);
-            //return null;
+            if (this.credentials == null)
+            {
+                throw new AuthorizationException($"The user {username} could not be authorized");
+            }
+        }
+
+        /// <summary>
+        /// Resolves all the needed information on from the <see cref="Person"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="person">
+        /// The <see cref="Person"/> that needs to be resolved.
+        /// </param>
+        /// <returns>
+        /// A completely resolved <see cref="Credentials"/> class.
+        /// </returns>
+        private Credentials ResolveCredentials(NpgsqlTransaction transaction, AuthenticationPerson person)
+        {
+            var personPermissions = new List<PersonPermission>();
+            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, person).ToList();
+
+            if (person.Role != null)
+            {
+                personPermissions = this.GetPersonPermissions(transaction, person).ToList();
+            }
+
+            var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
+
+            var personOrganizationalParticipants = new List<OrganizationalParticipant>();
+
+            // get org participation if the models have it enabled and person is part of an organization
+            if (allOrganizationalParticipants.Any() && person.Organization != null)
+            {
+                personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(person.Organization.Value, allOrganizationalParticipants, transaction);
+            }
+
+            return new Credentials
+            {
+                UserName = person.UserName,
+                Person = person,
+                PersonPermissions = personPermissions,
+                ParticipantPermissions = new List<ParticipantPermission>(),
+                EngineeringModelSetups = engineeringModelSetups,
+                OrganizationIid = person.Organization,
+                OrganizationalParticipants = personOrganizationalParticipants
+            };
         }
 
         /// <summary>
@@ -132,55 +207,53 @@ namespace CometServer.Authentication
         /// <param name="credentials">
         /// The credentials Interface.
         /// </param>
-        public void ResolveParticipantCredentials(NpgsqlTransaction transaction, ICredentials credentials)
+        public void ResolveParticipantCredentials(NpgsqlTransaction transaction)
         {
-            var creds = credentials as Credentials;
-
-            if (creds?.Person == null || creds.EngineeringModelSetup == null)
+            if (this.credentials?.Person == null || this.credentials.EngineeringModelSetup == null)
             {
                 return;
             }
 
-            var participant = this.GetParticipant(transaction, creds.Person, creds.EngineeringModelSetup);
+            var participant = this.GetParticipant(transaction, this.credentials.Person, this.credentials.EngineeringModelSetup);
             if (participant == null)
             {
                 return;
             }
 
             // Set participant information for the resolved participant
-            creds.ParticipantPermissions = this.GetParticipantPermissions(transaction, participant);
-            creds.DomainOfExpertise = this.GetSelectedDomain(transaction, participant);
-            creds.IsParticipant = true;
+            this.credentials.ParticipantPermissions = this.GetParticipantPermissions(transaction, participant);
+            this.credentials.DomainOfExpertise = this.GetSelectedDomain(transaction, participant);
+            this.credentials.IsParticipant = true;
 
             // take care of organizational participation
             // reset to default
-            creds.OrganizationalParticipant = null;
-            creds.IsDefaultOrganizationalParticipant = false;
+            this.credentials.OrganizationalParticipant = null;
+            this.credentials.IsDefaultOrganizationalParticipant = false;
 
             // recompute organizational participation
-            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, creds.Person).ToList();
+            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, this.credentials.Person).ToList();
             var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
 
             // get org participation if the models have it enabled and person is part of an organization
-            if (allOrganizationalParticipants.Any() && creds.OrganizationIid != null)
+            if (allOrganizationalParticipants.Any() && this.credentials.OrganizationIid != null)
             {
-                var personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(creds.OrganizationIid.Value, allOrganizationalParticipants, transaction);
-                creds.OrganizationalParticipants = personOrganizationalParticipants;
+                var personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(this.credentials.OrganizationIid.Value, allOrganizationalParticipants, transaction);
+                this.credentials.OrganizationalParticipants = personOrganizationalParticipants;
             }
 
-            if (creds.EngineeringModelSetup.OrganizationalParticipant.Any() && creds.OrganizationIid != null && creds.OrganizationalParticipants.Any())
+            if (this.credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && this.credentials.OrganizationIid != null && this.credentials.OrganizationalParticipants.Any())
             {
                 // transient settings for the particular EMS
                 // find the org participant
-                var organizationalParticipantIid = creds.EngineeringModelSetup.OrganizationalParticipant.Intersect(creds.OrganizationalParticipants.Select(op => op.Iid)).SingleOrDefault();
+                var organizationalParticipantIid = this.credentials.EngineeringModelSetup.OrganizationalParticipant.Intersect(this.credentials.OrganizationalParticipants.Select(op => op.Iid)).SingleOrDefault();
 
                 if (organizationalParticipantIid == Guid.Empty)
                 {
                     return;
                 }
 
-                creds.OrganizationalParticipant = creds.OrganizationalParticipants.First(op => op.Iid.Equals(organizationalParticipantIid));
-                creds.IsDefaultOrganizationalParticipant = creds.OrganizationalParticipant.Iid.Equals(creds.EngineeringModelSetup.DefaultOrganizationalParticipant);
+                this.credentials.OrganizationalParticipant = this.credentials.OrganizationalParticipants.First(op => op.Iid.Equals(organizationalParticipantIid));
+                this.credentials.IsDefaultOrganizationalParticipant = this.credentials.OrganizationalParticipant.Iid.Equals(this.credentials.EngineeringModelSetup.DefaultOrganizationalParticipant);
             }
         }
 
@@ -267,51 +340,7 @@ namespace CometServer.Authentication
             }
         }
 
-        /// <summary>
-        /// Resolves all the needed information on from the <see cref="Person"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="person">
-        /// The <see cref="Person"/> that needs to be resolved.
-        /// </param>
-        /// <returns>
-        /// A completely resolved <see cref="Credentials"/> class.
-        /// </returns>
-        private ICredentials ResolveCredentials(NpgsqlTransaction transaction, AuthenticationPerson person)
-        {
-            var personPermissions = new List<PersonPermission>();
-            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, person).ToList();
-
-            if (person.Role != null)
-            {
-                personPermissions = this.GetPersonPermissions(transaction, person).ToList();
-            }
-
-            Logger.Trace("Info {0} was authenticated", person.UserName);
-
-            var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
-
-            var personOrganizationalParticipants = new List<OrganizationalParticipant>();
-
-            // get org participation if the models have it enabled and person is part of an organization
-            if (allOrganizationalParticipants.Any() && person.Organization != null)
-            {
-                personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(person.Organization.Value, allOrganizationalParticipants, transaction);
-            }
-
-            return new Credentials
-            {
-                UserName = person.UserName,
-                Person = person,
-                PersonPermissions = personPermissions,
-                ParticipantPermissions = new List<ParticipantPermission>(),
-                EngineeringModelSetups = engineeringModelSetups,
-                OrganizationIid = person.Organization,
-                OrganizationalParticipants = personOrganizationalParticipants
-            };
-        }
+        
 
         /// <summary>
         /// Returns the list of OrganizationalParticipants relevant to the Person for all EngineeringModelSetups.

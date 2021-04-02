@@ -33,7 +33,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
 
@@ -58,9 +58,9 @@ namespace CometServer.Services
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the <see cref="IRequestUtils"/> for the current request
+        /// Gets or sets the <see cref="ICredentialsService"/> for the current request
         /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Gets or sets the commonFileStore service.
@@ -214,7 +214,7 @@ namespace CometServer.Services
             var logMessage = $"File structure creation is started into the temporary folder {folderPath}.";
             Logger.Info(logMessage);
 
-            var credentials = this.RequestUtils.Credentials as Credentials;
+            var credentials = this.CredentialsService.Credentials;
 
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 

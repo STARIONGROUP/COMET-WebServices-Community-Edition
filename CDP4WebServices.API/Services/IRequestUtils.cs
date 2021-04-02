@@ -30,7 +30,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
@@ -70,11 +70,6 @@ namespace CometServer.Services
         /// Gets or sets the <see cref="IDefaultPermissionProvider"/> for this request
         /// </summary>
         IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
-
-        /// <summary>
-        /// Gets or sets the authenticated <see cref="Credentials"/> that are valid for this request
-        /// </summary>
-        ICredentials Credentials { get; set; }
 
         /// <summary>
         /// Gets the get request data model version.

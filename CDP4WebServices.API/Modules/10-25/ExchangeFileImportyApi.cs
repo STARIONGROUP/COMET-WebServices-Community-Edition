@@ -45,7 +45,7 @@ namespace CometServer.Modules
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
@@ -92,9 +92,9 @@ namespace CometServer.Modules
         public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IPersonResolver"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database.
+        /// Gets or sets the <see cref="ICredentialsService"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database.
         /// </summary>
-        public IPersonResolver PersonResolver { get; set; }
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Gets or sets the revision service.

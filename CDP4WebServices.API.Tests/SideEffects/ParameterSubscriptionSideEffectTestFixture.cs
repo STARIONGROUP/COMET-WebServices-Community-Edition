@@ -32,6 +32,7 @@ namespace CometServer.Tests.SideEffects
     using CDP4Common.Exceptions;
     using CDP4Common.Types;
 
+    using CometServer.Authorization;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;

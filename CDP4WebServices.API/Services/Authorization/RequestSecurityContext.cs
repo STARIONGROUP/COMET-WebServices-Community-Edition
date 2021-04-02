@@ -26,7 +26,7 @@ namespace CometServer.Services.Authorization
 {
     using System;
 
-    using CometServer.Authentication;
+    using CometServer.Authorization;
 
     /// <summary>
     /// Request security context class that holds security data relevant for authorization checks
@@ -58,10 +58,5 @@ namespace CometServer.Services.Authorization
         /// </summary>
         [Obsolete]
         public string TopContainer { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Credentials
-        /// </summary>
-        public Credentials Credentials { get; set; }
     }
 }

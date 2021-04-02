@@ -1,8 +1,8 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IObfuscationService.cs" company="RHEA System S.A.">
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IAuthenticationPersonDao.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Geren�, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -22,25 +22,35 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Authorization
+namespace CDP4Orm.Dao.Authentication
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
-    using CDP4Common.DTO;
+    using CDP4Authentication;
 
-    using CometServer.Authentication;
+    using Npgsql;
 
     /// <summary>
-    /// The obfuscation service obscures properties and children of Element Definitions based on OrganizationalParticipation of
-    /// an EngineeringModelSetup
+    /// The AuthenticationPersonDao interface.
     /// </summary>
-    public interface IObfuscationService
+    public interface IAuthenticationPersonDao
     {
         /// <summary>
-        /// Obfuscates the entire response
+        /// Read the data from the database.
         /// </summary>
-        /// <param name="resourceResponse">The list of all <see cref="Thing" /> contained in the response.</param>
-        /// <param name="credentials">The <see cref="Credentials" /></param>
-        void ObfuscateResponse(List<Thing> resourceResponse, Credentials credentials);
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="userName">
+        /// UserName to retrieve from the database.
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="AuthenticationPerson"/>.
+        /// </returns>
+        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName);
     }
 }

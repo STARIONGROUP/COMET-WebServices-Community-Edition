@@ -33,6 +33,7 @@ namespace CometServer.Services
     using CDP4Common.Helpers;
 
     using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
@@ -84,11 +85,6 @@ namespace CometServer.Services
         /// Gest or sets the <see cref="HttpRequest"/>
         /// </summary>
         public HttpRequest HttpRequest { get; set; }
-
-        /// <summary>
-        /// Gets or sets the authenticated <see cref="Credentials"/> that are valid for this request
-        /// </summary>
-        public ICredentials Credentials { get; set; }
 
         /// <summary>
         /// Gets or sets the query parameters.

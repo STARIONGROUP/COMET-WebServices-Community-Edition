@@ -36,10 +36,9 @@ namespace CometServer.Modules
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
-    
-    using CDP4Orm.Dao;
 
-    using CometServer.Authentication;
+    using CDP4Orm.Dao;
+    using CometServer.Authorization;
     using CometServer.Services.ChangeLog;
 
     using Helpers;
@@ -97,6 +96,16 @@ namespace CometServer.Modules
         };
 
         /// <summary>
+        /// Gets or sets the change log service
+        /// </summary>
+        public IChangeLogService ChangeLogService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the obfuscation service.
+        /// </summary>
+        public IObfuscationService ObfuscationService { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class.
         /// </summary>
         public EngineeringModelApi()
@@ -126,35 +135,6 @@ namespace CometServer.Modules
                     await this.PostResponseData(req, res);
                 }
             });
-        }
-
-        /// <summary>
-        /// Gets or sets the person resolver service.
-        /// </summary>
-        public IPersonResolver PersonResolver { get; set; }
-
-        /// <summary>
-        /// Gets or sets the change log service
-        /// </summary>
-        public IChangeLogService ChangeLogService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the obfuscation service.
-        /// </summary>
-        public IObfuscationService ObfuscationService { get; set; }
-
-        /// <summary>
-        /// Abstract method contract for get response data processing.
-        /// </summary>
-        /// <param name="routeParams">
-        /// The route parameters from the request.
-        /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected override HttpResponse GetResponseData(string[] routeParams)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -198,7 +178,7 @@ namespace CometServer.Modules
                                               Guid.TryParse(routeSegments[3], out iterationContextId);
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Credentials as Credentials;
+                var credentials = this.CredentialsService.Credentials;
 
                 transaction = iterationContextRequest
                     ? this.TransactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
@@ -212,8 +192,7 @@ namespace CometServer.Modules
                 if (credentials != null)
                 {
                     credentials.EngineeringModelSetup = modelSetup;
-                    this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
-                    this.PermissionService.Credentials = credentials;
+                    this.CredentialsService.ResolveParticipantCredentials(transaction);
                 }
 
                 if (fromRevision > -1)
@@ -326,20 +305,6 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// The post response data.
-        /// </summary>
-        /// <param name="routeParams">
-        /// The route parameters.
-        /// </param>
-        /// <returns>
-        /// The <see cref="HttpResponse"/>.
-        /// </returns>
-        protected override HttpResponse PostResponseData(dynamic routeParams)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Handles the POST requset
         /// </summary>
         /// <param name="httpRequest">
@@ -421,7 +386,7 @@ namespace CometServer.Modules
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Credentials as Credentials;
+                var credentials = this.CredentialsService.Credentials;
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 // the route pattern enforces that there is atleast one route segment
@@ -435,9 +400,8 @@ namespace CometServer.Modules
 
                 if (credentials != null)
                 {
-                    this.PermissionService.Credentials = credentials;
                     this.PermissionService.Credentials.EngineeringModelSetup = modelSetup;
-                    this.PersonResolver.ResolveParticipantCredentials(transaction, this.PermissionService.Credentials);
+                    this.CredentialsService.ResolveParticipantCredentials(transaction);
                     this.PermissionService.Credentials.IsParticipant = true;
 
                     var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
@@ -575,11 +539,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private IEnumerable<Thing> GetContainmentResponse(
-            IProcessor resourceProcessor,
-            string partition,
-            EngineeringModelSetup modelSetup,
-            string[] routeSegments)
+        private IEnumerable<Thing> GetContainmentResponse(IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
         {
             List<Thing> resolvedResourcePath;
 
@@ -588,8 +548,7 @@ namespace CometServer.Modules
                 yield return thing;
             }
 
-            var credentials = this.RequestUtils.Credentials as Credentials;
-            var currentParticipantFlag = credentials.IsParticipant;
+            var credentials = this.CredentialsService.Credentials;
             if (this.RequestUtils.QueryParameters.IncludeReferenceData)
             {
                 this.TransactionManager.SetDefaultContext(resourceProcessor.Transaction);
@@ -660,7 +619,7 @@ namespace CometServer.Modules
         {
             if (routeSegments.Length >= 4 && routeSegments[2] == "iteration")
             {
-                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, Credentials = this.PermissionService.Credentials };
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
                 var requestedIterationId = CometServer.Services.Utils.ParseIdentifier(routeSegments[3]);
                 var iterations = processor.GetResource("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext).ToList();

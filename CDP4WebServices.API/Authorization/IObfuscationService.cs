@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="CometAuthorizationMiddlewareExtensions.cs" company="RHEA System S.A.">
+// <copyright file="IObfuscationService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -24,13 +24,23 @@
 
 namespace CometServer.Authorization
 {
-    using Microsoft.AspNetCore.Builder;
+    using System.Collections.Generic;
 
-    public static class CometAuthorizationMiddlewareExtensions
+    using CDP4Common.DTO;
+
+    using CometServer.Authorization;
+
+    /// <summary>
+    /// The obfuscation service obscures properties and children of Element Definitions based on OrganizationalParticipation of
+    /// an EngineeringModelSetup
+    /// </summary>
+    public interface IObfuscationService
     {
-        public static IApplicationBuilder UseCometAuhtorization(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<CometAuthorizationMiddleware>();
-        }
+        /// <summary>
+        /// Obfuscates the entire response
+        /// </summary>
+        /// <param name="resourceResponse">The list of all <see cref="Thing" /> contained in the response.</param>
+        /// <param name="credentials">The <see cref="Credentials" /></param>
+        void ObfuscateResponse(List<Thing> resourceResponse, Credentials credentials);
     }
 }

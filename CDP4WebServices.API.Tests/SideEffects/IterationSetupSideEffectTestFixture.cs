@@ -45,6 +45,7 @@ namespace CometServer.Tests.SideEffects
     using System.Collections.Generic;
     using System.Linq;
 
+    using CometServer.Authorization;
     using CometServer.Exceptions;
 
     [TestFixture]
@@ -60,7 +61,7 @@ namespace CometServer.Tests.SideEffects
         private Mock<IEngineeringModelService> mockedEngineeringModelService;
         private Mock<ISecurityContext> mockedSecurityContext;
         private Mock<ICdp4TransactionManager> mockedTransactionManager;
-        private Mock<IPersonResolver> mockedPersonResolver;
+        private Mock<ICredentialsService> mockedCredentialsService;
         private Mock<IRevisionService> mockedRevisionService;
 
         [SetUp]
@@ -72,7 +73,7 @@ namespace CometServer.Tests.SideEffects
             this.mockedSecurityContext = new Mock<ISecurityContext>();
             this.mockedTransactionManager = new Mock<ICdp4TransactionManager>();
             this.mockedRequestUtils = new Mock<IRequestUtils>();
-            this.mockedPersonResolver = new Mock<IPersonResolver>();
+            this.mockedCredentialsService = new Mock<ICredentialsService>();
             this.mockedRevisionService = new Mock<IRevisionService>();
 
             this.engineeringModel = new EngineeringModel(Guid.NewGuid(), 1);
@@ -86,7 +87,7 @@ namespace CometServer.Tests.SideEffects
             this.iterationSetupSideEffect.IterationSetupService = this.mockedIterationSetupService.Object;
             this.iterationSetupSideEffect.TransactionManager = this.mockedTransactionManager.Object;
             this.iterationSetupSideEffect.PermissionService = new PermissionService();
-            this.iterationSetupSideEffect.PersonResolver = this.mockedPersonResolver.Object;
+            this.iterationSetupSideEffect.CredentialsService = this.mockedCredentialsService.Object;
             this.iterationSetupSideEffect.RevisionService = this.mockedRevisionService.Object;
 
             var returnedEngineeringModels = new List<EngineeringModel> { this.engineeringModel };
@@ -105,10 +106,8 @@ namespace CometServer.Tests.SideEffects
 
             this.mockedTransactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.UtcNow);
 
-            this.mockedPersonResolver.Setup(x => x.ResolveParticipantCredentials(It.IsAny<NpgsqlTransaction>(), It.IsAny<Credentials>()));
-
             this.mockedRequestUtils.Setup(x => x.GetEngineeringModelPartitionString(It.IsAny<Guid>())).Returns("EngineeringModel");
-            this.mockedRequestUtils.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(new Guid(), 1) });
+            this.mockedCredentialsService.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(new Guid(), 1) });
 
             this.mockedRevisionService
                 .Setup(
