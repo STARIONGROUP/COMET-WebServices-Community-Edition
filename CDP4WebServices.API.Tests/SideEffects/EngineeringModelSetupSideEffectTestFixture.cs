@@ -34,10 +34,10 @@ namespace CometServer.Tests.SideEffects
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authentication;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
     using CometServer.Services.Operations.SideEffects;
@@ -57,7 +57,6 @@ namespace CometServer.Tests.SideEffects
     {
         private Credentials credentials;
         private AuthenticationPerson authenticatedPerson;
-        private Mock<ICdp4RequestContext> cdp4RequestContext;
         private EngineeringModelSetupSideEffect engineeringModelSetupSideEffect;
         private ModelCreatorManager modelCreatorManager;
 
@@ -87,10 +86,7 @@ namespace CometServer.Tests.SideEffects
 
             this.authenticatedPerson = new AuthenticationPerson(Guid.NewGuid(), 1) { DefaultDomain = Guid.NewGuid() };
             this.credentials = new Credentials() { Person = this.authenticatedPerson };
-            this.cdp4RequestContext = new Mock<ICdp4RequestContext>();
-            this.cdp4RequestContext.Setup(x => x.AuthenticatedCredentials).Returns(this.credentials);
-            this.requestUtils.Context = this.cdp4RequestContext.Object;
-
+            
             this.iterationService = new Mock<IIterationService>();
             this.iterationSetupService = new Mock<IIterationSetupService>();
             this.engineeringModelService = new Mock<IEngineeringModelService>();

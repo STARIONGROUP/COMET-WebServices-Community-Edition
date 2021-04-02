@@ -367,7 +367,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected abstract HttpResponse GetResponseData(dynamic routeParams);
+        protected abstract HttpResponse GetResponseData(string[] routeParams);
 
         /// <summary>
         /// Wrapper function to wire up authorization on the get response.
@@ -378,7 +378,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected virtual HttpResponse GetResponse(dynamic routeParams)
+        protected virtual HttpResponse GetResponse(string[] routeParams)
         {
             // wireup cdp authorization support
             this.CdpAuthorization();
@@ -433,7 +433,7 @@ namespace CometServer.Modules
         /// </returns>
         protected string ConstructLog(HttpRequest httpRequest, string message = null, bool success = true)
         {
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            var credentials = this.RequestUtils.Credentials;
             var requestMessage = $"[{httpRequest.Method}][{this.RequestPath}]{(!string.IsNullOrWhiteSpace(message) ? $" : {message}" : string.Empty)}";
             return LoggerUtils.GetLogMessage(credentials.Person, httpRequest.Host.ToString(), success, requestMessage);
         }

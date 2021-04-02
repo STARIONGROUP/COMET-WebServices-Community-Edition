@@ -31,6 +31,7 @@ namespace CometServer.Services
 
     using CDP4Common.Types;
 
+    using CometServer.Authentication;
     using CometServer.Configuration;
     using CometServer.Modules;
 
@@ -167,7 +168,7 @@ namespace CometServer.Services
         /// </param>
         internal static void CdpAuthorization(this ApiBase module)
         {
-            module.PermissionService.Credentials = module.RequestUtils.Context.AuthenticatedCredentials;
+            module.PermissionService.Credentials = module.RequestUtils.Credentials as Credentials;
         }
     }
 }

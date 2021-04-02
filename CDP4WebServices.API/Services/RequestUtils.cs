@@ -27,19 +27,15 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.IO;
     using System.Linq;
 
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
 
-    using CometServer.Helpers;
+    using CometServer.Authentication;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
-
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// A utils class available in the context of a request.
@@ -85,9 +81,14 @@ namespace CometServer.Services
         public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
 
         /// <summary>
-        /// Gets or sets the request context.
+        /// Gest or sets the <see cref="HttpRequest"/>
         /// </summary>
-        public ICdp4RequestContext Context { get; set; }
+        public HttpRequest HttpRequest { get; set; }
+
+        /// <summary>
+        /// Gets or sets the authenticated <see cref="Credentials"/> that are valid for this request
+        /// </summary>
+        public ICredentials Credentials { get; set; }
 
         /// <summary>
         /// Gets or sets the query parameters.
@@ -119,7 +120,7 @@ namespace CometServer.Services
             get
             {
                 var versionHeader =
-                    this.Context.Context.Request.Headers.SingleOrDefault(
+                    this.HttpRequest.Headers.SingleOrDefault(
                         x =>
                             x.Key.ToLower(CultureInfo.InvariantCulture) ==
                             AcceptCdpVersionHeader.ToLower(CultureInfo.InvariantCulture));
@@ -156,25 +157,6 @@ namespace CometServer.Services
         public string GetIterationPartitionString(Guid engineeringModelIid)
         {
             return $"Iteration_{engineeringModelIid.ToString().Replace("-", "_")}";
-        }
-
-        /// <summary>
-        /// Helper method to Allow serialization to the passed in output stream.
-        /// </summary>
-        /// <param name="jsonArray">
-        /// The JSON array that will be serialized.
-        /// </param>
-        /// <param name="outputStream">
-        /// The output Stream used to write the serialization data.
-        /// </param>
-        private void WriteToStream(JArray jsonArray, Stream outputStream)
-        {
-            using (var jsonWriter = new JsonTextWriter(new StreamWriter(outputStream)))
-            {
-                var ser = new JsonSerializer();
-                ser.Serialize(jsonWriter, jsonArray);
-                jsonWriter.Flush();
-            }
         }
     }
 }

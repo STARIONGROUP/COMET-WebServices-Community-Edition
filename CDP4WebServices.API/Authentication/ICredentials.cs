@@ -26,6 +26,8 @@ namespace CometServer.Authentication
 {
     using System.Collections.Generic;
 
+    using CDP4Authentication;
+
     using CDP4Common.DTO;
 
     /// <summary>
@@ -40,6 +42,11 @@ namespace CometServer.Authentication
         /// A string containing the username.
         /// </value>
         public string UserName { get; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Person"/>.
+        /// </summary>
+        public AuthenticationPerson Person { get; }
 
         /// <summary>
         /// Gets or sets the list of <see cref="PersonPermission"/> that this <see cref="Person"/> has.

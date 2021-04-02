@@ -58,9 +58,9 @@ namespace CometServer.Services
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the CDP4 request context.
+        /// Gets or sets the <see cref="IRequestUtils"/> for the current request
         /// </summary>
-        public ICdp4RequestContext Cdp4Context { get; set; }
+        public IRequestUtils RequestUtils { get; set; }
 
         /// <summary>
         /// Gets or sets the commonFileStore service.
@@ -105,7 +105,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> folder path where the file structure is created.
         /// </returns>
-        public string CreateFileStructure(List<Thing> resourceResponse, string partition, dynamic routeSegments)
+        public string CreateFileStructure(List<Thing> resourceResponse, string partition, string[] routeSegments)
         {
             if (resourceResponse[0].ClassKind == ClassKind.CommonFileStore
                 || resourceResponse[0].ClassKind == ClassKind.DomainFileStore
@@ -209,17 +209,12 @@ namespace CometServer.Services
         /// <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void CreateFileStructureOnDisk(Thing thing, string partition, string folderPath, dynamic routeSegments)
+        private void CreateFileStructureOnDisk(Thing thing, string partition, string folderPath, string[] routeSegments)
         {
             var logMessage = $"File structure creation is started into the temporary folder {folderPath}.";
             Logger.Info(logMessage);
 
-            //TODO: refactor to get current Credentials from request or context
-            // var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
-
-            throw new NotImplementedException("Credentials needs to be refactored");
-
-            var credentials = new Credentials();
+            var credentials = this.RequestUtils.Credentials as Credentials;
 
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
@@ -334,12 +329,7 @@ namespace CometServer.Services
         /// <returns>
         /// The list of things form a fileStore.
         /// </returns>
-        private List<Thing> GetFileStoreThings(
-            Thing thing,
-            dynamic routeSegments,
-            string partition,
-            NpgsqlTransaction transaction,
-            RequestSecurityContext authorizedContext)
+        private List<Thing> GetFileStoreThings(Thing thing, string[] routeSegments, string partition, NpgsqlTransaction transaction, RequestSecurityContext authorizedContext)
         {
             var iids = new List<Guid>();
 

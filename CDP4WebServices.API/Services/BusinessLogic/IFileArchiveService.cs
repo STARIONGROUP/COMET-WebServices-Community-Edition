@@ -49,7 +49,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> folder path where the file structure is created.
         /// </returns>
-        string CreateFileStructure(List<Thing> resourceResponse, string partition, dynamic routeSegments);
+        string CreateFileStructure(List<Thing> resourceResponse, string partition, string[] routeSegments);
 
         /// <summary>
         /// Delete file structure with archive.

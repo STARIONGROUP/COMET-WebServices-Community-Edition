@@ -30,12 +30,10 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
 
-    using CometServer.Helpers;
+    using CometServer.Authentication;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
-
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// The RequestUtils interface.
@@ -46,6 +44,11 @@ namespace CometServer.Services
         /// Gets or sets the cache for this request.
         /// </summary>
         List<Thing> Cache { get; set; }
+
+        /// <summary>
+        /// Gest or sets the <see cref="HttpRequest"/>
+        /// </summary>
+        public HttpRequest HttpRequest { get; set; }
 
         /// <summary>
         /// Gets or sets the meta info provider for this request.
@@ -67,11 +70,11 @@ namespace CometServer.Services
         /// Gets or sets the <see cref="IDefaultPermissionProvider"/> for this request
         /// </summary>
         IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
-        
+
         /// <summary>
-        /// Gets or sets the request context.
+        /// Gets or sets the authenticated <see cref="Credentials"/> that are valid for this request
         /// </summary>
-        ICdp4RequestContext Context { get; set; }
+        ICredentials Credentials { get; set; }
 
         /// <summary>
         /// Gets the get request data model version.

@@ -110,15 +110,17 @@ namespace CometServer.Authentication
         /// </returns>
         public ICredentials ResolvePerson(NpgsqlTransaction transaction, string username)
         {
-            var person = this.AuthenticationDao.Read(transaction, "SiteDirectory", username).SingleOrDefault();
+            throw new NotImplementedException();
 
-            if (person != null)
-            {
-                return this.ResolveCredentials(transaction, person);
-            }
+            //var person = this.AuthenticationDao.Read(transaction, "SiteDirectory", username).SingleOrDefault();
 
-            Logger.Warn("User request with username: {0} could not be authenticated", username);
-            return null;
+            //if (person != null)
+            //{
+            //    return this.ResolveCredentials(transaction, person);
+            //}
+
+            //Logger.Warn("User request with username: {0} could not be authenticated", username);
+            //return null;
         }
 
         /// <summary>

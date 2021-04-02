@@ -154,7 +154,8 @@ namespace CometServer.Services.Operations.SideEffects
             if (!thing.SourceEngineeringModelSetupIid.HasValue && !thing.ActiveDomain.Any())
             {
                 // new engineeringmodelsetup without active domain, set the user's default domain as the active domain
-                var defaultDomain = this.RequestUtils.Context.AuthenticatedCredentials.Person.DefaultDomain;
+                var defaultDomain = this.RequestUtils.Credentials.Person.DefaultDomain;
+
                 if (defaultDomain != null)
                 {
                     var domainId = defaultDomain.Value;
@@ -212,7 +213,7 @@ namespace CometServer.Services.Operations.SideEffects
             // reset the cache
             this.RequestUtils.Cache.Clear();
 
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            var credentials = this.RequestUtils.Credentials as Credentials;
             var actor = credentials.Person.Iid;
             
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
@@ -432,7 +433,7 @@ namespace CometServer.Services.Operations.SideEffects
             // use the default participant role as specified in the SiteDirectort container object
             var defaultRole = container.DefaultParticipantRole.Value;
 
-            var currentPerson = this.RequestUtils.Context.AuthenticatedCredentials.Person;
+            var currentPerson = this.RequestUtils.Credentials.Person;
             var defaultDomain = currentPerson.DefaultDomain;
             var participant = new Participant(Guid.NewGuid(), 1) { IsActive = true, Person = currentPerson.Iid, Role = defaultRole };
             if (defaultDomain != null)

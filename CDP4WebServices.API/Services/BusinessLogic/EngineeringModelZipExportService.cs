@@ -97,11 +97,6 @@ namespace CometServer.Services
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the CDP4 request context.
-        /// </summary>
-        public ICdp4RequestContext Cdp4Context { get; set; }
-
-        /// <summary>
         /// Gets or sets the transaction manager for this request.
         /// </summary>
         public ICdp4TransactionManager TransactionManager { get; set; }
@@ -202,12 +197,7 @@ namespace CometServer.Services
 
             var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new DtoThingIidComparer());
 
-            //TODO: refactor to get current Credentials from request or context
-            // var credentials = this.Cdp4Context.Context.CurrentUser as Credentials;
-
-            throw new NotImplementedException("Credentials needs to be refactored");
-
-            var credentials = new Credentials();
+            var credentials = this.RequestUtils.Credentials as Credentials;
 
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
@@ -277,7 +267,7 @@ namespace CometServer.Services
                     authorizedContext,
                     siteDirectoryPartition);
 
-                var activePersonGuidList = new List<Guid> { this.Cdp4Context.AuthenticatedCredentials.Person.Iid };
+                var activePersonGuidList = new List<Guid> { this.RequestUtils.Credentials.Person.Iid };
 
                 var activePerson = this.PersonService
                     .GetShallow(transaction, siteDirectoryPartition, activePersonGuidList, authorizedContext)
@@ -953,8 +943,7 @@ namespace CometServer.Services
         /// <param name="authorizedContext">
         /// The security context of the container instance.
         /// </param>
-        private void WriteModelsWithIterationsToZipFile(
-            IEnumerable<EngineeringModelSetup> engineeringModelSetups,
+        private void WriteModelsWithIterationsToZipFile(IEnumerable<EngineeringModelSetup> engineeringModelSetups,
             ZipFile zipFile,
             string filePath,
             NpgsqlTransaction transaction,
@@ -965,7 +954,7 @@ namespace CometServer.Services
             Regex rgx = new Regex(pattern);
 
             // Get the state of the current credentials and the participant flag 
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            var credentials = this.RequestUtils.Credentials as Credentials;
             var currentParticipantFlag = credentials.IsParticipant;
 
             // As EngineeringModel data will be retrieved the participant flag needs to be set to true
@@ -991,7 +980,7 @@ namespace CometServer.Services
 
                 if (engineeringModelDtos.Count == 0)
                 {
-                    throw new UnauthorizedAccessException($"Person {this.RequestUtils.Context.AuthenticatedCredentials.Person.UserName} is not authorized to access model {engineeringModelSetup.EngineeringModelIid}");
+                    throw new UnauthorizedAccessException($"Person {this.RequestUtils.Credentials.UserName} is not authorized to access model {engineeringModelSetup.EngineeringModelIid}");
                 }
 
                 var fileRevisions = engineeringModelDtos.Where(x => x.ClassKind == ClassKind.FileRevision)

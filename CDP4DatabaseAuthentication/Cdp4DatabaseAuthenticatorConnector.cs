@@ -70,7 +70,7 @@ namespace CDP4DatabaseAuthentication
         /// </summary>
         public override string Name
         {
-            get { return "CDP4 Database Authenticator"; }
+            get { return "COMET Database Authenticator"; }
         }
 
         /// <summary>

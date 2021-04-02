@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICdp4RequestContext.cs" company="RHEA System S.A.">
+// <copyright file="IAuthenticationPersonAuthenticator.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -22,25 +22,29 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Helpers
+namespace CometServer.Authentication
 {
-    using CometServer.Authentication;
+    using System.Threading.Tasks;
 
-    using Microsoft.AspNetCore.Http;
+    using CDP4Authentication;
 
     /// <summary>
-    /// The RequestContext interface.
+    /// The purpose of the <see cref="IAuthenticationPersonAuthenticator"/> is to authenticate a <see cref="AuthenticationPerson"/>
+    /// against the E-TM-10-25 datasource and associated authentication plugin
     /// </summary>
-    public interface ICdp4RequestContext
+    public interface IAuthenticationPersonAuthenticator
     {
         /// <summary>
-        /// Gets the request context.
+        /// Authenticates the <see cref="AuthenticationPerson"/> from the E-TM-10-25 datasource
         /// </summary>
-        HttpContext Context { get; }
-
-        /// <summary>
-        /// Gets the authenticated person.
-        /// </summary>
-        Credentials AuthenticatedCredentials { get; }
+        /// <param name="username">
+        /// the username of the <see cref="AuthenticationPerson"/> that is to be authenticated
+        /// </param>
+        /// <param name="password"></param>
+        /// the password of the <see cref="AuthenticationPerson"/> that is to be authenticated
+        /// <returns>
+        /// an instance of <see cref="AuthenticationPerson"/> or null if not found
+        /// </returns>
+        public Task<AuthenticationPerson> Authenticate(string username, string password);
     }
 }

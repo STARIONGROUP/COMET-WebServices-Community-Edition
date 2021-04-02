@@ -46,6 +46,7 @@ namespace CometServer
     using CDP4Orm.MigrationEngine;
 
     using CometServer.Authentication;
+    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
@@ -137,8 +138,6 @@ namespace CometServer
                 .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null)
                 .AddCookie(CookieScheme);
 
-            services.AddAuthorization();
-
             services.AddCarter(options: options =>
             {
             }, configurator: configurator =>
@@ -159,6 +158,8 @@ namespace CometServer
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
             builder.RegisterType<UserValidator>().As<IUserValidator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
+            builder.RegisterType<AuthenticationPersonAuthenticator>().As<IAuthenticationPersonAuthenticator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            
             builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
@@ -238,7 +239,9 @@ namespace CometServer
             app.UseRouting();
             app.UseCors();
             app.UseAuthentication();
-            app.UseAuthorization();
+
+            app.UseCometAuhtorization();
+
             app.UseEndpoints(builder => builder.MapCarter());
         }
     }

@@ -56,12 +56,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IPersonService"/>
         /// </summary>
         public IPersonService PersonService { get; set; }
-        
-        /// <summary>
-        /// Gets or sets the <see cref="ICdp4RequestContext"/>
-        /// </summary>
-        public ICdp4RequestContext Cdp4RequestContext { get; set; }
-        
+
         /// <summary>
         /// Allows derived classes to override and execute additional logic before an update operation.
         /// </summary>
@@ -123,7 +118,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </remarks>
         public override void AfterUpdate(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var authenticatedCredentials = this.Cdp4RequestContext.AuthenticatedCredentials;
+            var authenticatedCredentials = this.RequestUtils.Credentials;
             if (authenticatedCredentials.Person.Iid == thing.Iid)
             {
                 if (thing.Role != originalThing.Role)
@@ -180,10 +175,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             // Signal the ORM layer that a password change request is being handled:
             // encapsulate the 'clear-text' password with the PasswordChangeToken that is valid for this request only
-            var encapsulatedPasswordChangeRequest = string.Format(
-                "{1}{0}{1}",
-                passwordValue,
-                this.PersonDao.PasswordChangeToken);
+            var encapsulatedPasswordChangeRequest = $"{this.PersonDao.PasswordChangeToken}{passwordValue}{this.PersonDao.PasswordChangeToken}";
 
             // override the update info and override the rawUpdateInfo value
             rawUpdateInfo[PasswordKey] = encapsulatedPasswordChangeRequest;

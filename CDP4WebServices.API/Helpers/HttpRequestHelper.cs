@@ -25,12 +25,9 @@
 namespace CometServer.Helpers
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
 
     using Microsoft.AspNetCore.Http;
-
-    using NLog;
 
     using Services;
     using Services.Protocol;
@@ -40,11 +37,6 @@ namespace CometServer.Helpers
     /// </summary>
     public static class HttpRequestHelper
     {
-        /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// Validate that the current request only contains supported query parameters.
         /// </summary>

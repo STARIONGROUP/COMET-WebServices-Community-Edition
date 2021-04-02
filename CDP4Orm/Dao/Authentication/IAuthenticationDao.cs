@@ -25,6 +25,7 @@
 namespace CDP4Orm.Dao.Authentication
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -50,6 +51,6 @@ namespace CDP4Orm.Dao.Authentication
         /// <returns>
         /// List of instances of <see cref="AuthenticationPerson"/>.
         /// </returns>
-        IEnumerable<AuthenticationPerson> Read(NpgsqlTransaction transaction, string partition, string userName);
+        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName);
     }
 }

@@ -48,6 +48,8 @@ namespace CometServer.Services.Operations
     using System.Linq;
     using System.Security;
 
+    using CometServer.Authentication;
+
     using IServiceProvider = CometServer.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
@@ -965,7 +967,7 @@ namespace CometServer.Services.Operations
                 var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
-                securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                securityContext.Credentials = this.RequestUtils.Credentials as Credentials;
 
                 var resolvedInfo = this.operationThingCache[createInfo];
 
@@ -1125,7 +1127,7 @@ namespace CometServer.Services.Operations
                 var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(updateInfoKey.TypeName);
                 var service = this.ServiceProvider.MapToPersitableService(updateInfoKey.TypeName);
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
-                securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                securityContext.Credentials = this.RequestUtils.Credentials as Credentials;
 
                 var resolvedInfo = this.operationThingCache[updateInfoKey];
 

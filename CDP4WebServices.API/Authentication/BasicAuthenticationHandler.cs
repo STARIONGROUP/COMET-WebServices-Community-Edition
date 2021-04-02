@@ -25,11 +25,14 @@
 namespace CometServer.Authentication
 {
     using System;
+    using System.Diagnostics;
     using System.Net.Http.Headers;
     using System.Security.Claims;
     using System.Text;
     using System.Text.Encodings.Web;
     using System.Threading.Tasks;
+
+    using CDP4Authentication;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
@@ -41,9 +44,9 @@ namespace CometServer.Authentication
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         /// <summary>
-        /// The injected <see cref="IUserValidator"/>
+        /// The (injected) <see cref="IAuthenticationPersonAuthenticator"/> used to authenticate a user based on a username and password
         /// </summary>
-        private readonly IUserValidator userValidator;
+        private readonly IAuthenticationPersonAuthenticator authenticationPersonAuthenticator;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/> class.
@@ -60,13 +63,13 @@ namespace CometServer.Authentication
         /// <param name="clock">
         /// The <see cref="ISystemClock"/>
         /// </param>
-        /// <param name="userValidator">
-        /// The (injected) <see cref="IUserValidator"/> used to validate (authenticate) the user
+        /// <param name="authenticationPersonAuthenticator">
+        /// The (injected) <see cref="IAuthenticationPersonAuthenticator"/> used to authenticate a user based on a username and password
         /// </param>
-        public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IUserValidator userValidator) 
+        public BasicAuthenticationHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator) 
             : base(options, logger, encoder, clock)
         {
-            this.userValidator = userValidator;
+            this.authenticationPersonAuthenticator = authenticationPersonAuthenticator;
         }
 
         /// <summary>
@@ -77,31 +80,43 @@ namespace CometServer.Authentication
         /// </returns>
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            if (!Request.Headers.ContainsKey("Authorization"))
+            if (!this.Request.Headers.ContainsKey("Authorization"))
             {
+                this.Logger.LogInformation("The Authorization Header is missing from the request");
+
                 return AuthenticateResult.Fail("Missing Authorization Header");
             }
 
-            var username = string.Empty;
-            ICredentials credentials = null;
-            
+            var sw = Stopwatch.StartNew();
+
+            string username;
+            AuthenticationPerson authenticationPerson;
+
             try
             {
+                this.Logger.LogInformation("Extracting authentication data from the Authorization Header");
+
                 var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
                 var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
                 var basicAuthcredentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
                 username = basicAuthcredentials[0];
                 var password = basicAuthcredentials[1];
 
-                credentials = this.userValidator.Validate(username, password);
+                this.Logger.LogInformation($"Authenticating user: {username}");
+
+                authenticationPerson = await this.authenticationPersonAuthenticator.Authenticate(username, password);
             }
             catch
             {
+                this.Logger.LogInformation("Invalid Authorization Header");
+
                 return AuthenticateResult.Fail("Invalid Authorization Header");
             }
 
-            if (credentials == null)
+            if (authenticationPerson == null)
             {
+                this.Logger.LogInformation($"$Invalid Username or Password for: {username}");
+
                 return AuthenticateResult.Fail("Invalid Username or Password");
             }
 
@@ -112,6 +127,8 @@ namespace CometServer.Authentication
             var identity = new ClaimsIdentity(claims, this.Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var authenticationTicket = new AuthenticationTicket(principal, this.Scheme.Name);
+
+            this.Logger.LogInformation($"User: {username} authenticated in {sw.ElapsedMilliseconds} [ms]");
 
             return AuthenticateResult.Success(authenticationTicket);
         }

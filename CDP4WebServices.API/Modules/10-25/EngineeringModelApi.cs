@@ -152,7 +152,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected override HttpResponse GetResponseData(dynamic routeParams)
+        protected override HttpResponse GetResponseData(string[] routeParams)
         {
             throw new NotImplementedException();
         }
@@ -198,7 +198,7 @@ namespace CometServer.Modules
                                               Guid.TryParse(routeSegments[3], out iterationContextId);
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                var credentials = this.RequestUtils.Credentials as Credentials;
 
                 transaction = iterationContextRequest
                     ? this.TransactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
@@ -421,7 +421,7 @@ namespace CometServer.Modules
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                var credentials = this.RequestUtils.Credentials as Credentials;
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 // the route pattern enforces that there is atleast one route segment
@@ -588,7 +588,7 @@ namespace CometServer.Modules
                 yield return thing;
             }
 
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            var credentials = this.RequestUtils.Credentials as Credentials;
             var currentParticipantFlag = credentials.IsParticipant;
             if (this.RequestUtils.QueryParameters.IncludeReferenceData)
             {

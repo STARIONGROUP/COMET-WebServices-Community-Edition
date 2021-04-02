@@ -162,7 +162,7 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
             
             // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            var credentials = this.RequestUtils.Credentials as Credentials;
             credentials.EngineeringModelSetup = engineeringModelSetup;
             this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
             this.PermissionService.Credentials = credentials;
@@ -318,7 +318,7 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
 
             // Make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
-            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+            var credentials = this.RequestUtils.Credentials as Credentials;
             credentials.EngineeringModelSetup = (EngineeringModelSetup)container;
             this.PersonResolver.ResolveParticipantCredentials(transaction, credentials);
             this.PermissionService.Credentials = credentials;
@@ -366,7 +366,7 @@ namespace CometServer.Services.Operations.SideEffects
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
 
                 // Create revisions for deleted Iteration and updated EngineeringModel
-                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                var credentials = this.RequestUtils.Credentials as Credentials;
                 var actor = credentials.Person.Iid;
                 var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
                 this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);

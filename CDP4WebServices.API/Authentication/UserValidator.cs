@@ -30,7 +30,6 @@ namespace CometServer.Authentication
     using CDP4Authentication;
 
     using CometServer.Configuration;
-
     using CometServer.Services;
 
     using NLog;

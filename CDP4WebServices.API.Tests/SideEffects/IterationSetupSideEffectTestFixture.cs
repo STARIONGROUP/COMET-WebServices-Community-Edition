@@ -29,9 +29,9 @@ namespace CometServer.Tests.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CometServer.Authentication;
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
 
@@ -60,7 +60,6 @@ namespace CometServer.Tests.SideEffects
         private Mock<IEngineeringModelService> mockedEngineeringModelService;
         private Mock<ISecurityContext> mockedSecurityContext;
         private Mock<ICdp4TransactionManager> mockedTransactionManager;
-        private Mock<ICdp4RequestContext> mockedRequestContext;
         private Mock<IPersonResolver> mockedPersonResolver;
         private Mock<IRevisionService> mockedRevisionService;
 
@@ -73,7 +72,6 @@ namespace CometServer.Tests.SideEffects
             this.mockedSecurityContext = new Mock<ISecurityContext>();
             this.mockedTransactionManager = new Mock<ICdp4TransactionManager>();
             this.mockedRequestUtils = new Mock<IRequestUtils>();
-            this.mockedRequestContext = new Mock<ICdp4RequestContext>();
             this.mockedPersonResolver = new Mock<IPersonResolver>();
             this.mockedRevisionService = new Mock<IRevisionService>();
 
@@ -107,13 +105,10 @@ namespace CometServer.Tests.SideEffects
 
             this.mockedTransactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.UtcNow);
 
-            this.mockedRequestContext.Setup(x => x.AuthenticatedCredentials).Returns(new Credentials());
-
             this.mockedPersonResolver.Setup(x => x.ResolveParticipantCredentials(It.IsAny<NpgsqlTransaction>(), It.IsAny<Credentials>()));
 
-            this.mockedRequestUtils.Setup(x => x.Context).Returns(this.mockedRequestContext.Object);
             this.mockedRequestUtils.Setup(x => x.GetEngineeringModelPartitionString(It.IsAny<Guid>())).Returns("EngineeringModel");
-            this.mockedRequestUtils.Setup(x => x.Context.AuthenticatedCredentials).Returns(new Credentials { Person = new AuthenticationPerson(new Guid(), 1) });
+            this.mockedRequestUtils.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(new Guid(), 1) });
 
             this.mockedRevisionService
                 .Setup(

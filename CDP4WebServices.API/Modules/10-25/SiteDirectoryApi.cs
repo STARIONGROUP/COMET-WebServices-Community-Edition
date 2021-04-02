@@ -30,7 +30,6 @@ namespace CometServer.Modules
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Text.RegularExpressions;
     using System.Threading.Tasks;
 
     using Carter.Response;
@@ -39,6 +38,7 @@ namespace CometServer.Modules
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authentication;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
@@ -133,7 +133,7 @@ namespace CometServer.Modules
         /// </summary>
         public IModelCreatorManager ModelCreatorManager { get; set; }
 
-        protected override HttpResponse GetResponseData(dynamic routeParams)
+        protected override HttpResponse GetResponseData(string[] routeParams)
         {
             throw new NotImplementedException();
         }
@@ -172,7 +172,7 @@ namespace CometServer.Modules
                 var resourceResponse = new List<Thing>();
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                var credentials = this.RequestUtils.Credentials as Credentials;
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 if (fromRevision > -1)
@@ -299,7 +299,7 @@ namespace CometServer.Modules
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
 
                 // get prepared data source transaction
-                var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+                var credentials = this.RequestUtils.Credentials as Credentials;
 
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 

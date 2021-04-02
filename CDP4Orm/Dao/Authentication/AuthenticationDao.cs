@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao.Authentication
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -53,34 +54,37 @@ namespace CDP4Orm.Dao.Authentication
         /// <returns>
         /// List of instances of <see cref="AuthenticationPerson"/>.
         /// </returns>
-        public IEnumerable<AuthenticationPerson> Read(NpgsqlTransaction transaction, string partition, string userName)
+        public async Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName)
         {
-            using (var command = new NpgsqlCommand())
+            var result = new List<AuthenticationPerson>();
+
+            await using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new System.Text.StringBuilder();
+
+            sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Person_View\"", partition);
+
+            if (!string.IsNullOrWhiteSpace(userName))
             {
-                var sqlBuilder = new System.Text.StringBuilder();
-
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Person_View\"", partition);
-
-                if (!string.IsNullOrWhiteSpace(userName))
-                {
-                    sqlBuilder.Append(" WHERE \"ValueTypeSet\" -> 'ShortName' = :shortname");
-                    command.Parameters.Add("shortname", NpgsqlDbType.Varchar).Value = userName;
-                }
-
-                sqlBuilder.Append(";");
-
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sqlBuilder.ToString();
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return this.MapToDto(reader);
-                    }
-                }
+                sqlBuilder.Append(" WHERE \"ValueTypeSet\" -> 'ShortName' = :shortname");
+                command.Parameters.Add("shortname", NpgsqlDbType.Varchar).Value = userName;
             }
+
+            sqlBuilder.Append(";");
+
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
+
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                var authenticationPerson = this.MapToDto(reader);
+                result.Add(authenticationPerson);
+            }
+
+            return result;
         }
 
         /// <summary>

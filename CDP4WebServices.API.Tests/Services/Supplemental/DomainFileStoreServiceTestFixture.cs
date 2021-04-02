@@ -37,9 +37,9 @@ namespace CometServer.Tests.Services.Supplemental
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authentication;
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Authentication;
     using CometServer.Services.Authorization;
 
     using Moq;
