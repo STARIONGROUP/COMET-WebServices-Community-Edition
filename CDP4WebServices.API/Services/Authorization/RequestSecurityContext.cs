@@ -24,10 +24,6 @@
 
 namespace CometServer.Services.Authorization
 {
-    using System;
-
-    using CometServer.Authorization;
-
     /// <summary>
     /// Request security context class that holds security data relevant for authorization checks
     /// </summary>
@@ -52,11 +48,5 @@ namespace CometServer.Services.Authorization
         /// Gets or sets a value indicating whether the container was authorized for writing.
         /// </summary>
         public bool ContainerWriteAllowed { get; set; }
-
-        /// <summary>
-        /// Gets or sets the top container for this request context.
-        /// </summary>
-        [Obsolete]
-        public string TopContainer { get; set; }
     }
 }
