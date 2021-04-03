@@ -71,6 +71,11 @@ namespace CometServer.Services
         public IRequestUtils RequestUtils { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
+
+        /// <summary>
         /// Gets or sets the file n binary service.
         /// </summary>
         public IFileBinaryService FileBinaryService { get; set; }
@@ -436,7 +441,7 @@ namespace CometServer.Services
 
             using (var stream = this.ReadStreamFromArchive(zipEntry, archivePassword))
             {
-                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, version);
+                this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
                 returned = this.JsonSerializer.Deserialize(stream);
             }
 

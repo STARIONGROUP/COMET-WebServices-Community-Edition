@@ -352,7 +352,7 @@ namespace CometServer.Modules
                     await this.GetZippedModelsResponse(httpResponse, version, modelSetupGuidList, HttpStatusCode.OK, requestToken);
                 }
 
-                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, version);
+                this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
 
                 transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);

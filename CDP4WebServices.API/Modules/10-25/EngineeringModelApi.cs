@@ -384,7 +384,7 @@ namespace CometServer.Modules
                     bodyStream = httpRequest.Body;
                 }
 
-                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion(httpRequest));
+                this.JsonSerializer.Initialize(this.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion(httpRequest));
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
 
                 // get prepared data source transaction

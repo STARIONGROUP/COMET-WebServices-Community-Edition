@@ -54,6 +54,16 @@ namespace CometServer.Services.Operations.SideEffects
         private readonly Dictionary<string, IOperationSideEffect> operationSideEffectMap = new Dictionary<string, IOperationSideEffect>();
 
         /// <summary>
+        /// Gets or sets the <see cref="IRequestUtils" />.
+        /// </summary>
+        public IRequestUtils RequestUtils { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="OperationSideEffectProcessor" /> class.
         /// </summary>
         /// <param name="operationSideEffects">
@@ -81,11 +91,6 @@ namespace CometServer.Services.Operations.SideEffects
                 throw;
             }
         }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IRequestUtils" />.
-        /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
 
         /// <summary>
         /// Predicate to determine if a property will be validated.
@@ -354,7 +359,7 @@ namespace CometServer.Services.Operations.SideEffects
                     yield return this.GetOperationSideEffect(type);
                 }
 
-                var metaInfo = this.RequestUtils.MetaInfoProvider.GetMetaInfo(type);
+                var metaInfo = this.MetaInfoProvider.GetMetaInfo(type);
                 type = metaInfo.BaseType;
             } while (!string.IsNullOrEmpty(type));
         }

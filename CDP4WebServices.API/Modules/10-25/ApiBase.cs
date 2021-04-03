@@ -147,9 +147,14 @@ namespace CometServer.Modules
         public IPermissionService PermissionService { get; set; }
 
         /// <summary>
-        /// Gets or sets the Utils instance for this request.
+        /// Gets or sets the (injected) <see cref="IRequestUtils"/>
         /// </summary>
         public IRequestUtils RequestUtils { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (inject) <see cref="IMetaInfoProvider"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the operation processor.
@@ -612,7 +617,7 @@ namespace CometServer.Modules
             sw.Start();
             Logger.Debug("{0} start serializing dtos", requestToken);
 
-            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, requestDataModelVersion);
+            this.JsonSerializer.Initialize(this.MetaInfoProvider, requestDataModelVersion);
             this.JsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 

@@ -85,6 +85,11 @@ namespace CometServer.Services.ChangeLog
         public IRequestUtils RequestUtils { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
+
+        /// <summary>
         /// The injected <see cref="IOptionService"/>
         /// </summary>
         public IOptionService OptionService { get; set; }
@@ -287,7 +292,7 @@ namespace CometServer.Services.ChangeLog
                         if (addModelLogEntryToOperation)
                         {
                             var engineeringModelClasslessDTO = ClasslessDtoFactory
-                                .FromThing(this.RequestUtils.MetaInfoProvider,
+                                .FromThing(this.MetaInfoProvider,
                                     engineeringModel);
 
                             engineeringModelClasslessDTO.Add(nameof(EngineeringModel.LogEntry), new[] { modelLogEntry.Iid });
@@ -299,7 +304,7 @@ namespace CometServer.Services.ChangeLog
                         {
                             var modelLogEntryClasslessDTO =
                                 ClasslessDtoFactory
-                                    .FromThing(this.RequestUtils.MetaInfoProvider,
+                                    .FromThing(this.MetaInfoProvider,
                                         modelLogEntry,
                                         new[] { nameof(ModelLogEntry.LogEntryChangelogItem), nameof(ModelLogEntry.AffectedItemIid), nameof(ModelLogEntry.AffectedDomainIid) });
 
@@ -634,7 +639,7 @@ namespace CometServer.Services.ChangeLog
                 }
                 else
                 {
-                    var metaInfoProvider = this.RequestUtils.MetaInfoProvider.GetMetaInfo(originalThing);
+                    var metaInfoProvider = this.MetaInfoProvider.GetMetaInfo(originalThing);
                     var orgValue = metaInfoProvider.GetValue(operation.Key, originalThing);
                     stringBuilder.AppendLine($"  - {operation.Key}: {orgValue} => {operation.Value}");
                 }
@@ -667,7 +672,7 @@ namespace CometServer.Services.ChangeLog
         /// </param>
         private void AddChangedThingIidLine(NpgsqlTransaction transaction, string partition, Thing originalThing, string propertyName, Guid changedValue, StringBuilder stringBuilder)
         {
-            var metaInfoProvider = this.RequestUtils.MetaInfoProvider.GetMetaInfo(originalThing);
+            var metaInfoProvider = this.MetaInfoProvider.GetMetaInfo(originalThing);
             var metaInfo = metaInfoProvider.GetPropertyMetaInfo(propertyName);
 
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };

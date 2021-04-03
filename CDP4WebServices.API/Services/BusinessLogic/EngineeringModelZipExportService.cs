@@ -139,9 +139,14 @@ namespace CometServer.Services
         public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
-        /// Gets or sets the Utils instance for this request.
+        /// Gets or sets the (injected) <see cref="IRequestUtils"/>
         /// </summary>
         public IRequestUtils RequestUtils { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the permission service.
@@ -193,7 +198,7 @@ namespace CometServer.Services
         public string CreateZipExportFile(Version version, IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files = null)
         {
             // Initialize the json serializer
-            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, version);
+            this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
 
             var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new DtoThingIidComparer());
 
