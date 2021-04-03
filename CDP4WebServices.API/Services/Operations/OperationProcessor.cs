@@ -164,11 +164,7 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
-        public void Process(
-            CdpPostOperation operation,
-            NpgsqlTransaction transaction,
-            string partition,
-            Dictionary<string, Stream> fileStore = null)
+        public void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null)
         {
             this.ValidatePostMessage(operation, fileStore ?? new Dictionary<string, Stream>(), transaction, partition);
             this.ApplyOperation(operation, transaction, partition, fileStore ?? new Dictionary<string, Stream>());
@@ -1332,7 +1328,7 @@ namespace CometServer.Services.Operations
                             && !serviceBase.PermissionService.CanWrite(transaction, originalThing, updateInfoKey.TypeName,
                             resolvedInfo.Partition, ServiceBase.UpdateOperation, securityContext))
                         {
-                            throw new SecurityException("The person " + serviceBase.PermissionService.Credentials.Person.UserName + " does not have an appropriate update permission for " + originalThing.GetType().Name + ".");
+                            throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + originalThing.GetType().Name + ".");
                         }
                     }
 

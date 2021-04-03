@@ -217,7 +217,7 @@ namespace CometServer.Services
         {
             if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
             {
-                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
+                throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
             var parameterValueSetBase = thing as ParameterValueSetBase;
@@ -249,7 +249,7 @@ namespace CometServer.Services
         {
             if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
             {
-                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+                throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
             var parameterValueSetBase = thing as ParameterValueSetBase;
@@ -355,7 +355,7 @@ namespace CometServer.Services
                 }
                 else
                 {
-                    Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
+                    Logger.Info("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
 

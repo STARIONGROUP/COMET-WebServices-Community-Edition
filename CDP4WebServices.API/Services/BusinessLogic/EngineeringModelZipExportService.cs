@@ -44,6 +44,8 @@ namespace CometServer.Services
 
     using Ionic.Zip;
 
+    using Microsoft.AspNetCore.Http;
+
     using NLog;
 
     using Npgsql;
@@ -188,12 +190,10 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> path of the created archive.
         /// </returns>
-        public string CreateZipExportFile(IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files = null)
+        public string CreateZipExportFile(Version version, IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files = null)
         {
             // Initialize the json serializer
-            this.JsonSerializer.Initialize(
-                this.RequestUtils.MetaInfoProvider,
-                this.RequestUtils.GetRequestDataModelVersion);
+            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, version);
 
             var siteReferenceDataLibraries = new HashSet<SiteReferenceDataLibrary>(new DtoThingIidComparer());
 
@@ -954,11 +954,10 @@ namespace CometServer.Services
             Regex rgx = new Regex(pattern);
 
             // Get the state of the current credentials and the participant flag 
-            var credentials = this.CredentialsService.Credentials;
-            var currentParticipantFlag = credentials.IsParticipant;
+            var currentParticipantFlag = this.CredentialsService.Credentials.IsParticipant;
 
             // As EngineeringModel data will be retrieved the participant flag needs to be set to true
-            credentials.IsParticipant = true;
+            this.CredentialsService.Credentials.IsParticipant = true;
 
             foreach (var engineeringModelSetup in engineeringModelSetups)
             {
@@ -967,10 +966,9 @@ namespace CometServer.Services
                     replacement);
 
                 // Get participant permissions as EngineeringModel data will be retrieved
-                credentials.EngineeringModelSetup = engineeringModelSetup;
+                this.CredentialsService.Credentials.EngineeringModelSetup = engineeringModelSetup;
                 this.CredentialsService.ResolveParticipantCredentials(transaction);
-                this.PermissionService.Credentials = credentials;
-
+                
                 // Get all engineeringModel objects
                 var engineeringModelDtos = this.EngineeringModelService.GetDeep(
                     transaction,
@@ -993,14 +991,9 @@ namespace CometServer.Services
 
                     using (var outputStream = new MemoryStream(engineeringModelMemoryStream.ToArray()))
                     {
-                        var engineeringModelFilename = string.Format(
-                            @"{0}\{1}\{1}.json",
-                            EngineeringModelZipLocation,
-                            engineeringModelSetup.EngineeringModelIid);
+                        var engineeringModelFilename = $@"{EngineeringModelZipLocation}\{engineeringModelSetup.EngineeringModelIid}\{engineeringModelSetup.EngineeringModelIid}.json";
                         var engineeringModelZipEntry = zipFile.AddEntry(engineeringModelFilename, outputStream);
-                        engineeringModelZipEntry.Comment = string.Format(
-                            "The {0} EngineeringModel",
-                            engineeringModelSetup.ShortName);
+                        engineeringModelZipEntry.Comment = $"The {engineeringModelSetup.ShortName} EngineeringModel";
                         zipFile.Save(filePath);
                     }
                 }
@@ -1053,8 +1046,7 @@ namespace CometServer.Services
             }
 
             // Set the state of the credentials and the participant flag before retrieving EngineeringModel data
-            credentials.IsParticipant = currentParticipantFlag;
-            this.PermissionService.Credentials = credentials;
+            this.CredentialsService.Credentials.IsParticipant = currentParticipantFlag;
         }
     }
 }

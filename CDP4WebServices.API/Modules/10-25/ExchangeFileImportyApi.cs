@@ -301,8 +301,10 @@ namespace CometServer.Modules
             // drop existing data stores
             this.DropDataStoreAndPrepareNew();
 
+            var version = this.RequestUtils.GetRequestDataModelVersion(request);
+
             // handle exchange processing
-            if (!this.InsertModelData(filePath, exchangeFileRequest.Password, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(version, filePath, exchangeFileRequest.Password, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -359,7 +361,7 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful, false if not
         /// </returns>
-        private bool InsertModelData(string fileName, string password = null, bool seed = true)
+        private bool InsertModelData(Version version, string fileName, string password = null, bool seed = true)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -395,7 +397,7 @@ namespace CometServer.Modules
                 this.TransactionManager.SetAuditLoggingState(transaction, false);
 
                 // get sitedirectory data
-                var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(fileName, password).ToList();
+                var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
 
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
@@ -470,7 +472,7 @@ namespace CometServer.Modules
 
                         // get referenced engineeringmodel data
                         var engineeringModelItems = this.ExchangeFileProcessor
-                            .ReadEngineeringModelFromfile(fileName, password, engineeringModelSetup).ToList();
+                            .ReadEngineeringModelFromfile(version, fileName, password, engineeringModelSetup).ToList();
 
                         // should return one engineeringmodel topcontainer
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
@@ -513,7 +515,7 @@ namespace CometServer.Modules
                         {
                             this.RequestUtils.Cache.Clear();
                             var iterationItems = this.ExchangeFileProcessor
-                                .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
+                                .ReadModelIterationFromFile(version, fileName, password, iterationSetup).ToList();
 
                             // FixRevisionNumber(iterationItems);
                             this.RequestUtils.Cache = new List<Thing>(iterationItems);

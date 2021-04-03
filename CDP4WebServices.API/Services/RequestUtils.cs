@@ -82,11 +82,6 @@ namespace CometServer.Services
         public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
 
         /// <summary>
-        /// Gest or sets the <see cref="HttpRequest"/>
-        /// </summary>
-        public HttpRequest HttpRequest { get; set; }
-
-        /// <summary>
         /// Gets or sets the query parameters.
         /// </summary>
         public IQueryParameters QueryParameters
@@ -111,20 +106,17 @@ namespace CometServer.Services
         /// <summary>
         /// Gets the get request data model version.
         /// </summary>
-        public Version GetRequestDataModelVersion
+        public Version GetRequestDataModelVersion(HttpRequest httpRequest)
         {
-            get
-            {
-                var versionHeader =
-                    this.HttpRequest.Headers.SingleOrDefault(
-                        x =>
-                            x.Key.ToLower(CultureInfo.InvariantCulture) ==
-                            AcceptCdpVersionHeader.ToLower(CultureInfo.InvariantCulture));
+            string versionHeader;
 
-                return !versionHeader.Equals(default(KeyValuePair<string, IEnumerable<string>>))
-                    ? new Version(versionHeader.Value.First())
-                    : new Version(DefaultDataModelVersion);
+            if (httpRequest.Headers.TryGetValue(AcceptCdpVersionHeader, out var versionHeaderValue))
+            {
+                versionHeader = versionHeaderValue;
+                return new Version(versionHeader);
             }
+
+            return new Version(DefaultDataModelVersion);
         }
         
         /// <summary>

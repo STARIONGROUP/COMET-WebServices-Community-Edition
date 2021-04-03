@@ -38,6 +38,8 @@ namespace CometServer.Services
 
     using Ionic.Zip;
 
+    using Microsoft.AspNetCore.Http;
+
     using Newtonsoft.Json.Linq;
 
     using NLog;
@@ -85,10 +87,10 @@ namespace CometServer.Services
         /// <returns>
         /// The site directory contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadSiteDirectoryFromfile(string filePath, string password)
+        public IEnumerable<Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
-            return this.ReadSiteDirectoryDataFromStream(memoryStream, password);
+            return this.ReadSiteDirectoryDataFromStream(version, memoryStream, password);
         }
 
         /// <summary>
@@ -106,13 +108,13 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized engineering model contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadEngineeringModelFromfile(
+        public IEnumerable<Thing> ReadEngineeringModelFromfile(Version version,
             string filePath,
             string password,
             EngineeringModelSetup engineeringModelSetup)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
-            return this.ReadEngineeringModelDataFromStream(memoryStream, password, engineeringModelSetup);
+            return this.ReadEngineeringModelDataFromStream(version, memoryStream, password, engineeringModelSetup);
         }
 
         /// <summary>
@@ -130,13 +132,13 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized iteration contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadModelIterationFromFile(
+        public IEnumerable<Thing> ReadModelIterationFromFile(Version version,
             string filePath,
             string password,
             IterationSetup iterationSetup)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
-            return this.ReadIterationModelDataFromStream(memoryStream, password, iterationSetup);
+            return this.ReadIterationModelDataFromStream(version, memoryStream, password, iterationSetup);
         }
 
         /// <summary>
@@ -202,7 +204,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<Thing> ReadSiteDirectoryDataFromStream(MemoryStream stream, string password)
+        private IEnumerable<Thing> ReadSiteDirectoryDataFromStream(Version version, MemoryStream stream, string password)
         {
             try
             {
@@ -213,7 +215,7 @@ namespace CometServer.Services
                     var siteDirectoryZipEntry =
                         zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
 
-                    var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(siteDirectoryZipEntry, password);
+                    var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, siteDirectoryZipEntry, password);
                     Logger.Info("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
 
                     var returned = new List<Thing>(returnedSiteDirectory);
@@ -234,7 +236,7 @@ namespace CometServer.Services
 
                         var modelRdlFilePath = string.Format(ExchangeFileNameFormat, modelRdlDto.Iid);
                         var modelRdlZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(modelRdlFilePath));
-                        var modelRdlItems = this.ReadInfoFromArchiveEntry(modelRdlZipEntry, password);
+                        var modelRdlItems = this.ReadInfoFromArchiveEntry(version, modelRdlZipEntry, password);
 
                         Logger.Info("{0} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
                         returned.AddRange(modelRdlItems);
@@ -258,7 +260,7 @@ namespace CometServer.Services
                                 var siteRdlZipEntry =
                                     zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(siteRdlFilePath));
 
-                                var siteRdlItems = this.ReadInfoFromArchiveEntry(siteRdlZipEntry, password);
+                                var siteRdlItems = this.ReadInfoFromArchiveEntry(version, siteRdlZipEntry, password);
 
                                 Logger.Info("{0} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
                                 returned.AddRange(siteRdlItems);
@@ -303,7 +305,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<Thing> ReadEngineeringModelDataFromStream(
+        private IEnumerable<Thing> ReadEngineeringModelDataFromStream(Version version,
             MemoryStream stream,
             string password,
             EngineeringModelSetup engineeringModelSetup)
@@ -316,7 +318,7 @@ namespace CometServer.Services
                     // read engineeringmodel data
                     var engineeringModelFilePath = string.Format(ExchangeFileNameFormat, engineeringModelSetup.EngineeringModelIid);
                     var engineeringModelZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(engineeringModelFilePath));
-                    var engineeringModelItems = this.ReadInfoFromArchiveEntry(engineeringModelZipEntry, password);
+                    var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, engineeringModelZipEntry, password);
 
                     Logger.Info("{0} Engineering Model item(s) encountered", engineeringModelItems.Count);
                     return engineeringModelItems;
@@ -349,7 +351,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<Thing> ReadIterationModelDataFromStream(
+        private IEnumerable<Thing> ReadIterationModelDataFromStream(Version version,
             MemoryStream stream,
             string password,
             IterationSetup iterationSetup)
@@ -362,7 +364,7 @@ namespace CometServer.Services
                     // read iteration data
                     var iterationFilePath = string.Format(ExchangeFileNameFormat, iterationSetup.IterationIid);
                     var iterationZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(iterationFilePath));
-                    var iterationItems = this.ReadInfoFromArchiveEntry(iterationZipEntry, password);
+                    var iterationItems = this.ReadInfoFromArchiveEntry(version, iterationZipEntry, password);
 
                     Logger.Info("{0} Iteration item(s) encountered", iterationItems.Count);
                     return iterationItems;
@@ -425,7 +427,7 @@ namespace CometServer.Services
         /// <exception cref="Exception">
         /// throws exception if the file failed to open
         /// </exception>
-        private List<Thing> ReadInfoFromArchiveEntry(ZipEntry zipEntry, string archivePassword)
+        private List<Thing> ReadInfoFromArchiveEntry(Version version, ZipEntry zipEntry, string archivePassword)
         {
             var watch = Stopwatch.StartNew();
 
@@ -434,7 +436,7 @@ namespace CometServer.Services
 
             using (var stream = this.ReadStreamFromArchive(zipEntry, archivePassword))
             {
-                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
+                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, version);
                 returned = this.JsonSerializer.Deserialize(stream);
             }
 

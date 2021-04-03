@@ -36,11 +36,6 @@ namespace CometServer.Authorization
     public interface IPermissionService
     {
         /// <summary>
-        /// Gets or sets the <see cref="Credentials"/> assigned to this service.
-        /// </summary>
-        Credentials Credentials { get; set; }
-
-        /// <summary>
         /// Determines whether the typeName can be read.
         /// </summary>
         /// <param name="typeName">

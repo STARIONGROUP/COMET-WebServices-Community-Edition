@@ -84,14 +84,14 @@ namespace CometServer.Authorization
         public IAccessRightKindService AccessRightKindService { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
+
+        /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
-        /// Gets or sets the <see cref="Credentials"/> assigned to this service.
-        /// </summary>
-        public Credentials Credentials { get; set; }
 
         /// <summary>
         /// Gets the list of <see cref="Participant"/> of the current <see cref="Person"/> that is represented by the current <see cref="Credentials"/> 
@@ -120,7 +120,7 @@ namespace CometServer.Authorization
             if (partition == SiteDirectory)
             {
                 // Get the person's permission and if found use it. If not, use the default.
-                var personAccessRightKind = this.AccessRightKindService.QueryPersonAccessRightKind(this.Credentials, typeName);
+                var personAccessRightKind = this.AccessRightKindService.QueryPersonAccessRightKind(this.CredentialsService.Credentials, typeName);
 
                 switch (personAccessRightKind)
                 {
@@ -155,7 +155,7 @@ namespace CometServer.Authorization
             }
 
             // Get the person's permission and if found use it. If not, use the default.
-            var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.Credentials, typeName);
+            var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.CredentialsService.Credentials, typeName);
 
             switch (participantAccessRightKind)
             {
@@ -200,14 +200,14 @@ namespace CometServer.Authorization
             Logger.Debug("Database CanRead: {0}:{1}:{2}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
-            if (thing.ExcludedPerson.Contains(this.Credentials.Person.Iid))
+            if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))
             {
                 return false;
             }
 
             if (partition == SiteDirectory)
             {
-                var personAccessRightKind = this.AccessRightKindService.QueryPersonAccessRightKind(this.Credentials, thing.GetType().Name);
+                var personAccessRightKind = this.AccessRightKindService.QueryPersonAccessRightKind(this.CredentialsService.Credentials, thing.GetType().Name);
 
                 switch (personAccessRightKind)
                 {
@@ -225,27 +225,27 @@ namespace CometServer.Authorization
 
                         if (thing is EngineeringModelSetup modelSetup)
                         {
-                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
+                            return this.CredentialsService.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
                         }
 
                         if (thing is IterationSetup iterationSetup)
                         {
-                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.IterationSetup.Contains(iterationSetup.Iid));
+                            return this.CredentialsService.Credentials.EngineeringModelSetups.Any(ems => ems.IterationSetup.Contains(iterationSetup.Iid));
                         }
 
                         if (thing is Participant)
                         {
-                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.Participant.Contains(thing.Iid));
+                            return this.CredentialsService.Credentials.EngineeringModelSetups.Any(ems => ems.Participant.Contains(thing.Iid));
                         }
 
                         if (thing is ModelReferenceDataLibrary)
                         {
-                            return this.Credentials.EngineeringModelSetups.Any(ems => ems.RequiredRdl.Contains(thing.Iid));
+                            return this.CredentialsService.Credentials.EngineeringModelSetups.Any(ems => ems.RequiredRdl.Contains(thing.Iid));
                         }
 
                         if (thing is SiteReferenceDataLibrary)
                         {
-                            var rdlDependency = this.ModelReferenceDataLibraryDao.GetSiteReferenceDataLibraryDependency(this.Credentials.EngineeringModelSetups, transaction);
+                            var rdlDependency = this.ModelReferenceDataLibraryDao.GetSiteReferenceDataLibraryDependency(this.CredentialsService.Credentials.EngineeringModelSetups, transaction);
                             return rdlDependency.Contains(thing.Iid);
                         }
 
@@ -256,7 +256,7 @@ namespace CometServer.Authorization
                     {
                         if (thing is Person person)
                         {
-                            return this.PersonIsParticipantWithinCurrentUserModel(transaction, person) || person.Iid == this.Credentials.Person.Iid;
+                            return this.PersonIsParticipantWithinCurrentUserModel(transaction, person) || person.Iid == this.CredentialsService.Credentials.Person.Iid;
                         }
 
                         // That should only be applied on Person
@@ -305,14 +305,14 @@ namespace CometServer.Authorization
             Logger.Debug("Database CanWrite: {0}:{1}:{2}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
-            if (thing.ExcludedPerson.Contains(this.Credentials.Person.Iid))
+            if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))
             {
                 return false;
             }
 
             if (partition == SiteDirectory)
             {
-                var personAccessRightKind =  this.AccessRightKindService.QueryPersonAccessRightKind(this.Credentials, typeName);
+                var personAccessRightKind =  this.AccessRightKindService.QueryPersonAccessRightKind(this.CredentialsService.Credentials, typeName);
 
                 switch (personAccessRightKind)
                 {
@@ -358,7 +358,7 @@ namespace CometServer.Authorization
             }
 
             // obfuscation check. Regardless of other things, if a Thing is obfuscated for person, disallow write
-            if (this.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && (
+            if (this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && (
                     thing.ClassKind == ClassKind.ElementDefinition ||
                     thing.ClassKind == ClassKind.ElementUsage ||
                     thing.ClassKind == ClassKind.Parameter ||
@@ -376,24 +376,24 @@ namespace CometServer.Authorization
                 if (modifyOperation != CreateOperation)
                 {
                     // you have no access to any element definitions or contained thing
-                    if (this.Credentials.OrganizationalParticipant == null)
+                    if (this.CredentialsService.Credentials.OrganizationalParticipant == null)
                     {
                         return false;
                     }
 
                     // model is protected
-                    if (!this.Credentials.IsDefaultOrganizationalParticipant)
+                    if (!this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
                     {
                         // is not default organizational participant
                         if (thing.ClassKind == ClassKind.ElementDefinition)
                         {
                             // directly get the participation
-                            return ((ElementDefinition)thing).OrganizationalParticipant.Contains(this.Credentials.OrganizationalParticipant.Iid);
+                            return ((ElementDefinition)thing).OrganizationalParticipant.Contains(this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
                         }
                         else
                         {
                             // walk up the container chain until the ElementDefinition is found
-                            var isOrganizationallyAllowed = this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipations(transaction, partition, this.Credentials.Iteration, thing, this.Credentials.OrganizationalParticipant.Iid);
+                            var isOrganizationallyAllowed = this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipations(transaction, partition, this.CredentialsService.Credentials.Iteration, thing, this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
 
                             if (!isOrganizationallyAllowed)
                             {
@@ -408,7 +408,7 @@ namespace CometServer.Authorization
                 {
                     // on create the 
                     // you have no access to any element definitions or contained thing, cant create anything
-                    if (this.Credentials.OrganizationalParticipant == null)
+                    if (this.CredentialsService.Credentials.OrganizationalParticipant == null)
                     {
                         return false;
                     }
@@ -416,7 +416,7 @@ namespace CometServer.Authorization
             }
 
             // Get the person's participant permission and if found use it. If not, use the default.
-            var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.Credentials, typeName);
+            var participantAccessRightKind = this.AccessRightKindService.QueryParticipantAccessRightKind(this.CredentialsService.Credentials, typeName);
 
             switch (participantAccessRightKind)
             {
@@ -464,7 +464,7 @@ namespace CometServer.Authorization
 
             if (thing is EngineeringModelSetup modelSetup)
             {
-                return this.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
+                return this.CredentialsService.Credentials.EngineeringModelSetups.Any(ems => ems.Iid == modelSetup.Iid);
             }
 
             return false;
@@ -479,7 +479,7 @@ namespace CometServer.Authorization
         {
             if (thing is Person person)
             {
-                return person.Iid == this.Credentials.Person.Iid;
+                return person.Iid == this.CredentialsService.Credentials.Person.Iid;
             }
 
             return false;
@@ -506,7 +506,7 @@ namespace CometServer.Authorization
 
                 var participants = this.ParticipantDao
                     .Read(transaction, SiteDirectory, null).ToList()
-                    .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
+                    .Where(participant => participant.Person == this.CredentialsService.Credentials.Person.Iid && this.CredentialsService.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
 
                 this.currentParticipantCache.AddRange(participants);
             }
@@ -571,7 +571,7 @@ namespace CometServer.Authorization
         /// <returns>True if that is the case</returns>
         private bool PersonIsParticipantWithinCurrentUserModel(NpgsqlTransaction transaction, Person person)
         {
-            var participantsIds = this.Credentials.EngineeringModelSetups.SelectMany(x => x.Participant).ToArray();
+            var participantsIds = this.CredentialsService.Credentials.EngineeringModelSetups.SelectMany(x => x.Participant).ToArray();
             if (participantsIds.Length == 0)
             {
                 return false;

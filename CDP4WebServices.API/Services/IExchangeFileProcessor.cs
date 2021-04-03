@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System;
+
     using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
@@ -49,7 +51,7 @@ namespace CometServer.Services
         /// <returns>
         /// The site directory contained <see cref="Thing"/> collection.
         /// </returns>
-        IEnumerable<Thing> ReadSiteDirectoryFromfile(string filePath, string password);
+        IEnumerable<Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password);
 
         /// <summary>
         /// Get the engineering model from file.
@@ -66,7 +68,7 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized engineering model contained <see cref="Thing"/> collection.
         /// </returns>
-        IEnumerable<Thing> ReadEngineeringModelFromfile(string filePath, string password, EngineeringModelSetup engineeringModelSetup);
+        IEnumerable<Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup);
 
         /// <summary>
         /// Get the model iteration from file.
@@ -83,7 +85,7 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized iteration contained <see cref="Thing"/> collection.
         /// </returns>
-        IEnumerable<Thing> ReadModelIterationFromFile(string filePath, string password, IterationSetup iterationSetup);
+        IEnumerable<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup);
 
         /// <summary>
         /// Get user credentials from migration.json if exists

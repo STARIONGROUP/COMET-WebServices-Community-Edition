@@ -54,7 +54,7 @@ namespace CometServer.Services
         {
             var currentStoredFile = this.GetShallow(transaction, partition, new [] {file.Iid}, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault() as File;
 
-            if (!new object[] { this.PermissionService.Credentials.Person.Iid, null }.Contains(currentStoredFile?.LockedBy))
+            if (!new object[] { this.CredentialsService.Credentials.Person.Iid, null }.Contains(currentStoredFile?.LockedBy))
             {
                 throw new SecurityException($"{nameof(File)} is locked by another user");
             }

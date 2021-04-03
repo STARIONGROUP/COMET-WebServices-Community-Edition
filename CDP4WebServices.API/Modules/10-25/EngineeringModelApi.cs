@@ -110,7 +110,7 @@ namespace CometServer.Modules
         /// </summary>
         public EngineeringModelApi()
         {
-            this.Get(TopContainer, async (req, res) =>
+            this.Get("EngineeringModel/{*path}", async (req, res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -123,7 +123,7 @@ namespace CometServer.Modules
                 }
             });
 
-            this.Post(TopContainer, async (req, res) =>
+            this.Post("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", async (req, res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -167,8 +167,10 @@ namespace CometServer.Modules
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest, this.RequestUtils, SupportedGetQueryParameters);
 
+                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
+
                 // the route pattern enforces that there is at least one route segment
-                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path, TopContainer);
+                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
                 var resourceResponse = new List<Thing>();
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
@@ -258,7 +260,7 @@ namespace CometServer.Modules
                 if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    await this.WriteMultipartResponse(fileRevisions, resourceResponse, httpResponse);
+                    await this.WriteMultipartResponse(fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
@@ -270,18 +272,18 @@ namespace CometServer.Modules
                     {
                         var iterationPartition = this.RequestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
 
-                        await this.WriteArchivedResponse(resourceResponse, iterationPartition, routeSegments, httpResponse);
+                        await this.WriteArchivedResponse(resourceResponse, iterationPartition, routeSegments, version, httpResponse);
                         return;
                     }
 
                     if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
-                        await this.WriteArchivedResponse(resourceResponse, partition, routeSegments, httpResponse);
+                        await this.WriteArchivedResponse(resourceResponse, partition, routeSegments, version, httpResponse);
                         return;
                     }
                 }
 
-                await this.WriteJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, httpResponse, HttpStatusCode.OK, requestToken);
+                await this.WriteJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse, HttpStatusCode.OK, requestToken);
             }
             catch (Exception ex)
             {
@@ -382,7 +384,7 @@ namespace CometServer.Modules
                     bodyStream = httpRequest.Body;
                 }
 
-                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
+                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion(httpRequest));
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
 
                 // get prepared data source transaction
@@ -390,7 +392,7 @@ namespace CometServer.Modules
                 transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
                 // the route pattern enforces that there is atleast one route segment
-                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path, TopContainer);
+                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
                 var resourceProcessor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
 
@@ -400,12 +402,12 @@ namespace CometServer.Modules
 
                 if (credentials != null)
                 {
-                    this.PermissionService.Credentials.EngineeringModelSetup = modelSetup;
+                    this.CredentialsService.Credentials.EngineeringModelSetup = modelSetup;
                     this.CredentialsService.ResolveParticipantCredentials(transaction);
-                    this.PermissionService.Credentials.IsParticipant = true;
+                    this.CredentialsService.Credentials.IsParticipant = true;
 
                     var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
-                    this.PermissionService.Credentials.Iteration = iteration;
+                    this.CredentialsService.Credentials.Iteration = iteration;
                 }
 
                 // defer all reference data check until after transaction commit
@@ -419,7 +421,7 @@ namespace CometServer.Modules
 
                 this.OperationProcessor.Process(operationData, transaction, partition, fileDictionary);
 
-                var actor = this.PermissionService.Credentials.Person.Iid;
+                var actor = this.CredentialsService.Credentials.Person.Iid;
 
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
@@ -435,7 +437,7 @@ namespace CometServer.Modules
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    await this.WriteJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion, httpResponse);
+                    await this.WriteJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
                     return;
                 }
 
@@ -450,7 +452,7 @@ namespace CometServer.Modules
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                await this.WriteJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion, httpResponse);
+                await this.WriteJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
             }
             catch (InvalidOperationException ex)
             {

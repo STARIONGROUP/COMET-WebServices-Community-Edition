@@ -427,10 +427,10 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected async Task WriteMultipartResponse(List<FileRevision> fileRevisions, List<Thing> resourceResponse, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected async Task WriteMultipartResponse(List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             // create a new multipart response with contents assigned by stream
-            this.PrepareMultiPartResponse(httpResponse.Body, fileRevisions, resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
+            this.PrepareMultiPartResponse(httpResponse.Body, fileRevisions, resourceResponse, version);
 
             this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
@@ -454,12 +454,9 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected async Task WriteArchivedResponse(List<Thing> resourceResponse, string partition, string[] routeSegments, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected async Task WriteArchivedResponse(List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            await this.PrepareArchivedResponse(httpResponse.Body, resourceResponse,
-                this.RequestUtils.GetRequestDataModelVersion,
-                partition,
-                routeSegments);
+            await this.PrepareArchivedResponse(httpResponse.Body, resourceResponse, version, partition, routeSegments);
 
             this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
             httpResponse.StatusCode = (int) statusCode;
@@ -564,9 +561,9 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        protected async Task GetZippedModelsResponse(HttpResponse httpResponse, Version requestDataModelVersion, List<Guid> modelSetupGuidList, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
+        protected async Task GetZippedModelsResponse(HttpResponse httpResponse, Version version, List<Guid> modelSetupGuidList, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
-            var path = this.EngineeringModelZipExportService.CreateZipExportFile(modelSetupGuidList, null);
+            var path = this.EngineeringModelZipExportService.CreateZipExportFile(version, modelSetupGuidList, null);
 
             try
             {
@@ -615,7 +612,7 @@ namespace CometServer.Modules
             sw.Start();
             Logger.Debug("{0} start serializing dtos", requestToken);
 
-            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
+            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, requestDataModelVersion);
             this.JsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 

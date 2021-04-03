@@ -735,7 +735,7 @@ namespace CometServer.Services
                 }
                 else
                 {
-                    Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
+                    Logger.Info("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
 

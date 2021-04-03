@@ -199,7 +199,7 @@ namespace CometServer.Services
             //am I owner of the file?
             if (!this.PermissionService.IsOwner(transaction as NpgsqlTransaction, thing))
             {
-                throw new SecurityException($"The person {this.PermissionService.Credentials.Person.UserName} does not have an appropriate permission for {thing.GetType().Name}.");
+                throw new SecurityException($"The person {this.CredentialsService.Credentials.Person.UserName} does not have an appropriate permission for {thing.GetType().Name}.");
             }
 
             if (partition.Contains("Iteration"))

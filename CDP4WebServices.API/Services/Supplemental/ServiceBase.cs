@@ -28,7 +28,6 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Linq;
 
-    using CDP4Common;
     using CDP4Common.Dto;
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -71,6 +70,11 @@ namespace CometServer.Services
         /// Gets or sets the permission service.
         /// </summary>
         public IPermissionService PermissionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
         /// Gets or sets the Utils instance for this request.

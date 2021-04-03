@@ -27,6 +27,8 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
 
+    using Microsoft.AspNetCore.Http;
+
     /// <summary>
     /// The purpose of the <see cref="IEngineeringModelZipExportService"/> is to provide file functions for exporting an engineering model 
     /// in a zipped archive.
@@ -45,6 +47,6 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> path of the created archive.
         /// </returns>
-        string CreateZipExportFile(IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files);
+        string CreateZipExportFile(Version version, IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files);
     }
 }

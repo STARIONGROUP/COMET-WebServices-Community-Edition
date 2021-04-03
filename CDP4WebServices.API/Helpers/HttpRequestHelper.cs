@@ -86,16 +86,12 @@ namespace CometServer.Helpers
         /// <param name="requestPath">
         /// The path from the request.
         /// </param>
-        /// <param name="topContainer">
-        /// The top container name.
-        /// </param>
         /// <returns>
         /// The split route parameters as array.
         /// </returns>
-        public static string[] ParseRouteSegments(string requestPath, string topContainer)
+        public static string[] ParseRouteSegments(string requestPath)
         {
-            return $"{topContainer}/{requestPath}"
-                .Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
+            return requestPath.TrimStart('/').Split(new[] { "/" }, StringSplitOptions.RemoveEmptyEntries);
         }
     }
 }

@@ -105,7 +105,7 @@ namespace CometServer.Modules
         /// </summary>
         public SiteDirectoryApi()
         {
-            this.Get(TopContainer, async (req, res) =>
+            this.Get("SiteDirectory", async (req, res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -120,7 +120,22 @@ namespace CometServer.Modules
                 }
             });
 
-            this.Post(TopContainer, async (req, res) =>
+            this.Get("SiteDirectory/{*path}", async (req, res) =>
+            {
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.AsJson("not authenticated");
+                }
+                else
+                {
+                    await this.Authorize(req.HttpContext.User.Identity.Name);
+
+                    await this.GetResponseData(req, res);
+                }
+            });
+
+            this.Post("SiteDirectory/{iid:guid}", async (req, res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -201,8 +216,7 @@ namespace CometServer.Modules
 
             this.TransactionManager.SetCachedDtoReadEnabled(true);
 
-            var sw = new Stopwatch();
-            sw.Start();
+            var sw = Stopwatch.StartNew();
             var requestToken = this.GenerateRandomToken();
             
             try
@@ -216,8 +230,7 @@ namespace CometServer.Modules
                 var resourceResponse = new List<Thing>();
 
                 // get prepared data source transaction
-                var credentials = this.CredentialsService.Credentials as Credentials;
-                transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
 
                 if (fromRevision > -1)
                 {
@@ -226,7 +239,8 @@ namespace CometServer.Modules
                 }
                 else if (this.RevisionResolver.TryResolve(transaction, TopContainer, this.RequestUtils.QueryParameters.RevisionFrom, this.RequestUtils.QueryParameters.RevisionTo, out var resolvedValues))
                 {
-                    var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path, TopContainer);
+                    var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
+
                     var iid = routeSegments.Last();
 
                     if (!Guid.TryParse(iid, out var guid))
@@ -241,7 +255,8 @@ namespace CometServer.Modules
                 else
                 {
                     // gather all Things as indicated by the request URI 
-                    var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path, TopContainer);
+                    var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
+
                     resourceResponse.AddRange(this.GetContainmentResponse(transaction, TopContainer, routeSegments));
                 }
 
@@ -253,7 +268,8 @@ namespace CometServer.Modules
                 sw.Start();
                 Logger.Info("return {0} response started", requestToken);
 
-                await this.WriteJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, httpResponse, HttpStatusCode.OK, requestToken);
+                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
+                await this.WriteJsonResponse(resourceResponse, version, httpResponse, HttpStatusCode.OK, requestToken);
             }
             catch (Exception ex)
             {
@@ -312,6 +328,8 @@ namespace CometServer.Modules
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest, this.RequestUtils, SupportedPostQueryParameter);
 
+                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
+
                 var isMultiPart = httpRequest.GetMultipartBoundary() == string.Empty;
 
                 if (isMultiPart)
@@ -331,16 +349,13 @@ namespace CometServer.Modules
                     // use jsonb for the zipped response
                     this.TransactionManager.SetCachedDtoReadEnabled(true);
 
-                    await this.GetZippedModelsResponse(httpResponse, this.RequestUtils.GetRequestDataModelVersion, modelSetupGuidList, HttpStatusCode.OK, requestToken);
+                    await this.GetZippedModelsResponse(httpResponse, version, modelSetupGuidList, HttpStatusCode.OK, requestToken);
                 }
 
-                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
+                this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, version);
                 var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
 
-                // get prepared data source transaction
-                var credentials = this.CredentialsService.Credentials;
-
-                transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
 
                 // defer all reference data check until after transaction commit
                 using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED", transaction.Connection, transaction))
@@ -354,7 +369,7 @@ namespace CometServer.Modules
                 this.OperationProcessor.Process(operationData, transaction, TopContainer);
 
                 // save revision-history
-                var actor = credentials.Person.Iid;
+                var actor = this.CredentialsService.Credentials.Person.Iid;
                 var changedThings = this.RevisionService.SaveRevisions(transaction, TopContainer, actor, transactionRevision).ToList();
 
                 // commit the operation + revision-history
@@ -363,7 +378,7 @@ namespace CometServer.Modules
                 if (this.ModelCreatorManager.IsUserTriggerDisable)
                 {
                     // re-enable user triggers
-                    transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+                    transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
                     this.ModelCreatorManager.EnableUserTrigger(transaction);
                     transaction.Commit();
                 }
@@ -371,7 +386,7 @@ namespace CometServer.Modules
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    await this.WriteJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion, httpResponse);
+                    await this.WriteJsonResponse(changedThings, version, httpResponse);
                     return;
                 }
 
@@ -380,13 +395,13 @@ namespace CometServer.Modules
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
-                transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
                 var revisionResponse = this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
                 transaction.Commit();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                await this.WriteJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion, httpResponse);
+                await this.WriteJsonResponse(revisionResponse, version, httpResponse);
             }
             catch (InvalidOperationException ex)
             {
@@ -440,7 +455,7 @@ namespace CometServer.Modules
         {
             var processor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
 
-            if (routeParams.Length == 0)
+            if (routeParams.Length == 1)
             {
                 // sitedirectory singleton resource request (IncludeReferenceData is handled in the sitedirectory service logic)
                 foreach (var thing in processor.GetResource(TopContainer, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }))
@@ -450,9 +465,6 @@ namespace CometServer.Modules
             }
             else
             {
-                // process containment path
-                //var routeSegments = HttpRequestHelper.ParseRouteSegments(routeParams, TopContainer);
-
                 List<Thing> resolvedResourcePath;
                 foreach (var thing in this.ProcessRequestPath(processor, TopContainer, partition, routeParams, out resolvedResourcePath))
                 {

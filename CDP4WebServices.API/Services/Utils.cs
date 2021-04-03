@@ -85,8 +85,7 @@ namespace CometServer.Services
                 throw new ArgumentException("string can't be empty!");
             }
 
-            return string.Format(
-                "{0}{1}", input.First().ToString(CultureInfo.InvariantCulture).ToLower(), input.Substring(1)); 
+            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToLower()}{input.Substring(1)}"; 
         }
 
         /// <summary>

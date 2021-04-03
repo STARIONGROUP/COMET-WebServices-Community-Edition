@@ -46,11 +46,6 @@ namespace CometServer.Services
         List<Thing> Cache { get; set; }
 
         /// <summary>
-        /// Gest or sets the <see cref="HttpRequest"/>
-        /// </summary>
-        public HttpRequest HttpRequest { get; set; }
-
-        /// <summary>
         /// Gets or sets the meta info provider for this request.
         /// </summary>
         IMetaInfoProvider MetaInfoProvider { get; set; }
@@ -74,7 +69,7 @@ namespace CometServer.Services
         /// <summary>
         /// Gets the get request data model version.
         /// </summary>
-        Version GetRequestDataModelVersion { get; }
+        Version GetRequestDataModelVersion(HttpRequest httpRequest);
 
         /// <summary>
         /// Construct the engineering model partition identifier from the passed in engineeringModel id.

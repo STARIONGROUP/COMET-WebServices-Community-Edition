@@ -252,7 +252,6 @@ namespace CometServer.Helpers
             return this.isFullAccessGranted;
         }
 
-
         /// <summary>
         /// Get the session timeframe start time.
         /// </summary>
