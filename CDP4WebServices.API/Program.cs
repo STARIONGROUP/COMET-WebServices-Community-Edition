@@ -58,31 +58,48 @@ namespace CometServer
         /// <param name="args">
         /// the command line arguments
         /// </param>
-        public static async Task Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
-            Console.Title = "COMET WebServices - Community Edition";
+            Console.Title = "COMET WebServices";
 
-            // ASP.NET Core 3.0+:
-            // The UseServiceProviderFactory call attaches the
-            // Autofac provider to the generic hosting mechanism.
-            var host = Host.CreateDefaultBuilder(args)
-                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                .ConfigureWebHostDefaults(webHostBuilder =>
-                {
-                    webHostBuilder
-                        .UseKestrel()
-                        .UseStartup<Startup>();
-                })
-                .Build();
+            try
+            {
+                // ASP.NET Core 3.0+:
+                // The UseServiceProviderFactory call attaches the
+                // Autofac provider to the generic hosting mechanism.
+                var host = Host.CreateDefaultBuilder(args)
+                    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                    .ConfigureWebHostDefaults(webHostBuilder =>
+                    {
+                        webHostBuilder
+                            .UseKestrel()
+                            .UseStartup<Startup>();
+                    })
+                    .Build();
 
-            var appConfigService = host.Services.GetService<IAppConfigService>();
+                var appConfigService = host.Services.GetService<IAppConfigService>();
 
-            MigrationEngine.MigrateAllAtStartUp(appConfigService);
-            ConfigureRecurringJobs(appConfigService);
+                MigrationEngine.MigrateAllAtStartUp(appConfigService);
+                ConfigureRecurringJobs(appConfigService);
 
-            await host.RunAsync();
+                await host.RunAsync();
+
+                Logger.Info("Terminated COMET WebServices cleanly");
+                return 0;
+            }
+            catch (Exception e)
+            {
+                Logger.Fatal("An unhandled exception occurred during startup-bootstrapping");
+                return -1;
+            }
         }
 
+        /// <summary>
+        /// Configure the recurring jobs
+        /// </summary>
+        /// <param name="appConfigService">
+        /// The <see cref="IAppConfigService"/> that provides the configuration used to configure the recurring jobs
+        /// </param>
         public static void ConfigureRecurringJobs(IAppConfigService appConfigService)
         {
             var sw = Stopwatch.StartNew();
