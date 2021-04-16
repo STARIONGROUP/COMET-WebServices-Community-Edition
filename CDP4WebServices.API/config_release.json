@@ -20,7 +20,7 @@
     "SMTP": "smtp.cdp4.org",
     "Port": 587,
     "UserName": "cdp4postmaster-username",
-    "Password": "cdp4postmaster-password",
+    "Password": "cdp4postmaster-password"
   },
   "Defaults": {
     "PersonPassword": "pass",
