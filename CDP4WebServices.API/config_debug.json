@@ -34,6 +34,6 @@
   },
   "Changelog": {
     "CollectChanges": true,
-    "AllowEmailNotification":  false 
+    "AllowEmailNotification": false 
   }
 }
