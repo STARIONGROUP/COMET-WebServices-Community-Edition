@@ -44,7 +44,9 @@ namespace CometServer.Authorization
     using Npgsql;
 
     /// <summary>
-    /// Resolves the <see cref="ICredentials"/>
+    /// The prupose of the <see cref="CredentialsService"/> is to resolve a username into an instance
+    /// of the <see cref="Credentials"/> class. Once these have been resolved the <see cref="CredentialsService"/>,
+    /// or rather the <see cref="ICredentialsService"/> exposes this as a property for use in authorization logic
     /// </summary>
     public class CredentialsService : ICredentialsService
     {
@@ -54,60 +56,60 @@ namespace CometServer.Authorization
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the engineeringModelSetup dao.
+        /// Gets or sets the (injected) <see cref="IEngineeringModelSetupDao"/>
         /// </summary>
         public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the PersonPermissionDao.
+        /// Gets or sets the (injected) <see cref="PersonPermissionDao"/>
         /// </summary>
         public IPersonPermissionDao PersonPermissionDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the PersonRoleDao
+        /// Gets or sets the (injected) <see cref="PersonRoleDao"/>
         /// </summary>
         public IPersonRoleDao PersonRoleDao { get; set; }
 
         /// <summary>
-        /// Gets or sets a ParticipantDao
+        /// Gets or sets the (injected) <see cref="ParticipantDao"/>
         /// </summary>
         public IParticipantDao ParticipantDao { get; set; }
 
         /// <summary>
-        /// Gets or sets a ParticipantRoleDao
+        /// Gets or sets the (injected) <see cref="ParticipantRoleDao"/>
         /// </summary>
         public IParticipantRoleDao ParticipantRoleDao { get; set; }
 
         /// <summary>
-        /// Gets or sets a DomainOfExpertiseDao
+        /// Gets or sets the (injected) <see cref="DomainOfExpertiseDao"/>
         /// </summary>
         public IDomainOfExpertiseDao DomainOfExpertiseDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the ParticipantPermissionDao
+        /// Gets or sets the (injected) <see cref="ParticipantPermissionDao"/>
         /// </summary>
         public IParticipantPermissionDao ParticipantPermissionDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the OrganizationalParticipationDao
+        /// Gets or sets the (injected) <see cref="OrganizationalParticipantDao"/>
         /// </summary>
         public IOrganizationalParticipantDao OrganizationalParticipantDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the authentication dao.
+        /// Gets or sets the (injected) <see cref="AuthenticationPersonDao"/>
         /// </summary>
         public IAuthenticationPersonDao AuthenticationPersonDao { get; set; }
 
         /// <summary>
-        /// The backing field for the <see cref="ICredentials"/> property
+        /// The backing field for the <see cref="Credentials"/> property
         /// </summary>
         private Credentials credentials;
 
         /// <summary>
-        /// Gets the <see cref="ICredentials"/> that
+        /// Gets the <see cref="Credentials"/> that
         /// </summary>
         /// <exception cref="InvalidOperationException">
-        /// thrown when the <see cref="ICredentials"/> is null
+        /// thrown when the <see cref="Credentials"/> is null
         /// </exception>
         public Credentials Credentials
         {
@@ -125,7 +127,7 @@ namespace CometServer.Authorization
         }
 
         /// <summary>
-        /// Resolves the username to <see cref="ICredentials"/>
+        /// Resolves the username to <see cref="Credentials"/>
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -133,9 +135,6 @@ namespace CometServer.Authorization
         /// <param name="username">
         /// The supplied username
         /// </param>
-        /// <returns>
-        /// A <see cref="ICredentials"/> representing the resolved user, null if the user was not found.
-        /// </returns>
         public async Task ResolveCredentials(NpgsqlTransaction transaction, string username)
         {
             var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username);
@@ -203,9 +202,6 @@ namespace CometServer.Authorization
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
-        /// </param>
-        /// <param name="credentials">
-        /// The credentials Interface.
         /// </param>
         public void ResolveParticipantCredentials(NpgsqlTransaction transaction)
         {
@@ -339,8 +335,6 @@ namespace CometServer.Authorization
                 return null;
             }
         }
-
-        
 
         /// <summary>
         /// Returns the list of OrganizationalParticipants relevant to the Person for all EngineeringModelSetups.

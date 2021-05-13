@@ -176,8 +176,10 @@ namespace CometServer.Modules
 
                 await this.CredentialsService.ResolveCredentials(transaction, username);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                Logger.Error(ex);
+
                 transaction?.RollbackAsync();
 
                 throw;
