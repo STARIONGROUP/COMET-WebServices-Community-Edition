@@ -43,7 +43,8 @@ namespace CometServer
     using CDP4Orm.Dao.Cache;
     using CDP4Orm.Dao.Resolve;
     using CDP4Orm.Dao.Revision;
-    
+    using CDP4Orm.MigrationEngine;
+
     using CometServer.Authentication;
     using CometServer.Authorization;
     using CometServer.Configuration;
@@ -214,6 +215,7 @@ namespace CometServer
             builder.RegisterType<FileArchiveService>().As<IFileArchiveService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<EngineeringModelZipExportService>().As<IEngineeringModelZipExportService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<ModelCreatorManager>().As<IModelCreatorManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<MigrationService>().As<IMigrationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             Logger.Info("Finish Configuration of Application Container in {0} [ms]", sw.ElapsedMilliseconds);
         }

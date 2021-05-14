@@ -37,9 +37,7 @@ namespace CometServer.Services
     using CDP4Orm.Dao;
 
     using Ionic.Zip;
-
-    using Microsoft.AspNetCore.Http;
-
+    
     using Newtonsoft.Json.Linq;
 
     using NLog;
@@ -64,25 +62,28 @@ namespace CometServer.Services
         /// The NLog logger
         /// </summary>
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
-        /// Gets or sets the request utils.
-        /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
         /// </summary>
         public IMetaInfoProvider MetaInfoProvider { get; set; }
 
         /// <summary>
-        /// Gets or sets the file n binary service.
+        /// Gets or sets the (injected) <see cref="IFileBinaryService"/>
         /// </summary>
         public IFileBinaryService FileBinaryService { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="ICdp4JsonSerializer"/>
+        /// </summary>
+        public ICdp4JsonSerializer JsonSerializer { get; set; }
+
+        /// <summary>
         /// Get the site directory from file.
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="filePath">
         /// The file path.
         /// </param>
@@ -101,6 +102,9 @@ namespace CometServer.Services
         /// <summary>
         /// Get the engineering model from file.
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="filePath">
         /// The file path.
         /// </param>
@@ -113,10 +117,7 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized engineering model contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadEngineeringModelFromfile(Version version,
-            string filePath,
-            string password,
-            EngineeringModelSetup engineeringModelSetup)
+        public IEnumerable<Thing> ReadEngineeringModelFromfile(Version version,  string filePath,  string password, EngineeringModelSetup engineeringModelSetup)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
             return this.ReadEngineeringModelDataFromStream(version, memoryStream, password, engineeringModelSetup);
@@ -125,6 +126,9 @@ namespace CometServer.Services
         /// <summary>
         /// Get the model iteration from file.
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="filePath">
         /// The file path.
         /// </param>
@@ -137,25 +141,14 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized iteration contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadModelIterationFromFile(Version version,
-            string filePath,
-            string password,
-            IterationSetup iterationSetup)
+        public IEnumerable<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
             return this.ReadIterationModelDataFromStream(version, memoryStream, password, iterationSetup);
         }
-
+        
         /// <summary>
-        /// Gets or sets the <see cref="ICdp4JsonSerializer"/>
-        /// </summary>
-        /// <remarks>
-        /// Injected
-        /// </remarks>
-        public ICdp4JsonSerializer JsonSerializer { get; set; }
-
-        /// <summary>
-        /// Stores the referenced (by hash) file file binary contained in the archive.
+        /// Stores the referenced (by hash) file-binary contained in the archive.
         /// </summary>
         /// <param name="filePath">
         /// The file path of the zip archive being processed.
@@ -217,8 +210,7 @@ namespace CometServer.Services
                 using (var zip = ZipFile.Read(stream))
                 {
                     // read site directory info from file
-                    var siteDirectoryZipEntry =
-                        zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
+                    var siteDirectoryZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
 
                     var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, siteDirectoryZipEntry, password);
                     Logger.Info("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
@@ -285,7 +277,7 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                var msg = string.Format("{0}: {1}", "Failed to load file. Error", ex.Message);
+                var msg = $"Failed to load file: {ex.Message}";
                 Logger.Error(msg);
 
                 throw new FileLoadException(msg);
@@ -469,7 +461,7 @@ namespace CometServer.Services
         {
             if (zipEntry == null)
             {
-                throw new ArgumentNullException("zipEntry", "Supplied archive entry is invalid");
+                throw new ArgumentNullException(nameof(zipEntry), "Supplied archive entry is invalid");
             }
 
             var watch = Stopwatch.StartNew();

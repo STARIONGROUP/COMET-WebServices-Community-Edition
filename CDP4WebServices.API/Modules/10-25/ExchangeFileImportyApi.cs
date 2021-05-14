@@ -281,10 +281,10 @@ namespace CometServer.Modules
             Logger.Info("Starting data store seeding");
 
             // bind the request to the specialized model
-            var exchangeFileRequest = await request.Bind<ExchangeFileUploadRequest>() ;
+            var exchangeFile = await request.BindFile();
 
             // make sure there is only one file
-            if (exchangeFileRequest == null)
+            if (exchangeFile == null)
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("seed file not detected");
@@ -294,7 +294,7 @@ namespace CometServer.Modules
             string filePath = string.Empty;
             using (var memoryStream = new MemoryStream())
             {
-                await exchangeFileRequest.File.CopyToAsync(memoryStream);
+                await exchangeFile.CopyToAsync(memoryStream);
                 filePath = await this.LocalFileStorage.StreamFileToDisk(memoryStream);
             }
 
@@ -304,7 +304,7 @@ namespace CometServer.Modules
             var version = this.RequestUtils.GetRequestDataModelVersion(request);
 
             // handle exchange processing
-            if (!this.InsertModelData(version, filePath, exchangeFileRequest.Password, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(version, filePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");

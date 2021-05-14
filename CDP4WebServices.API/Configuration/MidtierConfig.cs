@@ -52,11 +52,11 @@ namespace CometServer.Configuration
         /// </param>
         public MidtierConfig(IConfiguration configuration)
         {
-            this.Protocol = configuration["Backtier:Protocol"];
-            this.HostName = configuration["Backtier:HostName"];
-            this.Port = int.Parse(configuration["Backtier:Port"]);
-            this.UploadDirectory = configuration["Backtier:UploadDirectory"];
-            this.FileStorageDirectory = configuration["Backtier:FileStorageDirectory"];
+            this.Protocol = configuration["Midtier:Protocol"];
+            this.HostName = configuration["Midtier:HostName"];
+            this.Port = int.Parse(configuration["Midtier:Port"]);
+            this.UploadDirectory = configuration["Midtier:UploadDirectory"];
+            this.FileStorageDirectory = configuration["Midtier:FileStorageDirectory"];
         }
 
         /// <summary>

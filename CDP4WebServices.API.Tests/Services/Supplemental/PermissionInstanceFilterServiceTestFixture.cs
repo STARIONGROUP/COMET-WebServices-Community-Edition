@@ -97,21 +97,8 @@ namespace CometServer.Tests.Services.Supplemental
         public void Setup()
         {
             this.npgsqlTransaction = null;
-            this.metaInfoProvider = new MetaInfoProvider
-            {
-                DomainOfExpertiseMetaInfo = new DomainOfExpertiseMetaInfo(),
-                IterationSetupMetaInfo = new IterationSetupMetaInfo(),
-                SiteDirectoryDataAnnotationMetaInfo = new SiteDirectoryDataAnnotationMetaInfo(),
-                ElementDefinitionMetaInfo = new ElementDefinitionMetaInfo(),
-                ElementUsageMetaInfo = new ElementUsageMetaInfo(),
-                BookMetaInfo = new BookMetaInfo(),
-                ActionItemMetaInfo = new ActionItemMetaInfo(),
-                SiteDirectoryMetaInfo = new SiteDirectoryMetaInfo(),
-                ActualFiniteStateMetaInfo = new ActualFiniteStateMetaInfo(),
-                DiagramCanvasMetaInfo = new DiagramCanvasMetaInfo(),
-                EngineeringModelMetaInfo = new EngineeringModelMetaInfo(),
-            };
-
+            this.metaInfoProvider = new MetaInfoProvider();
+            
             this.personRoles = new List<PersonRole>
                                    {
                                        new PersonRole

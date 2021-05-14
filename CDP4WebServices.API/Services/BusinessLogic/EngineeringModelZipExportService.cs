@@ -43,9 +43,7 @@ namespace CometServer.Services
     using CometServer.Services.Protocol;
 
     using Ionic.Zip;
-
-    using Microsoft.AspNetCore.Http;
-
+    
     using NLog;
 
     using Npgsql;

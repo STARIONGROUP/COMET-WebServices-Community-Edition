@@ -28,6 +28,7 @@ namespace CometServer.Tests
     using System.Collections.Generic;
 
     using CDP4Common.DTO;
+
     using CometServer.Modules;
     using CometServer.Services;
     using CometServer.Services.Authorization;
