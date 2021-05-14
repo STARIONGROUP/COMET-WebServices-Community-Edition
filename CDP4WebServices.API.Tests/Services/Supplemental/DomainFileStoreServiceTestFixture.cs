@@ -109,17 +109,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(true);
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), file)).Returns(true);
-
-            this.permissionService.Setup(x => x.Credentials)
-                .Returns(
-                    new Credentials
-                    {
-                        Person = new AuthenticationPerson(Guid.NewGuid(), 0)
-                        {
-                            UserName = "TestRunner"
-                        }
-                    });
-
+            
             // Without a domainFileStoreSelector, SingleOrDefault(domainFileStoreSelector) could fail, because multiple <see cref="DomainFileStore"/>s could exist.
             // Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
             // the to be created <see cref="DomainFileStore"/>. The isHidden check will then be ignored.

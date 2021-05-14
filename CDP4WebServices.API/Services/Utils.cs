@@ -26,14 +26,11 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
 
     using CDP4Common.Types;
-
-    using CometServer.Authentication;
+    
     using CometServer.Configuration;
-    using CometServer.Modules;
 
     using Thing = CDP4Common.DTO.Thing;
 
@@ -46,74 +43,13 @@ namespace CometServer.Services
         /// The UTC (zulu) date time serialization format.
         /// </summary>
         public const string DateTimeUtcSerializationFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'ffffff'Z'";
-
-        /// <summary>
-        /// The capitalize first letter.
-        /// </summary>
-        /// <param name="input">
-        /// The input.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// If supplied input is null or empty
-        /// </exception>
-        public static string CapitalizeFirstLetter(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                throw new ArgumentException("string can't be empty!");
-            }
-
-            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToUpper()}{input.Substring(1)}";
-        }
-
-        /// <summary>
-        /// Get a string and lower the first letter
-        /// </summary>
-        /// <param name="input">
-        /// The input.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        public static string FirstLetterToLower(string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                throw new ArgumentException("string can't be empty!");
-            }
-
-            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToLower()}{input.Substring(1)}"; 
-        }
-
-        /// <summary>
-        /// Parse the identifier input as GUID.
-        /// </summary>
-        /// <param name="input">
-        /// The input string which is to be parsed.
-        /// </param>
-        /// <returns>
-        /// The parsed GUID identifier
-        /// </returns>
-        /// <exception cref="Exception">
-        /// If the supplied input is not a valid GUID string representation
-        /// </exception>
-        public static Guid ParseIdentifier(string input)
-        {
-            Guid identifier;
-            if (!Guid.TryParse(input, out identifier))
-            {
-                throw new Exception("Invalid identifier supplied");
-            }
-
-            return identifier;
-        }
-
+        
         /// <summary>
         /// Construct a POSTGRESQL connection string based on the passed in database name.
         /// </summary>
+        /// <param name="backtierConfig">
+        /// The <see cref="BacktierConfig"/> that provides the connection string settings
+        /// </param>
         /// <param name="database">
         /// The name of the database to connect to.
         /// </param>

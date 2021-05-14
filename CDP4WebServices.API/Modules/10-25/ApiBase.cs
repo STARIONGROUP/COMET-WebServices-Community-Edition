@@ -44,10 +44,9 @@ namespace CometServer.Modules
 
     using CometServer.Authorization;
     using CometServer.Configuration;
+    using CometServer.Helpers;
     using CometServer.Services.Operations;
-
-    using Helpers;
-
+    
     using Microsoft.AspNetCore.Http;
 
     using NLog;
@@ -202,6 +201,54 @@ namespace CometServer.Modules
         public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
 
         /// <summary>
+        /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
+        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
+        /// </summary>
+        /// <param name="username">
+        /// The username used to authorize
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task Authorize(string username)
+        {
+            NpgsqlConnection connection = null;
+            NpgsqlTransaction transaction = null;
+
+            try
+            {
+                connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+                await connection.OpenAsync();
+
+                transaction = await connection.BeginTransactionAsync();
+
+                await this.CredentialsService.ResolveCredentials(transaction, username);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex);
+
+                transaction?.RollbackAsync();
+
+                throw;
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.CloseAsync();
+                    await connection.DisposeAsync();
+                }
+            }
+        }
+
+        /// <summary>
         /// Process the get request and return the requested resources.
         /// </summary>
         /// <param name="processor">
@@ -265,7 +312,7 @@ namespace CometServer.Modules
                 if (resourceContainmentSegment)
                 {
                     // this part is always used except for the last tuple
-                    var identifier = Utils.ParseIdentifier(routeSegments[i + 1]);
+                    var identifier = routeSegments[i + 1].ParseIdentifier();
 
                     processor.ValidateContainment(containmentColl, containerProperty, identifier);
 
@@ -322,7 +369,7 @@ namespace CometServer.Modules
                 }
                 else if (specificResourceRequest)
                 {
-                    var identifier = Utils.ParseIdentifier(routeSegments[i + 1]);
+                    var identifier = routeSegments[i + 1].ParseIdentifier();
 
                     processor.ValidateContainment(containmentColl, containerProperty, identifier);
 

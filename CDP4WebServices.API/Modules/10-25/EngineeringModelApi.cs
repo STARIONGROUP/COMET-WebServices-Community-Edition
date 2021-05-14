@@ -38,11 +38,11 @@ namespace CometServer.Modules
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
+
     using CometServer.Authorization;
+    using CometServer.Helpers;
     using CometServer.Services.ChangeLog;
-
-    using Helpers;
-
+    
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
     using Microsoft.AspNetCore.WebUtilities;
@@ -119,6 +119,8 @@ namespace CometServer.Modules
                 }
                 else
                 {
+                    await this.Authorize(req.HttpContext.User.Identity.Name);
+
                     await this.GetResponseData(req, res);
                 }
             });
@@ -132,6 +134,8 @@ namespace CometServer.Modules
                 }
                 else
                 {
+                    await this.Authorize(req.HttpContext.User.Identity.Name);
+
                     await this.PostResponseData(req, res);
                 }
             });
@@ -589,7 +593,7 @@ namespace CometServer.Modules
 
             // take first segment and try to resolve the engineering model setup for further processing
             var siteDir = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
-            var requestedModelId = CometServer.Services.Utils.ParseIdentifier(routeSegments[1]);
+            var requestedModelId = routeSegments[1].ParseIdentifier();
             var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, siteDir.Model, securityContext);
             var modelSetups = engineeringModelSetups.Where(x => ((EngineeringModelSetup)x).EngineeringModelIid == requestedModelId).ToList();
 
@@ -623,7 +627,7 @@ namespace CometServer.Modules
             {
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
-                var requestedIterationId = CometServer.Services.Utils.ParseIdentifier(routeSegments[3]);
+                var requestedIterationId = routeSegments[3].ParseIdentifier();
                 var iterations = processor.GetResource("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext).ToList();
 
                 if (iterations.Count != 1)

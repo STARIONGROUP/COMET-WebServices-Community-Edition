@@ -80,17 +80,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(true);
-
-            this.permissionService.Setup(x => x.Credentials)
-                .Returns(
-                    new Credentials
-                    {
-                        Person = new AuthenticationPerson(this.person.Iid, 0)
-                        {
-                            UserName = "TestRunner"
-                        }
-                    });
-
+            
             this.fileDao
                 .Setup(
                     x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))

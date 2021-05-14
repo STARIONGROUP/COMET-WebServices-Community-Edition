@@ -31,6 +31,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CometServer.Helpers;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
 
@@ -101,7 +102,7 @@ namespace CometServer.Services
 
             return
                 this.RequestUtils.MetaInfoProvider.GetMetaInfo(containerTypeName)
-                    .GetContainmentType(Utils.CapitalizeFirstLetter(propertyName)).TypeName;
+                    .GetContainmentType(propertyName.CapitalizeFirstLetter()).TypeName;
         }
 
         /// <summary>
@@ -176,7 +177,7 @@ namespace CometServer.Services
             //    container, Utils.CapitalizeFirstLetter(propertyName));
 
             var containmentPropertyValue = this.RequestUtils.MetaInfoProvider.GetMetaInfo(container)
-                .GetValue(Utils.CapitalizeFirstLetter(propertyName), container);
+                .GetValue(propertyName.CapitalizeFirstLetter(), container);
 
             if (containmentPropertyValue.GetType() == typeof(List<Guid>))
             {

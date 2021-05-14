@@ -152,54 +152,6 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
-        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
-        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
-        /// </summary>
-        /// <param name="username">
-        /// The username used to authorize
-        /// </param>
-        /// <returns>
-        /// an awaitable <see cref="Task"/>
-        /// </returns>
-        private async Task Authorize(string username)
-        {
-            NpgsqlConnection connection = null;
-            NpgsqlTransaction transaction = null;
-
-            try
-            {
-                connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-                await connection.OpenAsync();
-
-                transaction = await connection.BeginTransactionAsync();
-
-                await this.CredentialsService.ResolveCredentials(transaction, username);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-
-                transaction?.RollbackAsync();
-
-                throw;
-            }
-            finally
-            {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.CloseAsync();
-                    await connection.DisposeAsync();
-                }
-            }
-        }
-
-        /// <summary>
         /// Handles the GET request
         /// </summary>
         /// <param name="httpRequest">

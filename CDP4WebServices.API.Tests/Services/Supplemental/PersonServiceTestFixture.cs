@@ -68,15 +68,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.schemaName = Cdp4TransactionManager.SITE_DIRECTORY_PARTITION;
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
-
-            this.permissionService.Setup(x => x.Credentials).Returns(new Credentials
-            {
-                Person = new AuthenticationPerson(this.person.Iid, 0)
-                {
-                    UserName = "TestRunner"
-                }
-            });
-
+            
             this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
                 .Returns(new[] { this.person });
 
