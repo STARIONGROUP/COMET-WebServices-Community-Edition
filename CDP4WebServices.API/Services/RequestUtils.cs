@@ -72,11 +72,6 @@ namespace CometServer.Services
         public List<Thing> Cache { get; set; }
 
         /// <summary>
-        /// Gets or sets the meta info provider for this request.
-        /// </summary>
-        public IMetaInfoProvider MetaInfoProvider { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IDefaultPermissionProvider"/> for this request
         /// </summary>
         public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }

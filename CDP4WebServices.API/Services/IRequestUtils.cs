@@ -44,12 +44,7 @@ namespace CometServer.Services
         /// Gets or sets the cache for this request.
         /// </summary>
         List<Thing> Cache { get; set; }
-
-        /// <summary>
-        /// Gets or sets the meta info provider for this request.
-        /// </summary>
-        IMetaInfoProvider MetaInfoProvider { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the query parameters.
         /// </summary>

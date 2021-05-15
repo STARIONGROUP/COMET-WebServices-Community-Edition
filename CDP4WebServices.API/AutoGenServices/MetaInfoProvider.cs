@@ -30,7 +30,8 @@ namespace CometServer.Services
     using CDP4Common.MetaInfo;
 
     /// <summary>
-    /// A meta info registry class that allows retrieval of meta info instances by type name.
+    /// The purpose of the <see cref="MetaInfoProvider"/> is to provide
+    /// metadata regarding any kind of <see cref="Thing"/>
     /// </summary>
     public class MetaInfoProvider : MetaDataProvider, IMetaInfoProvider
     {

@@ -52,9 +52,6 @@ namespace CometServer.Tests.Services
         {
             this.requestUtils = new Mock<IRequestUtils>();
             this.metaInfoProvider = new Mock<IMetaInfoProvider>();
-
-            this.requestUtils.Setup(x => x.MetaInfoProvider).Returns(this.metaInfoProvider.Object);
-
             this.service = new AccessRightKindValidationService() { RequestUtils = this.requestUtils.Object };
         }
 

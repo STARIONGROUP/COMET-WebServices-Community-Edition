@@ -190,7 +190,7 @@ namespace CometServer.Modules
                     ? this.TransactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
                     : this.TransactionManager.SetupTransaction(ref connection, credentials);
 
-                var processor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
+                var processor = new ResourceProcessor(transaction, this.ServiceProvider , this.RequestUtils, this.MetaInfoProvider);
                 var modelSetup = this.DetermineEngineeringModelSetup(processor, routeSegments);
                 var partition = this.RequestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
@@ -398,7 +398,7 @@ namespace CometServer.Modules
                 // the route pattern enforces that there is atleast one route segment
                 var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
-                var resourceProcessor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
+                var resourceProcessor = new ResourceProcessor(transaction, this.ServiceProvider, this.RequestUtils, this.MetaInfoProvider);
 
                 var modelSetup = this.DetermineEngineeringModelSetup(resourceProcessor, routeSegments);
 

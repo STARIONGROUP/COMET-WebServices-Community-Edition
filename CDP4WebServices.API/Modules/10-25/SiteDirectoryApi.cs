@@ -407,7 +407,7 @@ namespace CometServer.Modules
         /// </returns>
         private IEnumerable<Thing> GetContainmentResponse(NpgsqlTransaction transaction, string partition, string[] routeParams)
         {
-            var processor = new ResourceProcessor(this.ServiceProvider, transaction, this.RequestUtils);
+            var processor = new ResourceProcessor(transaction, this.ServiceProvider, this.RequestUtils, this.MetaInfoProvider);
 
             if (routeParams.Length == 1)
             {

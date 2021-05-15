@@ -361,9 +361,7 @@ namespace CometServer.Tests.Services
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterSubscription.ToString())).Returns(this.parameterSubscriptionService.Object);
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(false);
-
-            this.requestUtils.Setup(x => x.MetaInfoProvider).Returns(this.metaInfoProvider.Object);
-
+            
             this.elementDefinitionService.Setup(
                     x =>
                         x.GetShallow(

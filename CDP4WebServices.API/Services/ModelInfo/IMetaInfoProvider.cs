@@ -28,7 +28,8 @@ namespace CometServer.Services
     using CDP4Common.MetaInfo;
 
     /// <summary>
-    /// The Service Registry interface.
+    /// The purpose of the <see cref="IMetaInfoProvider"/> is to provide
+    /// metadata regarding any kind of <see cref="Thing"/>
     /// </summary>
     public interface IMetaInfoProvider : IMetaDataProvider
     {

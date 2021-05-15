@@ -52,29 +52,41 @@ namespace CometServer.Services
         /// The transaction.
         /// </param>
         /// <param name="utils">
-        /// The utils helper class for this request.
+        /// The <see cref="IRequestUtils"/> for this request.
         /// </param>
-        public ResourceProcessor(IServiceProvider serviceProvider, NpgsqlTransaction transaction, IRequestUtils utils)
+        /// <param name="meetaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide meta-data for any kinf of <see cref="Thing"/>
+        /// </param>
+        public ResourceProcessor(NpgsqlTransaction transaction, IServiceProvider serviceProvider, IRequestUtils utils, IMetaInfoProvider meetaInfoProvider)
         {
-            this.ServiceProvider = serviceProvider;
             this.Transaction = transaction;
+
+            this.ServiceProvider = serviceProvider;
+            
             this.RequestUtils = utils;
+
+            this.MetaInfoProvider = meetaInfoProvider;
         }
 
         /// <summary>
         /// Gets the service registry.
         /// </summary>
         public IServiceProvider ServiceProvider { get; private set; }
-        
-        /// <summary>
-        /// Gets the transaction.
-        /// </summary>
-        public NpgsqlTransaction Transaction { get; private set; }
 
         /// <summary>
         /// Gets the transaction.
         /// </summary>
         public IRequestUtils RequestUtils { get; private set; }
+
+        /// <summary>
+        /// Gets the <see cref="IMetaInfoProvider"/> used to provide meta-data for any kinf of <see cref="Thing"/>
+        /// </summary>
+        public IMetaInfoProvider MetaInfoProvider { get; private set; }
+
+        /// <summary>
+        /// Gets the transaction.
+        /// </summary>
+        public NpgsqlTransaction Transaction { get; private set; }
 
         /// <summary>
         /// Returns the containment type based from the supplied container property.
@@ -101,7 +113,7 @@ namespace CometServer.Services
             var containerTypeName = containment.Last().GetType().Name;
 
             return
-                this.RequestUtils.MetaInfoProvider.GetMetaInfo(containerTypeName)
+                this.MetaInfoProvider.GetMetaInfo(containerTypeName)
                     .GetContainmentType(propertyName.CapitalizeFirstLetter()).TypeName;
         }
 
@@ -176,7 +188,7 @@ namespace CometServer.Services
             //return this.RequestUtils.MetaInfoProvider.GetMetaInfo(container).GetContainmentIds(
             //    container, Utils.CapitalizeFirstLetter(propertyName));
 
-            var containmentPropertyValue = this.RequestUtils.MetaInfoProvider.GetMetaInfo(container)
+            var containmentPropertyValue = this.MetaInfoProvider.GetMetaInfo(container)
                 .GetValue(propertyName.CapitalizeFirstLetter(), container);
 
             if (containmentPropertyValue.GetType() == typeof(List<Guid>))

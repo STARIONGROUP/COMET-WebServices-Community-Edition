@@ -111,7 +111,6 @@ namespace CometServer.Tests
         {
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.requestUtils.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
             this.operationProcessor = new OperationProcessor();
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationProcessor.OperationSideEffectProcessor = this.operationSideEffectProcessor;
