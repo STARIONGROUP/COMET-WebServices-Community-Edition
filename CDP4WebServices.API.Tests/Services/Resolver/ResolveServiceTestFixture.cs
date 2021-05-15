@@ -99,7 +99,6 @@ namespace CometServer.Tests
             this.aliasInfo = new DtoInfo(typeof(Alias).Name, Guid.NewGuid());
         }
 
-        #region static partition resolvement tests
         [Test]
         public void VerifyStaticSiteDirectoryConceptPartitionResolvement()
         {
@@ -175,9 +174,7 @@ namespace CometServer.Tests
                 Is.All.Matches(
                     (DtoResolveHelper x) => x.Partition == null));
         }
-        #endregion
 
-        #region partition resolvement from containment tree
         [Test]
         public void VerifyPartitionResolvementFromDirectParentContainment()
         {
@@ -226,6 +223,5 @@ namespace CometServer.Tests
             Assert.AreEqual(item1ResolveHelper.Partition, item2ResolveHelper.Partition);
             Assert.AreEqual(item2ResolveHelper.Partition, item3ResolveHelper.Partition);
         }
-        #endregion
     }
 }
