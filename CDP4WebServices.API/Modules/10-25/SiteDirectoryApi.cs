@@ -178,7 +178,8 @@ namespace CometServer.Modules
                 Logger.Info(this.ConstructLog(httpRequest,$"{requestToken} database operations started"));
 
                 // validate (and set) the supplied query parameters
-                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest, this.RequestUtils, SupportedGetQueryParameters);
+                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
+                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
                 var resourceResponse = new List<Thing>();
@@ -280,7 +281,8 @@ namespace CometServer.Modules
             {
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
-                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest, this.RequestUtils, SupportedPostQueryParameter);
+                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
+                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
                 var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
 

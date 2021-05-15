@@ -29,7 +29,6 @@ namespace CometServer.Helpers
 
     using Microsoft.AspNetCore.Http;
 
-    using Services;
     using Services.Protocol;
 
     /// <summary>
@@ -38,21 +37,20 @@ namespace CometServer.Helpers
     public static class HttpRequestHelper
     {
         /// <summary>
-        /// Validate that the current request only contains supported query parameters.
+        /// Validate that the <see cref="IQueryCollection"/> only contains supported query parameters.
         /// </summary>
-        /// <param name="request">
-        /// The <see cref="HttpRequest"/> that contains the query parameters
+        /// <param name="queryCollection">
+        /// The <see cref="IQueryCollection"/> that are to be validated
         /// </param>
-        /// <param name="requestUtil"></param>
         /// <param name="supportedQueryParameters">
         /// The supported Query Parameters.
         /// </param>
         /// <exception cref="InvalidOperationException">
         /// Exception if query parameter is not supported
         /// </exception>
-        public static void ValidateSupportedQueryParameter(HttpRequest request, IRequestUtils requestUtil, string[] supportedQueryParameters)
+        public static void ValidateSupportedQueryParameter(IQueryCollection queryCollection, string[] supportedQueryParameters)
         {
-            foreach (var kvp in request.Query)
+            foreach (var kvp in queryCollection)
             {
                 if (!supportedQueryParameters.Contains(kvp.Key))
                 {
@@ -61,23 +59,20 @@ namespace CometServer.Helpers
             }
 
             // verify that revisionFrom can only be associated with revisionTo
-            if (request.Query.Keys.Contains(QueryParameters.RevisionFromQuery))
+            if (queryCollection.Keys.Contains(QueryParameters.RevisionFromQuery))
             {
-                if (request.Query.Keys.Count > 1 && !request.Query.Keys.Contains(QueryParameters.RevisionToQuery))
+                if (queryCollection.Keys.Count > 1 && !queryCollection.Keys.Contains(QueryParameters.RevisionToQuery))
                 {
                     throw new InvalidOperationException("revisionFrom may only be associated with revisionTo.");
                 }
             }
-            else if (request.Query.Keys.Contains(QueryParameters.RevisionToQuery))
+            else if (queryCollection.Keys.Contains(QueryParameters.RevisionToQuery))
             {
-                if (request.Query.Keys.Count > 1 && !request.Query.Keys.Contains(QueryParameters.RevisionFromQuery))
+                if (queryCollection.Keys.Count > 1 && !queryCollection.Keys.Contains(QueryParameters.RevisionFromQuery))
                 {
                     throw new InvalidOperationException("revisionTo may only be associated with revisionFrom.");
                 }
             }
-
-            // process and set the query parameter info for this request
-            requestUtil.QueryParameters = new QueryParameters(request.Query);
         }
 
         /// <summary>
