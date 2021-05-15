@@ -28,9 +28,7 @@ namespace CometServer.Services
     using System.Collections.Generic;
 
     using CDP4Common.DTO;
-    using CDP4Common.Helpers;
 
-    using CometServer.Authorization;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
@@ -55,11 +53,6 @@ namespace CometServer.Services
         /// set to null to use request query parameters
         /// </summary>
         IQueryParameters OverrideQueryParameters { set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDefaultPermissionProvider"/> for this request
-        /// </summary>
-        IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
 
         /// <summary>
         /// Gets the get request data model version.

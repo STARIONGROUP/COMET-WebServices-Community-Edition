@@ -26,14 +26,9 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
-    using System.Linq;
 
     using CDP4Common.DTO;
-    using CDP4Common.Helpers;
 
-    using CometServer.Authentication;
-    using CometServer.Authorization;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Http;
@@ -70,11 +65,6 @@ namespace CometServer.Services
         /// Gets or sets the cache.
         /// </summary>
         public List<Thing> Cache { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDefaultPermissionProvider"/> for this request
-        /// </summary>
-        public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the query parameters.
