@@ -72,7 +72,9 @@ namespace CometServer
                     .ConfigureWebHostDefaults(webHostBuilder =>
                     {
                         webHostBuilder
-                            .UseKestrel()
+                            .UseKestrel(options => 
+                                options.AllowSynchronousIO = true
+                            )
                             .UseStartup<Startup>();
                     })
                     .Build();

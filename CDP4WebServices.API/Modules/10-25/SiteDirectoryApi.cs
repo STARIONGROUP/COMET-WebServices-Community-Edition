@@ -38,13 +38,11 @@ namespace CometServer.Modules
 
     using CDP4Orm.Dao;
 
-    using CometServer.Authorization;
+    using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
-
-    using Helpers;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
@@ -285,13 +283,13 @@ namespace CometServer.Modules
                 this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
                 var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
-
-                var isMultiPart = httpRequest.GetMultipartBoundary() == string.Empty;
-
+                
+                var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
+                
                 if (isMultiPart)
                 {
                     // multipart message received
-                    throw new InvalidOperationException(string.Format("Multipart post messages are not allowed for the {0} route", TopContainer));
+                    throw new InvalidOperationException($"Multipart post messages are not allowed for the {TopContainer} route");
                 }
                 
                 if (this.RequestUtils.QueryParameters.Export)
@@ -336,7 +334,7 @@ namespace CometServer.Modules
                     // re-enable user triggers
                     transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
                     this.ModelCreatorManager.EnableUserTrigger(transaction);
-                    transaction.Commit();
+                    await transaction.CommitAsync();
                 }
 
                 if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
@@ -353,7 +351,7 @@ namespace CometServer.Modules
                 // use new transaction to include latest database state
                 transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
                 var revisionResponse = this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
-                transaction.Commit();
+                await transaction.CommitAsync();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
@@ -369,8 +367,8 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                await httpResponse.AsJson($"exception:{ex.Message}");
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)
             {

@@ -291,7 +291,7 @@ namespace CometServer.Modules
             }
 
             // stream the file to disk
-            string filePath = string.Empty;
+            var filePath = string.Empty;
             using (var memoryStream = new MemoryStream())
             {
                 await exchangeFile.CopyToAsync(memoryStream);

@@ -32,6 +32,7 @@ namespace CometServer.Modules
     using System.Net;
     using System.Threading.Tasks;
 
+    using Carter.ModelBinding;
     using Carter.Response;
 
     using CDP4Common.CommonData;
@@ -41,8 +42,12 @@ namespace CometServer.Modules
 
     using CometServer.Authorization;
     using CometServer.Helpers;
+    using CometServer.Services;
     using CometServer.Services.ChangeLog;
-    
+    using CometServer.Services.Authorization;
+    using CometServer.Services.Operations;
+    using CometServer.Services.Protocol;
+
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
     using Microsoft.AspNetCore.WebUtilities;
@@ -50,11 +55,6 @@ namespace CometServer.Modules
     using NLog;
 
     using Npgsql;
-    
-    using Services;
-    using Services.Authorization;
-    using Services.Operations;
-    using Services.Protocol;
 
     using Thing = CDP4Common.DTO.Thing;
 
@@ -339,8 +339,10 @@ namespace CometServer.Modules
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
                 this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                
+                var multiPartBoundary = httpRequest.GetMultipartBoundary();
 
-                var isMultiPart = httpRequest.GetMultipartBoundary() == string.Empty;
+                var isMultiPart = multiPartBoundary != string.Empty;
 
                 Logger.Debug(this.ConstructLog(httpRequest, $"Request {requestToken} is mutlipart: {isMultiPart}"));
 
@@ -348,7 +350,11 @@ namespace CometServer.Modules
                 Dictionary<string, Stream> fileDictionary = null;
                 if (isMultiPart)
                 {
-                    bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(httpRequest);
+                    var requestStream = new MemoryStream();
+                    await httpRequest.Body.CopyToAsync(requestStream);
+                    
+                    bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, multiPartBoundary);
+                    fileDictionary = await this.ExtractFilesFromMultipartMessage(requestStream, multiPartBoundary);
 
                     // - New File: 
                     //      create -> File, FileRevision
@@ -365,25 +371,6 @@ namespace CometServer.Modules
                     // - NO matching file hash found in request body and NO matching file hash found on server -> ERROR
                     // - Matching file hash found in request body ??? is allready checked to find binary in request...
                     // - ANY file binary in request without corresponding metadata -> ERROR
-
-                    var boundary = httpRequest.GetMultipartBoundary();
-
-                    var multipartReader = new MultipartReader(boundary, httpRequest.Body);
-
-                    var section = await multipartReader.ReadNextSectionAsync();
-
-                    fileDictionary = new Dictionary<string, Stream>();
-                    while (section != null)
-                    {
-                        if (section.ContentType == this.MimeTypeOctetStream)
-                        {
-                            var hash = this.FileBinaryService.CalculateHashFromStream(section.Body);
-
-                            Logger.Debug(this.ConstructLog(httpRequest, $"File with hash {hash} present in request: {requestToken}"));
-
-                            fileDictionary.Add(hash, section.Body);
-                        }
-                    }
                 }
                 else
                 {
@@ -471,8 +458,8 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                await httpResponse.AsJson($"exception:{ex.Message}");
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)
             {
@@ -484,8 +471,8 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                await httpResponse.AsJson($"exception:{ex.Message}");
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             finally
             {
@@ -497,14 +484,16 @@ namespace CometServer.Modules
         /// <summary>
         /// Extracts the JSON part from the multi-part message
         /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> that contains the multi-part messsage
+        /// </param>
         /// <returns>
         /// A <see cref="Stream"/> that contains the posted JSON
         /// </returns>
-        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessage(HttpRequest httpRequest)
+        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessage(Stream stream, string boundary)
         {
-            var boundary = httpRequest.GetMultipartBoundary();
-            
-            var multipartReader = new MultipartReader(boundary, httpRequest.Body);
+            stream.Seek(0, SeekOrigin.Begin);
+            var multipartReader = new MultipartReader(boundary, stream);
             
             var section = await multipartReader.ReadNextSectionAsync();
 
@@ -528,6 +517,39 @@ namespace CometServer.Modules
             }
 
             throw new InvalidOperationException("A multipart request must contain a JSON part");
+        }
+
+        /// <summary>
+        /// Extracts the files from the multi-part message
+        /// </summary>
+        /// <param name="stream">
+        /// The <see cref="Stream"/> that contains the multi-part messsage
+        /// </param>
+        /// <returns>
+        /// A <see cref="Stream"/> that contains the posted multipart message
+        /// </returns>
+        private async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(Stream stream, string boundary)
+        {
+            var fileDictionary = new Dictionary<string, Stream>();
+
+            stream.Seek(0, SeekOrigin.Begin);
+            var multipartReader = new MultipartReader(boundary, stream);
+
+            var section = await multipartReader.ReadNextSectionAsync();
+
+            while (section != null)
+            {
+                if (section.ContentType == this.MimeTypeOctetStream)
+                {
+                    var hash = this.FileBinaryService.CalculateHashFromStream(section.Body);
+
+                    fileDictionary.Add(hash, section.Body);
+                }
+
+                section = await multipartReader.ReadNextSectionAsync();
+            }
+
+            return fileDictionary;
         }
 
         /// <summary>

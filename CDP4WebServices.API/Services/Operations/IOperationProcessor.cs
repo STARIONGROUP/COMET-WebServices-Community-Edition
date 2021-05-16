@@ -29,8 +29,6 @@ namespace CometServer.Services.Operations
 
     using CDP4Common.DTO;
 
-    using CDP4Orm.Dao.Resolve;
-
     using Npgsql;
 
     /// <summary>
