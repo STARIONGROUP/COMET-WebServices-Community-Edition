@@ -60,6 +60,7 @@ namespace CometServer.Tests.Services.Supplemental
 
         private DomainFileStoreService domainFileStoreService;
         private Mock<IPermissionService> permissionService;
+        private Mock<ICredentialsService> credentialsService;
         private Mock<IIterationService> iterationService;
         private Mock<IDomainFileStoreDao> domainFileStoreDao;
         private Mock<IDbTransaction> transaction;
@@ -73,6 +74,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.domainFileStoreDao = new Mock<IDomainFileStoreDao>();
             this.iterationService = new Mock<IIterationService>();
             this.permissionService = new Mock<IPermissionService>();
+            this.credentialsService = new Mock<ICredentialsService>();
             this.transaction = new Mock<IDbTransaction>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
 
@@ -80,6 +82,7 @@ namespace CometServer.Tests.Services.Supplemental
             {
                 IterationService = this.iterationService.Object,
                 PermissionService = this.permissionService.Object,
+                CredentialsService = this.credentialsService.Object,
                 DomainFileStoreDao = this.domainFileStoreDao.Object,
                 TransactionManager = this.transactionManager.Object
             };
@@ -109,7 +112,14 @@ namespace CometServer.Tests.Services.Supplemental
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(true);
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), file)).Returns(true);
-            
+
+            var credentials = new Credentials();
+            credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
+            {
+                UserName = "jdoe"
+            };
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+
             // Without a domainFileStoreSelector, SingleOrDefault(domainFileStoreSelector) could fail, because multiple <see cref="DomainFileStore"/>s could exist.
             // Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
             // the to be created <see cref="DomainFileStore"/>. The isHidden check will then be ignored.

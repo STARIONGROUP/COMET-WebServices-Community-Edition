@@ -54,6 +54,7 @@ namespace CometServer.Tests.Services.Supplemental
         private File file;
         private IFileService fileService;
         private Mock<IPermissionService> permissionService;
+        private Mock<ICredentialsService> credentialsService;
         private Mock<IFileDao> fileDao;
         private NpgsqlTransaction transaction;
         private Mock<ICdp4TransactionManager> transactionManager;
@@ -66,6 +67,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.file = new File(Guid.NewGuid(), 0);
             this.fileDao = new Mock<IFileDao>();
             this.permissionService = new Mock<IPermissionService>();
+            this.credentialsService = new Mock<ICredentialsService>();
             this.transaction = null;
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.person = new Person(Guid.NewGuid(), 0);
@@ -73,6 +75,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.fileService = new FileService
             {
                 PermissionService = this.permissionService.Object,
+                CredentialsService = this.credentialsService.Object,
                 FileDao = this.fileDao.Object,
                 TransactionManager = this.transactionManager.Object
             };
@@ -80,7 +83,14 @@ namespace CometServer.Tests.Services.Supplemental
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(true);
-            
+
+            var credentials = new Credentials();
+            credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
+            {
+                UserName = "jdoe"
+            };
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+
             this.fileDao
                 .Setup(
                     x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))

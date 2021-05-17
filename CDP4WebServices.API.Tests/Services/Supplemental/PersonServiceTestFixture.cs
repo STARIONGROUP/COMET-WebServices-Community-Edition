@@ -54,6 +54,7 @@ namespace CometServer.Tests.Services.Supplemental
         private Person person;
         private IPersonService personService;
         private Mock<IPermissionService> permissionService;
+        private Mock<ICredentialsService> credentialsService;
         private Mock<IPersonDao> personDao;
         private Mock<ICdp4TransactionManager> transactionManager;
         private string schemaName;
@@ -64,17 +65,26 @@ namespace CometServer.Tests.Services.Supplemental
             this.person = new Person(Guid.NewGuid(), 0);
             this.personDao = new Mock<IPersonDao>();
             this.permissionService = new Mock<IPermissionService>();
+            this.credentialsService = new Mock<ICredentialsService>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.schemaName = Cdp4TransactionManager.SITE_DIRECTORY_PARTITION;
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
-            
+
+            var credentials = new Credentials();
+            credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
+            {
+                UserName = "jdoe"
+            };
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+
             this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
                 .Returns(new[] { this.person });
 
             this.personService = new PersonService
             {
                 PermissionService = this.permissionService.Object,
+                CredentialsService = this.credentialsService.Object,
                 PersonDao = this.personDao.Object,
                 TransactionManager = this.transactionManager.Object
             };
