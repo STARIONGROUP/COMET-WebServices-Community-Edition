@@ -367,7 +367,7 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)
