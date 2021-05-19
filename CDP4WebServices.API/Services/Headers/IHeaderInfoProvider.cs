@@ -37,6 +37,11 @@ namespace CometServer.Services
         string Cdp4ServerHeader { get; }
 
         /// <summary>
+        /// Gets the COMET server response header.
+        /// </summary>
+        string CometServerHeader { get; }
+        
+        /// <summary>
         /// Gets the CDP4 common response header.
         /// </summary>
         string Cdp4CommonHeader { get; }
@@ -50,6 +55,11 @@ namespace CometServer.Services
         /// Gets the CDP4 server response version.
         /// </summary>
         string Cdp4ServerVersion { get; }
+
+        /// <summary>
+        /// Gets the COMET server response version.
+        /// </summary>
+        string CometServerVersion { get; }
 
         /// <summary>
         /// Gets the CDP4 Common response version.

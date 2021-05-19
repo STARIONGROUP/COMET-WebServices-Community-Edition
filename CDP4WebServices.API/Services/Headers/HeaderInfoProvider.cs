@@ -28,8 +28,6 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Reflection;
 
-    using CometServer.Configuration;
-
     using Microsoft.AspNetCore.Http;
 
     /// <summary>
@@ -45,7 +43,12 @@ namespace CometServer.Services
         /// <summary>
         /// The version of the <see cref="Cdp4ServerHeader"/>
         /// </summary>
-        private static readonly Lazy<string> Cdp4ServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(AppConfig)));
+        private static readonly Lazy<string> Cdp4ServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(Startup)));
+
+        /// <summary>
+        /// The version of the <see cref="Cdp4ServerHeader"/>
+        /// </summary>
+        private static readonly Lazy<string> CometServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(Startup)));
 
         /// <summary>
         /// The version of the <see cref="Cdp4CommonHeader"/>
@@ -59,6 +62,7 @@ namespace CometServer.Services
         {
             // setup version info at runtime bootstrap
             this.responseHeaders.Add(this.Cdp4ServerHeader, Cdp4ServerHeaderVersion.Value);
+            this.responseHeaders.Add(this.CometServerHeader, CometServerHeaderVersion.Value);
             this.responseHeaders.Add(this.Cdp4CommonHeader, Cdp4CommonHeaderVersion.Value);
             this.responseHeaders.Add(this.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
         }
@@ -71,6 +75,17 @@ namespace CometServer.Services
             get
             {
                 return "CDP4-Server";
+            }
+        }
+
+        /// <summary>
+        /// Gets the COMET server response header.
+        /// </summary>
+        public string CometServerHeader
+        {
+            get
+            {
+                return "COMET-Server";
             }
         }
 
@@ -108,6 +123,17 @@ namespace CometServer.Services
         }
 
         /// <summary>
+        /// Gets the CDP4 server response version.
+        /// </summary>
+        public string CometServerVersion
+        {
+            get
+            {
+                return this.responseHeaders[this.CometServerHeader];
+            }
+        }
+
+        /// <summary>
         /// Gets the CDP4 Common response version.
         /// </summary>
         public string Cdp4CommonVersion
@@ -138,6 +164,7 @@ namespace CometServer.Services
         public void RegisterResponseHeaders(HttpResponse response)
         {
             response.Headers.Add(this.Cdp4ServerHeader, this.Cdp4ServerVersion);
+            response.Headers.Add(this.CometServerHeader, this.CometServerVersion);
             response.Headers.Add(this.Cdp4CommonHeader, this.Cdp4CommonVersion);
 
             if (!response.Headers.ContainsKey(this.ContentTypeHeader))

@@ -32,7 +32,6 @@ namespace CometServer.Modules
     using System.Net;
     using System.Threading.Tasks;
 
-    using Carter.ModelBinding;
     using Carter.Response;
 
     using CDP4Common.CommonData;

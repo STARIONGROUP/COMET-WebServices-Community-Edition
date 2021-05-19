@@ -454,10 +454,13 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteJsonResponse(IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
+            this.HeaderInfoProvider.RegisterResponseHeaders(httpResponse);
+
+            httpResponse.StatusCode = (int)statusCode;
+
             var resultStream = new MemoryStream();
             this.CreateFilteredResponseStream(resourceResponse, resultStream, requestDataModelVersion, requestToken);
             resultStream.Seek(0, SeekOrigin.Begin);
-            httpResponse.StatusCode = (int)statusCode;
             await resultStream.CopyToAsync(httpResponse.Body);
         }
 
@@ -481,11 +484,11 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteMultipartResponse(List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            // create a new multipart response with contents assigned by stream
-            this.PrepareMultiPartResponse(httpResponse.Body, fileRevisions, resourceResponse, version);
-
             this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+
             httpResponse.StatusCode = (int)statusCode;
+
+            this.PrepareMultiPartResponse(httpResponse.Body, fileRevisions, resourceResponse, version);
         }
 
         /// <summary>
