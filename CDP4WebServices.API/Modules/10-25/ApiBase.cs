@@ -511,10 +511,10 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteArchivedResponse(List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            await this.PrepareArchivedResponse(httpResponse.Body, resourceResponse, version, partition, routeSegments);
-
             this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
-            httpResponse.StatusCode = (int) statusCode;
+            httpResponse.StatusCode = (int)statusCode;
+
+            await this.PrepareArchivedResponse(httpResponse.Body, resourceResponse, version, partition, routeSegments);
         }
 
         /// <summary>
