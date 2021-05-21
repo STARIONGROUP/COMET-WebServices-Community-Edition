@@ -27,7 +27,6 @@ namespace CometServer.Modules
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Threading.Tasks;
@@ -46,8 +45,6 @@ namespace CometServer.Modules
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
-
-    using Newtonsoft.Json;
 
     using NLog;
 
@@ -180,7 +177,8 @@ namespace CometServer.Modules
                 this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
                 var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
-                var resourceResponse = new List<Thing>();
+
+                IReadOnlyList<Thing> things = null;
 
                 // get prepared data source transaction
                 transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
@@ -188,7 +186,8 @@ namespace CometServer.Modules
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToList());
+
+                    things = this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToList();
                 }
                 else if (this.RevisionResolver.TryResolve(transaction, TopContainer, this.RequestUtils.QueryParameters.RevisionFrom, this.RequestUtils.QueryParameters.RevisionTo, out var resolvedValues))
                 {
@@ -203,14 +202,14 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, TopContainer, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
+                    things = this.RevisionService.Get(transaction, TopContainer, guid, resolvedValues.FromRevision, resolvedValues.ToRevision).ToList();
                 }
                 else
                 {
                     // gather all Things as indicated by the request URI 
                     var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
-
-                    resourceResponse.AddRange(this.GetContainmentResponse(transaction, TopContainer, routeSegments));
+                    
+                    things = this.GetContainmentResponse(transaction, TopContainer, routeSegments).ToList();
                 }
 
                 await transaction.CommitAsync();
@@ -222,7 +221,8 @@ namespace CometServer.Modules
                 Logger.Info("return {0} response started", requestToken);
 
                 var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
-                await this.WriteJsonResponse(resourceResponse, version, httpResponse, HttpStatusCode.OK, requestToken);
+
+                await this.WriteJsonResponse(things, version, httpResponse, HttpStatusCode.OK, requestToken);
             }
             catch (Exception ex)
             {
@@ -290,20 +290,6 @@ namespace CometServer.Modules
                 {
                     // multipart message received
                     throw new InvalidOperationException($"Multipart post messages are not allowed for the {TopContainer} route");
-                }
-                
-                if (this.RequestUtils.QueryParameters.Export)
-                {
-                    // convert stream to string
-                    var reader = new StreamReader(httpRequest.Body);
-                    var text = reader.ReadToEnd();
-
-                    var modelSetupGuidList = JsonConvert.DeserializeObject<List<Guid>>(text);
-
-                    // use jsonb for the zipped response
-                    this.TransactionManager.SetCachedDtoReadEnabled(true);
-
-                    await this.GetZippedModelsResponse(httpResponse, version, modelSetupGuidList, HttpStatusCode.OK, requestToken);
                 }
 
                 this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
@@ -412,15 +398,19 @@ namespace CometServer.Modules
             if (routeParams.Length == 1)
             {
                 // sitedirectory singleton resource request (IncludeReferenceData is handled in the sitedirectory service logic)
-                foreach (var thing in processor.GetResource(TopContainer, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }))
+
+                var things = processor.GetResource(TopContainer, partition, null, new RequestSecurityContext { ContainerReadAllowed = true });
+
+                foreach (var thing in things)
                 {
                     yield return thing;
                 }
             }
             else
             {
-                List<Thing> resolvedResourcePath;
-                foreach (var thing in this.ProcessRequestPath(processor, TopContainer, partition, routeParams, out resolvedResourcePath))
+                var things = this.ProcessRequestPath(processor, TopContainer, partition, routeParams, out var resolvedResourcePath);
+
+                foreach (var thing in things)
                 {
                     yield return thing;
                 }
