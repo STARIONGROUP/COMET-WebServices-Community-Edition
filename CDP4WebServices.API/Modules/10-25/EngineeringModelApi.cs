@@ -138,21 +138,6 @@ namespace CometServer.Modules
                     await this.PostResponseData(req, res);
                 }
             });
-
-            this.Post("EngineeringModel/{engineeringModelIid:guid}", async (req, res) =>
-            {
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
-                }
-                else
-                {
-                    await this.Authorize(req.HttpContext.User.Identity.Name);
-
-                    await this.PostResponseData(req, res);
-                }
-            });
         }
 
         /// <summary>
