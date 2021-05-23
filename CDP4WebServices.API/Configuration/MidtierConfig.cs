@@ -42,6 +42,8 @@ namespace CometServer.Configuration
             this.Port = 5000;
             this.UploadDirectory = "upload";
             this.FileStorageDirectory = "storage";
+            this.IsExportEnabled = true;
+            this.ExportDirectory = "export";
         }
 
         /// <summary>
@@ -57,6 +59,8 @@ namespace CometServer.Configuration
             this.Port = int.Parse(configuration["Midtier:Port"]);
             this.UploadDirectory = configuration["Midtier:UploadDirectory"];
             this.FileStorageDirectory = configuration["Midtier:FileStorageDirectory"];
+            this.IsExportEnabled = bool.Parse(configuration["Midtier:IsExportEnabled"]);
+            this.ExportDirectory = configuration["Midtier:ExportDirectory"];
         }
 
         /// <summary>
@@ -98,5 +102,22 @@ namespace CometServer.Configuration
         /// The default value is storage
         /// </remarks>
         public string FileStorageDirectory { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the export route is enabled or not
+        /// </summary>
+        /// <remarks>
+        /// The default value is true
+        /// </remarks>
+        public bool IsExportEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the path to the directory used to store export files that
+        /// are to be downloaded once created and then cleaned up
+        /// </summary>
+        /// <remarks>
+        /// The default value is export
+        /// </remarks>
+        public string ExportDirectory { get; set; }
     }
 }

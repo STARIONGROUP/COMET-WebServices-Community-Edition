@@ -30,8 +30,6 @@ namespace CometServer.Authorization
     using CDP4Common.CommonData;
     using CDP4Common.Helpers;
 
-    using CometServer.Authorization;
-
     /// <summary>
     /// The purpose of the <see cref="AccessRightKindService"/> is to provide a service that returns the <see cref="PersonAccessRightKind"/>
     /// and <see cref="ParticipantAccessRightKind"/> for a specific type

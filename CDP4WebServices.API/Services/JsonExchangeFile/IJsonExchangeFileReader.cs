@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IExchangeFileProcessor.cs" company="RHEA System S.A.">
+// <copyright file="IJsonExchangeFileReader.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -35,9 +35,10 @@ namespace CometServer.Services
     using System.Collections.Generic;
 
     /// <summary>
-    /// The ExchangeFileProcessor interface.
+    /// The <see cref="IJsonExchangeFileReader"/> interface that defines methods to read data from
+    /// an E-TM-10-25 Annex C3 archive
     /// </summary>
-    public interface IExchangeFileProcessor
+    public interface IJsonExchangeFileReader
     {
         /// <summary>
         /// Get the site directory from file.

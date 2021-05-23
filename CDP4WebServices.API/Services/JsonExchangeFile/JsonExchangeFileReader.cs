@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ExchangeFileProcessor.cs" company="RHEA System S.A.">
+// <copyright file="JsonExchangeFileReader.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -31,6 +31,7 @@ namespace CometServer.Services
     using System.Linq;
 
     using CDP4Common.CommonData;
+    using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
 
@@ -42,16 +43,11 @@ namespace CometServer.Services
 
     using NLog;
 
-    using EngineeringModelSetup = CDP4Common.DTO.EngineeringModelSetup;
-    using IterationSetup = CDP4Common.DTO.IterationSetup;
-    using ModelReferenceDataLibrary = CDP4Common.DTO.ModelReferenceDataLibrary;
-    using SiteReferenceDataLibrary = CDP4Common.DTO.SiteReferenceDataLibrary;
-    using Thing = CDP4Common.DTO.Thing;
-
     /// <summary>
-    /// The exchange file processor.
+    /// The purpose of the <see cref="JsonExchangeFileReader"/> is toread data from
+    /// an E-TM-10-25 Annex C3 archive
     /// </summary>
-    public class ExchangeFileProcessor : IExchangeFileProcessor
+    public class JsonExchangeFileReader : IJsonExchangeFileReader
     {
         /// <summary>
         /// The exchange file name format.
@@ -93,7 +89,7 @@ namespace CometServer.Services
         /// <returns>
         /// The site directory contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
+        public IEnumerable<CDP4Common.DTO.Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
             return this.ReadSiteDirectoryDataFromStream(version, memoryStream, password);
@@ -117,7 +113,7 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized engineering model contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadEngineeringModelFromfile(Version version,  string filePath,  string password, EngineeringModelSetup engineeringModelSetup)
+        public IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelFromfile(Version version,  string filePath,  string password, EngineeringModelSetup engineeringModelSetup)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
             return this.ReadEngineeringModelDataFromStream(version, memoryStream, password, engineeringModelSetup);
@@ -141,7 +137,7 @@ namespace CometServer.Services
         /// <returns>
         /// The deserialized iteration contained <see cref="Thing"/> collection.
         /// </returns>
-        public IEnumerable<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup)
+        public IEnumerable<CDP4Common.DTO.Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup)
         {
             var memoryStream = this.ReadFileToMemory(filePath);
             return this.ReadIterationModelDataFromStream(version, memoryStream, password, iterationSetup);
@@ -178,7 +174,7 @@ namespace CometServer.Services
         {
             var memoryStream = new MemoryStream();
 
-            using (Stream input = File.OpenRead(filePath))
+            using (Stream input = System.IO.File.OpenRead(filePath))
             {
                 input.CopyTo(memoryStream);
             }
@@ -202,7 +198,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<Thing> ReadSiteDirectoryDataFromStream(Version version, MemoryStream stream, string password)
+        private IEnumerable<CDP4Common.DTO.Thing> ReadSiteDirectoryDataFromStream(Version version, MemoryStream stream, string password)
         {
             try
             {
@@ -215,7 +211,7 @@ namespace CometServer.Services
                     var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, siteDirectoryZipEntry, password);
                     Logger.Info("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
 
-                    var returned = new List<Thing>(returnedSiteDirectory);
+                    var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
                     var processedRdls = new List<string>();
 
                     foreach (
@@ -302,7 +298,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<Thing> ReadEngineeringModelDataFromStream(Version version,
+        private IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelDataFromStream(Version version,
             MemoryStream stream,
             string password,
             EngineeringModelSetup engineeringModelSetup)
@@ -348,7 +344,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<Thing> ReadIterationModelDataFromStream(Version version,
+        private IEnumerable<CDP4Common.DTO.Thing> ReadIterationModelDataFromStream(Version version,
             MemoryStream stream,
             string password,
             IterationSetup iterationSetup)
@@ -424,12 +420,12 @@ namespace CometServer.Services
         /// <exception cref="Exception">
         /// throws exception if the file failed to open
         /// </exception>
-        private List<Thing> ReadInfoFromArchiveEntry(Version version, ZipEntry zipEntry, string archivePassword)
+        private List<CDP4Common.DTO.Thing> ReadInfoFromArchiveEntry(Version version, ZipEntry zipEntry, string archivePassword)
         {
             var watch = Stopwatch.StartNew();
 
             // the extracted stream is closed thus needs to be reinitialized from the buffer of the old one
-            IEnumerable<Thing> returned;
+            IEnumerable<CDP4Common.DTO.Thing> returned;
 
             using (var stream = this.ReadStreamFromArchive(zipEntry, archivePassword))
             {
@@ -475,7 +471,7 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                var msg = string.Format("{0}: {1}", "Failed to open file. Error", ex.Message);
+                var msg = $"{"Failed to open file. Error"}: {ex.Message}";
                 Logger.Error(msg);
 
                 throw new FileLoadException(msg);

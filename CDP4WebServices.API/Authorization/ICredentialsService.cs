@@ -34,7 +34,7 @@ namespace CometServer.Authorization
     public interface ICredentialsService
     {
         /// <summary>
-        /// Gets the resolved <see cref="ICredentials"/>
+        /// Gets the resolved <see cref="Credentials"/>
         /// </summary>
         public Credentials Credentials { get; }
 
@@ -47,9 +47,6 @@ namespace CometServer.Authorization
         /// <param name="username">
         /// The supplied username
         /// </param>
-        /// <returns>
-        /// A <see cref="ICredentials"/> representing the resolved user, null if the user was not found.
-        /// </returns>
         Task ResolveCredentials(NpgsqlTransaction transaction, string username);
 
         /// <summary>
@@ -57,9 +54,6 @@ namespace CometServer.Authorization
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
-        /// </param>
-        /// <param name="credentials">
-        /// The supplied credential class which can hold participant information
         /// </param>
         void ResolveParticipantCredentials(NpgsqlTransaction transaction);
     }

@@ -124,7 +124,7 @@ namespace CometServer.Modules
         /// <summary>
         /// Gets or sets the exchange file processor.
         /// </summary>
-        public IExchangeFileProcessor ExchangeFileProcessor { get; set; }
+        public IJsonExchangeFileReader JsonExchangeFileReader { get; set; }
 
         /// <summary>
         /// Gets or sets the transaction manager.
@@ -397,7 +397,7 @@ namespace CometServer.Modules
                 this.TransactionManager.SetAuditLoggingState(transaction, false);
 
                 // get sitedirectory data
-                var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
+                var items = this.JsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
 
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
@@ -444,7 +444,7 @@ namespace CometServer.Modules
                     this.RequestUtils.QueryParameters = new QueryParameters();
 
                     // Get users credentials from migration.json file
-                    var migrationCredentials = this.ExchangeFileProcessor.ReadMigrationJsonFromFile(fileName, password).ToList();
+                    var migrationCredentials = this.JsonExchangeFileReader.ReadMigrationJsonFromFile(fileName, password).ToList();
 
                     foreach (var person in items.OfType<Person>())
                     {
@@ -471,7 +471,7 @@ namespace CometServer.Modules
                         this.RequestUtils.Cache.Clear();
 
                         // get referenced engineeringmodel data
-                        var engineeringModelItems = this.ExchangeFileProcessor
+                        var engineeringModelItems = this.JsonExchangeFileReader
                             .ReadEngineeringModelFromfile(version, fileName, password, engineeringModelSetup).ToList();
 
                         // should return one engineeringmodel topcontainer
@@ -514,7 +514,7 @@ namespace CometServer.Modules
                         foreach (var iterationSetup in iterationSetups)
                         {
                             this.RequestUtils.Cache.Clear();
-                            var iterationItems = this.ExchangeFileProcessor
+                            var iterationItems = this.JsonExchangeFileReader
                                 .ReadModelIterationFromFile(version, fileName, password, iterationSetup).ToList();
 
                             // FixRevisionNumber(iterationItems);
@@ -597,7 +597,7 @@ namespace CometServer.Modules
 
             foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
             {
-                this.ExchangeFileProcessor.StoreFileBinary(fileName, password, hash);
+                this.JsonExchangeFileReader.StoreFileBinary(fileName, password, hash);
             }
         }
 

@@ -93,7 +93,7 @@ namespace CometServer.Modules
         /// <summary>
         /// The content disposition header.
         /// </summary>
-        private const string ContentDispositionHeader = "Content-Disposition";
+        protected const string ContentDispositionHeader = "Content-Disposition";
 
         /// <summary>
         /// The content length header.
@@ -109,12 +109,7 @@ namespace CometServer.Modules
         /// The site reference data library type name.
         /// </summary>
         private const string SiteReferenceDataLibraryType = "SiteReferenceDataLibrary";
-
-        /// <summary>
-        /// The site reference data library type name.
-        /// </summary>
-        private const string EngineeringModelZipFileName = "filename=AnnexC3ModelExport.zip";
-
+        
         /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
@@ -169,12 +164,7 @@ namespace CometServer.Modules
         /// Gets or sets the file archive service.
         /// </summary>
         public IFileArchiveService FileArchiveService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the engineering model zip export service.
-        /// </summary>
-        public IEngineeringModelZipExportService EngineeringModelZipExportService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the revision service.
         /// </summary>
@@ -601,48 +591,7 @@ namespace CometServer.Modules
             }
         }
 
-        /// <summary>
-        /// Get a zipped models archive response instance from the passed list of <see cref="Guid"/>.
-        /// </summary>
-        /// <param name="requestDataModelVersion">
-        /// The data model version of this request to use with serialization.
-        /// </param>
-        /// <param name="modelSetupGuidList">
-        /// The list of EngineeringModelSetup <see cref="Guid"/> to export
-        /// </param>
-        /// <param name="statusCode">
-        /// The optional HTML status Code.
-        /// </param>
-        /// <param name="requestToken">
-        /// optional request token
-        /// </param>
-        protected async Task GetZippedModelsResponse(HttpResponse httpResponse, Version version, List<Guid> modelSetupGuidList, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
-        {
-            var path = this.EngineeringModelZipExportService.CreateZipExportFile(version, modelSetupGuidList, null);
 
-            try
-            {
-                if (path == null)
-                {
-                    throw new Exception("The server was unable to export EngineeringModel. You might not be eligible to export some models, please check your permissions or contact your administrator.");
-                }
-
-                httpResponse.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
-                httpResponse.Headers.Add(ContentDispositionHeader, EngineeringModelZipFileName);
-
-                await this.CreateFileResponseStream(httpResponse.Body, path);
-            }
-            catch (Exception ex)
-            {
-                if (path != null)
-                {
-                    System.IO.File.Delete(path);
-                }
-
-                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
-                await httpResponse.AsJson("The zipped content could not be returned");
-            }
-        }
 
         /// <summary>
         /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
@@ -825,33 +774,7 @@ namespace CometServer.Modules
             var endLine = Encoding.Default.GetBytes($"\r\n--{BoundaryString}--");
             targetStream.Write(endLine, 0, endLine.Length);
         }
-
-        /// <summary>
-        /// Creates file response stream.
-        /// </summary>
-        /// <param name="targetStream">
-        /// The target stream where the file stream is copied.
-        /// </param>
-        /// <param name="path">
-        /// The path of the file to put in a stream.
-        /// </param>
-        private async Task CreateFileResponseStream(Stream targetStream, string path)
-        {
-            using (var fileStream = new FileStream(path, FileMode.Open))
-            {
-                var fileSize = fileStream.Length;
-                var buffer = new byte[(int)fileSize];
-                fileStream.Read(buffer, 0, (int)fileSize);
-
-                var content = new ByteArrayContent(buffer);
-
-                // stream the multipart content to the request contents target stream
-                await content.CopyToAsync(targetStream);
-            }
-
-            System.IO.File.Delete(path);
-        }
-
+        
         /// <summary>
         /// Setup the security context for the library data retrieval.
         /// </summary>

@@ -98,7 +98,7 @@ namespace CometServer.Services
                 throw new FileNotFoundException("The requested file does not exists");
             }
 
-            return new FileStream(filePath, FileMode.Open);
+            return new FileStream(filePath, FileMode.Open, FileAccess.Read);
         }
 
         /// <summary>

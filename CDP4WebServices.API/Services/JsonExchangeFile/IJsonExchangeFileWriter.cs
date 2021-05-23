@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IEngineeringModelZipExportService.cs" company="RHEA System S.A.">
+// <copyright file="IJsonExchangeFileWriter.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -27,26 +27,34 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
 
-    using Microsoft.AspNetCore.Http;
+    using CDP4Common.DTO;
+
+    using Npgsql;
 
     /// <summary>
-    /// The purpose of the <see cref="IEngineeringModelZipExportService"/> is to provide file functions for exporting an engineering model 
-    /// in a zipped archive.
+    /// The <see cref="IJsonExchangeFileWriter"/> interface that defines methods to write data to
+    /// an E-TM-10-25 Annex C3 archive
     /// </summary>
-    public interface IEngineeringModelZipExportService : IBusinessLogicService
+    public interface IJsonExchangeFileWriter
     {
         /// <summary>
-        /// Create a zip export file with EngineeringModels from supplied EngineeringModelSetupGuids and paths to files.
+        /// Creates an E-TM-10-25 Annex-C3 zip archive and stores this on disk. The path to this file is returned
         /// </summary>
-        /// <param name="engineeringModelSetupGuids">
-        /// The provided list of <see cref="Guid"/> of EngineeringModelSetups to write to the zip file
+        /// <param name="transaction">
+        /// The <see cref="NpgsqlTransaction"/> used to read 10-25 data from the database
         /// </param>
-        /// <param name="files">
-        /// The path to the files that need to be uploaded. If <paramref name="files"/> is null, then no files are to be uploaded
+        /// <param name="exportDirectory">
+        /// the path to the export directory where the temporary zip file will be created
+        /// </param>
+        /// <param name="engineeringModelSetups">
+        /// An <see cref="IEnumerable{EngineeringModelSetup}"/> that is to be included in the E-TM-10-25 Annex-C3 zip archive
+        /// </param>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET data model that is requested
         /// </param>
         /// <returns>
-        /// The <see cref="string"/> path of the created archive.
+        /// The path to the temporary E-TM-10-25 Annex-C3 zip archive
         /// </returns>
-        string CreateZipExportFile(Version version, IEnumerable<Guid> engineeringModelSetupGuids, IEnumerable<string> files);
+        string Create(NpgsqlTransaction transaction, string exportDirectory, IEnumerable<EngineeringModelSetup> engineeringModelSetups, Version version);
     }
 }

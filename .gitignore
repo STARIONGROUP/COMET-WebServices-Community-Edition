@@ -73,3 +73,5 @@ CDP4.v12.suo
 
 /CodeGenerator/*
 .idea
+
+/CDP4WebServices.API/storage/
