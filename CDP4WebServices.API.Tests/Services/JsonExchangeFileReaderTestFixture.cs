@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ExchangeFileProcessorTestFixture.cs" company="RHEA System S.A.">
+// <copyright file="JsonExchangeFileReaderTestFixture.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -25,31 +25,23 @@
 namespace CometServer.Tests.Services
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 
     using CDP4JsonSerializer;
 
     using CometServer.Services;
-
-    using Microsoft.VisualBasic;
-
-    using Moq;
-
+    
     using NUnit.Framework;
 
     /// <summary>
     /// Suite of tests for the <see cref="ExchangeFileProcessor"/> class
     /// </summary>
     [TestFixture]
-    public class ExchangeFileProcessorTestFixture
+    public class JsonExchangeFileReaderTestFixture
     {
         private MetaInfoProvider metaInfoProvider;
 
-        private ExchangeFileProcessor exchangeFileProcessor;
+        private JsonExchangeFileReader jsonExchangeFileReader;
 
         private FileBinaryService fileBinaryService;
 
@@ -64,7 +56,7 @@ namespace CometServer.Tests.Services
 
             this.jsonSerializer = new Cdp4JsonSerializer();
 
-            this.exchangeFileProcessor = new ExchangeFileProcessor
+            this.jsonExchangeFileReader = new JsonExchangeFileReader
             {
                 MetaInfoProvider = this.metaInfoProvider,
                 FileBinaryService =  this.fileBinaryService,
@@ -79,7 +71,7 @@ namespace CometServer.Tests.Services
         {
             var version = new Version(1, 0, 0);
 
-            var things = this.exchangeFileProcessor.ReadSiteDirectoryFromfile(version, this.testFilePath, null);
+            var things = this.jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, this.testFilePath, null);
 
             CollectionAssert.IsNotEmpty(things);
         }

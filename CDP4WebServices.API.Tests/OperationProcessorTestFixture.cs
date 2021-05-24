@@ -85,7 +85,7 @@ namespace CometServer.Tests
 
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
 
-        private readonly IOperationSideEffectProcessor operationSideEffectProcessor = new OperationSideEffectProcessor(new List<IOperationSideEffect>());
+        private readonly OperationSideEffectProcessor operationSideEffectProcessor = new OperationSideEffectProcessor(new List<IOperationSideEffect>());
 
         private readonly SimpleQuantityKindMetaInfo simpleQuantityKindMetaInfo = new SimpleQuantityKindMetaInfo();
 
@@ -111,9 +111,12 @@ namespace CometServer.Tests
         {
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.operationProcessor = new OperationProcessor();
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
+            this.operationSideEffectProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
+
+            this.operationProcessor = new OperationProcessor();
             this.operationProcessor.OperationSideEffectProcessor = this.operationSideEffectProcessor;
+            this.operationProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
             
             this.serviceProvider = new Mock<CometServer.Services.IServiceProvider>();
             this.resolveService = new Mock<IResolveService>();

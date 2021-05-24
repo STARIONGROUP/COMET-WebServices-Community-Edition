@@ -59,7 +59,7 @@ namespace CometServer.Tests.Services.Supplemental
         private NpgsqlTransaction transaction;
         private Mock<ICdp4TransactionManager> transactionManager;
         private string iterationPartitionName;
-        private Person person;
+        private Credentials credentials;
 
         [SetUp]
         public void Setup()
@@ -70,7 +70,6 @@ namespace CometServer.Tests.Services.Supplemental
             this.credentialsService = new Mock<ICredentialsService>();
             this.transaction = null;
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.person = new Person(Guid.NewGuid(), 0);
 
             this.fileService = new FileService
             {
@@ -84,12 +83,12 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(true);
 
-            var credentials = new Credentials();
-            credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
+            this.credentials = new Credentials();
+            this.credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
             {
                 UserName = "jdoe"
             };
-            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+            this.credentialsService.Setup(x => x.Credentials).Returns(this.credentials);
 
             this.fileDao
                 .Setup(
@@ -104,7 +103,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             Assert.DoesNotThrow(() => this.fileService.CheckFileLock(this.transaction, this.iterationPartitionName, this.file));
 
-            this.file.LockedBy = this.person.Iid;
+            this.file.LockedBy = this.credentials.Person.Iid;
             Assert.DoesNotThrow(() => this.fileService.CheckFileLock(this.transaction, this.iterationPartitionName, this.file));
 
             this.file.LockedBy = Guid.NewGuid();

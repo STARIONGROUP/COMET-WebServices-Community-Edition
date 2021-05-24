@@ -162,6 +162,7 @@ namespace CometServer.Tests.Services
                 ResolveService = this.resolveService.Object,
                 TransactionManager = this.transactionManager.Object,
                 DataModelUtils = this.dataModelUtils,
+                MetaInfoProvider = this.metaInfoProvider.Object
             };
 
             this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>());
