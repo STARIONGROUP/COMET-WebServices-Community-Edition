@@ -29,6 +29,7 @@ namespace CometServer.Modules
     using System.Diagnostics;
     using System.Linq;
     using System.Net;
+    using System.Security;
     using System.Threading.Tasks;
 
     using Carter.Response;
@@ -224,6 +225,19 @@ namespace CometServer.Modules
 
                 await this.WriteJsonResponse(things, version, httpResponse, HttpStatusCode.OK, requestToken);
             }
+            catch (SecurityException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
             catch (Exception ex)
             {
                 if (transaction != null)
@@ -354,6 +368,19 @@ namespace CometServer.Modules
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (SecurityException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)

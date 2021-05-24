@@ -30,6 +30,7 @@ namespace CometServer.Modules
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Security;
     using System.Threading.Tasks;
 
     using Carter.Response;
@@ -290,6 +291,18 @@ namespace CometServer.Modules
 
                 await this.WriteJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse, HttpStatusCode.OK, requestToken);
             }
+            catch (SecurityException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+
+                httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
             catch (Exception ex)
             {
                 if (transaction != null)
@@ -338,7 +351,7 @@ namespace CometServer.Modules
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
                 this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
-                
+
                 var multiPartBoundary = httpRequest.GetMultipartBoundary();
 
                 var isMultiPart = multiPartBoundary != string.Empty;
@@ -347,11 +360,12 @@ namespace CometServer.Modules
 
                 Stream bodyStream;
                 Dictionary<string, Stream> fileDictionary = null;
+
                 if (isMultiPart)
                 {
                     var requestStream = new MemoryStream();
                     await httpRequest.Body.CopyToAsync(requestStream);
-                    
+
                     bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, multiPartBoundary);
                     fileDictionary = await this.ExtractFilesFromMultipartMessage(requestStream, multiPartBoundary);
 
@@ -457,7 +471,20 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                httpResponse.StatusCode = (int) HttpStatusCode.Forbidden;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (SecurityException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)
@@ -470,7 +497,7 @@ namespace CometServer.Modules
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
-                httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
+                httpResponse.StatusCode = (int) HttpStatusCode.InternalServerError;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             finally
