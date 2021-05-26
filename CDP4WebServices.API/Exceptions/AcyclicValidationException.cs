@@ -30,7 +30,7 @@ namespace CometServer.Exceptions
     /// The acyclic validation exception.
     /// </summary>
     [Serializable]
-    public class AcyclicValidationException : Exception
+    public class AcyclicValidationException : InvalidOperationException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AcyclicValidationException"/> class.
