@@ -181,5 +181,26 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully deleted.
         /// </returns>
         bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+
+        /// <summary>
+        /// Upsert a database record from the supplied data transfer object.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="actualFiniteState">
+        /// The <see cref="CDP4Common.DTO.ActualFiniteState"/> that is to be persisted.
+        /// </param> 
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+
+        bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ActualFiniteState actualFiniteState, CDP4Common.DTO.Thing container = null);
     }
 }

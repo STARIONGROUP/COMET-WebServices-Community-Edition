@@ -256,6 +256,17 @@ namespace CDP4WebServices.API.Services
             return this.ActualFiniteStateDao.Write(transaction, partition, actualFiniteState, container);
         }
 
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            {
+                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+            }
+
+            var actualFiniteState = thing as ActualFiniteState;
+            return this.ActualFiniteStateDao.Upsert(transaction, partition, actualFiniteState, container);
+        }
+
         /// <summary>
         /// Get the requested data from the ORM layer.
         /// </summary>

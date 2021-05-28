@@ -227,6 +227,65 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert or update a new database record from the supplied data transfer object.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="actualFiniteState">
+        /// The actualFiniteStateList DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ActualFiniteState actualFiniteState, CDP4Common.DTO.Thing container = null)
+        {
+            bool isHandled;
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            var beforeWrite = this.BeforeWrite(transaction, partition, actualFiniteState, container, out isHandled, valueTypeDictionaryAdditions);
+            if (!isHandled)
+            {
+                beforeWrite = beforeWrite && base.Upsert(transaction, partition, actualFiniteState, container);
+
+                var valueTypeDictionaryContents = new Dictionary<string, string>
+                {
+                    { "Kind", !this.IsDerived(actualFiniteState, "Kind") ? actualFiniteState.Kind.ToString() : string.Empty },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                using (var command = new NpgsqlCommand())
+                {
+                    var sqlBuilder = new System.Text.StringBuilder();
+
+                    sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState\"", partition);
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
+                    sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                    sqlBuilder.Append(" DO NOTHING;");
+                    //sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteState\" SET \"Container\" = :container WHERE \"Iid\" = :iid;", partition);
+
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actualFiniteState.Iid;
+                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+
+                    command.CommandText = sqlBuilder.ToString();
+                    command.Connection = transaction.Connection;
+                    command.Transaction = transaction;
+
+                    this.ExecuteAndLogCommand(command);
+                }
+                actualFiniteState.PossibleState.ForEach(x => this.AddPossibleStateUpsert(transaction, partition, actualFiniteState.Iid, x));
+            }
+
+            return this.AfterWrite(beforeWrite, transaction, partition, actualFiniteState, container);
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -294,6 +353,46 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState_PossibleState\"", partition);
                 sqlBuilder.AppendFormat(" (\"ActualFiniteState\", \"PossibleState\")");
                 sqlBuilder.Append(" VALUES (:actualFiniteState, :possibleState);");
+
+                command.Parameters.Add("actualFiniteState", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("possibleState", NpgsqlDbType.Uuid).Value = possibleState;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Upsert a new association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ActualFiniteState"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="possibleState">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool AddPossibleStateUpsert(NpgsqlTransaction transaction, string partition, Guid iid, Guid possibleState)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState_PossibleState\"", partition);
+                sqlBuilder.AppendFormat(" (\"ActualFiniteState\", \"PossibleState\")");
+                sqlBuilder.Append(" VALUES (:actualFiniteState, :possibleState)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteState_PossibleState_PK\"");
+                sqlBuilder.Append(" DO NOTHING;");
 
                 command.Parameters.Add("actualFiniteState", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("possibleState", NpgsqlDbType.Uuid).Value = possibleState;

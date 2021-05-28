@@ -505,13 +505,15 @@ namespace CDP4WebServices.API.Modules
                             this.RequestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
+                            // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
                             var iteration =
                                 iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
-                            if (iteration == null || !iterationService.CreateConcept(
+                            if (iteration == null || !iterationService.CreateConceptFromImportedIteration(
                                     transaction,
                                     dataPartition,
                                     iteration,
-                                    engineeringModel))
+                                    engineeringModel,
+                                    iterationSetup.IterationNumber))
                             {
                                 iterationInsertResult = false;
                                 break;

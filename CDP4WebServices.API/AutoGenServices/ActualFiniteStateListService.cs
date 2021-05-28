@@ -263,6 +263,39 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Upsert the supplied <see cref="ActualFiniteStateList"/> instance.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="ActualFiniteStateList"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="ActualFiniteStateList"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            {
+                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+            }
+
+            var actualFiniteStateList = thing as ActualFiniteStateList;
+            var createSuccesful = this.ActualFiniteStateListDao.Upsert(transaction, partition, actualFiniteStateList, container);
+            return createSuccesful && this.UpsertContainment(transaction, partition, actualFiniteStateList);
+        }
+
+        /// <summary>
         /// Get the requested data from the ORM layer.
         /// </summary>
         /// <param name="transaction">
@@ -390,6 +423,33 @@ namespace CDP4WebServices.API.Services
             foreach (var actualState in this.ResolveFromRequestCache(actualFiniteStateList.ActualState))
             {
                 results.Add(this.ActualStateService.CreateConcept(transaction, partition, actualState, actualFiniteStateList));
+            }
+
+            return results.All(x => x);
+        }
+
+        /// <summary>
+        /// Persist the <see cref="ActualFiniteStateList"/> containment tree to the ORM layer.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="actualFiniteStateList">
+        /// The <see cref="ActualFiniteStateList"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, ActualFiniteStateList actualFiniteStateList)
+        {
+            var results = new List<bool>();
+
+            foreach (var actualState in this.ResolveFromRequestCache(actualFiniteStateList.ActualState))
+            {
+                results.Add(this.ActualStateService.UpsertConcept(transaction, partition, actualState, actualFiniteStateList));
             }
 
             return results.All(x => x);

@@ -101,6 +101,47 @@ namespace CDP4Orm.Dao
             return this.AfterWrite(beforeWrite, transaction, partition, thing, container);
         }
 
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Thing thing, CDP4Common.DTO.Thing container = null)
+        {
+            bool isHandled;
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            var beforeWrite = this.BeforeWrite(transaction, partition, thing, container, out isHandled, valueTypeDictionaryAdditions);
+            if (!isHandled)
+            {
+                var valueTypeDictionaryContents = new Dictionary<string, string>
+                {
+                    { "ClassKind", thing.ClassKind.ToString() },
+                    { "ModifiedOn", !this.IsDerived(thing, "ModifiedOn") ? thing.ModifiedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
+                    { "RevisionNumber", thing.RevisionNumber.ToString() },
+                    { "ThingPreference", !this.IsDerived(thing, "ThingPreference") ? thing.ThingPreference.Escape() : null },
+                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+                using (var command = new NpgsqlCommand())
+                {
+                    var sqlBuilder = new System.Text.StringBuilder();
+
+                    sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Thing\"", partition);
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary)");
+                    sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
+                    sqlBuilder.AppendFormat(" DO NOTHING;");
+
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
+                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+
+                    command.CommandText = sqlBuilder.ToString();
+                    command.Connection = transaction.Connection;
+                    command.Transaction = transaction;
+
+                    this.ExecuteAndLogCommand(command);
+                }
+                thing.ExcludedDomain.ForEach(x => this.AddExcludedDomain(transaction, partition, thing.Iid, x));
+                thing.ExcludedPerson.ForEach(x => this.AddExcludedPerson(transaction, partition, thing.Iid, x));
+            }
+
+            return this.AfterWrite(beforeWrite, transaction, partition, thing, container);
+        }
+
         /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>

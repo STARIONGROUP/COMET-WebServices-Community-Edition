@@ -11,8 +11,8 @@ namespace CDP4WebServices.API.Services
     using System.Diagnostics;
     using System.Linq;
     using System.Runtime.Remoting;
+    using System.Security;
     using Authorization;
-    using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using Helpers;
     using NLog;
@@ -236,6 +236,152 @@ namespace CDP4WebServices.API.Services
             }
 
             return iteration;
+        }
+
+        /// <summary>
+        /// Persist the supplied <see cref="Iteration"/> instance.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Iteration"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Iteration"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool CreateConceptFromImportedIteration(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Thing thing, Thing container, long sequence = -1)
+        {
+            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            {
+                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+            }
+
+            var iteration = thing as Iteration;
+            var createSuccesful = this.IterationDao.Write(transaction, partition, iteration, container);
+            return createSuccesful && this.CreateContaimentFromImportedIteration(transaction, partition, iteration, sequence);
+        }
+
+        /// <summary>
+        /// Persist the imported(AnnexC3 file) <see cref="Iteration"/> containment tree to the ORM layer.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iteration">
+        /// The <see cref="Iteration"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool CreateContaimentFromImportedIteration(NpgsqlTransaction transaction, string partition, Iteration iteration, long sequence)
+        {
+            var results = new List<bool>();
+            var iterationPartition = partition.Replace("EngineeringModel", "Iteration");
+
+            foreach (var actualFiniteStateList in this.ResolveFromRequestCache(iteration.ActualFiniteStateList))
+            {
+                results.Add(this.ActualFiniteStateListService.UpsertConcept(transaction, iterationPartition, actualFiniteStateList, iteration));
+            }
+
+            if (sequence != 1)
+            {
+                return true;
+            }
+
+            foreach (var diagramCanvas in this.ResolveFromRequestCache(iteration.DiagramCanvas))
+            {
+                results.Add(this.DiagramCanvasService.CreateConcept(transaction, iterationPartition, diagramCanvas, iteration));
+            }
+
+            foreach (var domainFileStore in this.ResolveFromRequestCache(iteration.DomainFileStore))
+            {
+                results.Add(this.DomainFileStoreService.CreateConcept(transaction, iterationPartition, domainFileStore, iteration));
+            }
+
+            foreach (var element in this.ResolveFromRequestCache(iteration.Element))
+            {
+                results.Add(this.ElementService.CreateConcept(transaction, iterationPartition, element, iteration));
+            }
+
+            foreach (var externalIdentifierMap in this.ResolveFromRequestCache(iteration.ExternalIdentifierMap))
+            {
+                results.Add(this.ExternalIdentifierMapService.CreateConcept(transaction, iterationPartition, externalIdentifierMap, iteration));
+            }
+
+            foreach (var goal in this.ResolveFromRequestCache(iteration.Goal))
+            {
+                results.Add(this.GoalService.CreateConcept(transaction, iterationPartition, goal, iteration));
+            }
+
+            foreach (var option in this.ResolveFromRequestCache(iteration.Option))
+            {
+                results.Add(this.OptionService.CreateConcept(transaction, iterationPartition, (Option)option.V, iteration, option.K));
+            }
+
+            foreach (var possibleFiniteStateList in this.ResolveFromRequestCache(iteration.PossibleFiniteStateList))
+            {
+                results.Add(this.PossibleFiniteStateListService.CreateConcept(transaction, iterationPartition, possibleFiniteStateList, iteration));
+            }
+
+            foreach (var publication in this.ResolveFromRequestCache(iteration.Publication))
+            {
+                results.Add(this.PublicationService.CreateConcept(transaction, iterationPartition, publication, iteration));
+            }
+
+            foreach (var relationship in this.ResolveFromRequestCache(iteration.Relationship))
+            {
+                results.Add(this.RelationshipService.CreateConcept(transaction, iterationPartition, relationship, iteration));
+            }
+
+            foreach (var requirementsSpecification in this.ResolveFromRequestCache(iteration.RequirementsSpecification))
+            {
+                results.Add(this.RequirementsSpecificationService.CreateConcept(transaction, iterationPartition, requirementsSpecification, iteration));
+            }
+
+            foreach (var ruleVerificationList in this.ResolveFromRequestCache(iteration.RuleVerificationList))
+            {
+                results.Add(this.RuleVerificationListService.CreateConcept(transaction, iterationPartition, ruleVerificationList, iteration));
+            }
+
+            foreach (var sharedDiagramStyle in this.ResolveFromRequestCache(iteration.SharedDiagramStyle))
+            {
+                results.Add(this.SharedDiagramStyleService.CreateConcept(transaction, iterationPartition, sharedDiagramStyle, iteration));
+            }
+
+            foreach (var stakeholder in this.ResolveFromRequestCache(iteration.Stakeholder))
+            {
+                results.Add(this.StakeholderService.CreateConcept(transaction, iterationPartition, stakeholder, iteration));
+            }
+
+            foreach (var stakeholderValue in this.ResolveFromRequestCache(iteration.StakeholderValue))
+            {
+                results.Add(this.StakeholderValueService.CreateConcept(transaction, iterationPartition, stakeholderValue, iteration));
+            }
+
+            foreach (var stakeholderValueMap in this.ResolveFromRequestCache(iteration.StakeholderValueMap))
+            {
+                results.Add(this.StakeholderValueMapService.CreateConcept(transaction, iterationPartition, stakeholderValueMap, iteration));
+            }
+
+            foreach (var valueGroup in this.ResolveFromRequestCache(iteration.ValueGroup))
+            {
+                results.Add(this.ValueGroupService.CreateConcept(transaction, iterationPartition, valueGroup, iteration));
+            }
+
+            return results.All(x => x);
         }
     }
 }

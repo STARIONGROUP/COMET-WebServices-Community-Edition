@@ -304,6 +304,47 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Upsert a new association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ActualFiniteStateList"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="excludeOption">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool AddExcludeOptionUpsert(NpgsqlTransaction transaction, string partition, Guid iid, Guid excludeOption)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteStateList_ExcludeOption\"", partition);
+                sqlBuilder.AppendFormat(" (\"ActualFiniteStateList\", \"ExcludeOption\")");
+                sqlBuilder.Append(" VALUES (:actualFiniteStateList, :excludeOption)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteStateList_ExcludeOption_PK\"");
+                sqlBuilder.Append(" DO NOTHING;");
+
+                command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("excludeOption", NpgsqlDbType.Uuid).Value = excludeOption;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -330,6 +371,47 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList\"", partition);
                 sqlBuilder.AppendFormat(" (\"ActualFiniteStateList\", \"PossibleFiniteStateList\", \"Sequence\")");
                 sqlBuilder.Append(" VALUES (:actualFiniteStateList, :possibleFiniteStateList, :sequence);");
+
+                command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = Guid.Parse(possibleFiniteStateList.V.ToString());
+                command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = possibleFiniteStateList.K;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ActualFiniteStateList"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="possibleFiniteStateList">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool AddPossibleFiniteStateListUpsert(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem possibleFiniteStateList)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList\"", partition);
+                sqlBuilder.AppendFormat(" (\"ActualFiniteStateList\", \"PossibleFiniteStateList\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:actualFiniteStateList, :possibleFiniteStateList, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteStateList_PossibleFiniteStateList_PK\"");
+                sqlBuilder.Append(" DO NOTHING;");
 
                 command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = Guid.Parse(possibleFiniteStateList.V.ToString());
@@ -629,6 +711,61 @@ namespace CDP4Orm.Dao
 
                 return this.ExecuteAndLogCommand(command) > 0;
             }
+        }
+
+        /// <summary>
+        /// Insert or update a new database record from the supplied data transfer object.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="actualFiniteStateList">
+        /// The actualFiniteStateList DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ActualFiniteStateList actualFiniteStateList, CDP4Common.DTO.Thing container = null)
+        {
+            bool isHandled;
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            var beforeWrite = this.BeforeWrite(transaction, partition, actualFiniteStateList, container, out isHandled, valueTypeDictionaryAdditions);
+            if (!isHandled)
+            {
+                beforeWrite = beforeWrite && base.Upsert(transaction, partition, actualFiniteStateList, container);
+
+                using (var command = new NpgsqlCommand())
+                {
+                    var sqlBuilder = new System.Text.StringBuilder();
+
+                    sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteStateList\"", partition);
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"Owner\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :container, :owner)");
+                    sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                    sqlBuilder.Append(" DO NOTHING;");
+                    //sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteStateList\" SET \"Container\" = :container WHERE \"Iid\" = :iid;", partition);
+
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actualFiniteStateList.Iid;
+                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                    command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(actualFiniteStateList, "Owner") ? actualFiniteStateList.Owner : Utils.NullableValue(null);
+
+                    command.CommandText = sqlBuilder.ToString();
+                    command.Connection = transaction.Connection;
+                    command.Transaction = transaction;
+
+                    this.ExecuteAndLogCommand(command);
+                }
+                actualFiniteStateList.ExcludeOption.ForEach(x => this.AddExcludeOptionUpsert(transaction, partition, actualFiniteStateList.Iid, x));
+                actualFiniteStateList.PossibleFiniteStateList.ForEach(x => this.AddPossibleFiniteStateListUpsert(transaction, partition, actualFiniteStateList.Iid, x));
+            }
+
+            return this.AfterWrite(beforeWrite, transaction, partition, actualFiniteStateList, container);
         }
     }
 }
