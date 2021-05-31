@@ -263,8 +263,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("rule", NpgsqlDbType.Uuid).Value = !this.IsDerived(userRuleVerification, "Rule") ? userRuleVerification.Rule : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"UserRuleVerification\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Rule\")");
-                sqlBuilder.AppendFormat(" = (:rule);");
+                sqlBuilder.AppendFormat(" SET \"Rule\"");
+                sqlBuilder.AppendFormat(" = :rule;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

@@ -272,8 +272,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("subscribedValueSet", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterSubscriptionValueSet, "SubscribedValueSet") ? parameterSubscriptionValueSet.SubscribedValueSet : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterSubscriptionValueSet\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"SubscribedValueSet\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :subscribedValueSet));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"SubscribedValueSet\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :subscribedValueSet);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

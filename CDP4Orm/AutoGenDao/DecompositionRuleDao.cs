@@ -293,8 +293,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("containingCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(decompositionRule, "ContainingCategory") ? decompositionRule.ContainingCategory : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DecompositionRule\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"ContainingCategory\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :containingCategory));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ContainingCategory\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :containingCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

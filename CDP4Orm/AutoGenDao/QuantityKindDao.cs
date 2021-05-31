@@ -137,8 +137,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("defaultScale", NpgsqlDbType.Uuid).Value = !this.IsDerived(quantityKind, "DefaultScale") ? quantityKind.DefaultScale : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"QuantityKind\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"DefaultScale\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :defaultScale));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"DefaultScale\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :defaultScale);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

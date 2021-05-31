@@ -292,8 +292,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = reviewItemDiscrepancy.Iid;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReviewItemDiscrepancy\"", partition);
-                sqlBuilder.AppendFormat(" SET ()");
-                sqlBuilder.AppendFormat(" = ();");
+                sqlBuilder.AppendFormat(" SET ");
+                sqlBuilder.AppendFormat(" = ;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

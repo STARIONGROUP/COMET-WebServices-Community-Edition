@@ -324,8 +324,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("publisher", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceSource, "Publisher") ? Utils.NullableValue(referenceSource.Publisher) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceSource\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"PublishedIn\", \"Publisher\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :publishedIn, :publisher));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"PublishedIn\", \"Publisher\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :publishedIn, :publisher);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

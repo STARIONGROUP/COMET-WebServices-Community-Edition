@@ -309,8 +309,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("defaultOrganizationalParticipant", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelSetup, "DefaultOrganizationalParticipant") ? Utils.NullableValue(engineeringModelSetup.DefaultOrganizationalParticipant) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"EngineeringModelSetup\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :defaultOrganizationalParticipant));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :defaultOrganizationalParticipant);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

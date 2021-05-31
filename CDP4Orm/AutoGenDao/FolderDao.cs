@@ -278,8 +278,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(folder, "Owner") ? folder.Owner : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Folder\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\", \"Owner\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :containingFolder, :creator, :owner));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\", \"Owner\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :containingFolder, :creator, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

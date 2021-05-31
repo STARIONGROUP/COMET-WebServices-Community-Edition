@@ -284,8 +284,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("group", NpgsqlDbType.Uuid).Value = !this.IsDerived(requirement, "Group") ? Utils.NullableValue(requirement.Group) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Requirement\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"Group\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :group));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Group\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :group);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

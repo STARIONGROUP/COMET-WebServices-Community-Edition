@@ -267,8 +267,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("rootElement", NpgsqlDbType.Uuid).Value = !this.IsDerived(nestedElement, "RootElement") ? nestedElement.RootElement : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"NestedElement\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"RootElement\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :rootElement));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"RootElement\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :rootElement);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

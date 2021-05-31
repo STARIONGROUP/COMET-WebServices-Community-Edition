@@ -282,8 +282,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("parameterValueSet", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterOverrideValueSet, "ParameterValueSet") ? parameterOverrideValueSet.ParameterValueSet : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterOverrideValueSet\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"ParameterValueSet\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :parameterValueSet));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"ParameterValueSet\")");
+                sqlBuilder.AppendFormat(" = (:container, :parameterValueSet);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

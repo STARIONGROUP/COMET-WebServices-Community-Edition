@@ -280,8 +280,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("general", NpgsqlDbType.Uuid).Value = !this.IsDerived(specializedQuantityKind, "General") ? specializedQuantityKind.General : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SpecializedQuantityKind\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"General\")");
-                sqlBuilder.AppendFormat(" = (:general);");
+                sqlBuilder.AppendFormat(" SET \"General\"");
+                sqlBuilder.AppendFormat(" = :general;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

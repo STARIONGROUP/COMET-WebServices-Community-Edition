@@ -294,8 +294,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("changeRequest", NpgsqlDbType.Uuid).Value = !this.IsDerived(changeProposal, "ChangeRequest") ? changeProposal.ChangeRequest : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ChangeProposal\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ChangeRequest\")");
-                sqlBuilder.AppendFormat(" = (:changeRequest);");
+                sqlBuilder.AppendFormat(" SET \"ChangeRequest\"");
+                sqlBuilder.AppendFormat(" = :changeRequest;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

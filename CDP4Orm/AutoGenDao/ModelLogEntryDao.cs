@@ -299,8 +299,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(modelLogEntry, "Author") ? Utils.NullableValue(modelLogEntry.Author) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ModelLogEntry\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"Author\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :author));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Author\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :author);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

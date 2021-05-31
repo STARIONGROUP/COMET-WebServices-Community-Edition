@@ -249,8 +249,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("referenceScaleValue", NpgsqlDbType.Uuid).Value = !this.IsDerived(mappingToReferenceScale, "ReferenceScaleValue") ? mappingToReferenceScale.ReferenceScaleValue : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"MappingToReferenceScale\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"DependentScaleValue\", \"ReferenceScaleValue\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :dependentScaleValue, :referenceScaleValue));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"DependentScaleValue\", \"ReferenceScaleValue\")");
+                sqlBuilder.AppendFormat(" = (:container, :dependentScaleValue, :referenceScaleValue);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

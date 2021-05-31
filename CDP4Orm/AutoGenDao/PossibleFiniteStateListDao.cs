@@ -267,8 +267,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(possibleFiniteStateList, "Owner") ? possibleFiniteStateList.Owner : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"PossibleFiniteStateList\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"DefaultState\", \"Owner\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :defaultState, :owner));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"DefaultState\", \"Owner\")");
+                sqlBuilder.AppendFormat(" = (:container, :defaultState, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

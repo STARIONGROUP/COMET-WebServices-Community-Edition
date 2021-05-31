@@ -144,8 +144,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("stateDependence", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterBase, "StateDependence") ? Utils.NullableValue(parameterBase.StateDependence) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterBase\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Group\", \"Owner\", \"ParameterType\", \"Scale\", \"StateDependence\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :group, :owner, :parameterType, :scale, :stateDependence));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Group\", \"Owner\", \"ParameterType\", \"Scale\", \"StateDependence\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :group, :owner, :parameterType, :scale, :stateDependence);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

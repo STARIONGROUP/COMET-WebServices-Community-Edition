@@ -286,8 +286,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(nestedParameter, "Owner") ? nestedParameter.Owner : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"NestedParameter\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"ActualState\", \"AssociatedParameter\", \"Owner\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :actualState, :associatedParameter, :owner));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ActualState\", \"AssociatedParameter\", \"Owner\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :actualState, :associatedParameter, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

@@ -252,8 +252,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueGroupToStakeholderValueRelationship", NpgsqlDbType.Uuid).Value = !this.IsDerived(stakeHolderValueMapSettings, "ValueGroupToStakeholderValueRelationship") ? Utils.NullableValue(stakeHolderValueMapSettings.ValueGroupToStakeholderValueRelationship) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMapSettings\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"GoalToValueGroupRelationship\", \"StakeholderValueToRequirementRelationship\", \"ValueGroupToStakeholderValueRelationship\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :goalToValueGroupRelationship, :stakeholderValueToRequirementRelationship, :valueGroupToStakeholderValueRelationship));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"GoalToValueGroupRelationship\", \"StakeholderValueToRequirementRelationship\", \"ValueGroupToStakeholderValueRelationship\")");
+                sqlBuilder.AppendFormat(" = (:container, :goalToValueGroupRelationship, :stakeholderValueToRequirementRelationship, :valueGroupToStakeholderValueRelationship);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

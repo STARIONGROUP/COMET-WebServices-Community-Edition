@@ -293,8 +293,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("referencingCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(referencerRule, "ReferencingCategory") ? referencerRule.ReferencingCategory : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferencerRule\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"ReferencingCategory\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :referencingCategory));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ReferencingCategory\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :referencingCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

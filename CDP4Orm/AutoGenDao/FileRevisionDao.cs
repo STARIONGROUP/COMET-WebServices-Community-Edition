@@ -285,8 +285,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("creator", NpgsqlDbType.Uuid).Value = !this.IsDerived(fileRevision, "Creator") ? fileRevision.Creator : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"FileRevision\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :containingFolder, :creator));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :containingFolder, :creator);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

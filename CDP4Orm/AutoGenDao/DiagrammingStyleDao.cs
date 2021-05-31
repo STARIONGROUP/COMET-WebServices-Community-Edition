@@ -156,8 +156,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("strokeColor", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagrammingStyle, "StrokeColor") ? Utils.NullableValue(diagrammingStyle.StrokeColor) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DiagrammingStyle\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"FillColor\", \"FontColor\", \"StrokeColor\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :fillColor, :fontColor, :strokeColor));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"FillColor\", \"FontColor\", \"StrokeColor\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :fillColor, :fontColor, :strokeColor);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

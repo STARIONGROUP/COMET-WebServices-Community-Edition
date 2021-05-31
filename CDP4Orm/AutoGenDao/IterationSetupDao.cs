@@ -304,8 +304,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("sourceIterationSetup", NpgsqlDbType.Uuid).Value = !this.IsDerived(iterationSetup, "SourceIterationSetup") ? Utils.NullableValue(iterationSetup.SourceIterationSetup) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"IterationSetup\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"SourceIterationSetup\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :sourceIterationSetup));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"SourceIterationSetup\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :sourceIterationSetup);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

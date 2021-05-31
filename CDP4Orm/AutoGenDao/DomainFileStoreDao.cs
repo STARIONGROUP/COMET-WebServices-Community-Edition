@@ -276,8 +276,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DomainFileStore\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

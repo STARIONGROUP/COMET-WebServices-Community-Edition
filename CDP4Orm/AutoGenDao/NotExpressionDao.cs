@@ -244,8 +244,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("term", NpgsqlDbType.Uuid).Value = !this.IsDerived(notExpression, "Term") ? notExpression.Term : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"NotExpression\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Term\")");
-                sqlBuilder.AppendFormat(" = (:term);");
+                sqlBuilder.AppendFormat(" SET \"Term\"");
+                sqlBuilder.AppendFormat(" = :term;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

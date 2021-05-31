@@ -256,8 +256,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("engineeringModelSetup", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModel, "EngineeringModelSetup") ? engineeringModel.EngineeringModelSetup : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"EngineeringModel\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"EngineeringModelSetup\")");
-                sqlBuilder.AppendFormat(" = (:engineeringModelSetup);");
+                sqlBuilder.AppendFormat(" SET \"EngineeringModelSetup\"");
+                sqlBuilder.AppendFormat(" = :engineeringModelSetup;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

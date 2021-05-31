@@ -252,8 +252,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "Owner") ? file.Owner : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"File\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"LockedBy\", \"Owner\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :lockedBy, :owner));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"LockedBy\", \"Owner\")");
+                sqlBuilder.AppendFormat(" = (:container, :lockedBy, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

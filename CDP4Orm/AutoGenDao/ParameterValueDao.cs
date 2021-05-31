@@ -138,8 +138,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("scale", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterValue, "Scale") ? Utils.NullableValue(parameterValue.Scale) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterValue\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"ParameterType\", \"Scale\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :parameterType, :scale));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ParameterType\", \"Scale\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :parameterType, :scale);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

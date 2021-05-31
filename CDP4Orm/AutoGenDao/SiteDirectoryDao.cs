@@ -298,8 +298,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("defaultPersonRole", NpgsqlDbType.Uuid).Value = !this.IsDerived(siteDirectory, "DefaultPersonRole") ? Utils.NullableValue(siteDirectory.DefaultPersonRole) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SiteDirectory\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

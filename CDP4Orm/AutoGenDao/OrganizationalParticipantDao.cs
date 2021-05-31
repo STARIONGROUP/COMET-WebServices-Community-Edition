@@ -246,8 +246,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("organization", NpgsqlDbType.Uuid).Value = !this.IsDerived(organizationalParticipant, "Organization") ? organizationalParticipant.Organization : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"OrganizationalParticipant\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"Organization\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :organization));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"Organization\")");
+                sqlBuilder.AppendFormat(" = (:container, :organization);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

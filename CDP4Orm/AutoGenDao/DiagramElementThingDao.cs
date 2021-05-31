@@ -128,8 +128,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("sharedStyle", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramElementThing, "SharedStyle") ? Utils.NullableValue(diagramElementThing.SharedStyle) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DiagramElementThing\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"DepictedThing\", \"SharedStyle\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :depictedThing, :sharedStyle));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"DepictedThing\", \"SharedStyle\")");
+                sqlBuilder.AppendFormat(" = (:container, :depictedThing, :sharedStyle);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

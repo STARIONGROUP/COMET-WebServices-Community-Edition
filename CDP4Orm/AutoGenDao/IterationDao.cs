@@ -287,8 +287,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("topElement", NpgsqlDbType.Uuid).Value = !this.IsDerived(iteration, "TopElement") ? Utils.NullableValue(iteration.TopElement) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Iteration\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

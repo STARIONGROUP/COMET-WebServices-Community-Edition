@@ -297,8 +297,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ArrayParameterType\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary);");
+                sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\"");
+                sqlBuilder.AppendFormat(" = :valueTypeDictionary;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

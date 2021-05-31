@@ -243,8 +243,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = exclusiveOrExpression.Iid;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ExclusiveOrExpression\"", partition);
-                sqlBuilder.AppendFormat(" SET ()");
-                sqlBuilder.AppendFormat(" = ();");
+                sqlBuilder.AppendFormat(" SET ");
+                sqlBuilder.AppendFormat(" = ;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

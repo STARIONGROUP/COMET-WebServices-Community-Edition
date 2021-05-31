@@ -136,8 +136,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("referenceUnit", NpgsqlDbType.Uuid).Value = !this.IsDerived(conversionBasedUnit, "ReferenceUnit") ? conversionBasedUnit.ReferenceUnit : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ConversionBasedUnit\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"ReferenceUnit\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :referenceUnit));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ReferenceUnit\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :referenceUnit);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

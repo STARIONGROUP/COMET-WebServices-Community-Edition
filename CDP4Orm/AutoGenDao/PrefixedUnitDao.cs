@@ -254,8 +254,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("prefix", NpgsqlDbType.Uuid).Value = !this.IsDerived(prefixedUnit, "Prefix") ? prefixedUnit.Prefix : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"PrefixedUnit\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Prefix\")");
-                sqlBuilder.AppendFormat(" = (:prefix);");
+                sqlBuilder.AppendFormat(" SET \"Prefix\"");
+                sqlBuilder.AppendFormat(" = :prefix;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

@@ -148,8 +148,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("actualState", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterValueSetBase, "ActualState") ? Utils.NullableValue(parameterValueSetBase.ActualState) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterValueSetBase\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"ActualOption\", \"ActualState\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :actualOption, :actualState));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ActualOption\", \"ActualState\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :actualOption, :actualState);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

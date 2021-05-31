@@ -257,8 +257,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = !this.IsDerived(independentParameterTypeAssignment, "ParameterType") ? independentParameterTypeAssignment.ParameterType : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"IndependentParameterTypeAssignment\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"Container\", \"MeasurementScale\", \"ParameterType\"))");
-                sqlBuilder.AppendFormat(" = ((:container, :measurementScale, :parameterType));");
+                sqlBuilder.AppendFormat(" SET (\"Container\", \"MeasurementScale\", \"ParameterType\")");
+                sqlBuilder.AppendFormat(" = (:container, :measurementScale, :parameterType);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

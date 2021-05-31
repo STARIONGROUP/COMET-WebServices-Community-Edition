@@ -267,8 +267,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterizedCategoryRule, "Category") ? parameterizedCategoryRule.Category : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterizedCategoryRule\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Category\")");
-                sqlBuilder.AppendFormat(" = (:category);");
+                sqlBuilder.AppendFormat(" SET \"Category\"");
+                sqlBuilder.AppendFormat(" = :category;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

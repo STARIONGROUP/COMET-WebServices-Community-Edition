@@ -126,8 +126,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("requiredRdl", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceDataLibrary, "RequiredRdl") ? Utils.NullableValue(referenceDataLibrary.RequiredRdl) : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceDataLibrary\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"RequiredRdl\")");
-                sqlBuilder.AppendFormat(" = (:requiredRdl);");
+                sqlBuilder.AppendFormat(" SET \"RequiredRdl\"");
+                sqlBuilder.AppendFormat(" = :requiredRdl;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

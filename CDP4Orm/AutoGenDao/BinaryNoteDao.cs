@@ -282,8 +282,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryNote, "FileType") ? binaryNote.FileType : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"BinaryNote\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"FileType\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :fileType));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"FileType\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :fileType);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

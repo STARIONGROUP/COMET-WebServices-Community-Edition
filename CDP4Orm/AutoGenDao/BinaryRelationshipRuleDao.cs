@@ -297,8 +297,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("targetCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationshipRule, "TargetCategory") ? binaryRelationshipRule.TargetCategory : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"BinaryRelationshipRule\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"RelationshipCategory\", \"SourceCategory\", \"TargetCategory\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :relationshipCategory, :sourceCategory, :targetCategory));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"RelationshipCategory\", \"SourceCategory\", \"TargetCategory\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :relationshipCategory, :sourceCategory, :targetCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

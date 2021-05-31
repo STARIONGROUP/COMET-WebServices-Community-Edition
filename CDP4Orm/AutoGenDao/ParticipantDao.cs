@@ -272,8 +272,8 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("selectedDomain", NpgsqlDbType.Uuid).Value = !this.IsDerived(participant, "SelectedDomain") ? participant.SelectedDomain : Utils.NullableValue(null);
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Participant\"", partition);
-                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\", \"Person\", \"Role\", \"SelectedDomain\"))");
-                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container, :person, :role, :selectedDomain));");
+                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Person\", \"Role\", \"SelectedDomain\")");
+                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :person, :role, :selectedDomain);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
