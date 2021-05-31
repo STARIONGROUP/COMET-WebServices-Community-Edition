@@ -118,7 +118,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiscussionItem\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ReplyTo\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :replyTo);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :replyTo)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = discussionItem.Iid;
                 command.Parameters.Add("replyTo", NpgsqlDbType.Uuid).Value = !this.IsDerived(discussionItem, "ReplyTo") ? Utils.NullableValue(discussionItem.ReplyTo) : Utils.NullableValue(null);

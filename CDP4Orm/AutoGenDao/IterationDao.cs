@@ -277,7 +277,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Iteration\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = iteration.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

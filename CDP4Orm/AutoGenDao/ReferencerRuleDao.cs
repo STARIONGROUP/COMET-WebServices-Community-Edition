@@ -286,7 +286,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferencerRule\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"ReferencingCategory\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referencingCategory);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referencingCategory)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referencerRule.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

@@ -290,7 +290,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteDirectory\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = siteDirectory.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

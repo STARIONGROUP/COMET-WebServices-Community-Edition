@@ -265,7 +265,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelReferenceDataLibrary\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = modelReferenceDataLibrary.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

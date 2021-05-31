@@ -286,7 +286,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"MultiRelationshipRule\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"RelationshipCategory\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :relationshipCategory);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :relationshipCategory)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = multiRelationshipRule.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

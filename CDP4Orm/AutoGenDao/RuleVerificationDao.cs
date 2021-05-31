@@ -142,7 +142,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"RuleVerification\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Sequence\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :sequence, :container);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :sequence, :container)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ruleVerification.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

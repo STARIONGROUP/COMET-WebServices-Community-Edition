@@ -119,7 +119,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"RequirementsContainer\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Owner\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :owner);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :owner)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = requirementsContainer.Iid;
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(requirementsContainer, "Owner") ? requirementsContainer.Owner : Utils.NullableValue(null);

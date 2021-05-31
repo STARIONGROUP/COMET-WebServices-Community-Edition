@@ -275,7 +275,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterOverrideValueSet\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"ParameterValueSet\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :parameterValueSet);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :parameterValueSet)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterOverrideValueSet.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

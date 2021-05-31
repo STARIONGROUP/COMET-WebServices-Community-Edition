@@ -250,7 +250,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"EngineeringModel\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"EngineeringModelSetup\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :engineeringModelSetup);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :engineeringModelSetup)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModel.Iid;
                 command.Parameters.Add("engineeringModelSetup", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModel, "EngineeringModelSetup") ? engineeringModel.EngineeringModelSetup : Utils.NullableValue(null);

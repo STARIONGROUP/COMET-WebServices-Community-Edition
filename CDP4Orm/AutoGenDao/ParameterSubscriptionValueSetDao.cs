@@ -264,7 +264,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterSubscriptionValueSet\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"SubscribedValueSet\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :subscribedValueSet);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :subscribedValueSet)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterSubscriptionValueSet.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

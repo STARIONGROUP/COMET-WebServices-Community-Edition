@@ -288,7 +288,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ContractChangeNotice\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ChangeProposal\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :changeProposal);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :changeProposal)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = contractChangeNotice.Iid;
                 command.Parameters.Add("changeProposal", NpgsqlDbType.Uuid).Value = !this.IsDerived(contractChangeNotice, "ChangeProposal") ? contractChangeNotice.ChangeProposal : Utils.NullableValue(null);

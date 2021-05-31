@@ -255,7 +255,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"RuleVerificationList\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"Owner\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :owner);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :owner)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ruleVerificationList.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

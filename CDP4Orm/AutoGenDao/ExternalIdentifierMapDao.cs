@@ -283,7 +283,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ExternalIdentifierMap\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"ExternalFormat\", \"Owner\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :externalFormat, :owner);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :externalFormat, :owner)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = externalIdentifierMap.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

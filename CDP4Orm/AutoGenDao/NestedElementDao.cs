@@ -259,7 +259,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"NestedElement\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"RootElement\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :rootElement);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :rootElement)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = nestedElement.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

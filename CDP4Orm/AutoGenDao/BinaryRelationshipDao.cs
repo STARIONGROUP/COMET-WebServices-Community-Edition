@@ -249,7 +249,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"BinaryRelationship\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Source\", \"Target\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :source, :target);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :source, :target)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = binaryRelationship.Iid;
                 command.Parameters.Add("source", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationship, "Source") ? binaryRelationship.Source : Utils.NullableValue(null);

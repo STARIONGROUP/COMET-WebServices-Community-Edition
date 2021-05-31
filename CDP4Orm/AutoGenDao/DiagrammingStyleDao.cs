@@ -147,7 +147,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagrammingStyle\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"FillColor\", \"FontColor\", \"StrokeColor\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :fillColor, :fontColor, :strokeColor);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :fillColor, :fontColor, :strokeColor)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagrammingStyle.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

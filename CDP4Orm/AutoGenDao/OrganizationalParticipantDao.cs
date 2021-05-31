@@ -239,7 +239,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"OrganizationalParticipant\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"Organization\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :organization);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :organization)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = organizationalParticipant.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

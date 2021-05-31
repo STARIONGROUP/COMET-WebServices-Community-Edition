@@ -120,7 +120,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"RequiredRdl\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :requiredRdl);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :requiredRdl)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referenceDataLibrary.Iid;
                 command.Parameters.Add("requiredRdl", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceDataLibrary, "RequiredRdl") ? Utils.NullableValue(referenceDataLibrary.RequiredRdl) : Utils.NullableValue(null);

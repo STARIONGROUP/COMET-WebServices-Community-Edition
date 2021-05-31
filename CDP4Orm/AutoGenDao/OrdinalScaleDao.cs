@@ -319,7 +319,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"OrdinalScale\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ordinalScale.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

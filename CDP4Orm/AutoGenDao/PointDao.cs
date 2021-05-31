@@ -275,7 +275,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Point\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Sequence\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :sequence, :container);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :sequence, :container)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = point.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

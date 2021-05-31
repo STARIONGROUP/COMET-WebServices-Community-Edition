@@ -272,7 +272,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SimpleQuantityKind\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid);");
+                sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = simpleQuantityKind.Iid;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");

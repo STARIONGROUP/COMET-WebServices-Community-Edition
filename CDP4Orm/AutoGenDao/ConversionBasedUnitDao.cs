@@ -129,7 +129,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ConversionBasedUnit\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"ReferenceUnit\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referenceUnit);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referenceUnit)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = conversionBasedUnit.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

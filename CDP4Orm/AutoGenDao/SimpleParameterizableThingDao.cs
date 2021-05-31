@@ -118,7 +118,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SimpleParameterizableThing\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Owner\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :owner);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :owner)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = simpleParameterizableThing.Iid;
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(simpleParameterizableThing, "Owner") ? simpleParameterizableThing.Owner : Utils.NullableValue(null);

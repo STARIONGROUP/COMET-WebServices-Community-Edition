@@ -261,7 +261,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterizedCategoryRule\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Category\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :category);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :category)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterizedCategoryRule.Iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterizedCategoryRule, "Category") ? parameterizedCategoryRule.Category : Utils.NullableValue(null);

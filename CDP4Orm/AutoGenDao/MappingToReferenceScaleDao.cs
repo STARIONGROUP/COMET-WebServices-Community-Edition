@@ -241,7 +241,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"MappingToReferenceScale\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"DependentScaleValue\", \"ReferenceScaleValue\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :dependentScaleValue, :referenceScaleValue);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :dependentScaleValue, :referenceScaleValue)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = mappingToReferenceScale.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

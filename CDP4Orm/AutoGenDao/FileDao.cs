@@ -244,7 +244,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"File\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"LockedBy\", \"Owner\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :lockedBy, :owner);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :lockedBy, :owner)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = file.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

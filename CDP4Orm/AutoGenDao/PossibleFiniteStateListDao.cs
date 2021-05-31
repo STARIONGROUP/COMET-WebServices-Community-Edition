@@ -259,7 +259,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"PossibleFiniteStateList\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"DefaultState\", \"Owner\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :defaultState, :owner);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :defaultState, :owner)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = possibleFiniteStateList.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

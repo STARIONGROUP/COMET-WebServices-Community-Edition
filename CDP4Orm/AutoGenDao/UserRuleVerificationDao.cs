@@ -257,7 +257,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"UserRuleVerification\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Rule\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :rule);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :rule)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = userRuleVerification.Iid;
                 command.Parameters.Add("rule", NpgsqlDbType.Uuid).Value = !this.IsDerived(userRuleVerification, "Rule") ? userRuleVerification.Rule : Utils.NullableValue(null);

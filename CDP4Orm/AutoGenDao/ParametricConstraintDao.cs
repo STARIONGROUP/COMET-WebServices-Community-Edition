@@ -247,7 +247,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParametricConstraint\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Sequence\", \"Container\", \"TopExpression\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :sequence, :container, :topExpression);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :sequence, :container, :topExpression)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parametricConstraint.Iid;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = sequence;

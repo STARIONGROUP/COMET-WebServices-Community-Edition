@@ -133,7 +133,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterBase\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Group\", \"Owner\", \"ParameterType\", \"Scale\", \"StateDependence\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :group, :owner, :parameterType, :scale, :stateDependence);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :group, :owner, :parameterType, :scale, :stateDependence)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterBase.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

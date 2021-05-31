@@ -248,7 +248,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"IndependentParameterTypeAssignment\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Sequence\", \"Container\", \"MeasurementScale\", \"ParameterType\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :sequence, :container, :measurementScale, :parameterType);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :sequence, :container, :measurementScale, :parameterType)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = independentParameterTypeAssignment.Iid;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = sequence;

@@ -120,7 +120,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramElementThing\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"DepictedThing\", \"SharedStyle\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :depictedThing, :sharedStyle);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :depictedThing, :sharedStyle)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramElementThing.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

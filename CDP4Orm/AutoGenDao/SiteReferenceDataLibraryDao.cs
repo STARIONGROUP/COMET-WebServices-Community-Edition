@@ -282,7 +282,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteReferenceDataLibrary\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = siteReferenceDataLibrary.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

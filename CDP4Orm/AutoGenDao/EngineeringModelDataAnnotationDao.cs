@@ -119,7 +119,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"EngineeringModelDataAnnotation\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Author\", \"PrimaryAnnotatedThing\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :author, :primaryAnnotatedThing);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :author, :primaryAnnotatedThing)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModelDataAnnotation.Iid;
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelDataAnnotation, "Author") ? engineeringModelDataAnnotation.Author : Utils.NullableValue(null);

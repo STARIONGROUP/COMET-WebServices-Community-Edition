@@ -264,7 +264,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"BooleanParameterType\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid);");
+                sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = booleanParameterType.Iid;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");

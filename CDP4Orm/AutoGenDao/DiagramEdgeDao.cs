@@ -252,7 +252,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramEdge\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Source\", \"Target\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :source, :target);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :source, :target)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramEdge.Iid;
                 command.Parameters.Add("source", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramEdge, "Source") ? diagramEdge.Source : Utils.NullableValue(null);

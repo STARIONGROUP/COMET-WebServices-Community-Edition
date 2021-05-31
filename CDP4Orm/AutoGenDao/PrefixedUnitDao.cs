@@ -248,7 +248,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"PrefixedUnit\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Prefix\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :prefix);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :prefix)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = prefixedUnit.Iid;
                 command.Parameters.Add("prefix", NpgsqlDbType.Uuid).Value = !this.IsDerived(prefixedUnit, "Prefix") ? prefixedUnit.Prefix : Utils.NullableValue(null);

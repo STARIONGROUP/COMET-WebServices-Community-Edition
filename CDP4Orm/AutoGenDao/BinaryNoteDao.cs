@@ -275,7 +275,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"BinaryNote\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"FileType\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :fileType);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :fileType)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = binaryNote.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

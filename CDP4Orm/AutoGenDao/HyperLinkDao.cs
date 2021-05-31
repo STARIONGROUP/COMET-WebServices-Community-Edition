@@ -270,7 +270,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"HyperLink\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = hyperLink.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

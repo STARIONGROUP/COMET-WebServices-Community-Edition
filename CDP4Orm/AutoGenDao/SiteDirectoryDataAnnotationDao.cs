@@ -261,7 +261,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteDirectoryDataAnnotation\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"Author\", \"PrimaryAnnotatedThing\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :author, :primaryAnnotatedThing);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container, :author, :primaryAnnotatedThing)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = siteDirectoryDataAnnotation.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;

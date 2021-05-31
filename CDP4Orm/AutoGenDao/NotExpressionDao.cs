@@ -238,7 +238,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"NotExpression\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Term\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :term);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :term)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = notExpression.Iid;
                 command.Parameters.Add("term", NpgsqlDbType.Uuid).Value = !this.IsDerived(notExpression, "Term") ? notExpression.Term : Utils.NullableValue(null);

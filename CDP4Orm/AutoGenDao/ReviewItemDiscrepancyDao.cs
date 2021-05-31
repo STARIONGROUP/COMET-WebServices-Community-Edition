@@ -287,7 +287,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReviewItemDiscrepancy\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid);");
+                sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = reviewItemDiscrepancy.Iid;
                 sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");

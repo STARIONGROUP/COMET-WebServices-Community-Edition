@@ -338,7 +338,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"LogarithmicScale\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"ReferenceQuantityKind\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referenceQuantityKind);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referenceQuantityKind)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = logarithmicScale.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;

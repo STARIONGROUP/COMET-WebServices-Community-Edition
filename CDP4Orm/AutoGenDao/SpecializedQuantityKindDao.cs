@@ -274,7 +274,7 @@ namespace CDP4Orm.Dao
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SpecializedQuantityKind\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"General\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :general);");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :general)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = specializedQuantityKind.Iid;
                 command.Parameters.Add("general", NpgsqlDbType.Uuid).Value = !this.IsDerived(specializedQuantityKind, "General") ? specializedQuantityKind.General : Utils.NullableValue(null);
