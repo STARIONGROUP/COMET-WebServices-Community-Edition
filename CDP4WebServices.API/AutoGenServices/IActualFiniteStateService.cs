@@ -7,9 +7,6 @@
 // </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
-using CDP4Common.DTO;
-using Npgsql;
-
 namespace CDP4WebServices.API.Services
 {
     /// <summary>
@@ -17,6 +14,5 @@ namespace CDP4WebServices.API.Services
     /// </summary>
     public partial interface IActualFiniteStateService : IPersistService
     {
-        bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1);
     }
 }

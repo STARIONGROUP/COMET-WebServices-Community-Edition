@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="NaturalLanguageService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -254,6 +254,38 @@ namespace CDP4WebServices.API.Services
 
             var naturalLanguage = thing as NaturalLanguage;
             return this.NaturalLanguageDao.Write(transaction, partition, naturalLanguage, container);
+        }
+
+        /// <summary>
+        /// Persist the supplied <see cref="NaturalLanguage"/> instance. Update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="NaturalLanguage"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="NaturalLanguage"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            {
+                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+            }
+
+            var naturalLanguage = thing as NaturalLanguage;
+            return this.NaturalLanguageDao.Upsert(transaction, partition, naturalLanguage, container);
         }
 
         /// <summary>

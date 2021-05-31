@@ -508,7 +508,7 @@ namespace CDP4WebServices.API.Modules
                             // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
                             var iteration =
                                 iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
-                            if (iteration == null || !iterationService.CreateConceptFromImportedIteration(
+                            if (iteration == null || !iterationService.UpsertConcept(
                                     transaction,
                                     dataPartition,
                                     iteration,

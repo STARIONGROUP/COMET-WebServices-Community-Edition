@@ -701,6 +701,12 @@ namespace CDP4WebServices.API.Tests
             return true;
         }
 
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            this.writtenThings.Add(thing);
+            return true;
+        }
+
         public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             return true;

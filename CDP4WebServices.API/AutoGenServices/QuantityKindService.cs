@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="QuantityKindService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -285,6 +285,52 @@ namespace CDP4WebServices.API.Services
             if (quantityKind.IsSameOrDerivedClass<SpecializedQuantityKind>())
             {
                 return this.SpecializedQuantityKindService.CreateConcept(transaction, partition, quantityKind, container);
+            }
+            throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", quantityKind.GetType().Name));
+        }
+
+        /// <summary>
+        /// Persist the supplied <see cref="QuantityKind"/> instance. Update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="QuantityKind"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="QuantityKind"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            {
+                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+            }
+
+            var quantityKind = thing as QuantityKind;
+            if (quantityKind.IsSameOrDerivedClass<DerivedQuantityKind>())
+            {
+                return this.DerivedQuantityKindService.UpsertConcept(transaction, partition, quantityKind, container);
+            }
+
+            if (quantityKind.IsSameOrDerivedClass<SimpleQuantityKind>())
+            {
+                return this.SimpleQuantityKindService.UpsertConcept(transaction, partition, quantityKind, container);
+            }
+
+            if (quantityKind.IsSameOrDerivedClass<SpecializedQuantityKind>())
+            {
+                return this.SpecializedQuantityKindService.UpsertConcept(transaction, partition, quantityKind, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", quantityKind.GetType().Name));
         }

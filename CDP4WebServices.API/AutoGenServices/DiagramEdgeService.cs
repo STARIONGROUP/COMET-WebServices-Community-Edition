@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DiagramEdgeService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -278,6 +278,39 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Persist the supplied <see cref="DiagramEdge"/> instance. Update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="DiagramEdge"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="DiagramEdge"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            {
+                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
+            }
+
+            var diagramEdge = thing as DiagramEdge;
+            var createSuccesful = this.DiagramEdgeDao.Upsert(transaction, partition, diagramEdge, container);
+            return createSuccesful && this.UpsertContainment(transaction, partition, diagramEdge);
+        }
+
+        /// <summary>
         /// Get the requested data from the ORM layer.
         /// </summary>
         /// <param name="transaction">
@@ -423,6 +456,48 @@ namespace CDP4WebServices.API.Services
             foreach (var point in this.ResolveFromRequestCache(diagramEdge.Point))
             {
                 results.Add(this.PointService.CreateConcept(transaction, partition, (Point)point.V, diagramEdge, point.K));
+            }
+
+            return results.All(x => x);
+        }
+                
+        /// <summary>
+        /// Persist the <see cref="DiagramEdge"/> containment tree to the ORM layer. Update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="diagramEdge">
+        /// The <see cref="DiagramEdge"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, DiagramEdge diagramEdge)
+        {
+            var results = new List<bool>();
+
+            foreach (var bounds in this.ResolveFromRequestCache(diagramEdge.Bounds))
+            {
+                results.Add(this.BoundsService.UpsertConcept(transaction, partition, bounds, diagramEdge));
+            }
+
+            foreach (var diagramElement in this.ResolveFromRequestCache(diagramEdge.DiagramElement))
+            {
+                results.Add(this.DiagramElementService.UpsertConcept(transaction, partition, diagramElement, diagramEdge));
+            }
+
+            foreach (var localStyle in this.ResolveFromRequestCache(diagramEdge.LocalStyle))
+            {
+                results.Add(this.LocalStyleService.UpsertConcept(transaction, partition, localStyle, diagramEdge));
+            }
+
+            foreach (var point in this.ResolveFromRequestCache(diagramEdge.Point))
+            {
+                results.Add(this.PointService.UpsertConcept(transaction, partition, (Point)point.V, diagramEdge, point.K));
             }
 
             return results.All(x => x);
