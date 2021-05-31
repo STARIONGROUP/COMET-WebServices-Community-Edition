@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ReferenceDataLibraryDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -93,6 +89,56 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterWrite(beforeWrite, transaction, partition, referenceDataLibrary, container);
+        }
+
+        /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="referenceDataLibrary">
+        /// The referenceDataLibrary DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ReferenceDataLibrary referenceDataLibrary, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, referenceDataLibrary, container);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"RequiredRdl\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :requiredRdl);");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referenceDataLibrary.Iid;
+                command.Parameters.Add("requiredRdl", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceDataLibrary, "RequiredRdl") ? Utils.NullableValue(referenceDataLibrary.RequiredRdl) : Utils.NullableValue(null);
+                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceDataLibrary\"", partition);
+                sqlBuilder.AppendFormat(" SET (\"RequiredRdl\")");
+                sqlBuilder.AppendFormat(" = (:requiredRdl);");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+            referenceDataLibrary.BaseQuantityKind.ForEach(x => this.UpsertBaseQuantityKind(transaction, partition, referenceDataLibrary.Iid, x));
+            referenceDataLibrary.BaseUnit.ForEach(x => this.UpsertBaseUnit(transaction, partition, referenceDataLibrary.Iid, x));
+
+            return true;
         }
 
         /// <summary>
@@ -181,6 +227,47 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ReferenceDataLibrary"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="baseQuantityKind">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertBaseQuantityKind(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem baseQuantityKind)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary_BaseQuantityKind\"", partition);
+                sqlBuilder.AppendFormat(" (\"ReferenceDataLibrary\", \"BaseQuantityKind\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseQuantityKind, :sequence);");
+                sqlBuilder.AppendFormat(" SET (\"ReferenceDataLibrary\", \"BaseQuantityKind\", \"Sequence\")");
+                sqlBuilder.Append(" = (:referenceDataLibrary, :baseQuantityKind, :sequence);");
+
+                command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("baseQuantityKind", NpgsqlDbType.Uuid).Value = Guid.Parse(baseQuantityKind.V.ToString());
+                command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = baseQuantityKind.K;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -207,6 +294,48 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary_BaseUnit\"", partition);
                 sqlBuilder.AppendFormat(" (\"ReferenceDataLibrary\", \"BaseUnit\")");
                 sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseUnit);");
+
+                command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("baseUnit", NpgsqlDbType.Uuid).Value = baseUnit;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ReferenceDataLibrary"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="baseUnit">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertBaseUnit(NpgsqlTransaction transaction, string partition, Guid iid, Guid baseUnit)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary_BaseUnit\"", partition);
+                sqlBuilder.AppendFormat(" (\"ReferenceDataLibrary\", \"BaseUnit\")");
+                sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseUnit)");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceDataLibrary_BaseUnit\"", partition);
+                sqlBuilder.AppendFormat(" SET (\"ReferenceDataLibrary\", \"BaseUnit\")");
+                sqlBuilder.Append(" = (:referenceDataLibrary, :baseUnit);");
 
                 command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("baseUnit", NpgsqlDbType.Uuid).Value = baseUnit;

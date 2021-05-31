@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IAliasDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -67,7 +67,6 @@ namespace CDP4Orm.Dao
         /// <param name="alias">
         /// The <see cref="CDP4Common.DTO.Alias"/> that is to be persisted.
         /// </param> 
-        
         /// <param name="container">
         /// The container of the DTO to be persisted.
         /// </param>
@@ -75,6 +74,26 @@ namespace CDP4Orm.Dao
         /// True if the concept was successfully persisted.
         /// </returns>
         bool Write(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Alias alias, CDP4Common.DTO.Thing container = null);
+
+        /// <summary>
+        /// Insert a database record from the supplied data transfer object and updates it if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="alias">
+        /// The <see cref="CDP4Common.DTO.Alias"/> that is to be persisted.
+        /// </param> 
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Alias alias, CDP4Common.DTO.Thing container = null);
 
         /// <summary>
         /// Update a database record from the supplied data transfer object.

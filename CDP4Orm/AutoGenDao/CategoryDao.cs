@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CategoryDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -252,6 +248,64 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="category">
+        /// The category DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Category category, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, category, container);
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
+            {
+                { "IsAbstract", !this.IsDerived(category, "IsAbstract") ? category.IsAbstract.ToString() : string.Empty },
+                { "IsDeprecated", !this.IsDerived(category, "IsDeprecated") ? category.IsDeprecated.ToString() : string.Empty },
+            }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Category\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = category.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Category\"", partition);
+                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\"))");
+                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container));");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+
+            category.PermissibleClass.ForEach(x => this.UpsertPermissibleClass(transaction, partition, category.Iid, x));
+            category.SuperCategory.ForEach(x => this.UpsertSuperCategory(transaction, partition, category.Iid, x));
+
+            return true;
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -338,6 +392,44 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Category"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="permissibleClass">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertPermissibleClass(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.CommonData.ClassKind permissibleClass)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Category_PermissibleClass\"", partition);
+                sqlBuilder.AppendFormat(" (\"Category\", \"PermissibleClass\")");
+                sqlBuilder.Append(" VALUES (:category, :permissibleClass)");
+
+                command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("permissibleClass", NpgsqlDbType.Text).Value = permissibleClass.ToString();
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
         /// <param name="transaction">
@@ -363,6 +455,48 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Category_SuperCategory\"", partition);
                 sqlBuilder.AppendFormat(" (\"Category\", \"SuperCategory\")");
                 sqlBuilder.Append(" VALUES (:category, :superCategory);");
+
+                command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("superCategory", NpgsqlDbType.Uuid).Value = superCategory;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Category"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="superCategory">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertSuperCategory(NpgsqlTransaction transaction, string partition, Guid iid, Guid superCategory)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Category_SuperCategory\"", partition);
+                sqlBuilder.AppendFormat(" (\"Category\", \"SuperCategory\")");
+                sqlBuilder.Append(" VALUES (:category, :superCategory)");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Category_SuperCategory\"", partition);
+                sqlBuilder.AppendFormat(" SET (\"Category\", \"SuperCategory\")");
+                sqlBuilder.Append(" = (:category, :superCategory);");
 
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("superCategory", NpgsqlDbType.Uuid).Value = superCategory;

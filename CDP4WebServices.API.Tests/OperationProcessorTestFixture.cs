@@ -746,6 +746,11 @@ namespace CDP4WebServices.API.Tests
             return true;
         }
 
+        public bool Upsert(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Update(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
         {
             throw new NotImplementedException();
@@ -796,6 +801,11 @@ namespace CDP4WebServices.API.Tests
             return true;
         }
 
+        public bool Upsert(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, Thing container = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Update(NpgsqlTransaction transaction, string partition, ParameterOverride parameter, Thing container = null)
         {
             throw new NotImplementedException();
@@ -843,6 +853,11 @@ namespace CDP4WebServices.API.Tests
         {
             this.writtenThings.Add(ed);
             return true;
+        }
+
+        public bool Upsert(NpgsqlTransaction transaction, string partition, ElementDefinition elementDefinition, Thing container = null)
+        {
+            throw new NotImplementedException();
         }
 
         public bool Update(NpgsqlTransaction transaction, string partition, ElementDefinition parameter, Thing container = null)

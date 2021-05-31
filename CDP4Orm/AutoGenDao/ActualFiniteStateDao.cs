@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ActualFiniteStateDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -227,7 +223,7 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Insert or update a new database record from the supplied data transfer object.
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -236,7 +232,7 @@ namespace CDP4Orm.Dao
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="actualFiniteState">
-        /// The actualFiniteStateList DTO that is to be persisted.
+        /// The actualFiniteState DTO that is to be persisted.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be persisted.
@@ -246,43 +242,39 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ActualFiniteState actualFiniteState, CDP4Common.DTO.Thing container = null)
         {
-            bool isHandled;
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            var beforeWrite = this.BeforeWrite(transaction, partition, actualFiniteState, container, out isHandled, valueTypeDictionaryAdditions);
-            if (!isHandled)
+            base.Upsert(transaction, partition, actualFiniteState, container);
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
             {
-                beforeWrite = beforeWrite && base.Upsert(transaction, partition, actualFiniteState, container);
+                { "Kind", !this.IsDerived(actualFiniteState, "Kind") ? actualFiniteState.Kind.ToString() : string.Empty },
+            }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                var valueTypeDictionaryContents = new Dictionary<string, string>
-                {
-                    { "Kind", !this.IsDerived(actualFiniteState, "Kind") ? actualFiniteState.Kind.ToString() : string.Empty },
-                }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
 
-                using (var command = new NpgsqlCommand())
-                {
-                    var sqlBuilder = new System.Text.StringBuilder();
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actualFiniteState.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteState\"", partition);
+                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\"))");
+                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container));");
 
-                    sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState\"", partition);
-                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
-                    sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                    sqlBuilder.Append(" DO NOTHING;");
-                    //sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteState\" SET \"Container\" = :container WHERE \"Iid\" = :iid;", partition);
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
 
-                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actualFiniteState.Iid;
-                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-
-                    command.CommandText = sqlBuilder.ToString();
-                    command.Connection = transaction.Connection;
-                    command.Transaction = transaction;
-
-                    this.ExecuteAndLogCommand(command);
-                }
-                actualFiniteState.PossibleState.ForEach(x => this.AddPossibleStateUpsert(transaction, partition, actualFiniteState.Iid, x));
+                this.ExecuteAndLogCommand(command);
             }
+            actualFiniteState.PossibleState.ForEach(x => this.UpsertPossibleState(transaction, partition, actualFiniteState.Iid, x));
 
-            return this.AfterWrite(beforeWrite, transaction, partition, actualFiniteState, container);
+            return true;
         }
 
         /// <summary>
@@ -366,7 +358,7 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Upsert a new association record in the link table.
+        /// Insert a new association record in the link table, or update if it already exists.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -383,7 +375,7 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// True if the value link was successfully created.
         /// </returns>
-        public bool AddPossibleStateUpsert(NpgsqlTransaction transaction, string partition, Guid iid, Guid possibleState)
+        public bool UpsertPossibleState(NpgsqlTransaction transaction, string partition, Guid iid, Guid possibleState)
         {
             using (var command = new NpgsqlCommand())
             {
@@ -391,8 +383,10 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState_PossibleState\"", partition);
                 sqlBuilder.AppendFormat(" (\"ActualFiniteState\", \"PossibleState\")");
                 sqlBuilder.Append(" VALUES (:actualFiniteState, :possibleState)");
-                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteState_PossibleState_PK\"");
-                sqlBuilder.Append(" DO NOTHING;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteState_PossibleState\"", partition);
+                sqlBuilder.AppendFormat(" SET (\"ActualFiniteState\", \"PossibleState\")");
+                sqlBuilder.Append(" = (:actualFiniteState, :possibleState);");
 
                 command.Parameters.Add("actualFiniteState", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("possibleState", NpgsqlDbType.Uuid).Value = possibleState;

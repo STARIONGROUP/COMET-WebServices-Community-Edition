@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefinitionDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -239,6 +235,65 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="definition">
+        /// The definition DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, definition, container);
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
+            {
+                { "Content", !this.IsDerived(definition, "Content") ? definition.Content.Escape() : string.Empty },
+                { "LanguageCode", !this.IsDerived(definition, "LanguageCode") ? definition.LanguageCode.Escape() : string.Empty },
+            }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = definition.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Definition\"", partition);
+                sqlBuilder.AppendFormat(" SET ((\"ValueTypeDictionary\", \"Container\"))");
+                sqlBuilder.AppendFormat(" = ((:valueTypeDictionary, :container));");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+
+            definition.Example.ForEach(x => this.UpsertExample(transaction, partition, definition.Iid, x));
+
+            definition.Note.ForEach(x => this.UpsertNote(transaction, partition, definition.Iid, x));
+
+            return true;
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -324,6 +379,50 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Definition"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="example">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertExample(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Example\"", partition);
+                sqlBuilder.AppendFormat(" (\"Definition\", \"Example\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:definition, :example, :sequence);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Definition_Example\"", partition);
+                sqlBuilder.AppendFormat(" SET (\"Definition\", \"Example\", \"Sequence\")");
+                sqlBuilder.Append(" = (:definition, :example, :sequence));");
+
+                command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("example", NpgsqlDbType.Text).Value = (string)example.V;
+                command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = example.K;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -350,6 +449,49 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Note\"", partition);
                 sqlBuilder.AppendFormat(" (\"Definition\", \"Note\", \"Sequence\")");
                 sqlBuilder.Append(" VALUES (:definition, :note, :sequence);");
+
+                command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("note", NpgsqlDbType.Text).Value = (string)note.V;
+                command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = note.K;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Definition"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="note">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertNote(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Note\"", partition);
+                sqlBuilder.AppendFormat(" (\"Definition\", \"Note\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:definition, :note, :sequence);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Definition_Note\"", partition);
+                sqlBuilder.AppendFormat(" SET (\"Definition\", \"Note\", \"Sequence\")");
+                sqlBuilder.Append(" = (:definition, :note, :sequence));");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("note", NpgsqlDbType.Text).Value = (string)note.V;
