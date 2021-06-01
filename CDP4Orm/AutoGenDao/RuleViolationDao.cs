@@ -263,10 +263,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ruleViolation.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"RuleViolation\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

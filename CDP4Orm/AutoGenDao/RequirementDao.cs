@@ -282,10 +282,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("group", NpgsqlDbType.Uuid).Value = !this.IsDerived(requirement, "Group") ? Utils.NullableValue(requirement.Group) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Requirement\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Group\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :group);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Group\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :group);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -404,9 +404,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Requirement_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"Requirement\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:requirement, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Requirement_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Requirement\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Requirement_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Requirement\", \"Category\")");
                 sqlBuilder.Append(" = (:requirement, :category);");
 
                 command.Parameters.Add("requirement", NpgsqlDbType.Uuid).Value = iid;

@@ -343,10 +343,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = logarithmicScale.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("referenceQuantityKind", NpgsqlDbType.Uuid).Value = !this.IsDerived(logarithmicScale, "ReferenceQuantityKind") ? logarithmicScale.ReferenceQuantityKind : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"LogarithmicScale\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ReferenceQuantityKind\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :referenceQuantityKind);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"ReferenceQuantityKind\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :referenceQuantityKind);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

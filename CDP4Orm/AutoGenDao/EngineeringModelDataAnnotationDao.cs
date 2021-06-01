@@ -124,10 +124,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModelDataAnnotation.Iid;
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelDataAnnotation, "Author") ? engineeringModelDataAnnotation.Author : Utils.NullableValue(null);
                 command.Parameters.Add("primaryAnnotatedThing", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelDataAnnotation, "PrimaryAnnotatedThing") ? Utils.NullableValue(engineeringModelDataAnnotation.PrimaryAnnotatedThing) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"EngineeringModelDataAnnotation\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Author\", \"PrimaryAnnotatedThing\")");
-                sqlBuilder.AppendFormat(" = (:author, :primaryAnnotatedThing);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Author\", \"PrimaryAnnotatedThing\")");
+                sqlBuilder.Append(" = (:author, :primaryAnnotatedThing);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

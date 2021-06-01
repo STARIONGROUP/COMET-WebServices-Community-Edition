@@ -260,10 +260,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ruleVerificationList.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(ruleVerificationList, "Owner") ? ruleVerificationList.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"RuleVerificationList\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:container, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"Owner\")");
+                sqlBuilder.Append(" = (:container, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

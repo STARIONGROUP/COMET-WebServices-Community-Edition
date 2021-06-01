@@ -136,10 +136,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Thing\"", partition);
-                sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\"");
-                sqlBuilder.AppendFormat(" = :valueTypeDictionary;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"ValueTypeDictionary\"");
+                sqlBuilder.Append(" = :valueTypeDictionary;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -265,9 +265,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Thing_ExcludedDomain\"", partition);
                 sqlBuilder.AppendFormat(" (\"Thing\", \"ExcludedDomain\")");
                 sqlBuilder.Append(" VALUES (:thing, :excludedDomain)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Thing_ExcludedDomain\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Thing\", \"ExcludedDomain\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Thing_ExcludedDomain_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Thing\", \"ExcludedDomain\")");
                 sqlBuilder.Append(" = (:thing, :excludedDomain);");
 
                 command.Parameters.Add("thing", NpgsqlDbType.Uuid).Value = iid;
@@ -344,9 +344,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Thing_ExcludedPerson\"", partition);
                 sqlBuilder.AppendFormat(" (\"Thing\", \"ExcludedPerson\")");
                 sqlBuilder.Append(" VALUES (:thing, :excludedPerson)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Thing_ExcludedPerson\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Thing\", \"ExcludedPerson\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Thing_ExcludedPerson_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Thing\", \"ExcludedPerson\")");
                 sqlBuilder.Append(" = (:thing, :excludedPerson);");
 
                 command.Parameters.Add("thing", NpgsqlDbType.Uuid).Value = iid;

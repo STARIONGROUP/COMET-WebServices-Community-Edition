@@ -254,10 +254,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = binaryRelationship.Iid;
                 command.Parameters.Add("source", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationship, "Source") ? binaryRelationship.Source : Utils.NullableValue(null);
                 command.Parameters.Add("target", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationship, "Target") ? binaryRelationship.Target : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"BinaryRelationship\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Source\", \"Target\")");
-                sqlBuilder.AppendFormat(" = (:source, :target);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Source\", \"Target\")");
+                sqlBuilder.Append(" = (:source, :target);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

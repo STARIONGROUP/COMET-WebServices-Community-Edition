@@ -123,10 +123,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = elementBase.Iid;
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(elementBase, "Owner") ? elementBase.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementBase\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Owner\"");
-                sqlBuilder.AppendFormat(" = :owner;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Owner\"");
+                sqlBuilder.Append(" = :owner;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -245,9 +245,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementBase_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"ElementBase\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:elementBase, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementBase_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ElementBase\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ElementBase_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ElementBase\", \"Category\")");
                 sqlBuilder.Append(" = (:elementBase, :category);");
 
                 command.Parameters.Add("elementBase", NpgsqlDbType.Uuid).Value = iid;

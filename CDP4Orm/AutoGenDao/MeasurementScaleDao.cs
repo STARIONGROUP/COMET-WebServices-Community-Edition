@@ -150,10 +150,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("unit", NpgsqlDbType.Uuid).Value = !this.IsDerived(measurementScale, "Unit") ? measurementScale.Unit : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"MeasurementScale\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Unit\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :unit);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Unit\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :unit);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

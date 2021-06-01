@@ -270,10 +270,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = sequence;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("quantityKind", NpgsqlDbType.Uuid).Value = !this.IsDerived(quantityKindFactor, "QuantityKind") ? quantityKindFactor.QuantityKind : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"QuantityKindFactor\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"QuantityKind\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :quantityKind);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"QuantityKind\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :quantityKind);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

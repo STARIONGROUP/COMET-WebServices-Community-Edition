@@ -250,10 +250,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("lockedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "LockedBy") ? Utils.NullableValue(file.LockedBy) : Utils.NullableValue(null);
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(file, "Owner") ? file.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"File\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"LockedBy\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:container, :lockedBy, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"LockedBy\", \"Owner\")");
+                sqlBuilder.Append(" = (:container, :lockedBy, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -372,9 +372,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"File_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"File\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:file, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"File_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"File\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"File_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"File\", \"Category\")");
                 sqlBuilder.Append(" = (:file, :category);");
 
                 command.Parameters.Add("file", NpgsqlDbType.Uuid).Value = iid;

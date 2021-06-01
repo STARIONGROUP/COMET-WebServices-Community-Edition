@@ -261,10 +261,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actualFiniteState.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteState\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -383,9 +383,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteState_PossibleState\"", partition);
                 sqlBuilder.AppendFormat(" (\"ActualFiniteState\", \"PossibleState\")");
                 sqlBuilder.Append(" VALUES (:actualFiniteState, :possibleState)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteState_PossibleState\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ActualFiniteState\", \"PossibleState\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteState_PossibleState_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ActualFiniteState\", \"PossibleState\")");
                 sqlBuilder.Append(" = (:actualFiniteState, :possibleState);");
 
                 command.Parameters.Add("actualFiniteState", NpgsqlDbType.Uuid).Value = iid;

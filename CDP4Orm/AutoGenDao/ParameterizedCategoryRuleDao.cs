@@ -265,10 +265,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterizedCategoryRule.Iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterizedCategoryRule, "Category") ? parameterizedCategoryRule.Category : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterizedCategoryRule\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Category\"");
-                sqlBuilder.AppendFormat(" = :category;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Category\"");
+                sqlBuilder.Append(" = :category;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -387,9 +387,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ParameterizedCategoryRule_ParameterType\"", partition);
                 sqlBuilder.AppendFormat(" (\"ParameterizedCategoryRule\", \"ParameterType\")");
                 sqlBuilder.Append(" VALUES (:parameterizedCategoryRule, :parameterType)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterizedCategoryRule_ParameterType\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ParameterizedCategoryRule\", \"ParameterType\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ParameterizedCategoryRule_ParameterType_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ParameterizedCategoryRule\", \"ParameterType\")");
                 sqlBuilder.Append(" = (:parameterizedCategoryRule, :parameterType);");
 
                 command.Parameters.Add("parameterizedCategoryRule", NpgsqlDbType.Uuid).Value = iid;

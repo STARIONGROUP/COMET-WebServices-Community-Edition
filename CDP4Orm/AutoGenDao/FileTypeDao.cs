@@ -284,10 +284,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = fileType.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"FileType\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -406,9 +406,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"FileType_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"FileType\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:fileType, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"FileType_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"FileType\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"FileType_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"FileType\", \"Category\")");
                 sqlBuilder.Append(" = (:fileType, :category);");
 
                 command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = iid;

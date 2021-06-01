@@ -265,10 +265,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("rootElement", NpgsqlDbType.Uuid).Value = !this.IsDerived(nestedElement, "RootElement") ? nestedElement.RootElement : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"NestedElement\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"RootElement\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :rootElement);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"RootElement\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :rootElement);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -387,7 +387,9 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"NestedElement_ElementUsage\"", partition);
                 sqlBuilder.AppendFormat(" (\"NestedElement\", \"ElementUsage\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:nestedElement, :elementUsage, :sequence);");
+                sqlBuilder.Append(" VALUES (:nestedElement, :elementUsage, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"NestedElement_ElementUsage_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
                 sqlBuilder.AppendFormat(" SET (\"NestedElement\", \"ElementUsage\", \"Sequence\")");
                 sqlBuilder.Append(" = (:nestedElement, :elementUsage, :sequence);");
 

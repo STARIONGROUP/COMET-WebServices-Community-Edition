@@ -249,10 +249,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actualFiniteStateList.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(actualFiniteStateList, "Owner") ? actualFiniteStateList.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteStateList\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:container, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"Owner\")");
+                sqlBuilder.Append(" = (:container, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -378,9 +378,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteStateList_ExcludeOption\"", partition);
                 sqlBuilder.AppendFormat(" (\"ActualFiniteStateList\", \"ExcludeOption\")");
                 sqlBuilder.Append(" VALUES (:actualFiniteStateList, :excludeOption)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActualFiniteStateList_ExcludeOption\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ActualFiniteStateList\", \"ExcludeOption\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteStateList_ExcludeOption_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ActualFiniteStateList\", \"ExcludeOption\")");
                 sqlBuilder.Append(" = (:actualFiniteStateList, :excludeOption);");
 
                 command.Parameters.Add("actualFiniteStateList", NpgsqlDbType.Uuid).Value = iid;
@@ -457,7 +457,9 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList\"", partition);
                 sqlBuilder.AppendFormat(" (\"ActualFiniteStateList\", \"PossibleFiniteStateList\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:actualFiniteStateList, :possibleFiniteStateList, :sequence);");
+                sqlBuilder.Append(" VALUES (:actualFiniteStateList, :possibleFiniteStateList, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ActualFiniteStateList_PossibleFiniteStateList_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
                 sqlBuilder.AppendFormat(" SET (\"ActualFiniteStateList\", \"PossibleFiniteStateList\", \"Sequence\")");
                 sqlBuilder.Append(" = (:actualFiniteStateList, :possibleFiniteStateList, :sequence);");
 

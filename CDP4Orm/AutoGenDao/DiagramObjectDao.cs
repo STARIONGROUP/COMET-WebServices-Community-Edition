@@ -276,10 +276,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramObject.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DiagramObject\"", partition);
-                sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\"");
-                sqlBuilder.AppendFormat(" = :valueTypeDictionary;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"ValueTypeDictionary\"");
+                sqlBuilder.Append(" = :valueTypeDictionary;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

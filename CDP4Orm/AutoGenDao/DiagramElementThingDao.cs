@@ -126,10 +126,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("depictedThing", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramElementThing, "DepictedThing") ? Utils.NullableValue(diagramElementThing.DepictedThing) : Utils.NullableValue(null);
                 command.Parameters.Add("sharedStyle", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramElementThing, "SharedStyle") ? Utils.NullableValue(diagramElementThing.SharedStyle) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DiagramElementThing\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"DepictedThing\", \"SharedStyle\")");
-                sqlBuilder.AppendFormat(" = (:container, :depictedThing, :sharedStyle);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"DepictedThing\", \"SharedStyle\")");
+                sqlBuilder.Append(" = (:container, :depictedThing, :sharedStyle);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

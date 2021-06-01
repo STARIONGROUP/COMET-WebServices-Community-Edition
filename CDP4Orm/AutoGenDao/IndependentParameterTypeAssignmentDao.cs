@@ -255,10 +255,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("measurementScale", NpgsqlDbType.Uuid).Value = !this.IsDerived(independentParameterTypeAssignment, "MeasurementScale") ? Utils.NullableValue(independentParameterTypeAssignment.MeasurementScale) : Utils.NullableValue(null);
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = !this.IsDerived(independentParameterTypeAssignment, "ParameterType") ? independentParameterTypeAssignment.ParameterType : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"IndependentParameterTypeAssignment\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"MeasurementScale\", \"ParameterType\")");
-                sqlBuilder.AppendFormat(" = (:container, :measurementScale, :parameterType);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"MeasurementScale\", \"ParameterType\")");
+                sqlBuilder.Append(" = (:container, :measurementScale, :parameterType);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

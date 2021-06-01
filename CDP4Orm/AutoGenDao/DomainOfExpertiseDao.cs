@@ -276,10 +276,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = domainOfExpertise.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DomainOfExpertise\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -398,9 +398,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DomainOfExpertise_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"DomainOfExpertise\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:domainOfExpertise, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DomainOfExpertise_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"DomainOfExpertise\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"DomainOfExpertise_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"DomainOfExpertise\", \"Category\")");
                 sqlBuilder.Append(" = (:domainOfExpertise, :category);");
 
                 command.Parameters.Add("domainOfExpertise", NpgsqlDbType.Uuid).Value = iid;

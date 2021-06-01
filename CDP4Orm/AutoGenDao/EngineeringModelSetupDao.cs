@@ -307,10 +307,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("defaultOrganizationalParticipant", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelSetup, "DefaultOrganizationalParticipant") ? Utils.NullableValue(engineeringModelSetup.DefaultOrganizationalParticipant) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"EngineeringModelSetup\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :defaultOrganizationalParticipant);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :defaultOrganizationalParticipant);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -429,9 +429,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"EngineeringModelSetup_ActiveDomain\"", partition);
                 sqlBuilder.AppendFormat(" (\"EngineeringModelSetup\", \"ActiveDomain\")");
                 sqlBuilder.Append(" VALUES (:engineeringModelSetup, :activeDomain)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"EngineeringModelSetup_ActiveDomain\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"EngineeringModelSetup\", \"ActiveDomain\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"EngineeringModelSetup_ActiveDomain_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"EngineeringModelSetup\", \"ActiveDomain\")");
                 sqlBuilder.Append(" = (:engineeringModelSetup, :activeDomain);");
 
                 command.Parameters.Add("engineeringModelSetup", NpgsqlDbType.Uuid).Value = iid;

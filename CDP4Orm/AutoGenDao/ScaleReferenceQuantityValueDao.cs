@@ -262,10 +262,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("scale", NpgsqlDbType.Uuid).Value = !this.IsDerived(scaleReferenceQuantityValue, "Scale") ? scaleReferenceQuantityValue.Scale : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ScaleReferenceQuantityValue\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Scale\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :scale);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Scale\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :scale);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

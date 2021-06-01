@@ -267,10 +267,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(siteDirectoryDataAnnotation, "Author") ? siteDirectoryDataAnnotation.Author : Utils.NullableValue(null);
                 command.Parameters.Add("primaryAnnotatedThing", NpgsqlDbType.Uuid).Value = !this.IsDerived(siteDirectoryDataAnnotation, "PrimaryAnnotatedThing") ? siteDirectoryDataAnnotation.PrimaryAnnotatedThing : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SiteDirectoryDataAnnotation\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"Author\", \"PrimaryAnnotatedThing\")");
-                sqlBuilder.AppendFormat(" = (:container, :author, :primaryAnnotatedThing);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"Author\", \"PrimaryAnnotatedThing\")");
+                sqlBuilder.Append(" = (:container, :author, :primaryAnnotatedThing);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

@@ -280,10 +280,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = parameterOverrideValueSet.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("parameterValueSet", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterOverrideValueSet, "ParameterValueSet") ? parameterOverrideValueSet.ParameterValueSet : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterOverrideValueSet\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"ParameterValueSet\")");
-                sqlBuilder.AppendFormat(" = (:container, :parameterValueSet);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"ParameterValueSet\")");
+                sqlBuilder.Append(" = (:container, :parameterValueSet);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

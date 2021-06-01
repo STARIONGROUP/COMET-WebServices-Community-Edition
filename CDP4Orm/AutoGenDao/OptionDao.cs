@@ -267,10 +267,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = option.Iid;
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = sequence;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Option\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Container\"");
-                sqlBuilder.AppendFormat(" = :container;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Container\"");
+                sqlBuilder.Append(" = :container;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -389,9 +389,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Option_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"Option\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:option, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Option_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Option\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Option_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Option\", \"Category\")");
                 sqlBuilder.Append(" = (:option, :category);");
 
                 command.Parameters.Add("option", NpgsqlDbType.Uuid).Value = iid;

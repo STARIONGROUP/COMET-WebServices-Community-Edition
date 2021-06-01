@@ -122,10 +122,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = discussionItem.Iid;
                 command.Parameters.Add("replyTo", NpgsqlDbType.Uuid).Value = !this.IsDerived(discussionItem, "ReplyTo") ? Utils.NullableValue(discussionItem.ReplyTo) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DiscussionItem\"", partition);
-                sqlBuilder.AppendFormat(" SET \"ReplyTo\"");
-                sqlBuilder.AppendFormat(" = :replyTo;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"ReplyTo\"");
+                sqlBuilder.Append(" = :replyTo;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

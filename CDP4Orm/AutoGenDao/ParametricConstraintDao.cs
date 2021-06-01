@@ -253,10 +253,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = sequence;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("topExpression", NpgsqlDbType.Uuid).Value = !this.IsDerived(parametricConstraint, "TopExpression") ? Utils.NullableValue(parametricConstraint.TopExpression) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParametricConstraint\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"TopExpression\")");
-                sqlBuilder.AppendFormat(" = (:container, :topExpression);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"TopExpression\")");
+                sqlBuilder.Append(" = (:container, :topExpression);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

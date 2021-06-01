@@ -260,10 +260,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = stakeholder.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Stakeholder\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Container\"");
-                sqlBuilder.AppendFormat(" = :container;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Container\"");
+                sqlBuilder.Append(" = :container;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -389,9 +389,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Stakeholder_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"Stakeholder\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:stakeholder, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Stakeholder_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Stakeholder\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Stakeholder_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Stakeholder\", \"Category\")");
                 sqlBuilder.Append(" = (:stakeholder, :category);");
 
                 command.Parameters.Add("stakeholder", NpgsqlDbType.Uuid).Value = iid;
@@ -468,9 +468,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Stakeholder_StakeholderValue\"", partition);
                 sqlBuilder.AppendFormat(" (\"Stakeholder\", \"StakeholderValue\")");
                 sqlBuilder.Append(" VALUES (:stakeholder, :stakeholderValue)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Stakeholder_StakeholderValue\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Stakeholder\", \"StakeholderValue\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Stakeholder_StakeholderValue_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Stakeholder\", \"StakeholderValue\")");
                 sqlBuilder.Append(" = (:stakeholder, :stakeholderValue);");
 
                 command.Parameters.Add("stakeholder", NpgsqlDbType.Uuid).Value = iid;

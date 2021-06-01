@@ -297,10 +297,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(siteLogEntry, "Author") ? Utils.NullableValue(siteLogEntry.Author) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SiteLogEntry\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Author\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :author);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Author\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :author);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -587,9 +587,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteLogEntry_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"SiteLogEntry\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:siteLogEntry, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SiteLogEntry_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"SiteLogEntry\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"SiteLogEntry_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"SiteLogEntry\", \"Category\")");
                 sqlBuilder.Append(" = (:siteLogEntry, :category);");
 
                 command.Parameters.Add("siteLogEntry", NpgsqlDbType.Uuid).Value = iid;

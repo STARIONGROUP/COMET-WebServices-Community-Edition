@@ -283,10 +283,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("containingFolder", NpgsqlDbType.Uuid).Value = !this.IsDerived(fileRevision, "ContainingFolder") ? Utils.NullableValue(fileRevision.ContainingFolder) : Utils.NullableValue(null);
                 command.Parameters.Add("creator", NpgsqlDbType.Uuid).Value = !this.IsDerived(fileRevision, "Creator") ? fileRevision.Creator : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"FileRevision\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :containingFolder, :creator);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"ContainingFolder\", \"Creator\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :containingFolder, :creator);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -405,7 +405,9 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"FileRevision_FileType\"", partition);
                 sqlBuilder.AppendFormat(" (\"FileRevision\", \"FileType\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:fileRevision, :fileType, :sequence);");
+                sqlBuilder.Append(" VALUES (:fileRevision, :fileType, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"FileRevision_FileType_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
                 sqlBuilder.AppendFormat(" SET (\"FileRevision\", \"FileType\", \"Sequence\")");
                 sqlBuilder.Append(" = (:fileRevision, :fileType, :sequence);");
 

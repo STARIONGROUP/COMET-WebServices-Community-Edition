@@ -290,10 +290,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("externalFormat", NpgsqlDbType.Uuid).Value = !this.IsDerived(externalIdentifierMap, "ExternalFormat") ? Utils.NullableValue(externalIdentifierMap.ExternalFormat) : Utils.NullableValue(null);
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(externalIdentifierMap, "Owner") ? externalIdentifierMap.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ExternalIdentifierMap\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ExternalFormat\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :externalFormat, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"ExternalFormat\", \"Owner\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :externalFormat, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

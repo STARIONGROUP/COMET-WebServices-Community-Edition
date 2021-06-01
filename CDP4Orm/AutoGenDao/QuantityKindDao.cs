@@ -135,10 +135,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = quantityKind.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("defaultScale", NpgsqlDbType.Uuid).Value = !this.IsDerived(quantityKind, "DefaultScale") ? quantityKind.DefaultScale : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"QuantityKind\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"DefaultScale\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :defaultScale);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"DefaultScale\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :defaultScale);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -257,9 +257,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"QuantityKind_PossibleScale\"", partition);
                 sqlBuilder.AppendFormat(" (\"QuantityKind\", \"PossibleScale\")");
                 sqlBuilder.Append(" VALUES (:quantityKind, :possibleScale)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"QuantityKind_PossibleScale\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"QuantityKind\", \"PossibleScale\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"QuantityKind_PossibleScale_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"QuantityKind\", \"PossibleScale\")");
                 sqlBuilder.Append(" = (:quantityKind, :possibleScale);");
 
                 command.Parameters.Add("quantityKind", NpgsqlDbType.Uuid).Value = iid;

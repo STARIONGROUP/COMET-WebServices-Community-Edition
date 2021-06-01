@@ -295,10 +295,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("relationshipCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationshipRule, "RelationshipCategory") ? binaryRelationshipRule.RelationshipCategory : Utils.NullableValue(null);
                 command.Parameters.Add("sourceCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationshipRule, "SourceCategory") ? binaryRelationshipRule.SourceCategory : Utils.NullableValue(null);
                 command.Parameters.Add("targetCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(binaryRelationshipRule, "TargetCategory") ? binaryRelationshipRule.TargetCategory : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"BinaryRelationshipRule\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"RelationshipCategory\", \"SourceCategory\", \"TargetCategory\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :relationshipCategory, :sourceCategory, :targetCategory);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"RelationshipCategory\", \"SourceCategory\", \"TargetCategory\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :relationshipCategory, :sourceCategory, :targetCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

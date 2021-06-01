@@ -282,10 +282,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = !this.IsDerived(elementUsage, "ElementDefinition") ? elementUsage.ElementDefinition : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementUsage\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ElementDefinition\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :elementDefinition);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"ElementDefinition\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :elementDefinition);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -404,9 +404,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementUsage_ExcludeOption\"", partition);
                 sqlBuilder.AppendFormat(" (\"ElementUsage\", \"ExcludeOption\")");
                 sqlBuilder.Append(" VALUES (:elementUsage, :excludeOption)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementUsage_ExcludeOption\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ElementUsage\", \"ExcludeOption\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ElementUsage_ExcludeOption_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ElementUsage\", \"ExcludeOption\")");
                 sqlBuilder.Append(" = (:elementUsage, :excludeOption);");
 
                 command.Parameters.Add("elementUsage", NpgsqlDbType.Uuid).Value = iid;

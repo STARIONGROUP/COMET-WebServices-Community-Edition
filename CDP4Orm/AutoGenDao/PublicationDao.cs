@@ -263,10 +263,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = publication.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Publication\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -392,9 +392,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Publication_Domain\"", partition);
                 sqlBuilder.AppendFormat(" (\"Publication\", \"Domain\")");
                 sqlBuilder.Append(" VALUES (:publication, :domain)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Publication_Domain\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Publication\", \"Domain\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Publication_Domain_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Publication\", \"Domain\")");
                 sqlBuilder.Append(" = (:publication, :domain);");
 
                 command.Parameters.Add("publication", NpgsqlDbType.Uuid).Value = iid;
@@ -471,9 +471,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Publication_PublishedParameter\"", partition);
                 sqlBuilder.AppendFormat(" (\"Publication\", \"PublishedParameter\")");
                 sqlBuilder.Append(" VALUES (:publication, :publishedParameter)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Publication_PublishedParameter\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Publication\", \"PublishedParameter\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Publication_PublishedParameter_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Publication\", \"PublishedParameter\")");
                 sqlBuilder.Append(" = (:publication, :publishedParameter);");
 
                 command.Parameters.Add("publication", NpgsqlDbType.Uuid).Value = iid;

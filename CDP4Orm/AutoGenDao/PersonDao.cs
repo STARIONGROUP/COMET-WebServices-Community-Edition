@@ -325,10 +325,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("defaultTelephoneNumber", NpgsqlDbType.Uuid).Value = !this.IsDerived(person, "DefaultTelephoneNumber") ? Utils.NullableValue(person.DefaultTelephoneNumber) : Utils.NullableValue(null);
                 command.Parameters.Add("organization", NpgsqlDbType.Uuid).Value = !this.IsDerived(person, "Organization") ? Utils.NullableValue(person.Organization) : Utils.NullableValue(null);
                 command.Parameters.Add("role", NpgsqlDbType.Uuid).Value = !this.IsDerived(person, "Role") ? Utils.NullableValue(person.Role) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Person\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultDomain\", \"DefaultEmailAddress\", \"DefaultTelephoneNumber\", \"Organization\", \"Role\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :defaultDomain, :defaultEmailAddress, :defaultTelephoneNumber, :organization, :role);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultDomain\", \"DefaultEmailAddress\", \"DefaultTelephoneNumber\", \"Organization\", \"Role\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :defaultDomain, :defaultEmailAddress, :defaultTelephoneNumber, :organization, :role);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

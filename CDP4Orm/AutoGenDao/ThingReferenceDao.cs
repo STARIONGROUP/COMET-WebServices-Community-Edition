@@ -134,10 +134,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thingReference.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("referencedThing", NpgsqlDbType.Uuid).Value = !this.IsDerived(thingReference, "ReferencedThing") ? thingReference.ReferencedThing : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ThingReference\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ReferencedThing\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :referencedThing);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"ReferencedThing\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :referencedThing);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

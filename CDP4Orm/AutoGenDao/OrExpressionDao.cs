@@ -241,10 +241,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = orExpression.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"OrExpression\"", partition);
-                sqlBuilder.AppendFormat(" SET ");
-                sqlBuilder.AppendFormat(" = ;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO NOTHING; ");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -363,9 +361,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"OrExpression_Term\"", partition);
                 sqlBuilder.AppendFormat(" (\"OrExpression\", \"Term\")");
                 sqlBuilder.Append(" VALUES (:orExpression, :term)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"OrExpression_Term\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"OrExpression\", \"Term\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"OrExpression_Term_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"OrExpression\", \"Term\")");
                 sqlBuilder.Append(" = (:orExpression, :term);");
 
                 command.Parameters.Add("orExpression", NpgsqlDbType.Uuid).Value = iid;

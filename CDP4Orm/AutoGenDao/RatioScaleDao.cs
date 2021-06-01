@@ -306,10 +306,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = ratioScale.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"RatioScale\"", partition);
-                sqlBuilder.AppendFormat(" SET ");
-                sqlBuilder.AppendFormat(" = ;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO NOTHING; ");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

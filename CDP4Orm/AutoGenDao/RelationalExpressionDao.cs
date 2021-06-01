@@ -271,10 +271,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = !this.IsDerived(relationalExpression, "ParameterType") ? relationalExpression.ParameterType : Utils.NullableValue(null);
                 command.Parameters.Add("scale", NpgsqlDbType.Uuid).Value = !this.IsDerived(relationalExpression, "Scale") ? Utils.NullableValue(relationalExpression.Scale) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"RelationalExpression\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ParameterType\", \"Scale\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :parameterType, :scale);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"ParameterType\", \"Scale\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :parameterType, :scale);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

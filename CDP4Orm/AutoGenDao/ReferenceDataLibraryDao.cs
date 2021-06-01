@@ -124,10 +124,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referenceDataLibrary.Iid;
                 command.Parameters.Add("requiredRdl", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceDataLibrary, "RequiredRdl") ? Utils.NullableValue(referenceDataLibrary.RequiredRdl) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceDataLibrary\"", partition);
-                sqlBuilder.AppendFormat(" SET \"RequiredRdl\"");
-                sqlBuilder.AppendFormat(" = :requiredRdl;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"RequiredRdl\"");
+                sqlBuilder.Append(" = :requiredRdl;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -253,7 +253,9 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary_BaseQuantityKind\"", partition);
                 sqlBuilder.AppendFormat(" (\"ReferenceDataLibrary\", \"BaseQuantityKind\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseQuantityKind, :sequence);");
+                sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseQuantityKind, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ReferenceDataLibrary_BaseQuantityKind_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
                 sqlBuilder.AppendFormat(" SET (\"ReferenceDataLibrary\", \"BaseQuantityKind\", \"Sequence\")");
                 sqlBuilder.Append(" = (:referenceDataLibrary, :baseQuantityKind, :sequence);");
 
@@ -332,9 +334,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary_BaseUnit\"", partition);
                 sqlBuilder.AppendFormat(" (\"ReferenceDataLibrary\", \"BaseUnit\")");
                 sqlBuilder.Append(" VALUES (:referenceDataLibrary, :baseUnit)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceDataLibrary_BaseUnit\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ReferenceDataLibrary\", \"BaseUnit\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ReferenceDataLibrary_BaseUnit_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ReferenceDataLibrary\", \"BaseUnit\")");
                 sqlBuilder.Append(" = (:referenceDataLibrary, :baseUnit);");
 
                 command.Parameters.Add("referenceDataLibrary", NpgsqlDbType.Uuid).Value = iid;

@@ -291,10 +291,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referencerRule.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("referencingCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(referencerRule, "ReferencingCategory") ? referencerRule.ReferencingCategory : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferencerRule\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ReferencingCategory\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :referencingCategory);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"ReferencingCategory\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :referencingCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -413,9 +413,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferencerRule_ReferencedCategory\"", partition);
                 sqlBuilder.AppendFormat(" (\"ReferencerRule\", \"ReferencedCategory\")");
                 sqlBuilder.Append(" VALUES (:referencerRule, :referencedCategory)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferencerRule_ReferencedCategory\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ReferencerRule\", \"ReferencedCategory\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ReferencerRule_ReferencedCategory_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ReferencerRule\", \"ReferencedCategory\")");
                 sqlBuilder.Append(" = (:referencerRule, :referencedCategory);");
 
                 command.Parameters.Add("referencerRule", NpgsqlDbType.Uuid).Value = iid;

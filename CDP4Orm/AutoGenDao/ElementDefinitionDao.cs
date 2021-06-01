@@ -265,10 +265,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = elementDefinition.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementDefinition\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Container\"");
-                sqlBuilder.AppendFormat(" = :container;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Container\"");
+                sqlBuilder.Append(" = :container;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -394,9 +394,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_OrganizationalParticipant\"", partition);
                 sqlBuilder.AppendFormat(" (\"ElementDefinition\", \"OrganizationalParticipant\")");
                 sqlBuilder.Append(" VALUES (:elementDefinition, :organizationalParticipant)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementDefinition_OrganizationalParticipant\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ElementDefinition\", \"OrganizationalParticipant\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ElementDefinition_OrganizationalParticipant_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ElementDefinition\", \"OrganizationalParticipant\")");
                 sqlBuilder.Append(" = (:elementDefinition, :organizationalParticipant);");
 
                 command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;
@@ -473,9 +473,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_ReferencedElement\"", partition);
                 sqlBuilder.AppendFormat(" (\"ElementDefinition\", \"ReferencedElement\")");
                 sqlBuilder.Append(" VALUES (:elementDefinition, :referencedElement)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ElementDefinition_ReferencedElement\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ElementDefinition\", \"ReferencedElement\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ElementDefinition_ReferencedElement_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ElementDefinition\", \"ReferencedElement\")");
                 sqlBuilder.Append(" = (:elementDefinition, :referencedElement);");
 
                 command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;

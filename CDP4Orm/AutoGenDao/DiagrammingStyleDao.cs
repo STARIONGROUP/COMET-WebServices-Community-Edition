@@ -154,10 +154,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("fillColor", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagrammingStyle, "FillColor") ? Utils.NullableValue(diagrammingStyle.FillColor) : Utils.NullableValue(null);
                 command.Parameters.Add("fontColor", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagrammingStyle, "FontColor") ? Utils.NullableValue(diagrammingStyle.FontColor) : Utils.NullableValue(null);
                 command.Parameters.Add("strokeColor", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagrammingStyle, "StrokeColor") ? Utils.NullableValue(diagrammingStyle.StrokeColor) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DiagrammingStyle\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"FillColor\", \"FontColor\", \"StrokeColor\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :fillColor, :fontColor, :strokeColor);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"FillColor\", \"FontColor\", \"StrokeColor\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :fillColor, :fontColor, :strokeColor);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

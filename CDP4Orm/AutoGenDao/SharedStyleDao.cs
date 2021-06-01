@@ -305,10 +305,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = sharedStyle.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SharedStyle\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Container\"");
-                sqlBuilder.AppendFormat(" = :container;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Container\"");
+                sqlBuilder.Append(" = :container;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

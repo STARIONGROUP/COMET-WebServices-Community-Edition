@@ -285,10 +285,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("defaultOption", NpgsqlDbType.Uuid).Value = !this.IsDerived(iteration, "DefaultOption") ? Utils.NullableValue(iteration.DefaultOption) : Utils.NullableValue(null);
                 command.Parameters.Add("iterationSetup", NpgsqlDbType.Uuid).Value = !this.IsDerived(iteration, "IterationSetup") ? iteration.IterationSetup : Utils.NullableValue(null);
                 command.Parameters.Add("topElement", NpgsqlDbType.Uuid).Value = !this.IsDerived(iteration, "TopElement") ? Utils.NullableValue(iteration.TopElement) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Iteration\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

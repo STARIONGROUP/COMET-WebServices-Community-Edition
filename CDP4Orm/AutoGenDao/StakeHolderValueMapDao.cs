@@ -267,10 +267,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = stakeHolderValueMap.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMap\"", partition);
-                sqlBuilder.AppendFormat(" SET \"Container\"");
-                sqlBuilder.AppendFormat(" = :container;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Container\"");
+                sqlBuilder.Append(" = :container;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -417,9 +417,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"StakeHolderValueMap_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"StakeHolderValueMap\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:stakeHolderValueMap, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMap_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"StakeHolderValueMap\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"StakeHolderValueMap_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"StakeHolderValueMap\", \"Category\")");
                 sqlBuilder.Append(" = (:stakeHolderValueMap, :category);");
 
                 command.Parameters.Add("stakeHolderValueMap", NpgsqlDbType.Uuid).Value = iid;
@@ -496,9 +496,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"StakeHolderValueMap_Goal\"", partition);
                 sqlBuilder.AppendFormat(" (\"StakeHolderValueMap\", \"Goal\")");
                 sqlBuilder.Append(" VALUES (:stakeHolderValueMap, :goal)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMap_Goal\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"StakeHolderValueMap\", \"Goal\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"StakeHolderValueMap_Goal_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"StakeHolderValueMap\", \"Goal\")");
                 sqlBuilder.Append(" = (:stakeHolderValueMap, :goal);");
 
                 command.Parameters.Add("stakeHolderValueMap", NpgsqlDbType.Uuid).Value = iid;
@@ -575,9 +575,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"StakeHolderValueMap_Requirement\"", partition);
                 sqlBuilder.AppendFormat(" (\"StakeHolderValueMap\", \"Requirement\")");
                 sqlBuilder.Append(" VALUES (:stakeHolderValueMap, :requirement)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMap_Requirement\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"StakeHolderValueMap\", \"Requirement\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"StakeHolderValueMap_Requirement_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"StakeHolderValueMap\", \"Requirement\")");
                 sqlBuilder.Append(" = (:stakeHolderValueMap, :requirement);");
 
                 command.Parameters.Add("stakeHolderValueMap", NpgsqlDbType.Uuid).Value = iid;
@@ -654,9 +654,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"StakeHolderValueMap_StakeholderValue\"", partition);
                 sqlBuilder.AppendFormat(" (\"StakeHolderValueMap\", \"StakeholderValue\")");
                 sqlBuilder.Append(" VALUES (:stakeHolderValueMap, :stakeholderValue)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMap_StakeholderValue\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"StakeHolderValueMap\", \"StakeholderValue\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"StakeHolderValueMap_StakeholderValue_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"StakeHolderValueMap\", \"StakeholderValue\")");
                 sqlBuilder.Append(" = (:stakeHolderValueMap, :stakeholderValue);");
 
                 command.Parameters.Add("stakeHolderValueMap", NpgsqlDbType.Uuid).Value = iid;
@@ -733,9 +733,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"StakeHolderValueMap_ValueGroup\"", partition);
                 sqlBuilder.AppendFormat(" (\"StakeHolderValueMap\", \"ValueGroup\")");
                 sqlBuilder.Append(" VALUES (:stakeHolderValueMap, :valueGroup)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMap_ValueGroup\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"StakeHolderValueMap\", \"ValueGroup\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"StakeHolderValueMap_ValueGroup_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"StakeHolderValueMap\", \"ValueGroup\")");
                 sqlBuilder.Append(" = (:stakeHolderValueMap, :valueGroup);");
 
                 command.Parameters.Add("stakeHolderValueMap", NpgsqlDbType.Uuid).Value = iid;

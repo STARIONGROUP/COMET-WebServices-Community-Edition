@@ -265,10 +265,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("defaultState", NpgsqlDbType.Uuid).Value = !this.IsDerived(possibleFiniteStateList, "DefaultState") ? Utils.NullableValue(possibleFiniteStateList.DefaultState) : Utils.NullableValue(null);
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(possibleFiniteStateList, "Owner") ? possibleFiniteStateList.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"PossibleFiniteStateList\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"DefaultState\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:container, :defaultState, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"DefaultState\", \"Owner\")");
+                sqlBuilder.Append(" = (:container, :defaultState, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -387,9 +387,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"PossibleFiniteStateList_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"PossibleFiniteStateList\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:possibleFiniteStateList, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"PossibleFiniteStateList_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"PossibleFiniteStateList\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"PossibleFiniteStateList_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"PossibleFiniteStateList\", \"Category\")");
                 sqlBuilder.Append(" = (:possibleFiniteStateList, :category);");
 
                 command.Parameters.Add("possibleFiniteStateList", NpgsqlDbType.Uuid).Value = iid;

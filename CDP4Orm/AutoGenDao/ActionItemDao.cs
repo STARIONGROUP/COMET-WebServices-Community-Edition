@@ -326,10 +326,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = actionItem.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("actionee", NpgsqlDbType.Uuid).Value = !this.IsDerived(actionItem, "Actionee") ? actionItem.Actionee : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ActionItem\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Actionee\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :actionee);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Actionee\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :actionee);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

@@ -322,10 +322,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("publishedIn", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceSource, "PublishedIn") ? Utils.NullableValue(referenceSource.PublishedIn) : Utils.NullableValue(null);
                 command.Parameters.Add("publisher", NpgsqlDbType.Uuid).Value = !this.IsDerived(referenceSource, "Publisher") ? Utils.NullableValue(referenceSource.Publisher) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceSource\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"PublishedIn\", \"Publisher\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :publishedIn, :publisher);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"PublishedIn\", \"Publisher\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :publishedIn, :publisher);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -444,9 +444,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceSource_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"ReferenceSource\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:referenceSource, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ReferenceSource_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ReferenceSource\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ReferenceSource_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ReferenceSource\", \"Category\")");
                 sqlBuilder.Append(" = (:referenceSource, :category);");
 
                 command.Parameters.Add("referenceSource", NpgsqlDbType.Uuid).Value = iid;

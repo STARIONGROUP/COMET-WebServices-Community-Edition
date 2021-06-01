@@ -274,10 +274,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = definition.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Definition\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -405,10 +405,10 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Example\"", partition);
                 sqlBuilder.AppendFormat(" (\"Definition\", \"Example\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:definition, :example, :sequence);");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Definition_Example\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Definition\", \"Example\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:definition, :example, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Definition_Example_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Definition\", \"Example\", \"Sequence\")");
                 sqlBuilder.Append(" = (:definition, :example, :sequence));");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
@@ -487,10 +487,10 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Note\"", partition);
                 sqlBuilder.AppendFormat(" (\"Definition\", \"Note\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:definition, :note, :sequence);");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Definition_Note\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Definition\", \"Note\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:definition, :note, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Definition_Note_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Definition\", \"Note\", \"Sequence\")");
                 sqlBuilder.Append(" = (:definition, :note, :sequence));");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;

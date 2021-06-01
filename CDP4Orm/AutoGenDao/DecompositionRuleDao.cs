@@ -291,10 +291,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = decompositionRule.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("containingCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(decompositionRule, "ContainingCategory") ? decompositionRule.ContainingCategory : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DecompositionRule\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"ContainingCategory\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :containingCategory);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"ContainingCategory\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :containingCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -413,9 +413,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DecompositionRule_ContainedCategory\"", partition);
                 sqlBuilder.AppendFormat(" (\"DecompositionRule\", \"ContainedCategory\")");
                 sqlBuilder.Append(" VALUES (:decompositionRule, :containedCategory)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DecompositionRule_ContainedCategory\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"DecompositionRule\", \"ContainedCategory\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"DecompositionRule_ContainedCategory_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"DecompositionRule\", \"ContainedCategory\")");
                 sqlBuilder.Append(" = (:decompositionRule, :containedCategory);");
 
                 command.Parameters.Add("decompositionRule", NpgsqlDbType.Uuid).Value = iid;

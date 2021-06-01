@@ -284,10 +284,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("actualState", NpgsqlDbType.Uuid).Value = !this.IsDerived(nestedParameter, "ActualState") ? Utils.NullableValue(nestedParameter.ActualState) : Utils.NullableValue(null);
                 command.Parameters.Add("associatedParameter", NpgsqlDbType.Uuid).Value = !this.IsDerived(nestedParameter, "AssociatedParameter") ? nestedParameter.AssociatedParameter : Utils.NullableValue(null);
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(nestedParameter, "Owner") ? nestedParameter.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"NestedParameter\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ActualState\", \"AssociatedParameter\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :actualState, :associatedParameter, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"ActualState\", \"AssociatedParameter\", \"Owner\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :actualState, :associatedParameter, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

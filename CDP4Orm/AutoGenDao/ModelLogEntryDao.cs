@@ -297,10 +297,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(modelLogEntry, "Author") ? Utils.NullableValue(modelLogEntry.Author) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ModelLogEntry\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Author\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :author);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Author\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :author);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -587,9 +587,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"ModelLogEntry\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:modelLogEntry, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ModelLogEntry_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ModelLogEntry\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ModelLogEntry_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ModelLogEntry\", \"Category\")");
                 sqlBuilder.Append(" = (:modelLogEntry, :category);");
 
                 command.Parameters.Add("modelLogEntry", NpgsqlDbType.Uuid).Value = iid;

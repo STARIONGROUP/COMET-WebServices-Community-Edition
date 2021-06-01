@@ -296,10 +296,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("defaultParticipantRole", NpgsqlDbType.Uuid).Value = !this.IsDerived(siteDirectory, "DefaultParticipantRole") ? Utils.NullableValue(siteDirectory.DefaultParticipantRole) : Utils.NullableValue(null);
                 command.Parameters.Add("defaultPersonRole", NpgsqlDbType.Uuid).Value = !this.IsDerived(siteDirectory, "DefaultPersonRole") ? Utils.NullableValue(siteDirectory.DefaultPersonRole) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"SiteDirectory\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

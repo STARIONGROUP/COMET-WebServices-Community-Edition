@@ -241,10 +241,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = exclusiveOrExpression.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ExclusiveOrExpression\"", partition);
-                sqlBuilder.AppendFormat(" SET ");
-                sqlBuilder.AppendFormat(" = ;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO NOTHING; ");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -363,9 +361,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ExclusiveOrExpression_Term\"", partition);
                 sqlBuilder.AppendFormat(" (\"ExclusiveOrExpression\", \"Term\")");
                 sqlBuilder.Append(" VALUES (:exclusiveOrExpression, :term)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ExclusiveOrExpression_Term\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ExclusiveOrExpression\", \"Term\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ExclusiveOrExpression_Term_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ExclusiveOrExpression\", \"Term\")");
                 sqlBuilder.Append(" = (:exclusiveOrExpression, :term);");
 
                 command.Parameters.Add("exclusiveOrExpression", NpgsqlDbType.Uuid).Value = iid;

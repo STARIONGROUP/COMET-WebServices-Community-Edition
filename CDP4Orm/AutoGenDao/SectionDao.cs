@@ -289,10 +289,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("sequence", NpgsqlDbType.Bigint).Value = sequence;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("owner", NpgsqlDbType.Uuid).Value = !this.IsDerived(section, "Owner") ? section.Owner : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Section\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Owner\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :owner);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Owner\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :owner);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -411,9 +411,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Section_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"Section\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:section, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Section_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Section\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Section_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Section\", \"Category\")");
                 sqlBuilder.Append(" = (:section, :category);");
 
                 command.Parameters.Add("section", NpgsqlDbType.Uuid).Value = iid;

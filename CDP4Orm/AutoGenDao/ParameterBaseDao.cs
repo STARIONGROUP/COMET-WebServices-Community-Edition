@@ -142,10 +142,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterBase, "ParameterType") ? parameterBase.ParameterType : Utils.NullableValue(null);
                 command.Parameters.Add("scale", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterBase, "Scale") ? Utils.NullableValue(parameterBase.Scale) : Utils.NullableValue(null);
                 command.Parameters.Add("stateDependence", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameterBase, "StateDependence") ? Utils.NullableValue(parameterBase.StateDependence) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ParameterBase\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Group\", \"Owner\", \"ParameterType\", \"Scale\", \"StateDependence\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :group, :owner, :parameterType, :scale, :stateDependence);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Group\", \"Owner\", \"ParameterType\", \"Scale\", \"StateDependence\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :group, :owner, :parameterType, :scale, :stateDependence);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

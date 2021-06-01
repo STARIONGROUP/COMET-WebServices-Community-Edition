@@ -291,10 +291,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = multiRelationshipRule.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("relationshipCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(multiRelationshipRule, "RelationshipCategory") ? multiRelationshipRule.RelationshipCategory : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"MultiRelationshipRule\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"RelationshipCategory\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :relationshipCategory);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"RelationshipCategory\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :relationshipCategory);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -413,9 +413,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"MultiRelationshipRule_RelatedCategory\"", partition);
                 sqlBuilder.AppendFormat(" (\"MultiRelationshipRule\", \"RelatedCategory\")");
                 sqlBuilder.Append(" VALUES (:multiRelationshipRule, :relatedCategory)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"MultiRelationshipRule_RelatedCategory\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"MultiRelationshipRule\", \"RelatedCategory\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"MultiRelationshipRule_RelatedCategory_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"MultiRelationshipRule\", \"RelatedCategory\")");
                 sqlBuilder.Append(" = (:multiRelationshipRule, :relatedCategory);");
 
                 command.Parameters.Add("multiRelationshipRule", NpgsqlDbType.Uuid).Value = iid;

@@ -290,10 +290,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("parameterType", NpgsqlDbType.Uuid).Value = !this.IsDerived(constant, "ParameterType") ? constant.ParameterType : Utils.NullableValue(null);
                 command.Parameters.Add("scale", NpgsqlDbType.Uuid).Value = !this.IsDerived(constant, "Scale") ? Utils.NullableValue(constant.Scale) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Constant\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"ParameterType\", \"Scale\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :parameterType, :scale);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"ParameterType\", \"Scale\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :parameterType, :scale);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -412,9 +412,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Constant_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"Constant\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:constant, :category)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Constant_Category\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Constant\", \"Category\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Constant_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Constant\", \"Category\")");
                 sqlBuilder.Append(" = (:constant, :category);");
 
                 command.Parameters.Add("constant", NpgsqlDbType.Uuid).Value = iid;

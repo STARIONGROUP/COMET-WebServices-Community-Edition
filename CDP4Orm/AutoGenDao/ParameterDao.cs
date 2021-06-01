@@ -283,10 +283,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("requestedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(parameter, "RequestedBy") ? Utils.NullableValue(parameter.RequestedBy) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Parameter\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"RequestedBy\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :requestedBy);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"RequestedBy\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :requestedBy);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

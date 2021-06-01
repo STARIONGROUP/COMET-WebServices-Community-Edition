@@ -276,10 +276,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = domainOfExpertiseGroup.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DomainOfExpertiseGroup\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -398,9 +398,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DomainOfExpertiseGroup_Domain\"", partition);
                 sqlBuilder.AppendFormat(" (\"DomainOfExpertiseGroup\", \"Domain\")");
                 sqlBuilder.Append(" VALUES (:domainOfExpertiseGroup, :domain)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"DomainOfExpertiseGroup_Domain\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"DomainOfExpertiseGroup\", \"Domain\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"DomainOfExpertiseGroup_Domain_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"DomainOfExpertiseGroup\", \"Domain\")");
                 sqlBuilder.Append(" = (:domainOfExpertiseGroup, :domain);");
 
                 command.Parameters.Add("domainOfExpertiseGroup", NpgsqlDbType.Uuid).Value = iid;

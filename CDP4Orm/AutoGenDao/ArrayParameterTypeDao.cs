@@ -295,10 +295,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = arrayParameterType.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ArrayParameterType\"", partition);
-                sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\"");
-                sqlBuilder.AppendFormat(" = :valueTypeDictionary;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"ValueTypeDictionary\"");
+                sqlBuilder.Append(" = :valueTypeDictionary;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -418,10 +418,10 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ArrayParameterType_Dimension\"", partition);
                 sqlBuilder.AppendFormat(" (\"ArrayParameterType\", \"Dimension\", \"Sequence\")");
-                sqlBuilder.Append(" VALUES (:arrayParameterType, :dimension, :sequence);");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ArrayParameterType_Dimension\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ArrayParameterType\", \"Dimension\", \"Sequence\")");
+                sqlBuilder.Append(" VALUES (:arrayParameterType, :dimension, :sequence)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ArrayParameterType_Dimension_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ArrayParameterType\", \"Dimension\", \"Sequence\")");
                 sqlBuilder.Append(" = (:arrayParameterType, :dimension, :sequence));");
 
                 command.Parameters.Add("arrayParameterType", NpgsqlDbType.Uuid).Value = iid;

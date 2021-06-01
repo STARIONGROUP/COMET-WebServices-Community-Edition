@@ -19,6 +19,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4Common.Helpers;
 
     using CDP4Orm.Dao;
+    using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
 
     using CDP4WebService.Authentication;
@@ -75,6 +76,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the revision service.
         /// </summary>
         public IRevisionService RevisionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revision dao.
+        /// </summary>
+        public IRevisionDao RevisionDao { get; set; }
 
         /// <summary>
         /// Gets or sets the cache service.
@@ -204,6 +210,9 @@ namespace CDP4WebServices.API.Modules
             // Seed the data store from the provided (uploaded) exchange file
             this.Post["/Data/Exchange", true] = async (x, ct) => await this.SeedDataStore();
 
+            // Import the data store from the provided (uploaded) exchange file
+            this.Post["/Data/Import", true] = async (x, ct) => await this.ImportDataStore();
+
             // Restore the data store to the data snapshot created from the inital seed
             this.Post["/Data/Restore"] = x => this.RestoreDatastore();
         }
@@ -246,6 +255,85 @@ namespace CDP4WebServices.API.Modules
                 this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
                 return errorResponse;
             }
+        }
+
+        /// <summary>
+        /// Asynchronously import the data store.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="Task{Response}"/>.
+        /// </returns>
+        internal async Task<Response> ImportDataStore()
+        {
+            if (!AppConfig.Current.Backtier.IsDbSeedEnabled)
+            {
+                Logger.Info(
+                    "Data store seed API invoked but it was disabled from configuration, cancel further processing...");
+
+                var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
+                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
+                return notAcceptableResponse;
+            }
+
+            Logger.Info("Starting data store importing");
+
+            var exchangeFileRequest = this.Bind<ExchangeFileUploadRequest>();
+
+            // make sure there is only one file
+            if (exchangeFileRequest.File == null)
+            {
+                var badRequestResponse = new Response().WithStatusCode(HttpStatusCode.BadRequest);
+                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse);
+                return badRequestResponse;
+            }
+
+            // stream the file to disk
+            var filePath = await this.LocalFileStorage.StreamFileToDisk(exchangeFileRequest.File.Value);
+
+            // drop existing data stores
+            this.DropDataStoreAndPrepareNew();
+
+            // handle exchange processing
+            if (!this.UpsertModelData(filePath, exchangeFileRequest.Password))
+            {
+                var errorResponse = new NotAcceptableResponse();
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                return errorResponse;
+            }
+
+            // Remove the exchange file after processing (saving space)
+            try
+            {
+                this.LocalFileStorage.RemoveFileFromDisk(filePath);
+            }
+            catch (Exception ex)
+            {
+                // swallow exception but log it
+                Logger.Error(ex, "Unable to remove file");
+            }
+
+            try
+            {
+                // Create a jsonb for each entry in the database
+                this.CreateRevisionHistoryForEachEntry();
+
+                // reset the credential cache as the underlying datastore was reset
+                this.WebServiceAuthentication.ResetCredentialCache();
+
+                var response = new Response().WithStatusCode(HttpStatusCode.OK);
+                this.HeaderInfoProvider.RegisterResponseHeaders(response);
+
+                Logger.Info("Finished the data store import");
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Unable to import the datastore");
+                var errorResponse = new Response().WithStatusCode(HttpStatusCode.InternalServerError);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                return errorResponse;
+            }
+
         }
 
         /// <summary>
@@ -495,7 +583,7 @@ namespace CDP4WebServices.API.Modules
                             maxIterationNumber);
 
                         var iterationInsertResult = true;
-                        foreach (var iterationSetup in iterationSetups)
+                        foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
                         {
                             this.RequestUtils.Cache.Clear();
                             var iterationItems = this.ExchangeFileProcessor
@@ -508,12 +596,11 @@ namespace CDP4WebServices.API.Modules
                             // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
                             var iteration =
                                 iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
-                            if (iteration == null || !iterationService.UpsertConcept(
+                            if (iteration == null || !iterationService.CreateConcept(
                                     transaction,
                                     dataPartition,
                                     iteration,
-                                    engineeringModel,
-                                    iterationSetup.IterationNumber))
+                                    engineeringModel))
                             {
                                 iterationInsertResult = false;
                                 break;
@@ -545,6 +632,263 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 Logger.Error(ex, "Error occured during data store seeding");
+
+                return false;
+            }
+            finally
+            {
+                // clean log (will happen at end of request as well due to IOC lifetime
+                this.TransactionManager.CommandLogger.ClearLog();
+
+                transaction?.Dispose();
+
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection.Dispose();
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Import data and use Upsert flow to add/update data. Return the data as serialized JSON
+        /// </summary>
+        /// <param name="fileName">
+        /// The exchange file name.
+        /// </param>
+        /// <param name="password">
+        /// The optional archive password as supplied by the request
+        /// </param>
+        /// <returns>
+        /// True if successful
+        /// </returns>
+        private bool UpsertModelData(string fileName, string password = null)
+        {
+            NpgsqlConnection connection = null;
+            NpgsqlTransaction transaction = null;
+
+            try
+            {
+                var sw = new Stopwatch();
+                
+                // clear database schemas if seeding
+                Logger.Info("Start clearing the current data store");
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                this.TransactionManager.SetFullAccessState(true);
+                this.ClearDatabaseSchemas(transaction);
+                transaction.Commit();
+
+                // Flushes the type cache and reload the types for this connection
+                connection.ReloadTypes();
+
+                sw.Start();
+                Logger.Info("Start seeding the data");
+
+                // use new transaction to for inserting the data
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                this.TransactionManager.SetFullAccessState(true);
+
+                // important, make sure to defer the constraints
+                var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+
+                // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                this.TransactionManager.SetAuditLoggingState(transaction, false);
+
+                // get sitedirectory data
+                var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(fileName, password).ToList();
+
+                // assign default password to all imported persons.
+                foreach (var person in items.OfType<Person>())
+                {
+                    person.Password = AppConfig.Current.Defaults.PersonPassword;
+                }
+
+                var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
+
+                if (topContainer == null)
+                {
+                    Logger.Error("No Topcontainer item encountered");
+                    throw new NoNullAllowedException("Topcontainer item needs to be present in the dataset");
+                }
+
+                this.RequestUtils.Cache = new List<Thing>(items);
+
+                // setup Site Directory schema
+                using (var siteDirCommand = new NpgsqlCommand())
+                {
+                    Logger.Info("Start Site Directory structure");
+                    siteDirCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.SiteDirectoryDefinition.sql");
+
+                    siteDirCommand.Connection = transaction.Connection;
+                    siteDirCommand.Transaction = transaction;
+                    siteDirCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                }
+
+                // apply migration on new SiteDirectory partition
+                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
+
+                var result = false;
+
+                if (topContainer.GetType().Name == "SiteDirectory")
+                {
+                    // make sure single iterationsetups are set to unfrozen before persitence
+                    this.FixSingleIterationSetups(items);
+
+                    var siteDirectoryService =
+                        this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
+
+                    result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
+                }
+
+                if (result)
+                {
+                    this.RequestUtils.QueryParameters = new QueryParameters();
+
+                    // Get users credentials from migration.json file
+                    var migrationCredentials = this.ExchangeFileProcessor.ReadMigrationJsonFromFile(fileName, password).ToList();
+
+                    foreach (var person in items.OfType<Person>())
+                    {
+                        var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
+
+                        if (credential != null)
+                        {
+                            this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
+                        }
+                    }
+
+                    // Add missing Person permissions
+                    this.CreateMissingPersonPermissions(transaction);
+
+                    var engineeringModelSetups =
+                        items.OfType<EngineeringModelSetup>()
+                            .ToList();
+
+                    var engineeringModelService =
+                        this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+                    
+                    var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
+
+                    foreach (var engineeringModelSetup in engineeringModelSetups)
+                    {
+                        var iterationNumber = EngineeringModelSetupSideEffect.FirstRevision;
+
+                        // cleanup before handling TopContainer
+                        this.RequestUtils.Cache.Clear();
+
+                        // get referenced engineeringmodel data
+                        var engineeringModelItems = this.ExchangeFileProcessor
+                            .ReadEngineeringModelFromfile(fileName, password, engineeringModelSetup).ToList();
+
+                        // should return one engineeringmodel topcontainer
+                        var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
+
+                        if (engineeringModel == null)
+                        {
+                            result = false;
+                            break;
+                        }
+
+                        var dataPartition = CDP4Orm.Dao.Utils.GetEngineeringModelSchemaName(engineeringModel.Iid);
+                        this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
+
+                        if (!engineeringModelService.Insert(transaction, dataPartition, engineeringModel))
+                        {
+                            result = false;
+                            break;
+                        }
+
+                        // Add missing Participant permissions
+                        this.CreateMissingParticipantPermissions(transaction);
+
+                        // extract any referenced file data to disk if not already present
+                        this.PersistFileBinaryData(fileName, password);
+
+                        var iterationSetups = items.OfType<IterationSetup>()
+                            .Where(
+                                x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
+
+                        // get current maximum iterationNumber and increase by one for the next value
+                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
+
+                        // reset the start number of iterationNumber sequence
+                        this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
+                            transaction,
+                            dataPartition,
+                            maxIterationNumber);
+
+                        var iterationInsertResult = true;
+
+                        foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
+                        {
+                            transaction.Commit();
+
+                            // use new transaction to for inserting the data
+                            transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                            this.TransactionManager.SetFullAccessState(true);
+
+                            // important, make sure to defer the constraints
+                            var constraintCommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                            constraintCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+
+                            // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                            this.TransactionManager.SetAuditLoggingState(transaction, false);
+
+                            this.RequestUtils.Cache.Clear();
+                        
+                            var iterationItems = this.ExchangeFileProcessor
+                                .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
+
+                            this.RequestUtils.Cache = new List<Thing>(iterationItems);
+
+                            // should return one iteration
+                            // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
+                            var iteration =
+                                iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
+
+                            iterationInsertResult = false;
+
+                            if (iteration == null)
+                            {
+                                break;
+                            }
+
+                            if (iterationService.UpsertConcept(
+                                transaction,
+                                dataPartition,
+                                iteration,
+                                engineeringModel))
+                            {
+                                iterationInsertResult = true;
+                            }
+                        }
+
+                        if (!iterationInsertResult)
+                        {
+                            result = false;
+                            break;
+                        }
+
+                        // extract any referenced file data to disk if not already present
+                        this.PersistFileBinaryData(fileName, password);
+                    }
+                }
+
+                transaction.Commit();
+                sw.Stop();
+                Logger.Info("Finished importing the data store in {0} [ms]", sw.ElapsedMilliseconds);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                if (transaction != null && !transaction.IsCompleted)
+                {
+                    transaction.Rollback();
+                }
+
+                Logger.Error(ex, "Error occured during data store importing");
 
                 return false;
             }

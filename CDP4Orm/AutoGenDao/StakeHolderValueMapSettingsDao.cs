@@ -250,10 +250,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("goalToValueGroupRelationship", NpgsqlDbType.Uuid).Value = !this.IsDerived(stakeHolderValueMapSettings, "GoalToValueGroupRelationship") ? Utils.NullableValue(stakeHolderValueMapSettings.GoalToValueGroupRelationship) : Utils.NullableValue(null);
                 command.Parameters.Add("stakeholderValueToRequirementRelationship", NpgsqlDbType.Uuid).Value = !this.IsDerived(stakeHolderValueMapSettings, "StakeholderValueToRequirementRelationship") ? Utils.NullableValue(stakeHolderValueMapSettings.StakeholderValueToRequirementRelationship) : Utils.NullableValue(null);
                 command.Parameters.Add("valueGroupToStakeholderValueRelationship", NpgsqlDbType.Uuid).Value = !this.IsDerived(stakeHolderValueMapSettings, "ValueGroupToStakeholderValueRelationship") ? Utils.NullableValue(stakeHolderValueMapSettings.ValueGroupToStakeholderValueRelationship) : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"StakeHolderValueMapSettings\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"GoalToValueGroupRelationship\", \"StakeholderValueToRequirementRelationship\", \"ValueGroupToStakeholderValueRelationship\")");
-                sqlBuilder.AppendFormat(" = (:container, :goalToValueGroupRelationship, :stakeholderValueToRequirementRelationship, :valueGroupToStakeholderValueRelationship);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"GoalToValueGroupRelationship\", \"StakeholderValueToRequirementRelationship\", \"ValueGroupToStakeholderValueRelationship\")");
+                sqlBuilder.Append(" = (:container, :goalToValueGroupRelationship, :stakeholderValueToRequirementRelationship, :valueGroupToStakeholderValueRelationship);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

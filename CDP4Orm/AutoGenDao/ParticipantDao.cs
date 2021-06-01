@@ -270,10 +270,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("person", NpgsqlDbType.Uuid).Value = !this.IsDerived(participant, "Person") ? participant.Person : Utils.NullableValue(null);
                 command.Parameters.Add("role", NpgsqlDbType.Uuid).Value = !this.IsDerived(participant, "Role") ? participant.Role : Utils.NullableValue(null);
                 command.Parameters.Add("selectedDomain", NpgsqlDbType.Uuid).Value = !this.IsDerived(participant, "SelectedDomain") ? participant.SelectedDomain : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Participant\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"Person\", \"Role\", \"SelectedDomain\")");
-                sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :person, :role, :selectedDomain);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Person\", \"Role\", \"SelectedDomain\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :person, :role, :selectedDomain);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -392,9 +392,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Participant_Domain\"", partition);
                 sqlBuilder.AppendFormat(" (\"Participant\", \"Domain\")");
                 sqlBuilder.Append(" VALUES (:participant, :domain)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"Participant_Domain\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Participant\", \"Domain\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Participant_Domain_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Participant\", \"Domain\")");
                 sqlBuilder.Append(" = (:participant, :domain);");
 
                 command.Parameters.Add("participant", NpgsqlDbType.Uuid).Value = iid;

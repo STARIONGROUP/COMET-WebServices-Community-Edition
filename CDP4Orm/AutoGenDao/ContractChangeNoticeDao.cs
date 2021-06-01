@@ -292,10 +292,10 @@ namespace CDP4Orm.Dao
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = contractChangeNotice.Iid;
                 command.Parameters.Add("changeProposal", NpgsqlDbType.Uuid).Value = !this.IsDerived(contractChangeNotice, "ChangeProposal") ? contractChangeNotice.ChangeProposal : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"ContractChangeNotice\"", partition);
-                sqlBuilder.AppendFormat(" SET \"ChangeProposal\"");
-                sqlBuilder.AppendFormat(" = :changeProposal;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"ChangeProposal\"");
+                sqlBuilder.Append(" = :changeProposal;");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

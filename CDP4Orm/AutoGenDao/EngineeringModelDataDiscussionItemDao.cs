@@ -263,10 +263,10 @@ namespace CDP4Orm.Dao
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = engineeringModelDataDiscussionItem.Iid;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(engineeringModelDataDiscussionItem, "Author") ? engineeringModelDataDiscussionItem.Author : Utils.NullableValue(null);
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"EngineeringModelDataDiscussionItem\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"Container\", \"Author\")");
-                sqlBuilder.AppendFormat(" = (:container, :author);");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Container\", \"Author\")");
+                sqlBuilder.Append(" = (:container, :author);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;

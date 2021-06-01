@@ -241,10 +241,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = andExpression.Iid;
-                sqlBuilder.AppendFormat(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"AndExpression\"", partition);
-                sqlBuilder.AppendFormat(" SET ");
-                sqlBuilder.AppendFormat(" = ;");
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO NOTHING; ");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -363,9 +361,9 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"AndExpression_Term\"", partition);
                 sqlBuilder.AppendFormat(" (\"AndExpression\", \"Term\")");
                 sqlBuilder.Append(" VALUES (:andExpression, :term)");
-                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.AppendFormat(" DO UPDATE \"{0}\".\"AndExpression_Term\"", partition);
-                sqlBuilder.AppendFormat(" SET (\"AndExpression\", \"Term\")");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"AndExpression_Term_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"AndExpression\", \"Term\")");
                 sqlBuilder.Append(" = (:andExpression, :term);");
 
                 command.Parameters.Add("andExpression", NpgsqlDbType.Uuid).Value = iid;
