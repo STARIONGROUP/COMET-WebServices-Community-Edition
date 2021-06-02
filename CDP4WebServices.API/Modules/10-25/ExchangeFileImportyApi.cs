@@ -767,6 +767,7 @@ namespace CDP4WebServices.API.Modules
                         this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
                     
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
+                    var iterationSetupService = this.ServiceProvider.MapToPersitableService<IterationSetupService>("IterationSetup");
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
@@ -789,6 +790,8 @@ namespace CDP4WebServices.API.Modules
                         }
 
                         var dataPartition = CDP4Orm.Dao.Utils.GetEngineeringModelSchemaName(engineeringModel.Iid);
+                        var siteDirectoryPartition = CDP4Orm.Dao.Utils.SiteDirectoryPartition;
+                        
                         this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
 
                         if (!engineeringModelService.Insert(transaction, dataPartition, engineeringModel))
@@ -839,34 +842,41 @@ namespace CDP4WebServices.API.Modules
                                 break;
                             }
 
-                            if (iterationService.UpsertConcept(
+                            if (iterationSetupService.UpsertConcept(
                                 transaction,
-                                dataPartition,
-                                iteration,
-                                engineeringModel))
+                                siteDirectoryPartition,
+                                iterationSetup, 
+                                engineeringModelSetup))
                             {
-                                iterationInsertResult = true;
+                                if (iterationService.UpsertConcept(
+                                    transaction,
+                                    dataPartition,
+                                    iteration,
+                                    engineeringModel))
+                                {
+                                    iterationInsertResult = true;
 
-                                transaction.Commit();
+                                    transaction.Commit();
 
-                                // Create a jsonb for each entry in the database
-                                this.CreateRevisionHistoryForEachEntry(revisionNumber);
+                                    // Create a jsonb for each entry in the database
+                                    this.CreateRevisionHistoryForEachEntry(revisionNumber);
 
-                                // use new transaction to for inserting the data
-                                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                                this.TransactionManager.SetFullAccessState(true);
+                                    // use new transaction to for inserting the data
+                                    transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                                    this.TransactionManager.SetFullAccessState(true);
 
-                                // important, make sure to defer the constraints
-                                var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                                constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                                    // important, make sure to defer the constraints
+                                    var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                                    constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
 
-                                // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                                this.TransactionManager.SetAuditLoggingState(transaction, false);
+                                    // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                                    this.TransactionManager.SetAuditLoggingState(transaction, false);
 
-                                // revision number goes up for the next Iteration
-                                revisionNumber += 1;
+                                    // revision number goes up for the next Iteration
+                                    revisionNumber += 1;
 
-                                createRevisionRecordsBeforeLastCommit = false;
+                                    createRevisionRecordsBeforeLastCommit = false;
+                                }
                             }
                         }
 
