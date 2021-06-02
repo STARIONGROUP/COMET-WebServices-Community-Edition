@@ -663,6 +663,7 @@ namespace CDP4WebServices.API.Modules
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
             var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
+            var createRevisionRecordsBeforeLastCommit = true;
 
             try
             {
@@ -769,6 +770,8 @@ namespace CDP4WebServices.API.Modules
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
+                        createRevisionRecordsBeforeLastCommit = true;
+
                         // cleanup before handling TopContainer
                         this.RequestUtils.Cache.Clear();
 
@@ -817,25 +820,6 @@ namespace CDP4WebServices.API.Modules
 
                         foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
                         {
-                            transaction.Commit();
-
-                            // Create a jsonb for each entry in the database
-                            this.CreateRevisionHistoryForEachEntry(revisionNumber);
-
-                            // use new transaction to for inserting the data
-                            transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                            this.TransactionManager.SetFullAccessState(true);
-
-                            // important, make sure to defer the constraints
-                            var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                            constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
-
-                            // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                            this.TransactionManager.SetAuditLoggingState(transaction, false);
-
-                            // revision number goes up for the next Iteration
-                            revisionNumber += 1;
-
                             this.RequestUtils.Cache.Clear();
                         
                             var iterationItems = this.ExchangeFileProcessor
@@ -862,6 +846,27 @@ namespace CDP4WebServices.API.Modules
                                 engineeringModel))
                             {
                                 iterationInsertResult = true;
+
+                                transaction.Commit();
+
+                                // Create a jsonb for each entry in the database
+                                this.CreateRevisionHistoryForEachEntry(revisionNumber);
+
+                                // use new transaction to for inserting the data
+                                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                                this.TransactionManager.SetFullAccessState(true);
+
+                                // important, make sure to defer the constraints
+                                var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                                constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+
+                                // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                                this.TransactionManager.SetAuditLoggingState(transaction, false);
+
+                                // revision number goes up for the next Iteration
+                                revisionNumber += 1;
+
+                                createRevisionRecordsBeforeLastCommit = false;
                             }
                         }
 
@@ -878,8 +883,11 @@ namespace CDP4WebServices.API.Modules
 
                 transaction.Commit();
 
-                // Create a jsonb for each entry in the database
-                this.CreateRevisionHistoryForEachEntry(revisionNumber);
+                if (createRevisionRecordsBeforeLastCommit)
+                {
+                    // Create a jsonb for each entry in the database
+                    this.CreateRevisionHistoryForEachEntry(revisionNumber);
+                }
                 
                 sw.Stop();
                 Logger.Info("Finished importing the data store in {0} [ms]", sw.ElapsedMilliseconds);
