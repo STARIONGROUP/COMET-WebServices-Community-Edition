@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileImportyApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017-2020 RHEA System S.A.
+//   Copyright (c) 2017-2021 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -314,9 +314,6 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                // Create a jsonb for each entry in the database
-                this.CreateRevisionHistoryForEachEntry();
-
                 // reset the credential cache as the underlying datastore was reset
                 this.WebServiceAuthentication.ResetCredentialCache();
 
@@ -394,7 +391,7 @@ namespace CDP4WebServices.API.Modules
             try
             {
                 // Create a jsonb for each entry in the database
-                this.CreateRevisionHistoryForEachEntry();
+                this.CreateRevisionHistoryForEachEntry(EngineeringModelSetupSideEffect.FirstRevision);
 
                 // database was succesfully seeded
                 this.DataStoreController
@@ -498,7 +495,7 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
+                this.MigrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
                 if (topContainer.GetType().Name == "SiteDirectory")
@@ -574,7 +571,7 @@ namespace CDP4WebServices.API.Modules
                                 x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
-                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
+                        var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
                         this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
@@ -589,7 +586,6 @@ namespace CDP4WebServices.API.Modules
                             var iterationItems = this.ExchangeFileProcessor
                                 .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
 
-                            // FixRevisionNumber(iterationItems);
                             this.RequestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
@@ -666,6 +662,7 @@ namespace CDP4WebServices.API.Modules
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
+            var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
 
             try
             {
@@ -772,8 +769,6 @@ namespace CDP4WebServices.API.Modules
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
-                        var iterationNumber = EngineeringModelSetupSideEffect.FirstRevision;
-
                         // cleanup before handling TopContainer
                         this.RequestUtils.Cache.Clear();
 
@@ -810,7 +805,7 @@ namespace CDP4WebServices.API.Modules
                                 x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
-                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
+                        var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
                         this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
@@ -824,16 +819,22 @@ namespace CDP4WebServices.API.Modules
                         {
                             transaction.Commit();
 
+                            // Create a jsonb for each entry in the database
+                            this.CreateRevisionHistoryForEachEntry(revisionNumber);
+
                             // use new transaction to for inserting the data
                             transaction = this.TransactionManager.SetupTransaction(ref connection, null);
                             this.TransactionManager.SetFullAccessState(true);
 
                             // important, make sure to defer the constraints
-                            var constraintCommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                            constraintCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                            var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                            constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
 
                             // make sure to only log insert changes, no subsequent trigger updates for exchange import
                             this.TransactionManager.SetAuditLoggingState(transaction, false);
+
+                            // revision number goes up for the next Iteration
+                            revisionNumber += 1;
 
                             this.RequestUtils.Cache.Clear();
                         
@@ -876,6 +877,10 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 transaction.Commit();
+
+                // Create a jsonb for each entry in the database
+                this.CreateRevisionHistoryForEachEntry(revisionNumber);
+                
                 sw.Stop();
                 Logger.Info("Finished importing the data store in {0} [ms]", sw.ElapsedMilliseconds);
 
@@ -1059,7 +1064,10 @@ namespace CDP4WebServices.API.Modules
         /// <summary>
         /// Create revision history for each entry in the database.
         /// </summary>
-        private void CreateRevisionHistoryForEachEntry()
+        /// <param name="revisionNumber">
+        /// The revision number we want to create revision records for
+        /// </param>
+        private void CreateRevisionHistoryForEachEntry(int revisionNumber)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -1077,7 +1085,7 @@ namespace CDP4WebServices.API.Modules
                 var actorId = actor != null ? actor.Iid : Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, actorId, EngineeringModelSetupSideEffect.FirstRevision);
+                this.RevisionService.SaveRevisions(transaction, TopContainer, actorId, revisionNumber);
 
                 var siteDirectory = this.SiteDirectoryService.Get(
                     transaction,
@@ -1105,7 +1113,7 @@ namespace CDP4WebServices.API.Modules
                         this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                     // Save revision history for EngineeringModel's entries
-                    this.RevisionService.SaveRevisions(transaction, partition, actorId, EngineeringModelSetupSideEffect.FirstRevision);
+                    this.RevisionService.SaveRevisions(transaction, partition, actorId, revisionNumber);
 
                     // commit revision history
                     transaction.Commit();
