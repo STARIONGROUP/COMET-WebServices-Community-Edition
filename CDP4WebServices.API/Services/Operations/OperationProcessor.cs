@@ -93,12 +93,12 @@ namespace CDP4WebServices.API.Services.Operations
         /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
         /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
         /// </summary>
-        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new Dictionary<DtoInfo, DtoResolveHelper>();
+        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new ();
 
         /// <summary>
         /// Backing field for <see cref="OperationOriginalThingCache"/>
         /// </summary>
-        private readonly List<Thing> operationOriginalThingCache = new List<Thing>();
+        private readonly List<Thing> operationOriginalThingCache = new ();
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.

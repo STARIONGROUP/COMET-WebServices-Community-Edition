@@ -691,7 +691,7 @@ namespace CDP4WebServices.API.Modules
                 command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                this.TransactionManager.SetAuditLoggingState(transaction, true);
+                this.TransactionManager.SetAuditLoggingState(transaction, false);
 
                 // get sitedirectory data
                 var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(fileName, password).ToList();
@@ -870,7 +870,7 @@ namespace CDP4WebServices.API.Modules
                                     constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
 
                                     // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                                    this.TransactionManager.SetAuditLoggingState(transaction, true);
+                                    this.TransactionManager.SetAuditLoggingState(transaction, false);
 
                                     // revision number goes up for the next Iteration
                                     revisionNumber += 1;

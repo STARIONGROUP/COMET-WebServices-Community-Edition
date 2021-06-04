@@ -1427,7 +1427,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
             var iterationPartition = $"Iteration{basePartition}";
 
-            if (!(this.ActualFiniteStateService.GetShallow(transaction, iterationPartition, new[] { stateIid }, securityContext).Single() is ActualFiniteState actualState))
+            if (this.ActualFiniteStateService.GetShallow(transaction, iterationPartition, new[] { stateIid }, securityContext).Single() is not ActualFiniteState actualState)
             {
                 return;
             }
@@ -1505,7 +1505,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
         {
             name = null;
 
-            if (!(thing is INamedThing namedThing))
+            if (thing is not INamedThing namedThing)
             {
                 return false;
             }
@@ -1531,7 +1531,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
         {
             shortName = null;
 
-            if (!(thing is IShortNamedThing shortNamedThing))
+            if (thing is not IShortNamedThing shortNamedThing)
             {
                 return false;
             }
