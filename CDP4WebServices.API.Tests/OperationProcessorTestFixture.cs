@@ -717,6 +717,11 @@ namespace CDP4WebServices.API.Tests
             return true;
         }
 
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+            return true;
+        }
+
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             return true;
@@ -777,6 +782,11 @@ namespace CDP4WebServices.API.Tests
             throw new NotImplementedException();
         }
 
+        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
@@ -832,6 +842,11 @@ namespace CDP4WebServices.API.Tests
             throw new NotImplementedException();
         }
 
+        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
@@ -882,6 +897,11 @@ namespace CDP4WebServices.API.Tests
         }
 
         public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }

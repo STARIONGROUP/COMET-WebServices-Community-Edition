@@ -211,6 +211,32 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="RequestForWaiver"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="RequestForWaiver"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="RequestForWaiver"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+
+            return this.RequestForWaiverDao.RawDelete(transaction, partition, thing.Iid);
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="RequestForWaiver"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -274,6 +300,7 @@ namespace CDP4WebServices.API.Services
 
         /// <summary>
         /// Persist the supplied <see cref="RequestForWaiver"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -295,11 +322,6 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
-            {
-                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
-            }
-
             var requestForWaiver = thing as RequestForWaiver;
             var createSuccesful = this.RequestForWaiverDao.Upsert(transaction, partition, requestForWaiver, container);
             return createSuccesful && this.UpsertContainment(transaction, partition, requestForWaiver);
@@ -452,6 +474,7 @@ namespace CDP4WebServices.API.Services
                 
         /// <summary>
         /// Persist the <see cref="RequestForWaiver"/> containment tree to the ORM layer. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.

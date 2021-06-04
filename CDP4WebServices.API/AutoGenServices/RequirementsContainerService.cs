@@ -196,6 +196,31 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="RequirementsContainer"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="RequirementsContainer"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="RequirementsContainer"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="RequirementsContainer"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -258,6 +283,7 @@ namespace CDP4WebServices.API.Services
 
         /// <summary>
         /// Persist the supplied <see cref="RequirementsContainer"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -279,11 +305,6 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
-            {
-                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
-            }
-
             var requirementsContainer = thing as RequirementsContainer;
             throw new NotSupportedException(string.Format("The abstract DTO type: {0} cannot be created.", requirementsContainer.GetType().Name));
         }

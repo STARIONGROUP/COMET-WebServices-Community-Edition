@@ -236,6 +236,7 @@ namespace CDP4Orm.Dao
 
         /// <summary>
         /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -382,6 +383,7 @@ namespace CDP4Orm.Dao
 
         /// <summary>
         /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -409,7 +411,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Definition_Example_PK\"");
                 sqlBuilder.Append(" DO UPDATE ");
                 sqlBuilder.Append(" SET (\"Definition\", \"Example\", \"Sequence\")");
-                sqlBuilder.Append(" = (:definition, :example, :sequence));");
+                sqlBuilder.Append(" = (:definition, :example, :sequence);");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("example", NpgsqlDbType.Text).Value = (string)example.V;
@@ -422,7 +424,6 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
-
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -464,6 +465,7 @@ namespace CDP4Orm.Dao
 
         /// <summary>
         /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -491,7 +493,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Definition_Note_PK\"");
                 sqlBuilder.Append(" DO UPDATE ");
                 sqlBuilder.Append(" SET (\"Definition\", \"Note\", \"Sequence\")");
-                sqlBuilder.Append(" = (:definition, :note, :sequence));");
+                sqlBuilder.Append(" = (:definition, :note, :sequence);");
 
                 command.Parameters.Add("definition", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("note", NpgsqlDbType.Text).Value = (string)note.V;
@@ -720,6 +722,31 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
+        }
+
+        /// <summary>
+        /// Delete a database record from the supplied data transfer object.
+        /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Definition"/> id that is to be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully deleted.
+        /// </returns>
+        public override bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            var result = false;
+
+            result = base.Delete(transaction, partition, iid);
+            return result;
         }
 
         /// <summary>

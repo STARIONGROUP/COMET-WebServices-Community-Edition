@@ -77,6 +77,7 @@ namespace CDP4Orm.Dao
 
         /// <summary>
         /// Insert a database record from the supplied data transfer object and updates it if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -178,6 +179,25 @@ namespace CDP4Orm.Dao
         /// </returns>
         bool Delete(NpgsqlTransaction transaction, string partition, Guid iid);
  
+        /// <summary>
+        /// Delete a database record from the supplied data transfer object.
+        /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ModellingThingReference"/> id that is to be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully deleted.
+        /// </returns>
+        bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid);
+        
         /// <summary>
         /// Delete the supplied value from the association link table indicated by the supplied property name.
         /// </summary>

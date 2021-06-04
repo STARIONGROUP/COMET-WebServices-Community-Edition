@@ -121,6 +121,7 @@ namespace CDP4WebServices.API.Services
  
         /// <summary>
         /// Create the supplied DTO instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -184,7 +185,29 @@ namespace CDP4WebServices.API.Services
         /// True if the delete was successful.
         /// </returns>
         bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null);
- 
+
+        /// <summary>
+        /// Delete the supplied DTO instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> to remove.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the DTO to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the delete was successful.
+        /// </returns>
+        bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null);
+
         /// <summary>
         /// Remove the supplied value from the association property as indicated by the supplied property name.
         /// </summary>

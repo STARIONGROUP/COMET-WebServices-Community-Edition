@@ -476,6 +476,31 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="Thing"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+            throw new NotSupportedException();
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="Thing"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -526,6 +551,7 @@ namespace CDP4WebServices.API.Services
 
         /// <summary>
         /// Persist the supplied <see cref="Thing"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.

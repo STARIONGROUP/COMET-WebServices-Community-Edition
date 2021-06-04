@@ -216,6 +216,32 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="DerivedUnit"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="DerivedUnit"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="DerivedUnit"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+
+            return this.DerivedUnitDao.RawDelete(transaction, partition, thing.Iid);
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="DerivedUnit"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -279,6 +305,7 @@ namespace CDP4WebServices.API.Services
 
         /// <summary>
         /// Persist the supplied <see cref="DerivedUnit"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -300,11 +327,6 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
-            {
-                throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
-            }
-
             var derivedUnit = thing as DerivedUnit;
             var createSuccesful = this.DerivedUnitDao.Upsert(transaction, partition, derivedUnit, container);
             return createSuccesful && this.UpsertContainment(transaction, partition, derivedUnit);
@@ -463,6 +485,7 @@ namespace CDP4WebServices.API.Services
                 
         /// <summary>
         /// Persist the <see cref="DerivedUnit"/> containment tree to the ORM layer. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
