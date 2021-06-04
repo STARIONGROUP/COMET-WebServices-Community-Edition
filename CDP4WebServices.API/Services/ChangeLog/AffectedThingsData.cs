@@ -39,18 +39,18 @@ namespace CDP4WebServices.API.Services.ChangeLog
         /// A <see cref="HashSet{T}"/> of type <see cref="Guid"/> that contains <see cref="Thing.Iid"/>s from items that need to be added
         /// to a the <see cref="LogEntryChangelogItem.AffectedReferenceIid"/> and <see cref="ModelLogEntry.AffectedItemIid"/> properties.
         /// </summary>
-        public HashSet<Guid> AffectedItemIds { get; } = new ();
+        public HashSet<Guid> AffectedItemIds { get; } = new HashSet<Guid>();
 
         /// <summary>
         /// A <see cref="HashSet{T}"/> of type <see cref="Guid"/> that contains <see cref="Thing.Iid"/>s from items that need to be added
         /// to a the <see cref="LogEntryChangelogItem.AffectedReferenceIid"/> and <see cref="ModelLogEntry.AffectedDomainIid"/> properties.
         /// </summary>
-        public HashSet<Guid> AffectedDomainIds { get; } = new ();
+        public HashSet<Guid> AffectedDomainIds { get; } = new HashSet<Guid>();
 
         /// <summary>
         /// A <see cref="List{T}"/> of type <see cref="string"/> that holds extra <see cref="LogEntryChangelogItem.ChangeDescription"/> data.
         /// </summary>
-        public List<string> ExtraChangeDescriptions { get; } = new ();
+        public List<string> ExtraChangeDescriptions { get; } = new List<string>();
 
         /// <summary>
         /// Add data from another <see cref="AffectedThingsData"/> to this <see cref="AffectedThingsData"/>
