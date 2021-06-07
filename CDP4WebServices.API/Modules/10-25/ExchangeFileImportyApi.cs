@@ -390,12 +390,9 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                // Create a jsonb for each entry in the database
-                this.CreateRevisionHistoryForEachEntry(EngineeringModelSetupSideEffect.FirstRevision);
-
+                Guid actorId = Guid.Empty;
                 // database was succesfully seeded
-                this.DataStoreController
-                    .CloneDataStore(); // create a clone of the data store for future restore support
+                this.DataStoreController.CloneDataStore(); // create a clone of the data store for future restore support
 
                 // reset the credential cache as the underlying datastore was reset
                 this.WebServiceAuthentication.ResetCredentialCache();
@@ -508,6 +505,8 @@ namespace CDP4WebServices.API.Modules
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
                 }
 
+                var engineeringModelSetups = items.OfType<EngineeringModelSetup>().ToList();
+
                 if (result)
                 {
                     this.RequestUtils.QueryParameters = new QueryParameters();
@@ -527,11 +526,7 @@ namespace CDP4WebServices.API.Modules
                     // Add missing Person permissions
                     this.CreateMissingPersonPermissions(transaction);
 
-                    var engineeringModelSetups =
-                        items.OfType<EngineeringModelSetup>()
-                            .ToList();
-                    var engineeringModelService =
-                        this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+                    var engineeringModelService = this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
@@ -580,27 +575,28 @@ namespace CDP4WebServices.API.Modules
                             maxIterationNumber);
 
                         var iterationInsertResult = true;
-                        foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
+                        // Import only first iteration of the model
+                        var iterationSetup = iterationSetups.OrderBy(x => x.IterationNumber).FirstOrDefault();
+
+                        this.RequestUtils.Cache.Clear();
+                        var iterationItems = this.ExchangeFileProcessor
+                            .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
+
+                        this.RequestUtils.Cache = new List<Thing>(iterationItems);
+
+                        // should return one iteration
+                        // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
+                        var iteration =
+                            iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
+
+                        if (iteration == null || !iterationService.CreateConcept(
+                                transaction,
+                                dataPartition,
+                                iteration,
+                                engineeringModel))
                         {
-                            this.RequestUtils.Cache.Clear();
-                            var iterationItems = this.ExchangeFileProcessor
-                                .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
-
-                            this.RequestUtils.Cache = new List<Thing>(iterationItems);
-
-                            // should return one iteration
-                            // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
-                            var iteration =
-                                iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
-                            if (iteration == null || !iterationService.CreateConcept(
-                                    transaction,
-                                    dataPartition,
-                                    iteration,
-                                    engineeringModel))
-                            {
-                                iterationInsertResult = false;
-                                break;
-                            }
+                            iterationInsertResult = false;
+                            break;
                         }
 
                         if (!iterationInsertResult)
@@ -617,6 +613,16 @@ namespace CDP4WebServices.API.Modules
                 transaction.Commit();
                 sw.Stop();
                 Logger.Info("Finished seeding the data store in {0} [ms]", sw.ElapsedMilliseconds);
+
+                Guid actorId = Guid.Empty;
+
+                this.CreateRevisionHistoryForSiteDirectory(ref actorId);
+
+                foreach (var engineeringModelSetup in engineeringModelSetups)
+                {
+                    // Create a jsonb for each entry in the database
+                    this.CreateRevisionHistoryForEngineeringModel(actorId, EngineeringModelSetupSideEffect.FirstRevision, engineeringModelSetup.EngineeringModelIid);
+                }
 
                 return result;
             }
@@ -663,7 +669,6 @@ namespace CDP4WebServices.API.Modules
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
             var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
-            var createRevisionRecordsBeforeLastCommit = true;
 
             try
             {
@@ -691,7 +696,7 @@ namespace CDP4WebServices.API.Modules
                 command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                this.TransactionManager.SetAuditLoggingState(transaction, false);
+                this.TransactionManager.SetAuditLoggingState(transaction, true);
 
                 // get sitedirectory data
                 var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(fileName, password).ToList();
@@ -768,10 +773,12 @@ namespace CDP4WebServices.API.Modules
                     
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
                     var iterationSetupService = this.ServiceProvider.MapToPersitableService<IterationSetupService>("IterationSetup");
+                    var createRevisionForSiteDirectory = false;
+                    Guid actorId = Guid.Empty;
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
-                        createRevisionRecordsBeforeLastCommit = true;
+                        revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
 
                         // cleanup before handling TopContainer
                         this.RequestUtils.Cache.Clear();
@@ -790,6 +797,9 @@ namespace CDP4WebServices.API.Modules
                         }
 
                         var dataPartition = CDP4Orm.Dao.Utils.GetEngineeringModelSchemaName(engineeringModel.Iid);
+
+                        var iterationPartition = CDP4Orm.Dao.Utils.GetEngineeringModelIterationSchemaName(engineeringModel.Iid);
+
                         var siteDirectoryPartition = CDP4Orm.Dao.Utils.SiteDirectoryPartition;
                         
                         this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
@@ -820,6 +830,7 @@ namespace CDP4WebServices.API.Modules
                             maxIterationNumber);
 
                         var iterationInsertResult = true;
+                        List<Thing> previousIterationItems = null;
 
                         foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
                         {
@@ -858,8 +869,15 @@ namespace CDP4WebServices.API.Modules
 
                                     transaction.Commit();
 
+                                    if (!createRevisionForSiteDirectory)
+                                    {
+                                        // Create revision history only once
+                                        this.CreateRevisionHistoryForSiteDirectory(ref actorId);
+                                        createRevisionForSiteDirectory = true;
+                                    }
+
                                     // Create a jsonb for each entry in the database
-                                    this.CreateRevisionHistoryForEachEntry(revisionNumber);
+                                    this.CreateRevisionHistoryForEngineeringModel(actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
 
                                     // use new transaction to for inserting the data
                                     transaction = this.TransactionManager.SetupTransaction(ref connection, null);
@@ -870,14 +888,29 @@ namespace CDP4WebServices.API.Modules
                                     constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
 
                                     // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                                    this.TransactionManager.SetAuditLoggingState(transaction, false);
+                                    this.TransactionManager.SetAuditLoggingState(transaction, true);
 
                                     // revision number goes up for the next Iteration
                                     revisionNumber += 1;
-
-                                    createRevisionRecordsBeforeLastCommit = false;
                                 }
                             }
+
+                            if (previousIterationItems != null)
+                            {
+                                // Compute differences between iterations
+                                var thingsToBeDeleted = previousIterationItems.
+                                    Where(thing => thing.ClassKind != ClassKind.Iteration && 
+                                    !iterationItems.Select(id => id.Iid).Contains(thing.Iid)).ToList();
+
+                                // Remove differences between iterations
+                                foreach (var thing in thingsToBeDeleted)
+                                {
+                                    var service = this.ServiceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
+                                    service.RawDeleteConcept(transaction, iterationPartition, thing);
+                                }
+                            }
+
+                            previousIterationItems = iterationItems;
                         }
 
                         if (!iterationInsertResult)
@@ -893,12 +926,6 @@ namespace CDP4WebServices.API.Modules
 
                 transaction.Commit();
 
-                if (createRevisionRecordsBeforeLastCommit)
-                {
-                    // Create a jsonb for each entry in the database
-                    this.CreateRevisionHistoryForEachEntry(revisionNumber);
-                }
-                
                 sw.Stop();
                 Logger.Info("Finished importing the data store in {0} [ms]", sw.ElapsedMilliseconds);
 
@@ -1080,12 +1107,12 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Create revision history for each entry in the database.
+        /// Create revision history for SiteDirectory and retrieve first person Id
         /// </summary>
-        /// <param name="revisionNumber">
-        /// The revision number we want to create revision records for
+        /// <param name="personId">
+        /// First person Id <see cref="Person" />
         /// </param>
-        private void CreateRevisionHistoryForEachEntry(int revisionNumber)
+        private void CreateRevisionHistoryForSiteDirectory(ref Guid personId)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -1099,43 +1126,59 @@ namespace CDP4WebServices.API.Modules
                 this.TransactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
-                var actor = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
-                var actorId = actor != null ? actor.Iid : Guid.Empty;
+                var person = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
+                personId = person != null ? person.Iid : Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, actorId, revisionNumber);
+                this.RevisionService.SaveRevisions(transaction, TopContainer, personId, EngineeringModelSetupSideEffect.FirstRevision);
 
-                var siteDirectory = this.SiteDirectoryService.Get(
-                    transaction,
-                    TopContainer,
-                    null,
-                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList();
+                transaction.Commit();
+            }
+            catch (NpgsqlException ex)
+            {
+                transaction?.Rollback();
+                Logger.Error(ex, "Error occured during revision history creation");
+            }
+            catch (Exception ex)
+            {
+                transaction?.Rollback();
+                Logger.Error(ex, "Error occured during revision history creation");
+            }
+            finally
+            {
+                transaction?.Dispose();
+                connection?.Dispose();
+            }
+        }
 
-                var engineeringModelSetups = this.EngineeringModelSetupService.GetShallow(
-                        transaction,
-                        TopContainer,
-                        siteDirectory[0].Model,
-                        new RequestSecurityContext { ContainerReadAllowed = true }).OfType<EngineeringModelSetup>()
-                    .ToList();
+        /// <summary>
+        /// Create revision history for each entry in the database.
+        /// </summary>
+        /// <param name="revisionNumber">
+        /// The revision number we want to create revision records for
+        /// </param>
+        /// <param name="personId">
+        /// First person Id <see cref="Person">
+        /// </param>
+        private void CreateRevisionHistoryForEngineeringModel(Guid personId, int revisionNumber, Guid engineeringModelIid)
+        {
+            NpgsqlConnection connection = null;
+            NpgsqlTransaction transaction = null;
+
+            this.RequestUtils.QueryParameters = new QueryParameters();
+
+            try
+            {
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                this.TransactionManager.SetFullAccessState(true);
+
+                var partition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
+
+                // Save revision history for EngineeringModel's entries
+                this.RevisionService.SaveRevisions(transaction, partition, personId, revisionNumber);
 
                 // commit revision history
                 transaction.Commit();
-
-                // Get all EngineeringModelSetups and create a revision history for each EngineeringModel
-                foreach (var engineeringModelSetup in engineeringModelSetups)
-                {
-                    transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                    this.TransactionManager.SetFullAccessState(true);
-
-                    var partition =
-                        this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
-
-                    // Save revision history for EngineeringModel's entries
-                    this.RevisionService.SaveRevisions(transaction, partition, actorId, revisionNumber);
-
-                    // commit revision history
-                    transaction.Commit();
-                }
             }
             catch (NpgsqlException ex)
             {
