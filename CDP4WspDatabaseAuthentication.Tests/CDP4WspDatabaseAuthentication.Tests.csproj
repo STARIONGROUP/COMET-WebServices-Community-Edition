@@ -7,7 +7,7 @@
     <Description>CDP4 Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
-    <Configurations>Debug;Release;Test</Configurations>
+    <Configurations>Debug;Release</Configurations>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

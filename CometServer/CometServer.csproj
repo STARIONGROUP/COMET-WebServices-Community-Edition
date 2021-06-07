@@ -8,7 +8,8 @@
     <Description>COMET Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Alex, Alexander</Authors>
-    <Configurations>Debug;Release;Test</Configurations>
+    <Configurations>Debug;Release</Configurations>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -33,19 +34,30 @@
     <PackageReference Include="System.Resources.Extensions" Version="5.0.0" />
     <PackageReference Include="MailKit" Version="2.11.1" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <EmbeddedResource Include="Resources\ascii-art.txt" />
     <EmbeddedResource Include="Resources\cdplogo_48x48.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="export\" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Update="Properties\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -53,22 +65,14 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
   </ItemGroup>
-  
+
   <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="export\" />
+    <None Update="NLog.dll.nlog">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <Target Name="PostcompileScript" AfterTargets="Build">
-
-    <!-- Copy nlog config -->
-    <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
 
     <!-- Copy Database Authentication plugin -->
     <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
@@ -79,5 +83,5 @@
     <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
 
   </Target>
-   
+
 </Project>

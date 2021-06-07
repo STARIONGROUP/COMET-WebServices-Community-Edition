@@ -8,7 +8,8 @@
     <Description>CDP4 Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
-    <Configurations>Debug;Release;Test</Configurations>
+    <Configurations>Debug;Release</Configurations>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -57,7 +58,7 @@
     <PackageReference Include="CDP4JsonSerializer-CE" Version="7.3.0" />
     <PackageReference Include="Npgsql" Version="5.0.4" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
   </ItemGroup>

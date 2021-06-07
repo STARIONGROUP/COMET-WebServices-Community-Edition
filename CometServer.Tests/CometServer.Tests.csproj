@@ -7,7 +7,7 @@
     <Description>Unit tests Library for the Comet Server</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Alex, Alexander</Authors>
-    <Configurations>Debug;Release;Test</Configurations>
+    <Configurations>Debug;Release</Configurations>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CDP4WebServices.API\CometServer.csproj" />
+    <ProjectReference Include="..\CometServer\CometServer.csproj" />
   </ItemGroup>
   
   <ItemGroup>
