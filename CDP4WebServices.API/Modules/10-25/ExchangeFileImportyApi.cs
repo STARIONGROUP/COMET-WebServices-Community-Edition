@@ -620,7 +620,7 @@ namespace CDP4WebServices.API.Modules
 
                 foreach (var engineeringModelSetup in engineeringModelSetups)
                 {
-                    // Create a jsonb for each entry in the database
+                    // Create revision history for each EngineeringModel
                     this.CreateRevisionHistoryForEngineeringModel(actorId, EngineeringModelSetupSideEffect.FirstRevision, engineeringModelSetup.EngineeringModelIid);
                 }
 
@@ -871,12 +871,12 @@ namespace CDP4WebServices.API.Modules
 
                                     if (!createRevisionForSiteDirectory)
                                     {
-                                        // Create revision history only once
+                                        // Create revision history only once for SiteDirectory
                                         this.CreateRevisionHistoryForSiteDirectory(ref actorId);
                                         createRevisionForSiteDirectory = true;
                                     }
 
-                                    // Create a jsonb for each entry in the database
+                                    // Create revision history for each EngineeringModel
                                     this.CreateRevisionHistoryForEngineeringModel(actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
 
                                     // use new transaction to for inserting the data
@@ -1152,7 +1152,7 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Create revision history for each entry in the database.
+        /// Create revision history for each EngineeringModel in the database.
         /// </summary>
         /// <param name="revisionNumber">
         /// The revision number we want to create revision records for
