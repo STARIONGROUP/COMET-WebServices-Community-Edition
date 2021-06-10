@@ -265,7 +265,7 @@ namespace CDP4WebServices.API.Modules
         /// </returns>
         internal async Task<Response> ImportDataStore()
         {
-            if (!AppConfig.Current.Backtier.IsDbSeedEnabled)
+            if (!AppConfig.Current.Backtier.IsDbImportEnabled)
             {
                 Logger.Info(
                     "Data store seed API invoked but it was disabled from configuration, cancel further processing...");

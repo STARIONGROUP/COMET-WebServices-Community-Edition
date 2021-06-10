@@ -60,6 +60,7 @@ namespace CDP4WebServer
                 Logger.Debug($"Backtier-DatabaseManage: {AppConfig.Current.Backtier.DatabaseManage}");
                 Logger.Debug($"Backtier-StatementTimeout: {AppConfig.Current.Backtier.StatementTimeout}");
                 Logger.Debug($"Backtier-IsDbSeedEnabled: {AppConfig.Current.Backtier.IsDbSeedEnabled}");
+                Logger.Debug($"Backtier-IsDbImportEnabled: {AppConfig.Current.Backtier.IsDbImportEnabled}");
                 Logger.Debug($"Backtier-IsDbRestoreEnabled: {AppConfig.Current.Backtier.IsDbRestoreEnabled}");
 
                 var hostString = $"{AppConfig.Current.Midtier.Protocol}://{AppConfig.Current.Midtier.HostName}:{AppConfig.Current.Midtier.Port}";
