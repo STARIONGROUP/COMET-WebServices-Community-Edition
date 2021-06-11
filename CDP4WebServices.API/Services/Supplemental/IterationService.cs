@@ -11,8 +11,8 @@ namespace CDP4WebServices.API.Services
     using System.Diagnostics;
     using System.Linq;
     using System.Runtime.Remoting;
+    using System.Security;
     using Authorization;
-    using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using Helpers;
     using NLog;

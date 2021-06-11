@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelReferenceDataLibraryService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -261,6 +261,32 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="ModelReferenceDataLibrary"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="ModelReferenceDataLibrary"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="ModelReferenceDataLibrary"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+
+            return this.ModelReferenceDataLibraryDao.RawDelete(transaction, partition, thing.Iid);
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="ModelReferenceDataLibrary"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -320,6 +346,35 @@ namespace CDP4WebServices.API.Services
             var modelReferenceDataLibrary = thing as ModelReferenceDataLibrary;
             var createSuccesful = this.ModelReferenceDataLibraryDao.Write(transaction, partition, modelReferenceDataLibrary, container);
             return createSuccesful && this.CreateContainment(transaction, partition, modelReferenceDataLibrary);
+        }
+
+        /// <summary>
+        /// Persist the supplied <see cref="ModelReferenceDataLibrary"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="ModelReferenceDataLibrary"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="ModelReferenceDataLibrary"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            var modelReferenceDataLibrary = thing as ModelReferenceDataLibrary;
+            var createSuccesful = this.ModelReferenceDataLibraryDao.Upsert(transaction, partition, modelReferenceDataLibrary, container);
+            return createSuccesful && this.UpsertContainment(transaction, partition, modelReferenceDataLibrary);
         }
 
         /// <summary>
@@ -528,6 +583,94 @@ namespace CDP4WebServices.API.Services
             foreach (var unitPrefix in this.ResolveFromRequestCache(modelReferenceDataLibrary.UnitPrefix))
             {
                 results.Add(this.UnitPrefixService.CreateConcept(transaction, partition, unitPrefix, modelReferenceDataLibrary));
+            }
+
+            return results.All(x => x);
+        }
+                
+        /// <summary>
+        /// Persist the <see cref="ModelReferenceDataLibrary"/> containment tree to the ORM layer. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="modelReferenceDataLibrary">
+        /// The <see cref="ModelReferenceDataLibrary"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, ModelReferenceDataLibrary modelReferenceDataLibrary)
+        {
+            var results = new List<bool>();
+
+            foreach (var alias in this.ResolveFromRequestCache(modelReferenceDataLibrary.Alias))
+            {
+                results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, modelReferenceDataLibrary));
+            }
+
+            foreach (var constant in this.ResolveFromRequestCache(modelReferenceDataLibrary.Constant))
+            {
+                results.Add(this.ConstantService.UpsertConcept(transaction, partition, constant, modelReferenceDataLibrary));
+            }
+
+            foreach (var definedCategory in this.ResolveFromRequestCache(modelReferenceDataLibrary.DefinedCategory))
+            {
+                results.Add(this.DefinedCategoryService.UpsertConcept(transaction, partition, definedCategory, modelReferenceDataLibrary));
+            }
+
+            foreach (var definition in this.ResolveFromRequestCache(modelReferenceDataLibrary.Definition))
+            {
+                results.Add(this.DefinitionService.UpsertConcept(transaction, partition, definition, modelReferenceDataLibrary));
+            }
+
+            foreach (var fileType in this.ResolveFromRequestCache(modelReferenceDataLibrary.FileType))
+            {
+                results.Add(this.FileTypeService.UpsertConcept(transaction, partition, fileType, modelReferenceDataLibrary));
+            }
+
+            foreach (var glossary in this.ResolveFromRequestCache(modelReferenceDataLibrary.Glossary))
+            {
+                results.Add(this.GlossaryService.UpsertConcept(transaction, partition, glossary, modelReferenceDataLibrary));
+            }
+
+            foreach (var hyperLink in this.ResolveFromRequestCache(modelReferenceDataLibrary.HyperLink))
+            {
+                results.Add(this.HyperLinkService.UpsertConcept(transaction, partition, hyperLink, modelReferenceDataLibrary));
+            }
+
+            foreach (var parameterType in this.ResolveFromRequestCache(modelReferenceDataLibrary.ParameterType))
+            {
+                results.Add(this.ParameterTypeService.UpsertConcept(transaction, partition, parameterType, modelReferenceDataLibrary));
+            }
+
+            foreach (var referenceSource in this.ResolveFromRequestCache(modelReferenceDataLibrary.ReferenceSource))
+            {
+                results.Add(this.ReferenceSourceService.UpsertConcept(transaction, partition, referenceSource, modelReferenceDataLibrary));
+            }
+
+            foreach (var rule in this.ResolveFromRequestCache(modelReferenceDataLibrary.Rule))
+            {
+                results.Add(this.RuleService.UpsertConcept(transaction, partition, rule, modelReferenceDataLibrary));
+            }
+
+            foreach (var scale in this.ResolveFromRequestCache(modelReferenceDataLibrary.Scale))
+            {
+                results.Add(this.ScaleService.UpsertConcept(transaction, partition, scale, modelReferenceDataLibrary));
+            }
+
+            foreach (var unit in this.ResolveFromRequestCache(modelReferenceDataLibrary.Unit))
+            {
+                results.Add(this.UnitService.UpsertConcept(transaction, partition, unit, modelReferenceDataLibrary));
+            }
+
+            foreach (var unitPrefix in this.ResolveFromRequestCache(modelReferenceDataLibrary.UnitPrefix))
+            {
+                results.Add(this.UnitPrefixService.UpsertConcept(transaction, partition, unitPrefix, modelReferenceDataLibrary));
             }
 
             return results.All(x => x);

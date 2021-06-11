@@ -27,6 +27,7 @@ namespace CDP4WebServices.API.Configuration
             this.StatementTimeout = 120;
             this.LogSqlCommands = false;
             this.IsDbSeedEnabled = false;
+            this.IsDbImportEnabled = false;
             this.IsDbRestoreEnabled = false;
         }
 
@@ -82,6 +83,11 @@ namespace CDP4WebServices.API.Configuration
         /// Gets or sets a value indicating whether database seed is enabled.
         /// </summary>
         public bool IsDbSeedEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether database import is enabled.
+        /// </summary>
+        public bool IsDbImportEnabled { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether database restore is enabled.
