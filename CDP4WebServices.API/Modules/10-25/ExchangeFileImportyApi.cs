@@ -668,7 +668,6 @@ namespace CDP4WebServices.API.Modules
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
-            var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
 
             try
             {
@@ -729,7 +728,7 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
+                this.MigrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
 
@@ -772,13 +771,12 @@ namespace CDP4WebServices.API.Modules
                         this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
                     
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
-                    var iterationSetupService = this.ServiceProvider.MapToPersitableService<IterationSetupService>("IterationSetup");
-                    var createRevisionForSiteDirectory = false;
-                    Guid actorId = Guid.Empty;
+                    var createRevisionForSiteDirectory = true;
+                    var actorId = Guid.Empty;
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
-                        revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
+                        var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
 
                         // cleanup before handling TopContainer
                         this.RequestUtils.Cache.Clear();
@@ -800,8 +798,6 @@ namespace CDP4WebServices.API.Modules
 
                         var iterationPartition = CDP4Orm.Dao.Utils.GetEngineeringModelIterationSchemaName(engineeringModel.Iid);
 
-                        var siteDirectoryPartition = CDP4Orm.Dao.Utils.SiteDirectoryPartition;
-                        
                         this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
 
                         if (!engineeringModelService.Insert(transaction, dataPartition, engineeringModel))
@@ -853,61 +849,54 @@ namespace CDP4WebServices.API.Modules
                                 break;
                             }
 
-                            if (iterationSetupService.UpsertConcept(
+                            if (iterationService.UpsertConcept(
                                 transaction,
-                                siteDirectoryPartition,
-                                iterationSetup, 
-                                engineeringModelSetup))
+                                dataPartition,
+                                iteration,
+                                engineeringModel))
                             {
-                                if (iterationService.UpsertConcept(
-                                    transaction,
-                                    dataPartition,
-                                    iteration,
-                                    engineeringModel))
+                                iterationInsertResult = true;
+
+                                if (previousIterationItems != null)
                                 {
-                                    iterationInsertResult = true;
+                                    // Compute differences between iterations
+                                    var thingsToBeDeleted = previousIterationItems
+                                        .Where(thing => thing.ClassKind != ClassKind.Iteration && 
+                                                        !iterationItems.Select(id => id.Iid).Contains(thing.Iid)).ToList();
 
-                                    transaction.Commit();
-
-                                    if (!createRevisionForSiteDirectory)
+                                    // Remove differences between iterations
+                                    foreach (var thing in thingsToBeDeleted)
                                     {
-                                        // Create revision history only once for SiteDirectory
-                                        this.CreateRevisionHistoryForSiteDirectory(ref actorId);
-                                        createRevisionForSiteDirectory = true;
+                                        var service = this.ServiceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
+                                        service.RawDeleteConcept(transaction, iterationPartition, thing);
                                     }
-
-                                    // Create revision history for each EngineeringModel
-                                    this.CreateRevisionHistoryForEngineeringModel(actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
-
-                                    // use new transaction to for inserting the data
-                                    transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                                    this.TransactionManager.SetFullAccessState(true);
-
-                                    // important, make sure to defer the constraints
-                                    var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                                    constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
-
-                                    // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                                    this.TransactionManager.SetAuditLoggingState(transaction, true);
-
-                                    // revision number goes up for the next Iteration
-                                    revisionNumber += 1;
                                 }
-                            }
 
-                            if (previousIterationItems != null)
-                            {
-                                // Compute differences between iterations
-                                var thingsToBeDeleted = previousIterationItems.
-                                    Where(thing => thing.ClassKind != ClassKind.Iteration && 
-                                    !iterationItems.Select(id => id.Iid).Contains(thing.Iid)).ToList();
+                                transaction.Commit();
 
-                                // Remove differences between iterations
-                                foreach (var thing in thingsToBeDeleted)
+                                if (createRevisionForSiteDirectory)
                                 {
-                                    var service = this.ServiceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
-                                    service.RawDeleteConcept(transaction, iterationPartition, thing);
+                                    // Create revision history only once for SiteDirectory
+                                    this.CreateRevisionHistoryForSiteDirectory(ref actorId);
+                                    createRevisionForSiteDirectory = false;
                                 }
+
+                                // Create revision history for each EngineeringModel
+                                this.CreateRevisionHistoryForEngineeringModel(actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
+
+                                // use new transaction to for inserting the data
+                                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                                this.TransactionManager.SetFullAccessState(true);
+
+                                // important, make sure to defer the constraints
+                                var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                                constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+
+                                // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                                this.TransactionManager.SetAuditLoggingState(transaction, true);
+
+                                // revision number goes up for the next Iteration
+                                revisionNumber += 1;
                             }
 
                             previousIterationItems = iterationItems;
