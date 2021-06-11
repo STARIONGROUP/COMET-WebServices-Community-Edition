@@ -16,9 +16,9 @@
     "DatabaseManage": "cdp4manage",
     "StatementTimeout": 180,
     "LogSqlCommands": false,
-    "IsDbImportEnabled": true,
+    "IsDbImportEnabled": false,
     "IsDbSeedEnabled": false,
-    "IsDbRestoreEnabled": true
+    "IsDbRestoreEnabled": false
   },
   "EmailService": {
     "Sender": "CDP4",
