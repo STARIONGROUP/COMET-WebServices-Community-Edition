@@ -638,7 +638,7 @@ namespace CDP4WebServices.API.Modules
                 // clean log (will happen at end of request as well due to IOC lifetime
                 this.TransactionManager.CommandLogger.ClearLog();
 
-                transaction.Dispose();
+                transaction?.Dispose();
 
                 if (connection != null)
                 {
@@ -931,7 +931,7 @@ namespace CDP4WebServices.API.Modules
                 // clean log (will happen at end of request as well due to IOC lifetime
                 this.TransactionManager.CommandLogger.ClearLog();
 
-                transaction.Dispose();
+                transaction?.Dispose();
 
                 if (connection != null)
                 {
