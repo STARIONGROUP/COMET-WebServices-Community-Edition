@@ -434,6 +434,7 @@ namespace CDP4WebServices.API.Modules
             try
             {
                 var sw = new Stopwatch();
+
                 if (seed)
                 {
                     // clear database schemas if seeding
@@ -471,6 +472,7 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
+
                 if (topContainer == null)
                 {
                     Logger.Error("No Topcontainer item encountered");
@@ -494,10 +496,12 @@ namespace CDP4WebServices.API.Modules
                 this.MigrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
+
                 if (topContainer.GetType().Name == "SiteDirectory")
                 {
                     // make sure single iterationsetups are set to unfrozen before persitence
                     this.FixSingleIterationSetups(items);
+
                     var siteDirectoryService =
                         this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
@@ -516,6 +520,7 @@ namespace CDP4WebServices.API.Modules
                     foreach (var person in items.OfType<Person>())
                     {
                         var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
+
                         if (credential != null)
                         {
                             this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
@@ -539,6 +544,7 @@ namespace CDP4WebServices.API.Modules
 
                         // should return one engineeringmodel topcontainer
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
+
                         if (engineeringModel == null)
                         {
                             result = false;
@@ -561,8 +567,8 @@ namespace CDP4WebServices.API.Modules
                         this.PersistFileBinaryData(fileName, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
-                            .Where(
-                                x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
+                            .Where(x => engineeringModelSetup.IterationSetup.Contains(x.Iid))
+                            .ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
                         var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
@@ -573,34 +579,25 @@ namespace CDP4WebServices.API.Modules
                             dataPartition,
                             maxIterationNumber);
 
-                        var iterationInsertResult = true;
                         // Import only first iteration of the model
                         var iterationSetup = iterationSetups.OrderBy(x => x.IterationNumber).FirstOrDefault();
 
                         this.RequestUtils.Cache.Clear();
+                        
                         var iterationItems = this.ExchangeFileProcessor
                             .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
 
                         this.RequestUtils.Cache = new List<Thing>(iterationItems);
 
                         // should return one iteration
-                        // for the every model EngineeringModel schema ends with the same ID as Iteration schema
-                        var iteration =
-                            iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
-
-                        if (iteration == null || !iterationService.CreateConcept(
+                        // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
+                        if (!(iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) is Iteration iteration) 
+                            || !iterationService.CreateConcept(
                                 transaction,
                                 dataPartition,
                                 iteration,
                                 engineeringModel))
                         {
-                            iterationInsertResult = false;
-                            break;
-                        }
-
-                        if (!iterationInsertResult)
-                        {
-                            result = false;
                             break;
                         }
 
@@ -736,8 +733,7 @@ namespace CDP4WebServices.API.Modules
                     // make sure single iterationsetups are set to unfrozen before persitence
                     this.FixSingleIterationSetups(items);
 
-                    var siteDirectoryService =
-                        this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
+                    var siteDirectoryService = this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
                 }
