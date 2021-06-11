@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ReviewItemDiscrepancyService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -216,6 +216,32 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="ReviewItemDiscrepancy"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="ReviewItemDiscrepancy"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="ReviewItemDiscrepancy"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+
+            return this.ReviewItemDiscrepancyDao.RawDelete(transaction, partition, thing.Iid);
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="ReviewItemDiscrepancy"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -275,6 +301,35 @@ namespace CDP4WebServices.API.Services
             var reviewItemDiscrepancy = thing as ReviewItemDiscrepancy;
             var createSuccesful = this.ReviewItemDiscrepancyDao.Write(transaction, partition, reviewItemDiscrepancy, container);
             return createSuccesful && this.CreateContainment(transaction, partition, reviewItemDiscrepancy);
+        }
+
+        /// <summary>
+        /// Persist the supplied <see cref="ReviewItemDiscrepancy"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="ReviewItemDiscrepancy"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="ReviewItemDiscrepancy"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            var reviewItemDiscrepancy = thing as ReviewItemDiscrepancy;
+            var createSuccesful = this.ReviewItemDiscrepancyDao.Upsert(transaction, partition, reviewItemDiscrepancy, container);
+            return createSuccesful && this.UpsertContainment(transaction, partition, reviewItemDiscrepancy);
         }
 
         /// <summary>
@@ -423,6 +478,49 @@ namespace CDP4WebServices.API.Services
             foreach (var solution in this.ResolveFromRequestCache(reviewItemDiscrepancy.Solution))
             {
                 results.Add(this.SolutionService.CreateConcept(transaction, partition, solution, reviewItemDiscrepancy));
+            }
+
+            return results.All(x => x);
+        }
+                
+        /// <summary>
+        /// Persist the <see cref="ReviewItemDiscrepancy"/> containment tree to the ORM layer. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="reviewItemDiscrepancy">
+        /// The <see cref="ReviewItemDiscrepancy"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, ReviewItemDiscrepancy reviewItemDiscrepancy)
+        {
+            var results = new List<bool>();
+
+            foreach (var approvedBy in this.ResolveFromRequestCache(reviewItemDiscrepancy.ApprovedBy))
+            {
+                results.Add(this.ApprovedByService.UpsertConcept(transaction, partition, approvedBy, reviewItemDiscrepancy));
+            }
+
+            foreach (var discussion in this.ResolveFromRequestCache(reviewItemDiscrepancy.Discussion))
+            {
+                results.Add(this.DiscussionService.UpsertConcept(transaction, partition, discussion, reviewItemDiscrepancy));
+            }
+
+            foreach (var relatedThing in this.ResolveFromRequestCache(reviewItemDiscrepancy.RelatedThing))
+            {
+                results.Add(this.RelatedThingService.UpsertConcept(transaction, partition, relatedThing, reviewItemDiscrepancy));
+            }
+
+            foreach (var solution in this.ResolveFromRequestCache(reviewItemDiscrepancy.Solution))
+            {
+                results.Add(this.SolutionService.UpsertConcept(transaction, partition, solution, reviewItemDiscrepancy));
             }
 
             return results.All(x => x);

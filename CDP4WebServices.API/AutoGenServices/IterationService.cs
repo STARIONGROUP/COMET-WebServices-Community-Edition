@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -281,6 +281,32 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
+        /// Delete the supplied <see cref="Iteration"/> instance.
+        /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) from where the requested resource will be removed.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Iteration"/> to delete.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Iteration"/> to be removed.
+        /// </param>
+        /// <returns>
+        /// True if the removal was successful.
+        /// </returns>
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+
+            return this.IterationDao.RawDelete(transaction, partition, thing.Iid);
+        }
+
+        /// <summary>
         /// Update the supplied <see cref="Iteration"/> instance.
         /// </summary>
         /// <param name="transaction">
@@ -340,6 +366,35 @@ namespace CDP4WebServices.API.Services
             var iteration = thing as Iteration;
             var createSuccesful = this.IterationDao.Write(transaction, partition, iteration, container);
             return createSuccesful && this.CreateContainment(transaction, partition, iteration);
+        }
+
+        /// <summary>
+        /// Persist the supplied <see cref="Iteration"/> instance. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Iteration"/> <see cref="Thing"/> to create.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Iteration"/> to be persisted.
+        /// </param>
+        /// <param name="sequence">
+        /// The order sequence used to persist this instance. Default is not used (-1).
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            var iteration = thing as Iteration;
+            var createSuccesful = this.IterationDao.Upsert(transaction, partition, iteration, container);
+            return createSuccesful && this.UpsertContainment(transaction, partition, iteration);
         }
 
         /// <summary>
@@ -568,6 +623,115 @@ namespace CDP4WebServices.API.Services
             foreach (var valueGroup in this.ResolveFromRequestCache(iteration.ValueGroup))
             {
                 results.Add(this.ValueGroupService.CreateConcept(transaction, iterationPartition, valueGroup, iteration));
+            }
+
+            return results.All(x => x);
+        }
+                
+        /// <summary>
+        /// Persist the <see cref="Iteration"/> containment tree to the ORM layer. Update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iteration">
+        /// The <see cref="Iteration"/> instance to persist.
+        /// </param>
+        /// <returns>
+        /// True if the persistence was successful.
+        /// </returns>
+        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, Iteration iteration)
+        {
+            var results = new List<bool>();
+            var iterationPartition = partition.Replace("EngineeringModel", "Iteration");
+
+            foreach (var actualFiniteStateList in this.ResolveFromRequestCache(iteration.ActualFiniteStateList))
+            {
+                results.Add(this.ActualFiniteStateListService.UpsertConcept(transaction, iterationPartition, actualFiniteStateList, iteration));
+            }
+
+            foreach (var diagramCanvas in this.ResolveFromRequestCache(iteration.DiagramCanvas))
+            {
+                results.Add(this.DiagramCanvasService.UpsertConcept(transaction, iterationPartition, diagramCanvas, iteration));
+            }
+
+            foreach (var domainFileStore in this.ResolveFromRequestCache(iteration.DomainFileStore))
+            {
+                results.Add(this.DomainFileStoreService.UpsertConcept(transaction, iterationPartition, domainFileStore, iteration));
+            }
+
+            foreach (var element in this.ResolveFromRequestCache(iteration.Element))
+            {
+                results.Add(this.ElementService.UpsertConcept(transaction, iterationPartition, element, iteration));
+            }
+
+            foreach (var externalIdentifierMap in this.ResolveFromRequestCache(iteration.ExternalIdentifierMap))
+            {
+                results.Add(this.ExternalIdentifierMapService.UpsertConcept(transaction, iterationPartition, externalIdentifierMap, iteration));
+            }
+
+            foreach (var goal in this.ResolveFromRequestCache(iteration.Goal))
+            {
+                results.Add(this.GoalService.UpsertConcept(transaction, iterationPartition, goal, iteration));
+            }
+
+            foreach (var option in this.ResolveFromRequestCache(iteration.Option))
+            {
+                results.Add(this.OptionService.UpsertConcept(transaction, iterationPartition, (Option)option.V, iteration, option.K));
+            }
+
+            foreach (var possibleFiniteStateList in this.ResolveFromRequestCache(iteration.PossibleFiniteStateList))
+            {
+                results.Add(this.PossibleFiniteStateListService.UpsertConcept(transaction, iterationPartition, possibleFiniteStateList, iteration));
+            }
+
+            foreach (var publication in this.ResolveFromRequestCache(iteration.Publication))
+            {
+                results.Add(this.PublicationService.UpsertConcept(transaction, iterationPartition, publication, iteration));
+            }
+
+            foreach (var relationship in this.ResolveFromRequestCache(iteration.Relationship))
+            {
+                results.Add(this.RelationshipService.UpsertConcept(transaction, iterationPartition, relationship, iteration));
+            }
+
+            foreach (var requirementsSpecification in this.ResolveFromRequestCache(iteration.RequirementsSpecification))
+            {
+                results.Add(this.RequirementsSpecificationService.UpsertConcept(transaction, iterationPartition, requirementsSpecification, iteration));
+            }
+
+            foreach (var ruleVerificationList in this.ResolveFromRequestCache(iteration.RuleVerificationList))
+            {
+                results.Add(this.RuleVerificationListService.UpsertConcept(transaction, iterationPartition, ruleVerificationList, iteration));
+            }
+
+            foreach (var sharedDiagramStyle in this.ResolveFromRequestCache(iteration.SharedDiagramStyle))
+            {
+                results.Add(this.SharedDiagramStyleService.UpsertConcept(transaction, iterationPartition, sharedDiagramStyle, iteration));
+            }
+
+            foreach (var stakeholder in this.ResolveFromRequestCache(iteration.Stakeholder))
+            {
+                results.Add(this.StakeholderService.UpsertConcept(transaction, iterationPartition, stakeholder, iteration));
+            }
+
+            foreach (var stakeholderValue in this.ResolveFromRequestCache(iteration.StakeholderValue))
+            {
+                results.Add(this.StakeholderValueService.UpsertConcept(transaction, iterationPartition, stakeholderValue, iteration));
+            }
+
+            foreach (var stakeholderValueMap in this.ResolveFromRequestCache(iteration.StakeholderValueMap))
+            {
+                results.Add(this.StakeholderValueMapService.UpsertConcept(transaction, iterationPartition, stakeholderValueMap, iteration));
+            }
+
+            foreach (var valueGroup in this.ResolveFromRequestCache(iteration.ValueGroup))
+            {
+                results.Add(this.ValueGroupService.UpsertConcept(transaction, iterationPartition, valueGroup, iteration));
             }
 
             return results.All(x => x);

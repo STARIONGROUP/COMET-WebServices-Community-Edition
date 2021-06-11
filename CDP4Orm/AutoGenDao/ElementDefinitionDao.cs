@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementDefinitionDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -237,6 +233,57 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="elementDefinition">
+        /// The elementDefinition DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ElementDefinition elementDefinition, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, elementDefinition, container);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"Container\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :container)");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = elementDefinition.Iid;
+                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET \"Container\"");
+                sqlBuilder.Append(" = :container;");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+            elementDefinition.OrganizationalParticipant.ForEach(x => this.UpsertOrganizationalParticipant(transaction, partition, elementDefinition.Iid, x));
+            elementDefinition.ReferencedElement.ForEach(x => this.UpsertReferencedElement(transaction, partition, elementDefinition.Iid, x));
+
+            return true;
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -321,6 +368,49 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ElementDefinition"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="organizationalParticipant">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertOrganizationalParticipant(NpgsqlTransaction transaction, string partition, Guid iid, Guid organizationalParticipant)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_OrganizationalParticipant\"", partition);
+                sqlBuilder.AppendFormat(" (\"ElementDefinition\", \"OrganizationalParticipant\")");
+                sqlBuilder.Append(" VALUES (:elementDefinition, :organizationalParticipant)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ElementDefinition_OrganizationalParticipant_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ElementDefinition\", \"OrganizationalParticipant\")");
+                sqlBuilder.Append(" = (:elementDefinition, :organizationalParticipant);");
+
+                command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("organizationalParticipant", NpgsqlDbType.Uuid).Value = organizationalParticipant;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -347,6 +437,49 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_ReferencedElement\"", partition);
                 sqlBuilder.AppendFormat(" (\"ElementDefinition\", \"ReferencedElement\")");
                 sqlBuilder.Append(" VALUES (:elementDefinition, :referencedElement);");
+
+                command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("referencedElement", NpgsqlDbType.Uuid).Value = referencedElement;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ElementDefinition"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="referencedElement">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertReferencedElement(NpgsqlTransaction transaction, string partition, Guid iid, Guid referencedElement)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_ReferencedElement\"", partition);
+                sqlBuilder.AppendFormat(" (\"ElementDefinition\", \"ReferencedElement\")");
+                sqlBuilder.Append(" VALUES (:elementDefinition, :referencedElement)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ElementDefinition_ReferencedElement_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ElementDefinition\", \"ReferencedElement\")");
+                sqlBuilder.Append(" = (:elementDefinition, :referencedElement);");
 
                 command.Parameters.Add("elementDefinition", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("referencedElement", NpgsqlDbType.Uuid).Value = referencedElement;
@@ -433,6 +566,31 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
+        }
+
+        /// <summary>
+        /// Delete a database record from the supplied data transfer object.
+        /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ElementDefinition"/> id that is to be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully deleted.
+        /// </returns>
+        public override bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            var result = false;
+
+            result = base.Delete(transaction, partition, iid);
+            return result;
         }
 
         /// <summary>

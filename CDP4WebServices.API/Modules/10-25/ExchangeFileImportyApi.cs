@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileImportyApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2017-2020 RHEA System S.A.
+//   Copyright (c) 2017-2021 RHEA System S.A.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -19,6 +19,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4Common.Helpers;
 
     using CDP4Orm.Dao;
+    using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
 
     using CDP4WebService.Authentication;
@@ -75,6 +76,11 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the revision service.
         /// </summary>
         public IRevisionService RevisionService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the revision dao.
+        /// </summary>
+        public IRevisionDao RevisionDao { get; set; }
 
         /// <summary>
         /// Gets or sets the cache service.
@@ -204,6 +210,9 @@ namespace CDP4WebServices.API.Modules
             // Seed the data store from the provided (uploaded) exchange file
             this.Post["/Data/Exchange", true] = async (x, ct) => await this.SeedDataStore();
 
+            // Import the data store from the provided (uploaded) exchange file
+            this.Post["/Data/Import", true] = async (x, ct) => await this.ImportDataStore();
+
             // Restore the data store to the data snapshot created from the inital seed
             this.Post["/Data/Restore"] = x => this.RestoreDatastore();
         }
@@ -246,6 +255,82 @@ namespace CDP4WebServices.API.Modules
                 this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
                 return errorResponse;
             }
+        }
+
+        /// <summary>
+        /// Asynchronously import the data store.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="Task{Response}"/>.
+        /// </returns>
+        internal async Task<Response> ImportDataStore()
+        {
+            if (!AppConfig.Current.Backtier.IsDbImportEnabled)
+            {
+                Logger.Info(
+                    "Data store import API invoked but it was disabled from configuration, cancel further processing...");
+
+                var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
+                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
+                return notAcceptableResponse;
+            }
+
+            Logger.Info("Starting data store importing");
+
+            var exchangeFileRequest = this.Bind<ExchangeFileUploadRequest>();
+
+            // make sure there is only one file
+            if (exchangeFileRequest.File == null)
+            {
+                var badRequestResponse = new Response().WithStatusCode(HttpStatusCode.BadRequest);
+                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse);
+                return badRequestResponse;
+            }
+
+            // stream the file to disk
+            var filePath = await this.LocalFileStorage.StreamFileToDisk(exchangeFileRequest.File.Value);
+
+            // drop existing data stores
+            this.DropDataStoreAndPrepareNew();
+
+            // handle exchange processing
+            if (!this.UpsertModelData(filePath, exchangeFileRequest.Password))
+            {
+                var errorResponse = new NotAcceptableResponse();
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                return errorResponse;
+            }
+
+            // Remove the exchange file after processing (saving space)
+            try
+            {
+                this.LocalFileStorage.RemoveFileFromDisk(filePath);
+            }
+            catch (Exception ex)
+            {
+                // swallow exception but log it
+                Logger.Error(ex, "Unable to remove file");
+            }
+
+            try
+            {
+                // reset the credential cache as the underlying datastore was reset
+                this.WebServiceAuthentication.ResetCredentialCache();
+
+                var response = new Response().WithStatusCode(HttpStatusCode.OK);
+                this.HeaderInfoProvider.RegisterResponseHeaders(response);
+
+                Logger.Info("Finished the data store import");
+                return response;
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex, "Unable to import the datastore");
+                var errorResponse = new Response().WithStatusCode(HttpStatusCode.InternalServerError);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                return errorResponse;
+            }
+
         }
 
         /// <summary>
@@ -305,12 +390,8 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                // Create a jsonb for each entry in the database
-                this.CreateRevisionHistoryForEachEntry();
-
                 // database was succesfully seeded
-                this.DataStoreController
-                    .CloneDataStore(); // create a clone of the data store for future restore support
+                this.DataStoreController.CloneDataStore(); // create a clone of the data store for future restore support
 
                 // reset the credential cache as the underlying datastore was reset
                 this.WebServiceAuthentication.ResetCredentialCache();
@@ -353,6 +434,7 @@ namespace CDP4WebServices.API.Modules
             try
             {
                 var sw = new Stopwatch();
+
                 if (seed)
                 {
                     // clear database schemas if seeding
@@ -390,6 +472,7 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
+
                 if (topContainer == null)
                 {
                     Logger.Error("No Topcontainer item encountered");
@@ -410,18 +493,22 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
+                this.MigrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
+
                 if (topContainer.GetType().Name == "SiteDirectory")
                 {
                     // make sure single iterationsetups are set to unfrozen before persitence
                     this.FixSingleIterationSetups(items);
+
                     var siteDirectoryService =
                         this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
                 }
+
+                var engineeringModelSetups = items.OfType<EngineeringModelSetup>().ToList();
 
                 if (result)
                 {
@@ -433,6 +520,7 @@ namespace CDP4WebServices.API.Modules
                     foreach (var person in items.OfType<Person>())
                     {
                         var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
+
                         if (credential != null)
                         {
                             this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
@@ -442,11 +530,7 @@ namespace CDP4WebServices.API.Modules
                     // Add missing Person permissions
                     this.CreateMissingPersonPermissions(transaction);
 
-                    var engineeringModelSetups =
-                        items.OfType<EngineeringModelSetup>()
-                            .ToList();
-                    var engineeringModelService =
-                        this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+                    var engineeringModelService = this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
@@ -460,6 +544,7 @@ namespace CDP4WebServices.API.Modules
 
                         // should return one engineeringmodel topcontainer
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
+
                         if (engineeringModel == null)
                         {
                             result = false;
@@ -482,11 +567,252 @@ namespace CDP4WebServices.API.Modules
                         this.PersistFileBinaryData(fileName, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
+                            .Where(x => engineeringModelSetup.IterationSetup.Contains(x.Iid))
+                            .ToList();
+
+                        // get current maximum iterationNumber and increase by one for the next value
+                        var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
+
+                        // reset the start number of iterationNumber sequence
+                        this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
+                            transaction,
+                            dataPartition,
+                            maxIterationNumber);
+
+                        // Import only first iteration of the model
+                        var iterationSetup = iterationSetups.OrderBy(x => x.IterationNumber).FirstOrDefault();
+
+                        this.RequestUtils.Cache.Clear();
+                        
+                        var iterationItems = this.ExchangeFileProcessor
+                            .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
+
+                        this.RequestUtils.Cache = new List<Thing>(iterationItems);
+
+                        // should return one iteration
+                        // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
+                        if (!(iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) is Iteration iteration) 
+                            || !iterationService.CreateConcept(
+                                transaction,
+                                dataPartition,
+                                iteration,
+                                engineeringModel))
+                        {
+                            break;
+                        }
+
+                        // extract any referenced file data to disk if not already present
+                        this.PersistFileBinaryData(fileName, password);
+                    }
+                }
+
+                transaction.Commit();
+                sw.Stop();
+                Logger.Info("Finished seeding the data store in {0} [ms]", sw.ElapsedMilliseconds);
+
+                var actorId = Guid.Empty;
+
+                this.CreateRevisionHistoryForSiteDirectory(ref actorId);
+
+                foreach (var engineeringModelSetup in engineeringModelSetups)
+                {
+                    // Create revision history for each EngineeringModel
+                    this.CreateRevisionHistoryForEngineeringModel(actorId, EngineeringModelSetupSideEffect.FirstRevision, engineeringModelSetup.EngineeringModelIid);
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                if (transaction != null && !transaction.IsCompleted)
+                {
+                    transaction.Rollback();
+                }
+
+                Logger.Error(ex, "Error occured during data store seeding");
+
+                return false;
+            }
+            finally
+            {
+                // clean log (will happen at end of request as well due to IOC lifetime
+                this.TransactionManager.CommandLogger.ClearLog();
+
+                transaction?.Dispose();
+
+                if (connection != null)
+                {
+                    connection.Close();
+                    connection.Dispose();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Import data and use Upsert flow to add/update data. Return the data as serialized JSON
+        /// </summary>
+        /// <param name="fileName">
+        /// The exchange file name.
+        /// </param>
+        /// <param name="password">
+        /// The optional archive password as supplied by the request
+        /// </param>
+        /// <returns>
+        /// True if successful
+        /// </returns>
+        private bool UpsertModelData(string fileName, string password = null)
+        {
+            NpgsqlConnection connection = null;
+            NpgsqlTransaction transaction = null;
+
+            try
+            {
+                var sw = new Stopwatch();
+
+                // clear database schemas if seeding
+                Logger.Info("Start clearing the current data store");
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                this.TransactionManager.SetFullAccessState(true);
+                this.ClearDatabaseSchemas(transaction);
+                transaction.Commit();
+
+                // Flushes the type cache and reload the types for this connection
+                connection.ReloadTypes();
+
+                sw.Start();
+                Logger.Info("Start importing the data");
+
+                // use new transaction to for inserting the data
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                this.TransactionManager.SetFullAccessState(true);
+
+                // important, make sure to defer the constraints
+                var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+
+                // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                this.TransactionManager.SetAuditLoggingState(transaction, true);
+
+                // get sitedirectory data
+                var items = this.ExchangeFileProcessor.ReadSiteDirectoryFromfile(fileName, password).ToList();
+
+                // assign default password to all imported persons.
+                foreach (var person in items.OfType<Person>())
+                {
+                    person.Password = AppConfig.Current.Defaults.PersonPassword;
+                }
+
+                var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
+
+                if (topContainer == null)
+                {
+                    Logger.Error("No Topcontainer item encountered");
+                    throw new NoNullAllowedException("Topcontainer item needs to be present in the dataset");
+                }
+
+                this.RequestUtils.Cache = new List<Thing>(items);
+
+                // setup Site Directory schema
+                using (var siteDirCommand = new NpgsqlCommand())
+                {
+                    Logger.Info("Start Site Directory structure");
+                    siteDirCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.SiteDirectoryDefinition.sql");
+
+                    siteDirCommand.Connection = transaction.Connection;
+                    siteDirCommand.Transaction = transaction;
+                    siteDirCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                }
+
+                // apply migration on new SiteDirectory partition
+                this.MigrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
+
+                var result = false;
+
+                if (topContainer.GetType().Name == "SiteDirectory")
+                {
+                    // make sure single iterationsetups are set to unfrozen before persitence
+                    this.FixSingleIterationSetups(items);
+
+                    var siteDirectoryService = this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
+
+                    result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
+                }
+
+                if (result)
+                {
+                    this.RequestUtils.QueryParameters = new QueryParameters();
+
+                    // Get users credentials from migration.json file
+                    var migrationCredentials = this.ExchangeFileProcessor.ReadMigrationJsonFromFile(fileName, password).ToList();
+
+                    foreach (var person in items.OfType<Person>())
+                    {
+                        var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
+
+                        if (credential != null)
+                        {
+                            this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
+                        }
+                    }
+
+                    // Add missing Person permissions
+                    this.CreateMissingPersonPermissions(transaction);
+
+                    var engineeringModelSetups =
+                        items.OfType<EngineeringModelSetup>()
+                            .ToList();
+
+                    var engineeringModelService =
+                        this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+
+                    var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
+                    var createRevisionForSiteDirectory = true;
+                    var actorId = Guid.Empty;
+
+                    foreach (var engineeringModelSetup in engineeringModelSetups)
+                    {
+                        var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
+
+                        // cleanup before handling TopContainer
+                        this.RequestUtils.Cache.Clear();
+
+                        // get referenced engineeringmodel data
+                        var engineeringModelItems = this.ExchangeFileProcessor
+                            .ReadEngineeringModelFromfile(fileName, password, engineeringModelSetup).ToList();
+
+                        // should return one engineeringmodel topcontainer
+                        var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
+
+                        if (engineeringModel == null)
+                        {
+                            result = false;
+                            break;
+                        }
+
+                        var dataPartition = CDP4Orm.Dao.Utils.GetEngineeringModelSchemaName(engineeringModel.Iid);
+
+                        var iterationPartition = CDP4Orm.Dao.Utils.GetEngineeringModelIterationSchemaName(engineeringModel.Iid);
+
+                        this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
+
+                        if (!engineeringModelService.Insert(transaction, dataPartition, engineeringModel))
+                        {
+                            result = false;
+                            break;
+                        }
+
+                        // Add missing Participant permissions
+                        this.CreateMissingParticipantPermissions(transaction);
+
+                        // extract any referenced file data to disk if not already present
+                        this.PersistFileBinaryData(fileName, password);
+
+                        var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
                                 x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
-                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
+                        var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
                         this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
@@ -495,27 +821,80 @@ namespace CDP4WebServices.API.Modules
                             maxIterationNumber);
 
                         var iterationInsertResult = true;
-                        foreach (var iterationSetup in iterationSetups)
+                        List<Thing> previousIterationItems = null;
+
+                        foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
                         {
                             this.RequestUtils.Cache.Clear();
+
                             var iterationItems = this.ExchangeFileProcessor
                                 .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
 
-                            // FixRevisionNumber(iterationItems);
                             this.RequestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
+                            // for the every model EngineeringModel schema ends with the same ID as Iteration schema
                             var iteration =
                                 iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
-                            if (iteration == null || !iterationService.CreateConcept(
-                                    transaction,
-                                    dataPartition,
-                                    iteration,
-                                    engineeringModel))
+
+                            iterationInsertResult = false;
+
+                            if (iteration == null)
                             {
-                                iterationInsertResult = false;
                                 break;
                             }
+
+                            if (iterationService.UpsertConcept(
+                                transaction,
+                                dataPartition,
+                                iteration,
+                                engineeringModel))
+                            {
+                                iterationInsertResult = true;
+
+                                if (previousIterationItems != null)
+                                {
+                                    // Compute differences between iterations
+                                    var thingsToBeDeleted = previousIterationItems
+                                        .Where(thing => thing.ClassKind != ClassKind.Iteration &&
+                                                        !iterationItems.Select(id => id.Iid).Contains(thing.Iid)).ToList();
+
+                                    // Remove differences between iterations
+                                    foreach (var thing in thingsToBeDeleted)
+                                    {
+                                        var service = this.ServiceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
+                                        service.RawDeleteConcept(transaction, iterationPartition, thing);
+                                    }
+                                }
+
+                                transaction.Commit();
+
+                                if (createRevisionForSiteDirectory)
+                                {
+                                    // Create revision history only once for SiteDirectory
+                                    this.CreateRevisionHistoryForSiteDirectory(ref actorId);
+                                    createRevisionForSiteDirectory = false;
+                                }
+
+                                // Create revision history for each EngineeringModel
+                                this.CreateRevisionHistoryForEngineeringModel(actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
+
+                                // use new transaction to for inserting the data
+                                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                                this.TransactionManager.SetFullAccessState(true);
+
+                                // important, make sure to defer the constraints
+                                var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
+                                constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+
+                                // make sure to only log insert changes, no subsequent trigger updates for exchange import
+                                this.TransactionManager.SetAuditLoggingState(transaction, true);
+
+                                // revision number goes up for the next Iteration
+                                revisionNumber += 1;
+                            }
+
+                            previousIterationItems = iterationItems;
                         }
 
                         if (!iterationInsertResult)
@@ -530,8 +909,9 @@ namespace CDP4WebServices.API.Modules
                 }
 
                 transaction.Commit();
+
                 sw.Stop();
-                Logger.Info("Finished seeding the data store in {0} [ms]", sw.ElapsedMilliseconds);
+                Logger.Info("Finished importing the data store in {0} [ms]", sw.ElapsedMilliseconds);
 
                 return result;
             }
@@ -542,7 +922,7 @@ namespace CDP4WebServices.API.Modules
                     transaction.Rollback();
                 }
 
-                Logger.Error(ex, "Error occured during data store seeding");
+                Logger.Error(ex, "Error occured during data store import");
 
                 return false;
             }
@@ -711,9 +1091,12 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Create revision history for each entry in the database.
+        /// Create revision history for SiteDirectory and retrieve first person Id
         /// </summary>
-        private void CreateRevisionHistoryForEachEntry()
+        /// <param name="personId">
+        /// First person Id <see cref="Person" />
+        /// </param>
+        private void CreateRevisionHistoryForSiteDirectory(ref Guid personId)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -727,43 +1110,62 @@ namespace CDP4WebServices.API.Modules
                 this.TransactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
-                var actor = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
-                var actorId = actor != null ? actor.Iid : Guid.Empty;
+                var person = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
+                personId = person != null ? person.Iid : Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, actorId, EngineeringModelSetupSideEffect.FirstRevision);
+                this.RevisionService.SaveRevisions(transaction, TopContainer, personId, EngineeringModelSetupSideEffect.FirstRevision);
 
-                var siteDirectory = this.SiteDirectoryService.Get(
-                    transaction,
-                    TopContainer,
-                    null,
-                    new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList();
+                transaction.Commit();
+            }
+            catch (NpgsqlException ex)
+            {
+                transaction?.Rollback();
+                Logger.Error(ex, "Error occured during revision history creation");
+            }
+            catch (Exception ex)
+            {
+                transaction?.Rollback();
+                Logger.Error(ex, "Error occured during revision history creation");
+            }
+            finally
+            {
+                transaction?.Dispose();
+                connection?.Dispose();
+            }
+        }
 
-                var engineeringModelSetups = this.EngineeringModelSetupService.GetShallow(
-                        transaction,
-                        TopContainer,
-                        siteDirectory[0].Model,
-                        new RequestSecurityContext { ContainerReadAllowed = true }).OfType<EngineeringModelSetup>()
-                    .ToList();
+        /// <summary>
+        /// Create revision history for each EngineeringModel in the database.
+        /// </summary>
+        /// <param name="revisionNumber">
+        /// The revision number we want to create revision records for
+        /// </param>
+        /// <param name="personId">
+        /// First person Id <see cref="Guid" />
+        /// </param>
+        /// <param name="engineeringModelIid">
+        /// Engineering model Id <see cref="Guid" />
+        /// </param>
+        private void CreateRevisionHistoryForEngineeringModel(Guid personId, int revisionNumber, Guid engineeringModelIid)
+        {
+            NpgsqlConnection connection = null;
+            NpgsqlTransaction transaction = null;
+
+            this.RequestUtils.QueryParameters = new QueryParameters();
+
+            try
+            {
+                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                this.TransactionManager.SetFullAccessState(true);
+
+                var partition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
+
+                // Save revision history for EngineeringModel's entries
+                this.RevisionService.SaveRevisions(transaction, partition, personId, revisionNumber);
 
                 // commit revision history
                 transaction.Commit();
-
-                // Get all EngineeringModelSetups and create a revision history for each EngineeringModel
-                foreach (var engineeringModelSetup in engineeringModelSetups)
-                {
-                    transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                    this.TransactionManager.SetFullAccessState(true);
-
-                    var partition =
-                        this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
-
-                    // Save revision history for EngineeringModel's entries
-                    this.RevisionService.SaveRevisions(transaction, partition, actorId, EngineeringModelSetupSideEffect.FirstRevision);
-
-                    // commit revision history
-                    transaction.Commit();
-                }
             }
             catch (NpgsqlException ex)
             {

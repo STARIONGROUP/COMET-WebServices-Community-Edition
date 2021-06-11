@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ReferencerRuleDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -256,6 +252,63 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="referencerRule">
+        /// The referencerRule DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ReferencerRule referencerRule, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, referencerRule, container);
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
+            {
+                { "MaxReferenced", !this.IsDerived(referencerRule, "MaxReferenced") ? referencerRule.MaxReferenced.ToString() : string.Empty },
+                { "MinReferenced", !this.IsDerived(referencerRule, "MinReferenced") ? referencerRule.MinReferenced.ToString() : string.Empty },
+            }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferencerRule\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"ReferencingCategory\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :referencingCategory)");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = referencerRule.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                command.Parameters.Add("referencingCategory", NpgsqlDbType.Uuid).Value = !this.IsDerived(referencerRule, "ReferencingCategory") ? referencerRule.ReferencingCategory : Utils.NullableValue(null);
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"ReferencingCategory\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :referencingCategory);");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+            referencerRule.ReferencedCategory.ForEach(x => this.UpsertReferencedCategory(transaction, partition, referencerRule.Iid, x));
+
+            return true;
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -323,6 +376,49 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferencerRule_ReferencedCategory\"", partition);
                 sqlBuilder.AppendFormat(" (\"ReferencerRule\", \"ReferencedCategory\")");
                 sqlBuilder.Append(" VALUES (:referencerRule, :referencedCategory);");
+
+                command.Parameters.Add("referencerRule", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("referencedCategory", NpgsqlDbType.Uuid).Value = referencedCategory;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ReferencerRule"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="referencedCategory">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertReferencedCategory(NpgsqlTransaction transaction, string partition, Guid iid, Guid referencedCategory)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferencerRule_ReferencedCategory\"", partition);
+                sqlBuilder.AppendFormat(" (\"ReferencerRule\", \"ReferencedCategory\")");
+                sqlBuilder.Append(" VALUES (:referencerRule, :referencedCategory)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ReferencerRule_ReferencedCategory_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ReferencerRule\", \"ReferencedCategory\")");
+                sqlBuilder.Append(" = (:referencerRule, :referencedCategory);");
 
                 command.Parameters.Add("referencerRule", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("referencedCategory", NpgsqlDbType.Uuid).Value = referencedCategory;
@@ -416,6 +512,31 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
+        }
+
+        /// <summary>
+        /// Delete a database record from the supplied data transfer object.
+        /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ReferencerRule"/> id that is to be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully deleted.
+        /// </returns>
+        public override bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            var result = false;
+
+            result = base.Delete(transaction, partition, iid);
+            return result;
         }
 
         /// <summary>
