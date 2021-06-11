@@ -268,7 +268,7 @@ namespace CDP4WebServices.API.Modules
             if (!AppConfig.Current.Backtier.IsDbImportEnabled)
             {
                 Logger.Info(
-                    "Data store seed API invoked but it was disabled from configuration, cancel further processing...");
+                    "Data store import API invoked but it was disabled from configuration, cancel further processing...");
 
                 var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
                 this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
@@ -685,7 +685,7 @@ namespace CDP4WebServices.API.Modules
                 connection.ReloadTypes();
 
                 sw.Start();
-                Logger.Info("Start seeding the data");
+                Logger.Info("Start importing the data");
 
                 // use new transaction to for inserting the data
                 transaction = this.TransactionManager.SetupTransaction(ref connection, null);
@@ -938,7 +938,7 @@ namespace CDP4WebServices.API.Modules
                     transaction.Rollback();
                 }
 
-                Logger.Error(ex, "Error occured during data store importing");
+                Logger.Error(ex, "Error occured during data store import");
 
                 return false;
             }
