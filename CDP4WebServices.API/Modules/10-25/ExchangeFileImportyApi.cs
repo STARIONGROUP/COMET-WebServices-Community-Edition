@@ -390,7 +390,6 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                Guid actorId = Guid.Empty;
                 // database was succesfully seeded
                 this.DataStoreController.CloneDataStore(); // create a clone of the data store for future restore support
 
@@ -585,7 +584,7 @@ namespace CDP4WebServices.API.Modules
                         this.RequestUtils.Cache = new List<Thing>(iterationItems);
 
                         // should return one iteration
-                        // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
+                        // for the every model EngineeringModel schema ends with the same ID as Iteration schema
                         var iteration =
                             iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
 
@@ -614,7 +613,7 @@ namespace CDP4WebServices.API.Modules
                 sw.Stop();
                 Logger.Info("Finished seeding the data store in {0} [ms]", sw.ElapsedMilliseconds);
 
-                Guid actorId = Guid.Empty;
+                var actorId = Guid.Empty;
 
                 this.CreateRevisionHistoryForSiteDirectory(ref actorId);
 
@@ -642,7 +641,7 @@ namespace CDP4WebServices.API.Modules
                 // clean log (will happen at end of request as well due to IOC lifetime
                 this.TransactionManager.CommandLogger.ClearLog();
 
-                transaction?.Dispose();
+                transaction.Dispose();
 
                 if (connection != null)
                 {
@@ -651,7 +650,7 @@ namespace CDP4WebServices.API.Modules
                 }
             }
         }
-        
+
         /// <summary>
         /// Import data and use Upsert flow to add/update data. Return the data as serialized JSON
         /// </summary>
@@ -672,7 +671,7 @@ namespace CDP4WebServices.API.Modules
             try
             {
                 var sw = new Stopwatch();
-                
+
                 // clear database schemas if seeding
                 Logger.Info("Start clearing the current data store");
                 transaction = this.TransactionManager.SetupTransaction(ref connection, null);
@@ -769,7 +768,7 @@ namespace CDP4WebServices.API.Modules
 
                     var engineeringModelService =
                         this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
-                    
+
                     var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
                     var createRevisionForSiteDirectory = true;
                     var actorId = Guid.Empty;
@@ -831,14 +830,14 @@ namespace CDP4WebServices.API.Modules
                         foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
                         {
                             this.RequestUtils.Cache.Clear();
-                        
+
                             var iterationItems = this.ExchangeFileProcessor
                                 .ReadModelIterationFromFile(fileName, password, iterationSetup).ToList();
 
                             this.RequestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
-                            // for the every model EngineeringModel schema ends with the same ID as Iteration schema 
+                            // for the every model EngineeringModel schema ends with the same ID as Iteration schema
                             var iteration =
                                 iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
 
@@ -861,7 +860,7 @@ namespace CDP4WebServices.API.Modules
                                 {
                                     // Compute differences between iterations
                                     var thingsToBeDeleted = previousIterationItems
-                                        .Where(thing => thing.ClassKind != ClassKind.Iteration && 
+                                        .Where(thing => thing.ClassKind != ClassKind.Iteration &&
                                                         !iterationItems.Select(id => id.Iid).Contains(thing.Iid)).ToList();
 
                                     // Remove differences between iterations
@@ -936,7 +935,7 @@ namespace CDP4WebServices.API.Modules
                 // clean log (will happen at end of request as well due to IOC lifetime
                 this.TransactionManager.CommandLogger.ClearLog();
 
-                transaction?.Dispose();
+                transaction.Dispose();
 
                 if (connection != null)
                 {
@@ -1147,7 +1146,10 @@ namespace CDP4WebServices.API.Modules
         /// The revision number we want to create revision records for
         /// </param>
         /// <param name="personId">
-        /// First person Id <see cref="Person">
+        /// First person Id <see cref="Guid" />
+        /// </param>
+        /// <param name="engineeringModelIid">
+        /// Engineering model Id <see cref="Guid" />
         /// </param>
         private void CreateRevisionHistoryForEngineeringModel(Guid personId, int revisionNumber, Guid engineeringModelIid)
         {
