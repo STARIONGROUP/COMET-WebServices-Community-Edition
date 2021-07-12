@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
 //
@@ -33,7 +33,6 @@ namespace CDP4WebServices.API.Modules
     using System.Net.Http;
     using System.Security.Cryptography;
     using System.Text;
-    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -384,6 +383,12 @@ namespace CDP4WebServices.API.Modules
         {
             // wireup cdp authorization support
             this.CdpAuthorization();
+
+            if (!this.IsAuthorized())
+            {
+                return this.GetUnauthorizedResponse();
+            }
+
             var response = this.GetResponseData(routeParams);
 
             // Register the required CDP4 headers to every response send
@@ -415,6 +420,12 @@ namespace CDP4WebServices.API.Modules
         {
             // wireup cdp authorization support
             this.CdpAuthorization();
+
+            if (!this.IsAuthorized())
+            {
+                return this.GetUnauthorizedResponse();
+            }
+            
             var response = this.PostResponseData(routeParams);
 
             this.HeaderInfoProvider.RegisterResponseHeaders(response);
@@ -493,6 +504,26 @@ namespace CDP4WebServices.API.Modules
                     requestToken),
                 StatusCode = statusCode
             };
+        }
+
+        /// <summary>
+        /// Checks if the user is authorized to perform reads or writes to the data store
+        /// </summary>
+        /// <returns>True is the user is authorized, otherwise false.</returns>
+        protected bool IsAuthorized()
+        {
+            var credentials = this.RequestUtils.Context.AuthenticatedCredentials;
+
+            return credentials.Person.IsActive && !credentials.Person.IsDeprecated;
+        }
+
+        /// <summary>
+        /// Gets the default Unauthorized <see cref="Response"/>
+        /// </summary>
+        /// <returns>The <see cref="Response"/></returns>
+        protected Response GetUnauthorizedResponse()
+        {
+            return HttpStatusCode.Unauthorized;
         }
 
         /// <summary>
