@@ -25,6 +25,7 @@
 namespace CDP4WebServices.API.Tests
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
 
     using CDP4Authentication;
@@ -46,6 +47,7 @@ namespace CDP4WebServices.API.Tests
     using NUnit.Framework;
 
     using Definition = CDP4Common.DTO.Definition;
+    using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
     /// Test fixture for the <see cref="PermissionService"/> class
@@ -56,7 +58,17 @@ namespace CDP4WebServices.API.Tests
         /// <summary>
         /// The EngineeringModel partition.
         /// </summary>
+        private const string SiteDirectoryPartition = "SiteDirectory";
+
+        /// <summary>
+        /// The EngineeringModel partition.
+        /// </summary>
         private const string EngineeringModelPartition = "EngineeringModel";
+
+        /// <summary>
+        /// The Iteration partition.
+        /// </summary>
+        private const string IterationPartition = "Iteration";
 
         private PermissionService permissionService;
         private Mock<IAccessRightKindService> accessRightKindService;
@@ -64,10 +76,18 @@ namespace CDP4WebServices.API.Tests
         private Mock<ParticipantDao> participantDao;
 
         private AuthenticationPerson authenticationPerson;
-        private Requirement requirement;
-        private Definition definition;
-        private DomainOfExpertise domain;
+        private static EngineeringModel engineeringModel = new(Guid.NewGuid(), 0);
+        private static ParameterType parameterType = new TextParameterType(Guid.NewGuid(), 0);
+        private static Iteration iteration = new(Guid.NewGuid(), 0);
+        private static Requirement requirement = new(Guid.NewGuid(), 0);
+        private static Definition definition = new(Guid.NewGuid(), 0);
+        private static Definition definition2 = new(Guid.NewGuid(), 0);
+        private static RequirementsSpecification requirementsSpecification = new(Guid.NewGuid(), 0);
+        private static DomainOfExpertise domain = new(Guid.NewGuid(), 0);
+        private static SiteDirectory siteDirectory = new(Guid.NewGuid(), 0);
         private Participant participant;
+
+        private Thing addContainerThingToCache = null;
 
         [SetUp]
         public void TestSetup()
@@ -91,7 +111,10 @@ namespace CDP4WebServices.API.Tests
                 .Callback<NpgsqlTransaction, string, Dictionary<DtoInfo, DtoResolveHelper>>
                 ((npgsqlTransaction, partition, operationThingContainerCache) =>
                 {
-                    operationThingContainerCache.Add(new ContainerInfo(nameof(Requirement), this.requirement.Iid), new DtoResolveHelper(this.requirement));
+                    if (this.addContainerThingToCache != null)
+                    {
+                        operationThingContainerCache.Add(new ContainerInfo(this.addContainerThingToCache.ClassKind.ToString(), this.addContainerThingToCache.Iid), new DtoResolveHelper(this.addContainerThingToCache));
+                    }
                 });
 
             this.permissionService.ResolveService = this.resolveService.Object;
@@ -100,16 +123,9 @@ namespace CDP4WebServices.API.Tests
 
             this.permissionService.AccessRightKindService = this.accessRightKindService.Object;
 
-            this.accessRightKindService.Setup(
-                    x =>
-                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), "Definition"))
-                .Returns(ParticipantAccessRightKind.SAME_AS_CONTAINER);
-
-            this.domain = new DomainOfExpertise(Guid.NewGuid(), 0);
-
             this.participant = new Participant(Guid.NewGuid(), 0)
             {
-                Domain = new List<Guid> { this.domain.Iid },
+                Domain = new List<Guid> { domain.Iid },
                 Person = this.authenticationPerson.Iid
             };
 
@@ -124,53 +140,144 @@ namespace CDP4WebServices.API.Tests
 
             this.permissionService.ParticipantDao = this.participantDao.Object;
 
-            this.requirement = new Requirement(Guid.NewGuid(), 0);
-            this.definition = new Definition(Guid.NewGuid(), 0);
-
-            this.requirement.Definition.Add(this.requirement.Iid);
+            engineeringModel.Iteration.Add(iteration.Iid);
+            requirement.Definition.Add(definition.Iid);
+            parameterType.Definition.Add(definition2.Iid);
+            siteDirectory.Domain.Add(domain.Iid);
         }
 
         [Test]
-        public void VerifySameAsContainerPermissionAutorization()
+        [TestCaseSource(nameof(TestCases))]
+        public void VerifySameAsContainerPermissionAutorization(Thing containerThing, Thing thing, string partition)
         {
-            var partitionString = EngineeringModelPartition;
+            //-------------------------------------------------------------
+            // Setup
+            //-------------------------------------------------------------
+            this.addContainerThingToCache = containerThing;
+            engineeringModel.Iteration.Add(iteration.Iid);
+
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), thing.ClassKind.ToString()))
+                .Returns(PersonAccessRightKind.SAME_AS_CONTAINER);
+
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), thing.ClassKind.ToString()))
+                .Returns(ParticipantAccessRightKind.SAME_AS_CONTAINER);
 
             var securityRequestContext = new RequestSecurityContext
             {
                 ContainerReadAllowed = true, ContainerWriteAllowed = true
             };
 
+            //-------------------------------------------------------------
+
+            //-------------------------------------------------------------
+            // container modify is allowed
+            //-------------------------------------------------------------
             this.accessRightKindService.Setup(
                     x =>
-                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), "Requirement"))
+                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
                 .Returns(ParticipantAccessRightKind.MODIFY);
+
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
+                .Returns(PersonAccessRightKind.MODIFY);
 
             Assert.IsTrue(
                 this.permissionService.CanWrite(
                     null,
-                    this.definition,
-                    "Definition",
-                    partitionString,
-                    ServiceBase.UpdateOperation,
-                    securityRequestContext
-                    )
-                );
-
-            this.accessRightKindService.Setup(
-                    x =>
-                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), "Requirement"))
-                .Returns(ParticipantAccessRightKind.READ);
-
-            Assert.IsFalse(
-                this.permissionService.CanWrite(
-                    null,
-                    this.definition,
-                    "Definition",
-                    partitionString,
+                    thing,
+                    thing.ClassKind.ToString(),
+                    partition,
                     ServiceBase.UpdateOperation,
                     securityRequestContext
                 )
             );
+
+            //-------------------------------------------------------------
+
+            //-------------------------------------------------------------
+            // container modify is NOT allowed
+            //-------------------------------------------------------------
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
+                .Returns(ParticipantAccessRightKind.READ);
+
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
+                .Returns(PersonAccessRightKind.READ);
+
+            Assert.IsFalse(
+                this.permissionService.CanWrite(
+                    null,
+                    thing,
+                    thing.ClassKind.ToString(),
+                    partition,
+                    ServiceBase.UpdateOperation,
+                    securityRequestContext
+                )
+            );
+
+            //-------------------------------------------------------------
+
+            //-------------------------------------------------------------
+            // Create operation does not check container, but returns
+            // RequestSecurityContext setting
+            //-------------------------------------------------------------
+            Assert.IsTrue(
+                this.permissionService.CanWrite(
+                    null,
+                    thing,
+                    thing.ClassKind.ToString(),
+                    partition,
+                    ServiceBase.CreateOperation,
+                    securityRequestContext
+                )
+            );
+
+            //-------------------------------------------------------------
+
+            //-------------------------------------------------------------
+            // container thing not found returns RequestSecurityContext setting
+            //-------------------------------------------------------------
+            this.addContainerThingToCache = null;
+
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
+                .Returns(ParticipantAccessRightKind.MODIFY);
+
+            Assert.IsFalse(
+                this.permissionService.CanWrite(
+                    null,
+                    thing,
+                    thing.ClassKind.ToString(),
+                    partition,
+                    ServiceBase.UpdateOperation,
+                    securityRequestContext
+                )
+            );
+
+            //-------------------------------------------------------------
+        }
+
+        /// <summary>
+        /// Different Cases we want to check access rights for
+        /// </summary>
+        /// <returns>an <see cref="IEnumerable"/> of type <see cref="object[]"/>
+        /// containing the <see cref="PermissionServiceTestFixture.VerifySameAsContainerPermissionAutorization"/> method's parameters.</returns>
+        public static IEnumerable TestCases()
+        {
+            yield return new object[] { requirement, definition, IterationPartition };
+            yield return new object[] { engineeringModel, iteration, EngineeringModelPartition };
+            yield return new object[] { parameterType, definition2, SiteDirectoryPartition };
+            yield return new object[] { iteration, requirementsSpecification, IterationPartition };
+            yield return new object[] { siteDirectory, domain, SiteDirectoryPartition };
         }
     }
 }
