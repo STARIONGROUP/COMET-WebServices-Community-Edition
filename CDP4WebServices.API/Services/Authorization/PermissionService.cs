@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
 //
@@ -27,7 +27,6 @@ namespace CDP4WebServices.API.Services.Authorization
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Net;
 
     using Authentication;
 
@@ -35,7 +34,8 @@ namespace CDP4WebServices.API.Services.Authorization
     using CDP4Common.DTO;
     
     using CDP4Orm.Dao;
-    
+    using CDP4Orm.Dao.Resolve;
+
     using NLog;
     
     using Npgsql;
@@ -87,6 +87,11 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets or sets the (injected) <see cref="IAccessRightKindService"/> for this request
         /// </summary>
         public IAccessRightKindService AccessRightKindService { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the resolve service.
+        /// </summary>
+        public IResolveService ResolveService { get; set; }
 
         /// <summary>
         /// A <see cref="NLog.Logger"/> instance
@@ -322,9 +327,9 @@ namespace CDP4WebServices.API.Services.Authorization
                 switch (personAccessRightKind)
                 {
                     case PersonAccessRightKind.SAME_AS_CONTAINER:
-                        {
-                            return securityContext.ContainerWriteAllowed;
-                        }
+                    {
+                        return this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
+                    }
 
                     case PersonAccessRightKind.SAME_AS_SUPERCLASS:
                         {
@@ -426,9 +431,9 @@ namespace CDP4WebServices.API.Services.Authorization
             switch (participantAccessRightKind)
             {
                 case ParticipantAccessRightKind.SAME_AS_CONTAINER:
-                    {
-                        return securityContext.ContainerWriteAllowed;
-                    }
+                {
+                    return this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
+                }
 
                 case ParticipantAccessRightKind.SAME_AS_SUPERCLASS:
                     {
@@ -450,6 +455,62 @@ namespace CDP4WebServices.API.Services.Authorization
                         return false;
                     }
             }
+        }
+
+        /// <summary>
+        /// Compute WRITE permission for <see cref="ParticipantAccessRightKind.SAME_AS_CONTAINER"/>, or <see cref="PersonAccessRightKind.SAME_AS_CONTAINER"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The transaction object.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> to compute permissions for.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="modifyOperation">
+        /// The string representation of the type of the modify operation.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security context of the current request.
+        /// </param>
+        /// <returns></returns>
+        private bool ComputeSameAsContainerWriteAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation, ISecurityContext securityContext)
+        {
+            if (modifyOperation != ServiceBase.UpdateOperation)
+            {
+                return securityContext.ContainerWriteAllowed;
+            }
+
+            var dtoInfo = thing.GetInfoPlaceholder();
+
+            var operationThingContainerCache =
+                new Dictionary<DtoInfo, DtoResolveHelper>
+                {
+                    {
+                        dtoInfo,
+                        new DtoResolveHelper(dtoInfo)
+                    }
+                };
+
+            var resolvePartition = partition.StartsWith(Utils.IterationSubPartition)
+                ? partition.Replace(Utils.IterationSubPartition, Utils.EngineeringModelPartition)
+                : partition;
+
+            this.ResolveService.ResolveItems(transaction, resolvePartition, operationThingContainerCache);
+
+            var containerThing = operationThingContainerCache.SingleOrDefault(x => x.Key is ContainerInfo).Value;
+
+            return containerThing != null
+                   &&
+                   this.CanWrite(
+                       transaction,
+                       containerThing.Thing,
+                       containerThing.Thing.ClassKind.ToString(),
+                       containerThing.Partition,
+                       modifyOperation,
+                       securityContext);
         }
 
         /// <summary>
