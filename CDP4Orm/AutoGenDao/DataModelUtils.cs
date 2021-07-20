@@ -1,10 +1,26 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DataModelUtils.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016 RHEA S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
+//
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This a utility class for Dao functionalities
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -22,251 +38,433 @@ namespace CDP4Orm.Dao
         /// </summary>
         private readonly HashSet<string> derivedProperties = new HashSet<string>
             {
-                "ActualFiniteState.Name",
-                "ActualFiniteState.ShortName",
-                "ActualFiniteState.Owner",
-                "ActualFiniteStateList.Name",
-                "ActualFiniteStateList.ShortName",
-                "ArrayParameterType.NumberOfValues",
-                "ArrayParameterType.HasSingleComponentType",
-                "ArrayParameterType.Rank",
-                "BooleanParameterType.NumberOfValues",
-                "BuiltInRuleVerification.Owner",
-                "CompoundParameterType.NumberOfValues",
-                "DateParameterType.NumberOfValues",
-                "DateTimeParameterType.NumberOfValues",
-                "DerivedQuantityKind.NumberOfValues",
-                "DerivedQuantityKind.AllPossibleScale",
-                "DerivedQuantityKind.QuantityDimensionExponent",
-                "DerivedQuantityKind.QuantityDimensionExpression",
-                "EnumerationParameterType.NumberOfValues",
-                "FileRevision.Path",
-                "Folder.Path",
-                "IdCorrespondence.Owner",
-                "NestedElement.Owner",
-                "NestedElement.Name",
-                "NestedElement.ShortName",
-                "NestedParameter.Path",
-                "ParameterOverride.ParameterType",
-                "ParameterOverride.IsOptionDependent",
-                "ParameterOverride.Scale",
-                "ParameterOverride.StateDependence",
-                "ParameterOverride.Group",
-                "ParameterOverrideValueSet.ActualValue",
-                "ParameterOverrideValueSet.Owner",
-                "ParameterOverrideValueSet.ActualState",
-                "ParameterOverrideValueSet.ActualOption",
-                "ParameterSubscription.ParameterType",
-                "ParameterSubscription.Scale",
-                "ParameterSubscription.StateDependence",
-                "ParameterSubscription.IsOptionDependent",
-                "ParameterSubscription.Group",
-                "ParameterSubscriptionValueSet.Computed",
-                "ParameterSubscriptionValueSet.Reference",
-                "ParameterSubscriptionValueSet.ActualValue",
-                "ParameterSubscriptionValueSet.ActualState",
-                "ParameterSubscriptionValueSet.ActualOption",
-                "ParameterSubscriptionValueSet.Owner",
-                "ParameterType.NumberOfValues",
-                "ParameterValueSet.ActualValue",
-                "ParameterValueSet.Owner",
-                "ParameterValueSetBase.ActualValue",
-                "ParameterValueSetBase.Owner",
-                "ParametricConstraint.Owner",
-                "Person.Name",
-                "PossibleFiniteState.Owner",
-                "PrefixedUnit.ConversionFactor",
-                "PrefixedUnit.Name",
-                "PrefixedUnit.ShortName",
-                "QuantityKind.NumberOfValues",
-                "QuantityKind.AllPossibleScale",
-                "QuantityKind.QuantityDimensionExponent",
-                "QuantityKind.QuantityDimensionExpression",
-                "RuleVerification.Owner",
-                "SampledFunctionParameterType.NumberOfValues",
-                "ScalarParameterType.NumberOfValues",
-                "SimpleParameterValue.Owner",
-                "SimpleQuantityKind.NumberOfValues",
-                "SimpleQuantityKind.AllPossibleScale",
-                "SimpleQuantityKind.QuantityDimensionExponent",
-                "SimpleQuantityKind.QuantityDimensionExpression",
-                "SpecializedQuantityKind.NumberOfValues",
-                "SpecializedQuantityKind.AllPossibleScale",
-                "SpecializedQuantityKind.QuantityDimensionExponent",
-                "SpecializedQuantityKind.QuantityDimensionExpression",
-                "TextParameterType.NumberOfValues",
-                "TimeOfDayParameterType.NumberOfValues",
-                "UserRuleVerification.Owner",
-                "UserRuleVerification.Name",
+                { "ActualFiniteState.Name" },
+                { "ActualFiniteState.Owner" },
+                { "ActualFiniteState.ShortName" },
+                { "ActualFiniteStateList.Name" },
+                { "ActualFiniteStateList.ShortName" },
+                { "ArrayParameterType.HasSingleComponentType" },
+                { "ArrayParameterType.NumberOfValues" },
+                { "ArrayParameterType.Rank" },
+                { "BooleanParameterType.NumberOfValues" },
+                { "BuiltInRuleVerification.Owner" },
+                { "CompoundParameterType.NumberOfValues" },
+                { "DateParameterType.NumberOfValues" },
+                { "DateTimeParameterType.NumberOfValues" },
+                { "DerivedQuantityKind.AllPossibleScale" },
+                { "DerivedQuantityKind.NumberOfValues" },
+                { "DerivedQuantityKind.QuantityDimensionExponent" },
+                { "DerivedQuantityKind.QuantityDimensionExpression" },
+                { "EnumerationParameterType.NumberOfValues" },
+                { "FileRevision.Path" },
+                { "Folder.Path" },
+                { "IdCorrespondence.Owner" },
+                { "NestedElement.Name" },
+                { "NestedElement.Owner" },
+                { "NestedElement.ShortName" },
+                { "NestedParameter.Path" },
+                { "ParameterOverride.Group" },
+                { "ParameterOverride.IsOptionDependent" },
+                { "ParameterOverride.ParameterType" },
+                { "ParameterOverride.Scale" },
+                { "ParameterOverride.StateDependence" },
+                { "ParameterOverrideValueSet.ActualOption" },
+                { "ParameterOverrideValueSet.ActualState" },
+                { "ParameterOverrideValueSet.ActualValue" },
+                { "ParameterOverrideValueSet.Owner" },
+                { "ParameterSubscription.Group" },
+                { "ParameterSubscription.IsOptionDependent" },
+                { "ParameterSubscription.ParameterType" },
+                { "ParameterSubscription.Scale" },
+                { "ParameterSubscription.StateDependence" },
+                { "ParameterSubscriptionValueSet.ActualOption" },
+                { "ParameterSubscriptionValueSet.ActualState" },
+                { "ParameterSubscriptionValueSet.ActualValue" },
+                { "ParameterSubscriptionValueSet.Computed" },
+                { "ParameterSubscriptionValueSet.Owner" },
+                { "ParameterSubscriptionValueSet.Reference" },
+                { "ParameterType.NumberOfValues" },
+                { "ParameterValueSet.ActualValue" },
+                { "ParameterValueSet.Owner" },
+                { "ParameterValueSetBase.ActualValue" },
+                { "ParameterValueSetBase.Owner" },
+                { "ParametricConstraint.Owner" },
+                { "Person.Name" },
+                { "PossibleFiniteState.Owner" },
+                { "PrefixedUnit.ConversionFactor" },
+                { "PrefixedUnit.Name" },
+                { "PrefixedUnit.ShortName" },
+                { "QuantityKind.AllPossibleScale" },
+                { "QuantityKind.NumberOfValues" },
+                { "QuantityKind.QuantityDimensionExponent" },
+                { "QuantityKind.QuantityDimensionExpression" },
+                { "RuleVerification.Owner" },
+                { "SampledFunctionParameterType.NumberOfValues" },
+                { "ScalarParameterType.NumberOfValues" },
+                { "SimpleParameterValue.Owner" },
+                { "SimpleQuantityKind.AllPossibleScale" },
+                { "SimpleQuantityKind.NumberOfValues" },
+                { "SimpleQuantityKind.QuantityDimensionExponent" },
+                { "SimpleQuantityKind.QuantityDimensionExpression" },
+                { "SpecializedQuantityKind.AllPossibleScale" },
+                { "SpecializedQuantityKind.NumberOfValues" },
+                { "SpecializedQuantityKind.QuantityDimensionExponent" },
+                { "SpecializedQuantityKind.QuantityDimensionExpression" },
+                { "TextParameterType.NumberOfValues" },
+                { "TimeOfDayParameterType.NumberOfValues" },
+                { "UserRuleVerification.Name" },
+                { "UserRuleVerification.Owner" },
             };
- 
+
         /// <summary>
         /// The type source partition mapping for each concrete class.
         /// </summary>
         private readonly Dictionary<string, IEnumerable<string>> typePartitionMap = new Dictionary<string, IEnumerable<string>>
             {
+
                 {
-                    "SiteDirectory", 
-                    new[] 
+                    "EngineeringModel",
+                    new []
                         {
-                            "ArrayParameterType",
-                            "BinaryRelationshipRule",
-                            "BooleanParameterType",
-                            "Category",
-                            "CompoundParameterType",
-                            "Constant",
-                            "CyclicRatioScale",
-                            "DateParameterType",
-                            "DateTimeParameterType",
-                            "DecompositionRule",
-                            "DependentParameterTypeAssignment",
-                            "DerivedQuantityKind",
-                            "DerivedUnit",
-                            "DomainOfExpertise",
-                            "DomainOfExpertiseGroup",
-                            "EmailAddress",
-                            "EngineeringModelSetup",
-                            "EnumerationParameterType",
-                            "EnumerationValueDefinition",
-                            "FileType",
-                            "Glossary",
-                            "IndependentParameterTypeAssignment",
-                            "IntervalScale",
-                            "IterationSetup",
-                            "LinearConversionUnit",
-                            "LogarithmicScale",
-                            "MappingToReferenceScale",
-                            "ModelReferenceDataLibrary",
-                            "MultiRelationshipRule",
-                            "NaturalLanguage",
-                            "OrdinalScale",
-                            "Organization",
-                            "OrganizationalParticipant",
-                            "ParameterizedCategoryRule",
-                            "ParameterTypeComponent",
-                            "Participant",
-                            "ParticipantPermission",
-                            "ParticipantRole",
-                            "Person",
-                            "PersonPermission",
-                            "PersonRole",
-                            "PrefixedUnit",
-                            "QuantityKindFactor",
-                            "RatioScale",
-                            "ReferencerRule",
-                            "ReferenceSource",
-                            "SampledFunctionParameterType",
-                            "ScaleReferenceQuantityValue",
-                            "ScaleValueDefinition",
-                            "SimpleQuantityKind",
-                            "SimpleUnit",
-                            "SiteDirectory",
-                            "SiteDirectoryDataAnnotation",
-                            "SiteDirectoryDataDiscussionItem",
-                            "SiteDirectoryThingReference",
-                            "SiteLogEntry",
-                            "SiteReferenceDataLibrary",
-                            "SpecializedQuantityKind",
-                            "TelephoneNumber",
-                            "Term",
-                            "TextParameterType",
-                            "TimeOfDayParameterType",
-                            "UnitFactor",
-                            "UnitPrefix",
-                            "UserPreference"
-                         }
+
+                        "ActionItem",
+
+                        "ActualFiniteState",
+
+                        "ActualFiniteStateList",
+
+                        "Alias",
+
+                        "AndExpression",
+
+                        "Approval",
+
+                        "ArchitectureDiagram",
+
+                        "ArchitectureElement",
+
+                        "Behavior",
+
+                        "BehavioralParameter",
+
+                        "BinaryNote",
+
+                        "BinaryRelationship",
+
+                        "Book",
+
+                        "BooleanExpression",
+
+                        "Bounds",
+
+                        "BuiltInRuleVerification",
+
+                        "ChangeProposal",
+
+                        "ChangeRequest",
+
+                        "Citation",
+
+                        "Color",
+
+                        "CommonFileStore",
+
+                        "ContractChangeNotice",
+
+                        "Definition",
+
+                        "DiagramCanvas",
+
+                        "DiagramEdge",
+
+                        "DiagramElementThing",
+
+                        "DiagramFrame",
+
+                        "DiagramObject",
+
+                        "DiagramPort",
+
+                        "DomainFileStore",
+
+                        "ElementDefinition",
+
+                        "ElementUsage",
+
+                        "EngineeringModelDataDiscussionItem",
+
+                        "EngineeringModelDataNote",
+
+                        "ExclusiveOrExpression",
+
+                        "ExternalIdentifierMap",
+
+                        "File",
+
+                        "FileRevision",
+
+                        "Folder",
+
+                        "Goal",
+
+                        "HyperLink",
+
+                        "IdCorrespondence",
+
+                        "Iteration",
+
+                        "LogEntryChangelogItem",
+
+                        "ModellingAnnotationItem",
+
+                        "ModellingThingReference",
+
+                        "ModelLogEntry",
+
+                        "MultiRelationship",
+
+                        "NestedElement",
+
+                        "NestedParameter",
+
+                        "Note",
+
+                        "NotExpression",
+
+                        "Option",
+
+                        "OrExpression",
+
+                        "OwnedStyle",
+
+                        "Page",
+
+                        "Parameter",
+
+                        "ParameterGroup",
+
+                        "ParameterOverride",
+
+                        "ParameterOverrideValueSet",
+
+                        "ParameterSubscription",
+
+                        "ParameterSubscriptionValueSet",
+
+                        "ParameterValueSet",
+
+                        "ParametricConstraint",
+
+                        "Point",
+
+                        "PossibleFiniteState",
+
+                        "PossibleFiniteStateList",
+
+                        "Publication",
+
+                        "RelationalExpression",
+
+                        "Relationship",
+
+                        "RelationshipParameterValue",
+
+                        "RequestForDeviation",
+
+                        "RequestForWaiver",
+
+                        "Requirement",
+
+                        "RequirementsContainerParameterValue",
+
+                        "RequirementsGroup",
+
+                        "RequirementsSpecification",
+
+                        "ReviewItemDiscrepancy",
+
+                        "RuleVerification",
+
+                        "RuleVerificationList",
+
+                        "RuleViolation",
+
+                        "Section",
+
+                        "SharedStyle",
+
+                        "SimpleParameterValue",
+
+                        "Solution",
+
+                        "Stakeholder",
+
+                        "StakeholderValue",
+
+                        "StakeHolderValueMap",
+
+                        "StakeHolderValueMapSettings",
+
+                        "TextualNote",
+
+                        "UserRuleVerification",
+
+                        "ValueGroup",
+                        },
                 },
+
                 {
-                    "EngineeringModel", 
-                    new[] 
+                    "SiteDirectory",
+                    new []
                         {
-                            "ActionItem",
-                            "Approval",
-                            "BinaryNote",
-                            "Book",
-                            "ChangeProposal",
-                            "ChangeRequest",
-                            "CommonFileStore",
-                            "ContractChangeNotice",
-                            "EngineeringModel",
-                            "EngineeringModelDataDiscussionItem",
-                            "EngineeringModelDataNote",
-                            "File",
-                            "FileRevision",
-                            "Folder",
-                            "Iteration",
-                            "ModellingThingReference",
-                            "ModelLogEntry",
-                            "Page",
-                            "RequestForDeviation",
-                            "RequestForWaiver",
-                            "ReviewItemDiscrepancy",
-                            "Section",
-                            "Solution",
-                            "TextualNote"
-                         }
+
+                        "Alias",
+
+                        "ArrayParameterType",
+
+                        "BinaryRelationshipRule",
+
+                        "BooleanParameterType",
+
+                        "Category",
+
+                        "Citation",
+
+                        "CompoundParameterType",
+
+                        "Constant",
+
+                        "CyclicRatioScale",
+
+                        "DateParameterType",
+
+                        "DateTimeParameterType",
+
+                        "DecompositionRule",
+
+                        "Definition",
+
+                        "DependentParameterTypeAssignment",
+
+                        "DerivedQuantityKind",
+
+                        "DerivedUnit",
+
+                        "DomainOfExpertise",
+
+                        "DomainOfExpertiseGroup",
+
+                        "EmailAddress",
+
+                        "EngineeringModelSetup",
+
+                        "EnumerationParameterType",
+
+                        "EnumerationValueDefinition",
+
+                        "FileType",
+
+                        "Glossary",
+
+                        "HyperLink",
+
+                        "IndependentParameterTypeAssignment",
+
+                        "IntervalScale",
+
+                        "IterationSetup",
+
+                        "LinearConversionUnit",
+
+                        "LogarithmicScale",
+
+                        "LogEntryChangelogItem",
+
+                        "MappingToReferenceScale",
+
+                        "MeasurementScale",
+
+                        "MeasurementUnit",
+
+                        "ModelReferenceDataLibrary",
+
+                        "MultiRelationshipRule",
+
+                        "NaturalLanguage",
+
+                        "OrdinalScale",
+
+                        "Organization",
+
+                        "OrganizationalParticipant",
+
+                        "ParameterizedCategoryRule",
+
+                        "ParameterType",
+
+                        "ParameterTypeComponent",
+
+                        "Participant",
+
+                        "ParticipantPermission",
+
+                        "ParticipantRole",
+
+                        "Person",
+
+                        "PersonPermission",
+
+                        "PersonRole",
+
+                        "PrefixedUnit",
+
+                        "QuantityKindFactor",
+
+                        "RatioScale",
+
+                        "ReferencerRule",
+
+                        "ReferenceSource",
+
+                        "Rule",
+
+                        "SampledFunctionParameterType",
+
+                        "ScaleReferenceQuantityValue",
+
+                        "ScaleValueDefinition",
+
+                        "SimpleQuantityKind",
+
+                        "SimpleUnit",
+
+                        "SiteDirectoryDataAnnotation",
+
+                        "SiteDirectoryDataDiscussionItem",
+
+                        "SiteDirectoryThingReference",
+
+                        "SiteLogEntry",
+
+                        "SiteReferenceDataLibrary",
+
+                        "SpecializedQuantityKind",
+
+                        "TelephoneNumber",
+
+                        "Term",
+
+                        "TextParameterType",
+
+                        "TimeOfDayParameterType",
+
+                        "UnitFactor",
+
+                        "UnitPrefix",
+
+                        "UserPreference",
+                        },
                 },
-                {
-                    "Iteration", 
-                    new[] 
-                        {
-                            "ActualFiniteState",
-                            "ActualFiniteStateList",
-                            "AndExpression",
-                            "BinaryRelationship",
-                            "Bounds",
-                            "BuiltInRuleVerification",
-                            "Color",
-                            "DiagramCanvas",
-                            "DiagramEdge",
-                            "DiagramObject",
-                            "DomainFileStore",
-                            "ElementDefinition",
-                            "ElementUsage",
-                            "ExclusiveOrExpression",
-                            "ExternalIdentifierMap",
-                            "File",
-                            "FileRevision",
-                            "Folder",
-                            "Goal",
-                            "IdCorrespondence",
-                            "MultiRelationship",
-                            "NestedElement",
-                            "NestedParameter",
-                            "NotExpression",
-                            "Option",
-                            "OrExpression",
-                            "OwnedStyle",
-                            "Parameter",
-                            "ParameterGroup",
-                            "ParameterOverride",
-                            "ParameterOverrideValueSet",
-                            "ParameterSubscription",
-                            "ParameterSubscriptionValueSet",
-                            "ParameterValueSet",
-                            "ParametricConstraint",
-                            "Point",
-                            "PossibleFiniteState",
-                            "PossibleFiniteStateList",
-                            "Publication",
-                            "RelationalExpression",
-                            "RelationshipParameterValue",
-                            "Requirement",
-                            "RequirementsContainerParameterValue",
-                            "RequirementsGroup",
-                            "RequirementsSpecification",
-                            "RuleVerificationList",
-                            "RuleViolation",
-                            "SharedStyle",
-                            "SimpleParameterValue",
-                            "Stakeholder",
-                            "StakeholderValue",
-                            "StakeHolderValueMap",
-                            "StakeHolderValueMapSettings",
-                            "UserRuleVerification",
-                            "ValueGroup"
-                         }
-                }
             };
 
         /// <summary>

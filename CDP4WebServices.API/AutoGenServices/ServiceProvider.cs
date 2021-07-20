@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ServiceProvider.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -76,9 +76,29 @@ namespace CDP4WebServices.API.Services
         public IApprovalService ApprovalService { get; set; }
 
         /// <summary>
+        /// Gets or sets the architectureDiagram service.
+        /// </summary>
+        public IArchitectureDiagramService ArchitectureDiagramService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the architectureElement service.
+        /// </summary>
+        public IArchitectureElementService ArchitectureElementService { get; set; }
+
+        /// <summary>
         /// Gets or sets the arrayParameterType service.
         /// </summary>
         public IArrayParameterTypeService ArrayParameterTypeService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavior service.
+        /// </summary>
+        public IBehaviorService BehaviorService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavioralParameter service.
+        /// </summary>
+        public IBehavioralParameterService BehavioralParameterService { get; set; }
 
         /// <summary>
         /// Gets or sets the binaryNote service.
@@ -241,6 +261,11 @@ namespace CDP4WebServices.API.Services
         public IDiagramElementThingService DiagramElementThingService { get; set; }
 
         /// <summary>
+        /// Gets or sets the diagramFrame service.
+        /// </summary>
+        public IDiagramFrameService DiagramFrameService { get; set; }
+
+        /// <summary>
         /// Gets or sets the diagrammingStyle service.
         /// </summary>
         public IDiagrammingStyleService DiagrammingStyleService { get; set; }
@@ -249,6 +274,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the diagramObject service.
         /// </summary>
         public IDiagramObjectService DiagramObjectService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the diagramPort service.
+        /// </summary>
+        public IDiagramPortService DiagramPortService { get; set; }
 
         /// <summary>
         /// Gets or sets the diagramShape service.
@@ -962,7 +992,11 @@ namespace CDP4WebServices.API.Services
                             { "Alias", this.AliasService },
                             { "AndExpression", this.AndExpressionService },
                             { "Approval", this.ApprovalService },
+                            { "ArchitectureDiagram", this.ArchitectureDiagramService },
+                            { "ArchitectureElement", this.ArchitectureElementService },
                             { "ArrayParameterType", this.ArrayParameterTypeService },
+                            { "Behavior", this.BehaviorService },
+                            { "BehavioralParameter", this.BehavioralParameterService },
                             { "BinaryNote", this.BinaryNoteService },
                             { "BinaryRelationship", this.BinaryRelationshipService },
                             { "BinaryRelationshipRule", this.BinaryRelationshipRuleService },
@@ -995,8 +1029,10 @@ namespace CDP4WebServices.API.Services
                             { "DiagramEdge", this.DiagramEdgeService },
                             { "DiagramElementContainer", this.DiagramElementContainerService },
                             { "DiagramElementThing", this.DiagramElementThingService },
+                            { "DiagramFrame", this.DiagramFrameService },
                             { "DiagrammingStyle", this.DiagrammingStyleService },
                             { "DiagramObject", this.DiagramObjectService },
+                            { "DiagramPort", this.DiagramPortService },
                             { "DiagramShape", this.DiagramShapeService },
                             { "DiagramThingBase", this.DiagramThingBaseService },
                             { "DiscussionItem", this.DiscussionItemService },
@@ -1160,7 +1196,11 @@ namespace CDP4WebServices.API.Services
                             { "Alias", this.AliasService },
                             { "AndExpression", this.AndExpressionService },
                             { "Approval", this.ApprovalService },
+                            { "ArchitectureDiagram", this.ArchitectureDiagramService },
+                            { "ArchitectureElement", this.ArchitectureElementService },
                             { "ArrayParameterType", this.ArrayParameterTypeService },
+                            { "Behavior", this.BehaviorService },
+                            { "BehavioralParameter", this.BehavioralParameterService },
                             { "BinaryNote", this.BinaryNoteService },
                             { "BinaryRelationship", this.BinaryRelationshipService },
                             { "BinaryRelationshipRule", this.BinaryRelationshipRuleService },
@@ -1193,8 +1233,10 @@ namespace CDP4WebServices.API.Services
                             { "DiagramEdge", this.DiagramEdgeService },
                             { "DiagramElementContainer", this.DiagramElementContainerService },
                             { "DiagramElementThing", this.DiagramElementThingService },
+                            { "DiagramFrame", this.DiagramFrameService },
                             { "DiagrammingStyle", this.DiagrammingStyleService },
                             { "DiagramObject", this.DiagramObjectService },
+                            { "DiagramPort", this.DiagramPortService },
                             { "DiagramShape", this.DiagramShapeService },
                             { "DiagramThingBase", this.DiagramThingBaseService },
                             { "DiscussionItem", this.DiscussionItemService },

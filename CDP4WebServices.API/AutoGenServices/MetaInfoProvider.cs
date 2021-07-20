@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MetaInfoProvider.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2019 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -72,9 +72,29 @@ namespace CDP4WebServices.API.Services
         public IApprovalMetaInfo ApprovalMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the architectureDiagram meta info.
+        /// </summary>
+        public IArchitectureDiagramMetaInfo ArchitectureDiagramMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the architectureElement meta info.
+        /// </summary>
+        public IArchitectureElementMetaInfo ArchitectureElementMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the arrayParameterType meta info.
         /// </summary>
         public IArrayParameterTypeMetaInfo ArrayParameterTypeMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavior meta info.
+        /// </summary>
+        public IBehaviorMetaInfo BehaviorMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavioralParameter meta info.
+        /// </summary>
+        public IBehavioralParameterMetaInfo BehavioralParameterMetaInfo { get; set; }
 
         /// <summary>
         /// Gets or sets the binaryNote meta info.
@@ -237,6 +257,11 @@ namespace CDP4WebServices.API.Services
         public IDiagramElementThingMetaInfo DiagramElementThingMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the diagramFrame meta info.
+        /// </summary>
+        public IDiagramFrameMetaInfo DiagramFrameMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the diagrammingStyle meta info.
         /// </summary>
         public IDiagrammingStyleMetaInfo DiagrammingStyleMetaInfo { get; set; }
@@ -245,6 +270,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the diagramObject meta info.
         /// </summary>
         public IDiagramObjectMetaInfo DiagramObjectMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the diagramPort meta info.
+        /// </summary>
+        public IDiagramPortMetaInfo DiagramPortMetaInfo { get; set; }
 
         /// <summary>
         /// Gets or sets the diagramShape meta info.
@@ -958,7 +988,11 @@ namespace CDP4WebServices.API.Services
                             { "Alias", this.AliasMetaInfo },
                             { "AndExpression", this.AndExpressionMetaInfo },
                             { "Approval", this.ApprovalMetaInfo },
+                            { "ArchitectureDiagram", this.ArchitectureDiagramMetaInfo },
+                            { "ArchitectureElement", this.ArchitectureElementMetaInfo },
                             { "ArrayParameterType", this.ArrayParameterTypeMetaInfo },
+                            { "Behavior", this.BehaviorMetaInfo },
+                            { "BehavioralParameter", this.BehavioralParameterMetaInfo },
                             { "BinaryNote", this.BinaryNoteMetaInfo },
                             { "BinaryRelationship", this.BinaryRelationshipMetaInfo },
                             { "BinaryRelationshipRule", this.BinaryRelationshipRuleMetaInfo },
@@ -991,8 +1025,10 @@ namespace CDP4WebServices.API.Services
                             { "DiagramEdge", this.DiagramEdgeMetaInfo },
                             { "DiagramElementContainer", this.DiagramElementContainerMetaInfo },
                             { "DiagramElementThing", this.DiagramElementThingMetaInfo },
+                            { "DiagramFrame", this.DiagramFrameMetaInfo },
                             { "DiagrammingStyle", this.DiagrammingStyleMetaInfo },
                             { "DiagramObject", this.DiagramObjectMetaInfo },
+                            { "DiagramPort", this.DiagramPortMetaInfo },
                             { "DiagramShape", this.DiagramShapeMetaInfo },
                             { "DiagramThingBase", this.DiagramThingBaseMetaInfo },
                             { "DiscussionItem", this.DiscussionItemMetaInfo },
