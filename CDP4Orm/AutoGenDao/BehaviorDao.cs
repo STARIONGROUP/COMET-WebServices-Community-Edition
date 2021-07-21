@@ -138,7 +138,6 @@ namespace CDP4Orm.Dao
             string tempBehavioralModelKind;
             string tempModifiedOn;
             string tempName;
-            string tempName;
             string tempScript;
             string tempShortName;
             string tempThingPreference;
@@ -164,11 +163,6 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
-            }
-
-            if (valueDict.TryGetValue("Name", out tempName))
-            {
-                dto.Name = tempName.UnEscape();
             }
 
             if (valueDict.TryGetValue("Name", out tempName))
@@ -224,8 +218,6 @@ namespace CDP4Orm.Dao
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
                     { "BehavioralModelKind", !this.IsDerived(behavior, "BehavioralModelKind") ? behavior.BehavioralModelKind.ToString() : string.Empty },
-                    { "Name", !this.IsDerived(behavior, "Name") ? behavior.Name.Escape() : string.Empty },
-                    { "Name", !this.IsDerived(behavior, "Name") ? behavior.Name.Escape() : string.Empty },
                     { "Script", !this.IsDerived(behavior, "Script") ? behavior.Script.Escape() : null },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
@@ -280,8 +272,6 @@ namespace CDP4Orm.Dao
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
                 { "BehavioralModelKind", !this.IsDerived(behavior, "BehavioralModelKind") ? behavior.BehavioralModelKind.ToString() : string.Empty },
-                { "Name", !this.IsDerived(behavior, "Name") ? behavior.Name.Escape() : string.Empty },
-                { "Name", !this.IsDerived(behavior, "Name") ? behavior.Name.Escape() : string.Empty },
                 { "Script", !this.IsDerived(behavior, "Script") ? behavior.Script.Escape() : null },
             }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
@@ -342,8 +332,6 @@ namespace CDP4Orm.Dao
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
                     { "BehavioralModelKind", !this.IsDerived(behavior, "BehavioralModelKind") ? behavior.BehavioralModelKind.ToString() : string.Empty },
-                    { "Name", !this.IsDerived(behavior, "Name") ? behavior.Name.Escape() : string.Empty },
-                    { "Name", !this.IsDerived(behavior, "Name") ? behavior.Name.Escape() : string.Empty },
                     { "Script", !this.IsDerived(behavior, "Script") ? behavior.Script.Escape() : null },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 

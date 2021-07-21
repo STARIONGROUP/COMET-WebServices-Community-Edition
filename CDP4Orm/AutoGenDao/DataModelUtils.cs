@@ -126,344 +126,188 @@ namespace CDP4Orm.Dao
                     "EngineeringModel",
                     new []
                         {
-
                         "ActionItem",
-
-                        "ActualFiniteState",
-
-                        "ActualFiniteStateList",
-
-                        "Alias",
-
-                        "AndExpression",
-
                         "Approval",
-
-                        "ArchitectureDiagram",
-
-                        "ArchitectureElement",
-
-                        "Behavior",
-
-                        "BehavioralParameter",
-
                         "BinaryNote",
-
-                        "BinaryRelationship",
-
                         "Book",
-
-                        "BooleanExpression",
-
-                        "Bounds",
-
-                        "BuiltInRuleVerification",
-
                         "ChangeProposal",
-
                         "ChangeRequest",
-
-                        "Citation",
-
-                        "Color",
-
                         "CommonFileStore",
-
                         "ContractChangeNotice",
-
-                        "Definition",
-
-                        "DiagramCanvas",
-
-                        "DiagramEdge",
-
-                        "DiagramElementThing",
-
-                        "DiagramFrame",
-
-                        "DiagramObject",
-
-                        "DiagramPort",
-
-                        "DomainFileStore",
-
-                        "ElementDefinition",
-
-                        "ElementUsage",
-
+                        "EngineeringModel",
                         "EngineeringModelDataDiscussionItem",
-
                         "EngineeringModelDataNote",
-
-                        "ExclusiveOrExpression",
-
-                        "ExternalIdentifierMap",
-
-                        "File",
-
-                        "FileRevision",
-
-                        "Folder",
-
-                        "Goal",
-
-                        "HyperLink",
-
-                        "IdCorrespondence",
-
                         "Iteration",
-
                         "LogEntryChangelogItem",
-
                         "ModellingAnnotationItem",
-
                         "ModellingThingReference",
-
                         "ModelLogEntry",
-
-                        "MultiRelationship",
-
-                        "NestedElement",
-
-                        "NestedParameter",
-
                         "Note",
-
-                        "NotExpression",
-
-                        "Option",
-
-                        "OrExpression",
-
-                        "OwnedStyle",
-
                         "Page",
-
-                        "Parameter",
-
-                        "ParameterGroup",
-
-                        "ParameterOverride",
-
-                        "ParameterOverrideValueSet",
-
-                        "ParameterSubscription",
-
-                        "ParameterSubscriptionValueSet",
-
-                        "ParameterValueSet",
-
-                        "ParametricConstraint",
-
-                        "Point",
-
-                        "PossibleFiniteState",
-
-                        "PossibleFiniteStateList",
-
-                        "Publication",
-
-                        "RelationalExpression",
-
-                        "Relationship",
-
-                        "RelationshipParameterValue",
-
                         "RequestForDeviation",
-
                         "RequestForWaiver",
-
-                        "Requirement",
-
-                        "RequirementsContainerParameterValue",
-
-                        "RequirementsGroup",
-
-                        "RequirementsSpecification",
-
                         "ReviewItemDiscrepancy",
-
-                        "RuleVerification",
-
-                        "RuleVerificationList",
-
-                        "RuleViolation",
-
                         "Section",
-
-                        "SharedStyle",
-
-                        "SimpleParameterValue",
-
                         "Solution",
-
-                        "Stakeholder",
-
-                        "StakeholderValue",
-
-                        "StakeHolderValueMap",
-
-                        "StakeHolderValueMapSettings",
-
                         "TextualNote",
+                        }
+                },
 
+                {
+                    "Iteration",
+                    new []
+                        {
+                        "ActualFiniteState",
+                        "ActualFiniteStateList",
+                        "Alias",
+                        "AndExpression",
+                        "ArchitectureDiagram",
+                        "ArchitectureElement",
+                        "Behavior",
+                        "BehavioralParameter",
+                        "BinaryRelationship",
+                        "BooleanExpression",
+                        "Bounds",
+                        "BuiltInRuleVerification",
+                        "Citation",
+                        "Color",
+                        "Definition",
+                        "DiagramCanvas",
+                        "DiagramEdge",
+                        "DiagramElementThing",
+                        "DiagramFrame",
+                        "DiagramObject",
+                        "DiagramPort",
+                        "DomainFileStore",
+                        "ElementDefinition",
+                        "ElementUsage",
+                        "ExclusiveOrExpression",
+                        "ExternalIdentifierMap",
+                        "File",
+                        "FileRevision",
+                        "Folder",
+                        "Goal",
+                        "HyperLink",
+                        "IdCorrespondence",
+                        "MultiRelationship",
+                        "NestedElement",
+                        "NestedParameter",
+                        "NotExpression",
+                        "Option",
+                        "OrExpression",
+                        "OwnedStyle",
+                        "Parameter",
+                        "ParameterGroup",
+                        "ParameterOverride",
+                        "ParameterOverrideValueSet",
+                        "ParameterSubscription",
+                        "ParameterSubscriptionValueSet",
+                        "ParameterValueSet",
+                        "ParametricConstraint",
+                        "Point",
+                        "PossibleFiniteState",
+                        "PossibleFiniteStateList",
+                        "Publication",
+                        "RelationalExpression",
+                        "Relationship",
+                        "RelationshipParameterValue",
+                        "Requirement",
+                        "RequirementsContainerParameterValue",
+                        "RequirementsGroup",
+                        "RequirementsSpecification",
+                        "RuleVerification",
+                        "RuleVerificationList",
+                        "RuleViolation",
+                        "SharedStyle",
+                        "SimpleParameterValue",
+                        "Stakeholder",
+                        "StakeholderValue",
+                        "StakeHolderValueMap",
+                        "StakeHolderValueMapSettings",
                         "UserRuleVerification",
-
                         "ValueGroup",
-                        },
+                        }
                 },
 
                 {
                     "SiteDirectory",
                     new []
                         {
-
                         "Alias",
-
                         "ArrayParameterType",
-
                         "BinaryRelationshipRule",
-
                         "BooleanParameterType",
-
                         "Category",
-
                         "Citation",
-
                         "CompoundParameterType",
-
                         "Constant",
-
                         "CyclicRatioScale",
-
                         "DateParameterType",
-
                         "DateTimeParameterType",
-
                         "DecompositionRule",
-
                         "Definition",
-
                         "DependentParameterTypeAssignment",
-
                         "DerivedQuantityKind",
-
                         "DerivedUnit",
-
                         "DomainOfExpertise",
-
                         "DomainOfExpertiseGroup",
-
                         "EmailAddress",
-
                         "EngineeringModelSetup",
-
                         "EnumerationParameterType",
-
                         "EnumerationValueDefinition",
-
                         "FileType",
-
                         "Glossary",
-
                         "HyperLink",
-
                         "IndependentParameterTypeAssignment",
-
                         "IntervalScale",
-
                         "IterationSetup",
-
                         "LinearConversionUnit",
-
                         "LogarithmicScale",
-
                         "LogEntryChangelogItem",
-
                         "MappingToReferenceScale",
-
                         "MeasurementScale",
-
                         "MeasurementUnit",
-
                         "ModelReferenceDataLibrary",
-
                         "MultiRelationshipRule",
-
                         "NaturalLanguage",
-
                         "OrdinalScale",
-
                         "Organization",
-
                         "OrganizationalParticipant",
-
                         "ParameterizedCategoryRule",
-
                         "ParameterType",
-
                         "ParameterTypeComponent",
-
                         "Participant",
-
                         "ParticipantPermission",
-
                         "ParticipantRole",
-
                         "Person",
-
                         "PersonPermission",
-
                         "PersonRole",
-
                         "PrefixedUnit",
-
                         "QuantityKindFactor",
-
                         "RatioScale",
-
                         "ReferencerRule",
-
                         "ReferenceSource",
-
                         "Rule",
-
                         "SampledFunctionParameterType",
-
                         "ScaleReferenceQuantityValue",
-
                         "ScaleValueDefinition",
-
                         "SimpleQuantityKind",
-
                         "SimpleUnit",
-
+                        "SiteDirectory",
                         "SiteDirectoryDataAnnotation",
-
                         "SiteDirectoryDataDiscussionItem",
-
                         "SiteDirectoryThingReference",
-
                         "SiteLogEntry",
-
                         "SiteReferenceDataLibrary",
-
                         "SpecializedQuantityKind",
-
                         "TelephoneNumber",
-
                         "Term",
-
                         "TextParameterType",
-
                         "TimeOfDayParameterType",
-
                         "UnitFactor",
-
                         "UnitPrefix",
-
                         "UserPreference",
-                        },
+                        }
                 },
             };
 
