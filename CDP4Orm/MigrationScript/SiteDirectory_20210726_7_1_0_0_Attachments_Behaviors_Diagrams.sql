@@ -1,4 +1,4 @@
-﻿-- Create table for class Attachment
+﻿-- Create table for class Attachment (which derives from: Thing)
 CREATE TABLE "SiteDirectory"."Attachment" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
@@ -46,9 +46,9 @@ ALTER TABLE "SiteDirectory"."Attachment_Cache" SET (autovacuum_analyze_scale_fac
 
 ALTER TABLE "SiteDirectory"."Attachment_Cache" SET (autovacuum_analyze_threshold = 2500);
 
--- Attachment is contained (composite) by Thing: [0..*]-[1..1]
+-- Attachment is contained (composite) by DefinedThing: [0..*]-[1..1]
 ALTER TABLE "SiteDirectory"."Attachment" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."Attachment" ADD CONSTRAINT "Attachment_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
+ALTER TABLE "SiteDirectory"."Attachment" ADD CONSTRAINT "Attachment_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 -- add index on container
 CREATE INDEX "Idx_Attachment_Container" ON "SiteDirectory"."Attachment" ("Container");
 CREATE TRIGGER attachment_apply_revision
@@ -57,6 +57,8 @@ CREATE TRIGGER attachment_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
 
+-- Class Attachment derives from Thing
+ALTER TABLE "SiteDirectory"."Attachment" ADD CONSTRAINT "AttachmentDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 -- FileType is a collection property (many to many) of class Attachment: [1..*]-[1..1]
 CREATE TABLE "SiteDirectory"."Attachment_FileType" (
   "Attachment" uuid NOT NULL,
@@ -211,275 +213,14 @@ END
 $BODY$
   LANGUAGE plpgsql VOLATILE;
 
-CREATE OR REPLACE VIEW "SiteDirectory"."Thing_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" AS "ValueTypeSet",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."TopContainer_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "TopContainer"."ValueTypeDictionary" AS "ValueTypeSet",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."TopContainer_Data"() AS "TopContainer" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."SiteDirectory_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "TopContainer"."ValueTypeDictionary" || "SiteDirectory"."ValueTypeDictionary" AS "ValueTypeSet",
-	"SiteDirectory"."DefaultParticipantRole",
-	"SiteDirectory"."DefaultPersonRole",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("SiteDirectory_Organization"."Organization",'{}'::text[]) AS "Organization",
-	COALESCE("SiteDirectory_Person"."Person",'{}'::text[]) AS "Person",
-	COALESCE("SiteDirectory_ParticipantRole"."ParticipantRole",'{}'::text[]) AS "ParticipantRole",
-	COALESCE("SiteDirectory_SiteReferenceDataLibrary"."SiteReferenceDataLibrary",'{}'::text[]) AS "SiteReferenceDataLibrary",
-	COALESCE("SiteDirectory_Model"."Model",'{}'::text[]) AS "Model",
-	COALESCE("SiteDirectory_PersonRole"."PersonRole",'{}'::text[]) AS "PersonRole",
-	COALESCE("SiteDirectory_LogEntry"."LogEntry",'{}'::text[]) AS "LogEntry",
-	COALESCE("SiteDirectory_DomainGroup"."DomainGroup",'{}'::text[]) AS "DomainGroup",
-	COALESCE("SiteDirectory_Domain"."Domain",'{}'::text[]) AS "Domain",
-	COALESCE("SiteDirectory_NaturalLanguage"."NaturalLanguage",'{}'::text[]) AS "NaturalLanguage",
-	COALESCE("SiteDirectory_Annotation"."Annotation",'{}'::text[]) AS "Annotation",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."TopContainer_Data"() AS "TopContainer" USING ("Iid")
-  JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
-  LEFT JOIN (SELECT "Organization"."Container" AS "Iid", array_agg("Organization"."Iid"::text) AS "Organization"
-   FROM "SiteDirectory"."Organization_Data"() AS "Organization"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "Organization"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "Organization"."Container") AS "SiteDirectory_Organization" USING ("Iid")
-  LEFT JOIN (SELECT "Person"."Container" AS "Iid", array_agg("Person"."Iid"::text) AS "Person"
-   FROM "SiteDirectory"."Person_Data"() AS "Person"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "Person"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "Person"."Container") AS "SiteDirectory_Person" USING ("Iid")
-  LEFT JOIN (SELECT "ParticipantRole"."Container" AS "Iid", array_agg("ParticipantRole"."Iid"::text) AS "ParticipantRole"
-   FROM "SiteDirectory"."ParticipantRole_Data"() AS "ParticipantRole"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "ParticipantRole"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "ParticipantRole"."Container") AS "SiteDirectory_ParticipantRole" USING ("Iid")
-  LEFT JOIN (SELECT "SiteReferenceDataLibrary"."Container" AS "Iid", array_agg("SiteReferenceDataLibrary"."Iid"::text) AS "SiteReferenceDataLibrary"
-   FROM "SiteDirectory"."SiteReferenceDataLibrary_Data"() AS "SiteReferenceDataLibrary"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "SiteReferenceDataLibrary"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "SiteReferenceDataLibrary"."Container") AS "SiteDirectory_SiteReferenceDataLibrary" USING ("Iid")
-  LEFT JOIN (SELECT "EngineeringModelSetup"."Container" AS "Iid", array_agg("EngineeringModelSetup"."Iid"::text) AS "Model"
-   FROM "SiteDirectory"."EngineeringModelSetup_Data"() AS "EngineeringModelSetup"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "EngineeringModelSetup"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "EngineeringModelSetup"."Container") AS "SiteDirectory_Model" USING ("Iid")
-  LEFT JOIN (SELECT "PersonRole"."Container" AS "Iid", array_agg("PersonRole"."Iid"::text) AS "PersonRole"
-   FROM "SiteDirectory"."PersonRole_Data"() AS "PersonRole"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "PersonRole"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "PersonRole"."Container") AS "SiteDirectory_PersonRole" USING ("Iid")
-  LEFT JOIN (SELECT "SiteLogEntry"."Container" AS "Iid", array_agg("SiteLogEntry"."Iid"::text) AS "LogEntry"
-   FROM "SiteDirectory"."SiteLogEntry_Data"() AS "SiteLogEntry"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "SiteLogEntry"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "SiteLogEntry"."Container") AS "SiteDirectory_LogEntry" USING ("Iid")
-  LEFT JOIN (SELECT "DomainOfExpertiseGroup"."Container" AS "Iid", array_agg("DomainOfExpertiseGroup"."Iid"::text) AS "DomainGroup"
-   FROM "SiteDirectory"."DomainOfExpertiseGroup_Data"() AS "DomainOfExpertiseGroup"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "DomainOfExpertiseGroup"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "DomainOfExpertiseGroup"."Container") AS "SiteDirectory_DomainGroup" USING ("Iid")
-  LEFT JOIN (SELECT "DomainOfExpertise"."Container" AS "Iid", array_agg("DomainOfExpertise"."Iid"::text) AS "Domain"
-   FROM "SiteDirectory"."DomainOfExpertise_Data"() AS "DomainOfExpertise"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "DomainOfExpertise"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "DomainOfExpertise"."Container") AS "SiteDirectory_Domain" USING ("Iid")
-  LEFT JOIN (SELECT "NaturalLanguage"."Container" AS "Iid", array_agg("NaturalLanguage"."Iid"::text) AS "NaturalLanguage"
-   FROM "SiteDirectory"."NaturalLanguage_Data"() AS "NaturalLanguage"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "NaturalLanguage"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "NaturalLanguage"."Container") AS "SiteDirectory_NaturalLanguage" USING ("Iid")
-  LEFT JOIN (SELECT "SiteDirectoryDataAnnotation"."Container" AS "Iid", array_agg("SiteDirectoryDataAnnotation"."Iid"::text) AS "Annotation"
-   FROM "SiteDirectory"."SiteDirectoryDataAnnotation_Data"() AS "SiteDirectoryDataAnnotation"
-   JOIN "SiteDirectory"."SiteDirectory_Data"() AS "SiteDirectory" ON "SiteDirectoryDataAnnotation"."Container" = "SiteDirectory"."Iid"
-   GROUP BY "SiteDirectoryDataAnnotation"."Container") AS "SiteDirectory_Annotation" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."Attachment_View" AS
- SELECT "Thing"."Iid", "Attachment"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Attachment"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Attachment_FileType"."FileType",'{}'::text[]) AS "FileType"
-  FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-  LEFT JOIN (SELECT "Attachment" AS "Iid", array_agg("FileType"::text) AS "FileType"
-   FROM "SiteDirectory"."Attachment_FileType_Data"() AS "Attachment_FileType"
-   JOIN "SiteDirectory"."Attachment_Data"() AS "Attachment" ON "Attachment" = "Iid"
-   GROUP BY "Attachment") AS "Attachment_FileType" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."Organization_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Organization"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Organization"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."Organization_Data"() AS "Organization" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."Person_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Person"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Person"."Container",
-	NULL::bigint AS "Sequence",
-	"Person"."Organization",
-	"Person"."DefaultDomain",
-	"Person"."Role",
-	"Person"."DefaultEmailAddress",
-	"Person"."DefaultTelephoneNumber",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Person_EmailAddress"."EmailAddress",'{}'::text[]) AS "EmailAddress",
-	COALESCE("Person_TelephoneNumber"."TelephoneNumber",'{}'::text[]) AS "TelephoneNumber",
-	COALESCE("Person_UserPreference"."UserPreference",'{}'::text[]) AS "UserPreference",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."Person_Data"() AS "Person" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
-  LEFT JOIN (SELECT "EmailAddress"."Container" AS "Iid", array_agg("EmailAddress"."Iid"::text) AS "EmailAddress"
-   FROM "SiteDirectory"."EmailAddress_Data"() AS "EmailAddress"
-   JOIN "SiteDirectory"."Person_Data"() AS "Person" ON "EmailAddress"."Container" = "Person"."Iid"
-   GROUP BY "EmailAddress"."Container") AS "Person_EmailAddress" USING ("Iid")
-  LEFT JOIN (SELECT "TelephoneNumber"."Container" AS "Iid", array_agg("TelephoneNumber"."Iid"::text) AS "TelephoneNumber"
-   FROM "SiteDirectory"."TelephoneNumber_Data"() AS "TelephoneNumber"
-   JOIN "SiteDirectory"."Person_Data"() AS "Person" ON "TelephoneNumber"."Container" = "Person"."Iid"
-   GROUP BY "TelephoneNumber"."Container") AS "Person_TelephoneNumber" USING ("Iid")
-  LEFT JOIN (SELECT "UserPreference"."Container" AS "Iid", array_agg("UserPreference"."Iid"::text) AS "UserPreference"
-   FROM "SiteDirectory"."UserPreference_Data"() AS "UserPreference"
-   JOIN "SiteDirectory"."Person_Data"() AS "Person" ON "UserPreference"."Container" = "Person"."Iid"
-   GROUP BY "UserPreference"."Container") AS "Person_UserPreference" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."EmailAddress_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "EmailAddress"."ValueTypeDictionary" AS "ValueTypeSet",
-	"EmailAddress"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."EmailAddress_Data"() AS "EmailAddress" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."TelephoneNumber_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "TelephoneNumber"."ValueTypeDictionary" AS "ValueTypeSet",
-	"TelephoneNumber"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
-	COALESCE("TelephoneNumber_VcardType"."VcardType",'{}'::text[]) AS "VcardType"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."TelephoneNumber_Data"() AS "TelephoneNumber" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
- LEFT JOIN (SELECT "TelephoneNumber" AS "Iid", array_agg("VcardType"::text) AS "VcardType"
-   FROM "SiteDirectory"."TelephoneNumber_VcardType_Data"() AS "TelephoneNumber_VcardType"
-   JOIN "SiteDirectory"."TelephoneNumber_Data"() AS "TelephoneNumber" ON "TelephoneNumber" = "Iid"
-   GROUP BY "TelephoneNumber") AS "TelephoneNumber_VcardType" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."UserPreference_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "UserPreference"."ValueTypeDictionary" AS "ValueTypeSet",
-	"UserPreference"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."UserPreference_Data"() AS "UserPreference" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."DefinedThing_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DefinedThing_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" AS "ValueTypeSet",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -492,10 +233,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DefinedThing_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -507,16 +244,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DefinedThing_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."ParticipantRole_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ParticipantRole_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParticipantRole"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParticipantRole"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("ParticipantRole_ParticipantPermission"."ParticipantPermission",'{}'::text[]) AS "ParticipantPermission",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
@@ -531,10 +274,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ParticipantRole_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -547,45 +286,24 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ParticipantRole_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ParticipantPermission"."Container" AS "Iid", array_agg("ParticipantPermission"."Iid"::text) AS "ParticipantPermission"
    FROM "SiteDirectory"."ParticipantPermission_Data"() AS "ParticipantPermission"
    JOIN "SiteDirectory"."ParticipantRole_Data"() AS "ParticipantRole" ON "ParticipantPermission"."Container" = "ParticipantRole"."Iid"
    GROUP BY "ParticipantPermission"."Container") AS "ParticipantRole_ParticipantPermission" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."Alias_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Alias"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Alias"."Container",
+CREATE OR REPLACE VIEW "SiteDirectory"."Attachment_View" AS
+ SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Attachment"."ValueTypeDictionary" AS "ValueTypeSet",
+	"Attachment"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."Alias_Data"() AS "Alias" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."Definition_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Definition"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Definition"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Definition_Citation"."Citation",'{}'::text[]) AS "Citation",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
-	COALESCE("Definition_Note"."Note",'{}'::text[]) AS "Note",
-	COALESCE("Definition_Example"."Example",'{}'::text[]) AS "Example"
+	COALESCE("Attachment_FileType"."FileType",'{}'::text[]) AS "FileType"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."Definition_Data"() AS "Definition" USING ("Iid")
+  JOIN "SiteDirectory"."Attachment_Data"() AS "Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
    FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
@@ -594,97 +312,20 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Definition_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
- LEFT JOIN (SELECT "Definition" AS "Iid", ARRAY[array_agg("Sequence"::text), array_agg("Note"::text)] AS "Note"
-   FROM "SiteDirectory"."Definition_Note_Data"() AS "Definition_Note"
-   JOIN "SiteDirectory"."Definition_Data"() AS "Definition" ON "Definition" = "Iid"
-   GROUP BY "Definition") AS "Definition_Note" USING ("Iid")
- LEFT JOIN (SELECT "Definition" AS "Iid", ARRAY[array_agg("Sequence"::text), array_agg("Example"::text)] AS "Example"
-   FROM "SiteDirectory"."Definition_Example_Data"() AS "Definition_Example"
-   JOIN "SiteDirectory"."Definition_Data"() AS "Definition" ON "Definition" = "Iid"
-   GROUP BY "Definition") AS "Definition_Example" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
-  LEFT JOIN (SELECT "Citation"."Container" AS "Iid", array_agg("Citation"."Iid"::text) AS "Citation"
-   FROM "SiteDirectory"."Citation_Data"() AS "Citation"
-   JOIN "SiteDirectory"."Definition_Data"() AS "Definition" ON "Citation"."Container" = "Definition"."Iid"
-   GROUP BY "Citation"."Container") AS "Definition_Citation" USING ("Iid");
+ LEFT JOIN (SELECT "Attachment" AS "Iid", array_agg("FileType"::text) AS "FileType"
+   FROM "SiteDirectory"."Attachment_FileType_Data"() AS "Attachment_FileType"
+   JOIN "SiteDirectory"."Attachment_Data"() AS "Attachment" ON "Attachment" = "Iid"
+   GROUP BY "Attachment") AS "Attachment_FileType" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."Citation_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Citation"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Citation"."Container",
-	NULL::bigint AS "Sequence",
-	"Citation"."Source",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."Citation_Data"() AS "Citation" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."HyperLink_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "HyperLink"."ValueTypeDictionary" AS "ValueTypeSet",
-	"HyperLink"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."HyperLink_Data"() AS "HyperLink" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."ParticipantPermission_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ParticipantPermission"."ValueTypeDictionary" AS "ValueTypeSet",
-	"ParticipantPermission"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."ParticipantPermission_Data"() AS "ParticipantPermission" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."ReferenceDataLibrary_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceDataLibrary_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ReferenceDataLibrary"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ReferenceDataLibrary"."RequiredRdl",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("ReferenceDataLibrary_DefinedCategory"."DefinedCategory",'{}'::text[]) AS "DefinedCategory",
 	COALESCE("ReferenceDataLibrary_ParameterType"."ParameterType",'{}'::text[]) AS "ParameterType",
 	COALESCE("ReferenceDataLibrary_Scale"."Scale",'{}'::text[]) AS "Scale",
@@ -718,10 +359,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceDataLibrary_View" AS
    FROM "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Data"() AS "ReferenceDataLibrary_BaseUnit"
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "ReferenceDataLibrary" = "Iid"
    GROUP BY "ReferenceDataLibrary") AS "ReferenceDataLibrary_BaseUnit" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -734,6 +371,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceDataLibrary_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Category"."Container" AS "Iid", array_agg("Category"."Iid"::text) AS "DefinedCategory"
    FROM "SiteDirectory"."Category_Data"() AS "Category"
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "Category"."Container" = "ReferenceDataLibrary"."Iid"
@@ -775,15 +416,17 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceDataLibrary_View" AS
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "Constant"."Container" = "ReferenceDataLibrary"."Iid"
    GROUP BY "Constant"."Container") AS "ReferenceDataLibrary_Constant" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."SiteReferenceDataLibrary_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."SiteReferenceDataLibrary_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ReferenceDataLibrary"."ValueTypeDictionary" || "SiteReferenceDataLibrary"."ValueTypeDictionary" AS "ValueTypeSet",
 	"SiteReferenceDataLibrary"."Container",
 	NULL::bigint AS "Sequence",
 	"ReferenceDataLibrary"."RequiredRdl",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("ReferenceDataLibrary_DefinedCategory"."DefinedCategory",'{}'::text[]) AS "DefinedCategory",
 	COALESCE("ReferenceDataLibrary_ParameterType"."ParameterType",'{}'::text[]) AS "ParameterType",
 	COALESCE("ReferenceDataLibrary_Scale"."Scale",'{}'::text[]) AS "Scale",
@@ -818,10 +461,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SiteReferenceDataLibrary_View" AS
    FROM "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Data"() AS "ReferenceDataLibrary_BaseUnit"
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "ReferenceDataLibrary" = "Iid"
    GROUP BY "ReferenceDataLibrary") AS "ReferenceDataLibrary_BaseUnit" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -834,6 +473,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SiteReferenceDataLibrary_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Category"."Container" AS "Iid", array_agg("Category"."Iid"::text) AS "DefinedCategory"
    FROM "SiteDirectory"."Category_Data"() AS "Category"
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "Category"."Container" = "ReferenceDataLibrary"."Iid"
@@ -875,14 +518,16 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SiteReferenceDataLibrary_View" AS
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "Constant"."Container" = "ReferenceDataLibrary"."Iid"
    GROUP BY "Constant"."Container") AS "ReferenceDataLibrary_Constant" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."Category_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."Category_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Category"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Category"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("Category_SuperCategory"."SuperCategory",'{}'::text[]) AS "SuperCategory",
@@ -906,10 +551,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Category_View" AS
    FROM "SiteDirectory"."Category_PermissibleClass_Data"() AS "Category_PermissibleClass"
    JOIN "SiteDirectory"."Category_Data"() AS "Category" ON "Category" = "Iid"
    GROUP BY "Category") AS "Category_PermissibleClass" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -921,16 +562,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Category_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."ParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -949,10 +596,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -964,16 +607,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."CompoundParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."CompoundParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "CompoundParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("CompoundParameterType_Component"."Component",'{}'::text[]) AS "Component",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
@@ -994,10 +643,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."CompoundParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1010,19 +655,25 @@ CREATE OR REPLACE VIEW "SiteDirectory"."CompoundParameterType_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ParameterTypeComponent"."Container" AS "Iid", ARRAY[array_agg("ParameterTypeComponent"."Sequence"::text), array_agg("ParameterTypeComponent"."Iid"::text)] AS "Component"
    FROM "SiteDirectory"."ParameterTypeComponent_Data"() AS "ParameterTypeComponent"
    JOIN "SiteDirectory"."CompoundParameterType_Data"() AS "CompoundParameterType" ON "ParameterTypeComponent"."Container" = "CompoundParameterType"."Iid"
    GROUP BY "ParameterTypeComponent"."Container") AS "CompoundParameterType_Component" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."ArrayParameterType_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."ArrayParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "CompoundParameterType"."ValueTypeDictionary" || "ArrayParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("CompoundParameterType_Component"."Component",'{}'::text[]) AS "Component",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
@@ -1049,10 +700,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ArrayParameterType_View" AS
    FROM "SiteDirectory"."ArrayParameterType_Dimension_Data"() AS "ArrayParameterType_Dimension"
    JOIN "SiteDirectory"."ArrayParameterType_Data"() AS "ArrayParameterType" ON "ArrayParameterType" = "Iid"
    GROUP BY "ArrayParameterType") AS "ArrayParameterType_Dimension" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1065,43 +712,25 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ArrayParameterType_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ParameterTypeComponent"."Container" AS "Iid", ARRAY[array_agg("ParameterTypeComponent"."Sequence"::text), array_agg("ParameterTypeComponent"."Iid"::text)] AS "Component"
    FROM "SiteDirectory"."ParameterTypeComponent_Data"() AS "ParameterTypeComponent"
    JOIN "SiteDirectory"."CompoundParameterType_Data"() AS "CompoundParameterType" ON "ParameterTypeComponent"."Container" = "CompoundParameterType"."Iid"
    GROUP BY "ParameterTypeComponent"."Container") AS "CompoundParameterType_Component" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."ParameterTypeComponent_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ParameterTypeComponent"."ValueTypeDictionary" AS "ValueTypeSet",
-	"ParameterTypeComponent"."Container",
-	"ParameterTypeComponent"."Sequence",
-	"ParameterTypeComponent"."ParameterType",
-	"ParameterTypeComponent"."Scale",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."ParameterTypeComponent_Data"() AS "ParameterTypeComponent" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."ScalarParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ScalarParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -1121,10 +750,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ScalarParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1136,16 +761,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ScalarParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."EnumerationParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."EnumerationParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "EnumerationParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("EnumerationParameterType_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
@@ -1167,10 +798,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EnumerationParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1183,19 +810,25 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EnumerationParameterType_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "EnumerationValueDefinition"."Container" AS "Iid", ARRAY[array_agg("EnumerationValueDefinition"."Sequence"::text), array_agg("EnumerationValueDefinition"."Iid"::text)] AS "ValueDefinition"
    FROM "SiteDirectory"."EnumerationValueDefinition_Data"() AS "EnumerationValueDefinition"
    JOIN "SiteDirectory"."EnumerationParameterType_Data"() AS "EnumerationParameterType" ON "EnumerationValueDefinition"."Container" = "EnumerationParameterType"."Iid"
    GROUP BY "EnumerationValueDefinition"."Container") AS "EnumerationParameterType_ValueDefinition" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."EnumerationValueDefinition_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."EnumerationValueDefinition_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "EnumerationValueDefinition"."ValueTypeDictionary" AS "ValueTypeSet",
 	"EnumerationValueDefinition"."Container",
 	"EnumerationValueDefinition"."Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -1209,10 +842,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EnumerationValueDefinition_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1224,16 +853,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EnumerationValueDefinition_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."BooleanParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."BooleanParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "BooleanParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -1254,10 +889,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."BooleanParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1269,16 +900,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."BooleanParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."DateParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DateParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "DateParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -1299,10 +936,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DateParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1314,16 +947,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DateParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."TextParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."TextParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "TextParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -1344,10 +983,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."TextParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1359,16 +994,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."TextParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."DateTimeParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DateTimeParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "DateTimeParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -1389,10 +1030,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DateTimeParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1404,16 +1041,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DateTimeParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."TimeOfDayParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."TimeOfDayParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "TimeOfDayParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category"
@@ -1434,10 +1077,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."TimeOfDayParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1449,17 +1088,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."TimeOfDayParameterType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."QuantityKind_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."QuantityKind_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "QuantityKind"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
 	"QuantityKind"."DefaultScale",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category",
@@ -1485,10 +1130,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."QuantityKind_View" AS
    FROM "SiteDirectory"."QuantityKind_PossibleScale_Data"() AS "QuantityKind_PossibleScale"
    JOIN "SiteDirectory"."QuantityKind_Data"() AS "QuantityKind" ON "QuantityKind" = "Iid"
    GROUP BY "QuantityKind") AS "QuantityKind_PossibleScale" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1500,7 +1141,13 @@ CREATE OR REPLACE VIEW "SiteDirectory"."QuantityKind_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."SpecializedQuantityKind_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."SpecializedQuantityKind_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "QuantityKind"."ValueTypeDictionary" || "SpecializedQuantityKind"."ValueTypeDictionary" AS "ValueTypeSet",
@@ -1508,10 +1155,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SpecializedQuantityKind_View" AS
 	NULL::bigint AS "Sequence",
 	"QuantityKind"."DefaultScale",
 	"SpecializedQuantityKind"."General",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category",
@@ -1538,10 +1185,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SpecializedQuantityKind_View" AS
    FROM "SiteDirectory"."QuantityKind_PossibleScale_Data"() AS "QuantityKind_PossibleScale"
    JOIN "SiteDirectory"."QuantityKind_Data"() AS "QuantityKind" ON "QuantityKind" = "Iid"
    GROUP BY "QuantityKind") AS "QuantityKind_PossibleScale" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1553,17 +1196,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SpecializedQuantityKind_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."SimpleQuantityKind_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."SimpleQuantityKind_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "QuantityKind"."ValueTypeDictionary" || "SimpleQuantityKind"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
 	"QuantityKind"."DefaultScale",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterType_Category"."Category",'{}'::text[]) AS "Category",
@@ -1590,10 +1239,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SimpleQuantityKind_View" AS
    FROM "SiteDirectory"."QuantityKind_PossibleScale_Data"() AS "QuantityKind_PossibleScale"
    JOIN "SiteDirectory"."QuantityKind_Data"() AS "QuantityKind" ON "QuantityKind" = "Iid"
    GROUP BY "QuantityKind") AS "QuantityKind_PossibleScale" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1605,17 +1250,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SimpleQuantityKind_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."DerivedQuantityKind_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DerivedQuantityKind_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "ScalarParameterType"."ValueTypeDictionary" || "QuantityKind"."ValueTypeDictionary" || "DerivedQuantityKind"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
 	"QuantityKind"."DefaultScale",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DerivedQuantityKind_QuantityKindFactor"."QuantityKindFactor",'{}'::text[]) AS "QuantityKindFactor",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
@@ -1643,10 +1294,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DerivedQuantityKind_View" AS
    FROM "SiteDirectory"."QuantityKind_PossibleScale_Data"() AS "QuantityKind_PossibleScale"
    JOIN "SiteDirectory"."QuantityKind_Data"() AS "QuantityKind" ON "QuantityKind" = "Iid"
    GROUP BY "QuantityKind") AS "QuantityKind_PossibleScale" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1659,42 +1306,25 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DerivedQuantityKind_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "QuantityKindFactor"."Container" AS "Iid", ARRAY[array_agg("QuantityKindFactor"."Sequence"::text), array_agg("QuantityKindFactor"."Iid"::text)] AS "QuantityKindFactor"
    FROM "SiteDirectory"."QuantityKindFactor_Data"() AS "QuantityKindFactor"
    JOIN "SiteDirectory"."DerivedQuantityKind_Data"() AS "DerivedQuantityKind" ON "QuantityKindFactor"."Container" = "DerivedQuantityKind"."Iid"
    GROUP BY "QuantityKindFactor"."Container") AS "DerivedQuantityKind_QuantityKindFactor" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."QuantityKindFactor_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "QuantityKindFactor"."ValueTypeDictionary" AS "ValueTypeSet",
-	"QuantityKindFactor"."Container",
-	"QuantityKindFactor"."Sequence",
-	"QuantityKindFactor"."QuantityKind",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."QuantityKindFactor_Data"() AS "QuantityKindFactor" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."SampledFunctionParameterType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."SampledFunctionParameterType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ParameterType"."ValueTypeDictionary" || "SampledFunctionParameterType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ParameterType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("SampledFunctionParameterType_IndependentParameterType"."IndependentParameterType",'{}'::text[]) AS "IndependentParameterType",
 	COALESCE("SampledFunctionParameterType_DependentParameterType"."DependentParameterType",'{}'::text[]) AS "DependentParameterType",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
@@ -1716,10 +1346,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SampledFunctionParameterType_View" AS
    FROM "SiteDirectory"."ParameterType_Category_Data"() AS "ParameterType_Category"
    JOIN "SiteDirectory"."ParameterType_Data"() AS "ParameterType" ON "ParameterType" = "Iid"
    GROUP BY "ParameterType") AS "ParameterType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1732,6 +1358,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SampledFunctionParameterType_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "IndependentParameterTypeAssignment"."Container" AS "Iid", ARRAY[array_agg("IndependentParameterTypeAssignment"."Sequence"::text), array_agg("IndependentParameterTypeAssignment"."Iid"::text)] AS "IndependentParameterType"
    FROM "SiteDirectory"."IndependentParameterTypeAssignment_Data"() AS "IndependentParameterTypeAssignment"
    JOIN "SiteDirectory"."SampledFunctionParameterType_Data"() AS "SampledFunctionParameterType" ON "IndependentParameterTypeAssignment"."Container" = "SampledFunctionParameterType"."Iid"
@@ -1741,63 +1371,17 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SampledFunctionParameterType_View" AS
    JOIN "SiteDirectory"."SampledFunctionParameterType_Data"() AS "SampledFunctionParameterType" ON "DependentParameterTypeAssignment"."Container" = "SampledFunctionParameterType"."Iid"
    GROUP BY "DependentParameterTypeAssignment"."Container") AS "SampledFunctionParameterType_DependentParameterType" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."IndependentParameterTypeAssignment_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "IndependentParameterTypeAssignment"."ValueTypeDictionary" AS "ValueTypeSet",
-	"IndependentParameterTypeAssignment"."Container",
-	"IndependentParameterTypeAssignment"."Sequence",
-	"IndependentParameterTypeAssignment"."MeasurementScale",
-	"IndependentParameterTypeAssignment"."ParameterType",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."IndependentParameterTypeAssignment_Data"() AS "IndependentParameterTypeAssignment" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."DependentParameterTypeAssignment_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DependentParameterTypeAssignment"."ValueTypeDictionary" AS "ValueTypeSet",
-	"DependentParameterTypeAssignment"."Container",
-	"DependentParameterTypeAssignment"."Sequence",
-	"DependentParameterTypeAssignment"."MeasurementScale",
-	"DependentParameterTypeAssignment"."ParameterType",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."DependentParameterTypeAssignment_Data"() AS "DependentParameterTypeAssignment" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."MeasurementScale_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementScale_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementScale"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementScale"."Container",
 	NULL::bigint AS "Sequence",
 	"MeasurementScale"."Unit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("MeasurementScale_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("MeasurementScale_MappingToReferenceScale"."MappingToReferenceScale",'{}'::text[]) AS "MappingToReferenceScale",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
@@ -1813,10 +1397,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementScale_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1829,6 +1409,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementScale_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ScaleValueDefinition"."Container" AS "Iid", array_agg("ScaleValueDefinition"."Iid"::text) AS "ValueDefinition"
    FROM "SiteDirectory"."ScaleValueDefinition_Data"() AS "ScaleValueDefinition"
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "ScaleValueDefinition"."Container" = "MeasurementScale"."Iid"
@@ -1838,15 +1422,17 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementScale_View" AS
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "MappingToReferenceScale"."Container" = "MeasurementScale"."Iid"
    GROUP BY "MappingToReferenceScale"."Container") AS "MeasurementScale_MappingToReferenceScale" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."OrdinalScale_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."OrdinalScale_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementScale"."ValueTypeDictionary" || "OrdinalScale"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementScale"."Container",
 	NULL::bigint AS "Sequence",
 	"MeasurementScale"."Unit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("MeasurementScale_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("MeasurementScale_MappingToReferenceScale"."MappingToReferenceScale",'{}'::text[]) AS "MappingToReferenceScale",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
@@ -1863,10 +1449,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."OrdinalScale_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1879,6 +1461,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."OrdinalScale_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ScaleValueDefinition"."Container" AS "Iid", array_agg("ScaleValueDefinition"."Iid"::text) AS "ValueDefinition"
    FROM "SiteDirectory"."ScaleValueDefinition_Data"() AS "ScaleValueDefinition"
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "ScaleValueDefinition"."Container" = "MeasurementScale"."Iid"
@@ -1888,14 +1474,16 @@ CREATE OR REPLACE VIEW "SiteDirectory"."OrdinalScale_View" AS
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "MappingToReferenceScale"."Container" = "MeasurementScale"."Iid"
    GROUP BY "MappingToReferenceScale"."Container") AS "MeasurementScale_MappingToReferenceScale" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."ScaleValueDefinition_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."ScaleValueDefinition_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ScaleValueDefinition"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ScaleValueDefinition"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -1909,10 +1497,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ScaleValueDefinition_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1924,41 +1508,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ScaleValueDefinition_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."MappingToReferenceScale_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "MappingToReferenceScale"."ValueTypeDictionary" AS "ValueTypeSet",
-	"MappingToReferenceScale"."Container",
-	NULL::bigint AS "Sequence",
-	"MappingToReferenceScale"."ReferenceScaleValue",
-	"MappingToReferenceScale"."DependentScaleValue",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."MappingToReferenceScale_Data"() AS "MappingToReferenceScale" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
   LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
    FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."RatioScale_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."RatioScale_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementScale"."ValueTypeDictionary" || "RatioScale"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementScale"."Container",
 	NULL::bigint AS "Sequence",
 	"MeasurementScale"."Unit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("MeasurementScale_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("MeasurementScale_MappingToReferenceScale"."MappingToReferenceScale",'{}'::text[]) AS "MappingToReferenceScale",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
@@ -1975,10 +1541,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."RatioScale_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -1991,6 +1553,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."RatioScale_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ScaleValueDefinition"."Container" AS "Iid", array_agg("ScaleValueDefinition"."Iid"::text) AS "ValueDefinition"
    FROM "SiteDirectory"."ScaleValueDefinition_Data"() AS "ScaleValueDefinition"
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "ScaleValueDefinition"."Container" = "MeasurementScale"."Iid"
@@ -2000,15 +1566,17 @@ CREATE OR REPLACE VIEW "SiteDirectory"."RatioScale_View" AS
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "MappingToReferenceScale"."Container" = "MeasurementScale"."Iid"
    GROUP BY "MappingToReferenceScale"."Container") AS "MeasurementScale_MappingToReferenceScale" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."CyclicRatioScale_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."CyclicRatioScale_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementScale"."ValueTypeDictionary" || "RatioScale"."ValueTypeDictionary" || "CyclicRatioScale"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementScale"."Container",
 	NULL::bigint AS "Sequence",
 	"MeasurementScale"."Unit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("MeasurementScale_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("MeasurementScale_MappingToReferenceScale"."MappingToReferenceScale",'{}'::text[]) AS "MappingToReferenceScale",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
@@ -2026,10 +1594,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."CyclicRatioScale_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2042,6 +1606,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."CyclicRatioScale_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ScaleValueDefinition"."Container" AS "Iid", array_agg("ScaleValueDefinition"."Iid"::text) AS "ValueDefinition"
    FROM "SiteDirectory"."ScaleValueDefinition_Data"() AS "ScaleValueDefinition"
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "ScaleValueDefinition"."Container" = "MeasurementScale"."Iid"
@@ -2051,15 +1619,17 @@ CREATE OR REPLACE VIEW "SiteDirectory"."CyclicRatioScale_View" AS
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "MappingToReferenceScale"."Container" = "MeasurementScale"."Iid"
    GROUP BY "MappingToReferenceScale"."Container") AS "MeasurementScale_MappingToReferenceScale" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."IntervalScale_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."IntervalScale_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementScale"."ValueTypeDictionary" || "IntervalScale"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementScale"."Container",
 	NULL::bigint AS "Sequence",
 	"MeasurementScale"."Unit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("MeasurementScale_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("MeasurementScale_MappingToReferenceScale"."MappingToReferenceScale",'{}'::text[]) AS "MappingToReferenceScale",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
@@ -2076,10 +1646,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."IntervalScale_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2092,6 +1658,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."IntervalScale_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ScaleValueDefinition"."Container" AS "Iid", array_agg("ScaleValueDefinition"."Iid"::text) AS "ValueDefinition"
    FROM "SiteDirectory"."ScaleValueDefinition_Data"() AS "ScaleValueDefinition"
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "ScaleValueDefinition"."Container" = "MeasurementScale"."Iid"
@@ -2101,16 +1671,18 @@ CREATE OR REPLACE VIEW "SiteDirectory"."IntervalScale_View" AS
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "MappingToReferenceScale"."Container" = "MeasurementScale"."Iid"
    GROUP BY "MappingToReferenceScale"."Container") AS "MeasurementScale_MappingToReferenceScale" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."LogarithmicScale_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."LogarithmicScale_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementScale"."ValueTypeDictionary" || "LogarithmicScale"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementScale"."Container",
 	NULL::bigint AS "Sequence",
 	"MeasurementScale"."Unit",
 	"LogarithmicScale"."ReferenceQuantityKind",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("MeasurementScale_ValueDefinition"."ValueDefinition",'{}'::text[]) AS "ValueDefinition",
 	COALESCE("MeasurementScale_MappingToReferenceScale"."MappingToReferenceScale",'{}'::text[]) AS "MappingToReferenceScale",
 	COALESCE("LogarithmicScale_ReferenceQuantityValue"."ReferenceQuantityValue",'{}'::text[]) AS "ReferenceQuantityValue",
@@ -2128,10 +1700,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."LogarithmicScale_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2144,6 +1712,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."LogarithmicScale_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "ScaleValueDefinition"."Container" AS "Iid", array_agg("ScaleValueDefinition"."Iid"::text) AS "ValueDefinition"
    FROM "SiteDirectory"."ScaleValueDefinition_Data"() AS "ScaleValueDefinition"
    JOIN "SiteDirectory"."MeasurementScale_Data"() AS "MeasurementScale" ON "ScaleValueDefinition"."Container" = "MeasurementScale"."Iid"
@@ -2157,37 +1729,16 @@ CREATE OR REPLACE VIEW "SiteDirectory"."LogarithmicScale_View" AS
    JOIN "SiteDirectory"."LogarithmicScale_Data"() AS "LogarithmicScale" ON "ScaleReferenceQuantityValue"."Container" = "LogarithmicScale"."Iid"
    GROUP BY "ScaleReferenceQuantityValue"."Container") AS "LogarithmicScale_ReferenceQuantityValue" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."ScaleReferenceQuantityValue_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ScaleReferenceQuantityValue"."ValueTypeDictionary" AS "ValueTypeSet",
-	"ScaleReferenceQuantityValue"."Container",
-	NULL::bigint AS "Sequence",
-	"ScaleReferenceQuantityValue"."Scale",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."ScaleReferenceQuantityValue_Data"() AS "ScaleReferenceQuantityValue" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."UnitPrefix_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."UnitPrefix_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "UnitPrefix"."ValueTypeDictionary" AS "ValueTypeSet",
 	"UnitPrefix"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2201,10 +1752,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."UnitPrefix_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2216,16 +1763,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."UnitPrefix_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."MeasurementUnit_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementUnit_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementUnit"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementUnit"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2239,10 +1792,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementUnit_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2254,16 +1803,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MeasurementUnit_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."DerivedUnit_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DerivedUnit_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementUnit"."ValueTypeDictionary" || "DerivedUnit"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementUnit"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DerivedUnit_UnitFactor"."UnitFactor",'{}'::text[]) AS "UnitFactor",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
@@ -2279,10 +1834,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DerivedUnit_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2295,43 +1846,26 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DerivedUnit_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "UnitFactor"."Container" AS "Iid", ARRAY[array_agg("UnitFactor"."Sequence"::text), array_agg("UnitFactor"."Iid"::text)] AS "UnitFactor"
    FROM "SiteDirectory"."UnitFactor_Data"() AS "UnitFactor"
    JOIN "SiteDirectory"."DerivedUnit_Data"() AS "DerivedUnit" ON "UnitFactor"."Container" = "DerivedUnit"."Iid"
    GROUP BY "UnitFactor"."Container") AS "DerivedUnit_UnitFactor" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."UnitFactor_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "UnitFactor"."ValueTypeDictionary" AS "ValueTypeSet",
-	"UnitFactor"."Container",
-	"UnitFactor"."Sequence",
-	"UnitFactor"."Unit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."UnitFactor_Data"() AS "UnitFactor" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."ConversionBasedUnit_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ConversionBasedUnit_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementUnit"."ValueTypeDictionary" || "ConversionBasedUnit"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementUnit"."Container",
 	NULL::bigint AS "Sequence",
 	"ConversionBasedUnit"."ReferenceUnit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2346,10 +1880,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ConversionBasedUnit_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2361,17 +1891,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ConversionBasedUnit_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."LinearConversionUnit_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."LinearConversionUnit_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementUnit"."ValueTypeDictionary" || "ConversionBasedUnit"."ValueTypeDictionary" || "LinearConversionUnit"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementUnit"."Container",
 	NULL::bigint AS "Sequence",
 	"ConversionBasedUnit"."ReferenceUnit",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2387,10 +1923,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."LinearConversionUnit_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2402,7 +1934,13 @@ CREATE OR REPLACE VIEW "SiteDirectory"."LinearConversionUnit_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."PrefixedUnit_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."PrefixedUnit_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementUnit"."ValueTypeDictionary" || "ConversionBasedUnit"."ValueTypeDictionary" || "PrefixedUnit"."ValueTypeDictionary" AS "ValueTypeSet",
@@ -2410,10 +1948,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."PrefixedUnit_View" AS
 	NULL::bigint AS "Sequence",
 	"ConversionBasedUnit"."ReferenceUnit",
 	"PrefixedUnit"."Prefix",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2429,10 +1967,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."PrefixedUnit_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2444,16 +1978,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."PrefixedUnit_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."SimpleUnit_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."SimpleUnit_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "MeasurementUnit"."ValueTypeDictionary" || "SimpleUnit"."ValueTypeDictionary" AS "ValueTypeSet",
 	"MeasurementUnit"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2468,10 +2008,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SimpleUnit_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2483,16 +2019,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."SimpleUnit_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."FileType_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."FileType_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "FileType"."ValueTypeDictionary" AS "ValueTypeSet",
 	"FileType"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("FileType_Category"."Category",'{}'::text[]) AS "Category"
@@ -2511,10 +2053,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."FileType_View" AS
    FROM "SiteDirectory"."FileType_Category_Data"() AS "FileType_Category"
    JOIN "SiteDirectory"."FileType_Data"() AS "FileType" ON "FileType" = "Iid"
    GROUP BY "FileType") AS "FileType_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2526,16 +2064,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."FileType_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."Glossary_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."Glossary_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Glossary"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Glossary"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Glossary_Term"."Term",'{}'::text[]) AS "Term",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
@@ -2555,10 +2099,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Glossary_View" AS
    FROM "SiteDirectory"."Glossary_Category_Data"() AS "Glossary_Category"
    JOIN "SiteDirectory"."Glossary_Data"() AS "Glossary" ON "Glossary" = "Iid"
    GROUP BY "Glossary") AS "Glossary_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2571,19 +2111,25 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Glossary_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Term"."Container" AS "Iid", array_agg("Term"."Iid"::text) AS "Term"
    FROM "SiteDirectory"."Term_Data"() AS "Term"
    JOIN "SiteDirectory"."Glossary_Data"() AS "Glossary" ON "Term"."Container" = "Glossary"."Iid"
    GROUP BY "Term"."Container") AS "Glossary_Term" USING ("Iid");
 
+DROP VIEW IF EXISTS "SiteDirectory"."Term_View";
+
 CREATE OR REPLACE VIEW "SiteDirectory"."Term_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Term"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Term"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2597,10 +2143,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Term_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2612,7 +2154,13 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Term_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."ReferenceSource_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceSource_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ReferenceSource"."ValueTypeDictionary" AS "ValueTypeSet",
@@ -2620,10 +2168,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceSource_View" AS
 	NULL::bigint AS "Sequence",
 	"ReferenceSource"."Publisher",
 	"ReferenceSource"."PublishedIn",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ReferenceSource_Category"."Category",'{}'::text[]) AS "Category"
@@ -2642,10 +2190,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceSource_View" AS
    FROM "SiteDirectory"."ReferenceSource_Category_Data"() AS "ReferenceSource_Category"
    JOIN "SiteDirectory"."ReferenceSource_Data"() AS "ReferenceSource" ON "ReferenceSource" = "Iid"
    GROUP BY "ReferenceSource") AS "ReferenceSource_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2657,16 +2201,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferenceSource_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."Rule_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."Rule_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Rule"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Rule"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2680,10 +2230,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Rule_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2695,17 +2241,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Rule_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."ReferencerRule_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ReferencerRule_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Rule"."ValueTypeDictionary" || "ReferencerRule"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Rule"."Container",
 	NULL::bigint AS "Sequence",
 	"ReferencerRule"."ReferencingCategory",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ReferencerRule_ReferencedCategory"."ReferencedCategory",'{}'::text[]) AS "ReferencedCategory"
@@ -2725,10 +2277,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferencerRule_View" AS
    FROM "SiteDirectory"."ReferencerRule_ReferencedCategory_Data"() AS "ReferencerRule_ReferencedCategory"
    JOIN "SiteDirectory"."ReferencerRule_Data"() AS "ReferencerRule" ON "ReferencerRule" = "Iid"
    GROUP BY "ReferencerRule") AS "ReferencerRule_ReferencedCategory" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2740,7 +2288,13 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ReferencerRule_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."BinaryRelationshipRule_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."BinaryRelationshipRule_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Rule"."ValueTypeDictionary" || "BinaryRelationshipRule"."ValueTypeDictionary" AS "ValueTypeSet",
@@ -2749,10 +2303,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."BinaryRelationshipRule_View" AS
 	"BinaryRelationshipRule"."RelationshipCategory",
 	"BinaryRelationshipRule"."SourceCategory",
 	"BinaryRelationshipRule"."TargetCategory",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SiteDirectory"."Thing_Data"() AS "Thing"
@@ -2767,10 +2321,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."BinaryRelationshipRule_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2782,17 +2332,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."BinaryRelationshipRule_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."MultiRelationshipRule_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."MultiRelationshipRule_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Rule"."ValueTypeDictionary" || "MultiRelationshipRule"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Rule"."Container",
 	NULL::bigint AS "Sequence",
 	"MultiRelationshipRule"."RelationshipCategory",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("MultiRelationshipRule_RelatedCategory"."RelatedCategory",'{}'::text[]) AS "RelatedCategory"
@@ -2812,10 +2368,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MultiRelationshipRule_View" AS
    FROM "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Data"() AS "MultiRelationshipRule_RelatedCategory"
    JOIN "SiteDirectory"."MultiRelationshipRule_Data"() AS "MultiRelationshipRule" ON "MultiRelationshipRule" = "Iid"
    GROUP BY "MultiRelationshipRule") AS "MultiRelationshipRule_RelatedCategory" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2827,17 +2379,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."MultiRelationshipRule_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."DecompositionRule_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DecompositionRule_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Rule"."ValueTypeDictionary" || "DecompositionRule"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Rule"."Container",
 	NULL::bigint AS "Sequence",
 	"DecompositionRule"."ContainingCategory",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("DecompositionRule_ContainedCategory"."ContainedCategory",'{}'::text[]) AS "ContainedCategory"
@@ -2857,10 +2415,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DecompositionRule_View" AS
    FROM "SiteDirectory"."DecompositionRule_ContainedCategory_Data"() AS "DecompositionRule_ContainedCategory"
    JOIN "SiteDirectory"."DecompositionRule_Data"() AS "DecompositionRule" ON "DecompositionRule" = "Iid"
    GROUP BY "DecompositionRule") AS "DecompositionRule_ContainedCategory" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2872,17 +2426,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DecompositionRule_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."ParameterizedCategoryRule_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ParameterizedCategoryRule_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Rule"."ValueTypeDictionary" || "ParameterizedCategoryRule"."ValueTypeDictionary" AS "ValueTypeSet",
 	"Rule"."Container",
 	NULL::bigint AS "Sequence",
 	"ParameterizedCategoryRule"."Category",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("ParameterizedCategoryRule_ParameterType"."ParameterType",'{}'::text[]) AS "ParameterType"
@@ -2902,10 +2462,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ParameterizedCategoryRule_View" AS
    FROM "SiteDirectory"."ParameterizedCategoryRule_ParameterType_Data"() AS "ParameterizedCategoryRule_ParameterType"
    JOIN "SiteDirectory"."ParameterizedCategoryRule_Data"() AS "ParameterizedCategoryRule" ON "ParameterizedCategoryRule" = "Iid"
    GROUP BY "ParameterizedCategoryRule") AS "ParameterizedCategoryRule_ParameterType" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2917,7 +2473,13 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ParameterizedCategoryRule_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."Constant_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."Constant_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "Constant"."ValueTypeDictionary" AS "ValueTypeSet",
@@ -2925,10 +2487,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Constant_View" AS
 	NULL::bigint AS "Sequence",
 	"Constant"."ParameterType",
 	"Constant"."Scale",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("Constant_Category"."Category",'{}'::text[]) AS "Category"
@@ -2947,10 +2509,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Constant_View" AS
    FROM "SiteDirectory"."Constant_Category_Data"() AS "Constant_Category"
    JOIN "SiteDirectory"."Constant_Data"() AS "Constant" ON "Constant" = "Iid"
    GROUP BY "Constant") AS "Constant_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -2962,17 +2520,23 @@ CREATE OR REPLACE VIEW "SiteDirectory"."Constant_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."EngineeringModelSetup_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."EngineeringModelSetup_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "EngineeringModelSetup"."ValueTypeDictionary" AS "ValueTypeSet",
 	"EngineeringModelSetup"."Container",
 	NULL::bigint AS "Sequence",
 	"EngineeringModelSetup"."DefaultOrganizationalParticipant",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("EngineeringModelSetup_Participant"."Participant",'{}'::text[]) AS "Participant",
 	COALESCE("EngineeringModelSetup_RequiredRdl"."RequiredRdl",'{}'::text[]) AS "RequiredRdl",
 	COALESCE("EngineeringModelSetup_IterationSetup"."IterationSetup",'{}'::text[]) AS "IterationSetup",
@@ -2995,10 +2559,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EngineeringModelSetup_View" AS
    FROM "SiteDirectory"."EngineeringModelSetup_ActiveDomain_Data"() AS "EngineeringModelSetup_ActiveDomain"
    JOIN "SiteDirectory"."EngineeringModelSetup_Data"() AS "EngineeringModelSetup" ON "EngineeringModelSetup" = "Iid"
    GROUP BY "EngineeringModelSetup") AS "EngineeringModelSetup_ActiveDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -3011,6 +2571,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EngineeringModelSetup_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Participant"."Container" AS "Iid", array_agg("Participant"."Iid"::text) AS "Participant"
    FROM "SiteDirectory"."Participant_Data"() AS "Participant"
    JOIN "SiteDirectory"."EngineeringModelSetup_Data"() AS "EngineeringModelSetup" ON "Participant"."Container" = "EngineeringModelSetup"."Iid"
@@ -3028,45 +2592,17 @@ CREATE OR REPLACE VIEW "SiteDirectory"."EngineeringModelSetup_View" AS
    JOIN "SiteDirectory"."EngineeringModelSetup_Data"() AS "EngineeringModelSetup" ON "OrganizationalParticipant"."Container" = "EngineeringModelSetup"."Iid"
    GROUP BY "OrganizationalParticipant"."Container") AS "EngineeringModelSetup_OrganizationalParticipant" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."Participant_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "Participant"."ValueTypeDictionary" AS "ValueTypeSet",
-	"Participant"."Container",
-	NULL::bigint AS "Sequence",
-	"Participant"."Person",
-	"Participant"."Role",
-	"Participant"."SelectedDomain",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
-	COALESCE("Participant_Domain"."Domain",'{}'::text[]) AS "Domain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."Participant_Data"() AS "Participant" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
- LEFT JOIN (SELECT "Participant" AS "Iid", array_agg("Domain"::text) AS "Domain"
-   FROM "SiteDirectory"."Participant_Domain_Data"() AS "Participant_Domain"
-   JOIN "SiteDirectory"."Participant_Data"() AS "Participant" ON "Participant" = "Iid"
-   GROUP BY "Participant") AS "Participant_Domain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."ModelReferenceDataLibrary_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."ModelReferenceDataLibrary_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "ReferenceDataLibrary"."ValueTypeDictionary" || "ModelReferenceDataLibrary"."ValueTypeDictionary" AS "ValueTypeSet",
 	"ModelReferenceDataLibrary"."Container",
 	NULL::bigint AS "Sequence",
 	"ReferenceDataLibrary"."RequiredRdl",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("ReferenceDataLibrary_DefinedCategory"."DefinedCategory",'{}'::text[]) AS "DefinedCategory",
 	COALESCE("ReferenceDataLibrary_ParameterType"."ParameterType",'{}'::text[]) AS "ParameterType",
 	COALESCE("ReferenceDataLibrary_Scale"."Scale",'{}'::text[]) AS "Scale",
@@ -3101,10 +2637,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ModelReferenceDataLibrary_View" AS
    FROM "SiteDirectory"."ReferenceDataLibrary_BaseUnit_Data"() AS "ReferenceDataLibrary_BaseUnit"
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "ReferenceDataLibrary" = "Iid"
    GROUP BY "ReferenceDataLibrary") AS "ReferenceDataLibrary_BaseUnit" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -3117,6 +2649,10 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ModelReferenceDataLibrary_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Category"."Container" AS "Iid", array_agg("Category"."Iid"::text) AS "DefinedCategory"
    FROM "SiteDirectory"."Category_Data"() AS "Category"
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "Category"."Container" = "ReferenceDataLibrary"."Iid"
@@ -3158,60 +2694,16 @@ CREATE OR REPLACE VIEW "SiteDirectory"."ModelReferenceDataLibrary_View" AS
    JOIN "SiteDirectory"."ReferenceDataLibrary_Data"() AS "ReferenceDataLibrary" ON "Constant"."Container" = "ReferenceDataLibrary"."Iid"
    GROUP BY "Constant"."Container") AS "ReferenceDataLibrary_Constant" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."IterationSetup_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "IterationSetup"."ValueTypeDictionary" AS "ValueTypeSet",
-	"IterationSetup"."Container",
-	NULL::bigint AS "Sequence",
-	"IterationSetup"."SourceIterationSetup",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."IterationSetup_Data"() AS "IterationSetup" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."OrganizationalParticipant_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "OrganizationalParticipant"."ValueTypeDictionary" AS "ValueTypeSet",
-	"OrganizationalParticipant"."Container",
-	NULL::bigint AS "Sequence",
-	"OrganizationalParticipant"."Organization",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."OrganizationalParticipant_Data"() AS "OrganizationalParticipant" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."PersonRole_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."PersonRole_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "PersonRole"."ValueTypeDictionary" AS "ValueTypeSet",
 	"PersonRole"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("PersonRole_PersonPermission"."PersonPermission",'{}'::text[]) AS "PersonPermission",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
@@ -3226,10 +2718,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."PersonRole_View" AS
    FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
    JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
    GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -3242,111 +2730,25 @@ CREATE OR REPLACE VIEW "SiteDirectory"."PersonRole_View" AS
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
    GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "PersonPermission"."Container" AS "Iid", array_agg("PersonPermission"."Iid"::text) AS "PersonPermission"
    FROM "SiteDirectory"."PersonPermission_Data"() AS "PersonPermission"
    JOIN "SiteDirectory"."PersonRole_Data"() AS "PersonRole" ON "PersonPermission"."Container" = "PersonRole"."Iid"
    GROUP BY "PersonPermission"."Container") AS "PersonRole_PersonPermission" USING ("Iid");
 
-CREATE OR REPLACE VIEW "SiteDirectory"."PersonPermission_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "PersonPermission"."ValueTypeDictionary" AS "ValueTypeSet",
-	"PersonPermission"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."PersonPermission_Data"() AS "PersonPermission" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."SiteLogEntry_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "SiteLogEntry"."ValueTypeDictionary" AS "ValueTypeSet",
-	"SiteLogEntry"."Container",
-	NULL::bigint AS "Sequence",
-	"SiteLogEntry"."Author",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("SiteLogEntry_LogEntryChangelogItem"."LogEntryChangelogItem",'{}'::text[]) AS "LogEntryChangelogItem",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
-	COALESCE("SiteLogEntry_Category"."Category",'{}'::text[]) AS "Category",
-	COALESCE("SiteLogEntry_AffectedItemIid"."AffectedItemIid",'{}'::text[]) AS "AffectedItemIid",
-	COALESCE("SiteLogEntry_AffectedDomainIid"."AffectedDomainIid",'{}'::text[]) AS "AffectedDomainIid"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."SiteLogEntry_Data"() AS "SiteLogEntry" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
- LEFT JOIN (SELECT "SiteLogEntry" AS "Iid", array_agg("Category"::text) AS "Category"
-   FROM "SiteDirectory"."SiteLogEntry_Category_Data"() AS "SiteLogEntry_Category"
-   JOIN "SiteDirectory"."SiteLogEntry_Data"() AS "SiteLogEntry" ON "SiteLogEntry" = "Iid"
-   GROUP BY "SiteLogEntry") AS "SiteLogEntry_Category" USING ("Iid")
- LEFT JOIN (SELECT "SiteLogEntry" AS "Iid", array_agg("AffectedItemIid"::text) AS "AffectedItemIid"
-   FROM "SiteDirectory"."SiteLogEntry_AffectedItemIid_Data"() AS "SiteLogEntry_AffectedItemIid"
-   JOIN "SiteDirectory"."SiteLogEntry_Data"() AS "SiteLogEntry" ON "SiteLogEntry" = "Iid"
-   GROUP BY "SiteLogEntry") AS "SiteLogEntry_AffectedItemIid" USING ("Iid")
- LEFT JOIN (SELECT "SiteLogEntry" AS "Iid", array_agg("AffectedDomainIid"::text) AS "AffectedDomainIid"
-   FROM "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Data"() AS "SiteLogEntry_AffectedDomainIid"
-   JOIN "SiteDirectory"."SiteLogEntry_Data"() AS "SiteLogEntry" ON "SiteLogEntry" = "Iid"
-   GROUP BY "SiteLogEntry") AS "SiteLogEntry_AffectedDomainIid" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
-  LEFT JOIN (SELECT "LogEntryChangelogItem"."Container" AS "Iid", array_agg("LogEntryChangelogItem"."Iid"::text) AS "LogEntryChangelogItem"
-   FROM "SiteDirectory"."LogEntryChangelogItem_Data"() AS "LogEntryChangelogItem"
-   JOIN "SiteDirectory"."SiteLogEntry_Data"() AS "SiteLogEntry" ON "LogEntryChangelogItem"."Container" = "SiteLogEntry"."Iid"
-   GROUP BY "LogEntryChangelogItem"."Container") AS "SiteLogEntry_LogEntryChangelogItem" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."LogEntryChangelogItem_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "LogEntryChangelogItem"."ValueTypeDictionary" AS "ValueTypeSet",
-	"LogEntryChangelogItem"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
-	COALESCE("LogEntryChangelogItem_AffectedReferenceIid"."AffectedReferenceIid",'{}'::text[]) AS "AffectedReferenceIid"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."LogEntryChangelogItem_Data"() AS "LogEntryChangelogItem" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
- LEFT JOIN (SELECT "LogEntryChangelogItem" AS "Iid", array_agg("AffectedReferenceIid"::text) AS "AffectedReferenceIid"
-   FROM "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Data"() AS "LogEntryChangelogItem_AffectedReferenceIid"
-   JOIN "SiteDirectory"."LogEntryChangelogItem_Data"() AS "LogEntryChangelogItem" ON "LogEntryChangelogItem" = "Iid"
-   GROUP BY "LogEntryChangelogItem") AS "LogEntryChangelogItem_AffectedReferenceIid" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+DROP VIEW IF EXISTS "SiteDirectory"."DomainOfExpertiseGroup_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DomainOfExpertiseGroup_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "DomainOfExpertiseGroup"."ValueTypeDictionary" AS "ValueTypeSet",
 	"DomainOfExpertiseGroup"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("DomainOfExpertiseGroup_Domain"."Domain",'{}'::text[]) AS "Domain"
@@ -3365,10 +2767,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DomainOfExpertiseGroup_View" AS
    FROM "SiteDirectory"."DomainOfExpertiseGroup_Domain_Data"() AS "DomainOfExpertiseGroup_Domain"
    JOIN "SiteDirectory"."DomainOfExpertiseGroup_Data"() AS "DomainOfExpertiseGroup" ON "DomainOfExpertiseGroup" = "Iid"
    GROUP BY "DomainOfExpertiseGroup") AS "DomainOfExpertiseGroup_Domain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -3380,16 +2778,22 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DomainOfExpertiseGroup_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
+  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
+   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
+
+DROP VIEW IF EXISTS "SiteDirectory"."DomainOfExpertise_View";
 
 CREATE OR REPLACE VIEW "SiteDirectory"."DomainOfExpertise_View" AS
  SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DefinedThing"."ValueTypeDictionary" || "DomainOfExpertise"."ValueTypeDictionary" AS "ValueTypeSet",
 	"DomainOfExpertise"."Container",
 	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("DefinedThing_Alias"."Alias",'{}'::text[]) AS "Alias",
 	COALESCE("DefinedThing_Definition"."Definition",'{}'::text[]) AS "Definition",
 	COALESCE("DefinedThing_HyperLink"."HyperLink",'{}'::text[]) AS "HyperLink",
+	COALESCE("DefinedThing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
 	COALESCE("DomainOfExpertise_Category"."Category",'{}'::text[]) AS "Category"
@@ -3408,10 +2812,6 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DomainOfExpertise_View" AS
    FROM "SiteDirectory"."DomainOfExpertise_Category_Data"() AS "DomainOfExpertise_Category"
    JOIN "SiteDirectory"."DomainOfExpertise_Data"() AS "DomainOfExpertise" ON "DomainOfExpertise" = "Iid"
    GROUP BY "DomainOfExpertise") AS "DomainOfExpertise_Category" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
   LEFT JOIN (SELECT "Alias"."Container" AS "Iid", array_agg("Alias"."Iid"::text) AS "Alias"
    FROM "SiteDirectory"."Alias_Data"() AS "Alias"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Alias"."Container" = "DefinedThing"."Iid"
@@ -3423,174 +2823,8 @@ CREATE OR REPLACE VIEW "SiteDirectory"."DomainOfExpertise_View" AS
   LEFT JOIN (SELECT "HyperLink"."Container" AS "Iid", array_agg("HyperLink"."Iid"::text) AS "HyperLink"
    FROM "SiteDirectory"."HyperLink_Data"() AS "HyperLink"
    JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "HyperLink"."Container" = "DefinedThing"."Iid"
-   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."NaturalLanguage_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "NaturalLanguage"."ValueTypeDictionary" AS "ValueTypeSet",
-	"NaturalLanguage"."Container",
-	NULL::bigint AS "Sequence",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."NaturalLanguage_Data"() AS "NaturalLanguage" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
+   GROUP BY "HyperLink"."Container") AS "DefinedThing_HyperLink" USING ("Iid")
   LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
    FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."GenericAnnotation_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "GenericAnnotation"."ValueTypeDictionary" AS "ValueTypeSet",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."GenericAnnotation_Data"() AS "GenericAnnotation" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."SiteDirectoryDataAnnotation_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "GenericAnnotation"."ValueTypeDictionary" || "SiteDirectoryDataAnnotation"."ValueTypeDictionary" AS "ValueTypeSet",
-	"SiteDirectoryDataAnnotation"."Container",
-	NULL::bigint AS "Sequence",
-	"SiteDirectoryDataAnnotation"."Author",
-	"SiteDirectoryDataAnnotation"."PrimaryAnnotatedThing",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("SiteDirectoryDataAnnotation_RelatedThing"."RelatedThing",'{}'::text[]) AS "RelatedThing",
-	COALESCE("SiteDirectoryDataAnnotation_Discussion"."Discussion",'{}'::text[]) AS "Discussion",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."GenericAnnotation_Data"() AS "GenericAnnotation" USING ("Iid")
-  JOIN "SiteDirectory"."SiteDirectoryDataAnnotation_Data"() AS "SiteDirectoryDataAnnotation" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid")
-  LEFT JOIN (SELECT "SiteDirectoryThingReference"."Container" AS "Iid", array_agg("SiteDirectoryThingReference"."Iid"::text) AS "RelatedThing"
-   FROM "SiteDirectory"."SiteDirectoryThingReference_Data"() AS "SiteDirectoryThingReference"
-   JOIN "SiteDirectory"."SiteDirectoryDataAnnotation_Data"() AS "SiteDirectoryDataAnnotation" ON "SiteDirectoryThingReference"."Container" = "SiteDirectoryDataAnnotation"."Iid"
-   GROUP BY "SiteDirectoryThingReference"."Container") AS "SiteDirectoryDataAnnotation_RelatedThing" USING ("Iid")
-  LEFT JOIN (SELECT "SiteDirectoryDataDiscussionItem"."Container" AS "Iid", array_agg("SiteDirectoryDataDiscussionItem"."Iid"::text) AS "Discussion"
-   FROM "SiteDirectory"."SiteDirectoryDataDiscussionItem_Data"() AS "SiteDirectoryDataDiscussionItem"
-   JOIN "SiteDirectory"."SiteDirectoryDataAnnotation_Data"() AS "SiteDirectoryDataAnnotation" ON "SiteDirectoryDataDiscussionItem"."Container" = "SiteDirectoryDataAnnotation"."Iid"
-   GROUP BY "SiteDirectoryDataDiscussionItem"."Container") AS "SiteDirectoryDataAnnotation_Discussion" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."ThingReference_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ThingReference"."ValueTypeDictionary" AS "ValueTypeSet",
-	"ThingReference"."ReferencedThing",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."ThingReference_Data"() AS "ThingReference" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."SiteDirectoryThingReference_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ThingReference"."ValueTypeDictionary" || "SiteDirectoryThingReference"."ValueTypeDictionary" AS "ValueTypeSet",
-	"SiteDirectoryThingReference"."Container",
-	NULL::bigint AS "Sequence",
-	"ThingReference"."ReferencedThing",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."ThingReference_Data"() AS "ThingReference" USING ("Iid")
-  JOIN "SiteDirectory"."SiteDirectoryThingReference_Data"() AS "SiteDirectoryThingReference" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."DiscussionItem_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "GenericAnnotation"."ValueTypeDictionary" || "DiscussionItem"."ValueTypeDictionary" AS "ValueTypeSet",
-	"DiscussionItem"."ReplyTo",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."GenericAnnotation_Data"() AS "GenericAnnotation" USING ("Iid")
-  JOIN "SiteDirectory"."DiscussionItem_Data"() AS "DiscussionItem" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
-
-CREATE OR REPLACE VIEW "SiteDirectory"."SiteDirectoryDataDiscussionItem_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "GenericAnnotation"."ValueTypeDictionary" || "DiscussionItem"."ValueTypeDictionary" || "SiteDirectoryDataDiscussionItem"."ValueTypeDictionary" AS "ValueTypeSet",
-	"SiteDirectoryDataDiscussionItem"."Container",
-	NULL::bigint AS "Sequence",
-	"DiscussionItem"."ReplyTo",
-	"SiteDirectoryDataDiscussionItem"."Author",
-	COALESCE("Thing_Attachment"."Attachment",'{}'::text[]) AS "Attachment",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SiteDirectory"."Thing_Data"() AS "Thing"
-  JOIN "SiteDirectory"."GenericAnnotation_Data"() AS "GenericAnnotation" USING ("Iid")
-  JOIN "SiteDirectory"."DiscussionItem_Data"() AS "DiscussionItem" USING ("Iid")
-  JOIN "SiteDirectory"."SiteDirectoryDataDiscussionItem_Data"() AS "SiteDirectoryDataDiscussionItem" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SiteDirectory"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SiteDirectory"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "Attachment"."Container" AS "Iid", array_agg("Attachment"."Iid"::text) AS "Attachment"
-   FROM "SiteDirectory"."Attachment_Data"() AS "Attachment"
-   JOIN "SiteDirectory"."Thing_Data"() AS "Thing" ON "Attachment"."Container" = "Thing"."Iid"
-   GROUP BY "Attachment"."Container") AS "Thing_Attachment" USING ("Iid");
+   JOIN "SiteDirectory"."DefinedThing_Data"() AS "DefinedThing" ON "Attachment"."Container" = "DefinedThing"."Iid"
+   GROUP BY "Attachment"."Container") AS "DefinedThing_Attachment" USING ("Iid");
