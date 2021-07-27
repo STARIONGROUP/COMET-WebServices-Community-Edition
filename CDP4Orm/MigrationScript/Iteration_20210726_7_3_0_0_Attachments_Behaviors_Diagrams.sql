@@ -436,6 +436,14 @@ ALTER TABLE "SchemaName_Replace"."ArchitectureDiagram" ADD CONSTRAINT "Architect
 ALTER TABLE "SchemaName_Replace"."ArchitectureDiagram" ADD COLUMN "Owner" uuid NOT NULL;
 ALTER TABLE "SchemaName_Replace"."ArchitectureDiagram" ADD CONSTRAINT "ArchitectureDiagram_FK_Owner" FOREIGN KEY ("Owner") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
+-- Class ArchitectureElement derives from DiagramObject
+ALTER TABLE "SchemaName_Replace"."ArchitectureElement" ADD CONSTRAINT "ArchitectureElementDerivesFromDiagramObject" FOREIGN KEY ("Iid") REFERENCES "SchemaName_Replace"."DiagramObject" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
+
+-- Class DiagramPort derives from DiagramShape
+ALTER TABLE "SchemaName_Replace"."DiagramPort" ADD CONSTRAINT "DiagramPortDerivesFromDiagramShape" FOREIGN KEY ("Iid") REFERENCES "SchemaName_Replace"."DiagramShape" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
+-- Class DiagramFrame derives from DiagramShape
+ALTER TABLE "SchemaName_Replace"."DiagramFrame" ADD CONSTRAINT "DiagramFrameDerivesFromDiagramShape" FOREIGN KEY ("Iid") REFERENCES "SchemaName_Replace"."DiagramShape" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
+
 ALTER TABLE "SchemaName_Replace"."Attachment"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -594,37 +602,6 @@ CREATE TRIGGER ArchitectureElement_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SchemaName_Replace"."ArchitectureElement"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-ALTER TABLE "SchemaName_Replace"."DiagramPort"
-  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
-  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
-CREATE INDEX "Idx_DiagramPort_ValidFrom" ON "SchemaName_Replace"."DiagramPort" ("ValidFrom");
-CREATE INDEX "Idx_DiagramPort_ValidTo" ON "SchemaName_Replace"."DiagramPort" ("ValidTo");
-
-CREATE TABLE "SchemaName_Replace"."DiagramPort_Audit" (LIKE "SchemaName_Replace"."DiagramPort");
-
-ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-
-ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_vacuum_threshold = 2500);
-
-ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-
-ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_analyze_threshold = 2500);
-
-ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_DiagramPortAudit_ValidFrom" ON "SchemaName_Replace"."DiagramPort_Audit" ("ValidFrom");
-CREATE INDEX "Idx_DiagramPortAudit_ValidTo" ON "SchemaName_Replace"."DiagramPort_Audit" ("ValidTo");
-
-CREATE TRIGGER DiagramPort_audit_prepare
-  BEFORE UPDATE ON "SchemaName_Replace"."DiagramPort"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER DiagramPort_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "SchemaName_Replace"."DiagramPort"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 ALTER TABLE "SchemaName_Replace"."DiagramFrame"
   ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
   ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
@@ -654,6 +631,37 @@ CREATE TRIGGER DiagramFrame_audit_prepare
 
 CREATE TRIGGER DiagramFrame_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SchemaName_Replace"."DiagramFrame"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+ALTER TABLE "SchemaName_Replace"."DiagramPort"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_DiagramPort_ValidFrom" ON "SchemaName_Replace"."DiagramPort" ("ValidFrom");
+CREATE INDEX "Idx_DiagramPort_ValidTo" ON "SchemaName_Replace"."DiagramPort" ("ValidTo");
+
+CREATE TABLE "SchemaName_Replace"."DiagramPort_Audit" (LIKE "SchemaName_Replace"."DiagramPort");
+
+ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
+
+ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_vacuum_threshold = 2500);
+
+ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
+
+ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" SET (autovacuum_analyze_threshold = 2500);
+
+ALTER TABLE "SchemaName_Replace"."DiagramPort_Audit" 
+  ADD COLUMN "Action" character(1) NOT NULL,
+  ADD COLUMN "Actor" uuid;
+CREATE INDEX "Idx_DiagramPortAudit_ValidFrom" ON "SchemaName_Replace"."DiagramPort_Audit" ("ValidFrom");
+CREATE INDEX "Idx_DiagramPortAudit_ValidTo" ON "SchemaName_Replace"."DiagramPort_Audit" ("ValidTo");
+
+CREATE TRIGGER DiagramPort_audit_prepare
+  BEFORE UPDATE ON "SchemaName_Replace"."DiagramPort"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER DiagramPort_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SchemaName_Replace"."DiagramPort"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
@@ -827,40 +835,6 @@ END
 $BODY$
   LANGUAGE plpgsql VOLATILE;
 
-CREATE OR REPLACE FUNCTION "SchemaName_Replace"."DiagramPort_Data" ()
-    RETURNS SETOF "SchemaName_Replace"."DiagramPort" AS
-$BODY$
-DECLARE
-   instant timestamp;
-BEGIN
-   instant := "SiteDirectory".get_session_instant();
-
-IF instant = 'infinity' THEN
-   RETURN QUERY
-   SELECT *
-   FROM "SchemaName_Replace"."DiagramPort";
-ELSE
-   RETURN QUERY
-   SELECT *
-   FROM (SELECT "Iid","ValueTypeDictionary","Container","ValidFrom","ValidTo" 
-      FROM "SchemaName_Replace"."DiagramPort"
-      -- prefilter union candidates
-      WHERE "ValidFrom" < instant
-      AND "ValidTo" >= instant
-       UNION ALL
-      SELECT "Iid","ValueTypeDictionary","Container","ValidFrom","ValidTo"
-      FROM "SchemaName_Replace"."DiagramPort_Audit"
-      -- prefilter union candidates
-      WHERE "Action" <> 'I'
-      AND "ValidFrom" < instant
-      AND "ValidTo" >= instant) "VersionedData"
-   ORDER BY "VersionedData"."ValidTo" DESC;
-END IF;
-
-END
-$BODY$
-  LANGUAGE plpgsql VOLATILE;
-
 CREATE OR REPLACE FUNCTION "SchemaName_Replace"."DiagramFrame_Data" ()
     RETURNS SETOF "SchemaName_Replace"."DiagramFrame" AS
 $BODY$
@@ -884,6 +858,39 @@ ELSE
        UNION ALL
       SELECT "Iid","ValueTypeDictionary","ValidFrom","ValidTo"
       FROM "SchemaName_Replace"."DiagramFrame_Audit"
+      -- prefilter union candidates
+      WHERE "Action" <> 'I'
+      AND "ValidFrom" < instant
+      AND "ValidTo" >= instant) "VersionedData"
+   ORDER BY "VersionedData"."ValidTo" DESC;
+END IF;
+
+END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+CREATE OR REPLACE FUNCTION "SchemaName_Replace"."DiagramPort_Data" ()
+    RETURNS SETOF "SchemaName_Replace"."DiagramPort" AS
+$BODY$
+DECLARE
+   instant timestamp;
+BEGIN
+   instant := "SiteDirectory".get_session_instant();
+
+IF instant = 'infinity' THEN
+   RETURN QUERY
+   SELECT *
+   FROM "SchemaName_Replace"."DiagramPort";
+ELSE
+   RETURN QUERY
+   SELECT *
+   FROM (SELECT "Iid","ValueTypeDictionary","ValidFrom","ValidTo" 
+      FROM "SchemaName_Replace"."DiagramPort"
+      -- prefilter union candidates
+      WHERE "ValidFrom" < instant
+      AND "ValidTo" >= instant
+       UNION ALL
+      SELECT "Iid","ValueTypeDictionary","ValidFrom","ValidTo"
+      FROM "SchemaName_Replace"."DiagramPort_Audit"
       -- prefilter union candidates
       WHERE "Action" <> 'I'
       AND "ValidFrom" < instant
@@ -2068,7 +2075,6 @@ CREATE OR REPLACE VIEW "SchemaName_Replace"."ArchitectureElement_View" AS
 	COALESCE("DiagramElementContainer_DiagramElement"."DiagramElement",'{}'::text[]) AS "DiagramElement",
 	COALESCE("DiagramElementContainer_Bounds"."Bounds",'{}'::text[]) AS "Bounds",
 	COALESCE("DiagramElementThing_LocalStyle"."LocalStyle",'{}'::text[]) AS "LocalStyle",
-	COALESCE("ArchitectureElement_DiagramPort"."DiagramPort",'{}'::text[]) AS "DiagramPort",
 	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
 	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
   FROM "SchemaName_Replace"."Thing_Data"() AS "Thing"
@@ -2078,52 +2084,6 @@ CREATE OR REPLACE VIEW "SchemaName_Replace"."ArchitectureElement_View" AS
   JOIN "SchemaName_Replace"."DiagramShape_Data"() AS "DiagramShape" USING ("Iid")
   JOIN "SchemaName_Replace"."DiagramObject_Data"() AS "DiagramObject" USING ("Iid")
   JOIN "SchemaName_Replace"."ArchitectureElement_Data"() AS "ArchitectureElement" USING ("Iid")
-  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
-   FROM "SchemaName_Replace"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
-   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
- LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
-   FROM "SchemaName_Replace"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
-   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
-   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
-  LEFT JOIN (SELECT "DiagramElementThing"."Container" AS "Iid", array_agg("DiagramElementThing"."Iid"::text) AS "DiagramElement"
-   FROM "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing"
-   JOIN "SchemaName_Replace"."DiagramElementContainer_Data"() AS "DiagramElementContainer" ON "DiagramElementThing"."Container" = "DiagramElementContainer"."Iid"
-   GROUP BY "DiagramElementThing"."Container") AS "DiagramElementContainer_DiagramElement" USING ("Iid")
-  LEFT JOIN (SELECT "Bounds"."Container" AS "Iid", array_agg("Bounds"."Iid"::text) AS "Bounds"
-   FROM "SchemaName_Replace"."Bounds_Data"() AS "Bounds"
-   JOIN "SchemaName_Replace"."DiagramElementContainer_Data"() AS "DiagramElementContainer" ON "Bounds"."Container" = "DiagramElementContainer"."Iid"
-   GROUP BY "Bounds"."Container") AS "DiagramElementContainer_Bounds" USING ("Iid")
-  LEFT JOIN (SELECT "OwnedStyle"."Container" AS "Iid", array_agg("OwnedStyle"."Iid"::text) AS "LocalStyle"
-   FROM "SchemaName_Replace"."OwnedStyle_Data"() AS "OwnedStyle"
-   JOIN "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing" ON "OwnedStyle"."Container" = "DiagramElementThing"."Iid"
-   GROUP BY "OwnedStyle"."Container") AS "DiagramElementThing_LocalStyle" USING ("Iid")
-  LEFT JOIN (SELECT "DiagramPort"."Container" AS "Iid", array_agg("DiagramPort"."Iid"::text) AS "DiagramPort"
-   FROM "SchemaName_Replace"."DiagramPort_Data"() AS "DiagramPort"
-   JOIN "SchemaName_Replace"."ArchitectureElement_Data"() AS "ArchitectureElement" ON "DiagramPort"."Container" = "ArchitectureElement"."Iid"
-   GROUP BY "DiagramPort"."Container") AS "ArchitectureElement_DiagramPort" USING ("Iid");
-
-DROP VIEW IF EXISTS "SchemaName_Replace"."DiagramPort_View";
-
-CREATE OR REPLACE VIEW "SchemaName_Replace"."DiagramPort_View" AS
- SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DiagramThingBase"."ValueTypeDictionary" || "DiagramElementContainer"."ValueTypeDictionary" || "DiagramElementThing"."ValueTypeDictionary" || "DiagramShape"."ValueTypeDictionary" || "DiagramPort"."ValueTypeDictionary" AS "ValueTypeSet",
-	"DiagramPort"."Container",
-	NULL::bigint AS "Sequence",
-	"DiagramElementThing"."Container",
-	NULL::bigint AS "Sequence",
-	"DiagramElementThing"."DepictedThing",
-	"DiagramElementThing"."SharedStyle",
-	COALESCE("DiagramElementContainer_DiagramElement"."DiagramElement",'{}'::text[]) AS "DiagramElement",
-	COALESCE("DiagramElementContainer_Bounds"."Bounds",'{}'::text[]) AS "Bounds",
-	COALESCE("DiagramElementThing_LocalStyle"."LocalStyle",'{}'::text[]) AS "LocalStyle",
-	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
-	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
-  FROM "SchemaName_Replace"."Thing_Data"() AS "Thing"
-  JOIN "SchemaName_Replace"."DiagramThingBase_Data"() AS "DiagramThingBase" USING ("Iid")
-  JOIN "SchemaName_Replace"."DiagramElementContainer_Data"() AS "DiagramElementContainer" USING ("Iid")
-  JOIN "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing" USING ("Iid")
-  JOIN "SchemaName_Replace"."DiagramShape_Data"() AS "DiagramShape" USING ("Iid")
-  JOIN "SchemaName_Replace"."DiagramPort_Data"() AS "DiagramPort" USING ("Iid")
   LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
    FROM "SchemaName_Replace"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
    JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
@@ -2164,6 +2124,46 @@ CREATE OR REPLACE VIEW "SchemaName_Replace"."DiagramFrame_View" AS
   JOIN "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing" USING ("Iid")
   JOIN "SchemaName_Replace"."DiagramShape_Data"() AS "DiagramShape" USING ("Iid")
   JOIN "SchemaName_Replace"."DiagramFrame_Data"() AS "DiagramFrame" USING ("Iid")
+  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
+   FROM "SchemaName_Replace"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
+   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
+   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
+ LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
+   FROM "SchemaName_Replace"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
+   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
+   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
+  LEFT JOIN (SELECT "DiagramElementThing"."Container" AS "Iid", array_agg("DiagramElementThing"."Iid"::text) AS "DiagramElement"
+   FROM "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing"
+   JOIN "SchemaName_Replace"."DiagramElementContainer_Data"() AS "DiagramElementContainer" ON "DiagramElementThing"."Container" = "DiagramElementContainer"."Iid"
+   GROUP BY "DiagramElementThing"."Container") AS "DiagramElementContainer_DiagramElement" USING ("Iid")
+  LEFT JOIN (SELECT "Bounds"."Container" AS "Iid", array_agg("Bounds"."Iid"::text) AS "Bounds"
+   FROM "SchemaName_Replace"."Bounds_Data"() AS "Bounds"
+   JOIN "SchemaName_Replace"."DiagramElementContainer_Data"() AS "DiagramElementContainer" ON "Bounds"."Container" = "DiagramElementContainer"."Iid"
+   GROUP BY "Bounds"."Container") AS "DiagramElementContainer_Bounds" USING ("Iid")
+  LEFT JOIN (SELECT "OwnedStyle"."Container" AS "Iid", array_agg("OwnedStyle"."Iid"::text) AS "LocalStyle"
+   FROM "SchemaName_Replace"."OwnedStyle_Data"() AS "OwnedStyle"
+   JOIN "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing" ON "OwnedStyle"."Container" = "DiagramElementThing"."Iid"
+   GROUP BY "OwnedStyle"."Container") AS "DiagramElementThing_LocalStyle" USING ("Iid");
+
+DROP VIEW IF EXISTS "SchemaName_Replace"."DiagramPort_View";
+
+CREATE OR REPLACE VIEW "SchemaName_Replace"."DiagramPort_View" AS
+ SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "DiagramThingBase"."ValueTypeDictionary" || "DiagramElementContainer"."ValueTypeDictionary" || "DiagramElementThing"."ValueTypeDictionary" || "DiagramShape"."ValueTypeDictionary" || "DiagramPort"."ValueTypeDictionary" AS "ValueTypeSet",
+	"DiagramElementThing"."Container",
+	NULL::bigint AS "Sequence",
+	"DiagramElementThing"."DepictedThing",
+	"DiagramElementThing"."SharedStyle",
+	COALESCE("DiagramElementContainer_DiagramElement"."DiagramElement",'{}'::text[]) AS "DiagramElement",
+	COALESCE("DiagramElementContainer_Bounds"."Bounds",'{}'::text[]) AS "Bounds",
+	COALESCE("DiagramElementThing_LocalStyle"."LocalStyle",'{}'::text[]) AS "LocalStyle",
+	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
+	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain"
+  FROM "SchemaName_Replace"."Thing_Data"() AS "Thing"
+  JOIN "SchemaName_Replace"."DiagramThingBase_Data"() AS "DiagramThingBase" USING ("Iid")
+  JOIN "SchemaName_Replace"."DiagramElementContainer_Data"() AS "DiagramElementContainer" USING ("Iid")
+  JOIN "SchemaName_Replace"."DiagramElementThing_Data"() AS "DiagramElementThing" USING ("Iid")
+  JOIN "SchemaName_Replace"."DiagramShape_Data"() AS "DiagramShape" USING ("Iid")
+  JOIN "SchemaName_Replace"."DiagramPort_Data"() AS "DiagramPort" USING ("Iid")
   LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
    FROM "SchemaName_Replace"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
    JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
