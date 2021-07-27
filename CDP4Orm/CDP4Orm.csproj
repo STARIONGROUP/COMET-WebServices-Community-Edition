@@ -20,7 +20,6 @@
     <None Remove="MigrationScript\All_NonThingTableMigrationTemplate_20180919_0_0_0_3_Add-Delete-Triggers.sql" />
     <None Remove="MigrationScript\All_OnStartUpOnly_20200810_6_2_0_0_Autovacuum.sql" />
     <None Remove="MigrationScript\EngineeringModel_20000101_0_0_0_5_IterationSequence.sql" />
-    <None Remove="MigrationScript\EngineeringModel_20210726_7_2_0_0_Attachments_Behaviors_Diagrams.sql" />
     <None Remove="MigrationScript\EngineeringModel_OnStartUpOnly_20190401_4_0_0_1_RemoveEngineeringModelDeleteConstraint.sql" />
     <None Remove="MigrationScript\EngineeringModel_OnStartUpOnly_20210109_6_4_0_0_Model_Updates.sql" />
     <None Remove="MigrationScript\EngineeringModel_20210109_6_4_0_0_Model_Updates.sql" />
@@ -40,7 +39,6 @@
     <EmbeddedResource Include="AutoGenStructure\EngineeringModelDefinition.sql" />
     <EmbeddedResource Include="AutoGenStructure\SiteDirectoryDefinition.sql" />
     <EmbeddedResource Include="MigrationScript\All_20180919_0_0_0_4_RevisionRegistryPK.sql" />
-    <EmbeddedResource Include="MigrationScript\EngineeringModel_20210726_7_2_0_0_Attachments_Behaviors_Diagrams.sql" />
     <EmbeddedResource Include="MigrationScript\Iteration_20210726_7_3_0_0_Attachments_Behaviors_Diagrams.sql" />
     <EmbeddedResource Include="MigrationScript\Iteration_20210109_6_5_0_0_Model_Updates.sql" />
     <EmbeddedResource Include="MigrationScript\EngineeringModel_20210109_6_4_0_0_Model_Updates.sql" />
