@@ -151,7 +151,6 @@ namespace CDP4Orm.Dao
             dto.DiagramElement.AddRange(Array.ConvertAll((string[])reader["DiagramElement"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
-            dto.IncludedDomain = Guid.Parse(reader["IncludedDomain"].ToString());
             dto.Owner = Guid.Parse(reader["Owner"].ToString());
             dto.TopArchitectureElement = reader["TopArchitectureElement"] is DBNull ? (Guid?)null : Guid.Parse(reader["TopArchitectureElement"].ToString());
 

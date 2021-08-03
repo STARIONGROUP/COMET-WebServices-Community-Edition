@@ -202,11 +202,10 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramPort\"", partition);
-                    sqlBuilder.AppendFormat(" (\"Iid\", \"Container\")");
-                    sqlBuilder.AppendFormat(" VALUES (:iid, :container);");
+                    sqlBuilder.AppendFormat(" (\"Iid\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid);");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramPort.Iid;
-                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
@@ -248,15 +247,12 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramPort\"", partition);
-                sqlBuilder.AppendFormat(" (\"Iid\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :container)");
+                sqlBuilder.AppendFormat(" (\"Iid\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramPort.Iid;
-                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
-                sqlBuilder.Append(" DO UPDATE ");
-                sqlBuilder.Append(" SET \"Container\"");
-                sqlBuilder.Append(" = :container;");
+                sqlBuilder.Append(" DO NOTHING; ");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -294,24 +290,6 @@ namespace CDP4Orm.Dao
             if (!isHandled)
             {
                 beforeUpdate = beforeUpdate && base.Update(transaction, partition, diagramPort, container);
-
-                using (var command = new NpgsqlCommand())
-                {
-                    var sqlBuilder = new System.Text.StringBuilder();
-                    sqlBuilder.AppendFormat("UPDATE \"{0}\".\"DiagramPort\"", partition);
-                    sqlBuilder.AppendFormat(" SET \"Container\"");
-                    sqlBuilder.AppendFormat(" = :container");
-                    sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
-
-                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramPort.Iid;
-                    command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-
-                    command.CommandText = sqlBuilder.ToString();
-                    command.Connection = transaction.Connection;
-                    command.Transaction = transaction;
-
-                    this.ExecuteAndLogCommand(command);
-                }
             }
 
             return this.AfterUpdate(beforeUpdate, transaction, partition, diagramPort, container);

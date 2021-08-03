@@ -152,7 +152,6 @@ namespace CDP4Orm.Dao
             dto.DiagramElement.AddRange(Array.ConvertAll((string[])reader["DiagramElement"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
-            dto.IncludedDomain = Guid.Parse(reader["IncludedDomain"].ToString());
 
             if (valueDict.TryGetValue("CreatedOn", out tempCreatedOn))
             {
@@ -226,13 +225,12 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
                     
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramCanvas\"", partition);
-                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"IncludedDomain\")");
-                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :includedDomain);");
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramCanvas.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                    command.Parameters.Add("includedDomain", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramCanvas, "IncludedDomain") ? diagramCanvas.IncludedDomain : Utils.NullableValue(null);
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
@@ -281,17 +279,16 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
                     
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramCanvas\"", partition);
-                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"IncludedDomain\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :includedDomain)");
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramCanvas.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                command.Parameters.Add("includedDomain", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramCanvas, "IncludedDomain") ? diagramCanvas.IncludedDomain : Utils.NullableValue(null);
                 sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.Append(" DO UPDATE ");
-                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"IncludedDomain\")");
-                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :includedDomain);");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -341,14 +338,13 @@ namespace CDP4Orm.Dao
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"DiagramCanvas\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"IncludedDomain\")");
-                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :includedDomain)");
+                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramCanvas.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
-                    command.Parameters.Add("includedDomain", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramCanvas, "IncludedDomain") ? diagramCanvas.IncludedDomain : Utils.NullableValue(null);
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;

@@ -163,6 +163,7 @@ namespace CDP4Orm.Dao
                         "AndExpression",
                         "ArchitectureDiagram",
                         "ArchitectureElement",
+                        "Attachment",
                         "Behavior",
                         "BehavioralParameter",
                         "BinaryRelationship",
@@ -235,6 +236,7 @@ namespace CDP4Orm.Dao
                         {
                         "Alias",
                         "ArrayParameterType",
+                        "Attachment",
                         "BinaryRelationshipRule",
                         "BooleanParameterType",
                         "Category",

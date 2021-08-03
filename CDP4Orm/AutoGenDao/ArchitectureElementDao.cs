@@ -149,7 +149,6 @@ namespace CDP4Orm.Dao
             dto.Bounds.AddRange(Array.ConvertAll((string[])reader["Bounds"], Guid.Parse));
             dto.DepictedThing = reader["DepictedThing"] is DBNull ? (Guid?)null : Guid.Parse(reader["DepictedThing"].ToString());
             dto.DiagramElement.AddRange(Array.ConvertAll((string[])reader["DiagramElement"], Guid.Parse));
-            dto.DiagramPort.AddRange(Array.ConvertAll((string[])reader["DiagramPort"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
             dto.LocalStyle.AddRange(Array.ConvertAll((string[])reader["LocalStyle"], Guid.Parse));

@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BehaviorDao.cs" company="RHEA System S.A.">
+// <copyright file="AttachmentDao.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
@@ -35,9 +35,9 @@ namespace CDP4Orm.Dao
     using NpgsqlTypes;
 
     /// <summary>
-    /// The Behavior Data Access Object which acts as an ORM layer to the SQL database.
+    /// The Attachment Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
-    public partial class BehaviorDao : DefinedThingDao, IBehaviorDao
+    public partial class AttachmentDao : ThingDao, IAttachmentDao
     {
         /// <summary>
         /// Read the data from the database.
@@ -55,9 +55,9 @@ namespace CDP4Orm.Dao
         /// The value indicating whether to get cached last state of Dto from revision history.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="CDP4Common.DTO.Behavior"/>.
+        /// List of instances of <see cref="CDP4Common.DTO.Attachment"/>.
         /// </returns>
-        public virtual IEnumerable<CDP4Common.DTO.Behavior> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false)
+        public virtual IEnumerable<CDP4Common.DTO.Attachment> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false)
         {
             using (var command = new NpgsqlCommand())
             {
@@ -65,7 +65,7 @@ namespace CDP4Orm.Dao
 
                 if (isCachedDtoReadEnabledAndInstant)
                 {
-                    sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"Behavior_Cache\"", partition);
+                    sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"Attachment_Cache\"", partition);
 
                     if (ids != null && ids.Any())
                     {
@@ -89,14 +89,14 @@ namespace CDP4Orm.Dao
                             var thing = this.MapJsonbToDto(reader);
                             if (thing != null)
                             {
-                                yield return thing as Behavior;
+                                yield return thing as Attachment;
                             }
                         }
                     }
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Behavior_View\"", partition);
+                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Attachment_View\"", partition);
 
                     if (ids != null && ids.Any()) 
                     {
@@ -131,53 +131,37 @@ namespace CDP4Orm.Dao
         /// An instance of the SQL reader.
         /// </param>
         /// <returns>
-        /// A deserialized instance of <see cref="CDP4Common.DTO.Behavior"/>.
+        /// A deserialized instance of <see cref="CDP4Common.DTO.Attachment"/>.
         /// </returns>
-        public virtual CDP4Common.DTO.Behavior MapToDto(NpgsqlDataReader reader)
+        public virtual CDP4Common.DTO.Attachment MapToDto(NpgsqlDataReader reader)
         {
-            string tempBehavioralModelKind;
+            string tempContentHash;
+            string tempFileName;
             string tempModifiedOn;
-            string tempName;
-            string tempScript;
-            string tempShortName;
             string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
-            var dto = new CDP4Common.DTO.Behavior(iid, revisionNumber);
-            dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
-            dto.Attachment.AddRange(Array.ConvertAll((string[])reader["Attachment"], Guid.Parse));
-            dto.BehavioralParameter.AddRange(Array.ConvertAll((string[])reader["BehavioralParameter"], Guid.Parse));
-            dto.Definition.AddRange(Array.ConvertAll((string[])reader["Definition"], Guid.Parse));
+            var dto = new CDP4Common.DTO.Attachment(iid, revisionNumber);
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
-            dto.HyperLink.AddRange(Array.ConvertAll((string[])reader["HyperLink"], Guid.Parse));
+            dto.FileType.AddRange(Array.ConvertAll((string[])reader["FileType"], Guid.Parse));
 
-            if (valueDict.TryGetValue("BehavioralModelKind", out tempBehavioralModelKind))
+            if (valueDict.TryGetValue("ContentHash", out tempContentHash))
             {
-                dto.BehavioralModelKind = Utils.ParseEnum<CDP4Common.EngineeringModelData.BehavioralModelKind>(tempBehavioralModelKind);
+                dto.ContentHash = tempContentHash.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("FileName", out tempFileName))
+            {
+                dto.FileName = tempFileName.UnEscape();
             }
 
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
-            }
-
-            if (valueDict.TryGetValue("Name", out tempName))
-            {
-                dto.Name = tempName.UnEscape();
-            }
-
-            if (valueDict.TryGetValue("Script", out tempScript) && tempScript != null)
-            {
-                dto.Script = tempScript.UnEscape();
-            }
-
-            if (valueDict.TryGetValue("ShortName", out tempShortName))
-            {
-                dto.ShortName = tempShortName.UnEscape();
             }
 
             if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
@@ -197,8 +181,8 @@ namespace CDP4Orm.Dao
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        /// <param name="behavior">
-        /// The behavior DTO that is to be persisted.
+        /// <param name="attachment">
+        /// The attachment DTO that is to be persisted.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be persisted.
@@ -206,30 +190,30 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// True if the concept was successfully persisted.
         /// </returns>
-        public virtual bool Write(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Behavior behavior, CDP4Common.DTO.Thing container = null)
+        public virtual bool Write(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Attachment attachment, CDP4Common.DTO.Thing container = null)
         {
             bool isHandled;
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            var beforeWrite = this.BeforeWrite(transaction, partition, behavior, container, out isHandled, valueTypeDictionaryAdditions);
+            var beforeWrite = this.BeforeWrite(transaction, partition, attachment, container, out isHandled, valueTypeDictionaryAdditions);
             if (!isHandled)
             {
-                beforeWrite = beforeWrite && base.Write(transaction, partition, behavior, container);
+                beforeWrite = beforeWrite && base.Write(transaction, partition, attachment, container);
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
-                    { "BehavioralModelKind", !this.IsDerived(behavior, "BehavioralModelKind") ? behavior.BehavioralModelKind.ToString() : string.Empty },
-                    { "Script", !this.IsDerived(behavior, "Script") ? behavior.Script.Escape() : null },
+                    { "ContentHash", !this.IsDerived(attachment, "ContentHash") ? attachment.ContentHash.Escape() : string.Empty },
+                    { "FileName", !this.IsDerived(attachment, "FileName") ? attachment.FileName.Escape() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     
-                    sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Behavior\"", partition);
+                    sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Attachment\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
 
-                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = behavior.Iid;
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = attachment.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
 
@@ -239,9 +223,10 @@ namespace CDP4Orm.Dao
 
                     this.ExecuteAndLogCommand(command);
                 }
+                attachment.FileType.ForEach(x => this.AddFileType(transaction, partition, attachment.Iid, x));
             }
 
-            return this.AfterWrite(beforeWrite, transaction, partition, behavior, container);
+            return this.AfterWrite(beforeWrite, transaction, partition, attachment, container);
         }
 
         /// <summary>
@@ -254,8 +239,8 @@ namespace CDP4Orm.Dao
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        /// <param name="behavior">
-        /// The behavior DTO that is to be persisted.
+        /// <param name="attachment">
+        /// The attachment DTO that is to be persisted.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be persisted.
@@ -263,26 +248,26 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// True if the concept was successfully persisted.
         /// </returns>
-        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Behavior behavior, CDP4Common.DTO.Thing container = null)
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Attachment attachment, CDP4Common.DTO.Thing container = null)
         {
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            base.Upsert(transaction, partition, behavior, container);
+            base.Upsert(transaction, partition, attachment, container);
 
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
-                { "BehavioralModelKind", !this.IsDerived(behavior, "BehavioralModelKind") ? behavior.BehavioralModelKind.ToString() : string.Empty },
-                { "Script", !this.IsDerived(behavior, "Script") ? behavior.Script.Escape() : null },
+                { "ContentHash", !this.IsDerived(attachment, "ContentHash") ? attachment.ContentHash.Escape() : string.Empty },
+                { "FileName", !this.IsDerived(attachment, "FileName") ? attachment.FileName.Escape() : string.Empty },
             }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                     
-                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Behavior\"", partition);
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Attachment\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
 
-                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = behavior.Iid;
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = attachment.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
                 sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
@@ -296,8 +281,132 @@ namespace CDP4Orm.Dao
 
                 this.ExecuteAndLogCommand(command);
             }
+            attachment.FileType.ForEach(x => this.UpsertFileType(transaction, partition, attachment.Iid, x));
 
             return true;
+        }
+
+        /// <summary>
+        /// Add the supplied value collection to the association link table indicated by the supplied property name
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="propertyName">
+        /// The association property name that will be persisted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="value">
+        /// A value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public override bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        {
+            var isCreated = base.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+
+            switch (propertyName)
+            {
+                case "FileType":
+                    {
+                        isCreated = this.AddFileType(transaction, partition, iid, (Guid)value);
+                        break;
+                    }
+
+                default:
+                    {
+                        break;
+                    }
+            }
+
+            return isCreated;
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="fileType">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool AddFileType(NpgsqlTransaction transaction, string partition, Guid iid, Guid fileType)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Attachment_FileType\"", partition);
+                sqlBuilder.AppendFormat(" (\"Attachment\", \"FileType\")");
+                sqlBuilder.Append(" VALUES (:attachment, :fileType);");
+
+                command.Parameters.Add("attachment", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = fileType;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="fileType">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertFileType(NpgsqlTransaction transaction, string partition, Guid iid, Guid fileType)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Attachment_FileType\"", partition);
+                sqlBuilder.AppendFormat(" (\"Attachment\", \"FileType\")");
+                sqlBuilder.Append(" VALUES (:attachment, :fileType)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"Attachment_FileType_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"Attachment\", \"FileType\")");
+                sqlBuilder.Append(" = (:attachment, :fileType);");
+
+                command.Parameters.Add("attachment", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = fileType;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
         }
 
         /// <summary>
@@ -309,8 +418,8 @@ namespace CDP4Orm.Dao
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
-        /// <param name="behavior">
-        /// The Behavior DTO that is to be updated.
+        /// <param name="attachment">
+        /// The Attachment DTO that is to be updated.
         /// </param>
         /// <param name="container">
         /// The container of the DTO to be updated.
@@ -318,30 +427,30 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// True if the concept was successfully updated.
         /// </returns>
-        public virtual bool Update(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Behavior behavior, CDP4Common.DTO.Thing container = null)
+        public virtual bool Update(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Attachment attachment, CDP4Common.DTO.Thing container = null)
         {
             bool isHandled;
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            var beforeUpdate = this.BeforeUpdate(transaction, partition, behavior, container, out isHandled, valueTypeDictionaryAdditions);
+            var beforeUpdate = this.BeforeUpdate(transaction, partition, attachment, container, out isHandled, valueTypeDictionaryAdditions);
             if (!isHandled)
             {
-                beforeUpdate = beforeUpdate && base.Update(transaction, partition, behavior, container);
+                beforeUpdate = beforeUpdate && base.Update(transaction, partition, attachment, container);
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
-                    { "BehavioralModelKind", !this.IsDerived(behavior, "BehavioralModelKind") ? behavior.BehavioralModelKind.ToString() : string.Empty },
-                    { "Script", !this.IsDerived(behavior, "Script") ? behavior.Script.Escape() : null },
+                    { "ContentHash", !this.IsDerived(attachment, "ContentHash") ? attachment.ContentHash.Escape() : string.Empty },
+                    { "FileName", !this.IsDerived(attachment, "FileName") ? attachment.FileName.Escape() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Behavior\"", partition);
+                    sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Attachment\"", partition);
                     sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
                     sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
-                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = behavior.Iid;
+                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = attachment.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
 
@@ -353,7 +462,7 @@ namespace CDP4Orm.Dao
                 }
             }
 
-            return this.AfterUpdate(beforeUpdate, transaction, partition, behavior, container);
+            return this.AfterUpdate(beforeUpdate, transaction, partition, attachment, container);
         }
 
         /// <summary>
@@ -366,7 +475,7 @@ namespace CDP4Orm.Dao
         /// The database partition (schema) where the requested resource will be deleted.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="CDP4Common.DTO.Behavior"/> id that is to be deleted.
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that is to be deleted.
         /// </param>
         /// <returns>
         /// True if the concept was successfully deleted.
@@ -395,7 +504,7 @@ namespace CDP4Orm.Dao
         /// The database partition (schema) where the requested resource will be deleted.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="CDP4Common.DTO.Behavior"/> id that is to be deleted.
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that is to be deleted.
         /// </param>
         /// <returns>
         /// True if the concept was successfully deleted.
@@ -406,6 +515,86 @@ namespace CDP4Orm.Dao
 
             result = base.Delete(transaction, partition, iid);
             return result;
+        }
+
+        /// <summary>
+        /// Delete the supplied value from the association link table indicated by the supplied property name.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be removed.
+        /// </param>
+        /// <param name="propertyName">
+        /// The association property name from where the value is to be removed.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that is the source of each link table record.
+        /// </param> 
+        /// <param name="value">
+        /// A value for which a link table record wil be removed.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully removed.
+        /// </returns>
+        public override bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        {
+            var isDeleted = base.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+
+            switch (propertyName)
+            {
+                case "FileType":
+                    {
+                        isDeleted = this.DeleteFileType(transaction, partition, iid, (Guid)value);
+                        break;
+                    }
+
+                default:
+                {
+                    break;
+                }
+            }
+
+            return isDeleted;
+        }
+
+        /// <summary>
+        /// Delete an association record in the link table.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.Attachment"/> id that is the source for each link table record.
+        /// </param> 
+        /// <param name="fileType">
+        /// A value for which a link table record wil be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully removed.
+        /// </returns>
+        public bool DeleteFileType(NpgsqlTransaction transaction, string partition, Guid iid, Guid fileType)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Attachment_FileType\"", partition);
+                sqlBuilder.Append(" WHERE \"Attachment\" = :attachment");
+                sqlBuilder.Append(" AND \"FileType\" = :fileType;");
+
+                command.Parameters.Add("attachment", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("fileType", NpgsqlDbType.Uuid).Value = fileType;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
         }
     }
 }

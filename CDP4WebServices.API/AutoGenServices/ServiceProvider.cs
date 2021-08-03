@@ -91,6 +91,11 @@ namespace CDP4WebServices.API.Services
         public IArrayParameterTypeService ArrayParameterTypeService { get; set; }
 
         /// <summary>
+        /// Gets or sets the attachment service.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the behavior service.
         /// </summary>
         public IBehaviorService BehaviorService { get; set; }
@@ -995,6 +1000,7 @@ namespace CDP4WebServices.API.Services
                             { "ArchitectureDiagram", this.ArchitectureDiagramService },
                             { "ArchitectureElement", this.ArchitectureElementService },
                             { "ArrayParameterType", this.ArrayParameterTypeService },
+                            { "Attachment", this.AttachmentService },
                             { "Behavior", this.BehaviorService },
                             { "BehavioralParameter", this.BehavioralParameterService },
                             { "BinaryNote", this.BinaryNoteService },
@@ -1199,6 +1205,7 @@ namespace CDP4WebServices.API.Services
                             { "ArchitectureDiagram", this.ArchitectureDiagramService },
                             { "ArchitectureElement", this.ArchitectureElementService },
                             { "ArrayParameterType", this.ArrayParameterTypeService },
+                            { "Attachment", this.AttachmentService },
                             { "Behavior", this.BehaviorService },
                             { "BehavioralParameter", this.BehavioralParameterService },
                             { "BinaryNote", this.BinaryNoteService },

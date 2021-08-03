@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -412,6 +417,7 @@ namespace CDP4WebServices.API.Services
             var engineeringModelSetupColl = results.Where(i => i.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.IterationSetupService.GetDeep(transaction, partition, engineeringModelSetupColl.SelectMany(x => x.IterationSetup), containerSecurityContext));
@@ -485,6 +491,11 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, engineeringModelSetup));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(engineeringModelSetup.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, engineeringModelSetup));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(engineeringModelSetup.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, engineeringModelSetup));
@@ -541,6 +552,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(engineeringModelSetup.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, engineeringModelSetup));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(engineeringModelSetup.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, engineeringModelSetup));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(engineeringModelSetup.Definition))

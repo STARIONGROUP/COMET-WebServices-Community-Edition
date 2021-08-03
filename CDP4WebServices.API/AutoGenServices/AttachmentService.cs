@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="PossibleFiniteStateService.cs" company="RHEA System S.A.">
+// <copyright file="AttachmentService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
@@ -35,37 +35,17 @@ namespace CDP4WebServices.API.Services
     using Npgsql;
 
     /// <summary>
-    /// The <see cref="PossibleFiniteState"/> Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="Attachment"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
-    public sealed partial class PossibleFiniteStateService : ServiceBase, IPossibleFiniteStateService
+    public sealed partial class AttachmentService : ServiceBase, IAttachmentService
     {
         /// <summary>
-        /// Gets or sets the <see cref="IAliasService"/>.
+        /// Gets or sets the <see cref="IAttachmentDao"/>.
         /// </summary>
-        public IAliasService AliasService { get; set; }
+        public IAttachmentDao AttachmentDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IAttachmentService"/>.
-        /// </summary>
-        public IAttachmentService AttachmentService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDefinitionService"/>.
-        /// </summary>
-        public IDefinitionService DefinitionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IHyperLinkService"/>.
-        /// </summary>
-        public IHyperLinkService HyperLinkService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IPossibleFiniteStateDao"/>.
-        /// </summary>
-        public IPossibleFiniteStateDao PossibleFiniteStateDao { get; set; }
-
-        /// <summary>
-        /// Get the requested <see cref="PossibleFiniteState"/>s from the ORM layer.
+        /// Get the requested <see cref="Attachment"/>s from the ORM layer.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -80,7 +60,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="PossibleFiniteState"/>, optionally with contained <see cref="Thing"/>s.
+        /// List of instances of <see cref="Attachment"/>, optionally with contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -102,7 +82,7 @@ namespace CDP4WebServices.API.Services
         /// The association property name that will be persisted.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="PossibleFiniteState"/> id that will be the source for each link table record.
+        /// The <see cref="Attachment"/> id that will be the source for each link table record.
         /// </param>
         /// <param name="value">
         /// A value for which a link table record will be created.
@@ -112,7 +92,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.PossibleFiniteStateDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return this.AttachmentDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -128,7 +108,7 @@ namespace CDP4WebServices.API.Services
         /// The association property from where the supplied value will be removed.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="PossibleFiniteState"/> id that is the source of the link table records.
+        /// The <see cref="Attachment"/> id that is the source of the link table records.
         /// </param>
         /// <param name="value">
         /// A value for which the link table record will be removed.
@@ -138,7 +118,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.PossibleFiniteStateDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return this.AttachmentDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -154,7 +134,7 @@ namespace CDP4WebServices.API.Services
         /// The association property name that will be reordered.
         /// </param>
         /// <param name="iid">
-        /// The <see cref="PossibleFiniteState"/> id that is the source for the reordered link table record.
+        /// The <see cref="Attachment"/> id that is the source for the reordered link table record.
         /// </param>
         /// <param name="orderUpdate">
         /// The order update information containing the new order key.
@@ -164,7 +144,7 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.PossibleFiniteStateDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return this.AttachmentDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -184,11 +164,11 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
-            return this.PossibleFiniteStateDao.ReorderContainment(transaction, partition, orderedItem);
+            throw new NotSupportedException();
         }
 
         /// <summary>
-        /// Delete the supplied <see cref="PossibleFiniteState"/> instance.
+        /// Delete the supplied <see cref="Attachment"/> instance.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -197,10 +177,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) from where the requested resource will be removed.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="PossibleFiniteState"/> to delete.
+        /// The <see cref="Attachment"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="PossibleFiniteState"/> to be removed.
+        /// The container instance of the <see cref="Attachment"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -212,11 +192,11 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.PossibleFiniteStateDao.Delete(transaction, partition, thing.Iid);
+            return this.AttachmentDao.Delete(transaction, partition, thing.Iid);
         }
 
         /// <summary>
-        /// Delete the supplied <see cref="PossibleFiniteState"/> instance.
+        /// Delete the supplied <see cref="Attachment"/> instance.
         /// A "Raw" Delete means that the delete is performed without calling before-, or after actions, or other side effects.
         /// This is typically used during the import of existing data to the Database.
         /// </summary>
@@ -227,10 +207,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) from where the requested resource will be removed.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="PossibleFiniteState"/> to delete.
+        /// The <see cref="Attachment"/> to delete.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="PossibleFiniteState"/> to be removed.
+        /// The container instance of the <see cref="Attachment"/> to be removed.
         /// </param>
         /// <returns>
         /// True if the removal was successful.
@@ -238,11 +218,11 @@ namespace CDP4WebServices.API.Services
         public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return this.PossibleFiniteStateDao.RawDelete(transaction, partition, thing.Iid);
+            return this.AttachmentDao.RawDelete(transaction, partition, thing.Iid);
         }
 
         /// <summary>
-        /// Update the supplied <see cref="PossibleFiniteState"/> instance.
+        /// Update the supplied <see cref="Attachment"/> instance.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -251,10 +231,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) where the requested resource will be updated.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="PossibleFiniteState"/> <see cref="Thing"/> to update.
+        /// The <see cref="Attachment"/> <see cref="Thing"/> to update.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="PossibleFiniteState"/> to be updated.
+        /// The container instance of the <see cref="Attachment"/> to be updated.
         /// </param>
         /// <returns>
         /// True if the update was successful.
@@ -266,12 +246,12 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
-            var possibleFiniteState = thing as PossibleFiniteState;
-            return this.PossibleFiniteStateDao.Update(transaction, partition, possibleFiniteState, container);
+            var attachment = thing as Attachment;
+            return this.AttachmentDao.Update(transaction, partition, attachment, container);
         }
 
         /// <summary>
-        /// Persist the supplied <see cref="PossibleFiniteState"/> instance.
+        /// Persist the supplied <see cref="Attachment"/> instance.
         /// </summary>
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
@@ -280,10 +260,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="PossibleFiniteState"/> <see cref="Thing"/> to create.
+        /// The <see cref="Attachment"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="PossibleFiniteState"/> to be persisted.
+        /// The container instance of the <see cref="Attachment"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -298,13 +278,12 @@ namespace CDP4WebServices.API.Services
                 throw new SecurityException("The person " + this.PermissionService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
-            var possibleFiniteState = thing as PossibleFiniteState;
-            var createSuccesful = this.PossibleFiniteStateDao.Write(transaction, partition, possibleFiniteState, sequence, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, possibleFiniteState);
+            var attachment = thing as Attachment;
+            return this.AttachmentDao.Write(transaction, partition, attachment, container);
         }
 
         /// <summary>
-        /// Persist the supplied <see cref="PossibleFiniteState"/> instance. Update if it already exists.
+        /// Persist the supplied <see cref="Attachment"/> instance. Update if it already exists.
         /// This is typically used during the import of existing data to the Database.
         /// </summary>
         /// <param name="transaction">
@@ -314,10 +293,10 @@ namespace CDP4WebServices.API.Services
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
         /// <param name="thing">
-        /// The <see cref="PossibleFiniteState"/> <see cref="Thing"/> to create.
+        /// The <see cref="Attachment"/> <see cref="Thing"/> to create.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="PossibleFiniteState"/> to be persisted.
+        /// The container instance of the <see cref="Attachment"/> to be persisted.
         /// </param>
         /// <param name="sequence">
         /// The order sequence used to persist this instance. Default is not used (-1).
@@ -327,9 +306,8 @@ namespace CDP4WebServices.API.Services
         /// </returns>
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            var possibleFiniteState = thing as PossibleFiniteState;
-            var createSuccesful = this.PossibleFiniteStateDao.Upsert(transaction, partition, possibleFiniteState, sequence, container);
-            return createSuccesful && this.UpsertContainment(transaction, partition, possibleFiniteState);
+            var attachment = thing as Attachment;
+            return this.AttachmentDao.Upsert(transaction, partition, attachment, container);
         }
 
         /// <summary>
@@ -348,21 +326,21 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="PossibleFiniteState"/>.
+        /// List of instances of <see cref="Attachment"/>.
         /// </returns>
         public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
-            var authorizedContext = this.AuthorizeReadRequest("PossibleFiniteState", containerSecurityContext, partition);
+            var authorizedContext = this.AuthorizeReadRequest("Attachment", containerSecurityContext, partition);
             var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var possibleFiniteStateColl = new List<Thing>(this.PossibleFiniteStateDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
+            var attachmentColl = new List<Thing>(this.AttachmentDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
 
-            return this.AfterGet(possibleFiniteStateColl, transaction, partition, idFilter);
+            return this.AfterGet(attachmentColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -381,7 +359,7 @@ namespace CDP4WebServices.API.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="PossibleFiniteState"/> and contained <see cref="Thing"/>s.
+        /// List of instances of <see cref="Attachment"/> and contained <see cref="Thing"/>s.
         /// </returns>
         public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
@@ -391,15 +369,7 @@ namespace CDP4WebServices.API.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
-            var possibleFiniteStateColl = results.Where(i => i.GetType() == typeof(PossibleFiniteState)).Cast<PossibleFiniteState>().ToList();
-
-            results.AddRange(this.AliasService.GetDeep(transaction, partition, possibleFiniteStateColl.SelectMany(x => x.Alias), containerSecurityContext));
-            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, possibleFiniteStateColl.SelectMany(x => x.Attachment), containerSecurityContext));
-            results.AddRange(this.DefinitionService.GetDeep(transaction, partition, possibleFiniteStateColl.SelectMany(x => x.Definition), containerSecurityContext));
-            results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, possibleFiniteStateColl.SelectMany(x => x.HyperLink), containerSecurityContext));
-
-            return results;
+            return this.GetShallow(transaction, partition, idFilter, containerSecurityContext);
         }
 
         /// <summary>
@@ -439,91 +409,6 @@ namespace CDP4WebServices.API.Services
             }
 
             return filteredCollection;
-        }
-
-        /// <summary>
-        /// Persist the <see cref="PossibleFiniteState"/> containment tree to the ORM layer.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="possibleFiniteState">
-        /// The <see cref="PossibleFiniteState"/> instance to persist.
-        /// </param>
-        /// <returns>
-        /// True if the persistence was successful.
-        /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, PossibleFiniteState possibleFiniteState)
-        {
-            var results = new List<bool>();
-
-            foreach (var alias in this.ResolveFromRequestCache(possibleFiniteState.Alias))
-            {
-                results.Add(this.AliasService.CreateConcept(transaction, partition, alias, possibleFiniteState));
-            }
-
-            foreach (var attachment in this.ResolveFromRequestCache(possibleFiniteState.Attachment))
-            {
-                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, possibleFiniteState));
-            }
-
-            foreach (var definition in this.ResolveFromRequestCache(possibleFiniteState.Definition))
-            {
-                results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, possibleFiniteState));
-            }
-
-            foreach (var hyperLink in this.ResolveFromRequestCache(possibleFiniteState.HyperLink))
-            {
-                results.Add(this.HyperLinkService.CreateConcept(transaction, partition, hyperLink, possibleFiniteState));
-            }
-
-            return results.All(x => x);
-        }
-                
-        /// <summary>
-        /// Persist the <see cref="PossibleFiniteState"/> containment tree to the ORM layer. Update if it already exists.
-        /// This is typically used during the import of existing data to the Database.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current <see cref="NpgsqlTransaction"/> to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="possibleFiniteState">
-        /// The <see cref="PossibleFiniteState"/> instance to persist.
-        /// </param>
-        /// <returns>
-        /// True if the persistence was successful.
-        /// </returns>
-        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, PossibleFiniteState possibleFiniteState)
-        {
-            var results = new List<bool>();
-
-            foreach (var alias in this.ResolveFromRequestCache(possibleFiniteState.Alias))
-            {
-                results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, possibleFiniteState));
-            }
-
-            foreach (var attachment in this.ResolveFromRequestCache(possibleFiniteState.Attachment))
-            {
-                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, possibleFiniteState));
-            }
-
-            foreach (var definition in this.ResolveFromRequestCache(possibleFiniteState.Definition))
-            {
-                results.Add(this.DefinitionService.UpsertConcept(transaction, partition, definition, possibleFiniteState));
-            }
-
-            foreach (var hyperLink in this.ResolveFromRequestCache(possibleFiniteState.HyperLink))
-            {
-                results.Add(this.HyperLinkService.UpsertConcept(transaction, partition, hyperLink, possibleFiniteState));
-            }
-
-            return results.All(x => x);
         }
     }
 }

@@ -87,6 +87,11 @@ namespace CDP4WebServices.API.Services
         public IArrayParameterTypeMetaInfo ArrayParameterTypeMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the attachment meta info.
+        /// </summary>
+        public IAttachmentMetaInfo AttachmentMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the behavior meta info.
         /// </summary>
         public IBehaviorMetaInfo BehaviorMetaInfo { get; set; }
@@ -991,6 +996,7 @@ namespace CDP4WebServices.API.Services
                             { "ArchitectureDiagram", this.ArchitectureDiagramMetaInfo },
                             { "ArchitectureElement", this.ArchitectureElementMetaInfo },
                             { "ArrayParameterType", this.ArrayParameterTypeMetaInfo },
+                            { "Attachment", this.AttachmentMetaInfo },
                             { "Behavior", this.BehaviorMetaInfo },
                             { "BehavioralParameter", this.BehavioralParameterMetaInfo },
                             { "BinaryNote", this.BinaryNoteMetaInfo },

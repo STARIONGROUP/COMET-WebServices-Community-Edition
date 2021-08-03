@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -395,6 +400,7 @@ namespace CDP4WebServices.API.Services
             var possibleFiniteStateListColl = results.Where(i => i.GetType() == typeof(PossibleFiniteStateList)).Cast<PossibleFiniteStateList>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, possibleFiniteStateListColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, possibleFiniteStateListColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, possibleFiniteStateListColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, possibleFiniteStateListColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.PossibleStateService.GetDeep(transaction, partition, possibleFiniteStateListColl.SelectMany(x => x.PossibleState).ToIdList(), containerSecurityContext));
@@ -465,6 +471,11 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, possibleFiniteStateList));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(possibleFiniteStateList.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, possibleFiniteStateList));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(possibleFiniteStateList.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, possibleFiniteStateList));
@@ -506,6 +517,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(possibleFiniteStateList.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, possibleFiniteStateList));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(possibleFiniteStateList.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, possibleFiniteStateList));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(possibleFiniteStateList.Definition))

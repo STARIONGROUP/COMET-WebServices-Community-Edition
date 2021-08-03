@@ -50,11 +50,6 @@ namespace CDP4WebServices.API.Services
         public IDiagramElementThingService DiagramElementService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IDiagramPortService"/>.
-        /// </summary>
-        public IDiagramPortService DiagramPortService { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IOwnedStyleService"/>.
         /// </summary>
         public IOwnedStyleService LocalStyleService { get; set; }
@@ -396,7 +391,6 @@ namespace CDP4WebServices.API.Services
 
             results.AddRange(this.BoundsService.GetDeep(transaction, partition, architectureElementColl.SelectMany(x => x.Bounds), containerSecurityContext));
             results.AddRange(this.DiagramElementService.GetDeep(transaction, partition, architectureElementColl.SelectMany(x => x.DiagramElement), containerSecurityContext));
-            results.AddRange(this.DiagramPortService.GetDeep(transaction, partition, architectureElementColl.SelectMany(x => x.DiagramPort), containerSecurityContext));
             results.AddRange(this.LocalStyleService.GetDeep(transaction, partition, architectureElementColl.SelectMany(x => x.LocalStyle), containerSecurityContext));
 
             return results;
@@ -470,11 +464,6 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.DiagramElementService.CreateConcept(transaction, partition, diagramElement, architectureElement));
             }
 
-            foreach (var diagramPort in this.ResolveFromRequestCache(architectureElement.DiagramPort))
-            {
-                results.Add(this.DiagramPortService.CreateConcept(transaction, partition, diagramPort, architectureElement));
-            }
-
             foreach (var localStyle in this.ResolveFromRequestCache(architectureElement.LocalStyle))
             {
                 results.Add(this.LocalStyleService.CreateConcept(transaction, partition, localStyle, architectureElement));
@@ -511,11 +500,6 @@ namespace CDP4WebServices.API.Services
             foreach (var diagramElement in this.ResolveFromRequestCache(architectureElement.DiagramElement))
             {
                 results.Add(this.DiagramElementService.UpsertConcept(transaction, partition, diagramElement, architectureElement));
-            }
-
-            foreach (var diagramPort in this.ResolveFromRequestCache(architectureElement.DiagramPort))
-            {
-                results.Add(this.DiagramPortService.UpsertConcept(transaction, partition, diagramPort, architectureElement));
             }
 
             foreach (var localStyle in this.ResolveFromRequestCache(architectureElement.LocalStyle))

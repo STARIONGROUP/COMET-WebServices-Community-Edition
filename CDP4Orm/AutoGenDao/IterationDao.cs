@@ -440,6 +440,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ArchitectureDiagram\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ArchitectureElement\" SELECT * FROM \"{1}\".\"ArchitectureElement\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ArchitectureElement\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Attachment\" SELECT * FROM \"{1}\".\"Attachment\";", targetPartition, sourcePartition);
+                sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Attachment\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Behavior\" SELECT * FROM \"{1}\".\"Behavior\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Behavior\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"BehavioralParameter\" SELECT * FROM \"{1}\".\"BehavioralParameter\";", targetPartition, sourcePartition);
@@ -602,6 +604,8 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"AndExpression_Term\" SELECT * FROM \"{1}\".\"AndExpression_Term\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"AndExpression_Term\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Attachment_FileType\" SELECT * FROM \"{1}\".\"Attachment_FileType\";", targetPartition, sourcePartition);
+                sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Attachment_FileType\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementBase_Category\" SELECT * FROM \"{1}\".\"ElementBase_Category\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ElementBase_Category\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ElementDefinition_OrganizationalParticipant\" SELECT * FROM \"{1}\".\"ElementDefinition_OrganizationalParticipant\";", targetPartition, sourcePartition);
@@ -693,6 +697,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"AndExpression\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ArchitectureDiagram\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ArchitectureElement\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
+                sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"Attachment\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"Behavior\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"BehavioralParameter\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"BinaryRelationship\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
@@ -774,6 +779,7 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ActualFiniteStateList_ExcludeOption\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"AndExpression_Term\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
+                sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"Attachment_FileType\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementBase_Category\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementDefinition_OrganizationalParticipant\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
                 sqlBuilder.AppendFormat("ALTER TABLE \"{0}\".\"ElementDefinition_ReferencedElement\" {1} TRIGGER USER;", sourcePartition, triggerStatus);
