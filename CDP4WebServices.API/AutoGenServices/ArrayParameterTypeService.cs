@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IParameterTypeComponentService"/>.
         /// </summary>
         public IParameterTypeComponentService ComponentService { get; set; }
@@ -395,6 +400,7 @@ namespace CDP4WebServices.API.Services
             var arrayParameterTypeColl = results.Where(i => i.GetType() == typeof(ArrayParameterType)).Cast<ArrayParameterType>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, arrayParameterTypeColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, arrayParameterTypeColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.ComponentService.GetDeep(transaction, partition, arrayParameterTypeColl.SelectMany(x => x.Component).ToIdList(), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, arrayParameterTypeColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, arrayParameterTypeColl.SelectMany(x => x.HyperLink), containerSecurityContext));
@@ -465,6 +471,11 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, arrayParameterType));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(arrayParameterType.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, arrayParameterType));
+            }
+
             foreach (var component in this.ResolveFromRequestCache(arrayParameterType.Component))
             {
                 results.Add(this.ComponentService.CreateConcept(transaction, partition, (ParameterTypeComponent)component.V, arrayParameterType, component.K));
@@ -506,6 +517,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(arrayParameterType.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, arrayParameterType));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(arrayParameterType.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, arrayParameterType));
             }
 
             foreach (var component in this.ResolveFromRequestCache(arrayParameterType.Component))

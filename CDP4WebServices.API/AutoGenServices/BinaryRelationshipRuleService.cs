@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -390,6 +395,7 @@ namespace CDP4WebServices.API.Services
             var binaryRelationshipRuleColl = results.Where(i => i.GetType() == typeof(BinaryRelationshipRule)).Cast<BinaryRelationshipRule>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, binaryRelationshipRuleColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, binaryRelationshipRuleColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, binaryRelationshipRuleColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, binaryRelationshipRuleColl.SelectMany(x => x.HyperLink), containerSecurityContext));
 
@@ -459,6 +465,11 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, binaryRelationshipRule));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(binaryRelationshipRule.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, binaryRelationshipRule));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(binaryRelationshipRule.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, binaryRelationshipRule));
@@ -495,6 +506,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(binaryRelationshipRule.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, binaryRelationshipRule));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(binaryRelationshipRule.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, binaryRelationshipRule));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(binaryRelationshipRule.Definition))

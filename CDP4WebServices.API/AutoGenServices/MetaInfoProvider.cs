@@ -72,9 +72,34 @@ namespace CDP4WebServices.API.Services
         public IApprovalMetaInfo ApprovalMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the architectureDiagram meta info.
+        /// </summary>
+        public IArchitectureDiagramMetaInfo ArchitectureDiagramMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the architectureElement meta info.
+        /// </summary>
+        public IArchitectureElementMetaInfo ArchitectureElementMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the arrayParameterType meta info.
         /// </summary>
         public IArrayParameterTypeMetaInfo ArrayParameterTypeMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the attachment meta info.
+        /// </summary>
+        public IAttachmentMetaInfo AttachmentMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavior meta info.
+        /// </summary>
+        public IBehaviorMetaInfo BehaviorMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavioralParameter meta info.
+        /// </summary>
+        public IBehavioralParameterMetaInfo BehavioralParameterMetaInfo { get; set; }
 
         /// <summary>
         /// Gets or sets the binaryNote meta info.
@@ -237,6 +262,11 @@ namespace CDP4WebServices.API.Services
         public IDiagramElementThingMetaInfo DiagramElementThingMetaInfo { get; set; }
 
         /// <summary>
+        /// Gets or sets the diagramFrame meta info.
+        /// </summary>
+        public IDiagramFrameMetaInfo DiagramFrameMetaInfo { get; set; }
+
+        /// <summary>
         /// Gets or sets the diagrammingStyle meta info.
         /// </summary>
         public IDiagrammingStyleMetaInfo DiagrammingStyleMetaInfo { get; set; }
@@ -245,6 +275,11 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the diagramObject meta info.
         /// </summary>
         public IDiagramObjectMetaInfo DiagramObjectMetaInfo { get; set; }
+
+        /// <summary>
+        /// Gets or sets the diagramPort meta info.
+        /// </summary>
+        public IDiagramPortMetaInfo DiagramPortMetaInfo { get; set; }
 
         /// <summary>
         /// Gets or sets the diagramShape meta info.
@@ -958,7 +993,12 @@ namespace CDP4WebServices.API.Services
                             { "Alias", this.AliasMetaInfo },
                             { "AndExpression", this.AndExpressionMetaInfo },
                             { "Approval", this.ApprovalMetaInfo },
+                            { "ArchitectureDiagram", this.ArchitectureDiagramMetaInfo },
+                            { "ArchitectureElement", this.ArchitectureElementMetaInfo },
                             { "ArrayParameterType", this.ArrayParameterTypeMetaInfo },
+                            { "Attachment", this.AttachmentMetaInfo },
+                            { "Behavior", this.BehaviorMetaInfo },
+                            { "BehavioralParameter", this.BehavioralParameterMetaInfo },
                             { "BinaryNote", this.BinaryNoteMetaInfo },
                             { "BinaryRelationship", this.BinaryRelationshipMetaInfo },
                             { "BinaryRelationshipRule", this.BinaryRelationshipRuleMetaInfo },
@@ -991,8 +1031,10 @@ namespace CDP4WebServices.API.Services
                             { "DiagramEdge", this.DiagramEdgeMetaInfo },
                             { "DiagramElementContainer", this.DiagramElementContainerMetaInfo },
                             { "DiagramElementThing", this.DiagramElementThingMetaInfo },
+                            { "DiagramFrame", this.DiagramFrameMetaInfo },
                             { "DiagrammingStyle", this.DiagrammingStyleMetaInfo },
                             { "DiagramObject", this.DiagramObjectMetaInfo },
+                            { "DiagramPort", this.DiagramPortMetaInfo },
                             { "DiagramShape", this.DiagramShapeMetaInfo },
                             { "DiagramThingBase", this.DiagramThingBaseMetaInfo },
                             { "DiscussionItem", this.DiscussionItemMetaInfo },

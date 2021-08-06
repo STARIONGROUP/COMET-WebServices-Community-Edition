@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IConstantService"/>.
         /// </summary>
         public IConstantService ConstantService { get; set; }
@@ -446,6 +451,7 @@ namespace CDP4WebServices.API.Services
             var modelReferenceDataLibraryColl = results.Where(i => i.GetType() == typeof(ModelReferenceDataLibrary)).Cast<ModelReferenceDataLibrary>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.ConstantService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Constant), containerSecurityContext));
             results.AddRange(this.DefinedCategoryService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.DefinedCategory), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Definition), containerSecurityContext));
@@ -523,6 +529,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(modelReferenceDataLibrary.Alias))
             {
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, modelReferenceDataLibrary));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(modelReferenceDataLibrary.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, modelReferenceDataLibrary));
             }
 
             foreach (var constant in this.ResolveFromRequestCache(modelReferenceDataLibrary.Constant))
@@ -611,6 +622,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(modelReferenceDataLibrary.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, modelReferenceDataLibrary));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(modelReferenceDataLibrary.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, modelReferenceDataLibrary));
             }
 
             foreach (var constant in this.ResolveFromRequestCache(modelReferenceDataLibrary.Constant))

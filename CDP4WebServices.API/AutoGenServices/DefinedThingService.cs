@@ -40,6 +40,11 @@ namespace CDP4WebServices.API.Services
     public sealed partial class DefinedThingService : ServiceBase, IDefinedThingService
     {
         /// <summary>
+        /// Gets or sets the <see cref="IBehaviorService"/>.
+        /// </summary>
+        public IBehaviorService BehaviorService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="ICategoryService"/>.
         /// </summary>
         public ICategoryService CategoryService { get; set; }
@@ -483,6 +488,7 @@ namespace CDP4WebServices.API.Services
             }
 
             var definedThingColl = new List<Thing>();
+            definedThingColl.AddRange(this.BehaviorService.GetShallow(transaction, partition, idFilter, authorizedContext));
             definedThingColl.AddRange(this.CategoryService.GetShallow(transaction, partition, idFilter, authorizedContext));
             definedThingColl.AddRange(this.ConstantService.GetShallow(transaction, partition, idFilter, authorizedContext));
             definedThingColl.AddRange(this.DomainOfExpertiseService.GetShallow(transaction, partition, idFilter, authorizedContext));
@@ -545,6 +551,7 @@ namespace CDP4WebServices.API.Services
             }
 
             var results = new List<Thing>();
+            results.AddRange(this.BehaviorService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.CategoryService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ConstantService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.DomainOfExpertiseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));

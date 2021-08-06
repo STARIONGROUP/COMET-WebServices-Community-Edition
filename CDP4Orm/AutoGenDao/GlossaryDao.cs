@@ -147,6 +147,7 @@ namespace CDP4Orm.Dao
 
             var dto = new CDP4Common.DTO.Glossary(iid, revisionNumber);
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
+            dto.Attachment.AddRange(Array.ConvertAll((string[])reader["Attachment"], Guid.Parse));
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
             dto.Definition.AddRange(Array.ConvertAll((string[])reader["Definition"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));

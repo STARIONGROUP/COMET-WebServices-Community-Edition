@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -390,6 +395,7 @@ namespace CDP4WebServices.API.Services
             var scaleValueDefinitionColl = results.Where(i => i.GetType() == typeof(ScaleValueDefinition)).Cast<ScaleValueDefinition>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, scaleValueDefinitionColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, scaleValueDefinitionColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, scaleValueDefinitionColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, scaleValueDefinitionColl.SelectMany(x => x.HyperLink), containerSecurityContext));
 
@@ -459,6 +465,11 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, scaleValueDefinition));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(scaleValueDefinition.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, scaleValueDefinition));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(scaleValueDefinition.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, scaleValueDefinition));
@@ -495,6 +506,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(scaleValueDefinition.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, scaleValueDefinition));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(scaleValueDefinition.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, scaleValueDefinition));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(scaleValueDefinition.Definition))
