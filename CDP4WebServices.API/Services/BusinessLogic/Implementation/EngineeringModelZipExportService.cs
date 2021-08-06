@@ -991,8 +991,8 @@ namespace CDP4WebServices.API.Services
                     throw new UnauthorizedAccessException(string.Format("Person {0} is not authorized to access model {1}", this.RequestUtils.Context.AuthenticatedCredentials.Person.UserName, engineeringModelSetup.EngineeringModelIid));
                 }
 
-                var fileRevisions = engineeringModelDtos.Where(x => x.ClassKind == ClassKind.FileRevision)
-                    .OfType<FileRevision>().ToList();
+                var contentHashes = engineeringModelDtos.Where(x => x.ClassKind == ClassKind.FileRevision)
+                    .OfType<FileRevision>().Select(x => x.ContentHash).ToList();
 
                 // Serialize and save dtos to the archive
                 using (var engineeringModelMemoryStream = new MemoryStream())
@@ -1029,9 +1029,17 @@ namespace CDP4WebServices.API.Services
                         new List<Guid> { iterationIid },
                         authorizedContext).ToList();
 
-                    fileRevisions.AddRange(
-                        iterationDtos.Where(x => x.ClassKind == ClassKind.FileRevision).OfType<FileRevision>()
-                            .ToList());
+                    contentHashes.AddRange(
+                        iterationDtos
+                            .Where(x => x.ClassKind == ClassKind.FileRevision)
+                            .OfType<FileRevision>()
+                            .Select(x => x.ContentHash));
+
+                    contentHashes.AddRange(
+                        iterationDtos
+                            .Where(x => x.ClassKind == ClassKind.Attachment)
+                            .OfType<Attachment>()
+                            .Select(x => x.ContentHash));
 
                     // Serialize and save dtos to the archive
                     using (var iterationMemoryStream = new MemoryStream())
@@ -1040,12 +1048,9 @@ namespace CDP4WebServices.API.Services
 
                         using (var outputStream = new MemoryStream(iterationMemoryStream.ToArray()))
                         {
-                            var iterationFilename = string.Format(
-                                @"{0}\{1}\{2}\{3}.json",
-                                EngineeringModelZipLocation,
-                                engineeringModelSetup.EngineeringModelIid,
-                                IterationZipLocation,
-                                iterationIid);
+                            var iterationFilename = 
+                                $@"{EngineeringModelZipLocation}\{engineeringModelSetup.EngineeringModelIid}\{IterationZipLocation}\{iterationIid}.json";
+
                             zipFile.AddEntry(iterationFilename, outputStream);
                             zipFile.Save(filePath);
                         }
@@ -1053,7 +1058,7 @@ namespace CDP4WebServices.API.Services
                 }
 
                 // Add files to the archive
-                foreach (var fileRevision in fileRevisions)
+                foreach (var contentHash in contentHashes)
                 {
                     var fileRevisionPath = string.Format(
                         @"{0}\{1}\{2}",
@@ -1062,7 +1067,8 @@ namespace CDP4WebServices.API.Services
                         FileRevisionZipLocation);
 
                     string storageFilePath;
-                    this.FileBinaryService.TryGetFileStoragePath(fileRevision.ContentHash, out storageFilePath);
+
+                    this.FileBinaryService.TryGetFileStoragePath(contentHash, out storageFilePath);
 
                     zipFile.AddFile(storageFilePath, fileRevisionPath);
                     zipFile.Save(filePath);

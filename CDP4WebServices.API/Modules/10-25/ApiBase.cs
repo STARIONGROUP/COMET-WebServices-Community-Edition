@@ -528,8 +528,8 @@ namespace CDP4WebServices.API.Modules
         /// <summary>
         /// Create a multipart response for the included file revisions.
         /// </summary>
-        /// <param name="fileRevisions">
-        /// The file revisions.
+        /// <param name="contentHashes">
+        /// The content hashes.
         /// </param>
         /// <param name="resourceResponse">
         /// The resource response.
@@ -541,7 +541,7 @@ namespace CDP4WebServices.API.Modules
         /// The <see cref="Response"/>.
         /// </returns>
         protected Response GetMultipartResponse(
-            List<FileRevision> fileRevisions,
+            List<string> contentHashes,
             List<Thing> resourceResponse,
             HttpStatusCode statusCode = HttpStatusCode.OK)
         {
@@ -550,7 +550,7 @@ namespace CDP4WebServices.API.Modules
             {
                 Contents = stream => this.PrepareMultiPartResponse(
                     stream,
-                    fileRevisions,
+                    contentHashes,
                     resourceResponse,
                     this.RequestUtils.GetRequestDataModelVersion),
                 StatusCode = statusCode
@@ -798,12 +798,12 @@ namespace CDP4WebServices.API.Modules
         }
 
         /// <summary>
-        /// Prepare a multi part response based on all included fileRevisions in the response.
+        /// Prepare a multi part response based on all included files in the response.
         /// </summary>
         /// <param name="targetStream">
         /// The target Stream.
         /// </param>
-        /// <param name="fileRevisions">
+        /// <param name="contentHashes">
         /// The file Revisions.
         /// </param>
         /// <param name="resourceResponse">
@@ -814,11 +814,11 @@ namespace CDP4WebServices.API.Modules
         /// </param>
         private void PrepareMultiPartResponse(
             Stream targetStream,
-            List<FileRevision> fileRevisions,
+            List<string> contentHashes,
             List<Thing> resourceResponse,
             Version requestDataModelVersion)
         {
-            if (!fileRevisions.Any())
+            if (!contentHashes.Any())
             {
                 // do nothing if no file revisions are present
                 return;
@@ -841,10 +841,11 @@ namespace CDP4WebServices.API.Modules
                 stream.Flush();
             }
 
-            foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
+            foreach (var hash in contentHashes.Distinct())
             {
                 byte[] buffer;
                 long fileSize;
+
                 using (var fileStream = this.FileBinaryService.RetrieveBinaryData(hash))
                 {
                     fileSize = fileStream.Length;
@@ -856,7 +857,7 @@ namespace CDP4WebServices.API.Modules
                 var binaryContent = new ByteArrayContent(buffer);
                 binaryContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
 
-                // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
+                // use the file hash value to easily identify the multipart content for each respective file hash entry
                 binaryContent.Headers.Add(ContentDispositionHeader, $"attachment; filename={hash}");
                 binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
@@ -928,7 +929,7 @@ namespace CDP4WebServices.API.Modules
                 var binaryContent = new ByteArrayContent(buffer);
                 binaryContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
 
-                // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
+                // use the file hash value to easily identify the multipart content for each respective file hash entry
                 binaryContent.Headers.Add(
                     ContentDispositionHeader,
                     $"attachment; filename={new DirectoryInfo(folderPath).Name + ".zip"}");
@@ -1042,6 +1043,54 @@ namespace CDP4WebServices.API.Modules
             // reset query parameters
             this.RequestUtils.OverrideQueryParameters = null;
             return chainedReferenceDataColl;
+        }
+
+        /// <summary>
+        /// Tries to create a Multi-part response if necessary
+        /// </summary>
+        /// <param name="resourceResponse">
+        /// A <see cref="List{T}"/> of type <see cref="Thing"/> in which to search for <see cref="Thing"/>s
+        /// that represent a physical file.
+        /// </param>
+        /// <param name="response">
+        /// The newly <see cref="Response"/>
+        /// </param>
+        /// <returns></returns>
+        protected bool TryGetMultipartResponse(List<Thing> resourceResponse, out Response response)
+        {
+            response = null;
+
+            if (this.RequestUtils.QueryParameters.IncludeFileData)
+            {
+                var contentHashes = this.GetContentHashes(resourceResponse);
+
+                if (contentHashes.Any())
+                {
+                    // create multipart response including file binaries
+                    response = this.GetMultipartResponse(contentHashes, resourceResponse);
+
+                    return true; 
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets all content hashes from <see cref="Thing"/>s that represent files and therefore have ContentHash properties
+        /// </summary>
+        /// <param name="things">
+        /// The <see cref="List{T}"/> of type <see cref="Thing"/> that could contain <see cref="Thing"/>
+        /// that represents a file and therefore has ContentHash properties
+        /// </param>
+        /// <returns>
+        /// A <see cref="List{T}"/> of type <see cref="string"/> containing all (file) content hashes.
+        /// </returns>
+        protected List<string> GetContentHashes(List<Thing> things)
+        {
+            return things.OfType<FileRevision>().Select(x => x.ContentHash)
+                .Union(things.OfType<Attachment>().Select(x => x.ContentHash))
+                .ToList();
         }
     }
 }

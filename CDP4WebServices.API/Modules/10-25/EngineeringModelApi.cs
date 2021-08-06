@@ -240,11 +240,9 @@ namespace CDP4WebServices.API.Modules
                     Logger.Info("{0} obfuscation completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
                 }
 
-                var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
-                if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
+                if (this.TryGetMultipartResponse(resourceResponse, out var response))
                 {
-                    // return multipart response including file binaries
-                    return this.GetMultipartResponse(fileRevisions, resourceResponse);
+                    return response;
                 }
 
                 if (this.RequestUtils.QueryParameters.IncludeFileData)
