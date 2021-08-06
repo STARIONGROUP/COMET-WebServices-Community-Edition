@@ -149,6 +149,7 @@ namespace CDP4Orm.Dao
 
             var dto = new CDP4Common.DTO.DecompositionRule(iid, revisionNumber);
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
+            dto.Attachment.AddRange(Array.ConvertAll((string[])reader["Attachment"], Guid.Parse));
             dto.ContainedCategory.AddRange(Array.ConvertAll((string[])reader["ContainedCategory"], Guid.Parse));
             dto.ContainingCategory = Guid.Parse(reader["ContainingCategory"].ToString());
             dto.Definition.AddRange(Array.ConvertAll((string[])reader["Definition"], Guid.Parse));

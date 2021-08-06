@@ -97,10 +97,11 @@ namespace CDP4Orm.Dao
                 else
                 {
                     sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"DiagramCanvas_View\"", partition);
+                    sqlBuilder.Append(" WHERE \"ValueTypeSet\" -> 'ClassKind' = 'DiagramCanvas'");
 
                     if (ids != null && ids.Any()) 
                     {
-                        sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
+                        sqlBuilder.Append(" AND \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
                     }
 
@@ -136,8 +137,10 @@ namespace CDP4Orm.Dao
         public virtual CDP4Common.DTO.DiagramCanvas MapToDto(NpgsqlDataReader reader)
         {
             string tempCreatedOn;
+            string tempDescription;
             string tempModifiedOn;
             string tempName;
+            string tempPublicationState;
             string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -155,6 +158,11 @@ namespace CDP4Orm.Dao
                 dto.CreatedOn = Utils.ParseUtcDate(tempCreatedOn);
             }
 
+            if (valueDict.TryGetValue("Description", out tempDescription))
+            {
+                dto.Description = tempDescription.UnEscape();
+            }
+
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
@@ -163,6 +171,11 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Name", out tempName))
             {
                 dto.Name = tempName.UnEscape();
+            }
+
+            if (valueDict.TryGetValue("PublicationState", out tempPublicationState))
+            {
+                dto.PublicationState = Utils.ParseEnum<CDP4Common.DiagramData.PublicationState>(tempPublicationState);
             }
 
             if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
@@ -203,6 +216,8 @@ namespace CDP4Orm.Dao
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
                     { "CreatedOn", !this.IsDerived(diagramCanvas, "CreatedOn") ? diagramCanvas.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
+                    { "Description", !this.IsDerived(diagramCanvas, "Description") ? diagramCanvas.Description.Escape() : string.Empty },
+                    { "PublicationState", !this.IsDerived(diagramCanvas, "PublicationState") ? diagramCanvas.PublicationState.ToString() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
@@ -255,6 +270,8 @@ namespace CDP4Orm.Dao
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
                 { "CreatedOn", !this.IsDerived(diagramCanvas, "CreatedOn") ? diagramCanvas.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
+                { "Description", !this.IsDerived(diagramCanvas, "Description") ? diagramCanvas.Description.Escape() : string.Empty },
+                { "PublicationState", !this.IsDerived(diagramCanvas, "PublicationState") ? diagramCanvas.PublicationState.ToString() : string.Empty },
             }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             using (var command = new NpgsqlCommand())
@@ -313,6 +330,8 @@ namespace CDP4Orm.Dao
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
                     { "CreatedOn", !this.IsDerived(diagramCanvas, "CreatedOn") ? diagramCanvas.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
+                    { "Description", !this.IsDerived(diagramCanvas, "Description") ? diagramCanvas.Description.Escape() : string.Empty },
+                    { "PublicationState", !this.IsDerived(diagramCanvas, "PublicationState") ? diagramCanvas.PublicationState.ToString() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())

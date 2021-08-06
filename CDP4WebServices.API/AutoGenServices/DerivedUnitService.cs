@@ -45,6 +45,11 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -395,6 +400,7 @@ namespace CDP4WebServices.API.Services
             var derivedUnitColl = results.Where(i => i.GetType() == typeof(DerivedUnit)).Cast<DerivedUnit>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, derivedUnitColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, derivedUnitColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, derivedUnitColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, derivedUnitColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.UnitFactorService.GetDeep(transaction, partition, derivedUnitColl.SelectMany(x => x.UnitFactor).ToIdList(), containerSecurityContext));
@@ -465,6 +471,11 @@ namespace CDP4WebServices.API.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, derivedUnit));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(derivedUnit.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, derivedUnit));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(derivedUnit.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, derivedUnit));
@@ -506,6 +517,11 @@ namespace CDP4WebServices.API.Services
             foreach (var alias in this.ResolveFromRequestCache(derivedUnit.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, derivedUnit));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(derivedUnit.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, derivedUnit));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(derivedUnit.Definition))
