@@ -45,6 +45,7 @@ for:
     - choco install opencover.portable --version=4.7.922
     - choco install "sonarscanner-msbuild-net46" -y
   before_build:
+    - cmd: nuget sources add -name github -source https://nuget.pkg.github.com/RHEAGROUP/index.json -username %GITHUB_USER% -password %GITHUB_TOKEN% -StorePasswordInClearText
     - cmd: nuget install NUnit.Console -Version 3.11.1 -OutputDirectory testrunner
     - cmd: nuget install NUnit.Runners -Version 3.11.1 -OutputDirectory testrunner
     - cmd: nuget restore -verbosity quiet

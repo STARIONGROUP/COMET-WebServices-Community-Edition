@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Authentication-CE</Title>
-    <Version>6.1.5</Version>
+    <Version>6.1.6</Version>
     <Description>Library to support the implementation of authentication</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
@@ -15,7 +15,7 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 </Project>
