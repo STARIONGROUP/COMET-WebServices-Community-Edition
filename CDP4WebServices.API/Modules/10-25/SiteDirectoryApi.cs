@@ -1,6 +1,24 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryApi.cs" company="RHEA System S.A.">
-//   Copyright (c) 2016-2020 RHEA System S.A.
+//   Copyright (c) 2016-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//
+//    This file is part of CDP4 Web Services Community Edition. 
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
@@ -172,7 +190,23 @@ namespace CDP4WebServices.API.Modules
                     resourceResponse.AddRange(this.GetContainmentResponse(transaction, TopContainer, routeParams));
                 }
 
+                if (this.RequestUtils.QueryParameters.IncludeFileData)
+                {
+                    var contentHashes = this.GetContentHashes(resourceResponse);
+
+                    if (contentHashes.Any())
+                    {
+                        // return multipart response including file binaries
+                        return this.GetMultipartResponse(contentHashes, resourceResponse);
+                    }
+                }
+
                 transaction.Commit();
+
+                if (this.TryGetMultipartResponse(resourceResponse, out var response))
+                {
+                    return response;
+                }
 
                 sw.Stop();
                 Logger.Info("Database operations {0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
