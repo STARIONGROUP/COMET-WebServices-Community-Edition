@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WebService-CE.Authentication</Title>
-    <Version>2.1.0</Version>
+    <Version>6.1.6</Version>
     <Description>CDP4WebService.Authentication</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="Nancy" Version="1.4.5" />
-    <PackageReference Include="NLog" Version="4.6.2" />
+    <PackageReference Include="NLog" Version="4.7.10" />
   </ItemGroup>
 
   <ItemGroup>

@@ -12,8 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="7.5.1-614-PR197" />
-    <PackageReference Include="DotNetZip" Version="1.13.2" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="7.5.1-rc1" />
+    <PackageReference Include="DotNetZip" Version="1.14.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="Nancy" Version="1.4.5" />
     <PackageReference Include="Nancy.Bootstrappers.Autofac" Version="1.4.1" />
