@@ -952,14 +952,18 @@ namespace CDP4WebServices.API.Modules
         /// </param>
         private void PersistFileBinaryData(string fileName, string password = null)
         {
-            var fileRevisions = this.RequestUtils.Cache.OfType<FileRevision>().ToList();
-            if (!fileRevisions.Any())
+            var fileHashes = 
+                this.RequestUtils.Cache.OfType<FileRevision>().Select(x => x.ContentHash)
+                    .Union(this.RequestUtils.Cache.OfType<Attachment>().Select(x => x.ContentHash))
+                    .ToList();
+
+            if (!fileHashes.Any())
             {
                 // nothing to do
                 return;
             }
 
-            foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
+            foreach (var hash in fileHashes.Distinct())
             {
                 this.ExchangeFileProcessor.StoreFileBinary(fileName, password, hash);
             }

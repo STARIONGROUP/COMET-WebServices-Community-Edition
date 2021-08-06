@@ -324,37 +324,57 @@ namespace CDP4WebServices.API.Services.Operations
                 }
             }
 
-            var newFileRevisions = operation.Create.OfType<FileRevision>().ToList();
+            var newFiles = 
+                operation.Create.OfType<FileRevision>()
+                    .Select(x => (x as Thing, x.ContentHash))
+                    .Union(
+                        operation.Create.OfType<Attachment>()
+                        .Select(x => (x as Thing, x.ContentHash))
+                        )
+                    .ToList();
 
+            this.CheckFilePersisted(fileStore, newFiles);
+        }
+
+        /// <summary>
+        /// Checks if a file is already persisted
+        /// </summary>
+        /// <param name="fileStore">The fileStore</param>
+        /// <param name="newFiles">A list that contains Iid's and ContentHashes to check file existence for</param>
+        /// <exception cref="InvalidOperationException">
+        /// If validation failed
+        /// </exception>
+        /// <exception cref="Cdp4ModelValidationException">
+        /// If the ContentHash property is empty
+        /// </exception>
+        private void CheckFilePersisted(Dictionary<string, Stream> fileStore, List<(Thing thing, string contentHash)> newFiles)
+        {
             // validate that each uploaded file has a resepective fileRevision part
-            if (fileStore.Keys.Any(hashKey => newFileRevisions.All(x => x.ContentHash != hashKey)))
+            if (fileStore.Keys.Any(hashKey => newFiles.All(x => x.contentHash != hashKey)))
             {
                 throw new InvalidOperationException("All uploaded files must be referenced by their respective (SHA1) content hash in a new 'FileRevision' object.");
             }
 
-            // validate the FileRevision items in operation
-            foreach (var fileRevision in newFileRevisions)
+            // validate the file items in operation
+            foreach (var newFile in newFiles)
             {
                 // validate that ContentHash is supplied
-                if (string.IsNullOrWhiteSpace(fileRevision.ContentHash))
+                if (string.IsNullOrWhiteSpace(newFile.contentHash))
                 {
                     throw new Cdp4ModelValidationException(
-                              string.Format(
-                                  "The 'ContentHash' property of 'FileRevision' with iid '{0}' is mandatory and cannot be an empty string or null.",
-                                  fileRevision.Iid));
+                        $"The 'ContentHash' property of '{newFile.thing.ClassKind}' with iid '{newFile.thing.Iid}' is mandatory and cannot be an empty string or null.");
                 }
 
-                if (!fileStore.ContainsKey(fileRevision.ContentHash))
+                if (fileStore.ContainsKey(newFile.contentHash))
                 {
-                    // try if file content is already on disk
-                    if (!this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
-                    {
-                        throw new InvalidOperationException(
-                                  string.Format(
-                                      "FileRevision with iid:'{0}' with content Hash [{1}] does not exist",
-                                      fileRevision.Iid,
-                                      fileRevision.ContentHash));
-                    }
+                    continue;
+                }
+
+                // try if file content is already on disk
+                if (!this.FileBinaryService.IsFilePersisted(newFile.contentHash))
+                {
+                    throw new InvalidOperationException(
+                        $"{newFile.thing.ClassKind} with iid:'{newFile.thing.Iid}' with content Hash [{newFile.contentHash}] does not exist");
                 }
             }
         }
@@ -429,9 +449,15 @@ namespace CDP4WebServices.API.Services.Operations
             }
 
             // verify no updates on FileRevision
-            if (operation.Update.Any(x => x[ClasskindKey].ToString() == typeof(FileRevision).Name))
+            if (operation.Update.Any(x => x[ClasskindKey].ToString() == nameof(FileRevision)))
             {
-                throw new InvalidOperationException("FileRevisions updates are not allowed");
+                throw new InvalidOperationException($"{nameof(FileRevision)} updates are not allowed");
+            }
+
+            // verify no updates on FileRevision
+            if (operation.Update.Any(x => x[ClasskindKey].ToString() == nameof(Attachment)))
+            {
+                throw new InvalidOperationException($"{nameof(Attachment)} updates are not allowed");
             }
         }
 
