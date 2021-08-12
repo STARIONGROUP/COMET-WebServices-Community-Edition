@@ -87,7 +87,12 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets or sets the (injected) <see cref="IAccessRightKindService"/> for this request
         /// </summary>
         public IAccessRightKindService AccessRightKindService { get; set; }
-        
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IDiagramPermissionService"/> for this request
+        /// </summary>
+        public IDiagramPermissionService DiagramPermissionService { get; set; }
+
         /// <summary>
         /// Gets or sets the resolve service.
         /// </summary>
@@ -284,6 +289,22 @@ namespace CDP4WebServices.API.Services.Authorization
             if (isExcludedDomain)
             {
                 return false;
+            }
+
+            // seperately test diagrams in engineering model context as they have publication status checks
+            if (thing is DiagramCanvas diagram)
+            {
+                if (diagram is IOwnedThing ownedDiagram)
+                {
+                    // if owner bypass
+                    if (this.IsOwner(transaction, (Thing) ownedDiagram))
+                    {
+                        return true;
+                    }
+
+                    // if it is an owned type of diagram, publication status has to be used to filter
+                    return this.DiagramPermissionService.CanReadOwnedDiagram(ownedDiagram, diagram.PublicationState, this.AccessRightKindService.QueryParticipantAccessRightKind(this.Credentials, diagram.GetType().Name));
+                }
             }
 
             return true;
