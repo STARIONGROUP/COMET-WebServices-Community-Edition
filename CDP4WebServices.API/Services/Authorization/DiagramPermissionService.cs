@@ -44,8 +44,13 @@ namespace CDP4WebServices.API.Services.Authorization
         /// <returns>True if readable</returns>
         public bool CanReadOwnedDiagram(IOwnedThing canvas, PublicationState publicationState, ParticipantAccessRightKind accessKind)
         {
+            return true;
+
+            // TODO: GH #917 the folowing code causes severe desync with the several clients. Needs to be discussed. For now all publication state READ restrictions
+            // based on the publication state moved to client
             // assumes you are NOT the owner
-            return !((publicationState == PublicationState.Hidden || publicationState == PublicationState.ReadyForPublish) && (accessKind == ParticipantAccessRightKind.READ || accessKind == ParticipantAccessRightKind.MODIFY_IF_OWNER));
+
+            // return !((publicationState == PublicationState.Hidden || publicationState == PublicationState.ReadyForPublish) && (accessKind == ParticipantAccessRightKind.READ || accessKind == ParticipantAccessRightKind.MODIFY_IF_OWNER));
         }
     }
 }
