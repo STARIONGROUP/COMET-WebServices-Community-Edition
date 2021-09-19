@@ -40,7 +40,6 @@ namespace CDP4WebServices.API.Services.Authorization
     
     using Npgsql;
 
-    using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
@@ -72,11 +71,6 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets or sets the request utils for this request.
         /// </summary>
         public IRequestUtils RequestUtils { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service registry.
-        /// </summary>
-        public IServiceProvider ServiceProvider { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IOrganizationalParticipationResolverService"/>.
@@ -571,7 +565,7 @@ namespace CDP4WebServices.API.Services.Authorization
                 this.currentParticipantCache = new List<Participant>();
 
                 var participants = this.ParticipantDao
-                    .Read(transaction, SiteDirectory, null).ToList()
+                    .Read(transaction, SiteDirectory, null, true).ToList()
                     .Where(participant => participant.Person == this.Credentials.Person.Iid && this.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
 
                 this.currentParticipantCache.AddRange(participants);
@@ -644,7 +638,7 @@ namespace CDP4WebServices.API.Services.Authorization
             }
 
             return this.ParticipantDao
-                            .Read(transaction, SiteDirectory, participantsIds)
+                            .Read(transaction, SiteDirectory, participantsIds, true)
                             .Any(p => p.Person == person.Iid);
         }
     }

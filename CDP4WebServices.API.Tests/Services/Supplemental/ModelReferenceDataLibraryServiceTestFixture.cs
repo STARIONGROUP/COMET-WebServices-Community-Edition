@@ -70,7 +70,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.modelReferenceDataLibraryService = new ModelReferenceDataLibraryService
             {
                 EngineeringModelSetupDao = this.engineeringModelSetupDao.Object,
-                SiteReferenceDataLibraryDato = this.siteReferenceDataLibraryDao.Object,
+                SiteReferenceDataLibraryDao = this.siteReferenceDataLibraryDao.Object,
                 ModelReferenceDataLibraryDao = this.modelReferenceDataLibraryDao.Object,
                 TransactionManager = this.transactionManager.Object
             };

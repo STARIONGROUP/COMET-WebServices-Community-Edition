@@ -44,10 +44,13 @@ namespace CDP4WebServices.API.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="engineeringModelId">The identifier of the associated <see cref="EngineeringModel"/></param>
         /// <returns>The requested <see cref="EngineeringModelSetup"/></returns>
-        public EngineeringModelSetup GetEngineeringModelSetup(NpgsqlTransaction transaction, Guid engineeringModelId)
+        /// <remarks>
+        /// The <see cref="EngineeringModelSetup"/> objects are read from the Cache Table and not from the View table
+        /// </remarks>
+        public EngineeringModelSetup GetEngineeringModelSetupFromDataBaseCache(NpgsqlTransaction transaction, Guid engineeringModelId)
         {
             return this.EngineeringModelSetupDao
-                .Read(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION)
+                .Read(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, null, true)
                 .FirstOrDefault(x => x.EngineeringModelIid == engineeringModelId);
         }
     }

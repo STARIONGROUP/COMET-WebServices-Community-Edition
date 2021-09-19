@@ -38,14 +38,10 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
     /// </summary>
     public sealed class PersonPermissionSideEffect : OperationSideEffect<PersonPermission>
     {
-        #region Injected services
-
         /// <summary>
         /// Gets or sets the <see cref="IAccessRightKindValidationService"/>
         /// </summary>
         public IAccessRightKindValidationService AccessRightKindValidationService { get; set; }
-
-        #endregion
 
         /// <summary>
         /// Gets the list of property names that are to be excluded from validation logic.

@@ -98,12 +98,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IModelCreatorManager"/> (injected)
         /// </summary>
         public IModelCreatorManager ModelCreatorManager { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IPersonResolver"/> (injected)
-        /// </summary>
-        public IPersonResolver PersonResolver { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the <see cref="IEngineeringModelDao"/>
         /// </summary>

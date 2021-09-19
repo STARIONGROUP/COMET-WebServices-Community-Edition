@@ -391,7 +391,7 @@ namespace CDP4WebServices.API.Tests
             var defaultArrayService = new Mock<IDefaultValueArrayFactory>();
             defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new [] {"-"}));
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
-            modelSetupService.Setup(x => x.GetEngineeringModelSetup(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).Returns(modelSetup);
+            modelSetupService.Setup(x => x.GetEngineeringModelSetupFromDataBaseCache(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).Returns(modelSetup);
 
             this.copySourceDtos = new List<Thing>();
 

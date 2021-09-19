@@ -109,7 +109,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
                 OptionService = this.optionService.Object,
                 RequestUtils = this.requestUtils,
                 ModelCreatorManager = this.modelCreatorManager,
-                PersonResolver = this.personResolver.Object,
                 PermissionService = this.permissionService.Object,
                 RevisionService = this.revisionService.Object,
                 EngineeringModelDao = this.engineeringModelDao.Object

@@ -41,6 +41,6 @@ namespace CDP4WebServices.API.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="engineeringModelId">The identifier of the associated <see cref="EngineeringModel"/></param>
         /// <returns>The requested <see cref="EngineeringModelSetup"/></returns>
-        EngineeringModelSetup GetEngineeringModelSetup(NpgsqlTransaction transaction, Guid engineeringModelId);
+        EngineeringModelSetup GetEngineeringModelSetupFromDataBaseCache(NpgsqlTransaction transaction, Guid engineeringModelId);
     }
 }

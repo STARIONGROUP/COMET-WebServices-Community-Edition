@@ -1029,6 +1029,11 @@ namespace CDP4WebServices.API.Services.Operations
         /// </exception>
         private void ApplyCopyOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
+            if (!operation.Copy.Any())
+            {
+                return;
+            }
+
             // re-order create
             var targetModelPartition = requestPartition.Contains(typeof(EngineeringModel).Name) ? requestPartition : requestPartition.Replace(typeof(Iteration).Name, typeof(EngineeringModel).Name);
             var targetIterationPartition = requestPartition.Contains(typeof(EngineeringModel).Name) ? requestPartition.Replace(typeof(EngineeringModel).Name, typeof(Iteration).Name) : requestPartition;
@@ -1037,10 +1042,10 @@ namespace CDP4WebServices.API.Services.Operations
 
             foreach (var copyinfo in operation.Copy)
             {
-                var targetModelSetup = modelSetupService.GetEngineeringModelSetup(transaction, copyinfo.Target.TopContainer.Iid);
-                if (targetModelSetup == null)
+                var targetEngineeringModelSetup = modelSetupService.GetEngineeringModelSetupFromDataBaseCache(transaction, copyinfo.Target.TopContainer.Iid);
+                if (targetEngineeringModelSetup == null)
                 {
-                    throw new InvalidOperationException("The target engineering-model-setup could not be found");
+                    throw new InvalidOperationException("The target EngineeringModelSetup could not be found");
                 }
 
                 var sourceThings = this.CopySourceService.GetCopySourceData(transaction, copyinfo, requestPartition);
@@ -1074,7 +1079,7 @@ namespace CDP4WebServices.API.Services.Operations
                 var elementDefs = sourceThings.OfType<ElementDefinition>().ToList();
                 if (elementDefs.Count == 1)
                 {
-                    ((ServiceBase)service).Copy(transaction, targetIterationPartition, topCopy, container, sourceThings, copyinfo, idmap, rdls, targetModelSetup, securityContext);
+                    ((ServiceBase)service).Copy(transaction, targetIterationPartition, topCopy, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                 }
                 else
                 {
@@ -1082,7 +1087,7 @@ namespace CDP4WebServices.API.Services.Operations
                     // copy usages after all definitions
                     foreach (var elementDefinition in elementDefs)
                     {
-                        ((ServiceBase)service).Copy(transaction, targetIterationPartition, elementDefinition, container, sourceThings, copyinfo, idmap, rdls, targetModelSetup, securityContext);
+                        ((ServiceBase)service).Copy(transaction, targetIterationPartition, elementDefinition, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                     }
 
                     var sourceElementDefIds = elementDefs.Select(x => x.Iid).ToArray();
@@ -1100,7 +1105,7 @@ namespace CDP4WebServices.API.Services.Operations
                             throw new InvalidOperationException($"The target element definition container could not be found for the usage to copy.");
                         }
 
-                        ((ServiceBase)usageService).Copy(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetModelSetup, securityContext);
+                        ((ServiceBase)usageService).Copy(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                     }
                 }
 
