@@ -306,16 +306,14 @@ namespace CDP4WebServices.API.Modules
 
             try
             {
-                var logMessage = $"{requestToken} started";
-                Logger.Info(this.ConstructLog(logMessage));
+                Logger.Info(this.ConstructLog($"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedPostQueryParameter);
                 
                 var contentTypeRegex = new Regex("^multipart/.*;\\s*boundary=(.*)$", RegexOptions.IgnoreCase);
                 var isMultiPart = contentTypeRegex.IsMatch(this.Request.Headers.ContentType);
 
-                logMessage = $"Request {requestToken} is mutlipart: {isMultiPart}";
-                Logger.Debug(this.ConstructLog(logMessage));
+                Logger.Debug(this.ConstructLog($"Request {requestToken} is mutlipart: {isMultiPart}"));
 
                 Stream bodyStream;
                 Dictionary<string, Stream> fileDictionary = null;
@@ -343,8 +341,7 @@ namespace CDP4WebServices.API.Modules
                     {
                         var hash = this.FileBinaryService.CalculateHashFromStream(uploadedFile.Value);
 
-                        logMessage = $"File with hash {hash} present in request: {requestToken}";
-                        Logger.Debug(this.ConstructLog(logMessage));
+                        Logger.Debug(this.ConstructLog($"File with hash {hash} present in request: {requestToken}"));
 
                         fileDictionary.Add(hash, uploadedFile.Value);
                     }
