@@ -102,6 +102,7 @@ namespace CDP4WebServices.API.Tests
         private Mock<API.Services.IServiceProvider> serviceProvider;
         private Mock<IResolveService> resolveService;
         private Mock<IPermissionService> permissionService;
+        private Mock<ICdp4TransactionManager> Cdp4TransactionManager;
 
         private OperationProcessor operationProcessor;
 
@@ -110,6 +111,9 @@ namespace CDP4WebServices.API.Tests
         [SetUp]
         public void TestSetup()
         {
+            this.Cdp4TransactionManager = new Mock<ICdp4TransactionManager>();
+            this.Cdp4TransactionManager.Setup(x => x.IsCachedDtoReadEnabled(It.IsAny<NpgsqlTransaction>())).Returns(true);
+
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.requestUtils.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
@@ -117,7 +121,9 @@ namespace CDP4WebServices.API.Tests
             this.operationProcessor.RequestUtils = this.requestUtils;
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationProcessor.OperationSideEffectProcessor = this.operationSideEffectProcessor;
-            
+            this.operationProcessor.TransactionManager = this.Cdp4TransactionManager.Object;
+
+
             this.serviceProvider = new Mock<API.Services.IServiceProvider>();
             this.resolveService = new Mock<IResolveService>();
 
@@ -629,7 +635,7 @@ namespace CDP4WebServices.API.Tests
 
             this.serviceProvider.Setup(x => x.MapToReadService(ClassKind.EngineeringModelSetup.ToString())).Returns(modelSetupService.Object);
             // targetIteration
-            this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
+            this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", It.IsAny<bool>(), null);
 
             Assert.AreEqual(2, edDao.WrittenThingCount);
             Assert.AreEqual(2, paramDao.WrittenThingCount);

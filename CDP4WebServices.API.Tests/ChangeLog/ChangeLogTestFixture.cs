@@ -163,7 +163,7 @@ namespace CDP4WebServices.API.Tests.Services
                 TransactionManager = this.transactionManager.Object,
                 DataModelUtils = this.dataModelUtils,
             };
-
+            
             this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>());
 
             this.requirementsSpecification = new RequirementsSpecification(Guid.NewGuid(), 0);
@@ -564,7 +564,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsFalse(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Never);
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Never);
 
             var engineeringModelClasslessDto = new ClasslessDTO()
             {
@@ -583,7 +583,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Once);
         }
 
         [Test]
@@ -608,7 +608,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
         }
 
         [Test]
@@ -633,7 +633,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsFalse(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(0));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(0));
 
             things = new Thing[] { this.iteration, this.requirementsSpecification, this.elementDefinition_1, this.engineeringModel };
             postOperation.Create.Add(this.elementDefinition_1);
@@ -653,7 +653,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
         }
@@ -689,9 +689,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -702,7 +702,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -784,9 +784,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -797,7 +797,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -868,9 +868,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -883,7 +883,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -949,9 +949,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -962,7 +962,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1031,9 +1031,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -1044,7 +1044,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Once);
 
             Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1125,9 +1125,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -1138,7 +1138,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Once);
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1203,9 +1203,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -1216,7 +1216,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1279,9 +1279,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -1292,7 +1292,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1387,9 +1387,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -1400,7 +1400,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1479,9 +1479,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -1492,7 +1492,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1567,9 +1567,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -1580,7 +1580,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1661,9 +1661,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -1674,7 +1674,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1765,9 +1765,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -1778,7 +1778,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1851,9 +1851,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -1864,7 +1864,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -1937,9 +1937,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, resolveFromCache, files)
                         =>
                     {
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
@@ -1950,7 +1950,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 
@@ -2051,9 +2051,9 @@ namespace CDP4WebServices.API.Tests.Services
 
             this.operationProcessor.Setup(
                     x =>
-                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null))
-                .Callback<CdpPostOperation, NpgsqlTransaction, string, Dictionary<string, Stream>>(
-                    (operation, transaction, partition, files)
+                        x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null))
+                .Callback<CdpPostOperation, NpgsqlTransaction, string, bool, Dictionary<string, Stream>>(
+                    (operation, transaction, partition, files, resolveFromCache)
                         =>
                     {
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
@@ -2064,7 +2064,7 @@ namespace CDP4WebServices.API.Tests.Services
             Assert.IsTrue(result);
 
             this.operationProcessor.Verify(
-                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
+                x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), It.IsAny<bool>(), null), Times.Exactly(1));
 
             Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
 

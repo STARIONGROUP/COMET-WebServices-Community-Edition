@@ -306,7 +306,7 @@ namespace CDP4WebServices.API.Services.ChangeLog
                             operationData.Update.Add(modelLogEntryClasslessDTO);
                         }
 
-                        this.OperationProcessor.Process(operationData, transaction, partition);
+                        this.OperationProcessor.Process(operationData, transaction, partition, false);
 
                         result = true;
                     }

@@ -29,8 +29,6 @@ namespace CDP4WebServices.API.Services.Operations
 
     using CDP4Common.DTO;
 
-    using CDP4Orm.Dao.Resolve;
-
     using Npgsql;
 
     /// <summary>
@@ -50,10 +48,13 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
+        /// <param name="resolveFromCache">
+        /// A value indicating whether meta data shall be resolved from the CAHCE tables or from the VIEWs
+        /// </param>
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
-        void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
+        void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, bool resolveFromCache, Dictionary<string, Stream> fileStore = null);
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.

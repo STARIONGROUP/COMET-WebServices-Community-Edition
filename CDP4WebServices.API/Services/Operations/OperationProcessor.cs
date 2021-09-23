@@ -48,6 +48,8 @@ namespace CDP4WebServices.API.Services.Operations
     using System.Linq;
     using System.Security;
 
+    using CDP4WebServices.API.Helpers;
+
     using IServiceProvider = CDP4WebServices.API.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
@@ -143,6 +145,11 @@ namespace CDP4WebServices.API.Services.Operations
         public ICopySourceService CopySourceService { get; set; }
 
         /// <summary>
+        /// Gets or sets the transaction manager.
+        /// </summary>
+        public ICdp4TransactionManager TransactionManager { get; set; }
+
+        /// <summary>
         /// Process the posted operation message.
         /// </summary>
         /// <param name="operation">
@@ -154,6 +161,9 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
+        /// <param name="resolveFromCache">
+        /// A value indicating whether meta data shall be resolved from the CAHCE tables or from the VIEWs
+        /// </param>
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
@@ -161,10 +171,11 @@ namespace CDP4WebServices.API.Services.Operations
             CdpPostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
+            bool resolveFromCache,
             Dictionary<string, Stream> fileStore = null)
         {
             this.ValidatePostMessage(operation, fileStore ?? new Dictionary<string, Stream>(), transaction, partition);
-            this.ApplyOperation(operation, transaction, partition, fileStore ?? new Dictionary<string, Stream>());
+            this.ApplyOperation(operation, transaction, partition, resolveFromCache, fileStore ?? new Dictionary<string, Stream>());
         }
 
         /// <summary>
@@ -764,6 +775,9 @@ namespace CDP4WebServices.API.Services.Operations
         /// <param name="partition">
         /// The partition.
         /// </param>
+        /// <param name="resolveFromCache">
+        /// A value indicating whether meta data shall be resolved from the CAHCE tables or from the VIEWs
+        /// </param>
         /// <param name="fileStore">
         /// The file Store.
         /// </param>
@@ -771,10 +785,16 @@ namespace CDP4WebServices.API.Services.Operations
             CdpPostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
+            bool resolveFromCache,
             Dictionary<string, Stream> fileStore)
         {
             // resolve any meta data from the persitence store
+            if (resolveFromCache)
+            {
+                this.TransactionManager.SetCachedDtoReadEnabled(true);
+            }
             this.ResolveService.ResolveItems(transaction, partition, this.operationThingCache);
+            this.TransactionManager.SetCachedDtoReadEnabled(false);
 
             // apply the operations
             this.ApplyDeleteOperations(operation, transaction, partition);
@@ -841,9 +861,47 @@ namespace CDP4WebServices.API.Services.Operations
         /// </param>
         private Thing GetPersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
         {
-            return service.GetShallow(
-                    transaction, partition, new[] { iid }, securityContext)
-                       .SingleOrDefault();
+                return service.GetShallow(
+                        transaction, partition, new[] { iid }, securityContext)
+                    .SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Try and get persisted item from the data store cache tables
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="service">
+        /// The service instance for the requested type.
+        /// </param>
+        /// <param name="iid">
+        /// The id of the item to retrieve.
+        /// </param>
+        /// <returns>
+        /// The retrieved <see cref="Thing"/> instance or null if not found.
+        /// </returns>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        private Thing GetPersistedItemFromDatastoreCache(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
+        {
+            try
+            {
+                // make sure we read from Cache tables and not from Views
+                this.TransactionManager.SetCachedDtoReadEnabled(true);
+
+                return service.GetShallow(
+                        transaction, partition, new[] { iid }, securityContext)
+                    .SingleOrDefault();
+            }
+            finally
+            {
+                this.TransactionManager.SetCachedDtoReadEnabled(false);
+            }
         }
 
         /// <summary>
@@ -969,13 +1027,12 @@ namespace CDP4WebServices.API.Services.Operations
 
                 var resolvedInfo = this.operationThingCache[createInfo];
 
-                // check that item doen not exist:
-                var persistedItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
+                // check that item doen not exist and get it from the datastore cache
+                var persistedItem = this.GetPersistedItemFromDatastoreCache(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
 
                 if (persistedItem != null)
                 {
-                    throw new InvalidOperationException(
-                        string.Format("Item '{0}' with Iid: '{1}' already exists", createInfo.TypeName, createInfo.Iid));
+                    throw new InvalidOperationException($"Item '{createInfo.TypeName}' with Iid: '{createInfo.Iid}' already exists");
                 }
 
                 // get the (cached) containment information for this create request

@@ -307,7 +307,7 @@ namespace CDP4WebServices.API.Modules
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
                 var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, TopContainer);
 
-                this.OperationProcessor.Process(operationData, transaction, TopContainer);
+                this.OperationProcessor.Process(operationData, transaction, TopContainer, true);
 
                 // save revision-history
                 var actor = credentials.Person.Iid;
