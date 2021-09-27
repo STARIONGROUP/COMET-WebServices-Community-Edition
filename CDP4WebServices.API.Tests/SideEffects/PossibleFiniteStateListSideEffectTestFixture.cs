@@ -138,7 +138,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterUpdateService.ParameterService = this.parameterService.Object;
             this.parameterUpdateService.ParameterOverrideService = this.parameterOverrideService.Object;
             this.parameterUpdateService.ParameterSubscriptionService = this.parameterSubscriptionService.Object;
-            this.parameterUpdateService.CompoundParameterTypeService = this.compoundParameterTypeService.Object;
 
             this.iteration = new Iteration(Guid.NewGuid(), 1);
             this.option1 = new Option(Guid.NewGuid(), 1);

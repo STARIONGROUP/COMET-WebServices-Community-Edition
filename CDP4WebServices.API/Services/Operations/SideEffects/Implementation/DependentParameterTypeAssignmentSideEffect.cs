@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ParameterTypeSideEffect.cs" company="RHEA System S.A.">
+// <copyright file="DependentParameterTypeAssignmentSideEffect.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
@@ -22,18 +22,18 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Services.Operations.SideEffects.Implementation
+namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using CDP4Common.DTO;
-
+    
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
 
     /// <summary>
-    /// The purpose of the <see cref="ParameterTypeSideEffect"/> class is to execute additional logic before and after a specific operation is performed.
+    /// The purpose of the <see cref="DependentParameterTypeAssignmentSideEffect"/> class is to execute additional logic before and after a specific operation is performed.
     /// </summary>
-    public sealed class ParameterTypeSideEffect : OperationSideEffect<ParameterType>
+    public class DependentParameterTypeAssignmentSideEffect : OperationSideEffect<DependentParameterTypeAssignment>
     {
         /// <summary>
         /// Gets or sets the <see cref="IDefaultValueArrayFactory"/>
@@ -66,8 +66,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(ParameterType thing, Thing container, ParameterType originalThing,
-            NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void AfterCreate(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
@@ -97,8 +96,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(ParameterType thing, Thing container, ParameterType originalThing,
-            NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void AfterDelete(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
@@ -128,8 +126,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(ParameterType thing, Thing container, ParameterType originalThing, NpgsqlTransaction transaction,
-            string partition, ISecurityContext securityContext)
+        public override void AfterUpdate(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();

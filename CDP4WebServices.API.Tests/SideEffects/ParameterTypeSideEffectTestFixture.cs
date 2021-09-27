@@ -25,26 +25,37 @@
 namespace CDP4WebServices.API.Tests.SideEffects
 {
     using CDP4Common.DTO;
+
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects.Implementation;
+
     using Moq;
+
     using Npgsql;
+
     using NUnit.Framework;
 
     [TestFixture]
     public class ParameterTypeSideEffectTestFixture
     {
         private ParameterTypeSideEffect parameterTypeSideEffect;
+
+        private Mock<ICachedReferenceDataService> cachedReferenceDataService;
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
 
         [SetUp]
         public void SetUp()
         {
+            this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
+            
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
+            this.defaultValueArrayFactory.SetupProperty(x => x.CachedReferenceDataService, this.cachedReferenceDataService.Object);
+
             this.parameterTypeSideEffect = new ParameterTypeSideEffect();
 
-            this.parameterTypeSideEffect.DefaultValueArrayFactory = defaultValueArrayFactory.Object;
+            this.parameterTypeSideEffect.DefaultValueArrayFactory = this.defaultValueArrayFactory.Object;
+            this.parameterTypeSideEffect.CachedReferenceDataService = this.cachedReferenceDataService.Object;
         }
 
         [Test]
@@ -53,6 +64,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterTypeSideEffect.AfterCreate(It.IsAny<ParameterType>(), It.IsAny<Thing>(), It.IsAny<ParameterType>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+
+            this.cachedReferenceDataService.Verify(x => x.Reset(), Times.Once);
         }
 
         [Test]
@@ -61,6 +74,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterTypeSideEffect.AfterDelete(It.IsAny<ParameterType>(), It.IsAny<Thing>(), It.IsAny<ParameterType>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+
+            this.cachedReferenceDataService.Verify(x => x.Reset(), Times.Once);
         }
 
         [Test]
@@ -69,6 +84,8 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterTypeSideEffect.AfterUpdate(It.IsAny<ParameterType>(), It.IsAny<Thing>(), It.IsAny<ParameterType>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+
+            this.cachedReferenceDataService.Verify(x => x.Reset(), Times.Once);
         }
     }
 }

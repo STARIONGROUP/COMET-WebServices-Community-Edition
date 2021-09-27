@@ -27,6 +27,7 @@ namespace CDP4WebServices.API.Services
     using System;
 
     using CDP4Common.Types;
+
     using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
@@ -39,14 +40,9 @@ namespace CDP4WebServices.API.Services
     public interface IDefaultValueArrayFactory : IBusinessLogicService
     {
         /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeService"/>
+        /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/>
         /// </summary>
-        IParameterTypeService ParameterTypeService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeComponentService"/>
-        /// </summary>
-        IParameterTypeComponentService ParameterTypeComponentService { get; set; }
+        public ICachedReferenceDataService CachedReferenceDataService { get; set; }
 
         /// <summary>
         /// Initializes the <see cref="DefaultValueArrayFactory"/>.

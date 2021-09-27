@@ -80,12 +80,7 @@ namespace CDP4WebServices.API.Services
         /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/>
         /// </summary>
         public IParameterSubscriptionValueSetService ParameterSubscriptionValueSetService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="ICompoundParameterTypeService"/>
-        /// </summary>
-        public ICompoundParameterTypeService CompoundParameterTypeService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the <see cref="IParameterValueSetFactory"/>
         /// </summary>
@@ -147,7 +142,6 @@ namespace CDP4WebServices.API.Services
             }
         }
 
-        #region Update Parameters
         /// <summary>
         /// Update a <see cref="Parameter"/> with new <see cref="ParameterValueSet"/>
         /// </summary>
@@ -252,9 +246,7 @@ namespace CDP4WebServices.API.Services
             this.ParameterValueSetService.CreateConcept(transaction, partition, valueSet, parameter);
             return valueSet;
         }
-        #endregion
 
-        #region ParameterOVerride
         /// <summary>
         /// Update a <see cref="ParameterOverride"/> with new <see cref="CDP4Common.DTO.ParameterOverrideValueSet"/>
         /// </summary>
@@ -314,9 +306,7 @@ namespace CDP4WebServices.API.Services
             this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, newValueSet, container);
             return newValueSet;
         }
-        #endregion
 
-        #region Parameter Subscription
         /// <summary>
         /// Update a <see cref="ParameterSubscription"/> with new <see cref="CDP4Common.DTO.ParameterSubscriptionValueSet"/>
         /// </summary>
@@ -364,6 +354,5 @@ namespace CDP4WebServices.API.Services
 
             this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, newValueSet, container);
         }
-        #endregion
     }
 }

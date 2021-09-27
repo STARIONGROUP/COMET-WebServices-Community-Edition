@@ -54,16 +54,14 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
         private Guid incompleteCoundParameterTypeIid;
         private Guid invalidReferencedCompoundParameterTypeIid;
         private Guid invalidReferencedParameterTypeFromComponentIid;
+        
+        private Dictionary<Guid, ParameterType> parameterTypes;
+        private Dictionary<Guid, ParameterTypeComponent> parameterTypeComponents;
+        private Dictionary<Guid, IndependentParameterTypeAssignment> independentParameterTypeAssignments;
+        private Dictionary<Guid, DependentParameterTypeAssignment> dependentParameterTypeAssignments;
 
-        private Mock<IParameterTypeService> parameterTypeService;
-        private Mock<IParameterTypeComponentService> parameterTypeComponentService;
-        private Mock<IIndependentParameterTypeAssignmentService> independentParameterTypeAssignmentService;
-        private Mock<IDependentParameterTypeAssignmentService> dependentParameterTypeAssignmentService;
-        private List<ParameterType> parameterTypes;
-        private List<ParameterTypeComponent> parameterTypeComponents;
+        private Mock<ICachedReferenceDataService> cachedReferenceDataService;
 
-        private List<IndependentParameterTypeAssignment> independentParameterTypeAssignments;
-        private List<DependentParameterTypeAssignment> dependentParameterTypeAssignments;
         private Mock<ISecurityContext> secutrityContext;
         private NpgsqlTransaction transaction;
 
@@ -77,37 +75,22 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             
             this.PopulateParameterTypes();
 
-            this.parameterTypeService = new Mock<IParameterTypeService>();
-            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypes);
-
-            this.independentParameterTypeAssignmentService = new Mock<IIndependentParameterTypeAssignmentService>();
-            this.dependentParameterTypeAssignmentService = new Mock<IDependentParameterTypeAssignmentService>();
-
-            this.independentParameterTypeAssignmentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.independentParameterTypeAssignments);
-
-            this.dependentParameterTypeAssignmentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.dependentParameterTypeAssignments);
-
-            this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
-            this.parameterTypeComponentService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypeComponents);
-
+            this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypes(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypes);
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponents(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypeComponents);
+            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignments(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.dependentParameterTypeAssignments);
+            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignments(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.independentParameterTypeAssignments);
+            
             this.defaultValueArrayFactory = new DefaultValueArrayFactory();
-            this.defaultValueArrayFactory.ParameterTypeService = this.parameterTypeService.Object;
-            this.defaultValueArrayFactory.ParameterTypeComponentService = this.parameterTypeComponentService.Object;
-
-            this.defaultValueArrayFactory.IndependentParameterTypeAssignmentService = this.independentParameterTypeAssignmentService.Object;
-            this.defaultValueArrayFactory.DependentParameterTypeAssignmentService = this.dependentParameterTypeAssignmentService.Object;
+            this.defaultValueArrayFactory.CachedReferenceDataService = this.cachedReferenceDataService.Object;
         }
 
         private void PopulateParameterTypes()
         {
-            this.parameterTypes = new List<ParameterType>();
-            this.parameterTypeComponents = new List<ParameterTypeComponent>();
-            this.independentParameterTypeAssignments = new List<IndependentParameterTypeAssignment>();
-            this.dependentParameterTypeAssignments = new List<DependentParameterTypeAssignment>();
+            this.parameterTypes = new Dictionary<Guid, ParameterType>();
+            this.parameterTypeComponents = new Dictionary<Guid, ParameterTypeComponent>();
+            this.independentParameterTypeAssignments = new Dictionary<Guid, IndependentParameterTypeAssignment>();
+            this.dependentParameterTypeAssignments = new Dictionary<Guid, DependentParameterTypeAssignment>();
 
             this.massIid = Guid.NewGuid();
             this.lengthIid = Guid.NewGuid();
@@ -135,13 +118,13 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             vector.Component.Add(orderedItemX);
             vector.Component.Add(orderedItemY);
             vector.Component.Add(orderedItemZ);            
-            this.parameterTypes.Add(mass);
-            this.parameterTypes.Add(length);
-            this.parameterTypes.Add(vector);
+            this.parameterTypes.Add(mass.Iid, mass);
+            this.parameterTypes.Add(length.Iid, length);
+            this.parameterTypes.Add(vector.Iid, vector);
 
-            this.parameterTypeComponents.Add(x);
-            this.parameterTypeComponents.Add(y);
-            this.parameterTypeComponents.Add(z);
+            this.parameterTypeComponents.Add(x.Iid, x);
+            this.parameterTypeComponents.Add(y.Iid, y);
+            this.parameterTypeComponents.Add(z.Iid, z);
 
             // create a jagged array            
             var jaggedComponentOne = new ParameterTypeComponent(this.jaggedComponentOneIid, 0) { ParameterType = length.Iid };
@@ -154,21 +137,21 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             jaggedArray.Component.Add(jaggedOrderedItemOne);
             jaggedArray.Component.Add(jaggedOrderedItemTwo);
 
-            this.parameterTypes.Add(jaggedArray);
-            this.parameterTypeComponents.Add(jaggedComponentOne);
-            this.parameterTypeComponents.Add(jaggedComponentTwo);
+            this.parameterTypes.Add(jaggedArray.Iid, jaggedArray);
+            this.parameterTypeComponents.Add(jaggedComponentOne.Iid, jaggedComponentOne);
+            this.parameterTypeComponents.Add(jaggedComponentTwo.Iid, jaggedComponentTwo);
 
             // incomplete compound
             this.incompleteCoundParameterTypeIid = Guid.NewGuid();
             var incompleteCoundParameterType = new CompoundParameterType(this.incompleteCoundParameterTypeIid, 0);
-            this.parameterTypes.Add(incompleteCoundParameterType);
+            this.parameterTypes.Add(incompleteCoundParameterType.Iid, incompleteCoundParameterType);
 
             // incorrect component referenced compound
             this.invalidReferencedCompoundParameterTypeIid = Guid.NewGuid();
             var invalidReferencedCompoundParameterType = new CompoundParameterType(this.invalidReferencedCompoundParameterTypeIid, 0);
             var invalidReferencedCompoundParameterTypeOrderedItemOne = new OrderedItem { K = 1, V = Guid.NewGuid() };
             invalidReferencedCompoundParameterType.Component.Add(invalidReferencedCompoundParameterTypeOrderedItemOne);
-            this.parameterTypes.Add(invalidReferencedCompoundParameterType);
+            this.parameterTypes.Add(invalidReferencedCompoundParameterType.Iid, invalidReferencedCompoundParameterType);
 
             // incorrect referenced parametertype from component
             this.invalidReferencedParameterTypeFromComponentIid = Guid.NewGuid();
@@ -177,8 +160,8 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
             var invalidComponentItemOne = new OrderedItem { K = 1, V = invalidComponent.Iid };
             invalidReferencedParameterTypeFromComponent.Component.Add(invalidComponentItemOne);
 
-            this.parameterTypes.Add(invalidReferencedParameterTypeFromComponent);
-            this.parameterTypeComponents.Add(invalidComponent);
+            this.parameterTypes.Add(invalidReferencedParameterTypeFromComponent.Iid, invalidReferencedParameterTypeFromComponent);
+            this.parameterTypeComponents.Add(invalidComponent.Iid, invalidComponent);
         }
 
         [Test]
@@ -189,8 +172,10 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
 
             this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.massIid);
 
@@ -208,9 +193,11 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
 
             this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.vectorIid);
 
             CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
@@ -227,10 +214,11 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
 
             this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-
-
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.jaggedArrayIid);
 
             CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
@@ -247,41 +235,15 @@ namespace CDP4WebServices.API.Tests.Services.BusinessLogic
 
             this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.incompleteCoundParameterTypeIid);
             CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
         }
-
-        [Test]
-        public void Verify_that_when_reset_is_called_IsLoaded_is_false()
-        {
-            Assert.IsFalse(this.defaultValueArrayFactory.IsLoaded);
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-
-            Assert.IsTrue(this.defaultValueArrayFactory.IsLoaded);
-
-            this.defaultValueArrayFactory.Reset();
-            Assert.IsFalse(this.defaultValueArrayFactory.IsLoaded);
-        }
-
-        [Test]
-        public void Verify_that_ParameterType_and_ParameterTypeService_are_only_called_once_when_load_is_called_mulitple_times()
-        {
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
-
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
-
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-            this.parameterTypeComponentService.Verify(x => x.GetShallow(this.transaction, It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.secutrityContext.Object), Times.Exactly(1));
-        }
-
+        
         [Test]
         public void VerifyThatWhenParameterTypeIsUnknowExceptionIsThrown()
         {

@@ -53,7 +53,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterOverrideService> parameterOverrideService;
         private Mock<IParameterSubscriptionService> parameterSubscriptionService;
         private Mock<IIterationService> iterationService;
-        private Mock<ICompoundParameterTypeService> compoundParameterTypeService;
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
         private StateDependentParameterUpdateService parameterUpdateService;
 
@@ -121,7 +120,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterOverrideService = new Mock<IParameterOverrideService>();
             this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
             this.iterationService = new Mock<IIterationService>();
-            this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.parameterUpdateService = new StateDependentParameterUpdateService();
             this.finateTrategyLogicService = new Mock<IFiniteStateLogicService>();
@@ -134,7 +132,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterUpdateService.ParameterSubscriptionService = this.parameterSubscriptionService.Object;
             this.parameterUpdateService.ParameterOverrideValueSetService = this.parameterOverrideValueSetService.Object;
             this.parameterUpdateService.ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object;
-            this.parameterUpdateService.CompoundParameterTypeService = this.compoundParameterTypeService.Object;
 
             this.iteration = new Iteration(Guid.NewGuid(), 1);
             this.option1 = new Option(Guid.NewGuid(), 1);
@@ -369,10 +366,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     x.GetShallow(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
                         this.securityContext.Object))
                 .Returns(new List<Thing> { this.psvs21, this.psvs22 });
-
-            this.compoundParameterTypeService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing>());
 
             this.parameterService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameter1, this.parameter2 });

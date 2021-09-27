@@ -26,13 +26,18 @@ namespace CDP4WebServices.API.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+
     using CDP4Common.DTO;
     using CDP4Common.Types;
+
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
+
     using Moq;
+
     using Npgsql;
+
     using NUnit.Framework;
 
     [TestFixture]
@@ -53,7 +58,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
         private Mock<IParameterOverrideService> parameterOverrideService;
         private Mock<IParameterSubscriptionService> parameterSubscriptionService;
         private Mock<IIterationService> iterationService;
-        private Mock<ICompoundParameterTypeService> compoundParameterTypeService;
         private FiniteStateLogicService finiteStateLogicService;
         private StateDependentParameterUpdateService parameterUpdateService;
 
@@ -122,7 +126,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.iterationService = new Mock<IIterationService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
-            this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.parameterUpdateService = new StateDependentParameterUpdateService();
             this.finiteStateLogicService = new FiniteStateLogicService();
 
@@ -132,7 +135,6 @@ namespace CDP4WebServices.API.Tests.SideEffects
             this.parameterUpdateService.ParameterOverrideService = this.parameterOverrideService.Object;
             this.parameterUpdateService.ParameterSubscriptionService = this.parameterSubscriptionService.Object;
             this.parameterUpdateService.ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object;
-            this.parameterUpdateService.CompoundParameterTypeService = this.compoundParameterTypeService.Object;
 
             this.iteration = new Iteration(Guid.NewGuid(), 1);
             this.option1 = new Option(Guid.NewGuid(), 1);
@@ -376,11 +378,7 @@ namespace CDP4WebServices.API.Tests.SideEffects
                     x.GetShallow(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
                         this.securityContext.Object))
                 .Returns(new List<Thing> {this.psvs21, this.psvs22});
-
-            this.compoundParameterTypeService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing>());
-
+            
             this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
             this.finiteStateLogicService.ActualFiniteStateListService = this.actualFiniteStateListService.Object;
             this.finiteStateLogicService.ActualFiniteStateService = this.actualFiniteStateService.Object;

@@ -49,12 +49,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IParameterValueSetService"/>
         /// </summary>
         public IParameterValueSetService ParameterValueSetService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IActualFiniteStateService"/>
-        /// </summary>
-        public IActualFiniteStateService ActualFiniteStateService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the <see cref="IActualFiniteStateListService"/>
         /// </summary>
@@ -76,14 +71,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeService"/>
+        /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/> 
         /// </summary>
-        public IParameterTypeService ParameterTypeService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeComponentService"/>
-        /// </summary>
-        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
+        public ICachedReferenceDataService CachedReferenceDataService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IParameterValueSetFactory"/>
@@ -124,12 +114,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IElementUsageService"/>
         /// </summary>
         public IElementUsageService ElementUsageService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IOptionBusinessLogicService"/>
-        /// </summary>
-        public IOptionBusinessLogicService OptionBusinessLogicService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the <see cref="IOldParameterContextProvider"/>
         /// </summary>
@@ -501,22 +486,22 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// Compute the <see cref="ParameterValueSet"/> for a <see cref="Parameter"/>
         /// </summary>
         /// <param name="parameter">
-        ///     The <see cref="Parameter"/>
+        /// The <see cref="Parameter"/>
         /// </param>
         /// <param name="oldParameter">
-        ///     The old parameter
+        /// The old parameter
         /// </param>
         /// <param name="transaction">
-        ///     The current transaction
+        /// The current transaction
         /// </param>
         /// <param name="partition">
-        ///     The current partition
+        /// The current partition
         /// </param>
         /// <param name="securityContext">
-        ///     The security context
+        /// The security context
         /// </param>
         /// <param name="defaultValueArray">
-        ///     The default value-array
+        /// The default value-array
         /// </param>
         /// <returns>
         /// The new <see cref="ParameterValueSet"/>s
@@ -735,18 +720,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         {
             var parameterTypeId = (Guid)rawUpdateInfo["ParameterType"];
 
-            // Check whether it is a QuantityKind type
-            var parameterType = this.ParameterTypeService
-                .GetShallow(transaction, Utils.SiteDirectoryPartition, new List<Guid> { parameterTypeId }, securityContext)
-                .Cast<ParameterType>().ToList();
+            var parameterTypes = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
 
-            if (parameterType.Count == 0)
+            if (!parameterTypes.TryGetValue(parameterTypeId, out var parameterType))
             {
-                throw new ArgumentException(
-                    string.Format("ParameterType with iid {0} cannot be found.", parameterTypeId));
+                throw new ArgumentException($"ParameterType with iid {parameterTypeId} cannot be found.");
             }
-
-            if (parameterType[0] is QuantityKind)
+            
+            if (parameterType is QuantityKind)
             {
                 // Check that a parameter contains scale and it is not changed to null
                 if (thing.Scale != null)
@@ -833,20 +814,14 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             NpgsqlTransaction transaction,
             ISecurityContext securityContext)
         {
-            // Check whether a parameterType is a QuantityKind type
-            var parameterType = this.ParameterTypeService.GetShallow(
-                transaction,
-                Utils.SiteDirectoryPartition,
-                new List<Guid> { thing.ParameterType },
-                securityContext).Cast<ParameterType>().ToList();
+            var parameterTypes = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
 
-            if (parameterType.Count == 0)
+            if (!parameterTypes.TryGetValue(thing.ParameterType, out var parameterType))
             {
-                throw new ArgumentException(
-                    string.Format("ParameterType with iid {0} cannot be found.", thing.ParameterType));
+                throw new ArgumentException($"ParameterType with iid {thing.ParameterType} cannot be found.");
             }
 
-            if (parameterType[0] is QuantityKind)
+            if (parameterType is QuantityKind)
             {
                 // Check that a parameter contains scale
                 if (thing.Scale == null)
