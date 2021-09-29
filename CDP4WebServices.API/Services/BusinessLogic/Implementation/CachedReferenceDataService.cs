@@ -6,7 +6,6 @@
 //
 //    This file is part of COMET Web Services Community Edition. 
 //    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
-//    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
 //    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public

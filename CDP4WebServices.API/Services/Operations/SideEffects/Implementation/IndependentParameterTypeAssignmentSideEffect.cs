@@ -22,7 +22,6 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-
 namespace CDP4WebServices.API.Services.Operations.SideEffects
 {
     using CDP4Common.DTO;

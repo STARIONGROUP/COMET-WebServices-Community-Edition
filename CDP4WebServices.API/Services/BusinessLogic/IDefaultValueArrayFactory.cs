@@ -42,7 +42,7 @@ namespace CDP4WebServices.API.Services
         /// <summary>
         /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/>
         /// </summary>
-        public ICachedReferenceDataService CachedReferenceDataService { get; set; }
+        ICachedReferenceDataService CachedReferenceDataService { get; set; }
 
         /// <summary>
         /// Initializes the <see cref="DefaultValueArrayFactory"/>.
