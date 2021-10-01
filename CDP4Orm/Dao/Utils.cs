@@ -34,8 +34,9 @@ namespace CDP4Orm.Dao
 
     using CDP4Common;
     using CDP4Common.DTO;
-    using CDP4Common.Helpers;
     using CDP4Common.Types;
+
+    using CDP4JsonSerializer;
 
     using CDP4Orm.Dao.Resolve;
 
@@ -119,7 +120,7 @@ namespace CDP4Orm.Dao
         /// <param name="valueArrayString">The string to convert</param>
         /// <returns>The <see cref="ValueArray{T}"/></returns>
         public static ValueArray<T> FromHstoreToValueArray<T>(this string valueArrayString) =>
-            ValueArrayUtils.FromHstoreToValueArray<T>(valueArrayString);
+            SerializerHelper.FromHstoreToValueArray<T>(valueArrayString);
 
         /// <summary>
         /// Convert a <see cref="ValueArray{String}"/> to the JSON format
@@ -127,7 +128,7 @@ namespace CDP4Orm.Dao
         /// <param name="valueArray">The <see cref="ValueArray{String}"/></param>
         /// <returns>The JSON string</returns>
         public static string ToHstoreString(this ValueArray<string> valueArray) =>
-            ValueArrayUtils.ToHstoreString(valueArray);
+            SerializerHelper.ToHstoreString(valueArray);
 
         /// <summary>
         /// Parse a source string to it's equivalent enumeration representation.
