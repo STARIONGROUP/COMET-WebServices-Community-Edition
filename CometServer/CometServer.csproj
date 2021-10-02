@@ -72,16 +72,13 @@
     </None>
   </ItemGroup>
 
-  <Target Name="PostcompileScript" AfterTargets="Build">
-
-    <!-- Copy Database Authentication plugin -->
-    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
-    <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
-
-    <!-- Copy WSP Database Authentication plugin -->
-    <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\CDP4WspDatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
-    <Copy SourceFiles="..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4WspDatabase" />
-
+  <Target Name="CopyAuthenticationPlugins" AfterTargets="Build">
+    <ItemGroup>
+      <CDP4DatabaseAuthentication Include="$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll;$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" />
+      <CDP4WspDatabaseAuthentication Include="$(ProjectDir)..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\CDP4WspDatabaseAuthentication.dll;$(ProjectDir)..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4Database" />
+    <Copy SourceFiles="@(CDP4WspDatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4WspDatabase" />
   </Target>
 
 </Project>
