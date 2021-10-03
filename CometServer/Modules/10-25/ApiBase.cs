@@ -36,7 +36,6 @@ namespace CometServer.Modules
     using System.Threading.Tasks;
 
     using Carter;
-    using Carter.Response;
 
     using CDP4Common.DTO;
 
@@ -590,9 +589,7 @@ namespace CometServer.Modules
                 return result;
             }
         }
-
-
-
+        
         /// <summary>
         /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
         /// </summary>

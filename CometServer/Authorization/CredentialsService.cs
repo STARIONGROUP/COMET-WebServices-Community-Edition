@@ -139,9 +139,22 @@ namespace CometServer.Authorization
         {
             var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username);
             var person = persons.SingleOrDefault();
-
+            
             if (person == null)
             {
+                Logger.Trace("The user {0} does not exist and cannot be resolved", username);
+                throw new AuthorizationException($"The user {username} could not be authorized");
+            }
+
+            if (!person.IsActive)
+            {
+                Logger.Trace("The user {0} is not Active and cannot be authorized", username);
+                throw new AuthorizationException($"The user {username} could not be authorized");
+            }
+
+            if (!person.IsDeprecated)
+            {
+                Logger.Trace("The user {0} is Deprecated and cannot be authorized", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 

@@ -72,6 +72,11 @@ namespace CDP4Authentication
         public bool IsActive { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether is deprecated.
+        /// </summary>
+        public bool IsDeprecated { get; set; }
+
+        /// <summary>
         /// Gets or sets the salt.
         /// </summary>
         public string Salt { get; set; }

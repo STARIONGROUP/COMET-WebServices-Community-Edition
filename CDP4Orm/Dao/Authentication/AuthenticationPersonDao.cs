@@ -98,37 +98,38 @@ namespace CDP4Orm.Dao.Authentication
         /// </returns>
         private AuthenticationPerson MapToDto(NpgsqlDataReader reader)
         {
-            string tempIsActive;
-            string tempPassword;
-            string tempSalt;
-            string tempShortName;
-            
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
             
-            var dto = new AuthenticationPerson(iid, revisionNumber);
+            var dto = new AuthenticationPerson(iid, revisionNumber)
+            {
+                Role = reader["Role"] is DBNull ? (Guid?)null : Guid.Parse(reader["Role"].ToString()),
+                DefaultDomain = reader["DefaultDomain"] is DBNull? (Guid?)null : Guid.Parse(reader["DefaultDomain"].ToString()),
+                Organization = reader["Organization"] is DBNull ? (Guid?)null : Guid.Parse(reader["Organization"].ToString())
+            };
 
-            dto.Role = reader["Role"] is DBNull ? (Guid?)null : Guid.Parse(reader["Role"].ToString());
-            dto.DefaultDomain = reader["DefaultDomain"] is DBNull? (Guid?)null : Guid.Parse(reader["DefaultDomain"].ToString());
-            dto.Organization = reader["Organization"] is DBNull ? (Guid?)null : Guid.Parse(reader["Organization"].ToString());
-
-            if (valueDict.TryGetValue("IsActive", out tempIsActive))
+            if (valueDict.TryGetValue("IsActive", out var tempIsActive))
             {
                 dto.IsActive = bool.Parse(tempIsActive);
             }
 
-            if (valueDict.TryGetValue("Password", out tempPassword) && !string.IsNullOrEmpty(tempPassword))
+            if (valueDict.TryGetValue("IsDeprecated", out var tempIsDeprecated))
+            {
+                dto.IsDeprecated = bool.Parse(tempIsDeprecated);
+            }
+
+            if (valueDict.TryGetValue("Password", out var tempPassword) && !string.IsNullOrEmpty(tempPassword))
             {
                 dto.Password = tempPassword.UnEscape();
             }
 
-            if (valueDict.TryGetValue("Salt", out tempSalt))
+            if (valueDict.TryGetValue("Salt", out var tempSalt))
             {
                 dto.Salt = tempSalt.UnEscape();
             }
 
-            if (valueDict.TryGetValue("ShortName", out tempShortName))
+            if (valueDict.TryGetValue("ShortName", out var tempShortName))
             {
                 // map shortname to UserName
                 dto.UserName = tempShortName.UnEscape();
