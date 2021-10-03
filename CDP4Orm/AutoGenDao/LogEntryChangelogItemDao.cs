@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="LogEntryChangelogItemDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -243,6 +239,65 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="logEntryChangelogItem">
+        /// The logEntryChangelogItem DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.LogEntryChangelogItem logEntryChangelogItem, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, logEntryChangelogItem, container);
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
+            {
+                { "AffectedItemIid", !this.IsDerived(logEntryChangelogItem, "AffectedItemIid") ? logEntryChangelogItem.AffectedItemIid.ToString() : string.Empty },
+                { "ChangeDescription", !this.IsDerived(logEntryChangelogItem, "ChangeDescription") ? logEntryChangelogItem.ChangeDescription.Escape() : null },
+                { "ChangelogKind", !this.IsDerived(logEntryChangelogItem, "ChangelogKind") ? logEntryChangelogItem.ChangelogKind.ToString() : string.Empty },
+            }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"LogEntryChangelogItem\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = logEntryChangelogItem.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+
+            logEntryChangelogItem.AffectedReferenceIid.ForEach(x => this.UpsertAffectedReferenceIid(transaction, partition, logEntryChangelogItem.Iid, x));
+
+            return true;
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -310,6 +365,45 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"LogEntryChangelogItem_AffectedReferenceIid\"", partition);
                 sqlBuilder.AppendFormat(" (\"LogEntryChangelogItem\", \"AffectedReferenceIid\")");
                 sqlBuilder.Append(" VALUES (:logEntryChangelogItem, :affectedReferenceIid);");
+
+                command.Parameters.Add("logEntryChangelogItem", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("affectedReferenceIid", NpgsqlDbType.Uuid).Value = affectedReferenceIid;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.LogEntryChangelogItem"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="affectedReferenceIid">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertAffectedReferenceIid(NpgsqlTransaction transaction, string partition, Guid iid, Guid affectedReferenceIid)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"LogEntryChangelogItem_AffectedReferenceIid\"", partition);
+                sqlBuilder.AppendFormat(" (\"LogEntryChangelogItem\", \"AffectedReferenceIid\")");
+                sqlBuilder.Append(" VALUES (:logEntryChangelogItem, :affectedReferenceIid)");
 
                 command.Parameters.Add("logEntryChangelogItem", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("affectedReferenceIid", NpgsqlDbType.Uuid).Value = affectedReferenceIid;
@@ -404,6 +498,31 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
+        }
+
+        /// <summary>
+        /// Delete a database record from the supplied data transfer object.
+        /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.LogEntryChangelogItem"/> id that is to be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully deleted.
+        /// </returns>
+        public override bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            var result = false;
+
+            result = base.Delete(transaction, partition, iid);
+            return result;
         }
 
         /// <summary>

@@ -1,20 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelLogEntryDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2020 RHEA System S.A.
+//    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Kamil Wojnowski, 
-//            Nathanael Smiechowski
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -22,9 +21,6 @@
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
-// <summary>
-//   This is an auto-generated Dao class. Any manual changes on this file will be overwritten.
-// </summary>
 // --------------------------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
@@ -259,6 +255,70 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new database record, or updates one if it already exists from the supplied data transfer object.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="modelLogEntry">
+        /// The modelLogEntry DTO that is to be persisted.
+        /// </param>
+        /// <param name="container">
+        /// The container of the DTO to be persisted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully persisted.
+        /// </returns>
+        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.ModelLogEntry modelLogEntry, CDP4Common.DTO.Thing container = null)
+        {
+            var valueTypeDictionaryAdditions = new Dictionary<string, string>();
+            base.Upsert(transaction, partition, modelLogEntry, container);
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
+            {
+                { "Content", !this.IsDerived(modelLogEntry, "Content") ? modelLogEntry.Content.Escape() : string.Empty },
+                { "CreatedOn", !this.IsDerived(modelLogEntry, "CreatedOn") ? modelLogEntry.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
+                { "LanguageCode", !this.IsDerived(modelLogEntry, "LanguageCode") ? modelLogEntry.LanguageCode.Escape() : string.Empty },
+                { "Level", !this.IsDerived(modelLogEntry, "Level") ? modelLogEntry.Level.ToString() : string.Empty },
+            }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                    
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry\"", partition);
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :author)");
+
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = modelLogEntry.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                command.Parameters.Add("author", NpgsqlDbType.Uuid).Value = !this.IsDerived(modelLogEntry, "Author") ? Utils.NullableValue(modelLogEntry.Author) : Utils.NullableValue(null);
+                sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"Author\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :author);");
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                this.ExecuteAndLogCommand(command);
+            }
+
+            modelLogEntry.AffectedDomainIid.ForEach(x => this.UpsertAffectedDomainIid(transaction, partition, modelLogEntry.Iid, x));
+
+            modelLogEntry.AffectedItemIid.ForEach(x => this.UpsertAffectedItemIid(transaction, partition, modelLogEntry.Iid, x));
+            modelLogEntry.Category.ForEach(x => this.UpsertCategory(transaction, partition, modelLogEntry.Iid, x));
+
+            return true;
+        }
+
+        /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name
         /// </summary>
         /// <param name="transaction">
@@ -349,6 +409,45 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ModelLogEntry"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="affectedDomainIid">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertAffectedDomainIid(NpgsqlTransaction transaction, string partition, Guid iid, Guid affectedDomainIid)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry_AffectedDomainIid\"", partition);
+                sqlBuilder.AppendFormat(" (\"ModelLogEntry\", \"AffectedDomainIid\")");
+                sqlBuilder.Append(" VALUES (:modelLogEntry, :affectedDomainIid)");
+
+                command.Parameters.Add("modelLogEntry", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("affectedDomainIid", NpgsqlDbType.Uuid).Value = affectedDomainIid;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
         /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
@@ -388,6 +487,45 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Insert a new association record in the link table, or update an existing one if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ModelLogEntry"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="affectedItemIid">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertAffectedItemIid(NpgsqlTransaction transaction, string partition, Guid iid, Guid affectedItemIid)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry_AffectedItemIid\"", partition);
+                sqlBuilder.AppendFormat(" (\"ModelLogEntry\", \"AffectedItemIid\")");
+                sqlBuilder.Append(" VALUES (:modelLogEntry, :affectedItemIid)");
+
+                command.Parameters.Add("modelLogEntry", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("affectedItemIid", NpgsqlDbType.Uuid).Value = affectedItemIid;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
         /// Insert a new association record in the link table.
         /// </summary>
         /// <param name="transaction">
@@ -413,6 +551,49 @@ namespace CDP4Orm.Dao
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry_Category\"", partition);
                 sqlBuilder.AppendFormat(" (\"ModelLogEntry\", \"Category\")");
                 sqlBuilder.Append(" VALUES (:modelLogEntry, :category);");
+
+                command.Parameters.Add("modelLogEntry", NpgsqlDbType.Uuid).Value = iid;
+                command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = category;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                return this.ExecuteAndLogCommand(command) > 0;
+            }
+        }
+
+        /// <summary>
+        /// Insert a new association record in the link table, or update if it already exists.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ModelLogEntry"/> id that will be the source for each link table record.
+        /// </param> 
+        /// <param name="category">
+        /// The value for which a link table record wil be created.
+        /// </param>
+        /// <returns>
+        /// True if the value link was successfully created.
+        /// </returns>
+        public bool UpsertCategory(NpgsqlTransaction transaction, string partition, Guid iid, Guid category)
+        {
+            using (var command = new NpgsqlCommand())
+            {
+                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry_Category\"", partition);
+                sqlBuilder.AppendFormat(" (\"ModelLogEntry\", \"Category\")");
+                sqlBuilder.Append(" VALUES (:modelLogEntry, :category)");
+                sqlBuilder.Append(" ON CONFLICT ON CONSTRAINT \"ModelLogEntry_Category_PK\"");
+                sqlBuilder.Append(" DO UPDATE ");
+                sqlBuilder.Append(" SET (\"ModelLogEntry\", \"Category\")");
+                sqlBuilder.Append(" = (:modelLogEntry, :category);");
 
                 command.Parameters.Add("modelLogEntry", NpgsqlDbType.Uuid).Value = iid;
                 command.Parameters.Add("category", NpgsqlDbType.Uuid).Value = category;
@@ -509,6 +690,31 @@ namespace CDP4Orm.Dao
             }
 
             return this.AfterDelete(beforeDelete, transaction, partition, iid);
+        }
+
+        /// <summary>
+        /// Delete a database record from the supplied data transfer object.
+        /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
+        /// This is typically used during the import of existing data to the Database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current <see cref="NpgsqlTransaction"/> to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be deleted.
+        /// </param>
+        /// <param name="iid">
+        /// The <see cref="CDP4Common.DTO.ModelLogEntry"/> id that is to be deleted.
+        /// </param>
+        /// <returns>
+        /// True if the concept was successfully deleted.
+        /// </returns>
+        public override bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            var result = false;
+
+            result = base.Delete(transaction, partition, iid);
+            return result;
         }
 
         /// <summary>

@@ -25,7 +25,6 @@
 namespace CometServer.Services
 {
     using System;
-    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
 
@@ -123,7 +122,6 @@ namespace CometServer.Services
                 var activeIterations = this.GetShallow(transaction, partition, new [] { this.activeIterationId }, securityContext).OfType<Iteration>().ToArray();
                 if (activeIterations.Length != 1)
                 {
-                    
                     throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
                 }
 
