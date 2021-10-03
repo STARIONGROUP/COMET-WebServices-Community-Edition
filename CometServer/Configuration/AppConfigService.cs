@@ -26,6 +26,9 @@ namespace CometServer.Configuration
 {
     using Microsoft.Extensions.Configuration;
 
+    /// <summary>
+    /// A service used to provide access to the <see cref="AppConfig"/>
+    /// </summary>
     public class AppConfigService : IAppConfigService
     {
         /// <summary>

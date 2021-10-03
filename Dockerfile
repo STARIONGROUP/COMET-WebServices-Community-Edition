@@ -1,25 +1,20 @@
-FROM mono:5.20.1.19
-
-RUN apt-get update -yq && apt-get upgrade -yq && apt-get install -yq nano netcat
-
+FROM mcr.microsoft.com/dotnet/sdk:5.0-bullseye-slim AS build-env
 WORKDIR /app
-COPY CDP4WebServer/bin/Release/net472 /app
-COPY LICENSE /app
+COPY CDP4Authentication CDP4Authentication
+COPY CDP4DatabaseAuthentication CDP4DatabaseAuthentication
+COPY CDP4WspDatabaseAuthentication CDP4WspDatabaseAuthentication
+COPY CDP4Orm CDP4Orm
+COPY CometServer CometServer
 
-RUN mkdir /app/wait-for
-COPY wait-for /app/wait-for
-COPY entrypoint.sh /app
+RUN dotnet build CDP4DatabaseAuthentication -c Release
+RUN dotnet build CDP4WspDatabaseAuthentication -c Release
+RUN dotnet publish CometServer -c Release
 
-RUN mkdir /app/logs; exit 0
-VOLUME /app/logs
+FROM mcr.microsoft.com/dotnet/aspnet:5.0-bullseye-slim
+WORKDIR /app
+RUN mkdir /app/logs
+RUN mkdir /app/storage
+RUN mkdir /app/upload
+COPY --from=build-env /app/CometServer/bin/Release/publish .
 
-RUN mkdir /app/storage; exit 0
-VOLUME /app/storage
-
-RUN mkdir /app/upload; exit 0
-VOLUME /app/upload
-
-#expose ports
-EXPOSE 5000
-
-CMD ["/bin/bash", "/app/entrypoint.sh"]
+CMD ["dotnet", "CometServer.dll"]

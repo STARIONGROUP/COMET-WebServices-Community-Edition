@@ -37,13 +37,11 @@ namespace CometServer.Configuration
         public MidtierConfig()
         {
             // set defaults
-            this.Protocol = "http";
-            this.HostName = "127.0.0.1";
-            this.Port = 5000;
             this.UploadDirectory = "upload";
             this.FileStorageDirectory = "storage";
             this.IsExportEnabled = true;
             this.ExportDirectory = "export";
+            this.BacktierWaitTime = 300;
         }
 
         /// <summary>
@@ -54,38 +52,12 @@ namespace CometServer.Configuration
         /// </param>
         public MidtierConfig(IConfiguration configuration)
         {
-            this.Protocol = configuration["Midtier:Protocol"];
-            this.HostName = configuration["Midtier:HostName"];
-            this.Port = int.Parse(configuration["Midtier:Port"]);
             this.UploadDirectory = configuration["Midtier:UploadDirectory"];
             this.FileStorageDirectory = configuration["Midtier:FileStorageDirectory"];
             this.IsExportEnabled = bool.Parse(configuration["Midtier:IsExportEnabled"]);
             this.ExportDirectory = configuration["Midtier:ExportDirectory"];
+            this.BacktierWaitTime = int.Parse(configuration["Midtier:BacktierWaitTime"]);
         }
-
-        /// <summary>
-        /// Gets or sets the protocol to use (http, https).
-        /// </summary>
-        /// <remarks>
-        /// The default value is http
-        /// </remarks>
-        public string Protocol { get; set; }
-
-        /// <summary>
-        /// Gets or sets the host name of the mid tier.
-        /// </summary>
-        /// <remarks>
-        /// The default value is 127.0.0.1
-        /// </remarks>
-        public string HostName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the listen port of the mid tier.
-        /// </summary>
-        /// <remarks>
-        /// The default value is 5000
-        /// </remarks>
-        public int Port { get; set; }
 
         /// <summary>
         /// Gets or sets the upload directory for the mid tier.
@@ -119,5 +91,14 @@ namespace CometServer.Configuration
         /// The default value is export
         /// </remarks>
         public string ExportDirectory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time in seconds to wait for the backtier to become available
+        /// at appliation startus
+        /// </summary>
+        /// <remarks>
+        /// The default value is 300
+        /// </remarks>
+        public int BacktierWaitTime { get; set; }
     }
 }

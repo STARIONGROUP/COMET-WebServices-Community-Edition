@@ -58,11 +58,10 @@ namespace CometServer
             NpgsqlTransaction transaction = null;
             var sw = Stopwatch.StartNew();
 
-            Logger.Info("Start migration.");
+            Logger.Info("Start migration");
 
             try
             {
-                // setup connection if not supplied
                 connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
 
                 // ensure an open connection

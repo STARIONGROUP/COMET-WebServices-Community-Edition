@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CometServer-CE</Title>
-    <Version>7.0.0</Version>
+    <Version>8.0.0</Version>
     <Description>COMET Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Alex, Alexander</Authors>
@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <None Remove="Resources\ascii-art.txt" />
-    <None Remove="Resources\cdplogo_48x48.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,31 +42,12 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\ascii-art.txt" />
-    <EmbeddedResource Include="Resources\cdplogo_48x48.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="export\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
+    <None Update="entrypoint.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="NLog.dll.nlog">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
@@ -80,6 +60,15 @@
     </ItemGroup>
     <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4Database" />
     <Copy SourceFiles="@(CDP4WspDatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4WspDatabase" />
+  </Target>
+
+  <Target Name="CopyAuthenticationPlugins" AfterTargets="AfterPublish">
+    <ItemGroup>
+      <CDP4DatabaseAuthentication Include="$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll;$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" />
+      <CDP4WspDatabaseAuthentication Include="$(ProjectDir)..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\CDP4WspDatabaseAuthentication.dll;$(ProjectDir)..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(PublishUrl)\Authentication\CDP4Database" />
+    <Copy SourceFiles="@(CDP4WspDatabaseAuthentication)" DestinationFolder="$(PublishUrl)\Authentication\CDP4WspDatabase" />
   </Target>
 
 </Project>

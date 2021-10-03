@@ -34,10 +34,7 @@ namespace CometServer.Tests.SideEffects
 
     using CDP4Orm.Dao;
 
-    using CometServer.Authentication;
     using CometServer.Authorization;
-    using CometServer.Configuration;
-    using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
@@ -81,10 +78,6 @@ namespace CometServer.Tests.SideEffects
         [SetUp]
         public void Setup()
         {
-            var configurationFilePath = System.IO.Path.Combine(TestContext.CurrentContext.TestDirectory, "config.json");
-
-            AppConfig.Load(configurationFilePath);
-
             this.authenticatedPerson = new AuthenticationPerson(Guid.NewGuid(), 1) { DefaultDomain = Guid.NewGuid() };
             this.credentials = new Credentials() { Person = this.authenticatedPerson };
             
@@ -226,12 +219,6 @@ namespace CometServer.Tests.SideEffects
 
             // Check that the engineering model is deleted in the newEngineeringModelPartition
             this.engineeringModelService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<EngineeringModel>(), null), Times.Never);
-        }
-
-        [Test]
-        public void VerifyThatCreateFromSourceWorks()
-        {
-            
         }
     }
 }

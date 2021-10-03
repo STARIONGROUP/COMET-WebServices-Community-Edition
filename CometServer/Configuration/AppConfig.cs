@@ -24,9 +24,6 @@
 
 namespace CometServer.Configuration
 {
-    using System;
-    using System.Configuration;
-
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
@@ -84,24 +81,5 @@ namespace CometServer.Configuration
         /// Gets the current changelog configuration.
         /// </summary>
         public ChangelogConfig Changelog { get; set; }
-
-        /// <summary>
-        /// Read configuration from file.
-        /// </summary>
-        /// <param name="configPath">
-        /// The config Path.
-        /// </param>
-        /// <remarks>
-        /// This it the application configuration of the web server
-        /// The configuration is read from a JSON config file located in the server root folder
-        /// </remarks>
-        public static void Load(string configPath = null)
-        {
-            
-            
-
-            
-        }
-
     }
 }

@@ -33,11 +33,13 @@ namespace CometServer
 
     using CometServer.ChangeNotification;
     using CometServer.Configuration;
+    using CometServer.Helpers;
 
     using Hangfire;
 
     using Microsoft.Extensions.Hosting;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
     using NLog;
@@ -78,11 +80,27 @@ namespace CometServer
                             .UseStartup<Startup>();
                     })
                     .Build();
-
+                
                 var appConfigService = host.Services.GetService<IAppConfigService>();
+
+                var dataStoreAvailable = DataStoreConnectionChecker.CheckConnection(appConfigService);
+                if (!dataStoreAvailable)
+                {
+                    Logger.Warn("The COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                    return 0;
+                }
+                else
+                {
+                    Logger.Info("The data-store has become available for connections within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                }
 
                 MigrationEngine.MigrateAllAtStartUp(appConfigService);
                 ConfigureRecurringJobs(appConfigService);
+
+                var configuration = host.Services.GetService<IConfiguration>();
+                var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
+
+                Logger.Info("COMET REST API Ready to accept connections at {0}", uri);
 
                 await host.RunAsync();
 

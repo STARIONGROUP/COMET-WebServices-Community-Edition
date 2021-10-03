@@ -1,52 +1,55 @@
 version: '3.8'
 services:
   
-  cdp4_db:
+  comet_db:
     image: rheagroup/cdp4-database-community-edition:latest
-    hostname: cdp4-postgresql
+    container_name: comet-db
+    shm_size: 2gb
+    restart: always
     command: postgres -c max_locks_per_transaction=1024
     environment:
-      - POSTGRES_PASSWORD=${DB_POSTGRESPASSWORD}
       - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+    hostname: comet-db
     networks:
-      cdp4:
+      comet:
         aliases:
-          - cdp4-postgresql
-    container_name: cdp4-database-community-edition
-    restart: always
+          - comet-db
     ports:
-      - '${DB_HOSTPORT}:5432'
+      - '5432:5432'
     expose:
       - '5432'
     volumes:
-      - cdpdbdata:/var/lib/postgresql/data
-      - cdpdblogs:/logs
-
-  cdp4_webservices:
-    hostname: cdp4-webservices
+      - comet-db-data:/var/lib/postgresql/data
+      - comet-db-logs:/logs
+  
+  comet_webservices:
+    image: rheagroup/comet-webservices-community-edition:8.0.0-rc1
+    container_name: comet-webservices
+    shm_size: 512m
     restart: always
-    build: .
+    hostname: comet-webservices
     networks:
-      cdp4:
+      comet:
         aliases:
-          - cdp4-webservices
+          - comet-webservices
     depends_on:
-      - cdp4_db
+      - comet_db
     ports:
-      - "${WEBSERVICES_HOSTPORT}:5000"
+      - "5000:5000"
     expose:
       - '5000'
     volumes:
-      - cdpwslogs:/app/logs
-      - cdpwsstorage:/app/storage
-      - cdpwsupload:/app/upload
+      - comet-ws-logs:/app/logs
+      - comet-ws-storage:/app/storage
+      - comet-ws-uplaod:/app/upload
 
 networks:
-  cdp4:
+  comet:
 
 volumes:
-  cdpdbdata:
-  cdpdblogs:
-  cdpwslogs:
-  cdpwsstorage:
-  cdpwsupload:
+  comet-db-data:
+  comet-db-logs:
+  comet-ws-logs:
+  comet-ws-storage:
+  comet-ws-uplaod:

@@ -36,7 +36,7 @@ namespace CometServer.Configuration
         /// </summary>
         public EmailConfig()
         {
-            this.Sender = "CDP4";
+            this.Sender = "COMET";
         }
 
         /// <summary>
