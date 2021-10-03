@@ -32,6 +32,7 @@ namespace CometServer.Authorization
     using CDP4Common.DTO;
     
     using CDP4Orm.Dao;
+    using CDP4Orm.Dao.Resolve;
 
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -82,6 +83,11 @@ namespace CometServer.Authorization
         /// Gets or sets the (injected) <see cref="IAccessRightKindService"/> for this request
         /// </summary>
         public IAccessRightKindService AccessRightKindService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the resolve service.
+        /// </summary>
+        public IResolveService ResolveService { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="ICredentialsService"/>
@@ -318,7 +324,7 @@ namespace CometServer.Authorization
                 {
                     case PersonAccessRightKind.SAME_AS_CONTAINER:
                         {
-                            return securityContext.ContainerWriteAllowed;
+                            return this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
                         }
 
                     case PersonAccessRightKind.SAME_AS_SUPERCLASS:
@@ -422,7 +428,7 @@ namespace CometServer.Authorization
             {
                 case ParticipantAccessRightKind.SAME_AS_CONTAINER:
                     {
-                        return securityContext.ContainerWriteAllowed;
+                        return this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
                     }
 
                 case ParticipantAccessRightKind.SAME_AS_SUPERCLASS:
@@ -445,6 +451,62 @@ namespace CometServer.Authorization
                         return false;
                     }
             }
+        }
+
+        /// <summary>
+        /// Compute WRITE permission for <see cref="ParticipantAccessRightKind.SAME_AS_CONTAINER"/>, or <see cref="PersonAccessRightKind.SAME_AS_CONTAINER"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The transaction object.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> to compute permissions for.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="modifyOperation">
+        /// The string representation of the type of the modify operation.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security context of the current request.
+        /// </param>
+        /// <returns></returns>
+        private bool ComputeSameAsContainerWriteAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation, ISecurityContext securityContext)
+        {
+            if (modifyOperation != ServiceBase.UpdateOperation)
+            {
+                return securityContext.ContainerWriteAllowed;
+            }
+
+            var dtoInfo = thing.GetInfoPlaceholder();
+
+            var operationThingContainerCache =
+                new Dictionary<DtoInfo, DtoResolveHelper>
+                {
+                    {
+                        dtoInfo,
+                        new DtoResolveHelper(dtoInfo)
+                    }
+                };
+
+            var resolvePartition = partition.StartsWith(CDP4Orm.Dao.Utils.IterationSubPartition)
+                ? partition.Replace(CDP4Orm.Dao.Utils.IterationSubPartition, CDP4Orm.Dao.Utils.EngineeringModelPartition)
+                : partition;
+
+            this.ResolveService.ResolveItems(transaction, resolvePartition, operationThingContainerCache);
+
+            var containerThing = operationThingContainerCache.SingleOrDefault(x => x.Key is ContainerInfo).Value;
+
+            return containerThing != null
+                   &&
+                   this.CanWrite(
+                       transaction,
+                       containerThing.Thing,
+                       containerThing.Thing.ClassKind.ToString(),
+                       containerThing.Partition,
+                       modifyOperation,
+                       securityContext);
         }
 
         /// <summary>

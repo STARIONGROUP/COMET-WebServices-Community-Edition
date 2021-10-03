@@ -722,6 +722,11 @@ namespace CometServer.Tests
             return true;
         }
 
+        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             return true;
@@ -730,6 +735,11 @@ namespace CometServer.Tests
         public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             return true;
+        }
+
+        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+            throw new NotImplementedException();
         }
 
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
@@ -767,6 +777,11 @@ namespace CometServer.Tests
             return true;
         }
 
+        public bool Upsert(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Update(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
         {
             throw new NotImplementedException();
@@ -783,6 +798,11 @@ namespace CometServer.Tests
         }
 
         public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
@@ -817,6 +837,11 @@ namespace CometServer.Tests
             return true;
         }
 
+        public bool Upsert(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, Thing container = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Update(NpgsqlTransaction transaction, string partition, ParameterOverride parameter, Thing container = null)
         {
             throw new NotImplementedException();
@@ -833,6 +858,11 @@ namespace CometServer.Tests
         }
 
         public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
@@ -866,6 +896,11 @@ namespace CometServer.Tests
             return true;
         }
 
+        public bool Upsert(NpgsqlTransaction transaction, string partition, ElementDefinition elementDefinition, Thing container = null)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool Update(NpgsqlTransaction transaction, string partition, ElementDefinition parameter, Thing container = null)
         {
             throw new NotImplementedException();
@@ -882,6 +917,11 @@ namespace CometServer.Tests
         }
 
         public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
