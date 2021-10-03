@@ -38,6 +38,7 @@ namespace CometServer.Modules
 
     using CDP4Orm.Dao;
 
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -110,7 +111,15 @@ namespace CometServer.Modules
                 }
                 else
                 {
-                    await this.Authorize(req.HttpContext.User.Identity.Name);
+                    try
+                    {
+                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException e)
+                    {
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
+                    }
 
                     await this.GetResponseData(req, res);
                 }
@@ -125,7 +134,15 @@ namespace CometServer.Modules
                 }
                 else
                 {
-                    await this.Authorize(req.HttpContext.User.Identity.Name);
+                    try
+                    {
+                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException e)
+                    {
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
+                    }
 
                     await this.GetResponseData(req, res);
                 }
@@ -140,7 +157,15 @@ namespace CometServer.Modules
                 }
                 else
                 {
-                    await this.Authorize(req.HttpContext.User.Identity.Name);
+                    try
+                    {
+                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException e)
+                    {
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
+                    }
 
                     await this.PostResponseData(req, res);
                 }

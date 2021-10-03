@@ -55,8 +55,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="7.3.0" />
-    <PackageReference Include="Npgsql" Version="5.0.4" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="8.0.0" />
+    <PackageReference Include="Npgsql" Version="5.0.10" />
   </ItemGroup>
 
   <ItemGroup>

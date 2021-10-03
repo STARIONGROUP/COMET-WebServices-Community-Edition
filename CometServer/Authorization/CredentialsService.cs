@@ -152,7 +152,7 @@ namespace CometServer.Authorization
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
-            if (!person.IsDeprecated)
+            if (person.IsDeprecated)
             {
                 Logger.Trace("The user {0} is Deprecated and cannot be authorized", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
