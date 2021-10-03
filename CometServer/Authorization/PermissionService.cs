@@ -567,7 +567,7 @@ namespace CometServer.Authorization
                 this.currentParticipantCache = new List<Participant>();
 
                 var participants = this.ParticipantDao
-                    .Read(transaction, SiteDirectory, null).ToList()
+                    .Read(transaction, SiteDirectory, null, true).ToList()
                     .Where(participant => participant.Person == this.CredentialsService.Credentials.Person.Iid && this.CredentialsService.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
 
                 this.currentParticipantCache.AddRange(participants);
@@ -640,7 +640,7 @@ namespace CometServer.Authorization
             }
 
             return this.ParticipantDao
-                            .Read(transaction, SiteDirectory, participantsIds)
+                            .Read(transaction, SiteDirectory, participantsIds, true)
                             .Any(p => p.Person == person.Iid);
         }
     }

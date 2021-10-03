@@ -47,7 +47,7 @@ namespace CometServer.Services
         /// <summary>
         /// Gets or sets the <see cref="ISiteReferenceDataLibraryDao"/>
         /// </summary>
-        public ISiteReferenceDataLibraryDao SiteReferenceDataLibraryDato { get; set; }
+        public ISiteReferenceDataLibraryDao SiteReferenceDataLibraryDao { get; set; }
 
         /// <summary>
         /// Query the required <see cref="ReferenceDataLibrary"/> for the <paramref name="iteration"/>
@@ -57,18 +57,18 @@ namespace CometServer.Services
         /// <returns>The <see cref="ReferenceDataLibrary"/></returns>
         public IEnumerable<ReferenceDataLibrary> QueryReferenceDataLibrary(NpgsqlTransaction transaction, Iteration iteration)
         {
-            var engineeringModelSetup = this.EngineeringModelSetupDao.Read(transaction, nameof(SiteDirectory)).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
+            var engineeringModelSetup = this.EngineeringModelSetupDao.Read(transaction, nameof(SiteDirectory), null, true).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
 
             if (engineeringModelSetup == null)
             {
-                throw new InvalidOperationException($"Could not find the associated engineering-modem-setup for iteration {iteration.Iid}");
+                throw new InvalidOperationException($"Could not find the associated EngineeringModelSetup for Iteration {iteration.Iid}");
             }
 
-            var mrdl = this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), engineeringModelSetup.RequiredRdl).FirstOrDefault();
+            var mrdl = this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), engineeringModelSetup.RequiredRdl, true).FirstOrDefault();
 
             if (mrdl == null)
             {
-                throw new InvalidOperationException($"Could not find the associated reference-data-library for iteration {iteration.Iid}");
+                throw new InvalidOperationException($"Could not find the associated ModelReferenceDataLibrary for Iteration {iteration.Iid}");
             }
 
             var requiredRdls = new List<ReferenceDataLibrary> { mrdl };
@@ -93,8 +93,8 @@ namespace CometServer.Services
             }
 
             var requiredRdl =
-                this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }).FirstOrDefault() as ReferenceDataLibrary
-                ?? this.SiteReferenceDataLibraryDato.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }).FirstOrDefault();
+                this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }, true).FirstOrDefault() as ReferenceDataLibrary
+                ?? this.SiteReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }, true).FirstOrDefault();
 
             if (requiredRdl != null)
             {

@@ -135,7 +135,7 @@ namespace CometServer.Tests.Authorization
 
             //this.participantDao.Setup(
             //        x =>
-            //            x.Read(null, It.IsAny<string>(), null, false))
+            //            x.Read(null, It.IsAny<string>(), null, true))
             //    .Returns(new List<Participant>() { this.participant });
 
             //this.permissionService.ParticipantDao = this.participantDao.Object;
