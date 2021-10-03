@@ -76,7 +76,8 @@ namespace CometServer.Services
                     if (personPermission.ObjectClass == ClassKind.EngineeringModelSetup || 
                         personPermission.ObjectClass == ClassKind.IterationSetup ||
                         personPermission.ObjectClass == ClassKind.ModelReferenceDataLibrary ||
-                        personPermission.ObjectClass == ClassKind.Participant)
+                        personPermission.ObjectClass == ClassKind.Participant ||
+                        personPermission.ObjectClass == ClassKind.SiteReferenceDataLibrary)
                     {
                         return true;
                     }
@@ -87,7 +88,8 @@ namespace CometServer.Services
                     if (personPermission.ObjectClass == ClassKind.EngineeringModelSetup || 
                         personPermission.ObjectClass == ClassKind.IterationSetup ||
                         personPermission.ObjectClass == ClassKind.ModelReferenceDataLibrary ||
-                        personPermission.ObjectClass == ClassKind.Participant)
+                        personPermission.ObjectClass == ClassKind.Participant ||
+                        personPermission.ObjectClass == ClassKind.SiteReferenceDataLibrary)
                     {
                         return true;
                     }

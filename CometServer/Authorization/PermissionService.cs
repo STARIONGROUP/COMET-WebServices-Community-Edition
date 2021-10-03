@@ -60,14 +60,14 @@ namespace CometServer.Authorization
         private const string CreateOperation = "create";
 
         /// <summary>
-        /// Gets or sets a <see cref="IParticipantDao"/>
+        /// Gets or sets the (injected) <see cref="IParticipantDao"/>
         /// </summary>
         public IParticipantDao ParticipantDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IModelReferenceDataLibraryDao"/>
+        /// Gets or sets the (injected) <see cref="IChainOfRdlComputationService"/> used to compute the allowed <see cref="SiteReferenceDataLibrary"/> unique identifiers
         /// </summary>
-        public IModelReferenceDataLibraryDao ModelReferenceDataLibraryDao { get; set; }
+        public IChainOfRdlComputationService ChainOfRdlComputationService { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
@@ -75,7 +75,7 @@ namespace CometServer.Authorization
         public IMetaInfoProvider MetaInfoProvider { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IOrganizationalParticipationResolverService"/>.
+        /// Gets or sets the (injected) <see cref="IOrganizationalParticipationResolverService"/>.
         /// </summary>
         public IOrganizationalParticipationResolverService OrganizationalParticipationResolverService { get; set; }
 
@@ -85,7 +85,7 @@ namespace CometServer.Authorization
         public IAccessRightKindService AccessRightKindService { get; set; }
 
         /// <summary>
-        /// Gets or sets the resolve service.
+        /// Gets or sets the (injected) resolve service.
         /// </summary>
         public IResolveService ResolveService { get; set; }
 
@@ -251,7 +251,7 @@ namespace CometServer.Authorization
 
                         if (thing is SiteReferenceDataLibrary)
                         {
-                            var rdlDependency = this.ModelReferenceDataLibraryDao.GetSiteReferenceDataLibraryDependency(this.CredentialsService.Credentials.EngineeringModelSetups, transaction);
+                            var rdlDependency = this.ChainOfRdlComputationService.QueryReferenceDataLibraryDependency(transaction, this.CredentialsService.Credentials.EngineeringModelSetups);
                             return rdlDependency.Contains(thing.Iid);
                         }
 
