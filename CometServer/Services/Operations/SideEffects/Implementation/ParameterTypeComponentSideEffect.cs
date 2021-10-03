@@ -72,6 +72,11 @@ namespace CometServer.Services.Operations.SideEffects
         public IDefaultValueArrayFactory DefaultValueArrayFactory { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/>
+        /// </summary>
+        public ICachedReferenceDataService CachedReferenceDataService { get; set; }
+
+        /// <summary>
         /// Allows derived classes to override and execute additional logic after a successful create operation.
         /// </summary>
         /// <param name="thing">
@@ -97,6 +102,9 @@ namespace CometServer.Services.Operations.SideEffects
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
+
+            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
+            this.CachedReferenceDataService.Reset();
         }
 
         /// <summary>
@@ -125,6 +133,9 @@ namespace CometServer.Services.Operations.SideEffects
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
+
+            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
+            this.CachedReferenceDataService.Reset();
         }
 
         /// <summary>
@@ -153,6 +164,9 @@ namespace CometServer.Services.Operations.SideEffects
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
+
+            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
+            this.CachedReferenceDataService.Reset();
         }
 
         /// <summary>

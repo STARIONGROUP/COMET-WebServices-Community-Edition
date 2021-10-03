@@ -1,0 +1,128 @@
+﻿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="ICachedReferenceDataService.cs" company="RHEA System S.A.">
+//    Copyright (c) 2015-2021 RHEA System S.A.
+//
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
+//
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
+//    modify it under the terms of the GNU Affero General Public
+//    License as published by the Free Software Foundation; either
+//    version 3 of the License, or (at your option) any later version.
+//
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//    Lesser General Public License for more details.
+//
+//    You should have received a copy of the GNU Affero General Public License
+//    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+// </copyright>
+// --------------------------------------------------------------------------------------------------------------------
+
+namespace CometServer.Services
+{
+    using System;
+    using System.Collections.Generic;
+    
+    using CDP4Common.DTO;
+
+    using CometServer.Services.Authorization;
+
+    using Npgsql;
+
+    /// <summary>
+    /// The purpose of the <see cref="ICachedReferenceDataService"/> is to provide a caching service for data that is reusable accross
+    /// various services during the course of one request
+    /// </summary>
+    /// <remarks>
+    /// The <see cref="ICachedReferenceDataService"/> is non-thread safe and should only be used per HTTP reequest
+    /// </remarks>
+    public interface ICachedReferenceDataService : IBusinessLogicService
+    {
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IParameterTypeService"/> used to query the <see cref="ParameterType"/>s from the data-store
+        /// </summary>
+        public IParameterTypeService ParameterTypeService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IParameterTypeComponentService"/> used to query the <see cref="ParameterTypeComponent"/>s from the data-store
+        /// </summary>
+        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDependentParameterTypeAssignmentService" />
+        /// </summary>
+        public IDependentParameterTypeAssignmentService DependentParameterTypeAssignmentService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IIndependentParameterTypeAssignmentService" />
+        /// </summary>
+        public IIndependentParameterTypeAssignmentService IndependentParameterTypeAssignmentService { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IMeasurementScaleService"/> used to query the <see cref="MeasurementScale"/>s from the data-store
+        /// </summary>
+        public IMeasurementScaleService MeasurementScaleService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IMeasurementUnitService"/> used to query the <see cref="MeasurementUnit"/>s from the data-store
+        /// </summary>
+        public IMeasurementUnitService MeasurementUnitService { get; set; }
+
+        /// <summary>
+        /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, ParameterType}"/>
+        /// </returns>
+        public Dictionary<Guid, ParameterType> QueryParameterTypes(NpgsqlTransaction transaction, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Queries the <see cref="ParameterTypeComponent"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, ParameterTypeComponent}"/>
+        /// </returns>
+        public Dictionary<Guid, ParameterTypeComponent> QueryParameterTypeComponents(NpgsqlTransaction transaction, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, ParameterType}"/>
+        /// </returns>
+        public Dictionary<Guid, DependentParameterTypeAssignment> QueryDependentParameterTypeAssignments(NpgsqlTransaction transaction, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, ParameterType}"/>
+        /// </returns>
+        public Dictionary<Guid, IndependentParameterTypeAssignment> QueryIndependentParameterTypeAssignments(NpgsqlTransaction transaction, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Queries the <see cref="MeasurementScale"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, MeasurementScale}"/>
+        /// </returns>
+        public Dictionary<Guid, MeasurementScale> QueryMeasurementScales(NpgsqlTransaction transaction, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Queries the <see cref="MeasurementUnit"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
+        /// </returns>
+        public Dictionary<Guid, MeasurementUnit> QueryMeasurementUnits(NpgsqlTransaction transaction, ISecurityContext securityContext);
+
+        /// <summary>
+        /// Resets (clears) the cached data from the <see cref="ICachedDataService" />.
+        /// </summary>
+        public void Reset();
+    }
+}

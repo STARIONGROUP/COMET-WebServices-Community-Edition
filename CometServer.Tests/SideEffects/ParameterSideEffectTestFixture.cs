@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ParameterSideEParameterSideEffectTestFixtureffect.cs" company="RHEA System S.A.">
+// <copyright file="ParameterSideEffectTestFixture.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
@@ -37,7 +37,6 @@ namespace CometServer.Tests.SideEffects
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
-
     using Moq;
 
     using Npgsql;
@@ -61,26 +60,69 @@ namespace CometServer.Tests.SideEffects
     /// Test fixture for the <see cref="ParameterSideEffect" /> class
     /// </summary>
     [TestFixture]
-    public class ParameterSideEParameterSideEffectTestFixtureffect
+    public class ParameterSideEffectTestFixture
     {
+        private Mock<ISecurityContext> securityContext;
+        private NpgsqlTransaction npgsqlTransaction;
+        private Mock<IOptionService> optionService;
+        private Mock<IActualFiniteStateListService> actualFiniteStateListService;
+        private Mock<IParameterValueSetService> valueSetService;
+        private Mock<IIterationService> iterationService;
+        private Mock<IParameterOverrideValueSetService> parameterOverrideValueSetService;
+        private Mock<IParameterSubscriptionValueSetService> parameterSubscriptionValueSetService;
+        private Mock<IParameterSubscriptionService> parameterSubscriptionService;
+        private Mock<IParameterOverrideService> parameterOverrideService;
+        private Mock<IElementUsageService> elementUsageService;
+        private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
+        private Mock<IOldParameterContextProvider> OldParameterContextProvider;
+        private Mock<ICachedReferenceDataService> cachedReferenceDataService;
+
+        private Mock<CometServer.Authorization.IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
+
+        private Parameter parameter;
+        private ParameterOverride parameterOverride;
+        private Iteration iteration;
+        private ActualFiniteStateList actualList;
+        private ActualFiniteState actualState1;
+        private ActualFiniteState actualState2;
+        private Option option1;
+        private Option option2;
+        private CompoundParameterType cptParameterType;
+        private BooleanParameterType boolPt;
+        private ParameterTypeComponent cpt1;
+        private ParameterTypeComponent cpt2;
+        private ElementDefinition elementDefinition;
+        private ElementUsage elementUsage;
+
+        private ParameterSideEffect sideEffect;
+
+        private readonly Guid existingQuantityKindParameterTypeGuid = Guid.NewGuid();
+        private readonly Guid existingNotQuantityKindParameterTypeGuid = Guid.NewGuid();
+        private readonly Guid notExistingParameterTypeGuid = Guid.NewGuid();
+        private readonly Guid scaleGuid = Guid.NewGuid();
+
+        private ValueArray<string> compoundDefaultValueArray;
+        private ValueArray<string> scalarDefaultValueArray;
+
+        private const string ParameterTypeTestKey = "ParameterType";
+        private const string ScaleTestKey = "Scale";
+
         [SetUp]
         public void Setup()
         {
             this.securityContext = new Mock<ISecurityContext>();
             this.optionService = new Mock<IOptionService>();
             this.actualFiniteStateListService = new Mock<IActualFiniteStateListService>();
-            this.parameterService = new Mock<ICompoundParameterTypeService>();
             this.valueSetService = new Mock<IParameterValueSetService>();
             this.iterationService = new Mock<IIterationService>();
             this.parameterOverrideValueSetService = new Mock<IParameterOverrideValueSetService>();
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
             this.parameterOverrideService = new Mock<IParameterOverrideService>();
-            this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
-            this.parameterTypeService = new Mock<IParameterTypeService>();
             this.elementUsageService = new Mock<IElementUsageService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.OldParameterContextProvider = new Mock<IOldParameterContextProvider>();
+            this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
 
             this.organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
             this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipation(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
@@ -120,16 +162,15 @@ namespace CometServer.Tests.SideEffects
                 ParameterSubscriptionValueSetService = this.parameterSubscriptionValueSetService.Object,
                 ParameterOverrideService = this.parameterOverrideService.Object,
                 ParameterSubscriptionService = this.parameterSubscriptionService.Object,
-                ParameterTypeService = this.parameterTypeService.Object,
                 ElementUsageService = this.elementUsageService.Object,
-                ParameterTypeComponentService = this.parameterTypeComponentService.Object,
                 OptionService = this.optionService.Object,
                 DefaultValueArrayFactory = this.defaultValueArrayFactory.Object,
                 ParameterValueSetFactory = new ParameterValueSetFactory(),
                 ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
                 ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
                 OldParameterContextProvider = this.OldParameterContextProvider.Object,
-                OrganizationalParticipationResolverService = this.organizationalParticipationResolverService.Object
+                OrganizationalParticipationResolverService = this.organizationalParticipationResolverService.Object,
+                CachedReferenceDataService = this.cachedReferenceDataService.Object
             };
 
             // prepare mock data
@@ -143,29 +184,25 @@ namespace CometServer.Tests.SideEffects
 
             this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid } };
 
-            this.parameterService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(this.cptParameterType.Iid)), this.securityContext.Object))
-                .Returns(new List<Thing> { this.cptParameterType });
-
             this.iterationService.Setup(x => x.GetActiveIteration(null, "partition", this.securityContext.Object))
                 .Returns(this.iteration);
 
             this.actualFiniteStateListService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(this.actualList.Iid)), this.securityContext.Object))
                 .Returns(new List<Thing> { this.actualList });
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
-                .Returns(new List<Thing> { this.boolPt, this.cptParameterType });
+            var parameterTypeDictionary = new Dictionary<Guid, ParameterType>();
+            parameterTypeDictionary.Add(this.cptParameterType.Iid, this.cptParameterType);
+            parameterTypeDictionary.Add(this.boolPt.Iid, this.boolPt);
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", new List<Guid> { this.existingNotQuantityKindParameterTypeGuid }, this.securityContext.Object))
-                .Returns(new List<Thing> { new BooleanParameterType(this.existingNotQuantityKindParameterTypeGuid, 1) });
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypes(this.npgsqlTransaction, this.securityContext.Object))
+                .Returns(parameterTypeDictionary);
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", new List<Guid> { this.existingQuantityKindParameterTypeGuid }, this.securityContext.Object))
-                .Returns(new List<Thing> { new SimpleQuantityKind(this.existingQuantityKindParameterTypeGuid, 1) });
+            var parameterTypeComponentDictionary = new Dictionary<Guid, ParameterTypeComponent>();
+            parameterTypeComponentDictionary.Add(this.cpt1.Iid, this.cpt1);
+            parameterTypeComponentDictionary.Add(this.cpt2.Iid, this.cpt2);
 
-            this.parameterTypeService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", new List<Guid> { this.notExistingParameterTypeGuid }, this.securityContext.Object))
-                .Returns(new List<Thing>());
-
-            this.parameterTypeComponentService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", null, this.securityContext.Object))
-                .Returns(new List<Thing> { this.cpt1, this.cpt2 });
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponents(this.npgsqlTransaction, this.securityContext.Object))
+                .Returns(parameterTypeComponentDictionary);
 
             this.parameterOverrideService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameterOverride });
@@ -182,83 +219,7 @@ namespace CometServer.Tests.SideEffects
             this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(this.boolPt.Iid))
                 .Returns(this.scalarDefaultValueArray);
 
-            this.OldParameterContextProvider.Setup(x => x.GetsourceValueSet(It.IsAny<Guid?>(), It.IsAny<Guid?>())).Returns((ParameterValueSet) null);
-        }
-
-        private Mock<ISecurityContext> securityContext;
-        private NpgsqlTransaction npgsqlTransaction;
-        private Mock<IOptionService> optionService;
-        private Mock<IActualFiniteStateListService> actualFiniteStateListService;
-        private Mock<ICompoundParameterTypeService> parameterService;
-        private Mock<IParameterValueSetService> valueSetService;
-        private Mock<IIterationService> iterationService;
-        private Mock<IParameterOverrideValueSetService> parameterOverrideValueSetService;
-        private Mock<IParameterSubscriptionValueSetService> parameterSubscriptionValueSetService;
-        private Mock<IParameterSubscriptionService> parameterSubscriptionService;
-        private Mock<IParameterOverrideService> parameterOverrideService;
-        private Mock<IParameterTypeComponentService> parameterTypeComponentService;
-        private Mock<IParameterTypeService> parameterTypeService;
-        private Mock<IElementUsageService> elementUsageService;
-        private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
-        private Mock<IOldParameterContextProvider> OldParameterContextProvider;
-
-        private Mock<IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
-
-        private Parameter parameter;
-        private ParameterOverride parameterOverride;
-        private Iteration iteration;
-        private ActualFiniteStateList actualList;
-        private ActualFiniteState actualState1;
-        private ActualFiniteState actualState2;
-        private Option option1;
-        private Option option2;
-        private CompoundParameterType cptParameterType;
-        private BooleanParameterType boolPt;
-        private ParameterTypeComponent cpt1;
-        private ParameterTypeComponent cpt2;
-        private ElementDefinition elementDefinition;
-        private ElementUsage elementUsage;
-
-        private ParameterSideEffect sideEffect;
-
-        private readonly Guid existingQuantityKindParameterTypeGuid = Guid.NewGuid();
-        private readonly Guid existingNotQuantityKindParameterTypeGuid = Guid.NewGuid();
-        private readonly Guid notExistingParameterTypeGuid = Guid.NewGuid();
-        private readonly Guid scaleGuid = Guid.NewGuid();
-
-        private ValueArray<string> compoundDefaultValueArray;
-        private ValueArray<string> scalarDefaultValueArray;
-
-        private const string ParameterTypeTestKey = "ParameterType";
-        private const string ScaleTestKey = "Scale";
-
-        [Test]
-        public void VerifyBeforeCreateSideEffectPasses()
-        {
-            this.parameter.ParameterType = this.existingNotQuantityKindParameterTypeGuid;
-
-            this.sideEffect.BeforeCreate(
-                this.parameter,
-                this.elementDefinition,
-                this.npgsqlTransaction,
-                "partition",
-                this.securityContext.Object);
-
-            this.parameter.ParameterType = this.existingQuantityKindParameterTypeGuid;
-            this.parameter.Scale = this.scaleGuid;
-
-            this.sideEffect.BeforeCreate(
-                this.parameter,
-                this.elementDefinition,
-                this.npgsqlTransaction,
-                "partition",
-                this.securityContext.Object);
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "partition", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Exactly(0));
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Exactly(2));
+            this.OldParameterContextProvider.Setup(x => x.GetsourceValueSet(It.IsAny<Guid?>(), It.IsAny<Guid?>())).Returns((ParameterValueSet)null);
         }
 
         [Test]
@@ -269,8 +230,6 @@ namespace CometServer.Tests.SideEffects
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Once);
         }
 
         [Test]
@@ -282,69 +241,7 @@ namespace CometServer.Tests.SideEffects
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Once);
-        }
 
-        [Test]
-        public void VerifyBeforeCreateSideEffectThrowsExceptionForQuantityKindScaleBeingNull()
-        {
-            this.parameter.ParameterType = this.existingQuantityKindParameterTypeGuid;
-
-            Assert.Throws<ArgumentNullException>(
-                () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Once);
-        }
-
-        [Test]
-        public void VerifyBeforeUpdateSideEffectPasses()
-        {
-            var rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid } };
-
-            this.sideEffect.BeforeUpdate(
-                this.parameter,
-                this.elementDefinition,
-                this.npgsqlTransaction,
-                "partition",
-                this.securityContext.Object,
-                rawUpdateInfo);
-
-            rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid }, { ScaleTestKey, null } };
-            this.parameter.Scale = this.scaleGuid;
-
-            this.sideEffect.BeforeUpdate(
-                this.parameter,
-                this.elementDefinition,
-                this.npgsqlTransaction,
-                "partition",
-                this.securityContext.Object,
-                rawUpdateInfo);
-
-            rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid } };
-
-            this.sideEffect.BeforeUpdate(
-                this.parameter,
-                this.elementDefinition,
-                this.npgsqlTransaction,
-                "partition",
-                this.securityContext.Object,
-                rawUpdateInfo);
-
-            rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid }, { ScaleTestKey, this.scaleGuid } };
-            this.parameter.Scale = null;
-
-            this.sideEffect.BeforeUpdate(
-                this.parameter,
-                this.elementDefinition,
-                this.npgsqlTransaction,
-                "partition",
-                this.securityContext.Object,
-                rawUpdateInfo);
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Exactly(4));
         }
 
         [Test]
@@ -354,9 +251,6 @@ namespace CometServer.Tests.SideEffects
 
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Once);
         }
 
         [Test]
@@ -378,33 +272,6 @@ namespace CometServer.Tests.SideEffects
 
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Exactly(3));
-        }
-
-        [Test]
-        public void VerifyBeforeUpdateSideEffectThrowsExceptionForQuantityKindScaleBeingNull()
-        {
-            var rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid }, { ScaleTestKey, null } };
-            this.parameter.Scale = this.scaleGuid;
-
-            Assert.Throws<ArgumentNullException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
-
-            rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid } };
-            this.parameter.Scale = null;
-
-            Assert.Throws<ArgumentNullException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
-
-            rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingQuantityKindParameterTypeGuid }, { ScaleTestKey, null } };
-
-            Assert.Throws<ArgumentNullException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
-
-            this.parameterTypeService.Verify(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<List<Guid>>(), this.securityContext.Object),
-                Times.Exactly(3));
         }
 
         [Test]

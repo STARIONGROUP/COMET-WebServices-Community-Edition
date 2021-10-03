@@ -27,11 +27,10 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Linq;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
-
+    
     using CometServer.Services.Authorization;
 
     using NLog;
@@ -60,7 +59,7 @@ namespace CometServer.Services
         /// a cache of <see cref="ParameterType" />s that is populated in the context of the current
         /// <see cref="DefaultValueArrayFactory" />
         /// </summary>
-        private readonly Dictionary<Guid, ParameterType> parameterTypeCache = new Dictionary<Guid, ParameterType>();
+        private Dictionary<Guid, ParameterType> parameterTypeCache = new Dictionary<Guid, ParameterType>();
 
         /// <summary>
         /// a cache of <see cref="IParameterTypeAssignment" />s that is populated in the context of the current
@@ -72,7 +71,7 @@ namespace CometServer.Services
         /// a cache of <see cref="ParameterTypeComponent" />s that is populated in the context of the current
         /// <see cref="DefaultValueArrayFactory" />
         /// </summary>
-        private readonly Dictionary<Guid, ParameterTypeComponent> parameterTypeComponentCache = new Dictionary<Guid, ParameterTypeComponent>();
+        private Dictionary<Guid, ParameterTypeComponent> parameterTypeComponentCache = new Dictionary<Guid, ParameterTypeComponent>();
 
         /// <summary>
         /// a cache of the <see cref="ParameterType" />s and their number-of-values in the context of the current
@@ -81,29 +80,9 @@ namespace CometServer.Services
         private readonly Dictionary<ParameterType, int> parameterTypeNumberOfValuesMap = new Dictionary<ParameterType, int>();
 
         /// <summary>
-        /// Assertion that determines whether the <see cref="DefaultValueArrayFactory" /> is loaded.
+        /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/>
         /// </summary>
-        public bool IsLoaded { get; private set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeService" />
-        /// </summary>
-        public IParameterTypeService ParameterTypeService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IIndependentParameterTypeAssignmentService" />
-        /// </summary>
-        public IIndependentParameterTypeAssignmentService IndependentParameterTypeAssignmentService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDependentParameterTypeAssignmentService" />
-        /// </summary>
-        public IDependentParameterTypeAssignmentService DependentParameterTypeAssignmentService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeComponentService" />
-        /// </summary>
-        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
+        public ICachedReferenceDataService CachedReferenceDataService { get; set; }
 
         /// <summary>
         /// Load required data from the database, i.e. <see cref="ParameterType" /> and <see cref="ParameterTypeComponent" />
@@ -116,83 +95,33 @@ namespace CometServer.Services
         /// </param>
         public void Load(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            if (this.IsLoaded)
-            {
-                Logger.Trace("The DefaultValueArrayFactory has already been loaded, no need to hit the database again");
-                return;
-            }
-
-            Logger.Trace("Loading ParameterTypes and ParameterTypeComponents");
+            Logger.Trace("Loading reference data");
 
             var sw = Stopwatch.StartNew();
 
-            var parameterTypes = this.ParameterTypeService.GetShallow(
-                transaction,
-                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                null,
-                securityContext).Cast<ParameterType>();
+            this.parameterTypeCache = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
+            this.parameterTypeComponentCache = this.CachedReferenceDataService.QueryParameterTypeComponents(transaction, securityContext);
 
-            Logger.Trace("ParameterTypes loaded in {0} [ms]", sw.ElapsedMilliseconds);
+            var dependentParameterTypeAssignments = this.CachedReferenceDataService.QueryDependentParameterTypeAssignments(transaction, securityContext);
 
-            sw.Restart();
-
-            var parameterTypeComponents = this.ParameterTypeComponentService.GetShallow(
-                transaction,
-                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                null,
-                securityContext).Cast<ParameterTypeComponent>();
-
-            Logger.Trace("ParameterTypeComponents loaded in {0} [ms]", sw.ElapsedMilliseconds);
-
-            sw.Restart();
-
-            var independentParameterTypeAssignments = this.IndependentParameterTypeAssignmentService.GetShallow(
-                transaction,
-                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                null,
-                securityContext).Cast<IndependentParameterTypeAssignment>();
-
-            var dependentParameterTypeAssignments = this.DependentParameterTypeAssignmentService.GetShallow(
-                transaction,
-                CDP4Orm.Dao.Utils.SiteDirectoryPartition,
-                null,
-                securityContext).Cast<DependentParameterTypeAssignment>();
-
-            Logger.Trace("ParameterTypeAssignments loaded in {0} [ms]", sw.ElapsedMilliseconds);
-
-            sw.Restart();
-
-            Logger.Trace("Initializing ParameterType cache");
-
-            sw.Restart();
-
-            foreach (var parameterType in parameterTypes)
+            foreach (var kvp in dependentParameterTypeAssignments)
             {
-                this.parameterTypeCache.Add(parameterType.Iid, parameterType);
+                this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            Logger.Trace("Initializing ParameterTypeComponent cache");
+            var independentParameterTypeAssignments = this.CachedReferenceDataService.QueryIndependentParameterTypeAssignments(transaction, securityContext);
 
-            foreach (var parameterTypeComponent in parameterTypeComponents)
+            foreach (var kvp in independentParameterTypeAssignments)
             {
-                this.parameterTypeComponentCache.Add(parameterTypeComponent.Iid, parameterTypeComponent);
+                this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            Logger.Trace("Initializing ParameterTypeAssignments cache");
-
-            foreach (var parameterTypeAssignment in independentParameterTypeAssignments)
-            {
-                this.parameterTypeAssignmentCache.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
-            }
-
-            foreach (var parameterTypeAssignment in dependentParameterTypeAssignments)
-            {
-                this.parameterTypeAssignmentCache.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
-            }
-
-            this.IsLoaded = true;
-
-            Logger.Trace("Cache initialized with {0} ParameterTypes and {1} ParameterTypeComponents in {2}", this.parameterTypeCache.Count, this.parameterTypeComponentCache.Count, sw.ElapsedMilliseconds);
+            Logger.Trace("Cache initialized with {0} ParameterTypes, {1} DependentParameterTypeAssignments, {2} IndependentParameterTypeAssignments and {3} ParameterTypeComponents in {4}",
+                this.parameterTypeCache.Count,
+                dependentParameterTypeAssignments.Count,
+                independentParameterTypeAssignments.Count,
+                this.parameterTypeComponentCache.Count,
+                sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -209,7 +138,6 @@ namespace CometServer.Services
             this.parameterTypeAssignmentCache.Clear();
             this.parameterTypeComponentCache.Clear();
             this.parameterTypeNumberOfValuesMap.Clear();
-            this.IsLoaded = false;
         }
 
         /// <summary>

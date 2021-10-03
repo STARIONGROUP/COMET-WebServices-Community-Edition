@@ -64,6 +64,8 @@ namespace CometServer.Tests.SideEffects
 
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
 
+        private Mock<ICachedReferenceDataService> cachedReferenceDataService;
+
         private ParameterTypeComponentSideEffect sideEffect;
 
         private CompoundParameterType compoundParameterTypeA;
@@ -97,7 +99,10 @@ namespace CometServer.Tests.SideEffects
         {
             this.npgsqlTransaction = null;
             this.securityContext = new Mock<ISecurityContext>();
+            this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
+
+            this.defaultValueArrayFactory.SetupProperty(x => x.CachedReferenceDataService, this.cachedReferenceDataService.Object);
 
             // There is a chain cptA -> ptcA -> cptB -> ptcB -> bptD
             this.booleanParameterTypeD = new BooleanParameterType { Iid = Guid.NewGuid() };
@@ -258,6 +263,7 @@ namespace CometServer.Tests.SideEffects
                                   };
 
             this.sideEffect.DefaultValueArrayFactory = this.defaultValueArrayFactory.Object;
+            this.sideEffect.CachedReferenceDataService = this.cachedReferenceDataService.Object;
         }
 
         [Test]
@@ -296,6 +302,8 @@ namespace CometServer.Tests.SideEffects
             this.sideEffect.AfterCreate(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+
+            this.cachedReferenceDataService.Verify(x => x.Reset(), Times.Once);
         }
 
         [Test]
@@ -304,6 +312,8 @@ namespace CometServer.Tests.SideEffects
             this.sideEffect.AfterDelete(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+
+            this.cachedReferenceDataService.Verify(x => x.Reset(), Times.Once);
         }
 
         [Test]
@@ -312,6 +322,8 @@ namespace CometServer.Tests.SideEffects
             this.sideEffect.AfterUpdate(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
+
+            this.cachedReferenceDataService.Verify(x => x.Reset(), Times.Once);
         }
     }
 }

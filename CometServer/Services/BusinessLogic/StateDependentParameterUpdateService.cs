@@ -80,12 +80,7 @@ namespace CometServer.Services
         /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/>
         /// </summary>
         public IParameterSubscriptionValueSetService ParameterSubscriptionValueSetService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="ICompoundParameterTypeService"/>
-        /// </summary>
-        public ICompoundParameterTypeService CompoundParameterTypeService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the <see cref="IParameterValueSetFactory"/>
         /// </summary>

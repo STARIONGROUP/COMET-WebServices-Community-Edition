@@ -1,28 +1,28 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ParameterTypeSideEffect.cs" company="RHEA System S.A.">
+// <copyright file="IndependentParameterTypeAssignmentSideEffect.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
-//    This file is part of Comet Server Community Edition. 
-//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of COMET Web Services Community Edition. 
+//    The COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
-//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    GNU Affero General Public License for more details.
+//    Lesser General Public License for more details.
 //
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.Operations.SideEffects.Implementation
+namespace CometServer.Services.Operations.SideEffects
 {
     using CDP4Common.DTO;
 
@@ -31,9 +31,9 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
     using Npgsql;
 
     /// <summary>
-    /// The purpose of the <see cref="ParameterTypeSideEffect"/> class is to execute additional logic before and after a specific operation is performed.
+    /// The purpose of the <see cref="DependentParameterTypeAssignmentSideEffect"/> class is to execute additional logic before and after a specific operation is performed.
     /// </summary>
-    public sealed class ParameterTypeSideEffect : OperationSideEffect<ParameterType>
+    public class IndependentParameterTypeAssignmentSideEffect : OperationSideEffect<IndependentParameterTypeAssignment>
     {
         /// <summary>
         /// Gets or sets the <see cref="IDefaultValueArrayFactory"/>
@@ -66,8 +66,7 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(ParameterType thing, Thing container, ParameterType originalThing,
-            NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void AfterCreate(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
@@ -97,8 +96,7 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(ParameterType thing, Thing container, ParameterType originalThing,
-            NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void AfterDelete(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
@@ -128,8 +126,7 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(ParameterType thing, Thing container, ParameterType originalThing, NpgsqlTransaction transaction,
-            string partition, ISecurityContext securityContext)
+        public override void AfterUpdate(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
