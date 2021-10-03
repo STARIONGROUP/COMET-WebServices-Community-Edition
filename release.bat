@@ -14,7 +14,7 @@ GOTO End
 
 :Setup
 
-ECHO Releasing Version %version%
+ECHO Releasing COMET Webservices Version %version%
 
 set dry=false
 
@@ -36,21 +36,21 @@ ECHO Cleaning up...
 ECHO.
 
 REM cleanup previous if exists
-docker rmi cdp4-services-community-edition:%version%
-docker rmi rheagroup/cdp4-services-community-edition:%version%
+docker rmi comet-webservices-community-edition:%version%
+docker rmi rheagroup/comet-webservices-community-edition:%version%
 
 REM remove local latest if exists
-docker rmi  cdp4-services-community-edition:latest
-docker rmi  rheagroup/cdp4-services-community-edition:latest
+docker rmi  comet-webservices-community-edition:latest
+docker rmi  rheagroup/comet-webservices-community-edition:latest
 
 ECHO.
 ECHO Building images...
 ECHO.
 
 REM build and tag
-docker build -t cdp4-services-community-edition:%version% -t cdp4-services-community-edition:latest .
-docker tag cdp4-services-community-edition:%version% rheagroup/cdp4-services-community-edition:%version%
-docker tag cdp4-services-community-edition:latest rheagroup/cdp4-services-community-edition:latest
+docker build -t comet-webservices-community-edition:%version% -t comet-webservices-community-edition:latest .
+docker tag comet-webservices-community-edition:%version% rheagroup/comet-webservices-community-edition:%version%
+docker tag comet-webservices-community-edition:latest rheagroup/comet-webservices-community-edition:latest
 
 IF %dry% equ true GOTO End
 
@@ -59,8 +59,8 @@ ECHO Pushing...
 ECHO.
 
 REM push
-docker push rheagroup/cdp4-services-community-edition:%version%
-docker push rheagroup/cdp4-services-community-edition:latest
+docker push rheagroup/comet-webservices-community-edition:%version%
+docker push rheagroup/comet-webservices-community-edition:latest
 
 :End
 
