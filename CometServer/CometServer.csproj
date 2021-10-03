@@ -21,7 +21,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="7.1.0" />
     <PackageReference Include="Carter" Version="5.2.0" />
-    <PackageReference Include="FluentValidation" Version="9.5.3" />
+    <PackageReference Include="FluentValidation" Version="10.3.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="5.0.10" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="5.0.0" />
     <PackageReference Include="DotNetZip" Version="1.15.0" />
@@ -60,15 +60,6 @@
     </ItemGroup>
     <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4Database" />
     <Copy SourceFiles="@(CDP4WspDatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4WspDatabase" />
-  </Target>
-
-  <Target Name="CopyAuthenticationPlugins" AfterTargets="AfterPublish">
-    <ItemGroup>
-      <CDP4DatabaseAuthentication Include="$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll;$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" />
-      <CDP4WspDatabaseAuthentication Include="$(ProjectDir)..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\CDP4WspDatabaseAuthentication.dll;$(ProjectDir)..\CDP4WspDatabaseAuthentication\bin\$(Configuration)\config.json" />
-    </ItemGroup>
-    <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(PublishUrl)\Authentication\CDP4Database" />
-    <Copy SourceFiles="@(CDP4WspDatabaseAuthentication)" DestinationFolder="$(PublishUrl)\Authentication\CDP4WspDatabase" />
   </Target>
 
 </Project>
