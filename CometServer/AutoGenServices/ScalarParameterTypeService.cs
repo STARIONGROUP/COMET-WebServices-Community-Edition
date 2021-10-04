@@ -545,7 +545,7 @@ namespace CometServer.Services
                 }
                 else
                 {
-                    throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate read permission for " + thing.GetType().Name + ".");
+                    Logger.Trace("The person {0} does not have a read permission for {1}.", this.CredentialsService.Credentials.Person.UserName, thing.GetType().Name);
                 }
             }
 
