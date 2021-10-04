@@ -454,7 +454,7 @@ namespace CDP4WebServices.API.Services
                 }
                 else
                 {
-                    Logger.Info("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
+                    Logger.Trace("The person " + this.PermissionService.Credentials.Person.UserName + " does not have a read permission for " + thing.GetType().Name + ".");
                 }
             }
 
