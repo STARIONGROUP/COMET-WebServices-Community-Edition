@@ -168,6 +168,13 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             setupToCreate.OrganizationalParticipant = new List<Guid>();
             setupToCreate.DefaultOrganizationalParticipant = null;
 
+            // Change the new ModelReferenceDataLibrary's Name and ShortName according to the new EngineeringModelSetup Name and ShortNAme
+            if (this.originalToCopyMap.SingleOrDefault(x => x.Key is ModelReferenceDataLibrary).Value is ModelReferenceDataLibrary modelRdlToCreate)
+            {
+                modelRdlToCreate.Name = $"{setupToCreate.Name} Model RDL";
+                modelRdlToCreate.ShortName = $"{setupToCreate.ShortName}MRDL";
+            }
+
             foreach (var iterationSetup in this.originalToCopyMap.Keys.OfType<IterationSetup>().OrderBy(x => x.IterationNumber))
             {
                 var copy = (IterationSetup)this.originalToCopyMap[iterationSetup];
