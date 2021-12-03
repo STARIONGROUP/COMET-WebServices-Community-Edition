@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WebServices-CE.API</Title>
-    <Version>7.0.2</Version>
+    <Version>7.0.3</Version>
     <Description>Library that contains the CDP4 Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="8.0.0" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="8.1.0" />
     <PackageReference Include="DotNetZip" Version="1.14.0" />
     <PackageReference Include="Hangfire" Version="1.7.19" />
     <PackageReference Include="HangFire.Autofac" Version="2.3.1" />
