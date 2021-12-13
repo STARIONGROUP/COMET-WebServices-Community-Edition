@@ -63,10 +63,53 @@ namespace CDP4WebServices.API.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon cdplogo_48x48 {
+        internal static System.Drawing.Icon comet {
             get {
-                object obj = ResourceManager.GetObject("cdplogo_48x48", resourceCulture);
+                object obj = ResourceManager.GetObject("comet", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap comet_logo {
+            get {
+                object obj = ResourceManager.GetObject("comet_logo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap rhea_logo {
+            get {
+                object obj = ResourceManager.GetObject("rhea_logo", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;!DOCTYPE html&gt;
+        ///
+        ///&lt;html lang=&quot;en&quot; xmlns=&quot;http://www.w3.org/1999/xhtml&quot;&gt;
+        ///&lt;head&gt;
+        ///    &lt;meta charset=&quot;utf-8&quot; /&gt;
+        ///    &lt;title&gt;&lt;/title&gt;
+        ///&lt;/head&gt;
+        ///&lt;body&gt;
+        ///&lt;div&gt;
+        ///&lt;img src=&quot;{{basePath}}/images/comet_logo&quot; height =&quot;100&quot; /&gt;
+        ///&lt;h1&gt;Welcome to the COMET WebService.&lt;/h1&gt;
+        ///
+        ///&lt;/div&gt;
+        ///&lt;/body&gt;
+        ///&lt;/html&gt;.
+        /// </summary>
+        internal static string RootPage {
+            get {
+                return ResourceManager.GetString("RootPage", resourceCulture);
             }
         }
     }

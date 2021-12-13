@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="RootModule.cs" company="RHEA System S.A.">
+// <copyright file="AssemblyInfo.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
@@ -22,48 +22,32 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Modules
+namespace CDP4WebServer.IIS
 {
-    using System.Drawing.Imaging;
-    using System.IO;
-
-    using CDP4Common.DTO;
-
     using CDP4WebServices.API.Configuration;
 
-    using Nancy;
+    using Microsoft.Owin.Extensions;
+
+    using Owin;
 
     /// <summary>
-    /// The root module handler.
+    /// Provides the entry point for the ASP.NET application
     /// </summary>
-    public class RootModule : NancyModule
+    public class Startup
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RootModule"/> class.
+        /// Specifies how the ASP.NET application will respond to individual HTTP requests.
         /// </summary>
-        public RootModule()
+        /// <param name="app">
+        /// Application pipeline
+        /// </param>
+        public void Configuration(IAppBuilder app)
         {
-            this.Get["/"] = _ =>
-                Properties.Resources.RootPage
-                    .Replace("{{basePath}}", this.Request.Url.BasePath)
-                    .Replace("{{sdkVersion}}", typeof(Thing).Assembly.GetName().Version.ToString())
-                    .Replace("{{apiVersion}}", typeof(AppConfig).Assembly.GetName().Version.ToString());
+            // load application configuration from file
+            AppConfig.Load();
 
-            this.Get["/images/comet_logo"] = _ =>
-            {
-                var ms = new MemoryStream();
-                Properties.Resources.comet_logo.Save(ms, ImageFormat.Png);
-                ms.Position = 0;
-                return this.Response.FromStream(ms, "image/png");
-            };
-
-            this.Get["/images/rhea_logo"] = _ =>
-            {
-                var ms = new MemoryStream();
-                Properties.Resources.rhea_logo.Save(ms, ImageFormat.Png);
-                ms.Position = 0;
-                return this.Response.FromStream(ms, "image/png");
-            };
+            app.UseNancy();
+            app.UseStageMarker(PipelineStage.MapHandler);
         }
     }
 }

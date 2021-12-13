@@ -931,7 +931,7 @@ namespace CDP4WebServices.API.Modules
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
                 binaryContent.Headers.Add(
                     ContentDispositionHeader,
-                    $"attachment; filename={folderPath + ".zip"}");
+                    $"attachment; filename={new DirectoryInfo(folderPath).Name + ".zip"}");
 
                 binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);

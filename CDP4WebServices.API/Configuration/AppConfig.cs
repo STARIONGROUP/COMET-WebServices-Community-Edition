@@ -153,11 +153,11 @@ namespace CDP4WebServices.API.Configuration
         /// </returns>
         private static string ReadConfigFile(string configPath)
         {
-            var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configPath);
-
+            var path = Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath ?? Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), configPath);
+            
             if (!File.Exists(path))
             {
-                throw new FileNotFoundException("Configuration file not found.", Configpath);
+                throw new FileNotFoundException($"Configuration file not found ({path}).", Configpath);
             }
 
             var json = File.ReadAllText(path);
