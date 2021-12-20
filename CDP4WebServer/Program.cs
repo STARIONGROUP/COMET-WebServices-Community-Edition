@@ -107,6 +107,15 @@ namespace CDP4WebServer
             }
             catch (Exception ex)
             {
+                if (ex.InnerException != null)
+                {
+                    Logger.Error(ex.InnerException);
+                }
+                else
+                {
+                    Logger.Error(ex);
+                }
+
                 // global catch all
                 Logger.Fatal(ex, "The CDP4 Services encountered an unrecoverable error");
                 return 42;

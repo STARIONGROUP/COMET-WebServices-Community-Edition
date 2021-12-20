@@ -407,7 +407,7 @@ namespace CDP4WebServices.API.Services
             string folderPath,
             List<FileType> fileTypes)
         {
-            var path = folderPath + "\\" + rootFolder.Name;
+            var path = Path.Combine(folderPath, rootFolder.Name);
             Directory.CreateDirectory(path);
 
             var logMessage = string.Format("Directory {0} is created.", path);
