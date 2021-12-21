@@ -1,16 +1,10 @@
-FROM mono:5.20.1.19
+FROM mono:6
 
-RUN echo "deb http://ftp.debian.org/debian stretch-updates main" >> /etc/apt/sources.list 
+RUN apt-get update -y
 
-RUN echo "deb-src http://ftp.debian.org/debian stretch-updates main" >> /etc/apt/sources.list 
+RUN apt-get upgrade -y
 
-RUN apt-get update -y; exit 0
-
-RUN apt-get install apt-transport-https -y; exit 0
-
-RUN apt-get install -y nano netcat; exit 0
-
-RUN apt-get update -y; exit 0
+RUN apt-get install -y nano netcat
 
 WORKDIR /app
 COPY CDP4WebServer/bin/Release/net472 /app
