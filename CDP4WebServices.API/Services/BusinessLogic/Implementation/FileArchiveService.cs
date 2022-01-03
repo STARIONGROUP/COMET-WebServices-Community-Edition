@@ -28,6 +28,7 @@ namespace CDP4WebServices.API.Services
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -190,7 +191,12 @@ namespace CDP4WebServices.API.Services
         private string CreateTemporaryFolderOnDisk()
         {
             // Specify a name for a random folder.
-            string folderPath = Guid.NewGuid().ToString();
+            var folderPath = Guid.NewGuid().ToString();
+
+            if (AppDomain.CurrentDomain.RelativeSearchPath != null)
+            {
+                folderPath = Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath, folderPath);
+            }
 
             Directory.CreateDirectory(folderPath);
 
@@ -401,7 +407,7 @@ namespace CDP4WebServices.API.Services
             string folderPath,
             List<FileType> fileTypes)
         {
-            var path = folderPath + "\\" + rootFolder.Name;
+            var path = Path.Combine(folderPath, rootFolder.Name);
             Directory.CreateDirectory(path);
 
             var logMessage = string.Format("Directory {0} is created.", path);

@@ -1,6 +1,10 @@
-FROM mono:5.20.1.19
+FROM mono:6
 
-RUN apt-get update -yq && apt-get upgrade -yq && apt-get install -yq nano netcat
+RUN apt-get update -y
+
+RUN apt-get upgrade -y
+
+RUN apt-get install -y nano netcat
 
 WORKDIR /app
 COPY CDP4WebServer/bin/Release/net472 /app

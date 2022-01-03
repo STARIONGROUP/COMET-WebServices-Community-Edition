@@ -78,7 +78,7 @@ namespace CDP4WebServices.API.Services.Authentication
         /// <returns>The list of directories which contain the authenticator plugins.</returns>
         private static List<string> GetFolders()
         {
-            return Directory.GetDirectories(Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName, AuthenticatorPluginFolder)).ToList();
+            return Directory.GetDirectories(Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath ?? Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName, AuthenticatorPluginFolder)).ToList();
         }
 
         /// <summary>

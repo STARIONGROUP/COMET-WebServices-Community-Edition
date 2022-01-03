@@ -4,7 +4,7 @@
     <TargetFramework>net472</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WebServices-CE.API</Title>
-    <Version>7.0.3</Version>
+    <Version>7.0.4</Version>
     <Description>Library that contains the CDP4 Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
@@ -20,7 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Resources\cdplogo_48x48.ico" />
+    <None Remove="Resources\COMET-Community-Edition.png" />
+    <None Remove="Resources\comet.ico" />
+    <None Remove="Resources\rhealogo.png" />
+    <None Remove="Resources\RootPage.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,8 +50,17 @@
   </ItemGroup>
   
   <ItemGroup>
-    <EmbeddedResource Include="Resources\cdplogo_48x48.ico">
+    <EmbeddedResource Include="Resources\COMET-Community-Edition.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\comet.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\rhealogo.png">
+    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\RootPage.html">
+    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
   

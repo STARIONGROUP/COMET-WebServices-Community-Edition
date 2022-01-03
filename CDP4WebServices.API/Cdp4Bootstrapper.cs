@@ -390,7 +390,7 @@ namespace CDP4WebServices.API
         {
             using (var ms = new MemoryStream())
             {
-                Properties.Resources.cdplogo_48x48.Save(ms);
+                Properties.Resources.comet.Save(ms);
                 return ms.ToArray();
             }
         }

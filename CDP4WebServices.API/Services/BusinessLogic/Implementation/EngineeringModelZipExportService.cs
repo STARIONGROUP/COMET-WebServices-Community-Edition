@@ -848,8 +848,9 @@ namespace CDP4WebServices.API.Services
                     using (var outputStream = new MemoryStream(memoryStream.ToArray()))
                     {
                         var siteReferenceDataLibraryFilename = string.Format(
-                            "{0}\\{1}.json",
+                            "{0}{1}{2}.json",
                             SiteRdlZipLocation,
+                            Path.DirectorySeparatorChar, 
                             siteReferenceDataLibrary.Iid);
                         var zipEntry = zipFile.AddEntry(siteReferenceDataLibraryFilename, outputStream);
                         zipEntry.Comment = string.Format(
@@ -914,8 +915,9 @@ namespace CDP4WebServices.API.Services
                     using (var outputStream = new MemoryStream(memoryStream.ToArray()))
                     {
                         var modelReferenceDataLibraryFilename = string.Format(
-                            "{0}\\{1}.json",
+                            "{0}{1}{2}.json",
                             ModelRdlZipLocation,
+                            Path.DirectorySeparatorChar,
                             modelReferenceDataLibrary.Iid);
                         var zipEntry = zipFile.AddEntry(modelReferenceDataLibraryFilename, outputStream);
                         zipEntry.Comment = string.Format(

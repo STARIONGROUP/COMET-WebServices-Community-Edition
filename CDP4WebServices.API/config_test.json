@@ -1,13 +1,13 @@
 {
   "Midtier": {
     "Protocol": "http",
-    "HostName": "localhost",
+    "HostName": "localhost", // * in case of test docker build
     "Port": 5000,
     "UploadDirectory": "upload",
     "FileStorageDirectory": "storage"
   },
   "Backtier": {
-    "HostName": "localhost",
+    "HostName": "localhost", // cdp4-postgresql in case of test docker build
     "Port": 5432,
     "UserName": "cdp4",
     "Password": "cdp4",
