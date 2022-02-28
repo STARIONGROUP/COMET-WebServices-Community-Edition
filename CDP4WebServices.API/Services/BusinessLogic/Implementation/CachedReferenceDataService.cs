@@ -189,13 +189,13 @@ namespace CDP4WebServices.API.Services
 
                 this.dependentParameterTypeAssignment = new Dictionary<Guid, DependentParameterTypeAssignment>();
 
-                var dependentParameterTypeAssignments = this.ParameterTypeComponentService
+                var dependentParameterTypeAssignments = this.DependentParameterTypeAssignmentService
                     .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<DependentParameterTypeAssignment>();
 
-                foreach (var dependentParameterTypeAssignment in dependentParameterTypeAssignments)
+                foreach (var parameterTypeAssignment in dependentParameterTypeAssignments)
                 {
-                    this.dependentParameterTypeAssignment.Add(dependentParameterTypeAssignment.Iid, dependentParameterTypeAssignment);
+                    this.dependentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
                 Logger.Debug($"DependentParameterTypeAssignments Queried in {sw.ElapsedMilliseconds} [ms]");
@@ -220,13 +220,13 @@ namespace CDP4WebServices.API.Services
 
                 this.independentParameterTypeAssignment = new Dictionary<Guid, IndependentParameterTypeAssignment>();
 
-                var independentParameterTypeAssignments = this.ParameterTypeComponentService
+                var independentParameterTypeAssignments = this.IndependentParameterTypeAssignmentService
                     .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<IndependentParameterTypeAssignment>();
 
-                foreach (var independentParameterTypeAssignment in independentParameterTypeAssignments)
+                foreach (var parameterTypeAssignment in independentParameterTypeAssignments)
                 {
-                    this.independentParameterTypeAssignment.Add(independentParameterTypeAssignment.Iid, independentParameterTypeAssignment);
+                    this.independentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
                 Logger.Debug($"IndependentParameterTypeAssignment Queried in {sw.ElapsedMilliseconds} [ms]");
