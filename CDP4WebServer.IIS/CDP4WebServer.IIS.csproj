@@ -244,7 +244,7 @@
     <Copy SourceFiles="..\CDP4WebServices.API\config_release.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Release'" />
     <Copy SourceFiles="..\CDP4WebServices.API\config_test.json" DestinationFiles="$(OutputPath)\config.json" Condition="'$(Configuration)'=='Test'" />
     <!-- Copy nlog config -->
-    <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\NLog.dll.nlog" />
+    <Copy SourceFiles="..\CDP4WebServices.API\NLog.dll.nlog" DestinationFiles="$(OutputPath)\Nlog.config" />
     <!-- Copy Database Authentication plugin -->
     <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
     <Copy SourceFiles="..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" DestinationFolder="$(OutputPath)\Authentication\CDP4Database" />
