@@ -456,6 +456,7 @@ namespace CDP4WebServices.API.Modules
             {
                 transaction?.Dispose();
                 connection?.Dispose();
+                sw.Stop();
             }
         }
 

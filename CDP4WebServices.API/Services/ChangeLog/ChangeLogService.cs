@@ -182,6 +182,13 @@ namespace CDP4WebServices.API.Services.ChangeLog
         {
             var sw = Stopwatch.StartNew();
             Logger.Info("Starting to append changelog data");
+            
+            var isCachedDtoReadEnabled = this.TransactionManager.IsCachedDtoReadEnabled(transaction);
+
+            if (!isCachedDtoReadEnabled)
+            {
+                this.TransactionManager.SetCachedDtoReadEnabled(true);
+            }
 
             var isFullAccessEnabled = this.TransactionManager.IsFullAccessEnabled();
             var result = false;
@@ -306,6 +313,8 @@ namespace CDP4WebServices.API.Services.ChangeLog
                             operationData.Update.Add(modelLogEntryClasslessDTO);
                         }
 
+                        // New things that need to be read that are not yet in cache at this moment in time
+                        this.TransactionManager.SetCachedDtoReadEnabled(false);
                         this.OperationProcessor.Process(operationData, transaction, partition);
 
                         result = true;
@@ -322,7 +331,14 @@ namespace CDP4WebServices.API.Services.ChangeLog
                 {
                     this.TransactionManager.SetFullAccessState(false);
                 }
+
+                if (!isCachedDtoReadEnabled && this.TransactionManager.IsCachedDtoReadEnabled(transaction))
+                {
+                    this.TransactionManager.SetCachedDtoReadEnabled(false);
+                }
             }
+
+            sw.Stop();
 
             Logger.Info($"Finished appending to changelog data in {sw.ElapsedMilliseconds} [ms]");
 
