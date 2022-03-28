@@ -33,7 +33,6 @@ namespace CDP4WebServices.API.Services.Operations
 
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
-
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations.SideEffects;
 
@@ -44,6 +43,7 @@ namespace CDP4WebServices.API.Services.Operations
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Security;
@@ -819,6 +819,33 @@ namespace CDP4WebServices.API.Services.Operations
         }
 
         /// <summary>
+        /// Try and get persisted items from the data store.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="service">
+        /// The service instance for the requested type.
+        /// </param>
+        /// <param name="iids">
+        /// The id of the item to retrieve.
+        /// </param>
+        /// <returns>
+        /// The retrieved <see cref="IEnumerable{T}"/> or type <see cref="Thing"/> instances
+        /// </returns>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        private IEnumerable<Thing> GetPersistedItems(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
+        {
+            return service.GetShallow(
+                    transaction, partition, iids, securityContext);
+        }
+
+        /// <summary>
         /// Try and get persisted item from the data store.
         /// </summary>
         /// <param name="transaction">
@@ -960,55 +987,71 @@ namespace CDP4WebServices.API.Services.Operations
         {
             // re-order create
             this.ReorderCreateOrder(operation);
-            foreach (var createInfo in operation.Create.Select(x => x.GetInfoPlaceholder()))
-            {
-                var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
-                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
+            if (operation.Create.Any())
+            {
+                var operationInfoPlaceholders = operation.Create.Select(x => x.GetInfoPlaceholder());
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
                 securityContext.Credentials = this.RequestUtils.Context.AuthenticatedCredentials;
 
-                var resolvedInfo = this.operationThingCache[createInfo];
+                var typeGroups = operationInfoPlaceholders.GroupBy(x => x.TypeName).Select(x => new {TypeName = x.Key, Things = x.ToList()});
 
-                // check that item doen not exist:
-                var persistedItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
-
-                if (persistedItem != null)
+                foreach (var typeGroup in typeGroups)
                 {
-                    throw new InvalidOperationException(
-                        string.Format("Item '{0}' with Iid: '{1}' already exists", createInfo.TypeName, createInfo.Iid));
+                    var partitions = this.operationThingCache.Where(x => typeGroup.Things.Contains(x.Key)).Select(x => x.Value.Partition).Distinct();
+                    foreach (var partition in partitions)
+                    {
+                        var service = this.ServiceProvider.MapToPersitableService(typeGroup.TypeName);
+                        var typeGroupIids = typeGroup.Things.Select(x => x.Iid);
+
+                        var persistedItems = this.GetPersistedItems(transaction, partition, service, typeGroupIids, securityContext);
+
+                        foreach (var createInfo in typeGroup.Things)
+                        {
+                            var resolvedInfo = this.operationThingCache[createInfo];
+
+                            var persistedItem = persistedItems.FirstOrDefault(x => x.Iid.Equals(createInfo.Iid));
+
+                            if (persistedItem != null)
+                            {
+                                throw new InvalidOperationException(
+                                    string.Format("Item '{0}' with Iid: '{1}' already exists", createInfo.TypeName, createInfo.Iid));
+                            }
+
+                            // get the (cached) containment information for this create request
+                            var resolvedContainerInfo = this.GetContainerInfo(resolvedInfo.Thing);
+
+                            // keep a copy of the orginal thing to pass to the after create hook
+                            var originalThing = resolvedInfo.Thing.DeepClone<Thing>();
+
+                            if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
+                            {
+                                this.operationOriginalThingCache.Add(originalThing);
+                            }
+
+                            // call before create hook
+                            if (resolvedInfo.Thing is ParameterValueSet || !this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
+                            {
+                                Logger.Warn("Skipping create operation of thing {0} with id {1} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
+                                continue;
+                            }
+
+                            if (resolvedInfo.ContainerInfo.ContainmentSequence != -1)
+                            {
+                                service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);
+                            }
+                            else
+                            {
+                                service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
+                            }
+
+                            var createdItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
+
+                            // call after create hook
+                            this.OperationSideEffectProcessor.AfterCreate(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
+                        }
+                    }
                 }
-
-                // get the (cached) containment information for this create request
-                var resolvedContainerInfo = this.GetContainerInfo(resolvedInfo.Thing);
-
-                // keep a copy of the orginal thing to pass to the after create hook
-                var originalThing = resolvedInfo.Thing.DeepClone<Thing>();
-
-                if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
-                {
-                    this.operationOriginalThingCache.Add(originalThing);
-                }
-
-                // call before create hook
-                if (!this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
-                {
-                    Logger.Warn("Skipping create operation of thing {0} with id {1} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
-                    continue;
-                }
-
-                if (resolvedInfo.ContainerInfo.ContainmentSequence != -1)
-                {
-                    service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);
-                }
-                else
-                {
-                    service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
-                }
-
-                var createdItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
-
-                // call after create hook
-                this.OperationSideEffectProcessor.AfterCreate(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
             }
         }
 
