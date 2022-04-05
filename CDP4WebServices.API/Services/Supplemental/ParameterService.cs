@@ -166,7 +166,7 @@ namespace CDP4WebServices.API.Services
                     valueset.Formula = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
                     valueset.Published = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
 
-                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    this.ValueSetService.UpsertConcept(transaction, partition, valueset, copy);
                 }
             }
 

@@ -60,7 +60,7 @@ namespace CDP4WebServer
             try
             {
                 Logger.Info("################################################################");
-                Logger.Info($"Starting CDP4 Services v{Assembly.GetEntryAssembly().GetName().Version}");
+                Logger.Info($"Starting COMET Services v{Assembly.GetEntryAssembly()?.GetName().Version}");
 
                 // load application configuration from file
                 AppConfig.Load();
@@ -88,14 +88,14 @@ namespace CDP4WebServer
                 {
                     if (IsRunningOnMono())
                     {
-                        Logger.Info("CDP4 Services Running on Mono Runtime @ {0}", hostString);
+                        Logger.Info("COMET Services Running on Mono Runtime @ {0}", hostString);
 
                         var terminationSignals = GetUnixTerminationSignals();
                         UnixSignal.WaitAny(terminationSignals);
                     }
                     else
                     {
-                        Logger.Info("CDP4 Services Running on .NET Runtime @ {0}", hostString);
+                        Logger.Info("COMET Services Running on .NET Runtime @ {0}", hostString);
 
                         Console.WriteLine("Running on {0}", hostString);
                         Console.WriteLine("Press enter to exit");
@@ -117,7 +117,7 @@ namespace CDP4WebServer
                 }
 
                 // global catch all
-                Logger.Fatal(ex, "The CDP4 Services encountered an unrecoverable error");
+                Logger.Fatal(ex, "The COMET Services encountered an unrecoverable error");
                 return 42;
             }
         }
