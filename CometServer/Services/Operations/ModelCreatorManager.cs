@@ -1,8 +1,8 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelCreatorManager.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2022 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -167,6 +167,13 @@ namespace CometServer.Services.Operations
             // make sure organizationa participation is reset yet again
             setupToCreate.OrganizationalParticipant = new List<Guid>();
             setupToCreate.DefaultOrganizationalParticipant = null;
+
+            // Change the new ModelReferenceDataLibrary's Name and ShortName according to the new EngineeringModelSetup Name and ShortNAme
+            if (this.originalToCopyMap.SingleOrDefault(x => x.Key is ModelReferenceDataLibrary).Value is ModelReferenceDataLibrary modelRdlToCreate)
+            {
+                modelRdlToCreate.Name = $"{setupToCreate.Name} Model RDL";
+                modelRdlToCreate.ShortName = $"{setupToCreate.ShortName}MRDL";
+            }
 
             foreach (var iterationSetup in this.originalToCopyMap.Keys.OfType<IterationSetup>().OrderBy(x => x.IterationNumber))
             {
