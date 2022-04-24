@@ -189,13 +189,13 @@ namespace CometServer.Services
 
                 this.dependentParameterTypeAssignment = new Dictionary<Guid, DependentParameterTypeAssignment>();
 
-                var dependentParameterTypeAssignments = this.ParameterTypeComponentService
+                var dependentParameterTypeAssignments = this.DependentParameterTypeAssignmentService
                     .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<DependentParameterTypeAssignment>();
 
-                foreach (var dependentParameterTypeAssignment in dependentParameterTypeAssignments)
+                foreach (var dpta in dependentParameterTypeAssignments)
                 {
-                    this.dependentParameterTypeAssignment.Add(dependentParameterTypeAssignment.Iid, dependentParameterTypeAssignment);
+                    this.dependentParameterTypeAssignment.Add(dpta.Iid, dpta);
                 }
 
                 Logger.Debug($"DependentParameterTypeAssignments Queried in {sw.ElapsedMilliseconds} [ms]");
@@ -220,13 +220,13 @@ namespace CometServer.Services
 
                 this.independentParameterTypeAssignment = new Dictionary<Guid, IndependentParameterTypeAssignment>();
 
-                var independentParameterTypeAssignments = this.ParameterTypeComponentService
+                var independentParameterTypeAssignments = this.IndependentParameterTypeAssignmentService
                     .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<IndependentParameterTypeAssignment>();
 
-                foreach (var independentParameterTypeAssignment in independentParameterTypeAssignments)
+                foreach (var ipta in independentParameterTypeAssignments)
                 {
-                    this.independentParameterTypeAssignment.Add(independentParameterTypeAssignment.Iid, independentParameterTypeAssignment);
+                    this.independentParameterTypeAssignment.Add(ipta.Iid, ipta);
                 }
 
                 Logger.Debug($"IndependentParameterTypeAssignment Queried in {sw.ElapsedMilliseconds} [ms]");
