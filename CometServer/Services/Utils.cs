@@ -58,7 +58,7 @@ namespace CometServer.Services
         /// </returns>
         public static string GetConnectionString(BacktierConfig backtierConfig, string database)
         {
-            return $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={database};Convert Infinity DateTime=true;CommandTimeout={backtierConfig.StatementTimeout};";
+            return $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={database};CommandTimeout={backtierConfig.StatementTimeout};";
         }
 
         /// <summary>

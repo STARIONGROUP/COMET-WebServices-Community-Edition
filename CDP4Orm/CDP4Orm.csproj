@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Orm-CE</Title>
     <Version>8.0.0</Version>
@@ -55,8 +55,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="8.0.0" />
-    <PackageReference Include="Npgsql" Version="5.0.10" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="8.1.0" />
+    <PackageReference Include="Npgsql" Version="6.0.4" />
   </ItemGroup>
 
   <ItemGroup>
