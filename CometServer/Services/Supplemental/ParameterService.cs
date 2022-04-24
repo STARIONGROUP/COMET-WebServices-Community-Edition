@@ -164,7 +164,20 @@ namespace CometServer.Services
                     valueset.Formula = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
                     valueset.Published = this.DefaultValueArrayFactory.CreateDefaultValueArray(newparameter.ParameterType);
 
-                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    var fullAccesEnabled = this.TransactionManager.IsFullAccessEnabled();
+                    if (!fullAccesEnabled)
+                    {
+                        this.TransactionManager.SetFullAccessState(true);
+                    }
+
+                    try
+                    {
+                        this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    }
+                    finally
+                    {
+                        this.TransactionManager.SetFullAccessState(fullAccesEnabled);
+                    }
                 }
             }
 
