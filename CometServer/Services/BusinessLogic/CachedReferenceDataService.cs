@@ -193,9 +193,9 @@ namespace CometServer.Services
                     .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<DependentParameterTypeAssignment>();
 
-                foreach (var dpta in dependentParameterTypeAssignments)
+                foreach (var parameterTypeAssignment in dependentParameterTypeAssignments)
                 {
-                    this.dependentParameterTypeAssignment.Add(dpta.Iid, dpta);
+                    this.dependentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
                 Logger.Debug($"DependentParameterTypeAssignments Queried in {sw.ElapsedMilliseconds} [ms]");
@@ -224,9 +224,9 @@ namespace CometServer.Services
                     .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<IndependentParameterTypeAssignment>();
 
-                foreach (var ipta in independentParameterTypeAssignments)
+                foreach (var parameterTypeAssignment in independentParameterTypeAssignments)
                 {
-                    this.independentParameterTypeAssignment.Add(ipta.Iid, ipta);
+                    this.independentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
                 Logger.Debug($"IndependentParameterTypeAssignment Queried in {sw.ElapsedMilliseconds} [ms]");
