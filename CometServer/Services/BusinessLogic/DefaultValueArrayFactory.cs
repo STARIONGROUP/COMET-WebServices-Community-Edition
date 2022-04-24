@@ -102,6 +102,8 @@ namespace CometServer.Services
             this.parameterTypeCache = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
             this.parameterTypeComponentCache = this.CachedReferenceDataService.QueryParameterTypeComponents(transaction, securityContext);
 
+            this.parameterTypeAssignmentCache.Clear();
+
             var dependentParameterTypeAssignments = this.CachedReferenceDataService.QueryDependentParameterTypeAssignments(transaction, securityContext);
 
             foreach (var kvp in dependentParameterTypeAssignments)
