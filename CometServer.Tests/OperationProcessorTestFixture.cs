@@ -724,7 +724,8 @@ namespace CometServer.Tests
 
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            throw new NotImplementedException();
+            this.writtenThings.Add(thing);
+            return true;
         }
 
         public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)

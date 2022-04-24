@@ -26,6 +26,7 @@ namespace CometServer
 {
     using System;
     using System.Diagnostics;
+    using System.Reflection;
     using System.Threading.Tasks;
 
     using Autofac;
@@ -80,8 +81,26 @@ namespace CometServer
                             .UseStartup<Startup>();
                     })
                     .Build();
-                
+
+                Logger.Info("################################################################");
+                Logger.Info($"Starting COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
+
                 var appConfigService = host.Services.GetService<IAppConfigService>();
+
+                Logger.Info("Configuration Loaded:");
+
+                Logger.Debug($"Midtier-UploadDirectory: {appConfigService.AppConfig.Midtier.UploadDirectory}");
+                Logger.Debug($"Midtier-FileStorageDirectory: {appConfigService.AppConfig.Midtier.FileStorageDirectory}");
+                Logger.Debug($"Backtier-HostName: {appConfigService.AppConfig.Backtier.HostName}");
+                Logger.Debug($"Backtier-Port: {appConfigService.AppConfig.Backtier.Port}");
+                Logger.Debug($"Backtier-Database: {appConfigService.AppConfig.Backtier.Database}");
+                Logger.Debug($"Backtier-DatabaseRestore: {appConfigService.AppConfig.Backtier.DatabaseRestore}");
+                Logger.Debug($"Backtier-DatabaseManage: {appConfigService.AppConfig.Backtier.DatabaseManage}");
+                Logger.Debug($"Backtier-StatementTimeout: {appConfigService.AppConfig.Backtier.StatementTimeout}");
+                Logger.Debug($"Backtier-IsDbSeedEnabled: {appConfigService.AppConfig.Backtier.IsDbSeedEnabled}");
+                Logger.Debug($"Backtier-IsDbImportEnabled: {appConfigService.AppConfig.Backtier.IsDbImportEnabled}");
+                Logger.Debug($"Backtier-IsDbRestoreEnabled: {appConfigService.AppConfig.Backtier.IsDbRestoreEnabled}");
+
 
                 var dataStoreAvailable = DataStoreConnectionChecker.CheckConnection(appConfigService);
                 if (!dataStoreAvailable)
