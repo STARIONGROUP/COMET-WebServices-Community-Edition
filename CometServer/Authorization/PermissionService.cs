@@ -41,7 +41,6 @@ namespace CometServer.Authorization
     
     using Npgsql;
 
-    using IServiceProvider = CometServer.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
