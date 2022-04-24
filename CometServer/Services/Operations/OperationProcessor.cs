@@ -93,12 +93,12 @@ namespace CometServer.Services.Operations
         /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
         /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
         /// </summary>
-        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new Dictionary<DtoInfo, DtoResolveHelper>();
+        private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new ();
 
         /// <summary>
         /// Backing field for <see cref="OperationOriginalThingCache"/>
         /// </summary>
-        private readonly List<Thing> operationOriginalThingCache = new List<Thing>();
+        private readonly List<Thing> operationOriginalThingCache = new ();
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.
@@ -164,7 +164,11 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
-        public void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null)
+        public void Process(
+            CdpPostOperation operation,
+            NpgsqlTransaction transaction,
+            string partition,
+            Dictionary<string, Stream> fileStore = null)
         {
             this.ValidatePostMessage(operation, fileStore ?? new Dictionary<string, Stream>(), transaction, partition);
             this.ApplyOperation(operation, transaction, partition, fileStore ?? new Dictionary<string, Stream>());
@@ -808,6 +812,33 @@ namespace CometServer.Services.Operations
         }
 
         /// <summary>
+        /// Try and get persisted items from the data store.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="service">
+        /// The service instance for the requested type.
+        /// </param>
+        /// <param name="iids">
+        /// The id of the item to retrieve.
+        /// </param>
+        /// <returns>
+        /// The retrieved <see cref="IEnumerable{T}"/> or type <see cref="Thing"/> instances
+        /// </returns>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        private IEnumerable<Thing> GetPersistedItems(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
+        {
+            return service.GetShallow(
+                    transaction, partition, iids, securityContext);
+        }
+
+        /// <summary>
         /// Try and get persisted item from the data store.
         /// </summary>
         /// <param name="transaction">
@@ -949,57 +980,70 @@ namespace CometServer.Services.Operations
         {
             // re-order create
             this.ReorderCreateOrder(operation);
-            foreach (var createInfo in operation.Create.Select(x => x.GetInfoPlaceholder()))
+
+            if (operation.Create.Any())
             {
-                var service = this.ServiceProvider.MapToPersitableService(createInfo.TypeName);
+                var operationInfoPlaceholders = operation.Create.Select(x => x.GetInfoPlaceholder());
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
+                
+                var typeGroups = operationInfoPlaceholders.GroupBy(x => x.TypeName).Select(x => new {TypeName = x.Key, Things = x.ToList()});
 
-                var securityContext = new RequestSecurityContext
+                foreach (var typeGroup in typeGroups)
                 {
-                    ContainerReadAllowed = true, 
-                };
+                    var partitions = this.operationThingCache.Where(x => typeGroup.Things.Contains(x.Key)).Select(x => x.Value.Partition).Distinct();
+                    foreach (var partition in partitions)
+                    {
+                        var service = this.ServiceProvider.MapToPersitableService(typeGroup.TypeName);
+                        var typeGroupIids = typeGroup.Things.Select(x => x.Iid);
 
-                var resolvedInfo = this.operationThingCache[createInfo];
+                        var persistedItems = this.GetPersistedItems(transaction, partition, service, typeGroupIids, securityContext);
 
-                // check that item doen not exist:
-                var persistedItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
+                        foreach (var createInfo in typeGroup.Things)
+                        {
+                            var resolvedInfo = this.operationThingCache[createInfo];
 
-                if (persistedItem != null)
-                {
-                    throw new InvalidOperationException(
-                        $"Item '{createInfo.TypeName}' with Iid: '{createInfo.Iid}' already exists");
+                            var persistedItem = persistedItems.FirstOrDefault(x => x.Iid.Equals(createInfo.Iid));
+
+                            if (persistedItem != null)
+                            {
+                                throw new InvalidOperationException(
+                                    string.Format("Item '{0}' with Iid: '{1}' already exists", createInfo.TypeName, createInfo.Iid));
+                            }
+
+                            // get the (cached) containment information for this create request
+                            var resolvedContainerInfo = this.GetContainerInfo(resolvedInfo.Thing);
+
+                            // keep a copy of the orginal thing to pass to the after create hook
+                            var originalThing = resolvedInfo.Thing.DeepClone<Thing>();
+
+                            if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
+                            {
+                                this.operationOriginalThingCache.Add(originalThing);
+                            }
+
+                            // call before create hook
+                            if (resolvedInfo.Thing is ParameterValueSet || !this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
+                            {
+                                Logger.Warn("Skipping create operation of thing {0} with id {1} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
+                                continue;
+                            }
+
+                            if (resolvedInfo.ContainerInfo.ContainmentSequence != -1)
+                            {
+                                service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);
+                            }
+                            else
+                            {
+                                service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
+                            }
+
+                            var createdItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
+
+                            // call after create hook
+                            this.OperationSideEffectProcessor.AfterCreate(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
+                        }
+                    }
                 }
-
-                // get the (cached) containment information for this create request
-                var resolvedContainerInfo = this.GetContainerInfo(resolvedInfo.Thing);
-
-                // keep a copy of the orginal thing to pass to the after create hook
-                var originalThing = resolvedInfo.Thing.DeepClone<Thing>();
-
-                if (this.operationOriginalThingCache.All(x => x.Iid != originalThing.Iid))
-                {
-                    this.operationOriginalThingCache.Add(originalThing);
-                }
-
-                // call before create hook
-                if (!this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
-                {
-                    Logger.Warn("Skipping create operation of thing {0} with id {1} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
-                    continue;
-                }
-
-                if (resolvedInfo.ContainerInfo.ContainmentSequence != -1)
-                {
-                    service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);
-                }
-                else
-                {
-                    service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
-                }
-
-                var createdItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
-
-                // call after create hook
-                this.OperationSideEffectProcessor.AfterCreate(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
             }
         }
 
@@ -1120,12 +1164,8 @@ namespace CometServer.Services.Operations
 
                 var metaInfo = this.MetaInfoProvider.GetMetaInfo(updateInfoKey.TypeName);
                 var service = this.ServiceProvider.MapToPersitableService(updateInfoKey.TypeName);
-                var securityContext = new RequestSecurityContext
-                {
-                    ContainerReadAllowed = true, 
-                    ContainerWriteAllowed = true
-                };
-
+                var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
+                
                 var resolvedInfo = this.operationThingCache[updateInfoKey];
 
                 // get persisted thing

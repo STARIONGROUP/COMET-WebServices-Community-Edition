@@ -521,6 +521,7 @@ namespace CometServer.Modules
             {
                 transaction?.Dispose();
                 connection?.Dispose();
+                sw.Stop();
             }
         }
 
