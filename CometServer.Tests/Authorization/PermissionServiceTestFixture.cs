@@ -1,21 +1,21 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionServiceTestFixture.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2022 RHEA System S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft.
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft
 //
-//    This file is part of CDP4 Web Services Community Edition. 
-//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of Comet Server Community Edition. 
+//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
-//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
+//    The Comet Server Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
+//    The Comet Server Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    Lesser General Public License for more details.
+//    GNU Affero General Public License for more details.
 //
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -71,6 +71,7 @@ namespace CometServer.Tests.Authorization
         private const string IterationPartition = "Iteration";
 
         private PermissionService permissionService;
+        private Mock<ICredentialsService> credentialsService;
         private Mock<IAccessRightKindService> accessRightKindService;
         private Mock<IResolveService> resolveService;
         private Mock<ParticipantDao> participantDao;
@@ -90,68 +91,73 @@ namespace CometServer.Tests.Authorization
         private Thing addContainerThingToCache = null;
 
         [SetUp]
-        public void TestSetup()
+        public void SetUp()
         {
-            //this.authenticationPerson = new AuthenticationPerson(Guid.NewGuid(), 0)
-            //{
-            //    UserName = "TestRunner"
-            //};
+            this.authenticationPerson = new AuthenticationPerson(Guid.NewGuid(), 0)
+            {
+                UserName = "TestRunner"
+            };
 
-            //this.permissionService = new PermissionService();
+            var credentials = new Credentials
+            {
+                Person = this.authenticationPerson,
+                EngineeringModelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0)
+            };
 
-            //this.permissionService.Credentials = new Credentials
-            //{
-            //    Person = this.authenticationPerson,
-            //    EngineeringModelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0)
-            //};
+            this.participant = new Participant(Guid.NewGuid(), 0)
+            {
+                Domain = new List<Guid> { domain.Iid },
+                Person = this.authenticationPerson.Iid
+            };
 
-            //this.resolveService = new Mock<IResolveService>();
+            credentials.EngineeringModelSetup.Participant.Add(this.participant.Iid);
 
-            //this.resolveService.Setup(x => x.ResolveItems(null, It.IsAny<string>(), It.IsAny<Dictionary<DtoInfo, DtoResolveHelper>>()))
-            //    .Callback<NpgsqlTransaction, string, Dictionary<DtoInfo, DtoResolveHelper>>
-            //    ((npgsqlTransaction, partition, operationThingContainerCache) =>
-            //    {
-            //        if (this.addContainerThingToCache != null)
-            //        {
-            //            operationThingContainerCache.Add(new ContainerInfo(this.addContainerThingToCache.ClassKind.ToString(), this.addContainerThingToCache.Iid), new DtoResolveHelper(this.addContainerThingToCache));
-            //        }
-            //    });
+            
 
-            //this.permissionService.ResolveService = this.resolveService.Object;
+            this.credentialsService = new Mock<ICredentialsService>();
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
 
-            //this.accessRightKindService = new Mock<IAccessRightKindService>();
+            this.permissionService = new PermissionService();
 
-            //this.permissionService.AccessRightKindService = this.accessRightKindService.Object;
+            this.permissionService.CredentialsService = this.credentialsService.Object;
 
-            //this.participant = new Participant(Guid.NewGuid(), 0)
-            //{
-            //    Domain = new List<Guid> { domain.Iid },
-            //    Person = this.authenticationPerson.Iid
-            //};
+            this.resolveService = new Mock<IResolveService>();
 
-            //this.permissionService.Credentials.EngineeringModelSetup.Participant.Add(this.participant.Iid);
+            this.resolveService.Setup(x => x.ResolveItems(null, It.IsAny<string>(), It.IsAny<Dictionary<DtoInfo, DtoResolveHelper>>()))
+                .Callback<NpgsqlTransaction, string, Dictionary<DtoInfo, DtoResolveHelper>>
+                ((npgsqlTransaction, partition, operationThingContainerCache) =>
+                {
+                    if (this.addContainerThingToCache != null)
+                    {
+                        operationThingContainerCache.Add(new ContainerInfo(this.addContainerThingToCache.ClassKind.ToString(), this.addContainerThingToCache.Iid), new DtoResolveHelper(this.addContainerThingToCache));
+                    }
+                });
 
-            //this.participantDao = new Mock<ParticipantDao>();
+            this.permissionService.ResolveService = this.resolveService.Object;
 
-            //this.participantDao.Setup(
-            //        x =>
-            //            x.Read(null, It.IsAny<string>(), null, true))
-            //    .Returns(new List<Participant>() { this.participant });
+            this.accessRightKindService = new Mock<IAccessRightKindService>();
 
-            //this.permissionService.ParticipantDao = this.participantDao.Object;
+            this.permissionService.AccessRightKindService = this.accessRightKindService.Object;
 
-            //engineeringModel.Iteration.Add(iteration.Iid);
-            //requirement.Definition.Add(definition.Iid);
-            //parameterType.Definition.Add(definition2.Iid);
-            //siteDirectory.Domain.Add(domain.Iid);
+            this.participantDao = new Mock<ParticipantDao>();
+
+            this.participantDao.Setup(
+                    x =>
+                        x.Read(null, It.IsAny<string>(), null, true))
+                .Returns(new List<Participant>() { this.participant });
+
+            this.permissionService.ParticipantDao = this.participantDao.Object;
+
+            engineeringModel.Iteration.Add(iteration.Iid);
+            requirement.Definition.Add(definition.Iid);
+            parameterType.Definition.Add(definition2.Iid);
+            siteDirectory.Domain.Add(domain.Iid);
         }
 
         [Test]
         [TestCaseSource(nameof(TestCases))]
         public void VerifySameAsContainerPermissionAutorization(Thing containerThing, Thing thing, string partition)
         {
-            Assert.Inconclusive("Needs fixing");
-
             //-------------------------------------------------------------
             // Setup
             //-------------------------------------------------------------
