@@ -2,7 +2,7 @@
 // <copyright file="Startup.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -61,7 +61,6 @@ namespace CometServer
     using Hangfire;
     using Hangfire.MemoryStorage;
 
-    using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -133,9 +132,7 @@ namespace CometServer
                     });
             });
 
-            services.AddAuthentication("Basic")
-                .AddScheme<AuthenticationSchemeOptions, BasicAuthenticationHandler>("Basic", null)
-                .AddCookie(CookieScheme);
+            services.AddAuthentication("CDP4").AddCookie(CookieScheme);
 
             services.AddCarter(options: options =>
             {
@@ -241,6 +238,7 @@ namespace CometServer
             app.UseRouting();
             app.UseCors();
             app.UseAuthentication();
+            app.UseBasicAuthenticatonMiddleware();
             app.UseEndpoints(builder => builder.MapCarter());
         }
     }
