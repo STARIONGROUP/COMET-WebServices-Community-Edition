@@ -21,7 +21,18 @@ IF %1==devdown GOTO DevDown
 IF %1==devtestdown GOTO DevTestDown
 IF %1==nginx GOTO Serv
 IF %1==nginxdown GOTO ServDown
+IF %1==local GOTO Local
+IF %1==localdown GOTO LocalDown
 
+GOTO End
+
+:Local
+START /B docker-compose -f docker-compose-local.yml down --remove-orphans
+START /B docker-compose -f docker-compose-local.yml up --build -d
+GOTO End
+
+:LocalDown
+START /B docker-compose -f docker-compose-local.yml down --remove-orphans
 GOTO End
 
 :Serv
