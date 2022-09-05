@@ -151,6 +151,7 @@ namespace CDP4Orm.Dao
             var dto = new CDP4Common.DTO.EngineeringModelSetup(iid, revisionNumber);
             dto.ActiveDomain.AddRange(Array.ConvertAll((string[])reader["ActiveDomain"], Guid.Parse));
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
+            dto.Attachment.AddRange(Array.ConvertAll((string[])reader["Attachment"], Guid.Parse));
             dto.DefaultOrganizationalParticipant = reader["DefaultOrganizationalParticipant"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultOrganizationalParticipant"].ToString());
             dto.Definition.AddRange(Array.ConvertAll((string[])reader["Definition"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));

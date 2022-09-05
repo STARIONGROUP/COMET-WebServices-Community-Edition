@@ -222,6 +222,9 @@ namespace CDP4WebServices.API
                     // wireup permission service
                     builder.RegisterTypeAsPropertyInjectedSingleton<OrganizationalParticipationResolverService, IOrganizationalParticipationResolverService>();
 
+                    // wireup diagram permission service
+                    builder.RegisterTypeAsPropertyInjectedSingleton<DiagramPermissionService, IDiagramPermissionService>();
+
                     // wireup permission service
                     builder.RegisterTypeAsPropertyInjectedSingleton<PermissionService, IPermissionService>();
 

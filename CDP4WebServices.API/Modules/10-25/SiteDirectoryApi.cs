@@ -190,7 +190,23 @@ namespace CDP4WebServices.API.Modules
                     resourceResponse.AddRange(this.GetContainmentResponse(transaction, TopContainer, routeParams));
                 }
 
+                if (this.RequestUtils.QueryParameters.IncludeFileData)
+                {
+                    var contentHashes = this.GetContentHashes(resourceResponse);
+
+                    if (contentHashes.Any())
+                    {
+                        // return multipart response including file binaries
+                        return this.GetMultipartResponse(contentHashes, resourceResponse);
+                    }
+                }
+
                 transaction.Commit();
+
+                if (this.TryGetMultipartResponse(resourceResponse, out var response))
+                {
+                    return response;
+                }
 
                 sw.Stop();
                 Logger.Info("Database operations {0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);

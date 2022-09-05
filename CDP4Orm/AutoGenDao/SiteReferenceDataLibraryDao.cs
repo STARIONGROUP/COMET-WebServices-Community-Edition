@@ -147,6 +147,7 @@ namespace CDP4Orm.Dao
 
             var dto = new CDP4Common.DTO.SiteReferenceDataLibrary(iid, revisionNumber);
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
+            dto.Attachment.AddRange(Array.ConvertAll((string[])reader["Attachment"], Guid.Parse));
             dto.BaseQuantityKind.AddRange(Utils.ParseOrderedList<Guid>(reader["BaseQuantityKind"] as string[,]));
             dto.BaseUnit.AddRange(Array.ConvertAll((string[])reader["BaseUnit"], Guid.Parse));
             dto.Constant.AddRange(Array.ConvertAll((string[])reader["Constant"], Guid.Parse));

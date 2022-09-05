@@ -40,6 +40,11 @@ namespace CDP4WebServices.API.Services
     public sealed partial class DiagramObjectService : ServiceBase, IDiagramObjectService
     {
         /// <summary>
+        /// Gets or sets the <see cref="IArchitectureElementService"/>.
+        /// </summary>
+        public IArchitectureElementService ArchitectureElementService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IBoundsService"/>.
         /// </summary>
         public IBoundsService BoundsService { get; set; }
@@ -262,6 +267,10 @@ namespace CDP4WebServices.API.Services
             }
 
             var diagramObject = thing as DiagramObject;
+            if (diagramObject.IsSameOrDerivedClass<ArchitectureElement>())
+            {
+                return this.ArchitectureElementService.UpdateConcept(transaction, partition, diagramObject, container);
+            }
             return this.DiagramObjectDao.Update(transaction, partition, diagramObject, container);
         }
 
@@ -294,6 +303,11 @@ namespace CDP4WebServices.API.Services
             }
 
             var diagramObject = thing as DiagramObject;
+            if (diagramObject.IsSameOrDerivedClass<ArchitectureElement>())
+            {
+                return this.ArchitectureElementService.CreateConcept(transaction, partition, diagramObject, container);
+            }
+
             var createSuccesful = this.DiagramObjectDao.Write(transaction, partition, diagramObject, container);
             return createSuccesful && this.CreateContainment(transaction, partition, diagramObject);
         }
@@ -323,6 +337,11 @@ namespace CDP4WebServices.API.Services
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var diagramObject = thing as DiagramObject;
+            if (diagramObject.IsSameOrDerivedClass<ArchitectureElement>())
+            {
+                return this.ArchitectureElementService.UpsertConcept(transaction, partition, diagramObject, container);
+            }
+
             var createSuccesful = this.DiagramObjectDao.Upsert(transaction, partition, diagramObject, container);
             return createSuccesful && this.UpsertContainment(transaction, partition, diagramObject);
         }
@@ -356,6 +375,11 @@ namespace CDP4WebServices.API.Services
             }
 
             var diagramObjectColl = new List<Thing>(this.DiagramObjectDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
+
+            diagramObjectColl.AddRange(
+                this.RequestUtils.QueryParameters.ExtentDeep
+                    ? this.ArchitectureElementService.GetDeep(transaction, partition, idFilter, authorizedContext)
+                    : this.ArchitectureElementService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(diagramObjectColl, transaction, partition, idFilter);
         }

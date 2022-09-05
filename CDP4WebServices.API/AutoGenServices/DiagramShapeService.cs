@@ -40,9 +40,19 @@ namespace CDP4WebServices.API.Services
     public sealed partial class DiagramShapeService : ServiceBase, IDiagramShapeService
     {
         /// <summary>
+        /// Gets or sets the <see cref="IDiagramFrameService"/>.
+        /// </summary>
+        public IDiagramFrameService DiagramFrameService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDiagramObjectService"/>.
         /// </summary>
         public IDiagramObjectService DiagramObjectService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDiagramPortService"/>.
+        /// </summary>
+        public IDiagramPortService DiagramPortService { get; set; }
 
         /// <summary>
         /// Get the requested <see cref="DiagramShape"/>s from the ORM layer.
@@ -241,9 +251,19 @@ namespace CDP4WebServices.API.Services
             }
 
             var diagramShape = thing as DiagramShape;
+            if (diagramShape.IsSameOrDerivedClass<DiagramFrame>())
+            {
+                return this.DiagramFrameService.UpdateConcept(transaction, partition, diagramShape, container);
+            }
+
             if (diagramShape.IsSameOrDerivedClass<DiagramObject>())
             {
                 return this.DiagramObjectService.UpdateConcept(transaction, partition, diagramShape, container);
+            }
+
+            if (diagramShape.IsSameOrDerivedClass<DiagramPort>())
+            {
+                return this.DiagramPortService.UpdateConcept(transaction, partition, diagramShape, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", diagramShape.GetType().Name));
         }
@@ -277,9 +297,19 @@ namespace CDP4WebServices.API.Services
             }
 
             var diagramShape = thing as DiagramShape;
+            if (diagramShape.IsSameOrDerivedClass<DiagramFrame>())
+            {
+                return this.DiagramFrameService.CreateConcept(transaction, partition, diagramShape, container);
+            }
+
             if (diagramShape.IsSameOrDerivedClass<DiagramObject>())
             {
                 return this.DiagramObjectService.CreateConcept(transaction, partition, diagramShape, container);
+            }
+
+            if (diagramShape.IsSameOrDerivedClass<DiagramPort>())
+            {
+                return this.DiagramPortService.CreateConcept(transaction, partition, diagramShape, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", diagramShape.GetType().Name));
         }
@@ -309,9 +339,19 @@ namespace CDP4WebServices.API.Services
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var diagramShape = thing as DiagramShape;
+            if (diagramShape.IsSameOrDerivedClass<DiagramFrame>())
+            {
+                return this.DiagramFrameService.UpsertConcept(transaction, partition, diagramShape, container);
+            }
+
             if (diagramShape.IsSameOrDerivedClass<DiagramObject>())
             {
                 return this.DiagramObjectService.UpsertConcept(transaction, partition, diagramShape, container);
+            }
+
+            if (diagramShape.IsSameOrDerivedClass<DiagramPort>())
+            {
+                return this.DiagramPortService.UpsertConcept(transaction, partition, diagramShape, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", diagramShape.GetType().Name));
         }
@@ -345,7 +385,9 @@ namespace CDP4WebServices.API.Services
             }
 
             var diagramShapeColl = new List<Thing>();
+            diagramShapeColl.AddRange(this.DiagramFrameService.GetShallow(transaction, partition, idFilter, authorizedContext));
             diagramShapeColl.AddRange(this.DiagramObjectService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            diagramShapeColl.AddRange(this.DiagramPortService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(diagramShapeColl, transaction, partition, idFilter);
         }
@@ -377,7 +419,9 @@ namespace CDP4WebServices.API.Services
             }
 
             var results = new List<Thing>();
+            results.AddRange(this.DiagramFrameService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.DiagramObjectService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.DiagramPortService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             return results;
         }
 

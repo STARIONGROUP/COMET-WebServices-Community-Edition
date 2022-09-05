@@ -55,6 +55,16 @@ namespace CDP4WebServices.API.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IBehavioralParameterService"/>.
+        /// </summary>
+        public IBehavioralParameterService BehavioralParameterService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IBookService"/>.
         /// </summary>
         public IBookService BookService { get; set; }
@@ -608,6 +618,8 @@ namespace CDP4WebServices.API.Services
             thingColl.AddRange(this.ActualFiniteStateService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.ActualFiniteStateListService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.AliasService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.AttachmentService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(this.BehavioralParameterService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.BookService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.BooleanExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
             thingColl.AddRange(this.CitationService.GetShallow(transaction, partition, idFilter, authorizedContext));
@@ -697,6 +709,8 @@ namespace CDP4WebServices.API.Services
             results.AddRange(this.ActualFiniteStateService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.ActualFiniteStateListService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.AliasService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(this.BehavioralParameterService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.BookService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.BooleanExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
             results.AddRange(this.CitationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));

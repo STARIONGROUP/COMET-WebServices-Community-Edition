@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="8.1.0" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="9.0.0-716-PR210" />
     <PackageReference Include="DotNetZip" Version="1.14.0" />
     <PackageReference Include="Hangfire" Version="1.7.19" />
     <PackageReference Include="HangFire.Autofac" Version="2.3.1" />
