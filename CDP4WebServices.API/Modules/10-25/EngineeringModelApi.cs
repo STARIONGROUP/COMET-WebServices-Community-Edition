@@ -37,6 +37,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4Orm.Dao;
 
     using CDP4WebServices.API.Configuration;
+    using CDP4WebServices.API.Exceptions;
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.ChangeLog;
 
@@ -309,7 +310,7 @@ namespace CDP4WebServices.API.Modules
                 Logger.Info(this.ConstructLog($"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedPostQueryParameter);
-                
+
                 var contentTypeRegex = new Regex("^multipart/.*;\\s*boundary=(.*)$", RegexOptions.IgnoreCase);
                 var isMultiPart = contentTypeRegex.IsMatch(this.Request.Headers.ContentType);
 
@@ -317,6 +318,7 @@ namespace CDP4WebServices.API.Modules
 
                 Stream bodyStream;
                 Dictionary<string, Stream> fileDictionary = null;
+
                 if (isMultiPart)
                 {
                     bodyStream = this.ExtractJsonBodyStreamFromMultiPartMessage();
@@ -337,6 +339,7 @@ namespace CDP4WebServices.API.Modules
                     // - Matching file hash found in request body ??? is allready checked to find binary in request...
                     // - ANY file binary in request without corresponding metadata -> ERROR
                     fileDictionary = new Dictionary<string, Stream>();
+
                     foreach (var uploadedFile in this.Request.Files.ToList().Where(f => f.ContentType == this.MimeTypeOctetStream))
                     {
                         var hash = this.FileBinaryService.CalculateHashFromStream(uploadedFile.Value);
@@ -438,6 +441,19 @@ namespace CDP4WebServices.API.Modules
                 // error handling
                 var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
                 return errorResponse.WithStatusCode(HttpStatusCode.Forbidden);
+            }
+            catch (BadRequestException ex)
+            {
+                if (transaction != null && !transaction.IsCompleted)
+                {
+                    transaction.Rollback();
+                }
+
+                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] \n {ex.Message}"));
+
+                // error handling
+                var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
+                return errorResponse.WithStatusCode(HttpStatusCode.BadRequest);
             }
             catch (Exception ex)
             {
