@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessor.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2022 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -1426,13 +1426,11 @@ namespace CDP4WebServices.API.Services.Operations
                 {
                     if (propertyValue.Select(x => x.K).Count() != propertyValue.Select(x => x.K).Distinct().Count())
                     {
-                        transaction?.Rollback();
                         throw new BadRequestException($"{updatedThing.ClassKind} (Iid:{updatedThing.Iid}) contains duplicate keys after saving to database for property {propertyName}.\n Conflicting changes were made.\n Transaction was canceled.");
                     }
 
                     if (propertyValue.Select(x => x.V).Count() != propertyValue.Select(x => x.V).Distinct().Count())
                     {
-                        transaction?.Rollback();
                         throw new BadRequestException($"{updatedThing.ClassKind} (Iid:{updatedThing.Iid}) contains duplicate values after saving to database for property {propertyName}.\n Conflicting changes were made.\n Transaction was canceled.");
                     }
                 }
