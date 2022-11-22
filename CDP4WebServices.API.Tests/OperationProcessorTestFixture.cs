@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessorTestFixture.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2022 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -44,6 +44,7 @@ namespace CDP4WebServices.API.Tests
 
     using CDP4Orm.Dao;
 
+    using CDP4WebServices.API.Exceptions;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Operations.SideEffects;
@@ -244,6 +245,124 @@ namespace CDP4WebServices.API.Tests
             Assert.Throws(
                 typeof(InvalidOperationException),
                 () => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
+        }
+
+        [Test]
+        public void VerifyOrderedItemListValidationForCorrectValues()
+        {
+            var updatedItem = new CDP4Common.DTO.PossibleFiniteStateList();
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=1, 
+                    V=Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=2, 
+                    V=Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=3, 
+                    V=Guid.NewGuid()
+                });
+
+            var metaInfo = new PossibleFiniteStateListMetaInfo();
+
+            Assert.DoesNotThrow(
+                () => this.operationProcessor.OrderedItemListValidation(
+                    null, 
+                    updatedItem, 
+                    new List<string> {"PossibleState"},
+                    metaInfo
+                )
+            );
+        }
+
+        [Test]
+        public void VerifyOrderedItemListValidationForKeys()
+        {
+            var updatedItem = new CDP4Common.DTO.PossibleFiniteStateList();
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=0, 
+                    V=Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=0, 
+                    V=Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=1, 
+                    V=Guid.NewGuid()
+                });
+
+            var metaInfo = new PossibleFiniteStateListMetaInfo();
+
+            var exception = Assert.Throws<BadRequestException>(
+                () => this.operationProcessor.OrderedItemListValidation(
+                    null, 
+                    updatedItem, 
+                    new List<string> {"PossibleState"},
+                    metaInfo
+                    )
+                );
+
+            Assert.That(exception.Message, Contains.Substring("contains duplicate keys"));
+        }
+
+        [Test]
+        public void VerifyOrderedItemListValidationForValues()
+        {
+            var updatedItem = new CDP4Common.DTO.PossibleFiniteStateList();
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=1, 
+                    V=Guid.Parse("2cfad1a6-87a4-412e-bcaa-655782cb60cf")
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=2, 
+                    V=Guid.Parse("2cfad1a6-87a4-412e-bcaa-655782cb60cf")
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K=3, 
+                    V=Guid.NewGuid()
+                });
+
+            var metaInfo = new PossibleFiniteStateListMetaInfo();
+
+            var exception = Assert.Throws<BadRequestException>(
+                () => this.operationProcessor.OrderedItemListValidation(
+                    null, 
+                    updatedItem, 
+                    new List<string> {"PossibleState"},
+                    metaInfo
+                )
+            );
+
+            Assert.That(exception.Message, Contains.Substring("contains duplicate values"));
         }
 
         [Test]
