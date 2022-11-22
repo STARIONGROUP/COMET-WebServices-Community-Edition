@@ -8,7 +8,7 @@
   },
   "Backtier": {
     "HostName": "localhost",
-    "Port": 5432,
+    "Port": 5444,
     "UserName": "cdp4",
     "Password": "cdp4",
     "Database": "cdp4server",
