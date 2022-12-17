@@ -89,6 +89,12 @@ namespace CometServer.Authentication
             try
             {
                 var authHeader = AuthenticationHeaderValue.Parse(context.Request.Headers["Authorization"]);
+                if (authHeader != null && authHeader.Scheme != "Basic")
+                {
+                    await this.next(context);
+                    return;
+                }
+
                 var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
                 var basicAuthcredentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
                 username = basicAuthcredentials[0];
