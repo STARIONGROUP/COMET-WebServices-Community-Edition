@@ -35,6 +35,7 @@ namespace CDP4WebServices.API.Modules
 
     using CDP4Orm.Dao;
 
+    using CDP4WebServices.API.Exceptions;
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.Operations;
@@ -254,7 +255,7 @@ namespace CDP4WebServices.API.Modules
             var sw = new Stopwatch();
             sw.Start();
             var requestToken = this.GenerateRandomToken();
-            
+
             try
             {
                 Logger.Info(this.ConstructLog($"{requestToken} started"));
@@ -315,6 +316,7 @@ namespace CDP4WebServices.API.Modules
 
                 // commit the operation + revision-history
                 transaction.Commit();
+
                 if (this.ModelCreatorManager.IsUserTriggerDisable)
                 {
                     // re-enable user triggers
@@ -354,6 +356,19 @@ namespace CDP4WebServices.API.Modules
                 // error handling
                 var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
                 return errorResponse.WithStatusCode(HttpStatusCode.Forbidden);
+            }
+            catch (BadRequestException ex)
+            {
+                if (transaction != null && !transaction.IsCompleted)
+                {
+                    transaction.Rollback();
+                }
+
+                Logger.Error(ex, this.ConstructFailureLog($"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+
+                // error handling
+                var errorResponse = new JsonResponse(string.Format("exception:{0}", ex.Message), new DefaultJsonSerializer());
+                return errorResponse.WithStatusCode(HttpStatusCode.BadRequest);
             }
             catch (Exception ex)
             {
