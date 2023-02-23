@@ -18,7 +18,7 @@ CDP4_USR=CDP4USER
 # Get the process id for the running instance of the CDP4 service
 getpid() {
   # retrieve the PID by finding the process that runs from the CDP4_DIR, (trailing space is needed)
-  PID=`ps -aux -e | grep "mono" | grep "PWD=$CDP4_DIR " | awk '{print $2}'`
+  PID=`ps -aux -e | grep "mono" | grep "PWD=$CDP4_DIR" | awk '{print $2}'`
   if [ "x$PID" = "x" ]; then
      PID=0
   fi
