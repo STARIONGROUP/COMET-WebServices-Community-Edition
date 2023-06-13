@@ -129,7 +129,7 @@ namespace CDP4WebServices.API.Services.Protocol
             this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionFromQuery);
             this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionToQuery);
             this.ClassKinds = this.ProcessClassKindsQueryParameter(queryParameters, ClassKindQuery);
-            this.CategoriesShortName = this.ProcessCategoryQueryParameter(queryParameters, CategoryQuery);
+            this.CategoriesId = this.ProcessCategoryQueryParameter(queryParameters, CategoryQuery);
         }
 
         /// <summary>
@@ -178,9 +178,9 @@ namespace CDP4WebServices.API.Services.Protocol
         public IEnumerable<ClassKind> ClassKinds { get; set; }
 
         /// <summary>
-        /// Gets or sets a collection of <see cref="Category"/>s shortname to used during the cherry picking request
+        /// Gets or sets a collection of <see cref="Category"/>s id to used during the cherry picking request
         /// </summary>
-        public IEnumerable<string> CategoriesShortName { get; set; }
+        public IEnumerable<Guid> CategoriesId { get; set; }
 
         /// <summary>
         /// The validate query parameter.
@@ -309,21 +309,9 @@ namespace CDP4WebServices.API.Services.Protocol
         /// The collection of <see cref="string"/>
         /// </returns>
         /// <exception cref="ArgumentException">If the provided values do not match the array pattern</exception>
-        protected IEnumerable<string> ProcessCategoryQueryParameter(Dictionary<string, object> queryParameters, string key)
+        protected IEnumerable<Guid> ProcessCategoryQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
-            if (!queryParameters.ContainsKey(key))
-            {
-                return Enumerable.Empty<string>();
-            }
-
-            var collectionOfClassKinds = queryParameters[key].ToString();
-
-            if (!collectionOfClassKinds.TryParseCollectionOfValues(out var retrievedValues))
-            {
-                throw new ArgumentException($"The {ClassKindQuery} parameter should match the array pattern");
-            }
-
-            return retrievedValues;
+            return !queryParameters.ContainsKey(key) ? Enumerable.Empty<Guid>() : queryParameters[key].ToString().FromShortGuidArray();
         }
 
         /// <summary>

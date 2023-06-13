@@ -26,6 +26,7 @@
 
 namespace CDP4WebServices.API.Extensions
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -52,5 +53,62 @@ namespace CDP4WebServices.API.Extensions
             retrievedValues = Enumerable.Empty<string>();
             return false;
         }
+
+        /// <summary>
+        /// Creates a <see cref="IEnumerable{Guid}" /> based the ShortGuid Array representation ->
+        /// </summary>
+        /// <param name="shortGuids">
+        /// an <see cref="IEnumerable{String}" /> shortGuid
+        /// </param>
+        /// <returns>
+        /// an <see cref="IEnumerable{Guid}" />
+        /// </returns>
+        /// <remarks>
+        /// A ShortGuid is a base64 encoded guid-string representation where any "/" has been replaced with a "_"
+        /// and any "+" has been replaced with a "-" (to make the string representation <see cref="Uri" /> friendly)
+        /// A ShortGuid Array is a string that starts with "[", ends with "]" and contains a number of ShortGuid separated by a ";"
+        /// </remarks>
+        /// <exception cref="ArgumentException">
+        /// Thrown when the <paramref name="shortGuids" /> does not start with '[' or ends with ']'
+        /// </exception>
+        public static IEnumerable<Guid> FromShortGuidArray(this string shortGuids)
+        {
+            if (!shortGuids.StartsWith("["))
+            {
+                throw new ArgumentException("Invalid ShortGuid Array, must start with [", nameof(shortGuids));
+            }
+
+            if (!shortGuids.EndsWith("]"))
+            {
+                throw new ArgumentException("Invalid ShortGuid Array, must end with ]", nameof(shortGuids));
+            }
+
+            var listOfShortGuids = shortGuids.TrimStart('[').TrimEnd(']').Split(';');
+
+            foreach (var shortGuid in listOfShortGuids)
+            {
+                yield return shortGuid.FromShortGuid();
+            }
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Guid" /> based the ShortGuid representation
+        /// </summary>
+        /// <param name="shortGuid">
+        /// a shortGuid string
+        /// </param>
+        /// <returns>
+        /// an instance of <see cref="Guid" />
+        /// </returns>
+        /// <remarks>
+        /// A ShortGuid is a base64 encoded guid-string representation where any "/" has been replaced with a "_"
+        /// and any "+" has been replaced with a "-" (to make the string representation <see cref="Uri" /> friendly)
+        /// </remarks>
+        public static Guid FromShortGuid(this string shortGuid)
+        {
+            var buffer = Convert.FromBase64String(shortGuid.Replace("_", "/").Replace("-", "+") + "==");
+            return new Guid(buffer);
+        }
+
     }
 }

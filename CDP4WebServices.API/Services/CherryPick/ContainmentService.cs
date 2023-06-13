@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ContainmentHelper.cs" company="RHEA System S.A.">
+// <copyright file="ContainmentService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 // 
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski,
@@ -24,7 +24,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4WebServices.API.Helpers
+namespace CDP4WebServices.API.Services.CherryPick
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -35,19 +35,21 @@ namespace CDP4WebServices.API.Helpers
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
-    /// Helper class that provide capabilities on retrieving contained <see cref="Thing"/> or container <see cref="Thing"/>
+    /// The <see cref="ContainmentService" /> provides capabilities to retrieve containment on
+    /// <see cref="Thing" />
     /// </summary>
-    public static class ContainmentHelper
+    public class ContainmentService : IContainmentService
     {
         /// <summary>
-        /// Queries contained <see cref="Thing"/> where the <see cref="ClassKind"/> is defined by one the <see cref="ClassKind"/>
+        /// Queries contained <see cref="Thing" /> where the <see cref="ClassKind" /> is defined by one the
+        /// <see cref="ClassKind" />
         /// </summary>
-        /// <param name="containers">A <see cref="IReadOnlyList{T}"/> of <see cref="Thing"/> containers</param>
-        /// <param name="source">A <see cref="IReadOnlyList{T}"/> of all <see cref="Thing"/></param>
+        /// <param name="containers">A <see cref="IReadOnlyList{T}" /> of <see cref="Thing" /> containers</param>
+        /// <param name="source">A <see cref="IReadOnlyList{T}" /> of all <see cref="Thing" /></param>
         /// <param name="queryDeep">Value asserting that the query have to make deep search on containment</param>
-        /// <param name="classKind">A collection of <see cref="ClassKind"/> that should matches</param>
-        /// <returns>A collection of <see cref="Thing"/></returns>
-        public static IEnumerable<Thing> QueryContainedThings(IReadOnlyList<Thing> containers, IReadOnlyList<Thing> source, bool queryDeep,params ClassKind[] classKind)
+        /// <param name="classKind">A collection of <see cref="ClassKind" /> that should matches</param>
+        /// <returns>A collection of <see cref="Thing" /></returns>
+        public IEnumerable<Thing> QueryContainedThings(IReadOnlyList<Thing> containers, IReadOnlyList<Thing> source, bool queryDeep, params ClassKind[] classKind)
         {
             var allRetrievedThings = new List<Thing>();
             List<Thing> containedThings;
@@ -55,25 +57,25 @@ namespace CDP4WebServices.API.Helpers
             do
             {
                 containedThings = source.Where(x => classKind.Contains(x.ClassKind) && containers.Any(c => c.Contains(x))
-                    && containers.All(c => c.Iid != x.Iid))
+                                                                                    && containers.All(c => c.Iid != x.Iid))
                     .DistinctBy(x => x.Iid)
                     .Where(x => allRetrievedThings.All(a => a.Iid != x.Iid))
                     .ToList();
 
                 allRetrievedThings.AddRange(containedThings);
                 containers = containedThings;
-            } while (containedThings.Any() && queryDeep); 
+            } while (containedThings.Any() && queryDeep);
 
             return allRetrievedThings;
         }
 
         /// <summary>
-        /// Retrieve the containers tree for a <see cref="Thing"/>
+        /// Retrieve the containers tree for a <see cref="Thing" />
         /// </summary>
-        /// <param name="containedThing">A <see cref="Thing"/></param>
-        /// <param name="allThings">A collection of <see cref="Thing"/> to retrieve the containers tree</param>
+        /// <param name="containedThing">A <see cref="Thing" /></param>
+        /// <param name="allThings">A collection of <see cref="Thing" /> to retrieve the containers tree</param>
         /// <returns>The retrieved container tree</returns>
-        public static IEnumerable<Thing> QueryContainersTree(Thing containedThing, IReadOnlyList<Thing> allThings)
+        public IEnumerable<Thing> QueryContainersTree(Thing containedThing, IReadOnlyList<Thing> allThings)
         {
             var tree = new List<Thing>();
             var container = allThings.FirstOrDefault(x => x.Contains(containedThing));
@@ -89,18 +91,18 @@ namespace CDP4WebServices.API.Helpers
         }
 
         /// <summary>
-        /// Retrieve the containers tree for a collection of <see cref="Thing"/>
+        /// Retrieve the containers tree for a collection of <see cref="Thing" />
         /// </summary>
-        /// <param name="containedThings">A collection of <see cref="Thing"/></param>
-        /// <param name="allThings">A collection of <see cref="Thing"/> to retrieve the containers tree</param>
+        /// <param name="containedThings">A collection of <see cref="Thing" /></param>
+        /// <param name="allThings">A collection of <see cref="Thing" /> to retrieve the containers tree</param>
         /// <returns>The retrieved container tree</returns>
-        public static IEnumerable<Thing> QueryContainersTree(IReadOnlyList<Thing> containedThings, IReadOnlyList<Thing> allThings)
+        public IEnumerable<Thing> QueryContainersTree(IReadOnlyList<Thing> containedThings, IReadOnlyList<Thing> allThings)
         {
             var tree = new List<Thing>();
 
             foreach (var containedThing in containedThings)
             {
-                tree.AddRange(QueryContainersTree(containedThing, allThings).Where(x => tree.All(t => x.Iid != t.Iid)));
+                tree.AddRange(this.QueryContainersTree(containedThing, allThings).Where(x => tree.All(t => x.Iid != t.Iid)));
             }
 
             return tree;

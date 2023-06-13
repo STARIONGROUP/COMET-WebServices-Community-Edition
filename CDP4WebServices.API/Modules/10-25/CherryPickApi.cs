@@ -40,6 +40,7 @@ namespace CDP4WebServices.API.Modules
     using CDP4WebServices.API.Services;
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.Authorization;
+    using CDP4WebServices.API.Services.CherryPick;
     using CDP4WebServices.API.Services.Protocol;
 
     using Nancy;
@@ -53,7 +54,7 @@ namespace CDP4WebServices.API.Modules
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
-    /// This is an API endpoint class to support cherry picking of <see cref="CDP4Common.DTO.Thing" /> inside an
+    /// This is an API endpoint class to support cherry picking of <see cref="Thing" /> inside an
     /// <see cref="Iteration" />
     /// based on <see cref="Category" /> filter
     /// </summary>
@@ -103,6 +104,16 @@ namespace CDP4WebServices.API.Modules
         public IObfuscationService ObfuscationService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="ICherryPickService"/>
+        /// </summary>
+        public ICherryPickService CherryPickService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IContainmentService"/>
+        /// </summary>
+        public IContainmentService ContainmentService { get; set; }
+
+        /// <summary>
         /// Abstract method contract for get response data processing.
         /// </summary>
         /// <param name="routeParams">
@@ -127,7 +138,7 @@ namespace CDP4WebServices.API.Modules
                 Logger.Info(this.ConstructLog($"{requestToken} started"));
                 HttpRequestHelper.ValidateSupportedQueryParameter(this.Request, this.RequestUtils, SupportedGetQueryParameters);
 
-                if (!this.RequestUtils.QueryParameters.ClassKinds.Any() || !this.RequestUtils.QueryParameters.CategoriesShortName.Any())
+                if (!this.RequestUtils.QueryParameters.ClassKinds.Any() || !this.RequestUtils.QueryParameters.CategoriesId.Any())
                 {
                     var invalidRequest = new JsonResponse($"The {QueryParameters.ClassKindQuery} and {QueryParameters.CategoryQuery} parameters are required", new DefaultJsonSerializer());
                     return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
@@ -156,6 +167,14 @@ namespace CDP4WebServices.API.Modules
                     this.PermissionService.Credentials = credentials;
                 }
 
+                var securityContext = new RequestSecurityContext();
+
+                if (this.RequestUtils.QueryParameters.ClassKinds.Any(classKind => !this.PermissionService.CanRead(classKind.ToString(), securityContext, partition)))
+                {
+                    var invalidRequest = new JsonResponse("", new DefaultJsonSerializer());
+                    return invalidRequest.WithStatusCode(HttpStatusCode.MethodNotAllowed);
+                }
+
                 var resourceResponse = new List<Thing>();
 
                 // gather all Things of the Iteration
@@ -168,13 +187,13 @@ namespace CDP4WebServices.API.Modules
                     return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                 }
 
-                var cherryPickedThings = CherryPickHelper.CherryPick(resourceResponse, this.RequestUtils.QueryParameters.ClassKinds, this.RequestUtils.QueryParameters.CategoriesShortName)
+                var cherryPickedThings = this.CherryPickService.CherryPick(resourceResponse, this.RequestUtils.QueryParameters.ClassKinds, this.RequestUtils.QueryParameters.CategoriesId)
                     .ToList();
 
-                var containedThings = ContainmentHelper.QueryContainedThings(cherryPickedThings, resourceResponse, true,
+                var containedThings = this.ContainmentService.QueryContainedThings(cherryPickedThings, resourceResponse, true,
                     ClassKind.Parameter, ClassKind.ParameterOverride, ClassKind.ParameterValueSet, ClassKind.ParameterOverrideValueSet);
 
-                var containers = ContainmentHelper.QueryContainersTree(cherryPickedThings, resourceResponse);
+                var containers = this.ContainmentService.QueryContainersTree(cherryPickedThings, resourceResponse);
 
                 cherryPickedThings.AddRange(containedThings);
                 cherryPickedThings.AddRange(containers);

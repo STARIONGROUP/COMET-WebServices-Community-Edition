@@ -81,9 +81,9 @@ namespace CDP4WebServices.API.Services.Protocol
         IEnumerable<ClassKind> ClassKinds { get; set; }
 
         /// <summary>
-        /// Gets or sets a collection of <see cref="Category"/>s shortname to used during the cherry picking request
+        /// Gets or sets a collection of <see cref="Category"/>s id to used during the cherry picking request
         /// </summary>
-        IEnumerable<string> CategoriesShortName { get; set; }
+        IEnumerable<Guid> CategoriesId { get; set; }
 
         /// <summary>
         /// The validate query parameter.
