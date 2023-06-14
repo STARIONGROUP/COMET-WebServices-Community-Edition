@@ -56,7 +56,6 @@ namespace CDP4WebServices.API.Services.CherryPick
             var cherryPickedThings = new List<Thing>();
 
             var categories = things.OfType<Category>().Where(x => categoriesId.Contains(x.Iid)).ToList();
-            cherryPickedThings.AddRange(categories);
             var existingCategories = categories.Select(x => x.Iid).ToList();
 
             switch (classKind)

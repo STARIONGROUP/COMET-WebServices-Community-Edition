@@ -151,20 +151,14 @@ namespace CDP4WebServices.API.Tests.Services.CherryPick
         public void VerifyCherryPickParameter()
         {
             var cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.Parameter, new List<Guid> { this.equipmentCategory.Iid }).ToList();
-            
-            Assert.Multiple(() => 
-            { 
-                Assert.That(cherryPicked, Has.Count.EqualTo(1));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-            });
+            Assert.That(cherryPicked, Is.Empty);
 
             cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.Parameter, new List<Guid> { this.sensorCategory.Iid }).ToList();
             
             Assert.Multiple(() =>
             {
-                Assert.That(cherryPicked, Has.Count.EqualTo(2));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-                Assert.That(cherryPicked[1], Is.TypeOf<Parameter>());
+                Assert.That(cherryPicked, Has.Count.EqualTo(1));
+                Assert.That(cherryPicked[0], Is.TypeOf<Parameter>());
             });
         }
 
@@ -172,20 +166,14 @@ namespace CDP4WebServices.API.Tests.Services.CherryPick
         public void VerifyCherryPickParameterOverride()
         {
             var cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.ParameterOverride, new List<Guid> { this.equipmentCategory.Iid }).ToList();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(cherryPicked, Has.Count.EqualTo(1));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-            });
+            Assert.That(cherryPicked, Is.Empty);
 
             cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.ParameterOverride, new List<Guid> { this.sensorCategory.Iid }).ToList();
 
             Assert.Multiple(() =>
             {
-                Assert.That(cherryPicked, Has.Count.EqualTo(2));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-                Assert.That(cherryPicked[1], Is.TypeOf<ParameterOverride>());
+                Assert.That(cherryPicked, Has.Count.EqualTo(1));
+                Assert.That(cherryPicked[0], Is.TypeOf<ParameterOverride>());
             });
         }
 
@@ -193,21 +181,15 @@ namespace CDP4WebServices.API.Tests.Services.CherryPick
         public void VerifyCherryPickElementUsage()
         {
             var cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.ElementUsage, new List<Guid> { this.sensorCategory.Iid }).ToList();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(cherryPicked, Has.Count.EqualTo(1));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-            });
+            Assert.That(cherryPicked, Is.Empty);
 
             cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.ElementUsage, new List<Guid> { this.equipmentCategory.Iid }).ToList();
 
             Assert.Multiple(() =>
             {
-                Assert.That(cherryPicked, Has.Count.EqualTo(3));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
+                Assert.That(cherryPicked, Has.Count.EqualTo(2));
+                Assert.That(cherryPicked[0], Is.TypeOf<ElementUsage>());
                 Assert.That(cherryPicked[1], Is.TypeOf<ElementUsage>());
-                Assert.That(cherryPicked[2], Is.TypeOf<ElementUsage>());
             });
         }
 
@@ -215,20 +197,14 @@ namespace CDP4WebServices.API.Tests.Services.CherryPick
         public void VerifyCherryPickElementDefinition()
         {
             var cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.ElementDefinition, new List<Guid> { this.sensorCategory.Iid }).ToList();
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(cherryPicked, Has.Count.EqualTo(1));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-            });
+            Assert.That(cherryPicked, Is.Empty);
 
             cherryPicked = this.cherryPickService.CherryPick(this.things, ClassKind.ElementDefinition, new List<Guid> { this.equipmentCategory.Iid }).ToList();
 
             Assert.Multiple(() =>
             {
-                Assert.That(cherryPicked, Has.Count.EqualTo(2));
-                Assert.That(cherryPicked[0], Is.TypeOf<Category>());
-                Assert.That(cherryPicked[1], Is.TypeOf<ElementDefinition>());
+                Assert.That(cherryPicked, Has.Count.EqualTo(1));
+                Assert.That(cherryPicked[0], Is.TypeOf<ElementDefinition>());
             });
         }
 
@@ -245,12 +221,11 @@ namespace CDP4WebServices.API.Tests.Services.CherryPick
 
             Assert.Multiple(() =>
             {
-                Assert.That(cherryPicked, Has.Count.EqualTo(7));
+                Assert.That(cherryPicked, Has.Count.EqualTo(5));
                 Assert.That(cherryPicked.OfType<ElementUsage>().ToList(), Has.Count.EqualTo(2));
                 Assert.That(cherryPicked.OfType<ElementDefinition>().ToList(), Has.Count.EqualTo(1));
                 Assert.That(cherryPicked.OfType<Parameter>().ToList(), Has.Count.EqualTo(1));
                 Assert.That(cherryPicked.OfType<ParameterOverride>().ToList(), Has.Count.EqualTo(1));
-                Assert.That(cherryPicked.OfType<Category>().ToList(), Has.Count.EqualTo(2));
             });
         }
     }
