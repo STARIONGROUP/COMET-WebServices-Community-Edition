@@ -53,6 +53,7 @@ namespace CDP4WebServices.API
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.Authorization;
     using CDP4WebServices.API.Services.ChangeLog;
+    using CDP4WebServices.API.Services.CherryPick;
     using CDP4WebServices.API.Services.ContributorsLocation;
     using CDP4WebServices.API.Services.DataStore;
     using CDP4WebServices.API.Services.Email;
@@ -139,6 +140,8 @@ namespace CDP4WebServices.API
                     builder.RegisterTypeAsPropertyInjectedSingleton<CDP4WebServiceAuthentication, ICDP4WebServiceAuthentication>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<MigrationService, IMigrationService>();
                     builder.RegisterTypeAsPropertyInjectedSingleton<EmailService, IEmailService>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<CherryPickService, ICherryPickService>();
+                    builder.RegisterTypeAsPropertyInjectedSingleton<ContainmentService, IContainmentService>();
                 });
 
             Logger.Info($"Application Container configured in {sw.ElapsedMilliseconds} [ms]");

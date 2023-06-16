@@ -29,7 +29,10 @@ namespace CDP4WebServices.API.Services.Protocol
     using System.Globalization;
     using System.Linq;
 
+    using CDP4Common.CommonData;
     using CDP4Common.DTO;
+
+    using CDP4WebServices.API.Extensions;
 
     /// <summary>
     /// The query parameters of the current request.
@@ -67,26 +70,36 @@ namespace CDP4WebServices.API.Services.Protocol
         public const string RevisionNumberQuery = "revisionNumber";
 
         /// <summary>
-        /// The revision number FROM which the request to get the revisions of a <see cref="Thing"/> is done
+        /// The revision number FROM which the request to get the revisions of a <see cref="CDP4Common.DTO.Thing"/> is done
         /// </summary>
         public const string RevisionFromQuery = "revisionFrom";
 
         /// <summary>
-        /// The revision number TO which the request to get the revisions of a <see cref="Thing"/> is done
+        /// The revision number TO which the request to get the revisions of a <see cref="CDP4Common.DTO.Thing"/> is done
         /// </summary>
         public const string RevisionToQuery = "revisionTo";
+
+        /// <summary>
+        /// The collection of <see cref="CDP4Common.CommonData.ClassKind"/> used to retrieve <see cref="CDP4Common.DTO.Thing"/> during a cherry picking operation
+        /// </summary>
+        public const string ClassKindQuery = "classkind";
+
+        /// <summary>
+        /// The collection <see cref="Category"/> shortname used to filter <see cref="CDP4Common.DTO.Thing"/> during a cherry picking operation
+        /// </summary>
+        public const string CategoryQuery = "category";
 
         /// <summary>
         /// The query parameter definitions.
         /// </summary>
         private readonly Dictionary<string, string[]> queryParameterDefinitions = new Dictionary<string, string[]>
-                               {
-                                   { ExtentQuery, new[] { "deep", "shallow" } },
-                                   { IncludeReferenceDataQuery, new[] { "true", "false" } },
-                                   { IncludeAllContainersQuery, new[] { "true", "false" } },
-                                   { IncludeFileDataQuery, new[] { "true", "false" } },
-                                   { ExportQuery, new[] { "true", "false" } }
-                               };
+        {
+            { ExtentQuery, new[] { "deep", "shallow" } },
+            { IncludeReferenceDataQuery, new[] { "true", "false" } },
+            { IncludeAllContainersQuery, new[] { "true", "false" } },
+            { IncludeFileDataQuery, new[] { "true", "false" } },
+            { ExportQuery, new[] { "true", "false" } }
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryParameters"/> class.
@@ -115,6 +128,8 @@ namespace CDP4WebServices.API.Services.Protocol
             this.RevisionNumber = this.ProcessQueryParameter(queryParameters, RevisionNumberQuery);
             this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionFromQuery);
             this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionToQuery);
+            this.ClassKinds = this.ProcessClassKindsQueryParameter(queryParameters, ClassKindQuery);
+            this.CategoriesId = this.ProcessCategoryQueryParameter(queryParameters, CategoryQuery);
         }
 
         /// <summary>
@@ -156,6 +171,16 @@ namespace CDP4WebServices.API.Services.Protocol
         /// Gets or sets the revision number, or DateTime to which the request is done
         /// </summary>
         public object RevisionTo { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of <see cref="ClassKind"/> to used during the cherry picking request
+        /// </summary>
+        public IEnumerable<ClassKind> ClassKinds { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of <see cref="Category"/>s id to used during the cherry picking request
+        /// </summary>
+        public IEnumerable<Guid> CategoriesId { get; set; }
 
         /// <summary>
         /// The validate query parameter.
@@ -230,6 +255,7 @@ namespace CDP4WebServices.API.Services.Protocol
             }
 
             int revNumber;
+
             if (!int.TryParse(queryParameters[RevisionNumberQuery].ToString(), out revNumber))
             {
                 return -1;
@@ -271,6 +297,67 @@ namespace CDP4WebServices.API.Services.Protocol
         }
 
         /// <summary>
+        /// Process the <see cref="CategoryQuery"/> parameter
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The collection of <see cref="string"/>
+        /// </returns>
+        /// <exception cref="ArgumentException">If the provided values do not match the array pattern</exception>
+        protected IEnumerable<Guid> ProcessCategoryQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            return !queryParameters.ContainsKey(key) ? Enumerable.Empty<Guid>() : queryParameters[key].ToString().FromShortGuidArray();
+        }
+
+        /// <summary>
+        /// Process the <see cref="ClassKindQuery"/> parameter
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The collection of <see cref="ClassKind"/>
+        /// </returns>
+        /// <exception cref="ArgumentException">If the provided values do not match the array pattern</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If one of the provided values inside the array is not a <see cref="ClassKind"/></exception>
+        protected IEnumerable<ClassKind> ProcessClassKindsQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            if (!queryParameters.ContainsKey(key))
+            {
+                return Enumerable.Empty<ClassKind>();
+            }
+
+            var collectionOfClassKinds = queryParameters[key].ToString();
+
+            if (!collectionOfClassKinds.TryParseCollectionOfValues(out var retrievedValues))
+            {
+                throw new ArgumentException($"The {ClassKindQuery} parameter should match the array pattern");
+            }
+
+            var classKinds = new List<ClassKind>();
+
+            foreach (var retrievedValue in retrievedValues)
+            {
+                if (!Enum.TryParse<ClassKind>(retrievedValue, true, out var classKind))
+                {
+                    throw new ArgumentOutOfRangeException($"Unrecognized ClassKind value: {retrievedValue}");
+                }
+
+                classKinds.Add(classKind);
+            }
+
+            return classKinds;
+        }
+
+        /// <summary>
         /// Setup query parameter defaults.
         /// </summary>
         private void SetupQueryParameterDefaults()
@@ -278,8 +365,8 @@ namespace CDP4WebServices.API.Services.Protocol
             this.ExtentDeep = false;
             this.IncludeReferenceData = false;
             this.IncludeAllContainers = false;
-            this.IncludeFileData = false;            
-            this.Export = false;            
+            this.IncludeFileData = false;
+            this.Export = false;
         }
     }
 }

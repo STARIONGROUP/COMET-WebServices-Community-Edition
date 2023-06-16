@@ -25,6 +25,10 @@
 namespace CDP4WebServices.API.Services.Protocol
 {
     using System;
+    using System.Collections.Generic;
+
+    using CDP4Common.CommonData;
+    using CDP4Common.DTO;
 
     /// <summary>
     /// The Query Parameters interface.
@@ -70,6 +74,16 @@ namespace CDP4WebServices.API.Services.Protocol
         /// Gets or sets the revision number, or DateTime to which the request is done
         /// </summary>
         object RevisionTo { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of <see cref="ClassKind"/> to used during the cherry picking request
+        /// </summary>
+        IEnumerable<ClassKind> ClassKinds { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of <see cref="Category"/>s id to used during the cherry picking request
+        /// </summary>
+        IEnumerable<Guid> CategoriesId { get; set; }
 
         /// <summary>
         /// The validate query parameter.
