@@ -184,7 +184,12 @@ namespace CometServer.Services
         private string CreateTemporaryFolderOnDisk()
         {
             // Specify a name for a random folder.
-            string folderPath = Guid.NewGuid().ToString();
+            var folderPath = Guid.NewGuid().ToString();
+
+            if (AppDomain.CurrentDomain.RelativeSearchPath != null)
+            {
+                folderPath = Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath, folderPath);
+            }
 
             Directory.CreateDirectory(folderPath);
 

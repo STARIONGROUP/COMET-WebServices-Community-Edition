@@ -78,7 +78,7 @@ namespace CometServer.Authentication
         /// </returns>
         private IEnumerable<string> GetFolders()
         {
-            return Directory.GetDirectories(Path.Combine(Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName, AuthenticatorPluginFolder)).ToList();
+            return Directory.GetDirectories(Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath ?? Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName, AuthenticatorPluginFolder)).ToList();
         }
 
         /// <summary>
