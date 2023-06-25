@@ -49,7 +49,6 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Http.Extensions;
 
     using NLog;
-
     using Npgsql;
 
     using Thing = CDP4Common.DTO.Thing;
@@ -393,6 +392,19 @@ namespace CometServer.Modules
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (BadRequestException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (SecurityException ex)

@@ -1200,14 +1200,17 @@ namespace CometServer.Services.Operations
                 // call before update hook
                 this.OperationSideEffectProcessor.BeforeUpdate(updatableThing, containerInfo, transaction, resolvedInfo.Partition, securityContext, updateInfo);
 
-                // track if updates occured
-                var isUpdated = false;
+                // track if any update on any property has occured
+                var isAnyUpdated = false;
 
                 var orderedListToBeChecked = new List<string>();
 
                 // iterate the update info properties other than Iid, revision and classkind
                 foreach (var update in updateInfo.Where(x => !this.baseProperties.Contains(x.Key)))
                 {
+                    //Track is an individual property update has occured
+                    var isUpdated = false;
+
                     var propertyName = update.Key;
                     var propInfo = metaInfo.GetPropertyMetaInfo(propertyName);
                     
@@ -1222,6 +1225,8 @@ namespace CometServer.Services.Operations
                                 isUpdated = true;
                             }
 
+                            isAnyUpdated = isAnyUpdated || isUpdated;
+
                             break;
                         }
 
@@ -1233,7 +1238,9 @@ namespace CometServer.Services.Operations
                                 // add new collection items to unordered non-composite list property
                                 foreach (var newValue in collectionItems)
                                 {
-                                    service.AddToCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newValue);
+                                    isUpdated = service.AddToCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newValue);
+
+                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
                             }
                             else if (propInfo.Aggregation == AggregationKind.Composite)
@@ -1265,7 +1272,10 @@ namespace CometServer.Services.Operations
                                     }
 
                                     // try apply containment change
-                                    if (!containedThingService.UpdateConcept(transaction, resolvedInfo.Partition, containedThing, updatableThing))
+                                    isUpdated = containedThingService.UpdateConcept(transaction, resolvedInfo.Partition, containedThing, updatableThing);
+                                    
+                                    // try apply containment change
+                                    if (!isUpdated)
                                     {
                                         Logger.Info(
                                             "The containment change of item '{0}' with iid: '{1}' to container '{2}' with '{3}' could not be performed.",
@@ -1273,7 +1283,10 @@ namespace CometServer.Services.Operations
                                             containedIid,
                                             resolvedInfo.InstanceInfo.TypeName,
                                             resolvedInfo.InstanceInfo.Iid);
+
                                     }
+
+                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
                             }
 
@@ -1287,7 +1300,7 @@ namespace CometServer.Services.Operations
                             {
                                 foreach (var newOrderedItem in orderedCollectionItems.Where(x => !x.M.HasValue))
                                 {
-                                    service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
+                                    isUpdated = service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
 
                                     // add ordered item to collection property
                                     isUpdated = service.AddToCollectionProperty(
@@ -1296,6 +1309,8 @@ namespace CometServer.Services.Operations
                                         propertyName,
                                         resolvedInfo.InstanceInfo.Iid,
                                         newOrderedItem);
+
+                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
 
                                 foreach (var orderedItemUpdate in orderedCollectionItems.Where(x => x.M.HasValue))
@@ -1316,6 +1331,8 @@ namespace CometServer.Services.Operations
                                             propertyName,
                                             updatableThing.Iid);
                                     }
+
+                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
                             }
                             else if (propInfo.Aggregation == AggregationKind.Composite)
@@ -1364,6 +1381,8 @@ namespace CometServer.Services.Operations
                                                 propInfo.TypeName,
                                                 containedItemIid);
                                     }
+
+                                    isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
                             }
 
@@ -1372,7 +1391,7 @@ namespace CometServer.Services.Operations
                     }
                 }
 
-                if (isUpdated)
+                if (isAnyUpdated)
                 {
                     // PreCheck CanWrite
                     if (service is ServiceBase serviceBase)
