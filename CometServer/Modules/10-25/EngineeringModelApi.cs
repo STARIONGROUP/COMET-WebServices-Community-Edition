@@ -58,6 +58,7 @@ namespace CometServer.Modules
     using Npgsql;
 
     using Thing = CDP4Common.DTO.Thing;
+    using NLog.Targets;
 
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
@@ -489,6 +490,19 @@ namespace CometServer.Modules
 
                 // error handling
                 httpResponse.StatusCode = (int) HttpStatusCode.Forbidden;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (BadRequestException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] \n {ex.Message}"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (SecurityException ex)

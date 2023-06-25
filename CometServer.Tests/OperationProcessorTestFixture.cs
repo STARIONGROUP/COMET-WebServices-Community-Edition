@@ -41,6 +41,7 @@ namespace CometServer.Tests
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -245,6 +246,126 @@ namespace CometServer.Tests
                 typeof(InvalidOperationException),
                 () => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
         }
+
+        [Test]
+        public void VerifyOrderedItemListValidationForCorrectValues()
+        {
+            var updatedItem = new CDP4Common.DTO.PossibleFiniteStateList();
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 1,
+                    V = Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 2,
+                    V = Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 3,
+                    V = Guid.NewGuid()
+                });
+
+            var metaInfo = new PossibleFiniteStateListMetaInfo();
+
+            Assert.DoesNotThrow(
+                () => this.operationProcessor.OrderedItemListValidation(
+                    null,
+                    updatedItem,
+                    new List<string> { "PossibleState" },
+                    metaInfo
+                )
+            );
+        }
+
+        [Test]
+        public void VerifyOrderedItemListValidationForKeys()
+        {
+            var updatedItem = new CDP4Common.DTO.PossibleFiniteStateList();
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 0,
+                    V = Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 0,
+                    V = Guid.NewGuid()
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 1,
+                    V = Guid.NewGuid()
+                });
+
+            var metaInfo = new PossibleFiniteStateListMetaInfo();
+
+            var exception = Assert.Throws<BadRequestException>(
+                () => this.operationProcessor.OrderedItemListValidation(
+                    null,
+                    updatedItem,
+                    new List<string> { "PossibleState" },
+                    metaInfo
+                    )
+                );
+
+            Assert.That(exception.Message, Contains.Substring("contains duplicate keys"));
+        }
+
+        [Test]
+        public void VerifyOrderedItemListValidationForValues()
+        {
+            var updatedItem = new CDP4Common.DTO.PossibleFiniteStateList();
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 1,
+                    V = Guid.Parse("2cfad1a6-87a4-412e-bcaa-655782cb60cf")
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 2,
+                    V = Guid.Parse("2cfad1a6-87a4-412e-bcaa-655782cb60cf")
+                });
+
+            updatedItem.PossibleState.Add(
+                new OrderedItem
+                {
+                    K = 3,
+                    V = Guid.NewGuid()
+                });
+
+            var metaInfo = new PossibleFiniteStateListMetaInfo();
+
+            var exception = Assert.Throws<BadRequestException>(
+                () => this.operationProcessor.OrderedItemListValidation(
+                    null,
+                    updatedItem,
+                    new List<string> { "PossibleState" },
+                    metaInfo
+                )
+            );
+
+            Assert.That(exception.Message, Contains.Substring("contains duplicate values"));
+        }
+
+
 
         [Test]
         public void VerifyCreateWithoutContainerUpdateValidation()

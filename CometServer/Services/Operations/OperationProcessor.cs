@@ -1,8 +1,8 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessor.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -52,6 +52,7 @@ namespace CometServer.Services.Operations
 
     using IServiceProvider = CometServer.Services.IServiceProvider;
     using Thing = CDP4Common.DTO.Thing;
+    using CometServer.Exceptions;
 
     /// <summary>
     /// The operation processor class that provides logic for CUD logic on the data source.
@@ -1202,6 +1203,8 @@ namespace CometServer.Services.Operations
                 // track if updates occured
                 var isUpdated = false;
 
+                var orderedListToBeChecked = new List<string>();
+
                 // iterate the update info properties other than Iid, revision and classkind
                 foreach (var update in updateInfo.Where(x => !this.baseProperties.Contains(x.Key)))
                 {
@@ -1349,6 +1352,11 @@ namespace CometServer.Services.Operations
 
                                     isUpdated = containedThingService.ReorderContainment(transaction, resolvedInfo.Partition, orderedItemUpdate);
 
+                                    if (!orderedListToBeChecked.Contains(propertyName))
+                                    {
+                                        orderedListToBeChecked.Add(propertyName);
+                                    }
+
                                     if (!isUpdated)
                                     {
                                             Logger.Info(
@@ -1383,8 +1391,40 @@ namespace CometServer.Services.Operations
                     // get persisted thing
                     var updatedThing = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, resolvedInfo.InstanceInfo.Iid, securityContext);
 
+                    if (orderedListToBeChecked.Any())
+                    {
+                        this.OrderedItemListValidation(transaction, updatedThing, orderedListToBeChecked, metaInfo);
+                    }
+
                     // call after update hook
                     this.OperationSideEffectProcessor.AfterUpdate(updatedThing, containerInfo, originalThing, transaction, resolvedInfo.Partition, securityContext);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Check OrderedItemList after saving changes to the database for correctness of data
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/> </param>
+        /// <param name="updatedThing">The updated <see cref="Thing"/></param>
+        /// <param name="properties">The <see cref="List{T}"/> of type <see cref="string"/> that contains all propertynames to check</param>
+        /// <param name="metaInfo">The <see cref="IMetaInfo"/> of the container <see cref="Thing"/> that contains the OrderedList properties</param>
+        /// <exception cref="BadRequestException"></exception>
+        internal void OrderedItemListValidation(NpgsqlTransaction transaction, Thing updatedThing, List<string> properties, IMetaInfo metaInfo)
+        {
+            foreach (var propertyName in properties)
+            {
+                if (metaInfo.GetValue(propertyName, updatedThing) is IEnumerable<OrderedItem> propertyValue)
+                {
+                    if (propertyValue.Select(x => x.K).Count() != propertyValue.Select(x => x.K).Distinct().Count())
+                    {
+                        throw new BadRequestException($"{updatedThing.ClassKind} (Iid:{updatedThing.Iid}) contains duplicate keys after saving to database for property {propertyName}.\n Conflicting changes were made.\n Transaction was canceled.");
+                    }
+
+                    if (propertyValue.Select(x => x.V).Count() != propertyValue.Select(x => x.V).Distinct().Count())
+                    {
+                        throw new BadRequestException($"{updatedThing.ClassKind} (Iid:{updatedThing.Iid}) contains duplicate values after saving to database for property {propertyName}.\n Conflicting changes were made.\n Transaction was canceled.");
+                    }
                 }
             }
         }
