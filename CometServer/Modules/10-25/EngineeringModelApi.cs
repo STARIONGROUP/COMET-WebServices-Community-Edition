@@ -49,8 +49,10 @@ namespace CometServer.Modules
     using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
 
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
+    using Microsoft.AspNetCore.Routing;
     using Microsoft.AspNetCore.WebUtilities;
 
     using NLog;
@@ -106,6 +108,14 @@ namespace CometServer.Modules
         /// Gets or sets the obfuscation service.
         /// </summary>
         public IObfuscationService ObfuscationService { get; set; }
+
+        public override void AddRoutes(IEndpointRouteBuilder app)
+        {
+            app.MapGet();
+
+
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class.
