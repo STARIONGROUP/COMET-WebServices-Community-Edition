@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileImportyApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -99,12 +99,7 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the revision dao.
         /// </summary>
         public IRevisionDao RevisionDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the cache service.
-        /// </summary>
-        public ICacheService CacheService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the permission service.
         /// </summary>
@@ -164,22 +159,7 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the engineeringModel dao.
         /// </summary>
         public IEngineeringModelDao EngineeringModelDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the engineeringModelSetup dao.
-        /// </summary>
-        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the siteDirectory dao.
-        /// </summary>
-        public ISiteDirectoryDao SiteDirectoryDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the user validator
-        /// </summary>
-        public IUserValidator UserValidator { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the Person service.
         /// </summary>
@@ -194,12 +174,7 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the PersonPermission service.
         /// </summary>
         public IPersonPermissionService PersonPermissionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Participant service.
-        /// </summary>
-        public IParticipantService ParticipantService { get; set; }
-
+        
         /// <summary>
         /// Gets or sets the ParticipantRole service.
         /// </summary>
@@ -248,7 +223,7 @@ namespace CDP4WebServices.API.Modules
                 Logger.Info(
                     "Data restore API invoked but it was disabled from configuration, cancel further processing...");
                 var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
-                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse, ContentTypeKind.JSON);
                 return notAcceptableResponse;
             }
 
@@ -262,7 +237,7 @@ namespace CDP4WebServices.API.Modules
 
                 Logger.Info("Finished data store rollback");
                 var response = new HtmlResponse();
-                this.HeaderInfoProvider.RegisterResponseHeaders(response);
+                this.HeaderInfoProvider.RegisterResponseHeaders(response, ContentTypeKind.JSON);
                 return response;
             }
             catch (Exception ex)
@@ -270,7 +245,7 @@ namespace CDP4WebServices.API.Modules
                 Logger.Error(ex, "Error occured during data store rollback");
 
                 var errorResponse = new HtmlResponse(HttpStatusCode.InternalServerError);
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse, ContentTypeKind.JSON);
                 return errorResponse;
             }
         }
@@ -289,7 +264,7 @@ namespace CDP4WebServices.API.Modules
                     "Data store import API invoked but it was disabled from configuration, cancel further processing...");
 
                 var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
-                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse, ContentTypeKind.JSON);
                 return notAcceptableResponse;
             }
 
@@ -301,7 +276,7 @@ namespace CDP4WebServices.API.Modules
             if (exchangeFileRequest.File == null)
             {
                 var badRequestResponse = new Response().WithStatusCode(HttpStatusCode.BadRequest);
-                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse, ContentTypeKind.JSON);
                 return badRequestResponse;
             }
 
@@ -315,7 +290,7 @@ namespace CDP4WebServices.API.Modules
             if (!this.UpsertModelData(filePath, exchangeFileRequest.Password))
             {
                 var errorResponse = new NotAcceptableResponse();
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse, ContentTypeKind.JSON);
                 return errorResponse;
             }
 
@@ -336,7 +311,7 @@ namespace CDP4WebServices.API.Modules
                 this.WebServiceAuthentication.ResetCredentialCache();
 
                 var response = new Response().WithStatusCode(HttpStatusCode.OK);
-                this.HeaderInfoProvider.RegisterResponseHeaders(response);
+                this.HeaderInfoProvider.RegisterResponseHeaders(response, ContentTypeKind.JSON);
 
                 Logger.Info("Finished the data store import");
                 return response;
@@ -345,10 +320,9 @@ namespace CDP4WebServices.API.Modules
             {
                 Logger.Error(ex, "Unable to import the datastore");
                 var errorResponse = new Response().WithStatusCode(HttpStatusCode.InternalServerError);
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse, ContentTypeKind.JSON);
                 return errorResponse;
             }
-
         }
 
         /// <summary>
@@ -364,7 +338,7 @@ namespace CDP4WebServices.API.Modules
                 Logger.Info(
                     "Data store seed API invoked but it was disabled from configuration, cancel further processing...");
                 var notAcceptableResponse = new Response().WithStatusCode(HttpStatusCode.NotAcceptable);
-                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(notAcceptableResponse, ContentTypeKind.JSON);
                 return notAcceptableResponse;
             }
 
@@ -377,7 +351,7 @@ namespace CDP4WebServices.API.Modules
             if (exchangeFileRequest.File == null)
             {
                 var badRequestResponse = new Response().WithStatusCode(HttpStatusCode.BadRequest);
-                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(badRequestResponse, ContentTypeKind.JSON);
                 return badRequestResponse;
             }
 
@@ -391,7 +365,7 @@ namespace CDP4WebServices.API.Modules
             if (!this.InsertModelData(filePath, exchangeFileRequest.Password, AppConfig.Current.Backtier.IsDbSeedEnabled))
             {
                 var errorResponse = new NotAcceptableResponse();
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse, ContentTypeKind.JSON);
                 return errorResponse;
             }
 
@@ -415,7 +389,7 @@ namespace CDP4WebServices.API.Modules
                 this.WebServiceAuthentication.ResetCredentialCache();
 
                 var response = new Response().WithStatusCode(HttpStatusCode.OK);
-                this.HeaderInfoProvider.RegisterResponseHeaders(response);
+                this.HeaderInfoProvider.RegisterResponseHeaders(response, ContentTypeKind.JSON);
 
                 Logger.Info("Finished the data store seed");
                 return response;
@@ -424,7 +398,7 @@ namespace CDP4WebServices.API.Modules
             {
                 Logger.Error(ex, "Unable to dump the datastore");
                 var errorResponse = new Response().WithStatusCode(HttpStatusCode.InternalServerError);
-                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse);
+                this.HeaderInfoProvider.RegisterResponseHeaders(errorResponse, ContentTypeKind.JSON);
                 return errorResponse;
             }
         }

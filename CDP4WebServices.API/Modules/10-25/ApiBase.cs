@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -37,6 +37,8 @@ namespace CDP4WebServices.API.Modules
 
     using CDP4JsonSerializer;
 
+    using CDP4MessagePackSerializer;
+
     using CDP4WebServices.API.Services.Operations;
     using CDP4WebServices.API.Services.Supplemental;
 
@@ -64,7 +66,7 @@ namespace CDP4WebServices.API.Modules
         /// <summary>
         /// The Multipart message boundary string <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
         /// </summary>
-        protected const string BoundaryString = "----Boundary";
+        public const string BoundaryString = "----Boundary";
 
         /// <summary>
         /// The site directory data.
@@ -82,9 +84,14 @@ namespace CDP4WebServices.API.Modules
         protected readonly string ApiFormat = "/{0}/{1}";
 
         /// <summary>
-        /// The mime type JSON.
+        /// The JSON mime type.
         /// </summary>
         protected readonly string MimeTypeJson = "application/json";
+
+        /// <summary>
+        /// The MessagePack mime type.
+        /// </summary>
+        protected readonly string MimeTypeMessagePack = "application/msgpack";
 
         /// <summary>
         /// The mime type octet stream.
@@ -187,6 +194,11 @@ namespace CDP4WebServices.API.Modules
         public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IMessagePackSerializer"/>
+        /// </summary>
+        public IMessagePackSerializer MessagePackSerializer { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IPermissionInstanceFilterService"/>
         /// </summary>
         public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
@@ -198,7 +210,7 @@ namespace CDP4WebServices.API.Modules
         {
             get
             {
-                return string.Format("{0}{1}", this.Context.Request.Url.Path, this.Context.Request.Url.Query);
+                return $"{this.Context.Request.Url.Path}{this.Context.Request.Url.Query}";
             }
         }
 
@@ -364,10 +376,13 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters from the request.
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The <see cref="Response"/>.
         /// </returns>
-        protected abstract Response GetResponseData(dynamic routeParams);
+        protected abstract Response GetResponseData(dynamic routeParams, ContentTypeKind contentTypeKind);
 
         /// <summary>
         /// Wrapper function to wire up authorization on the get response.
@@ -387,12 +402,14 @@ namespace CDP4WebServices.API.Modules
             {
                 return this.GetUnauthorizedResponse();
             }
+            
+            var contentTypeKind = ContentTypeKind.JSON;
+            if (this.Request.Headers.Accept.Any(x => x.Item1 == this.MimeTypeMessagePack))
+            {
+                contentTypeKind = ContentTypeKind.MESSAGEPACK;
+            }
 
-            var response = this.GetResponseData(routeParams);
-
-            // Register the required CDP4 headers to every response send
-            this.HeaderInfoProvider.RegisterResponseHeaders(response);
-            return response;
+            return this.GetResponseData(routeParams, contentTypeKind);
         }
 
         /// <summary>
@@ -401,10 +418,13 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters from the request.
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The <see cref="Response"/>.
         /// </returns>
-        protected abstract Response PostResponseData(dynamic routeParams);
+        protected abstract Response PostResponseData(dynamic routeParams, ContentTypeKind contentTypeKind);
 
         /// <summary>
         /// Wrapper function to wire up authorization on the post response.
@@ -424,13 +444,16 @@ namespace CDP4WebServices.API.Modules
             {
                 return this.GetUnauthorizedResponse();
             }
-            
-            var response = this.PostResponseData(routeParams);
 
-            this.HeaderInfoProvider.RegisterResponseHeaders(response);
-            return response;
+            var contentTypeKind = ContentTypeKind.JSON;
+            if (this.Request.Headers.Accept.Any(x => x.Item1 == this.MimeTypeMessagePack))
+            {
+                contentTypeKind = ContentTypeKind.MESSAGEPACK;
+            }
+
+            return this.PostResponseData(routeParams, contentTypeKind);
         }
-
+        
         /// <summary>
         /// Construct a request log message.
         /// </summary>
@@ -494,15 +517,59 @@ namespace CDP4WebServices.API.Modules
             string requestToken = "")
         {
             // create a new response with contents assigned by stream
-            return new Response
+            var jsonResponse = new Response
             {
-                Contents = stream => this.CreateFilteredResponseStream(
+                Contents = stream => this.CreateFilteredJsonResponseStream(
                     resourceResponse,
                     stream,
                     requestDataModelVersion,
                     requestToken),
                 StatusCode = statusCode
             };
+
+            this.HeaderInfoProvider.RegisterResponseHeaders(jsonResponse, ContentTypeKind.JSON);
+
+            return jsonResponse;
+        }
+
+        /// <summary>
+        /// Get a MessagePack response instance from the passed in resource collection.
+        /// </summary>
+        /// <param name="resourceResponse">
+        /// The resource collection to serialize.
+        /// </param>
+        /// <param name="requestDataModelVersion">
+        /// The data model version of this request to use with serialization.
+        /// </param>
+        /// <param name="statusCode">
+        /// The optional HTML status Code.
+        /// </param>
+        /// <param name="requestToken">
+        /// optional request token
+        /// </param>
+        /// <returns>
+        /// The <see cref="Response"/>.
+        /// </returns>
+        protected Response GetMessagePackResponse(
+            IReadOnlyList<Thing> resourceResponse,
+            Version requestDataModelVersion,
+            HttpStatusCode statusCode = HttpStatusCode.OK,
+            string requestToken = "")
+        {
+            // create a new response with contents assigned by stream
+            var messagePackResponse = new Response
+            {
+                Contents = stream => this.CreateFilteredMessagePackResponseStream(
+                    resourceResponse,
+                    stream,
+                    requestDataModelVersion,
+                    requestToken),
+                StatusCode = statusCode
+            };
+
+            this.HeaderInfoProvider.RegisterResponseHeaders(messagePackResponse, ContentTypeKind.MESSAGEPACK);
+
+            return messagePackResponse;
         }
 
         /// <summary>
@@ -556,7 +623,7 @@ namespace CDP4WebServices.API.Modules
                 StatusCode = statusCode
             };
 
-            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(response, BoundaryString);
+            this.HeaderInfoProvider.RegisterResponseHeaders(response, ContentTypeKind.MULTIPARTMIXED);
 
             return response;
         }
@@ -597,7 +664,7 @@ namespace CDP4WebServices.API.Modules
                 StatusCode = statusCode
             };
 
-            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(response, BoundaryString);
+            this.HeaderInfoProvider.RegisterResponseHeaders(response, ContentTypeKind.MULTIPARTMIXED);
 
             return response;
         }
@@ -749,7 +816,7 @@ namespace CDP4WebServices.API.Modules
             {
                 // error handling
                 var errorResponse = new JsonResponse(
-                    string.Format("exception:{0}", ex.Message),
+                    $"exception:{ex.Message}",
                     new DefaultJsonSerializer());
 
                 if (path != null)
@@ -776,25 +843,56 @@ namespace CDP4WebServices.API.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateFilteredResponseStream(
+        private void CreateFilteredJsonResponseStream(
             IReadOnlyList<Thing> dtos,
             Stream stream,
             Version requestDataModelVersion,
+            
             string requestToken = "")
         {
             var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
 
             var sw = new Stopwatch();
             sw.Start();
-            Logger.Debug("{0} start serializing dtos", requestToken);
-
-            this.JsonSerializer.Initialize(
-                this.RequestUtils.MetaInfoProvider,
-                this.RequestUtils.GetRequestDataModelVersion);
+            Logger.Debug("{0} start serializing dtos as JSON", requestToken);
+            this.JsonSerializer.Initialize(this.RequestUtils.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion);
             this.JsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            Logger.Debug("serializing dtos {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+            Logger.Debug("serializing dtos as JSON {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
+        /// </summary>
+        /// <param name="dtos">
+        /// The DTO's that needs to be serialized to a stream
+        /// </param>
+        /// <param name="stream">
+        /// Stream to which to write the serializer output
+        /// </param>
+        /// <param name="requestDataModelVersion">
+        /// The data model version of this request to use with serialization.
+        /// </param>
+        /// <param name="requestToken">
+        /// optional request token
+        /// </param>
+        private void CreateFilteredMessagePackResponseStream(
+            IReadOnlyList<Thing> dtos,
+            Stream stream,
+            Version requestDataModelVersion,
+
+            string requestToken = "")
+        {
+            var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Logger.Debug("{0} start serializing dtos as MessagePack", requestToken);
+            this.MessagePackSerializer.SerializeToStream(filteredDtos, stream);
+            sw.Stop();
+
+            Logger.Debug("serializing dtos as MessagePack {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -827,7 +925,7 @@ namespace CDP4WebServices.API.Modules
             var content = new MultipartContent("mixed", BoundaryString);
             using (var stream = new MemoryStream())
             {
-                this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
+                this.CreateFilteredJsonResponseStream(resourceResponse, stream, requestDataModelVersion);
 
                 // rewind stream prior to reading
                 stream.Position = 0;
@@ -900,7 +998,7 @@ namespace CDP4WebServices.API.Modules
 
                 using (var stream = new MemoryStream())
                 {
-                    this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
+                    this.CreateFilteredJsonResponseStream(resourceResponse, stream, requestDataModelVersion);
 
                     // rewind stream prior to reading
                     stream.Position = 0;

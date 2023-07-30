@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Cdp4Bootstrapper.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -36,6 +36,8 @@ namespace CDP4WebServices.API
     using CDP4Common.MetaInfo;
 
     using CDP4JsonSerializer;
+
+    using CDP4MessagePackSerializer;
 
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Authentication;
@@ -219,6 +221,9 @@ namespace CDP4WebServices.API
                     // wireup class cdp4JsonSerializer
                     builder.RegisterTypeAsPropertyInjectedSingleton<Cdp4JsonSerializer, ICdp4JsonSerializer>();
 
+                    // wireup class cdp4JsonSerializer
+                    builder.RegisterTypeAsPropertyInjectedSingleton<MessagePackSerializer, IMessagePackSerializer>();
+
                     // wireup AccessRightKind service
                     builder.RegisterTypeAsPropertyInjectedSingleton<AccessRightKindService, IAccessRightKindService>();
 
@@ -326,7 +331,7 @@ namespace CDP4WebServices.API
                 Logger.Fatal(ex, LoggerUtils.GetLogMessage(subject, ctx.Request.UserHostAddress, false, requestMessage));
 
                 var errorResponse = new JsonResponse($"exception:{ex.Message}", new DefaultJsonSerializer());
-                headerInforProvider.RegisterResponseHeaders(errorResponse);
+                headerInforProvider.RegisterResponseHeaders(errorResponse,ContentTypeKind.JSON);
                 return errorResponse.WithStatusCode(HttpStatusCode.InternalServerError);
             };
 

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="HeaderInfoProvider.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -29,6 +29,7 @@ namespace CDP4WebServices.API.Services
     using System.Reflection;
 
     using CDP4WebServices.API.Configuration;
+    using CDP4WebServices.API.Modules;
 
     using Nancy;
 
@@ -60,7 +61,6 @@ namespace CDP4WebServices.API.Services
             // setup version info at runtime bootstrap
             this.responseHeaders.Add(this.Cdp4ServerHeader, Cdp4ServerHeaderVersion.Value);
             this.responseHeaders.Add(this.Cdp4CommonHeader, Cdp4CommonHeaderVersion.Value);
-            this.responseHeaders.Add(this.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
         }
 
         /// <summary>
@@ -119,45 +119,35 @@ namespace CDP4WebServices.API.Services
         }
 
         /// <summary>
-        /// Gets the Content type version.
-        /// </summary>
-        public string ContentTypeVersion
-        {
-            get
-            {
-                return this.responseHeaders[this.ContentTypeHeader];
-            }
-        }
-
-        /// <summary>
         /// Register the CDP4 headers to the passed in response.
         /// </summary>
         /// <param name="response">
         /// The nancy response.
         /// </param>
-        public void RegisterResponseHeaders(Response response)
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> that is used to determine what the value of the
+        /// Content-Type header needs to be
+        /// </param>
+        public void RegisterResponseHeaders(Response response, ContentTypeKind contentTypeKind)
         {
             response.Headers.Add(this.Cdp4ServerHeader, this.Cdp4ServerVersion);
             response.Headers.Add(this.Cdp4CommonHeader, this.Cdp4CommonVersion);
 
-            if (!response.Headers.ContainsKey(this.ContentTypeHeader))
+            switch (contentTypeKind)
             {
-                response.Headers.Add(this.ContentTypeHeader, this.ContentTypeVersion);
-            }            
-        }
-
-        /// <summary>
-        /// Register the multipart CDP4 content-type header to the passed in response.
-        /// </summary>
-        /// <param name="response">
-        /// The nancy response.
-        /// </param>
-        /// <param name="boundaryString">
-        /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
-        /// </param>
-        public void RegisterMultipartResponseContentTypeHeader(Response response, string boundaryString)
-        {
-            response.Headers.Add(this.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundaryString}");
+                case ContentTypeKind.JSON:
+                    response.Headers.Add(this.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
+                    break;
+                case ContentTypeKind.MESSAGEPACK:
+                    response.Headers.Add(this.ContentTypeHeader, "application/msgpack; ecss-e-tm-10-25; version=1.0.0");
+                    break;
+                case ContentTypeKind.MULTIPARTMIXED:
+                    response.Headers.Add(this.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={ApiBase.BoundaryString}");
+                    break;
+                case ContentTypeKind.IGNORE:
+                    // The Content-Type header does not need to be set as it is already present
+                    break;
+            }
         }
 
         /// <summary>

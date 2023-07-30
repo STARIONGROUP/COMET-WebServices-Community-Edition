@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -127,17 +127,20 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the obfuscation service.
         /// </summary>
         public IObfuscationService ObfuscationService { get; set; }
-        
+
         /// <summary>
         /// Parse the url segments and return the data as serialized JSON
         /// </summary>
         /// <param name="routeParams">
         /// A dynamic dictionary holding the route parameters
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The serialized retrieved data or exception message
         /// </returns>
-        protected override Response GetResponseData(dynamic routeParams)
+        protected override Response GetResponseData(dynamic routeParams, ContentTypeKind contentTypeKind)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -264,7 +267,15 @@ namespace CDP4WebServices.API.Modules
                     }
                 }
 
-                return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
+                    case ContentTypeKind.MESSAGEPACK:
+                        return this.GetMessagePackResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion);
+                    default:
+                        throw new InvalidOperationException($"contentTypeKind: {contentTypeKind} not supported");
+                }
             }
             catch (Exception ex)
             {
@@ -293,10 +304,13 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters.
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The <see cref="Response"/>.
         /// </returns>
-        protected override Response PostResponseData(dynamic routeParams)
+        protected override Response PostResponseData(dynamic routeParams, ContentTypeKind contentTypeKind)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -426,8 +440,16 @@ namespace CDP4WebServices.API.Modules
                 transaction.Commit();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-
-                return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                    case ContentTypeKind.MESSAGEPACK:
+                        return this.GetMessagePackResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                    default:
+                        throw new InvalidOperationException($"contentTypeKind: {contentTypeKind} not supported");
+                }
             }
             catch (InvalidOperationException ex)
             {

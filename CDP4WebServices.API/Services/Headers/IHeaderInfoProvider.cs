@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IHeaderInfoProvider.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -57,27 +57,14 @@ namespace CDP4WebServices.API.Services
         string Cdp4CommonVersion { get; }
 
         /// <summary>
-        /// Gets the Content type version.
-        /// </summary>
-        string ContentTypeVersion { get; }
-
-        /// <summary>
         /// Register the CDP4 headers to the passed in response.
         /// </summary>
         /// <param name="response">
         /// The nancy response.
         /// </param>
-        void RegisterResponseHeaders(Response response);
-
-        /// <summary>
-        /// Register the multipart CDP4 content-type header to the passed in response.
-        /// </summary>
-        /// <param name="response">
-        /// The nancy response.
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
         /// </param>
-        /// <param name="boundaryString">
-        /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
-        /// </param>
-        void RegisterMultipartResponseContentTypeHeader(Response response, string boundaryString);
+        void RegisterResponseHeaders(Response response, ContentTypeKind contentTypeKind);
     }
 }

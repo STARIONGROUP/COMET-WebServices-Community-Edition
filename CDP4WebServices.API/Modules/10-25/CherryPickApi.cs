@@ -119,10 +119,13 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters from the request.
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The <see cref="Response" />.
         /// </returns>
-        protected override Response GetResponseData(dynamic routeParams)
+        protected override Response GetResponseData(dynamic routeParams, ContentTypeKind contentTypeKind)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -202,7 +205,15 @@ namespace CDP4WebServices.API.Modules
                 // obfuscate if needed
                 if (!modelSetup.OrganizationalParticipant.Any())
                 {
-                    return this.GetJsonResponse(cherryPickedThings, this.RequestUtils.GetRequestDataModelVersion);
+                    switch (contentTypeKind)
+                    {
+                        case ContentTypeKind.JSON:
+                            return this.GetJsonResponse(cherryPickedThings, this.RequestUtils.GetRequestDataModelVersion);
+                        case ContentTypeKind.MESSAGEPACK:
+                            return this.GetMessagePackResponse(cherryPickedThings, this.RequestUtils.GetRequestDataModelVersion);
+                        default:
+                            throw new InvalidOperationException($"contentTypeKind: {contentTypeKind} not supported");
+                    }
                 }
 
                 sw = new Stopwatch();
@@ -213,7 +224,15 @@ namespace CDP4WebServices.API.Modules
 
                 Logger.Info("{0} obfuscation completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                return this.GetJsonResponse(cherryPickedThings, this.RequestUtils.GetRequestDataModelVersion);
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        return this.GetJsonResponse(cherryPickedThings, this.RequestUtils.GetRequestDataModelVersion);
+                    case ContentTypeKind.MESSAGEPACK:
+                        return this.GetMessagePackResponse(cherryPickedThings, this.RequestUtils.GetRequestDataModelVersion);
+                    default:
+                        throw new InvalidOperationException($"contentTypeKind: {contentTypeKind} not supported");
+                }
             }
             catch (Exception ex)
             {
@@ -241,10 +260,16 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters from the request.
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The <see cref="Response" />.
         /// </returns>
-        protected override Response PostResponseData(dynamic routeParams)
+        /// <remarks>
+        /// The CherryPick route does not accept a POST and returns a <see cref="HttpStatusCode.MethodNotAllowed "/>
+        /// </remarks>
+        protected override Response PostResponseData(dynamic routeParams, ContentTypeKind contentTypeKind)
         {
             return new Response { StatusCode = HttpStatusCode.MethodNotAllowed };
         }

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MigrationEngine.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -72,7 +72,7 @@ namespace CDP4WebServices.API
                     {
                         connection.Open();
                     }
-                    catch (PostgresException e)
+                    catch (NpgsqlException e)
                     {
                         Logger.Warn("Could not connect to the database for migration, the database might not exist yet. Skipping migration. Error message: {0}", e.Message);
                         return;

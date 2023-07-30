@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -108,7 +108,7 @@ namespace CDP4WebServices.API.Modules
         {
             // enable basic authentication
             this.RequiresAuthentication();
-
+            
             // support trailing or empty segment
             this.Get[string.Format(SiteDirectoryRootFormat, TopContainer)] = 
                 route => this.GetResponse(route);
@@ -136,10 +136,13 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// A dynamic dictionary holding the route parameters
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <returns>
         /// The serialized retrieved data or exception message
         /// </returns>
-        protected override Response GetResponseData(dynamic routeParams)
+        protected override Response GetResponseData(dynamic routeParams, ContentTypeKind contentTypeKind)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -198,12 +201,16 @@ namespace CDP4WebServices.API.Modules
 
                 sw.Start();
                 Logger.Info("return {0} response started", requestToken);
-
-                return this.GetJsonResponse(
-                    resourceResponse,
-                    this.RequestUtils.GetRequestDataModelVersion,
-                    HttpStatusCode.OK,
-                    requestToken);
+                
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        return this.GetJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, HttpStatusCode.OK, requestToken);
+                    case ContentTypeKind.MESSAGEPACK:
+                        return this.GetMessagePackResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion, HttpStatusCode.OK, requestToken);
+                    default:
+                        throw new InvalidOperationException($"contentTypeKind: {contentTypeKind} not supported");
+                }
             }
             catch (Exception ex)
             {
@@ -241,13 +248,16 @@ namespace CDP4WebServices.API.Modules
         /// <param name="routeParams">
         /// The route parameters.
         /// </param>
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> is used to determine which for the <see cref="Response"/> will take
+        /// </param>
         /// <remarks>
         /// multipart handling sample source <see cref="http://www.applandeo.com/en/net-and-nancy-parsing-multipartform-data-requests/"/>
         /// </remarks>
         /// <returns>
         /// The <see cref="Response"/>.
         /// </returns>
-        protected override Response PostResponseData(dynamic routeParams)
+        protected override Response PostResponseData(dynamic routeParams, ContentTypeKind contentTypeKind)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -269,8 +279,7 @@ namespace CDP4WebServices.API.Modules
                 if (isMultiPart)
                 {
                     // multipart message received
-                    throw new InvalidOperationException(
-                        string.Format("Multipart post messages are not allowed for the {0} route", TopContainer));
+                    throw new InvalidOperationException($"Multipart post messages are not allowed for the {TopContainer} route");
                 }
                 else
                 {
@@ -341,8 +350,16 @@ namespace CDP4WebServices.API.Modules
                 transaction.Commit();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-
-                return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        return this.GetJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                    case ContentTypeKind.MESSAGEPACK:
+                        return this.GetMessagePackResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion);
+                    default:
+                        throw new InvalidOperationException($"contentTypeKind: {contentTypeKind} not supported");
+                }
             }
             catch (InvalidOperationException ex)
             {
