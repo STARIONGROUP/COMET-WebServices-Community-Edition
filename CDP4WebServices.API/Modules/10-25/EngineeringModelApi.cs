@@ -33,13 +33,15 @@ namespace CDP4WebServices.API.Modules
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
-    
+    using CDP4Common.Extensions;
+
     using CDP4Orm.Dao;
 
     using CDP4WebServices.API.Configuration;
     using CDP4WebServices.API.Exceptions;
     using CDP4WebServices.API.Services.Authentication;
     using CDP4WebServices.API.Services.ChangeLog;
+    using CDP4WebServices.API.Services.CherryPick;
 
     using Helpers;
     
@@ -85,7 +87,10 @@ namespace CDP4WebServices.API.Modules
                 QueryParameters.IncludeFileDataQuery,
                 QueryParameters.RevisionNumberQuery, 
                 QueryParameters.RevisionFromQuery, 
-                QueryParameters.RevisionToQuery
+                QueryParameters.RevisionToQuery,
+                QueryParameters.ClassKindQuery,
+                QueryParameters.CategoryQuery,
+                QueryParameters.CherryPickQuery
             };
 
         /// <summary>
@@ -127,6 +132,16 @@ namespace CDP4WebServices.API.Modules
         /// Gets or sets the obfuscation service.
         /// </summary>
         public IObfuscationService ObfuscationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ICherryPickService"/>
+        /// </summary>
+        public ICherryPickService CherryPickService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IContainmentService"/>
+        /// </summary>
+        public IContainmentService ContainmentService { get; set; }
 
         /// <summary>
         /// Parse the url segments and return the data as serialized JSON
@@ -206,6 +221,12 @@ namespace CDP4WebServices.API.Modules
                 }
                 else
                 {
+                    if (this.RequestUtils.QueryParameters.CherryPick)
+                    {
+                        this.RequestUtils.QueryParameters.ExtentDeep = true;
+                        this.RequestUtils.QueryParameters.IncludeReferenceData = true;
+                    }
+
                     if (routeSegments.Length == 4 && routeSegments[2] == "iteration" && this.RequestUtils.QueryParameters.ExtentDeep)
                     {
                         string[] engineeringModelRouteSegments = { routeSegments[0], routeSegments[1] };
@@ -226,6 +247,33 @@ namespace CDP4WebServices.API.Modules
                         var invalidRequest = new JsonResponse("The identifier of the object to query was not found or the route is invalid.", new DefaultJsonSerializer());
                         return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                     }
+                }
+
+                if (this.RequestUtils.QueryParameters.CherryPick)
+                {
+                    if (routeSegments.Length != 4 || routeSegments[2] != "iteration")
+                    {
+                        var invalidRequest = new JsonResponse($"The {QueryParameters.CherryPickQuery} feature is only available when reading an iteration", new DefaultJsonSerializer());
+                        return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
+                    }
+
+                    if (!this.RequestUtils.QueryParameters.ClassKinds.Any() || !this.RequestUtils.QueryParameters.CategoriesId.Any())
+                    {
+                        var invalidRequest = new JsonResponse($"The {QueryParameters.ClassKindQuery} and {QueryParameters.CategoryQuery} parameters are required to use {QueryParameters.CherryPickQuery}", new DefaultJsonSerializer());
+                        return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
+                    }
+
+                    resourceResponse = this.CherryPick(resourceResponse);
+                }
+                else if (this.RequestUtils.QueryParameters.ClassKinds.Any())
+                {
+                    var invalidRequest = new JsonResponse($"The {QueryParameters.ClassKindQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled", new DefaultJsonSerializer());
+                    return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
+                }
+                else if (this.RequestUtils.QueryParameters.CategoriesId.Any())
+                {
+                    var invalidRequest = new JsonResponse($"The {QueryParameters.CategoryQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled", new DefaultJsonSerializer());
+                    return invalidRequest.WithStatusCode(HttpStatusCode.BadRequest);
                 }
 
                 transaction.Commit();
@@ -296,6 +344,26 @@ namespace CDP4WebServices.API.Modules
 
                 connection?.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Cherry Picks <see cref="Thing" />s inside read <see cref="Thing"/>s based on provided <see cref="ClassKind"/> and <see cref="Category"/> filters
+        /// </summary>
+        /// <param name="resourceResponse">A collection of read <see cref="Thing"/>s</param>
+        /// <returns></returns>
+        private List<Thing> CherryPick(IReadOnlyList<Thing> resourceResponse)
+        {
+            var cherryPickedThings = this.CherryPickService.CherryPick(resourceResponse, this.RequestUtils.QueryParameters.ClassKinds, this.RequestUtils.QueryParameters.CategoriesId)
+                .ToList();
+
+            var containedThings = this.ContainmentService.QueryContainedThings(cherryPickedThings, resourceResponse, true,
+                ClassKind.Parameter, ClassKind.ParameterOverride, ClassKind.ParameterValueSet, ClassKind.ParameterOverrideValueSet);
+
+            var containers = this.ContainmentService.QueryContainersTree(cherryPickedThings, resourceResponse);
+
+            cherryPickedThings.AddRange(containedThings);
+            cherryPickedThings.AddRange(containers);
+            return cherryPickedThings.DistinctBy(x => x.Iid).ToList();
         }
 
         /// <summary>
