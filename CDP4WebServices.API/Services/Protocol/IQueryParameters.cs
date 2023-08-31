@@ -86,6 +86,11 @@ namespace CDP4WebServices.API.Services.Protocol
         IEnumerable<Guid> CategoriesId { get; set; }
 
         /// <summary>
+        /// Gets or sets the flag to enable the Cherry Pick feature
+        /// </summary>
+        bool CherryPick { get; set; }
+
+        /// <summary>
         /// The validate query parameter.
         /// </summary>
         /// <param name="queryParameter">

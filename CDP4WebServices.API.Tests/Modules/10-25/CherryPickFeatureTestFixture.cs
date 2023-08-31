@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="CherryPickApiTestFixture.cs" company="RHEA System S.A.">
+// <copyright file="CherryPickFeatureTestFixture.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 // 
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski,
@@ -28,6 +28,7 @@ namespace CDP4WebServices.API.Tests.Modules
 {
     using System;
     using System.Collections.Generic;
+    using System.Data;
     using System.Linq;
 
     using CDP4Authentication;
@@ -36,6 +37,8 @@ namespace CDP4WebServices.API.Tests.Modules
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
+
+    using CDP4Orm.Dao.Revision;
 
     using CDP4WebServices.API.Helpers;
     using CDP4WebServices.API.Modules;
@@ -58,9 +61,9 @@ namespace CDP4WebServices.API.Tests.Modules
     using Thing = CDP4Common.DTO.Thing;
 
     [TestFixture]
-    public class CherryPickApiTestFixture
+    public class CherryPickFeatureTestFixture
     {
-        private CherryPickApi cherryPickApi;
+        private EngineeringModelApi engineeringModelApi;
         private Mock<IPersonResolver> personResolver;
         private Mock<IObfuscationService> obfuscationService;
         private Mock<IRequestUtils> requestUtils;
@@ -76,6 +79,7 @@ namespace CDP4WebServices.API.Tests.Modules
         private Guid engineeringModelId;
         private Mock<IReadService> engineeringModelReadService;
         private Guid iterationId;
+        private Mock<IRevisionResolver> revisionResolver;
 
         [SetUp]
         public void SetUp()
@@ -88,11 +92,19 @@ namespace CDP4WebServices.API.Tests.Modules
             this.permissionService = new Mock<IPermissionService>();
             this.cherryPickService = new Mock<ICherryPickService>();
             this.containmentService = new Mock<IContainmentService>();
+            this.revisionResolver = new Mock<IRevisionResolver>();
+
+            (int FromRevision, int ToRevision, IEnumerable<RevisionRegistryInfo> RevisionRegistryInfoList) value;
+
+            this.revisionResolver.Setup(x => x.TryResolve(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<object>(), It.IsAny<object>(), out value))
+                .Returns(false);
             
             this.queryParameters = new QueryParameters()
             {
                 ClassKinds = Enumerable.Empty<ClassKind>(),
-                CategoriesId = Enumerable.Empty<Guid>()
+                CategoriesId = Enumerable.Empty<Guid>(),
+                RevisionNumber = -1,
+                CherryPick = true
             };
 
             this.headerInfoProvider = new Mock<IHeaderInfoProvider>();
@@ -108,7 +120,7 @@ namespace CDP4WebServices.API.Tests.Modules
                 }
             };
 
-            this.cherryPickApi = new CherryPickApi()
+            this.engineeringModelApi = new EngineeringModelApi()
             {
                 ObfuscationService = this.obfuscationService.Object,
                 PersonResolver = this.personResolver.Object,
@@ -118,27 +130,32 @@ namespace CDP4WebServices.API.Tests.Modules
                 PermissionService = this.permissionService.Object,
                 CherryPickService = this.cherryPickService.Object,
                 ContainmentService = this.containmentService.Object,
-                HeaderInfoProvider = this.headerInfoProvider.Object
+                HeaderInfoProvider = this.headerInfoProvider.Object,
+                RevisionResolver = this.revisionResolver.Object
             };
+
+            this.engineeringModelId = Guid.NewGuid();
+            this.iterationId = Guid.NewGuid();
 
             var cdpContext = new Mock<ICdp4RequestContext>();
 
             this.requestUtils.Setup(x => x.Context).Returns(cdpContext.Object);
             this.requestUtils.Setup(x => x.QueryParameters).Returns(this.queryParameters);
+
+            this.requestUtils.Setup(x => x.GetEngineeringModelPartitionString(this.engineeringModelId))
+                .Returns($"EngineeringModel_{this.engineeringModelId.ToString().Replace("-", "_")}");
+
             cdpContext.Setup(x => x.AuthenticatedCredentials).Returns(this.credentials);
 
             this.browser = new Browser(cfg =>
             { 
-                cfg.Module(this.cherryPickApi);
+                cfg.Module(this.engineeringModelApi);
 
                 cfg.RequestStartup((_, _, context) =>
                 {
                     context.CurrentUser = this.credentials;
                 });
             });
-
-            this.engineeringModelId = Guid.NewGuid();
-            this.iterationId = Guid.NewGuid();
 
             var siteDirectoryService = new Mock<IReadService>();
             var engineeringModelSetupId = Guid.NewGuid();
@@ -174,6 +191,10 @@ namespace CDP4WebServices.API.Tests.Modules
             this.serviceProvider.Setup(x => x.MapToReadService("EngineeringModel")).Returns(this.engineeringModelReadService.Object);
             this.serviceProvider.Setup(x => x.MapToReadService("ModelReferenceDataLibrary")).Returns(modelDataLibraryReadService.Object);
 
+            this.engineeringModelReadService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
+                It.Is<IEnumerable<Guid>>(g => g.Contains(this.engineeringModelId)),
+                It.IsAny<ISecurityContext>())).Returns(new List<Thing> { new EngineeringModel() { Iid = this.engineeringModelId, Iteration = new List<Guid> { this.iterationId } } });
+
             modelDataLibraryReadService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>()
                 , It.IsAny<ISecurityContext>())).Returns(new List<Thing>{new ModelReferenceDataLibrary()});
 
@@ -191,7 +212,7 @@ namespace CDP4WebServices.API.Tests.Modules
         [Test]
         public void VerifyGetRoute()
         {
-            var route = $"cherrypick/EngineeringModel/{this.engineeringModelId}/Iteration/{this.iterationId}";
+            var route = $"EngineeringModel/{this.engineeringModelId}/iteration/{this.iterationId}";
             var response = this.browser.Get(route);
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
 
@@ -201,35 +222,19 @@ namespace CDP4WebServices.API.Tests.Modules
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
 
             this.queryParameters.CategoriesId = new List<Guid> { Guid.NewGuid() };
-
-            response = this.browser.Get($"cherrypick/EngineeringModel/{this.engineeringModelId}/Iteration/4");
+            this.queryParameters.CherryPick = false;
+            response = this.browser.Get(route);
             Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.BadRequest));
 
-            response = this.browser.Get($"cherrypick/EngineeringModel/{Guid.NewGuid()}/Iteration/{this.iterationId}");
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError));
+            this.queryParameters.CherryPick = true;
 
-            response = this.browser.Get(route);
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.MethodNotAllowed));
-            
-            this.permissionService.Setup(x => x.CanRead("ElementDefinition", It.IsAny<ISecurityContext>(), It.IsAny<string>()))
-                .Returns(true);
-            
-            response = this.browser.Get(route);
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.InternalServerError));
+            this.cherryPickService.Verify(x => x.CherryPick(It.IsAny<IReadOnlyList<Thing>>(),
+                this.queryParameters.ClassKinds, this.queryParameters.CategoriesId), Times.Never);
 
-            this.engineeringModelReadService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), 
-                It.Is<IEnumerable<Guid>>(g => g.Contains(this.engineeringModelId)),
-                It.IsAny<ISecurityContext>())).Returns(new List<Thing>{new EngineeringModel() { Iid = this.engineeringModelId, Iteration = new List<Guid>{this.iterationId}}});
+            this.browser.Get(route);
 
-            response = this.browser.Get(route);
-
-            Assert.Multiple(() =>
-            {
-                Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-
-                this.cherryPickService.Verify(x => x.CherryPick(It.IsAny<IReadOnlyList<Thing>>(),
-                    this.queryParameters.ClassKinds, this.queryParameters.CategoriesId), Times.Once);
-            });
+            this.cherryPickService.Verify(x => x.CherryPick(It.IsAny<IReadOnlyList<Thing>>(),
+                this.queryParameters.ClassKinds, this.queryParameters.CategoriesId), Times.Once);
         }
     }
 }

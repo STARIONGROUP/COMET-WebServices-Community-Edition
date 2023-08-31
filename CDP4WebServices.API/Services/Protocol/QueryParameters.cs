@@ -90,6 +90,11 @@ namespace CDP4WebServices.API.Services.Protocol
         public const string CategoryQuery = "category";
 
         /// <summary>
+        /// The flag to enable Cherry Pick feature
+        /// </summary>
+        public const string CherryPickQuery = "cherryPick";
+
+        /// <summary>
         /// The query parameter definitions.
         /// </summary>
         private readonly Dictionary<string, string[]> queryParameterDefinitions = new Dictionary<string, string[]>
@@ -98,7 +103,8 @@ namespace CDP4WebServices.API.Services.Protocol
             { IncludeReferenceDataQuery, new[] { "true", "false" } },
             { IncludeAllContainersQuery, new[] { "true", "false" } },
             { IncludeFileDataQuery, new[] { "true", "false" } },
-            { ExportQuery, new[] { "true", "false" } }
+            { ExportQuery, new[] { "true", "false" } },
+            { CherryPickQuery, new [] {"true", "false"} }
         };
 
         /// <summary>
@@ -130,6 +136,7 @@ namespace CDP4WebServices.API.Services.Protocol
             this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionToQuery);
             this.ClassKinds = this.ProcessClassKindsQueryParameter(queryParameters, ClassKindQuery);
             this.CategoriesId = this.ProcessCategoryQueryParameter(queryParameters, CategoryQuery);
+            this.CherryPick = this.ProcessQueryParameter(queryParameters, CherryPickQuery, "true");
         }
 
         /// <summary>
@@ -181,6 +188,11 @@ namespace CDP4WebServices.API.Services.Protocol
         /// Gets or sets a collection of <see cref="Category"/>s id to used during the cherry picking request
         /// </summary>
         public IEnumerable<Guid> CategoriesId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the flag to enable the Cherry Pick feature
+        /// </summary>
+        public bool CherryPick { get; set; }
 
         /// <summary>
         /// The validate query parameter.
@@ -367,6 +379,7 @@ namespace CDP4WebServices.API.Services.Protocol
             this.IncludeAllContainers = false;
             this.IncludeFileData = false;
             this.Export = false;
+            this.CherryPick = false;
         }
     }
 }

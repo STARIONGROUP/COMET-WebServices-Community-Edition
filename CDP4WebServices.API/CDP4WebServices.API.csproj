@@ -21,8 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="23.0.0-PR-268-04" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="23.0.0-PR-268-05" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="24.0.0" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="24.0.0" />
     <PackageReference Include="DotNetZip" Version="1.16.0" />
     <PackageReference Include="Hangfire" Version="1.7.19" />
     <PackageReference Include="HangFire.Autofac" Version="2.3.1" />
@@ -73,5 +73,9 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
-   
+  
+  <ItemGroup>
+    <Folder Include="Services\CherryPick\" />
+  </ItemGroup>
+
 </Project>
