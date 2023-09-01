@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DomainFileStoreServiceTestFixture.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -165,47 +165,96 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         }
 
         [Test]
-        [TestCaseSource(nameof(TestCases))]
-        public void VerifyCheckSecurity<T>(T thing, bool shouldFail) where T : Thing
+        [TestCaseSource(nameof(TestWriteCases))]
+        public void VerifyHasReadAccess<T>(T thing, bool shouldFail) where T : Thing
         {
             if (shouldFail)
             {
-                Assert.Throws<SecurityException>(() => this.domainFileStoreService.CheckSecurity(
-                    thing,
-                    this.transaction.Object,
-                    this.iterationPartitionName));
-
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
-
-                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.CheckSecurity(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.HasReadAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
             }
             else
             {
-                Assert.DoesNotThrow(() => this.domainFileStoreService.CheckSecurity(
+                Assert.That(this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.True);
+
+                domainFileStore.IsHidden = true;
+
+                Assert.That(() => this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.True);
+
+                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(false);
+
+                Assert.That(this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.False);
+
+                domainFileStore.IsHidden = false;
+
+                Assert.That(this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.True);
+            }
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestWriteCases))]
+        public void VerifyCheckSecurity<T>(T thing, bool shouldFail) where T : Thing
+        {
+            if (shouldFail)
+            {
+                Assert.Throws<SecurityException>(() => this.domainFileStoreService.HasWriteAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName));
+
+                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
+
+                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.HasWriteAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName));
+            }
+            else
+            {
+                Assert.DoesNotThrow(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
 
                 domainFileStore.IsHidden = true;
 
-                Assert.DoesNotThrow(() => this.domainFileStoreService.CheckSecurity(
+                Assert.DoesNotThrow(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
 
                 this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
 
-                Assert.Throws<SecurityException>(() => this.domainFileStoreService.CheckSecurity(
+                Assert.Throws<SecurityException>(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
             }
         }
 
-        public static IEnumerable TestCases()
+        public static IEnumerable TestWriteCases()
+        {
+            yield return new object[] { file, false };
+            yield return new object[] { folder, false };
+            yield return new object[] { domainFileStore, false };
+            yield return new object[] { new ElementDefinition(), true };
+        }
+
+        public static IEnumerable TestReadCases()
         {
             yield return new object[] { file, false };
             yield return new object[] { folder, false };

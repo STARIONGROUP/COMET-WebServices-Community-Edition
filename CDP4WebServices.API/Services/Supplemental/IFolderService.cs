@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDomainFileStoreService.cs" company="RHEA System S.A.">
+// <copyright file="IFolderService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
@@ -22,16 +22,17 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+
 namespace CDP4WebServices.API.Services
 {
-    using System.Data;
-
     using CDP4Common.DTO;
 
+    using Npgsql;
+
     /// <summary>
-    /// The DomainFileStore Service Interface which uses the ORM layer to interact with the data model.
+    /// The Folder Service Interface which uses the ORM layer to interact with the data model.
     /// </summary>
-    public partial interface IDomainFileStoreService
+    public partial interface IFolderService
     {
         /// <summary>
         /// Checks if the <see cref="Participant"/> is allowed to read (and therefore also write to) a <see cref="DomainFileStore"/>
@@ -43,37 +44,12 @@ namespace CDP4WebServices.API.Services
         /// <param name="thing">
         /// The <see cref="Thing"/> to check.
         /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        bool IsAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing);
-
-        /// <summary>
-        /// Check the security related functionality
-        /// </summary>
-        /// <param name="thing">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition);
-
-        /// <summary>
-        /// Check the security related functionality
-        /// </summary>
-        /// <param name="thing">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition);
+        bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition);
     }
 }

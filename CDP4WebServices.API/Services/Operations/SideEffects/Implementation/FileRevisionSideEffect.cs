@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileRevisionSideEffect.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -67,7 +67,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.CheckSecurity(container, transaction, partition);
+            this.HasWriteAccess(container, transaction, partition);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeUpdate(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            this.CheckSecurity(container, transaction, partition);
+            this.HasWriteAccess(container, transaction, partition);
         }
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CheckSecurity(Thing container, NpgsqlTransaction transaction, string partition)
+        private void HasWriteAccess(Thing container, NpgsqlTransaction transaction, string partition)
         {
             if (!(container is File file))
             {
@@ -119,8 +119,8 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
 
             this.FileService.CheckFileLock(transaction, partition, file);
 
-            this.DomainFileStoreService.CheckSecurity(
-                container,
+            this.DomainFileStoreService.HasWriteAccess(
+                file,
                 transaction,
                 partition);
         }
