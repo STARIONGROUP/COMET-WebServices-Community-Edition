@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DomainFileStoreSideEffect.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -72,7 +72,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            this.CheckSecurity(thing, transaction, partition);
+            this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(DomainFileStore thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.CheckSecurity(thing, transaction, partition);
+            this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -110,9 +110,9 @@ namespace CDP4WebServices.API.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CheckSecurity(Thing thing, NpgsqlTransaction transaction, string partition)
+        private void HasWriteAccess(Thing thing, NpgsqlTransaction transaction, string partition)
         {
-            this.DomainFileStoreService.CheckSecurity(
+            this.DomainFileStoreService.HasWriteAccess(
                 thing,
                 transaction,
                 partition);

@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="FileService.cs" company="RHEA System S.A.">
+// <copyright file="FolderService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
@@ -24,19 +24,14 @@
 
 namespace CDP4WebServices.API.Services
 {
-    using System.Linq;
-    using System.Security;
-
     using CDP4Common.DTO;
-
-    using CDP4WebServices.API.Services.Authorization;
 
     using Npgsql;
 
     /// <summary>
-    /// The <see cref="File"/> Service which uses the ORM layer to interact with the data model.
+    /// The <see cref="Folder"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
-    public sealed partial class FileService
+    public sealed partial class FolderService
     {
         /// <summary>
         /// Gets or sets the <see cref="IDomainFileStoreService"/>.
@@ -89,28 +84,6 @@ namespace CDP4WebServices.API.Services
         public bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition)
         {
             return this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
-        }
-
-        /// <summary>
-        /// Checks is a file lock is present and throws an error when it is set by another user
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="file">
-        /// The <see cref="File"/> to check
-        /// </param>
-        public void CheckFileLock(NpgsqlTransaction transaction, string partition, File file)
-        {
-            var currentStoredFile = this.GetShallow(transaction, partition, new [] {file.Iid}, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault() as File;
-
-            if (!new object[] { this.PermissionService.Credentials.Person.Iid, null }.Contains(currentStoredFile?.LockedBy))
-            {
-                throw new SecurityException($"{nameof(File)} is locked by another user");
-            }
         }
     }
 }

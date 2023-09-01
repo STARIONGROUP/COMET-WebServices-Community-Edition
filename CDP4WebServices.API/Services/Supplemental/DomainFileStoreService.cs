@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DomainFileStoreService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -124,7 +124,7 @@ namespace CDP4WebServices.API.Services
 
             if (result)
             {
-                this.CheckAllowedAccordingToIsHidden(transaction, thing);
+                result = this.IsAllowedAccordingToIsHidden(transaction, thing);
             }
 
             return result;
@@ -194,7 +194,7 @@ namespace CDP4WebServices.API.Services
         /// Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
         /// the to be created <see cref="DomainFileStore"/>. The isHidden check will then be ignored.
         /// </remarks>
-        public void CheckSecurity(Thing thing, IDbTransaction transaction, string partition)
+        public void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
         {
             //am I owner of the file?
             if (!this.PermissionService.IsOwner(transaction as NpgsqlTransaction, thing))
@@ -230,6 +230,49 @@ namespace CDP4WebServices.API.Services
                     throw new SecurityException($"{nameof(DomainFileStore)} {domainFileStore.Name ?? "<No Name>"} is a private {nameof(DomainFileStore)}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Check the security related functionality
+        /// </summary>
+        /// <param name="thing">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        public bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
+        {
+            if (partition.Contains("Iteration"))
+            {
+                var thingType = thing.GetType();
+                
+                if (!this.domainFileStoreSelectors.ContainsKey(thingType))
+                {
+                    throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {thingType.Name}");
+                }
+
+                var domainFileStoreSelector = this.domainFileStoreSelectors[thingType].Invoke(thing.Iid);
+
+                //is DomainFileStore hidden
+                var engineeringModelPartition = partition.Replace(
+                    CDP4Orm.Dao.Utils.IterationSubPartition,
+                    CDP4Orm.Dao.Utils.EngineeringModelPartition);
+
+                var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
+
+                var domainFileStore =
+                    this.GetShallow(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext())
+                        .Cast<DomainFileStore>()
+                        .SingleOrDefault(domainFileStoreSelector);
+
+                return domainFileStore != null && this.IsAllowedAccordingToIsHidden(transaction, domainFileStore);
+            }
+
+            return true;
         }
     }
 }
