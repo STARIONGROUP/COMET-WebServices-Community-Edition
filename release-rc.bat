@@ -37,11 +37,11 @@ ECHO.
 
 REM cleanup previous if exists
 docker rmi cdp4-services-community-edition:%version%
-docker rmi docker.pkg.github.com/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:%version%
+docker rmi ghcr.io/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:%version%
 
 REM remove local latest if exists
 docker rmi  cdp4-services-community-edition:latest-rc
-docker rmi  docker.pkg.github.com/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:latest-rc
+docker rmi  ghcr.io/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:latest-rc
 
 ECHO.
 ECHO Building images...
@@ -49,8 +49,8 @@ ECHO.
 
 REM build and tag
 docker build -t cdp4-services-community-edition:%version% -t cdp4-services-community-edition:latest-rc .
-docker tag cdp4-services-community-edition:%version% docker.pkg.github.com/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:%version%
-docker tag cdp4-services-community-edition:latest-rc docker.pkg.github.com/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:latest-rc
+docker tag cdp4-services-community-edition:%version% ghcr.io/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:%version%
+docker tag cdp4-services-community-edition:latest-rc ghcr.io/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:latest-rc
 
 IF %dry% equ true GOTO End
 
@@ -59,8 +59,8 @@ ECHO Pushing...
 ECHO.
 
 REM push
-docker push docker.pkg.github.com/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:%version%
-docker push docker.pkg.github.com/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:latest-rc
+docker push ghcr.io/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:%version%
+docker push ghcr.io/rheagroup/cdp4-webservices-community-edition/cdp4-services-community-edition:latest-rc
 
 :End
 
