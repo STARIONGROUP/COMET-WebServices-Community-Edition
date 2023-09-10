@@ -36,8 +36,12 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
 
+    using CDP4JsonSerializer;
+
     using CDP4Orm.Dao;
 
+    using CometServer.Authorization;
+    using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services;
@@ -51,6 +55,7 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Routing;
 
     using NLog;
+
     using Npgsql;
 
     using Thing = CDP4Common.DTO.Thing;
@@ -92,6 +97,77 @@ namespace CometServer.Modules
                 QueryParameters.RevisionNumberQuery, 
                 QueryParameters.ExportQuery
             };
+
+        /// <summary>
+        /// Initializes a new instance of the &lt;see cref="ExchangeFileImportyApi"/&gt;
+        /// </summary>
+        /// <param name="modelCreatorManager">
+        /// The (injected) <see cref="IModelCreatorManager"/>
+        /// </param>
+        /// <param name="appConfigService">
+        /// The (injected) <see cref="IAppConfigService"/>
+        /// </param>
+        /// <param name="credentialsService">
+        /// The (injected) <see cref="ICredentialsService"/>
+        /// </param>
+        /// <param name="headerInfoProvider">
+        /// The (injected) <see cref="IHeaderInfoProvider"/>
+        /// </param>
+        /// <param name="serviceProvider">
+        /// The (injected) <see cref="Services.IServiceProvider"/>
+        /// </param>
+        /// <param name="permissionService">
+        /// The (injected) <see cref="IPermissionService"/>
+        /// </param>
+        /// <param name="requestUtils">
+        /// The (injected) <see cref="IRequestUtils"/>
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The (injected) <see cref="IMetaInfoProvider"/>
+        /// </param>
+        /// <param name="operationProcessor">
+        /// The (injected) <see cref="IOperationProcessor"/>
+        /// </param>
+        /// <param name="fileBinaryService">
+        /// The (injected) <see cref="IFileBinaryService"/>
+        /// </param>
+        /// <param name="fileArchiveService">
+        /// The (injected) <see cref="IFileArchiveService"/>
+        /// </param>
+        /// <param name="revisionService">
+        /// The (injected) <see cref="IRevisionService"/>
+        /// </param>
+        /// <param name="revisionResolver">
+        /// The (injected) <see cref="IRevisionResolver"/>
+        /// </param>
+        /// <param name="transactionManager">
+        /// The (injected) <see cref="ICdp4TransactionManager"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The (injected) <see cref="ICdp4JsonSerializer"/>
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The (injected) <see cref="IPermissionInstanceFilterService"/>
+        /// </param>
+        public SiteDirectoryApi(IModelCreatorManager modelCreatorManager, 
+            IAppConfigService appConfigService, 
+            ICredentialsService credentialsService, 
+            IHeaderInfoProvider headerInfoProvider, 
+            Services.IServiceProvider serviceProvider, 
+            IPermissionService permissionService, 
+            IRequestUtils requestUtils, 
+            IMetaInfoProvider metaInfoProvider, 
+            IOperationProcessor operationProcessor, 
+            IFileBinaryService fileBinaryService, 
+            IFileArchiveService fileArchiveService, 
+            IRevisionService revisionService, 
+            IRevisionResolver revisionResolver, 
+            ICdp4TransactionManager transactionManager, 
+            ICdp4JsonSerializer jsonSerializer, 
+            IPermissionInstanceFilterService permissionInstanceFilterService) : base(appConfigService, credentialsService, headerInfoProvider, serviceProvider, permissionService, requestUtils, metaInfoProvider, operationProcessor, fileBinaryService, fileArchiveService, revisionService, revisionResolver, transactionManager, jsonSerializer, permissionInstanceFilterService)
+        {
+            this.ModelCreatorManager = modelCreatorManager;
+        }
 
         /// <summary>
         /// Gets or sets the model creator manager service.

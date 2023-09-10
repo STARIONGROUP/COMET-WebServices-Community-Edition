@@ -133,6 +133,8 @@ namespace CometServer
             });
 
             services.AddAuthentication("CDP4").AddCookie(CookieScheme);
+
+            services.AddCarter();
         }
 
         // ConfigureContainer is where you can register things directly
@@ -146,7 +148,7 @@ namespace CometServer
 
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
-            
+
             // 10-25 helpers
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().SingleInstance();
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().SingleInstance();
@@ -232,7 +234,11 @@ namespace CometServer
             app.UseCors();
             app.UseAuthentication();
             app.UseBasicAuthenticatonMiddleware();
-            app.UseEndpoints(builder => builder.MapCarter());
+
+            app.UseEndpoints(builder =>
+            {
+                builder.MapCarter();
+            });
         }
     }
 }

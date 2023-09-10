@@ -190,6 +190,87 @@ namespace CometServer.Modules
         public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ApiBase"/> class
+        /// </summary>
+        /// <param name="appConfigService">
+        /// The (injected) <see cref="IAppConfigService"/>
+        /// </param>
+        /// <param name="credentialsService">
+        /// The (injected) <see cref="ICredentialsService"/>
+        /// </param>
+        /// <param name="headerInfoProvider">
+        /// The (injected) <see cref="IHeaderInfoProvider"/>
+        /// </param>
+        /// <param name="serviceProvider">
+        /// The (injected) <see cref="IServiceProvider"/>
+        /// </param>
+        /// <param name="permissionService">
+        /// The (injected) <see cref="IPermissionService"/>
+        /// </param>
+        /// <param name="requestUtils">
+        /// The (injected) <see cref="IRequestUtils"/>
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The (injected) <see cref="IMetaInfoProvider"/>
+        /// </param>
+        /// <param name="operationProcessor">
+        /// The (injected) <see cref="IOperationProcessor"/>
+        /// </param>
+        /// <param name="fileBinaryService">
+        /// The (injected) <see cref="IFileBinaryService"/>
+        /// </param>
+        /// <param name="fileArchiveService">
+        /// The (injected) <see cref="IFileArchiveService"/>
+        /// </param>
+        /// <param name="revisionService">
+        /// The (injected) <see cref="IRevisionService"/>
+        /// </param>
+        /// <param name="revisionResolver">
+        /// The (injected) <see cref="IRevisionResolver"/>
+        /// </param>
+        /// <param name="transactionManager">
+        /// The (injected) <see cref="ICdp4TransactionManager"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The (injected) <see cref="ICdp4JsonSerializer"/>
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The (injected) <see cref="IPermissionInstanceFilterService"/>
+        /// </param>
+        protected ApiBase(IAppConfigService appConfigService, 
+            ICredentialsService credentialsService,
+            IHeaderInfoProvider headerInfoProvider,
+            IServiceProvider serviceProvider,
+            IPermissionService permissionService,
+            IRequestUtils requestUtils,
+            IMetaInfoProvider metaInfoProvider,
+            IOperationProcessor operationProcessor,
+            IFileBinaryService fileBinaryService,
+            IFileArchiveService fileArchiveService,
+            IRevisionService revisionService,
+            IRevisionResolver revisionResolver,
+            ICdp4TransactionManager transactionManager,
+            ICdp4JsonSerializer jsonSerializer,
+            IPermissionInstanceFilterService permissionInstanceFilterService)
+        {
+            this.AppConfigService = appConfigService;
+            this.CredentialsService = credentialsService;
+            this.HeaderInfoProvider = headerInfoProvider;
+            this.ServiceProvider = serviceProvider;
+            this.PermissionService = permissionService;
+            this.RequestUtils = requestUtils;
+            this.MetaInfoProvider = metaInfoProvider;
+            this.OperationProcessor = operationProcessor;
+            this.FileBinaryService = fileBinaryService;
+            this.FileArchiveService = fileArchiveService;
+            this.RevisionService = revisionService;
+            this.RevisionResolver = revisionResolver;
+            this.TransactionManager = transactionManager;
+            this.JsonSerializer = jsonSerializer;
+            this.PermissionInstanceFilterService = permissionInstanceFilterService;
+        }
+
+        /// <summary>
         /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
         /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
         /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline

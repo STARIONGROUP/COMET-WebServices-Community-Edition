@@ -89,6 +89,122 @@ namespace CometServer.Modules
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/>
+        /// </summary>
+        /// <param name="appConfigService">
+        /// The (injected) <see cref="IAppConfigService"/>
+        /// </param>
+        /// <param name="credentialsService"> 
+        /// The (injected) <see cref="ICredentialsService"/>
+        /// </param>
+        /// <param name="revisionService">
+        /// The (injected) <see cref="IRevisionService"/>
+        /// </param>
+        /// <param name="revisionDao">
+        /// The (injected) <see cref="IRevisionDao"/>
+        /// </param>
+        /// <param name="permissionService">
+        /// The (injected) <see cref="IPermissionService"/>
+        /// </param>
+        /// <param name="siteDirectoryService">
+        /// The (injected) <see cref="ISiteDirectoryService"/>
+        /// </param>
+        /// <param name="engineeringModelSetupService">
+        /// The (injected) <see cref="IEngineeringModelSetupService"/>
+        /// </param>
+        /// <param name="localFileStorage">
+        /// The (injected) <see cref="ILocalFileStorage"/>
+        /// </param>
+        /// <param name="jsonExchangeFileReader">
+        /// The (injected) <see cref="IJsonExchangeFileReader"/>
+        /// </param>
+        /// <param name="transactionManager">
+        /// The (injected) <see cref="ICdp4TransactionManager"/>
+        /// </param>
+        /// <param name="requestUtils">
+        /// The (injected) <see cref="IRequestUtils"/>
+        /// </param>
+        /// <param name="serviceProvider">
+        /// The (injected) <see cref="IServiceProvider"/>
+        /// </param>
+        /// <param name="dataStoreController">
+        /// The (injected) <see cref="IDataStoreController"/>
+        /// </param>
+        /// <param name="engineeringModelDao">
+        /// The (injected) <see cref="IEngineeringModelDao"/>
+        /// </param>
+        /// <param name="personService">
+        /// The (injected) <see cref="IPersonRoleService"/>
+        /// </param>
+        /// <param name="personRoleService">
+        /// The (injected) <see cref="IPersonRoleService"/>
+        /// </param>
+        /// <param name="personPermissionService">
+        /// The (injected) <see cref="IPersonPermissionService"/>
+        /// </param>
+        /// <param name="participantService">
+        /// The (injected) <see cref="IParticipantService"/>
+        /// </param>
+        /// <param name="participantRoleService">
+        /// The (injected) <see cref="IParticipantRoleService"/>
+        /// </param>
+        /// <param name="participantPermissionService">
+        /// The (injected) <see cref="IParticipantPermissionService"/>
+        /// </param>
+        /// <param name="defaultPermissionProvider">
+        /// The (injected) <see cref="IDefaultPermissionProvider"/>
+        /// </param>
+        /// <param name="migrationService">
+        /// The (injected) <see cref="IMigrationService"/>
+        /// </param>
+        public ExchangeFileImportyApi(IAppConfigService appConfigService,
+            ICredentialsService credentialsService,
+            IRevisionService revisionService,
+            IRevisionDao revisionDao,
+            IPermissionService permissionService,
+            ISiteDirectoryService siteDirectoryService,
+            IEngineeringModelSetupService engineeringModelSetupService,
+            ILocalFileStorage localFileStorage,
+            IJsonExchangeFileReader jsonExchangeFileReader,
+            ICdp4TransactionManager transactionManager,
+            IRequestUtils requestUtils,
+            IServiceProvider serviceProvider,
+            IDataStoreController dataStoreController,
+            IEngineeringModelDao engineeringModelDao,
+            IPersonService personService,
+            IPersonRoleService personRoleService,
+            IPersonPermissionService personPermissionService,
+            IParticipantService participantService,
+            IParticipantRoleService participantRoleService,
+            IParticipantPermissionService participantPermissionService,
+            IDefaultPermissionProvider defaultPermissionProvider,
+            IMigrationService migrationService)
+        {
+            this.AppConfigService = appConfigService;
+            this.CredentialsService = credentialsService;
+            this.RevisionService = revisionService;
+            this.RevisionDao = revisionDao;
+            this.PermissionService = permissionService;
+            this.SiteDirectoryService = siteDirectoryService;
+            this.EngineeringModelSetupService = engineeringModelSetupService;
+            this.LocalFileStorage = localFileStorage;
+            this.JsonExchangeFileReader = jsonExchangeFileReader;
+            this.TransactionManager = transactionManager;
+            this.RequestUtils = requestUtils;
+            this.ServiceProvider = serviceProvider;
+            this.DataStoreController = dataStoreController;
+            this.EngineeringModelDao = engineeringModelDao;
+            this.PersonService = personService;
+            this.PersonRoleService = personRoleService;
+            this.PersonPermissionService = personPermissionService;
+            this.ParticipantService = participantService;
+            this.ParticipantRoleService = participantRoleService;
+            this.ParticipantPermissionService = participantPermissionService;
+            this.DefaultPermissionProvider = defaultPermissionProvider;
+            this.MigrationService = migrationService;
+        }
+
+        /// <summary>
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }

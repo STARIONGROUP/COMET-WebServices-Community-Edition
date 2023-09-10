@@ -29,14 +29,22 @@ namespace CometServer.Tests
 
     using CDP4Common.DTO;
 
+    using CDP4JsonSerializer;
+
+    using CometServer.Authorization;
+    using CometServer.Configuration;
+    using CometServer.Helpers;
     using CometServer.Modules;
     using CometServer.Services;
     using CometServer.Services.Authorization;
+    using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
 
     using Moq;
 
     using NUnit.Framework;
+
+    using IServiceProvider = CometServer.Services.IServiceProvider;
 
     /// <summary>
     /// Test fixture for the <see cref="CometServer.Services.Utils"/> class
@@ -45,10 +53,42 @@ namespace CometServer.Tests
     public class UtilsTestFixture
     {
         private readonly SiteDirectory siteDir = new SiteDirectory();
+
         private readonly EngineeringModelSetup modelSetup = new EngineeringModelSetup();
+
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
         
         private readonly string mockedId = Guid.NewGuid().ToString();
+
+        private Mock<IModelCreatorManager> modelCreatorManager;
+
+        private Mock<IAppConfigService> appConfigService;
+
+        private Mock<ICredentialsService> credentialsService;
+
+        private Mock<IHeaderInfoProvider> headerInfoProvider;
+
+        private Mock<IServiceProvider> serviceProvider;
+
+        private Mock<IPermissionService> permissionService;
+
+        private Mock<IMetaInfoProvider> metaInfoProvider;
+
+        private Mock<IOperationProcessor> operationProcessor;
+
+        private Mock<IFileBinaryService> fileBinaryService;
+
+        private Mock<IFileArchiveService> fileArchiveService;
+
+        private Mock<IRevisionService> revisionService;
+
+        private Mock<IRevisionResolver> revisionResolver;
+
+        private Mock<ICdp4TransactionManager> transactionManager;
+
+        private Mock<ICdp4JsonSerializer> jsonSerializer;
+
+        private Mock<IPermissionInstanceFilterService> permissionInstanceFilterService;
 
         private Mock<IProcessor> SetupMockProcessor()
         {
@@ -72,12 +112,51 @@ namespace CometServer.Tests
             return mockedProcessor;
         }
 
+        [SetUp]
+        public void Setup()
+        {
+            this.modelCreatorManager = new Mock<IModelCreatorManager>();
+            this.appConfigService = new Mock<IAppConfigService>();
+            this.credentialsService = new Mock<ICredentialsService>();
+            this.headerInfoProvider = new Mock<IHeaderInfoProvider>();
+            this.serviceProvider = new Mock<IServiceProvider>();
+            this.permissionService = new Mock<IPermissionService>();
+            this.metaInfoProvider = new Mock<IMetaInfoProvider>();
+            this.operationProcessor = new Mock<IOperationProcessor>();
+            this.fileBinaryService = new Mock<IFileBinaryService>();
+            this.fileArchiveService = new Mock<IFileArchiveService>();
+            this.revisionService = new Mock<IRevisionService>();
+            this.revisionResolver = new Mock<IRevisionResolver>();
+            this.transactionManager = new Mock<ICdp4TransactionManager>();
+            this.jsonSerializer = new Mock<ICdp4JsonSerializer>();
+            this.permissionInstanceFilterService= new Mock<IPermissionInstanceFilterService>();
+        }
+
         [Test]
         public void VerifyOnlyResourceReturned()
         {
             var mockedProcessor = this.SetupMockProcessor();
+            
             List<Thing> containmentCollection;
-            var result = new SiteDirectoryApi { RequestUtils = this.requestUtils }.ProcessRequestPath(mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
+
+            var siteDirectoryApi = new SiteDirectoryApi(this.modelCreatorManager.Object,
+                this.appConfigService.Object,
+                this.credentialsService.Object,
+                this.headerInfoProvider.Object,
+                this.serviceProvider.Object,
+                this.permissionService.Object,
+                this.requestUtils,
+                this.metaInfoProvider.Object,
+                this.operationProcessor.Object,
+                this.fileBinaryService.Object,
+                this.fileArchiveService.Object,
+                this.revisionService.Object,
+                this.revisionResolver.Object,
+                this.transactionManager.Object,
+                this.jsonSerializer.Object,
+                this.permissionInstanceFilterService.Object);
+
+            var result = siteDirectoryApi.ProcessRequestPath(mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
 
             CollectionAssert.AreEquivalent(new[] { this.modelSetup }, result);
         }
@@ -86,12 +165,30 @@ namespace CometServer.Tests
         public void VerifyResourceWithContainmentReturned()
         {
             var mockedProcessor = this.SetupMockProcessor();
+            
             List<Thing> containmentCollection;
 
             // set query parameter override
             this.requestUtils.OverrideQueryParameters = new QueryParameters { IncludeAllContainers = true };
 
-            var result = new SiteDirectoryApi { RequestUtils = this.requestUtils }.ProcessRequestPath(mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
+            var siteDirectoryApi = new SiteDirectoryApi(this.modelCreatorManager.Object,
+                this.appConfigService.Object,
+                this.credentialsService.Object,
+                this.headerInfoProvider.Object,
+                this.serviceProvider.Object,
+                this.permissionService.Object,
+                this.requestUtils,
+                this.metaInfoProvider.Object,
+                this.operationProcessor.Object,
+                this.fileBinaryService.Object,
+                this.fileArchiveService.Object,
+                this.revisionService.Object,
+                this.revisionResolver.Object,
+                this.transactionManager.Object,
+                this.jsonSerializer.Object,
+                this.permissionInstanceFilterService.Object);
+            
+            var result = siteDirectoryApi.ProcessRequestPath(mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
             
             // reset query parameter override
             this.requestUtils.OverrideQueryParameters = null;

@@ -56,7 +56,7 @@ namespace CometServer.Helpers
         /// </returns>
         public static bool CheckConnection(IAppConfigService appConfigService)
         {
-            var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+            var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.DatabaseManage));
 
             var startTime = DateTime.UtcNow;
             var remainingSeconds = appConfigService.AppConfig.Midtier.BacktierWaitTime;
