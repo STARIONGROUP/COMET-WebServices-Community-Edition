@@ -66,7 +66,7 @@ namespace CometServer.Services.FileHandling
         /// </returns>
         public async Task<string> StreamFileToDisk(Stream stream)
         {
-            var targetFile = Path.Combine(this.GetDirectory(), Guid.NewGuid().ToString());
+            var targetFile = this.CreateUploadFilePath();
 
             var sw = Stopwatch.StartNew();
 
@@ -95,12 +95,28 @@ namespace CometServer.Services.FileHandling
         }
 
         /// <summary>
-        /// The get directory.
+        /// Creates a new upload file path. The path is a combination
+        /// of the upload directory and a randomized GUID as filename.
+        /// The file does not have an extension
         /// </summary>
         /// <returns>
-        /// The <see cref="string"/>.
+        /// The path of the new file
         /// </returns>
-        private string GetDirectory()
+        public string CreateUploadFilePath()
+        {
+            return Path.Combine(this.QueryAndCreateDirectory(), Guid.NewGuid().ToString());
+        }
+
+        /// <summary>
+        /// Queries the path to the upload directory
+        /// </summary>
+        /// <remarks>
+        /// if the directory does not yet exist it is created
+        /// </remarks>
+        /// <returns>
+        /// The path to the upload directory
+        /// </returns>
+        private string QueryAndCreateDirectory()
         {
             var uploadDirectory = this.AppConfigService.AppConfig.Midtier.UploadDirectory;
 

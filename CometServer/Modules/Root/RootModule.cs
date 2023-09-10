@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RootModule.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft.
 //
@@ -27,18 +27,25 @@ namespace CometServer.Modules
     using Carter;
     using Carter.Response;
 
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
+
     /// <summary>
     /// The <see cref="CarterModule"/> responsipble for handling HTTP requets for the root /
     /// </summary>
     public class RootModule : CarterModule
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="RootModule"/> class.
-        /// </summary>
-        public RootModule()
+         /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
+         /// </summary>
+         /// <param name="app">
+         /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+         /// </param>
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            this.Get("/", async (req, res) =>
-            {
+            app.MapGet("/", async (HttpRequest req, HttpResponse res) => {
+
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();

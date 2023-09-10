@@ -67,10 +67,10 @@ namespace CometServer.Helpers
                 {
                     connection.Open();
                     connection.Close();
-                    
+
                     return true;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     Logger.Info("Waiting for the data store at {0}:{1} to become availble in {2} [s]", 
                         appConfigService.AppConfig.Backtier.HostName,

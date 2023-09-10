@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
@@ -60,7 +60,6 @@ namespace CometServer.Modules
     using Npgsql;
 
     using Thing = CDP4Common.DTO.Thing;
-    using NLog.Targets;
 
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
@@ -109,20 +108,15 @@ namespace CometServer.Modules
         /// </summary>
         public IObfuscationService ObfuscationService { get; set; }
 
+        /// <summary>
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
+        /// </summary>
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet();
-
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class.
-        /// </summary>
-        public EngineeringModelApi()
-        {
-            this.Get("EngineeringModel/{*path}", async (req, res) =>
+            app.MapGet("EngineeringModel/{*path}", async (HttpRequest req, HttpResponse res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -145,7 +139,7 @@ namespace CometServer.Modules
                 }
             });
 
-            this.Post("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", async (req, res) =>
+            app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", async (HttpRequest req, HttpResponse res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {

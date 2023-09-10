@@ -28,8 +28,10 @@ namespace CometServer.Modules
     using System.Net;
 
     using Carter;
-    
+
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
 
     /// <summary>
     /// The authentication module handler. Handles routes to do with authentication settings.
@@ -37,12 +39,14 @@ namespace CometServer.Modules
     public class AuthenticationModule : CarterModule
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthenticationModule"/> class.
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
         /// </summary>
-        public AuthenticationModule()
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            this.Get("/login", async (req, res) =>
-            {
+            app.MapGet("/login", async (HttpRequest req, HttpResponse res) => {
                 if (req.HttpContext.User.Identity == null)
                 {
                     res.UpdateWithNotAutherizedSettings();
@@ -52,8 +56,7 @@ namespace CometServer.Modules
                 res.StatusCode = (int)HttpStatusCode.Accepted;
             });
 
-            this.Get("/logout", async (req, res) =>
-            {
+            app.MapGet("/logout", async (HttpRequest req, HttpResponse res) => {
                 //return webServiceAuthentication.LogOutResponse(req.HttpContext);
                 throw new NotImplementedException();
             });

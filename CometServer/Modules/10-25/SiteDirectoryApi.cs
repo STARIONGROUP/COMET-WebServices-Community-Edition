@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
@@ -45,8 +45,10 @@ namespace CometServer.Modules
     using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
 
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
+    using Microsoft.AspNetCore.Routing;
 
     using NLog;
     using Npgsql;
@@ -97,11 +99,38 @@ namespace CometServer.Modules
         public IModelCreatorManager ModelCreatorManager { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SiteDirectoryApi"/> class.
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
         /// </summary>
-        public SiteDirectoryApi()
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            this.Get("SiteDirectory", async (req, res) =>
+            app.MapGet("SiteDirectory", async (HttpRequest req, HttpResponse res) =>
+                {
+                    if (!req.HttpContext.User.Identity.IsAuthenticated)
+                    {
+                        res.UpdateWithNotAuthenticatedSettings();
+                       
+                        await res.AsJson("not authenticated");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            await this.Authorize(req.HttpContext.User.Identity.Name);
+                        }
+                        catch (AuthorizationException e)
+                        {
+                            res.UpdateWithNotAutherizedSettings();
+                            await res.AsJson("not authorized");
+                        }
+
+                        await this.GetResponseData(req, res);
+                    }
+                });
+
+            app.MapGet("SiteDirectory/{*path}", async (HttpRequest req, HttpResponse res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -124,30 +153,7 @@ namespace CometServer.Modules
                 }
             });
 
-            this.Get("SiteDirectory/{*path}", async (req, res) =>
-            {
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
-                }
-                else
-                {
-                    try
-                    {
-                        await this.Authorize(req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException e)
-                    {
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                    }
-
-                    await this.GetResponseData(req, res);
-                }
-            });
-
-            this.Post("SiteDirectory/{iid:guid}", async (req, res) =>
+            app.MapPost("SiteDirectory/{iid:guid}", async (HttpRequest req, HttpResponse res) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {

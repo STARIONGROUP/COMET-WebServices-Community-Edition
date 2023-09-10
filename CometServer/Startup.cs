@@ -133,13 +133,6 @@ namespace CometServer
             });
 
             services.AddAuthentication("CDP4").AddCookie(CookieScheme);
-
-            services.AddCarter(options: options =>
-            {
-            }, configurator: configurator =>
-            {
-                configurator.WithModelBinder<CometJsonModelBinder>();
-            });
         }
 
         // ConfigureContainer is where you can register things directly

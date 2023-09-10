@@ -50,5 +50,15 @@ namespace CometServer.Services.FileHandling
         /// The target file.
         /// </param>
         void RemoveFileFromDisk(string targetFile);
+
+        /// <summary>
+        /// Creates a new upload file path. The path is a combination
+        /// of the upload directory and a randomized GUID as filename.
+        /// The file does not have an extension
+        /// </summary>
+        /// <returns>
+        /// The path of the new file
+        /// </returns>
+        string CreateUploadFilePath();
     }
 }

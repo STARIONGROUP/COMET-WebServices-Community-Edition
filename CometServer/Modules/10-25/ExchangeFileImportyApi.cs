@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileImportyApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
@@ -28,7 +28,6 @@ namespace CometServer.Modules
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics;
-    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Text;
@@ -56,7 +55,9 @@ namespace CometServer.Modules
     using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Protocol;
 
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
 
     using NLog;
 
@@ -198,30 +199,24 @@ namespace CometServer.Modules
         public IMigrationService MigrationService { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/> class.
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
         /// </summary>
-        public ExchangeFileImportyApi()
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            // Seed the data store from the provided (uploaded) exchange file
-            this.Post("/Data/Exchange", async (req, res) =>
-                {
-                    await this.SeedDataStore(req, res);
-                }
-            );
+            app.MapPost("/Data/Exchange", async (HttpRequest req, HttpResponse res) => {
+                await this.SeedDataStore(req, res);
+            });
 
-            // Seed the data store from the provided (uploaded) exchange file
-            this.Post("/Data/Import", async (req, res) =>
-                {
-                    await this.ImportDataStore(req, res);
-                }
-            );
+            app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res) => {
+                await this.ImportDataStore(req, res);
+            });
 
-            // Restore the data store to the data snapshot created from the inital seed
-            this.Post("/Data/Restore", async (req, res) =>
-                {
-                    await this.RestoreDatastore(req, res);
-                }
-            );
+            app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res) => {
+                await this.RestoreDatastore(req, res);
+            });
         }
 
         /// <summary>
@@ -287,23 +282,9 @@ namespace CometServer.Modules
 
             Logger.Info("Starting data store importing");
 
-            // bind the request to the specialized model
-            var exchangeFile = await request.BindFile();
+            var filePath = this.LocalFileStorage.CreateUploadFilePath();
 
-            // make sure there is only one file
-            if (exchangeFile == null)
-            {
-                response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await response.AsJson("seed file not detected");
-            }
-
-            // stream the file to disk
-            var filePath = string.Empty;
-            using (var memoryStream = new MemoryStream())
-            {
-                await exchangeFile.CopyToAsync(memoryStream);
-                filePath = await this.LocalFileStorage.StreamFileToDisk(memoryStream);
-            }
+            await request.BindAndSaveFile(filePath);
 
             // drop existing data stores
             this.DropDataStoreAndPrepareNew();
@@ -325,7 +306,7 @@ namespace CometServer.Modules
             catch (Exception ex)
             {
                 // swallow exception but log it
-                Logger.Error(ex, "Unable to remove file");
+                Logger.Error(ex, "Unable to remove file {0}", filePath);
             }
 
             try
@@ -372,23 +353,9 @@ namespace CometServer.Modules
 
             Logger.Info("Starting data store seeding");
 
-            // bind the request to the specialized model
-            var exchangeFile = await request.BindFile();
+            var filePath = this.LocalFileStorage.CreateUploadFilePath();
 
-            // make sure there is only one file
-            if (exchangeFile == null)
-            {
-                response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await response.AsJson("seed file not detected");
-            }
-
-            // stream the file to disk
-            var filePath = string.Empty;
-            using (var memoryStream = new MemoryStream())
-            {
-                await exchangeFile.CopyToAsync(memoryStream);
-                filePath = await this.LocalFileStorage.StreamFileToDisk(memoryStream);
-            }
+            await request.BindAndSaveFile(filePath);
 
             // drop existing data stores
             this.DropDataStoreAndPrepareNew();

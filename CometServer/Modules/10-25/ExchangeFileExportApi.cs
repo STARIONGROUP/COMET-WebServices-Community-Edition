@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileExportApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
@@ -26,49 +26,31 @@ namespace CometServer.Modules
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Net.Http;
     using System.Net.Mime;
     using System.Security;
-    using System.Text;
     using System.Threading.Tasks;
 
     using Carter;
-    using Carter.ModelBinding;
     using Carter.Response;
 
-    using CDP4Common.CommonData;
     using CDP4Common.DTO;
-    using CDP4Common.Helpers;
-
-    using CDP4Orm.Dao;
-    using CDP4Orm.MigrationEngine;
-
-    using CometServer.Authorization;
-    using CometServer.Configuration;
+    
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Authorization;
-    using CometServer.Services.DataStore;
-    using CometServer.Services.FileHandling;
-    using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Protocol;
 
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
-
-    using Newtonsoft.Json;
+    using Microsoft.AspNetCore.Routing;
 
     using NLog;
 
     using Npgsql;
-
-    using File = CDP4Common.DTO.File;
-    using IServiceProvider = CometServer.Services.IServiceProvider;
 
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format export
@@ -105,26 +87,27 @@ namespace CometServer.Modules
         };
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExchangeFileExportApi"/> class.
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
         /// </summary>
-        public ExchangeFileExportApi()
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            // Seed the data store from the provided (uploaded) exchange file
-            this.Post("/export", async (req, res) =>
-                {
-                    if (!req.HttpContext.User.Identity.IsAuthenticated)
-                    {
-                        res.UpdateWithNotAuthenticatedSettings();
-                        await res.AsJson("not authenticated");
-                    }
-                    else
-                    {
-                        await this.Authorize(req.HttpContext.User.Identity.Name);
+            app.MapPost("/export", async (HttpRequest req, HttpResponse res) => {
 
-                        await this.PostResponseData(req, res);
-                    }
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.AsJson("not authenticated");
                 }
-            );
+                else
+                {
+                    await this.Authorize(req.HttpContext.User.Identity.Name);
+
+                    await this.PostResponseData(req, res);
+                }
+            });
         }
 
         /// <summary>

@@ -25,8 +25,9 @@
 namespace CometServer.Modules
 {
     using Carter;
-
+    using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Routing;
 
     /// <summary>
     /// handle request on the logged-in users
@@ -34,12 +35,14 @@ namespace CometServer.Modules
     public class UsernameModule : CarterModule
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="UsernameModule"/> class.
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
         /// </summary>
-        public UsernameModule()
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            this.Get("/username", async (req, res) =>
-            {
+            app.MapGet("/username", async (HttpRequest req, HttpResponse res) => {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
