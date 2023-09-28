@@ -20,7 +20,6 @@ ECHO.
 GOTO End
 
 :Setup
-
 ECHO Releasing Version %version%
 
 set dry=false
@@ -50,7 +49,7 @@ ECHO.
 ECHO Cleaning up...
 ECHO.
 
-call MSBuild.exe CDP4-Server.sln -target:Clean -p:Configuration=Release
+call dotnet build CDP4-Server-NO-IIS.sln -target:Clean -p:Configuration=Release
 
 ECHO.
 ECHO Removing logs if existing...
@@ -62,7 +61,8 @@ ECHO.
 ECHO Building solution....
 ECHO.
 
-call MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
+call dotnet build CDP4-Server-NO-IIS.sln -property:Configuration=Release -restore
+
 
 ECHO Error Level %errorlevel%
 
