@@ -28,6 +28,7 @@ namespace CometServer.Modules
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Text;
@@ -51,7 +52,6 @@ namespace CometServer.Modules
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.DataStore;
-    using CometServer.Services.FileHandling;
     using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Protocol;
 
@@ -112,9 +112,6 @@ namespace CometServer.Modules
         /// <param name="engineeringModelSetupService">
         /// The (injected) <see cref="IEngineeringModelSetupService"/>
         /// </param>
-        /// <param name="localFileStorage">
-        /// The (injected) <see cref="ILocalFileStorage"/>
-        /// </param>
         /// <param name="jsonExchangeFileReader">
         /// The (injected) <see cref="IJsonExchangeFileReader"/>
         /// </param>
@@ -164,7 +161,6 @@ namespace CometServer.Modules
             IPermissionService permissionService,
             ISiteDirectoryService siteDirectoryService,
             IEngineeringModelSetupService engineeringModelSetupService,
-            ILocalFileStorage localFileStorage,
             IJsonExchangeFileReader jsonExchangeFileReader,
             ICdp4TransactionManager transactionManager,
             IRequestUtils requestUtils,
@@ -187,7 +183,6 @@ namespace CometServer.Modules
             this.PermissionService = permissionService;
             this.SiteDirectoryService = siteDirectoryService;
             this.EngineeringModelSetupService = engineeringModelSetupService;
-            this.LocalFileStorage = localFileStorage;
             this.JsonExchangeFileReader = jsonExchangeFileReader;
             this.TransactionManager = transactionManager;
             this.RequestUtils = requestUtils;
@@ -238,11 +233,6 @@ namespace CometServer.Modules
         /// Gets or sets the EngineeringModelSetup service.
         /// </summary>
         public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the file upload handler.
-        /// </summary>
-        public ILocalFileStorage LocalFileStorage { get; set; }
 
         /// <summary>
         /// Gets or sets the exchange file processor.
@@ -381,6 +371,33 @@ namespace CometServer.Modules
         }
 
         /// <summary>
+        /// Saves the seed file to disk and returns the file path where it has been saved
+        /// </summary>
+        /// <param name="request">
+        /// The <see cref="HttpRequest"/> that contains fhe file
+        /// </param>
+        /// <returns>
+        /// the file path where the seed file has been stored
+        /// </returns>
+        private async Task<string> SaveTemporarySeedFile(HttpRequest request)
+        {
+            var uploadDirectory = this.AppConfigService.AppConfig.Midtier.UploadDirectory;
+
+            if (!Directory.Exists(uploadDirectory))
+            {
+                Directory.CreateDirectory(uploadDirectory);
+            }
+
+            var tempFileName = Guid.NewGuid().ToString();
+
+            var templFilePath = Path.Combine(uploadDirectory, tempFileName);
+
+            await request.BindAndSaveFile(uploadDirectory, tempFileName);
+
+            return templFilePath;
+        }
+
+        /// <summary>
         /// Asynchronously import the data store.
         /// </summary>
         /// <returns>
@@ -398,9 +415,7 @@ namespace CometServer.Modules
 
             Logger.Info("Starting data store importing");
 
-            var filePath = this.LocalFileStorage.CreateUploadFilePath();
-
-            await request.BindAndSaveFile(filePath);
+            var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
             // drop existing data stores
             this.DropDataStoreAndPrepareNew();
@@ -408,7 +423,7 @@ namespace CometServer.Modules
             var version = this.RequestUtils.GetRequestDataModelVersion(request);
 
             // handle exchange processing
-            if (!this.UpsertModelData(version, filePath, null))
+            if (!this.UpsertModelData(version, temporarysSeedFilePath, null))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -417,12 +432,12 @@ namespace CometServer.Modules
             // Remove the exchange file after processing (saving space)
             try
             {
-                this.LocalFileStorage.RemoveFileFromDisk(filePath);
+                System.IO.File.Delete(temporarysSeedFilePath);
             }
             catch (Exception ex)
             {
                 // swallow exception but log it
-                Logger.Error(ex, "Unable to remove file {0}", filePath);
+                Logger.Error(ex, "Unable to remove file {0}", temporarysSeedFilePath);
             }
 
             try
@@ -469,9 +484,7 @@ namespace CometServer.Modules
 
             Logger.Info("Starting data store seeding");
 
-            var filePath = this.LocalFileStorage.CreateUploadFilePath();
-
-            await request.BindAndSaveFile(filePath);
+            var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
             // drop existing data stores
             this.DropDataStoreAndPrepareNew();
@@ -479,7 +492,7 @@ namespace CometServer.Modules
             var version = this.RequestUtils.GetRequestDataModelVersion(request);
 
             // handle exchange processing
-            if (!this.InsertModelData(version, filePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -488,7 +501,7 @@ namespace CometServer.Modules
             // Remove the exchange file after processing (saving space)
             try
             {
-                this.LocalFileStorage.RemoveFileFromDisk(filePath);
+                System.IO.File.Delete(temporarysSeedFilePath);
             }
             catch (Exception ex)
             {
