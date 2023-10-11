@@ -63,6 +63,8 @@ namespace CometServer.Modules
     using CometServer.Configuration;
     using CDP4JsonSerializer;
 
+    using IServiceProvider = CometServer.Services.IServiceProvider;
+    
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
     /// </summary>
@@ -103,89 +105,13 @@ namespace CometServer.Modules
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class
         /// </summary>
-        /// <param name="changeLogService">
-        /// The (injected) <see cref="IChangeLogService"/>
-        /// </param>
-        /// <param name="obfuscationService">
-        /// The (injected) <see cref="IObfuscationService"/>
-        /// </param>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        /// <param name="credentialsService">
-        /// The (injected) <see cref="ICredentialsService"/>
-        /// </param>
-        /// <param name="headerInfoProvider">
-        /// The (injected) <see cref="IHeaderInfoProvider"/>
-        /// </param>
-        /// <param name="serviceProvider">
-        /// The (injected) <see cref="Services.IServiceProvider"/>
-        /// </param>
-        /// <param name="permissionService">
-        /// The (injected) <see cref="IPermissionService"/>
-        /// </param>
-        /// <param name="requestUtils">
-        /// The (injected) <see cref="IRequestUtils"/>
-        /// </param>
-        /// <param name="metaInfoProvider">
-        /// The (injected) <see cref="IMetaInfoProvider"/>
-        /// </param>
-        /// <param name="operationProcessor">
-        /// The (injected) <see cref="IOperationProcessor"/>
-        /// </param>
-        /// <param name="fileBinaryService">
-        /// The (injected) <see cref="IFileBinaryService"/>
-        /// </param>
-        /// <param name="fileArchiveService">
-        /// The (injected) <see cref="IFileArchiveService"/>
-        /// </param>
-        /// <param name="revisionService">
-        /// The (injected) <see cref="IRevisionService"/>
-        /// </param>
-        /// <param name="revisionResolver">
-        /// The (injected) <see cref="IRevisionResolver"/>
-        /// </param>
-        /// <param name="transactionManager">
-        /// The (injected) <see cref="ICdp4TransactionManager"/>
-        /// </param>
-        /// <param name="jsonSerializer">
-        /// The (injected) <see cref="ICdp4JsonSerializer"/>
-        /// </param>
-        /// <param name="permissionInstanceFilterService">
-        /// The (injected) <see cref="IPermissionInstanceFilterService"/>
-        /// </param>
-        public EngineeringModelApi(IChangeLogService changeLogService, 
-            IObfuscationService obfuscationService, 
-            IAppConfigService appConfigService, 
-            ICredentialsService credentialsService, 
-            IHeaderInfoProvider headerInfoProvider, 
-            Services.IServiceProvider serviceProvider,
-            IPermissionService permissionService, 
-            IRequestUtils requestUtils, 
-            IMetaInfoProvider metaInfoProvider, 
-            IOperationProcessor operationProcessor, 
-            IFileBinaryService fileBinaryService, 
-            IFileArchiveService fileArchiveService, 
-            IRevisionService revisionService,
-            IRevisionResolver revisionResolver, 
-            ICdp4TransactionManager transactionManager, 
-            ICdp4JsonSerializer jsonSerializer,
-            IPermissionInstanceFilterService permissionInstanceFilterService) 
-            : base(appConfigService, credentialsService, headerInfoProvider, serviceProvider, permissionService, requestUtils, metaInfoProvider, operationProcessor, fileBinaryService, fileArchiveService, revisionService, revisionResolver, transactionManager, jsonSerializer, permissionInstanceFilterService)
+        public EngineeringModelApi(IAppConfigService appConfigService) 
+            : base(appConfigService)
         {
-            this.ChangeLogService = changeLogService;
-            this.ObfuscationService = obfuscationService;
         }
-
-        /// <summary>
-        /// Gets or sets the change log service
-        /// </summary>
-        public IChangeLogService ChangeLogService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the obfuscation service.
-        /// </summary>
-        public IObfuscationService ObfuscationService { get; set; }
 
         /// <summary>
         /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
@@ -195,7 +121,8 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("EngineeringModel/{*path}", async (HttpRequest req, HttpResponse res) =>
+            app.MapGet("EngineeringModel/{*path}", 
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -206,7 +133,7 @@ namespace CometServer.Modules
                 {
                     try
                     {
-                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
                     catch (AuthorizationException e)
                     {
@@ -214,11 +141,12 @@ namespace CometServer.Modules
                         await res.AsJson("not authorized");
                     }
 
-                    await this.GetResponseData(req, res);
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService, obfuscationService);
                 }
             });
 
-            app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", async (HttpRequest req, HttpResponse res) =>
+            app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -229,7 +157,7 @@ namespace CometServer.Modules
                 {
                     try
                     {
-                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
                     catch (AuthorizationException e)
                     {
@@ -237,7 +165,7 @@ namespace CometServer.Modules
                         await res.AsJson("not authorized");
                     }
 
-                    await this.PostResponseData(req, res);
+                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, fileBinaryService, revisionService, jsonSerializer, permissionInstanceFilterService, changeLogService);
                 }
             });
         }
@@ -254,12 +182,12 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
+        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            this.TransactionManager.SetCachedDtoReadEnabled(true);
+            transactionManager.SetCachedDtoReadEnabled(true);
 
             var sw = new Stopwatch();
             sw.Start();
@@ -272,44 +200,44 @@ namespace CometServer.Modules
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
 
-                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
                 
-                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
+                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
 
                 // the route pattern enforces that there is at least one route segment
                 var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
                 var resourceResponse = new List<Thing>();
-                var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
+                var fromRevision = requestUtils.QueryParameters.RevisionNumber;
                 var iterationContextId = Guid.Empty;
                 var iterationContextRequest = routeSegments.Length >= 4 &&
                                               routeSegments[2] == "iteration" &&
                                               Guid.TryParse(routeSegments[3], out iterationContextId);
 
                 // get prepared data source transaction
-                var credentials = this.CredentialsService.Credentials;
+                var credentials = credentialsService.Credentials;
 
                 transaction = iterationContextRequest
-                    ? this.TransactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
-                    : this.TransactionManager.SetupTransaction(ref connection, credentials);
+                    ? transactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
+                    : transactionManager.SetupTransaction(ref connection, credentials);
 
-                var processor = new ResourceProcessor(transaction, this.ServiceProvider , this.RequestUtils, this.MetaInfoProvider);
-                var modelSetup = this.DetermineEngineeringModelSetup(processor, routeSegments);
-                var partition = this.RequestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
+                var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
+                var modelSetup = this.DetermineEngineeringModelSetup(requestUtils, transactionManager, processor, routeSegments);
+                var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
                 // set the participant information
                 if (credentials != null)
                 {
                     credentials.EngineeringModelSetup = modelSetup;
-                    this.CredentialsService.ResolveParticipantCredentials(transaction);
+                    credentialsService.ResolveParticipantCredentials(transaction);
                 }
 
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, fromRevision, false));
+                    resourceResponse.AddRange(revisionService.Get(transaction, partition, fromRevision, false));
                 }
-                else if (this.RevisionResolver.TryResolve(transaction, partition, this.RequestUtils.QueryParameters.RevisionFrom, this.RequestUtils.QueryParameters.RevisionTo, out var resolvedValues))
+                else if (revisionResolver.TryResolve(transaction, partition, requestUtils.QueryParameters.RevisionFrom, requestUtils.QueryParameters.RevisionTo, out var resolvedValues))
                 {
                     var iid = routeSegments.Last();
 
@@ -320,16 +248,16 @@ namespace CometServer.Modules
                         return;
                     }
                     
-                    resourceResponse.AddRange(this.RevisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
+                    resourceResponse.AddRange(revisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
                 }
                 else
                 {
-                    if (routeSegments.Length == 4 && routeSegments[2] == "iteration" && this.RequestUtils.QueryParameters.ExtentDeep)
+                    if (routeSegments.Length == 4 && routeSegments[2] == "iteration" && requestUtils.QueryParameters.ExtentDeep)
                     {
                         string[] engineeringModelRouteSegments = { routeSegments[0], routeSegments[1] };
 
                         // gather all Things at engineeringmodel level as indicated by the request URI 
-                        resourceResponse.AddRange(this.GetContainmentResponse(processor, partition, modelSetup, engineeringModelRouteSegments));
+                        resourceResponse.AddRange(this.GetContainmentResponse(requestUtils, transactionManager, credentialsService, processor, partition, modelSetup, engineeringModelRouteSegments));
 
                         // find and remove the engineeringModelInstance, that will be retrieved in the second go.
                         var engineeringModel = resourceResponse.SingleOrDefault(x => x.ClassKind == ClassKind.EngineeringModel);
@@ -337,7 +265,7 @@ namespace CometServer.Modules
                     }
 
                     // gather all Things as indicated by the request URI 
-                    resourceResponse.AddRange(this.GetContainmentResponse(processor, partition, modelSetup, routeSegments));
+                    resourceResponse.AddRange(this.GetContainmentResponse(requestUtils, transactionManager, credentialsService, processor, partition, modelSetup, routeSegments));
 
                     if (!resourceResponse.Any())
                     {
@@ -358,39 +286,39 @@ namespace CometServer.Modules
                     sw.Start();
                     Logger.Info("Model has Organizational Participation assigned. Obfuscation enabled.", requestToken, sw.ElapsedMilliseconds);
 
-                    this.ObfuscationService.ObfuscateResponse(resourceResponse, credentials);
+                    obfuscationService.ObfuscateResponse(resourceResponse, credentials);
 
                     Logger.Info("{0} obfuscation completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
                 }
 
                 var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
-                if (this.RequestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
+                if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    await this.WriteMultipartResponse(fileRevisions, resourceResponse, version, httpResponse);
+                    await this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
-                if (this.RequestUtils.QueryParameters.IncludeFileData)
+                if (requestUtils.QueryParameters.IncludeFileData)
                 {
                     var routeSegmentList = routeSegments.ToList();
 
                     if (this.IsValidDomainFileStoreArchiveRoute(routeSegmentList))
                     {
-                        var iterationPartition = this.RequestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
+                        var iterationPartition = requestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
 
-                        await this.WriteArchivedResponse(resourceResponse, iterationPartition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
                         return;
                     }
 
                     if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
-                        await this.WriteArchivedResponse(resourceResponse, partition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
                         return;
                     }
                 }
 
-                await this.WriteJsonResponse(resourceResponse, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse, HttpStatusCode.OK, requestToken);
+                await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse, HttpStatusCode.OK, requestToken);
             }
             catch (SecurityException ex)
             {
@@ -437,7 +365,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
+        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -451,7 +379,7 @@ namespace CometServer.Modules
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
-                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
                 var multiPartBoundary = httpRequest.GetMultipartBoundary();
 
@@ -468,7 +396,7 @@ namespace CometServer.Modules
                     await httpRequest.Body.CopyToAsync(requestStream);
 
                     bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, multiPartBoundary);
-                    fileDictionary = await this.ExtractFilesFromMultipartMessage(requestStream, multiPartBoundary);
+                    fileDictionary = await this.ExtractFilesFromMultipartMessage(fileBinaryService, requestStream, multiPartBoundary);
 
                     // - New File: 
                     //      create -> File, FileRevision
@@ -492,75 +420,75 @@ namespace CometServer.Modules
                     bodyStream = httpRequest.Body;
                 }
 
-                this.JsonSerializer.Initialize(this.MetaInfoProvider, this.RequestUtils.GetRequestDataModelVersion(httpRequest));
-                var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
+                jsonSerializer.Initialize(metaInfoProvider, requestUtils.GetRequestDataModelVersion(httpRequest));
+                var operationData = jsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
 
                 // get prepared data source transaction
-                var credentials = this.CredentialsService.Credentials;
-                transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+                var credentials = credentialsService.Credentials;
+                transaction = transactionManager.SetupTransaction(ref connection, credentials);
 
                 // the route pattern enforces that there is atleast one route segment
                 var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
-                var resourceProcessor = new ResourceProcessor(transaction, this.ServiceProvider, this.RequestUtils, this.MetaInfoProvider);
+                var resourceProcessor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
-                var modelSetup = this.DetermineEngineeringModelSetup(resourceProcessor, routeSegments);
+                var modelSetup = this.DetermineEngineeringModelSetup(requestUtils, transactionManager, resourceProcessor, routeSegments);
 
-                var partition = this.RequestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
+                var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
                 if (credentials != null)
                 {
-                    this.CredentialsService.Credentials.EngineeringModelSetup = modelSetup;
-                    this.CredentialsService.ResolveParticipantCredentials(transaction);
-                    this.CredentialsService.Credentials.IsParticipant = true;
+                    credentialsService.Credentials.EngineeringModelSetup = modelSetup;
+                    credentialsService.ResolveParticipantCredentials(transaction);
+                    credentialsService.Credentials.IsParticipant = true;
 
                     var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
-                    this.CredentialsService.Credentials.Iteration = iteration;
+                    credentialsService.Credentials.Iteration = iteration;
                 }
 
                 // defer all reference data check until after transaction commit
                 using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction))
                 {
-                    command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                    command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
                 }
 
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
-                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, partition);
+                var transactionRevision = revisionService.GetRevisionForTransaction(transaction, partition);
 
-                this.OperationProcessor.Process(operationData, transaction, partition, fileDictionary);
+                operationProcessor.Process(operationData, transaction, partition, fileDictionary);
 
-                var actor = this.CredentialsService.Credentials.Person.Iid;
+                var actor = credentialsService.Credentials.Person.Iid;
 
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
-                    var initiallyChangedThings = this.RevisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
-                    this.ChangeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);
+                    var initiallyChangedThings = revisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
+                    changeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);
                 }
 
                 // save revision-history
-                var changedThings = this.RevisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();
+                var changedThings = revisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();
 
                 await transaction.CommitAsync();
 
-                if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
+                if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    await this.WriteJsonResponse(changedThings, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
+                    await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
                     return;
                 }
 
                 Logger.Info(this.ConstructLog(httpRequest));
-                var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
+                var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
-                transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
-                var revisionResponse = this.RevisionService.Get(transaction, partition, fromRevision, true).ToArray();
+                transaction = transactionManager.SetupTransaction(ref connection, credentials);
+                var revisionResponse = revisionService.Get(transaction, partition, fromRevision, true).ToArray();
 
                 await transaction.CommitAsync();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                await this.WriteJsonResponse(revisionResponse, this.RequestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
+                await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService,revisionResponse, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
             }
             catch (InvalidOperationException ex)
             {
@@ -669,7 +597,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A <see cref="Stream"/> that contains the posted multipart message
         /// </returns>
-        private async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(Stream stream, string boundary)
+        private async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(IFileBinaryService fileBinaryService, Stream stream, string boundary)
         {
             var fileDictionary = new Dictionary<string, Stream>();
 
@@ -682,7 +610,7 @@ namespace CometServer.Modules
             {
                 if (section.ContentType == this.MimeTypeOctetStream)
                 {
-                    var hash = this.FileBinaryService.CalculateHashFromStream(section.Body);
+                    var hash = fileBinaryService.CalculateHashFromStream(section.Body);
 
                     fileDictionary.Add(hash, section.Body);
                 }
@@ -711,21 +639,21 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private IEnumerable<Thing> GetContainmentResponse(IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
+        private IEnumerable<Thing> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
         {
             List<Thing> resolvedResourcePath;
 
-            foreach (var thing in this.ProcessRequestPath(resourceProcessor, TopContainer, partition, routeSegments, out resolvedResourcePath))
+            foreach (var thing in this.ProcessRequestPath(requestUtils, transactionManager, resourceProcessor, TopContainer, partition, routeSegments, out resolvedResourcePath))
             {
                 yield return thing;
             }
 
-            var credentials = this.CredentialsService.Credentials;
-            if (this.RequestUtils.QueryParameters.IncludeReferenceData)
+            var credentials = credentialsService.Credentials;
+            if (requestUtils.QueryParameters.IncludeReferenceData)
             {
-                this.TransactionManager.SetDefaultContext(resourceProcessor.Transaction);
+                transactionManager.SetDefaultContext(resourceProcessor.Transaction);
 
-                foreach (var thing in this.CollectReferenceDataLibraryChain(resourceProcessor, modelSetup))
+                foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, resourceProcessor, modelSetup))
                 {
                     yield return thing;
                 }
@@ -747,15 +675,15 @@ namespace CometServer.Modules
         /// <exception cref="Exception">
         /// If engineering model could not be resolved
         /// </exception>
-        private EngineeringModelSetup DetermineEngineeringModelSetup(IProcessor processor, string[] routeSegments)
+        private EngineeringModelSetup DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string[] routeSegments)
         {
             // override query parameters to return only extent shallow
-            this.RequestUtils.OverrideQueryParameters = new QueryParameters();
+            requestUtils.OverrideQueryParameters = new QueryParameters();
 
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             // set the transaction to default context to retrieve SiteDirectory data
-            this.TransactionManager.SetDefaultContext(processor.Transaction);
+            transactionManager.SetDefaultContext(processor.Transaction);
 
             // take first segment and try to resolve the engineering model setup for further processing
             var siteDir = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
@@ -769,7 +697,7 @@ namespace CometServer.Modules
             }
 
             // override query parameters to return only extent shallow
-            this.RequestUtils.OverrideQueryParameters = null;
+            requestUtils.OverrideQueryParameters = null;
 
             return (EngineeringModelSetup)modelSetups.Single();
         }

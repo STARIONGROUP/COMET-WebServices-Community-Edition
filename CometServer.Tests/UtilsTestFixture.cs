@@ -139,24 +139,9 @@ namespace CometServer.Tests
             
             List<Thing> containmentCollection;
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.modelCreatorManager.Object,
-                this.appConfigService.Object,
-                this.credentialsService.Object,
-                this.headerInfoProvider.Object,
-                this.serviceProvider.Object,
-                this.permissionService.Object,
-                this.requestUtils,
-                this.metaInfoProvider.Object,
-                this.operationProcessor.Object,
-                this.fileBinaryService.Object,
-                this.fileArchiveService.Object,
-                this.revisionService.Object,
-                this.revisionResolver.Object,
-                this.transactionManager.Object,
-                this.jsonSerializer.Object,
-                this.permissionInstanceFilterService.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object);
 
-            var result = siteDirectoryApi.ProcessRequestPath(mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
+            var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
 
             CollectionAssert.AreEquivalent(new[] { this.modelSetup }, result);
         }
@@ -171,24 +156,9 @@ namespace CometServer.Tests
             // set query parameter override
             this.requestUtils.OverrideQueryParameters = new QueryParameters { IncludeAllContainers = true };
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.modelCreatorManager.Object,
-                this.appConfigService.Object,
-                this.credentialsService.Object,
-                this.headerInfoProvider.Object,
-                this.serviceProvider.Object,
-                this.permissionService.Object,
-                this.requestUtils,
-                this.metaInfoProvider.Object,
-                this.operationProcessor.Object,
-                this.fileBinaryService.Object,
-                this.fileArchiveService.Object,
-                this.revisionService.Object,
-                this.revisionResolver.Object,
-                this.transactionManager.Object,
-                this.jsonSerializer.Object,
-                this.permissionInstanceFilterService.Object);
-            
-            var result = siteDirectoryApi.ProcessRequestPath(mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object);
+
+            var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
             
             // reset query parameter override
             this.requestUtils.OverrideQueryParameters = null;

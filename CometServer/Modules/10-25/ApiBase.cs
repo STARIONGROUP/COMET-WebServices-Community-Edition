@@ -44,7 +44,6 @@ namespace CometServer.Modules
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
-    using CometServer.Services.Operations;
     
     using Microsoft.AspNetCore.Http;
 
@@ -115,160 +114,20 @@ namespace CometServer.Modules
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// Gets or sets the <see cref="IAppConfigService"/>
-        /// </summary>
-        public IAppConfigService AppConfigService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="ICredentialsService"/> used for authorization
-        /// </summary>
-        public ICredentialsService CredentialsService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the header info provider.
-        /// </summary>
-        public IHeaderInfoProvider HeaderInfoProvider { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service registry.
-        /// </summary>
-        public IServiceProvider ServiceProvider { get; set; }
-
-        /// <summary>
-        /// Gets or sets the permission service.
-        /// </summary>
-        public IPermissionService PermissionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="IRequestUtils"/>
-        /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
-
-        /// <summary>
-        /// Gets or sets the (inject) <see cref="IMetaInfoProvider"/>
-        /// </summary>
-        public IMetaInfoProvider MetaInfoProvider { get; set; }
-
-        /// <summary>
-        /// Gets or sets the operation processor.
-        /// </summary>
-        public IOperationProcessor OperationProcessor { get; set; }
-
-        /// <summary>
-        /// Gets or sets the file binary service.
-        /// </summary>
-        public IFileBinaryService FileBinaryService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the file archive service.
-        /// </summary>
-        public IFileArchiveService FileArchiveService { get; set; }
-        
-        /// <summary>
-        /// Gets or sets the revision service.
-        /// </summary>
-        public IRevisionService RevisionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the revision resolver.
-        /// </summary>
-        public IRevisionResolver RevisionResolver { get; set; }
-
-        /// <summary>
-        /// Gets or sets the transaction manager for this request.
-        /// </summary>
-        public ICdp4TransactionManager TransactionManager { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="ICdp4JsonSerializer"/>
-        /// </summary>
-        public ICdp4JsonSerializer JsonSerializer { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IPermissionInstanceFilterService"/>
-        /// </summary>
-        public IPermissionInstanceFilterService PermissionInstanceFilterService { get; set; }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
         /// </summary>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        /// <param name="credentialsService">
-        /// The (injected) <see cref="ICredentialsService"/>
-        /// </param>
-        /// <param name="headerInfoProvider">
-        /// The (injected) <see cref="IHeaderInfoProvider"/>
-        /// </param>
-        /// <param name="serviceProvider">
-        /// The (injected) <see cref="IServiceProvider"/>
-        /// </param>
-        /// <param name="permissionService">
-        /// The (injected) <see cref="IPermissionService"/>
-        /// </param>
-        /// <param name="requestUtils">
-        /// The (injected) <see cref="IRequestUtils"/>
-        /// </param>
-        /// <param name="metaInfoProvider">
-        /// The (injected) <see cref="IMetaInfoProvider"/>
-        /// </param>
-        /// <param name="operationProcessor">
-        /// The (injected) <see cref="IOperationProcessor"/>
-        /// </param>
-        /// <param name="fileBinaryService">
-        /// The (injected) <see cref="IFileBinaryService"/>
-        /// </param>
-        /// <param name="fileArchiveService">
-        /// The (injected) <see cref="IFileArchiveService"/>
-        /// </param>
-        /// <param name="revisionService">
-        /// The (injected) <see cref="IRevisionService"/>
-        /// </param>
-        /// <param name="revisionResolver">
-        /// The (injected) <see cref="IRevisionResolver"/>
-        /// </param>
-        /// <param name="transactionManager">
-        /// The (injected) <see cref="ICdp4TransactionManager"/>
-        /// </param>
-        /// <param name="jsonSerializer">
-        /// The (injected) <see cref="ICdp4JsonSerializer"/>
-        /// </param>
-        /// <param name="permissionInstanceFilterService">
-        /// The (injected) <see cref="IPermissionInstanceFilterService"/>
-        /// </param>
-        protected ApiBase(IAppConfigService appConfigService, 
-            ICredentialsService credentialsService,
-            IHeaderInfoProvider headerInfoProvider,
-            IServiceProvider serviceProvider,
-            IPermissionService permissionService,
-            IRequestUtils requestUtils,
-            IMetaInfoProvider metaInfoProvider,
-            IOperationProcessor operationProcessor,
-            IFileBinaryService fileBinaryService,
-            IFileArchiveService fileArchiveService,
-            IRevisionService revisionService,
-            IRevisionResolver revisionResolver,
-            ICdp4TransactionManager transactionManager,
-            ICdp4JsonSerializer jsonSerializer,
-            IPermissionInstanceFilterService permissionInstanceFilterService)
+        protected ApiBase(IAppConfigService appConfigService)
         {
             this.AppConfigService = appConfigService;
-            this.CredentialsService = credentialsService;
-            this.HeaderInfoProvider = headerInfoProvider;
-            this.ServiceProvider = serviceProvider;
-            this.PermissionService = permissionService;
-            this.RequestUtils = requestUtils;
-            this.MetaInfoProvider = metaInfoProvider;
-            this.OperationProcessor = operationProcessor;
-            this.FileBinaryService = fileBinaryService;
-            this.FileArchiveService = fileArchiveService;
-            this.RevisionService = revisionService;
-            this.RevisionResolver = revisionResolver;
-            this.TransactionManager = transactionManager;
-            this.JsonSerializer = jsonSerializer;
-            this.PermissionInstanceFilterService = permissionInstanceFilterService;
         }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
         /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
@@ -281,19 +140,19 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task Authorize(string username)
+        protected async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             try
             {
-                connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+                connection = new NpgsqlConnection(Services.Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
                 await connection.OpenAsync();
 
                 transaction = await connection.BeginTransactionAsync();
 
-                await this.CredentialsService.ResolveCredentials(transaction, username);
+                await credentialsService.ResolveCredentials(transaction, username);
             }
             catch (Exception ex)
             {
@@ -339,7 +198,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The collection of retrieved <see cref="CDP4Common.DTO.Thing"/>.
         /// </returns>
-        public IEnumerable<Thing> ProcessRequestPath(IProcessor processor, string topContainer, string partition, string[] routeSegments, out List<Thing> resourcePath)
+        public IEnumerable<Thing> ProcessRequestPath(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string topContainer, string partition, string[] routeSegments, out List<Thing> resourcePath)
         {
             var containmentColl = new List<Thing>();
             var responseColl = new List<Thing>();
@@ -376,7 +235,7 @@ namespace CometServer.Modules
                 {
                     // switch to iteration context for further processing,
                     // in case of Iteration generalResource request, this is handled separately below
-                    this.TransactionManager.SetIterationContext(processor.Transaction, partition);
+                    transactionManager.SetIterationContext(processor.Transaction, partition);
                 }
 
                 if (resourceContainmentSegment)
@@ -416,7 +275,7 @@ namespace CometServer.Modules
                             // switch to iteration context for further processing
                             // use engineering-model id to set the iteration context
                             // partition here should be EngineeringModel_<uuid>
-                            this.TransactionManager.SetIterationContext(
+                            transactionManager.SetIterationContext(
                                 processor.Transaction,
                                 partition,
                                 containedIterationId);
@@ -461,7 +320,7 @@ namespace CometServer.Modules
                 }
             }
 
-            if (this.RequestUtils.QueryParameters.IncludeAllContainers)
+            if (requestUtils.QueryParameters.IncludeAllContainers)
             {
                 responseColl.InsertRange(0, containmentColl);
             }
@@ -522,14 +381,14 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task WriteJsonResponse(IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
+        protected async Task WriteJsonResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
-            this.HeaderInfoProvider.RegisterResponseHeaders(httpResponse);
+            headerInfoProvider.RegisterResponseHeaders(httpResponse);
 
             httpResponse.StatusCode = (int)statusCode;
 
             var resultStream = new MemoryStream();
-            this.CreateFilteredResponseStream(resourceResponse, resultStream, requestDataModelVersion, requestToken);
+            this.CreateFilteredResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
             resultStream.Seek(0, SeekOrigin.Begin);
             await resultStream.CopyToAsync(httpResponse.Body);
         }
@@ -552,13 +411,13 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected async Task WriteMultipartResponse(List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected async Task WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+            headerInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
 
             httpResponse.StatusCode = (int)statusCode;
 
-            this.PrepareMultiPartResponse(httpResponse.Body, fileRevisions, resourceResponse, version);
+            this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
         }
 
         /// <summary>
@@ -579,12 +438,12 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected async Task WriteArchivedResponse(List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected async Task WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            this.HeaderInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+            headerInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
 
-            await this.PrepareArchivedResponse(httpResponse.Body, resourceResponse, version, partition, routeSegments);
+            await this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
         }
 
         /// <summary>
@@ -602,9 +461,9 @@ namespace CometServer.Modules
         /// <returns>
         /// A top container instance.
         /// </returns>
-        protected Thing GetTopContainer(NpgsqlTransaction transaction, string partition, string topContainer)
+        protected Thing GetTopContainer(IServiceProvider serviceProvider, NpgsqlTransaction transaction, string partition, string topContainer)
         {
-            return this.ServiceProvider.MapToReadService(topContainer).GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
+            return serviceProvider.MapToReadService(topContainer).GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
         }
 
         /// <summary>
@@ -619,16 +478,16 @@ namespace CometServer.Modules
         /// <returns>
         /// IEnumerable collection of data reference library items.
         /// </returns>
-        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(
+        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IRequestUtils requestUtils,
             IProcessor processor,
             EngineeringModelSetup modelSetup)
         {
-            var securityContext = this.SetupSecurityContextForLibraryRead();
+            var securityContext = this.SetupSecurityContextForLibraryRead(requestUtils);
 
             // retrieve the required model reference data library
             var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, modelSetup.RequiredRdl, securityContext);
 
-            return this.RetrieveChainedReferenceData(processor, securityContext, modelReferenceDataLibraryData);
+            return this.RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData);
         }
 
         /// <summary>
@@ -643,14 +502,14 @@ namespace CometServer.Modules
         /// <returns>
         /// IEnumerable collection of data reference library items.
         /// </returns>
-        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IProcessor processor, ModelReferenceDataLibrary modelReferenceDataLibrary)
+        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IRequestUtils requestUtils, IProcessor processor, ModelReferenceDataLibrary modelReferenceDataLibrary)
         {
-            var securityContext = this.SetupSecurityContextForLibraryRead();
+            var securityContext = this.SetupSecurityContextForLibraryRead(requestUtils);
 
             // retrieve the required model reference data library with extent = deep
             var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, new[] { modelReferenceDataLibrary.Iid }, securityContext);
 
-            return this.RetrieveChainedReferenceData(processor, securityContext, modelReferenceDataLibraryData)
+            return this.RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData)
                 .Where(x => x.Iid != modelReferenceDataLibrary.Iid);
         }
 
@@ -686,16 +545,16 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateFilteredResponseStream(IReadOnlyList<Thing> dtos, Stream stream, Version requestDataModelVersion, string requestToken = "")
+        private void CreateFilteredResponseStream(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> dtos, Stream stream, Version requestDataModelVersion, string requestToken = "")
         {
-            var filteredDtos = this.PermissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
+            var filteredDtos = permissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
 
             var sw = new Stopwatch();
             sw.Start();
             Logger.Debug("{0} start serializing dtos", requestToken);
 
-            this.JsonSerializer.Initialize(this.MetaInfoProvider, requestDataModelVersion);
-            this.JsonSerializer.SerializeToStream(filteredDtos, stream);
+            jsonSerializer.Initialize(metaInfoProvider, requestDataModelVersion);
+            jsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
             Logger.Debug("serializing dtos {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
@@ -716,7 +575,7 @@ namespace CometServer.Modules
         /// <param name="requestDataModelVersion">
         /// The request data model version.
         /// </param>
-        private void PrepareMultiPartResponse(Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
+        private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
             if (!fileRevisions.Any())
             {
@@ -727,7 +586,7 @@ namespace CometServer.Modules
             var content = new MultipartContent("mixed", BoundaryString);
             using (var stream = new MemoryStream())
             {
-                this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
+                this.CreateFilteredResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
 
                 // rewind stream prior to reading
                 stream.Position = 0;
@@ -745,7 +604,7 @@ namespace CometServer.Modules
             {
                 byte[] buffer;
                 long fileSize;
-                using (var fileStream = this.FileBinaryService.RetrieveBinaryData(hash))
+                using (var fileStream = fileBinaryService.RetrieveBinaryData(hash))
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
@@ -785,9 +644,9 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private async Task PrepareArchivedResponse(Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
+        private async Task PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
-            var folderPath = this.FileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
+            var folderPath = fileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
 
             try
             {
@@ -795,7 +654,7 @@ namespace CometServer.Modules
 
                 using (var stream = new MemoryStream())
                 {
-                    this.CreateFilteredResponseStream(resourceResponse, stream, requestDataModelVersion);
+                    this.CreateFilteredResponseStream(metaInfoProvider,jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
 
                     // rewind stream prior to reading
                     stream.Position = 0;
@@ -809,7 +668,7 @@ namespace CometServer.Modules
                     stream.Flush();
                 }
 
-                this.FileArchiveService.CreateZipArchive(folderPath);
+                fileArchiveService.CreateZipArchive(folderPath);
 
                 byte[] buffer;
                 long fileSize;
@@ -836,7 +695,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                this.FileArchiveService.DeleteFileStructureWithArchive(folderPath);
+                fileArchiveService.DeleteFileStructureWithArchive(folderPath);
             }
         }
 
@@ -859,10 +718,10 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="RequestSecurityContext"/>.
         /// </returns>
-        private RequestSecurityContext SetupSecurityContextForLibraryRead()
+        private RequestSecurityContext SetupSecurityContextForLibraryRead(IRequestUtils requestUtils)
         {
             // override query parameters to return full set
-            this.RequestUtils.OverrideQueryParameters =
+            requestUtils.OverrideQueryParameters =
                 new QueryParameters { ExtentDeep = true, IncludeReferenceData = true };
 
             return new RequestSecurityContext { ContainerReadAllowed = true };
@@ -883,7 +742,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A collection of retrieved reference data.
         /// </returns>
-        private IEnumerable<Thing> RetrieveChainedReferenceData(IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
+        private IEnumerable<Thing> RetrieveChainedReferenceData(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
         {
             var chainedReferenceDataColl = new List<Thing>();
 
@@ -904,7 +763,7 @@ namespace CometServer.Modules
             }
 
             // reset query parameters
-            this.RequestUtils.OverrideQueryParameters = null;
+            requestUtils.OverrideQueryParameters = null;
             return chainedReferenceDataColl;
         }
     }

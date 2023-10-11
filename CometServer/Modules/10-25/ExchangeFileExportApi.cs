@@ -34,7 +34,6 @@ namespace CometServer.Modules
     using System.Security;
     using System.Threading.Tasks;
 
-    using Carter;
     using Carter.Response;
 
     using CDP4Common.DTO;
@@ -44,7 +43,6 @@ namespace CometServer.Modules
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
-    using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
 
     using Microsoft.AspNetCore.Builder;
@@ -77,12 +75,6 @@ namespace CometServer.Modules
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         
         /// <summary>
-        /// Gets or sets the (injected) <see cref="IJsonExchangeFileWriter"/> used to create an
-        /// E-TM-10-25 Annex C3 JSON export file.
-        /// </summary>
-        public IJsonExchangeFileWriter JsonExchangeFileWriter { get; set; }
-        
-        /// <summary>
         /// The supported post query parameter.
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
@@ -93,72 +85,8 @@ namespace CometServer.Modules
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileExportApi"/> class
         /// </summary>
-        /// <param name="jsonExchangeFileWriter">
-        /// The (injected) <see cref="IJsonExchangeFileWriter"/>
-        /// </param>
-        /// <param name="appConfigService">
-        /// The (injected) <see cref="IAppConfigService"/>
-        /// </param>
-        /// <param name="credentialsService">
-        /// The (injected) <see cref="ICredentialsService"/>
-        /// </param>
-        /// <param name="headerInfoProvider">
-        /// The (injected) <see cref="IHeaderInfoProvider"/>
-        /// </param>
-        /// <param name="serviceProvider">
-        /// The (injected) <see cref="Services.IServiceProvider"/>
-        /// </param>
-        /// <param name="permissionService">
-        /// The (injected) <see cref="IPermissionService"/>
-        /// </param>
-        /// <param name="requestUtils">
-        /// The (injected) <see cref="IRequestUtils"/>
-        /// </param>
-        /// <param name="metaInfoProvider">
-        /// The (injected) <see cref="IMetaInfoProvider"/>
-        /// </param>
-        /// <param name="operationProcessor">
-        /// The (injected) <see cref="IOperationProcessor"/>
-        /// </param>
-        /// <param name="fileBinaryService">
-        /// The (injected) <see cref="IFileBinaryService"/>
-        /// </param>
-        /// <param name="fileArchiveService">
-        /// The (injected) <see cref="IFileArchiveService"/>
-        /// </param>
-        /// <param name="revisionService">
-        /// The (injected) <see cref="IRevisionService"/>
-        /// </param>
-        /// <param name="revisionResolver">
-        /// The (injected) <see cref="IRevisionResolver"/>
-        /// </param>
-        /// <param name="transactionManager">
-        /// The (injected) <see cref="ICdp4TransactionManager"/>
-        /// </param>
-        /// <param name="jsonSerializer">
-        /// The (injected) <see cref="ICdp4JsonSerializer"/>
-        /// </param>
-        /// <param name="permissionInstanceFilterService">
-        /// The (injected) <see cref="IPermissionInstanceFilterService"/>
-        /// </param>
-        public ExchangeFileExportApi(IJsonExchangeFileWriter jsonExchangeFileWriter, 
-            IAppConfigService appConfigService, 
-            ICredentialsService credentialsService, 
-            IHeaderInfoProvider headerInfoProvider, 
-            Services.IServiceProvider serviceProvider,
-            IPermissionService permissionService, 
-            IRequestUtils requestUtils,
-            IMetaInfoProvider metaInfoProvider, 
-            IOperationProcessor operationProcessor, 
-            IFileBinaryService fileBinaryService, 
-            IFileArchiveService fileArchiveService,
-            IRevisionService revisionService, 
-            IRevisionResolver revisionResolver, 
-            ICdp4TransactionManager transactionManager,
-            ICdp4JsonSerializer jsonSerializer, 
-            IPermissionInstanceFilterService permissionInstanceFilterService) : base(appConfigService, credentialsService, headerInfoProvider, serviceProvider, permissionService, requestUtils, metaInfoProvider, operationProcessor, fileBinaryService, fileArchiveService, revisionService, revisionResolver, transactionManager, jsonSerializer, permissionInstanceFilterService)
+        public ExchangeFileExportApi(IAppConfigService appConfigService) : base(appConfigService)
         {
-            this.JsonExchangeFileWriter = jsonExchangeFileWriter;
         }
 
         /// <summary>
@@ -169,7 +97,8 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/export", async (HttpRequest req, HttpResponse res) => {
+            app.MapPost("/export",
+            async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter) => {
 
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -178,9 +107,9 @@ namespace CometServer.Modules
                 }
                 else
                 {
-                    await this.Authorize(req.HttpContext.User.Identity.Name);
+                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
 
-                    await this.PostResponseData(req, res);
+                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
                 }
             });
         }
@@ -197,7 +126,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
+        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter)
         {
             if (!this.AppConfigService.AppConfig.Midtier.IsExportEnabled)
             {
@@ -209,7 +138,7 @@ namespace CometServer.Modules
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            this.TransactionManager.SetCachedDtoReadEnabled(true);
+            transactionManager.SetCachedDtoReadEnabled(true);
 
             var sw = Stopwatch.StartNew();
             var requestToken = this.GenerateRandomToken();
@@ -221,7 +150,7 @@ namespace CometServer.Modules
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
-                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
                 var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
                 if (isMultiPart)
@@ -230,16 +159,16 @@ namespace CometServer.Modules
                     throw new InvalidOperationException($"Multipart post messages are not allowed for the {TopContainer} route");
                 }
 
-                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
-                this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
+                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
+                jsonSerializer.Initialize(metaInfoProvider, version);
                 
-                var iids = this.JsonSerializer.Deserialize<List<Guid>>(httpRequest.Body);
+                var iids = jsonSerializer.Deserialize<List<Guid>>(httpRequest.Body);
 
-                var engineeringModelSetups = this.QueryExportEngineeringModelSetups(iids);
+                var engineeringModelSetups = this.QueryExportEngineeringModelSetups(credentialsService, iids);
 
-                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
+                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
 
-                zipFilePath = this.JsonExchangeFileWriter.Create(transaction, this.AppConfigService.AppConfig.Midtier.ExportDirectory, engineeringModelSetups, version);
+                zipFilePath = jsonExchangeFileWriter.Create(transaction, this.AppConfigService.AppConfig.Midtier.ExportDirectory, engineeringModelSetups, version);
 
                 await transaction.CommitAsync();
 
@@ -316,7 +245,7 @@ namespace CometServer.Modules
         /// thrown when at least one of the provided <paramref name="iids"/> does not correspond to an <see cref="EngineeringModelSetup"/>
         /// the user has access to.
         /// </exception>
-        private IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (IEnumerable<Guid> iids)
+        private IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (ICredentialsService credentialsService, IEnumerable<Guid> iids)
         {
             if (!iids.Any())
             {
@@ -325,11 +254,11 @@ namespace CometServer.Modules
 
             foreach (var iid in iids)
             {
-                var engineeringModelSetup = this.CredentialsService.Credentials.EngineeringModelSetups.SingleOrDefault(x => x.Iid == iid);
+                var engineeringModelSetup = credentialsService.Credentials.EngineeringModelSetups.SingleOrDefault(x => x.Iid == iid);
 
                 if (engineeringModelSetup == null)
                 {
-                    throw new UnauthorizedAccessException($"$The user {this.CredentialsService.Credentials.Person.UserName} does not have access to one of the EngineeringModels that are requested to be exported");
+                    throw new UnauthorizedAccessException($"$The user {credentialsService.Credentials.Person.UserName} does not have access to one of the EngineeringModels that are requested to be exported");
                 }
                 else
                 {

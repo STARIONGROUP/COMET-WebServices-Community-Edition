@@ -43,10 +43,8 @@ namespace CometServer.Modules
     using CDP4Common.Helpers;
 
     using CDP4Orm.Dao;
-    using CDP4Orm.Dao.Revision;
     using CDP4Orm.MigrationEngine;
 
-    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services;
@@ -58,9 +56,7 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
-
     using NLog;
-
     using Npgsql;
 
     using IServiceProvider = CometServer.Services.IServiceProvider;
@@ -94,215 +90,15 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        /// <param name="credentialsService"> 
-        /// The (injected) <see cref="ICredentialsService"/>
-        /// </param>
-        /// <param name="revisionService">
-        /// The (injected) <see cref="IRevisionService"/>
-        /// </param>
-        /// <param name="revisionDao">
-        /// The (injected) <see cref="IRevisionDao"/>
-        /// </param>
-        /// <param name="permissionService">
-        /// The (injected) <see cref="IPermissionService"/>
-        /// </param>
-        /// <param name="siteDirectoryService">
-        /// The (injected) <see cref="ISiteDirectoryService"/>
-        /// </param>
-        /// <param name="engineeringModelSetupService">
-        /// The (injected) <see cref="IEngineeringModelSetupService"/>
-        /// </param>
-        /// <param name="jsonExchangeFileReader">
-        /// The (injected) <see cref="IJsonExchangeFileReader"/>
-        /// </param>
-        /// <param name="transactionManager">
-        /// The (injected) <see cref="ICdp4TransactionManager"/>
-        /// </param>
-        /// <param name="requestUtils">
-        /// The (injected) <see cref="IRequestUtils"/>
-        /// </param>
-        /// <param name="serviceProvider">
-        /// The (injected) <see cref="IServiceProvider"/>
-        /// </param>
-        /// <param name="dataStoreController">
-        /// The (injected) <see cref="IDataStoreController"/>
-        /// </param>
-        /// <param name="engineeringModelDao">
-        /// The (injected) <see cref="IEngineeringModelDao"/>
-        /// </param>
-        /// <param name="personService">
-        /// The (injected) <see cref="IPersonRoleService"/>
-        /// </param>
-        /// <param name="personRoleService">
-        /// The (injected) <see cref="IPersonRoleService"/>
-        /// </param>
-        /// <param name="personPermissionService">
-        /// The (injected) <see cref="IPersonPermissionService"/>
-        /// </param>
-        /// <param name="participantService">
-        /// The (injected) <see cref="IParticipantService"/>
-        /// </param>
-        /// <param name="participantRoleService">
-        /// The (injected) <see cref="IParticipantRoleService"/>
-        /// </param>
-        /// <param name="participantPermissionService">
-        /// The (injected) <see cref="IParticipantPermissionService"/>
-        /// </param>
-        /// <param name="defaultPermissionProvider">
-        /// The (injected) <see cref="IDefaultPermissionProvider"/>
-        /// </param>
-        /// <param name="migrationService">
-        /// The (injected) <see cref="IMigrationService"/>
-        /// </param>
-        public ExchangeFileImportyApi(IAppConfigService appConfigService,
-            ICredentialsService credentialsService,
-            IRevisionService revisionService,
-            IRevisionDao revisionDao,
-            IPermissionService permissionService,
-            ISiteDirectoryService siteDirectoryService,
-            IEngineeringModelSetupService engineeringModelSetupService,
-            IJsonExchangeFileReader jsonExchangeFileReader,
-            ICdp4TransactionManager transactionManager,
-            IRequestUtils requestUtils,
-            IServiceProvider serviceProvider,
-            IDataStoreController dataStoreController,
-            IEngineeringModelDao engineeringModelDao,
-            IPersonService personService,
-            IPersonRoleService personRoleService,
-            IPersonPermissionService personPermissionService,
-            IParticipantService participantService,
-            IParticipantRoleService participantRoleService,
-            IParticipantPermissionService participantPermissionService,
-            IDefaultPermissionProvider defaultPermissionProvider,
-            IMigrationService migrationService)
+        public ExchangeFileImportyApi(IAppConfigService appConfigService)
         {
             this.AppConfigService = appConfigService;
-            this.CredentialsService = credentialsService;
-            this.RevisionService = revisionService;
-            this.RevisionDao = revisionDao;
-            this.PermissionService = permissionService;
-            this.SiteDirectoryService = siteDirectoryService;
-            this.EngineeringModelSetupService = engineeringModelSetupService;
-            this.JsonExchangeFileReader = jsonExchangeFileReader;
-            this.TransactionManager = transactionManager;
-            this.RequestUtils = requestUtils;
-            this.ServiceProvider = serviceProvider;
-            this.DataStoreController = dataStoreController;
-            this.EngineeringModelDao = engineeringModelDao;
-            this.PersonService = personService;
-            this.PersonRoleService = personRoleService;
-            this.PersonPermissionService = personPermissionService;
-            this.ParticipantService = participantService;
-            this.ParticipantRoleService = participantRoleService;
-            this.ParticipantPermissionService = participantPermissionService;
-            this.DefaultPermissionProvider = defaultPermissionProvider;
-            this.MigrationService = migrationService;
         }
 
         /// <summary>
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="ICredentialsService"/> that manages retrieving the <see cref="CDP4Common.DTO.Person"/> from the database.
-        /// </summary>
-        public ICredentialsService CredentialsService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the revision service.
-        /// </summary>
-        public IRevisionService RevisionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the revision dao.
-        /// </summary>
-        public IRevisionDao RevisionDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the permission service.
-        /// </summary>
-        public IPermissionService PermissionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the SiteDirectory service.
-        /// </summary>
-        public ISiteDirectoryService SiteDirectoryService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the EngineeringModelSetup service.
-        /// </summary>
-        public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the exchange file processor.
-        /// </summary>
-        public IJsonExchangeFileReader JsonExchangeFileReader { get; set; }
-
-        /// <summary>
-        /// Gets or sets the transaction manager.
-        /// </summary>
-        public ICdp4TransactionManager TransactionManager { get; set; }
-
-        /// <summary>
-        /// Gets or sets the request utils.
-        /// </summary>
-        public IRequestUtils RequestUtils { get; set; }
-
-        /// <summary>
-        /// Gets or sets the service provider.
-        /// </summary>
-        public IServiceProvider ServiceProvider { get; set; }
-
-        /// <summary>
-        /// Gets or sets the data store controller.
-        /// </summary>
-        public IDataStoreController DataStoreController { get; set; }
-
-        /// <summary>
-        /// Gets or sets the engineeringModel dao.
-        /// </summary>
-        public IEngineeringModelDao EngineeringModelDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Person service.
-        /// </summary>
-        public IPersonService PersonService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the PersonRole service.
-        /// </summary>
-        public IPersonRoleService PersonRoleService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the PersonPermission service.
-        /// </summary>
-        public IPersonPermissionService PersonPermissionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the Participant service.
-        /// </summary>
-        public IParticipantService ParticipantService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the ParticipantRole service.
-        /// </summary>
-        public IParticipantRoleService ParticipantRoleService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the ParticipantPermission service.
-        /// </summary>
-        public IParticipantPermissionService ParticipantPermissionService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IDefaultPermissionProvider"/>
-        /// </summary>
-        public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IMigrationService"/>
-        /// </summary>
-        public IMigrationService MigrationService { get; set; }
 
         /// <summary>
         /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
@@ -312,16 +108,18 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/Data/Exchange", async (HttpRequest req, HttpResponse res) => {
-                await this.SeedDataStore(req, res);
+            app.MapPost("/Data/Exchange", async (HttpRequest req, HttpResponse res,
+                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) => {
+                await this.SeedDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
             });
 
-            app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res) => {
-                await this.ImportDataStore(req, res);
+            app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res,
+                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) => {
+                await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
             });
 
-            app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res) => {
-                await this.RestoreDatastore(req, res);
+            app.MapPost("/Data/Restore", async (HttpResponse res, IDataStoreController dataStoreController) => {
+                await this.RestoreDatastore(res, dataStoreController);
             });
         }
 
@@ -334,10 +132,13 @@ namespace CometServer.Modules
         /// <param name="response">
         /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
+        /// <param name="dataStoreController">
+        /// The (injected) <see cref="IDataStoreController"/>
+        /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task RestoreDatastore(HttpRequest request, HttpResponse response)
+        internal async Task RestoreDatastore(HttpResponse response, IDataStoreController dataStoreController)
         {
             if (!this.AppConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
@@ -350,7 +151,7 @@ namespace CometServer.Modules
             try
             {
                 Logger.Info("Starting data store rollback");
-                this.DataStoreController.RestoreDataStore();
+                dataStoreController.RestoreDataStore();
 
                 // TODO: check what to do with this in origianl CDP4 code
                 // reset the credential cache as the underlying datastore was reset
@@ -403,7 +204,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="Task{Response}"/>.
         /// </returns>
-        internal async Task ImportDataStore(HttpRequest request, HttpResponse response)
+        internal async Task ImportDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
         {
             if (!this.AppConfigService.AppConfig.Backtier.IsDbImportEnabled)
             {
@@ -418,12 +219,12 @@ namespace CometServer.Modules
             var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
             // drop existing data stores
-            this.DropDataStoreAndPrepareNew();
+            this.DropDataStoreAndPrepareNew(dataStoreController);
 
-            var version = this.RequestUtils.GetRequestDataModelVersion(request);
+            var version = requestUtils.GetRequestDataModelVersion(request);
 
             // handle exchange processing
-            if (!this.UpsertModelData(version, temporarysSeedFilePath, null))
+            if (!this.UpsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -472,7 +273,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task SeedDataStore(HttpRequest request, HttpResponse response)
+        internal async Task SeedDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
             if (!this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled)
             {
@@ -487,12 +288,12 @@ namespace CometServer.Modules
             var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
             // drop existing data stores
-            this.DropDataStoreAndPrepareNew();
+            this.DropDataStoreAndPrepareNew(dataStoreController);
 
-            var version = this.RequestUtils.GetRequestDataModelVersion(request);
+            var version = requestUtils.GetRequestDataModelVersion(request);
 
             // handle exchange processing
-            if (!this.InsertModelData(version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -512,11 +313,11 @@ namespace CometServer.Modules
             try
             {
                 // Create a jsonb for each entry in the database
-                this.CreateRevisionHistoryForEachEntry();
+                this.CreateRevisionHistoryForEachEntry(requestUtils, transactionManager, revisionService, personService, siteDirectoryService, engineeringModelSetupService);
 
                 // database was succesfully seeded
                 // create a clone of the data store for future restore support
-                this.DataStoreController.CloneDataStore();
+                dataStoreController.CloneDataStore();
 
                 // TODO: check what to do with this in origianl CDP4 code
                 // reset the credential cache as the underlying datastore was reset
@@ -549,7 +350,7 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful, false if not
         /// </returns>
-        private bool InsertModelData(Version version, string fileName, string password = null, bool seed = true)
+        private bool InsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -561,8 +362,8 @@ namespace CometServer.Modules
                 {
                     // clear database schemas if seeding
                     Logger.Info("Start clearing the current data store");
-                    transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                    this.TransactionManager.SetFullAccessState(true);
+                    transaction = transactionManager.SetupTransaction(ref connection, null);
+                    transactionManager.SetFullAccessState(true);
                     this.ClearDatabaseSchemas(transaction);
                     transaction.Commit();
 
@@ -574,18 +375,18 @@ namespace CometServer.Modules
                 Logger.Info("Start seeding the data");
 
                 // use new transaction to for inserting the data
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetFullAccessState(true);
+                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transactionManager.SetFullAccessState(true);
 
                 // important, make sure to defer the constraints
                 var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                this.TransactionManager.SetAuditLoggingState(transaction, false);
+                transactionManager.SetAuditLoggingState(transaction, false);
 
                 // get sitedirectory data
-                var items = this.JsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
+                var items = jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
 
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
@@ -600,7 +401,7 @@ namespace CometServer.Modules
                     throw new NoNullAllowedException("Topcontainer item needs to be present in the dataset");
                 }
 
-                this.RequestUtils.Cache = new List<Thing>(items);
+                requestUtils.Cache = new List<Thing>(items);
 
                 // setup Site Directory schema
                 using (var siteDirCommand = new NpgsqlCommand())
@@ -610,11 +411,11 @@ namespace CometServer.Modules
 
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
-                    siteDirCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                    siteDirCommand.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
                 }
 
                 // apply migration on new SiteDirectory partition
-                this.MigrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
+                migrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
 
                 var result = false;
                 if (topContainer.GetType().Name == "SiteDirectory")
@@ -622,44 +423,44 @@ namespace CometServer.Modules
                     // make sure single iterationsetups are set to unfrozen before persitence
                     this.FixSingleIterationSetups(items);
                     var siteDirectoryService =
-                        this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
+                        serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
                 }
 
                 if (result)
                 {
-                    this.RequestUtils.QueryParameters = new QueryParameters();
+                    requestUtils.QueryParameters = new QueryParameters();
 
                     // Get users credentials from migration.json file
-                    var migrationCredentials = this.JsonExchangeFileReader.ReadMigrationJsonFromFile(fileName, password).ToList();
+                    var migrationCredentials = jsonExchangeFileReader.ReadMigrationJsonFromFile(fileName, password).ToList();
 
                     foreach (var person in items.OfType<Person>())
                     {
                         var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
                         if (credential != null)
                         {
-                            this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
+                            personService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
                         }
                     }
 
                     // Add missing Person permissions
-                    this.CreateMissingPersonPermissions(transaction);
+                    this.CreateMissingPersonPermissions(transaction, personRoleService, personPermissionService, defaultPermissionProvider);
 
                     var engineeringModelSetups =
                         items.OfType<EngineeringModelSetup>()
                             .ToList();
                     var engineeringModelService =
-                        this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
-                    var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
+                        serviceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+                    var iterationService = serviceProvider.MapToPersitableService<IterationService>("Iteration");
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
                         // cleanup before handling TopContainer
-                        this.RequestUtils.Cache.Clear();
+                        requestUtils.Cache.Clear();
 
                         // get referenced engineeringmodel data
-                        var engineeringModelItems = this.JsonExchangeFileReader
+                        var engineeringModelItems = jsonExchangeFileReader
                             .ReadEngineeringModelFromfile(version, fileName, password, engineeringModelSetup).ToList();
 
                         // should return one engineeringmodel topcontainer
@@ -671,7 +472,7 @@ namespace CometServer.Modules
                         }
 
                         var dataPartition = CDP4Orm.Dao.Utils.GetEngineeringModelSchemaName(engineeringModel.Iid);
-                        this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
+                        requestUtils.Cache = new List<Thing>(engineeringModelItems);
 
                         if (!engineeringModelService.Insert(transaction, dataPartition, engineeringModel))
                         {
@@ -680,10 +481,10 @@ namespace CometServer.Modules
                         }
 
                         // Add missing Participant permissions
-                        this.CreateMissingParticipantPermissions(transaction);
+                        this.CreateMissingParticipantPermissions(transaction, participantRoleService, participantPermissionService, defaultPermissionProvider);
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(fileName, password);
+                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
@@ -693,7 +494,7 @@ namespace CometServer.Modules
                         int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
-                        this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
+                        engineeringModelDao.ResetIterationNumberSequenceStartNumber(
                             transaction,
                             dataPartition,
                             maxIterationNumber);
@@ -701,12 +502,12 @@ namespace CometServer.Modules
                         var iterationInsertResult = true;
                         foreach (var iterationSetup in iterationSetups)
                         {
-                            this.RequestUtils.Cache.Clear();
-                            var iterationItems = this.JsonExchangeFileReader
+                            requestUtils.Cache.Clear();
+                            var iterationItems = jsonExchangeFileReader
                                 .ReadModelIterationFromFile(version, fileName, password, iterationSetup).ToList();
 
                             // FixRevisionNumber(iterationItems);
-                            this.RequestUtils.Cache = new List<Thing>(iterationItems);
+                            requestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
                             var iteration =
@@ -729,7 +530,7 @@ namespace CometServer.Modules
                         }
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(fileName, password);
+                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
                     }
                 }
 
@@ -753,7 +554,7 @@ namespace CometServer.Modules
             finally
             {
                 // clean log (will happen at end of request as well due to IOC lifetime
-                this.TransactionManager.CommandLogger.ClearLog();
+                transactionManager.CommandLogger.ClearLog();
 
                 transaction?.Dispose();
 
@@ -777,7 +578,7 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful
         /// </returns>
-        private bool UpsertModelData(Version version, string fileName, string password = null)
+        private bool UpsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -788,8 +589,8 @@ namespace CometServer.Modules
 
                 // clear database schemas if seeding
                 Logger.Info("Start clearing the current data store");
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetFullAccessState(true);
+                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transactionManager.SetFullAccessState(true);
                 this.ClearDatabaseSchemas(transaction);
                 transaction.Commit();
 
@@ -800,18 +601,18 @@ namespace CometServer.Modules
                 Logger.Info("Start importing the data");
 
                 // use new transaction to for inserting the data
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetFullAccessState(true);
+                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transactionManager.SetFullAccessState(true);
 
                 // important, make sure to defer the constraints
                 var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                this.TransactionManager.SetAuditLoggingState(transaction, true);
+                transactionManager.SetAuditLoggingState(transaction, true);
 
                 // get sitedirectory data
-                var items = this.JsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
+                var items = jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
 
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
@@ -827,7 +628,7 @@ namespace CometServer.Modules
                     throw new NoNullAllowedException("Topcontainer item needs to be present in the dataset");
                 }
 
-                this.RequestUtils.Cache = new List<Thing>(items);
+                requestUtils.Cache = new List<Thing>(items);
 
                 // setup Site Directory schema
                 using (var siteDirCommand = new NpgsqlCommand())
@@ -837,11 +638,11 @@ namespace CometServer.Modules
 
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
-                    siteDirCommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                    siteDirCommand.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
                 }
 
                 // apply migration on new SiteDirectory partition
-                this.MigrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
+                migrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
 
@@ -850,17 +651,17 @@ namespace CometServer.Modules
                     // make sure single iterationsetups are set to unfrozen before persitence
                     this.FixSingleIterationSetups(items);
 
-                    var siteDirectoryService = this.ServiceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
+                    var siteDirectoryService = serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
                 }
 
                 if (result)
                 {
-                    this.RequestUtils.QueryParameters = new QueryParameters();
+                    requestUtils.QueryParameters = new QueryParameters();
 
                     // Get users credentials from migration.json file
-                    var migrationCredentials = this.JsonExchangeFileReader.ReadMigrationJsonFromFile(fileName, password).ToList();
+                    var migrationCredentials = jsonExchangeFileReader.ReadMigrationJsonFromFile(fileName, password).ToList();
 
                     foreach (var person in items.OfType<Person>())
                     {
@@ -868,21 +669,21 @@ namespace CometServer.Modules
 
                         if (credential != null)
                         {
-                            this.PersonService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
+                            personService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
                         }
                     }
 
                     // Add missing Person permissions
-                    this.CreateMissingPersonPermissions(transaction);
+                    this.CreateMissingPersonPermissions(transaction, personRoleService, personPermissionService, defaultPermissionProvider);
 
                     var engineeringModelSetups =
                         items.OfType<EngineeringModelSetup>()
                             .ToList();
 
                     var engineeringModelService =
-                        this.ServiceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+                        serviceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
 
-                    var iterationService = this.ServiceProvider.MapToPersitableService<IterationService>("Iteration");
+                    var iterationService = serviceProvider.MapToPersitableService<IterationService>("Iteration");
                     var createRevisionForSiteDirectory = true;
                     var actorId = Guid.Empty;
 
@@ -891,10 +692,10 @@ namespace CometServer.Modules
                         var revisionNumber = EngineeringModelSetupSideEffect.FirstRevision;
 
                         // cleanup before handling TopContainer
-                        this.RequestUtils.Cache.Clear();
+                        requestUtils.Cache.Clear();
 
                         // get referenced engineeringmodel data
-                        var engineeringModelItems = this.JsonExchangeFileReader
+                        var engineeringModelItems = jsonExchangeFileReader
                             .ReadEngineeringModelFromfile(version, fileName, password, engineeringModelSetup).ToList();
 
                         // should return one engineeringmodel topcontainer
@@ -910,7 +711,7 @@ namespace CometServer.Modules
 
                         var iterationPartition = CDP4Orm.Dao.Utils.GetEngineeringModelIterationSchemaName(engineeringModel.Iid);
 
-                        this.RequestUtils.Cache = new List<Thing>(engineeringModelItems);
+                        requestUtils.Cache = new List<Thing>(engineeringModelItems);
 
                         if (!engineeringModelService.Insert(transaction, dataPartition, engineeringModel))
                         {
@@ -919,10 +720,10 @@ namespace CometServer.Modules
                         }
 
                         // Add missing Participant permissions
-                        this.CreateMissingParticipantPermissions(transaction);
+                        this.CreateMissingParticipantPermissions(transaction, participantRoleService, participantPermissionService, defaultPermissionProvider);
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(fileName, password);
+                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
@@ -932,7 +733,7 @@ namespace CometServer.Modules
                         var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
-                        this.EngineeringModelDao.ResetIterationNumberSequenceStartNumber(
+                        engineeringModelDao.ResetIterationNumberSequenceStartNumber(
                             transaction,
                             dataPartition,
                             maxIterationNumber);
@@ -942,12 +743,12 @@ namespace CometServer.Modules
 
                         foreach (var iterationSetup in iterationSetups.OrderBy(x => x.IterationNumber))
                         {
-                            this.RequestUtils.Cache.Clear();
+                            requestUtils.Cache.Clear();
 
-                            var iterationItems = this.JsonExchangeFileReader
+                            var iterationItems = jsonExchangeFileReader
                                 .ReadModelIterationFromFile(version, fileName, password, iterationSetup).ToList();
 
-                            this.RequestUtils.Cache = new List<Thing>(iterationItems);
+                            requestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
                             // for the every model EngineeringModel schema ends with the same ID as Iteration schema
@@ -979,7 +780,7 @@ namespace CometServer.Modules
                                     // Remove differences between iterations
                                     foreach (var thing in thingsToBeDeleted)
                                     {
-                                        var service = this.ServiceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
+                                        var service = serviceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
                                         service.RawDeleteConcept(transaction, iterationPartition, thing);
                                     }
                                 }
@@ -989,23 +790,23 @@ namespace CometServer.Modules
                                 if (createRevisionForSiteDirectory)
                                 {
                                     // Create revision history only once for SiteDirectory
-                                    this.CreateRevisionHistoryForSiteDirectory(ref actorId);
+                                    this.CreateRevisionHistoryForSiteDirectory(requestUtils, transactionManager, revisionService, personService, ref actorId);
                                     createRevisionForSiteDirectory = false;
                                 }
 
                                 // Create revision history for each EngineeringModel
-                                this.CreateRevisionHistoryForEngineeringModel(actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
+                                this.CreateRevisionHistoryForEngineeringModel(requestUtils, transactionManager, revisionService, actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
 
                                 // use new transaction to for inserting the data
-                                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                                this.TransactionManager.SetFullAccessState(true);
+                                transaction = transactionManager.SetupTransaction(ref connection, null);
+                                transactionManager.SetFullAccessState(true);
 
                                 // important, make sure to defer the constraints
                                 var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                                constraintcommand.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                                constraintcommand.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
 
                                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                                this.TransactionManager.SetAuditLoggingState(transaction, true);
+                                transactionManager.SetAuditLoggingState(transaction, true);
 
                                 // revision number goes up for the next Iteration
                                 revisionNumber += 1;
@@ -1021,7 +822,7 @@ namespace CometServer.Modules
                         }
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(fileName, password);
+                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
                     }
                 }
 
@@ -1046,7 +847,7 @@ namespace CometServer.Modules
             finally
             {
                 // clean log (will happen at end of request as well due to IOC lifetime
-                this.TransactionManager.CommandLogger.ClearLog();
+                transactionManager.CommandLogger.ClearLog();
 
                 transaction?.Dispose();
 
@@ -1067,9 +868,9 @@ namespace CometServer.Modules
         /// <param name="password">
         /// The archive password.
         /// </param>
-        private void PersistFileBinaryData(string fileName, string password = null)
+        private void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, string password = null)
         {
-            var fileRevisions = this.RequestUtils.Cache.OfType<FileRevision>().ToList();
+            var fileRevisions = requestUtils.Cache.OfType<FileRevision>().ToList();
             if (!fileRevisions.Any())
             {
                 // nothing to do
@@ -1078,7 +879,7 @@ namespace CometServer.Modules
 
             foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
             {
-                this.JsonExchangeFileReader.StoreFileBinary(fileName, password, hash);
+                jsonExchangeFileReader.StoreFileBinary(fileName, password, hash);
             }
         }
 
@@ -1146,7 +947,7 @@ namespace CometServer.Modules
         /// Drops existing working and restore data stores if they exist
         /// and creates a new working data store.
         /// </summary>
-        private void DropDataStoreAndPrepareNew()
+        private void DropDataStoreAndPrepareNew(IDataStoreController dataStoreController)
         {
             Logger.Info("start dropping existing data stores");
 
@@ -1163,7 +964,7 @@ namespace CometServer.Modules
                 {
                     Logger.Debug("Drop the data store");
 
-                    this.DataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
+                    dataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
 
                     cmd.Connection = connection;
                     
@@ -1205,25 +1006,25 @@ namespace CometServer.Modules
         /// <param name="personId">
         /// First person Id <see cref="Person" />
         /// </param>
-        private void CreateRevisionHistoryForSiteDirectory(ref Guid personId)
+        private void CreateRevisionHistoryForSiteDirectory(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService,  ref Guid personId)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            this.RequestUtils.QueryParameters = new QueryParameters();
+            requestUtils.QueryParameters = new QueryParameters();
 
             try
             {
                 // Create a revision history for SiteDirectory's entries
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetFullAccessState(true);
+                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
-                var person = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
+                var person = personService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
                 personId = person != null ? person.Iid : Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, personId, EngineeringModelSetupSideEffect.FirstRevision);
+                revisionService.SaveRevisions(transaction, TopContainer, personId, EngineeringModelSetupSideEffect.FirstRevision);
 
                 transaction.Commit();
             }
@@ -1256,22 +1057,22 @@ namespace CometServer.Modules
         /// <param name="engineeringModelIid">
         /// Engineering model Id <see cref="Guid" />
         /// </param>
-        private void CreateRevisionHistoryForEngineeringModel(Guid personId, int revisionNumber, Guid engineeringModelIid)
+        private void CreateRevisionHistoryForEngineeringModel(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, Guid personId, int revisionNumber, Guid engineeringModelIid)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            this.RequestUtils.QueryParameters = new QueryParameters();
+            requestUtils.QueryParameters = new QueryParameters();
 
             try
             {
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetFullAccessState(true);
+                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transactionManager.SetFullAccessState(true);
 
-                var partition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
+                var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
 
                 // Save revision history for EngineeringModel's entries
-                this.RevisionService.SaveRevisions(transaction, partition, personId, revisionNumber);
+                revisionService.SaveRevisions(transaction, partition, personId, revisionNumber);
 
                 // commit revision history
                 transaction.Commit();
@@ -1296,33 +1097,33 @@ namespace CometServer.Modules
         /// <summary>
         /// Create revision history for each entry in the database.
         /// </summary>
-        private void CreateRevisionHistoryForEachEntry()
+        private void CreateRevisionHistoryForEachEntry(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            this.RequestUtils.QueryParameters = new QueryParameters();
+            requestUtils.QueryParameters = new QueryParameters();
 
             try
             {
                 // Create a revision history for SiteDirectory's entries
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                this.TransactionManager.SetFullAccessState(true);
+                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
-                var actor = this.PersonService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
+                var actor = personService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
                 var actorId = actor != null ? actor.Iid : Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
-                this.RevisionService.SaveRevisions(transaction, TopContainer, actorId, EngineeringModelSetupSideEffect.FirstRevision);
+                revisionService.SaveRevisions(transaction, TopContainer, actorId, EngineeringModelSetupSideEffect.FirstRevision);
 
-                var siteDirectory = this.SiteDirectoryService.Get(
+                var siteDirectory = siteDirectoryService.Get(
                     transaction,
                     TopContainer,
                     null,
                     new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList();
 
-                var engineeringModelSetups = this.EngineeringModelSetupService.GetShallow(
+                var engineeringModelSetups = engineeringModelSetupService.GetShallow(
                         transaction,
                         TopContainer,
                         siteDirectory[0].Model,
@@ -1335,14 +1136,14 @@ namespace CometServer.Modules
                 // Get all EngineeringModelSetups and create a revision history for each EngineeringModel
                 foreach (var engineeringModelSetup in engineeringModelSetups)
                 {
-                    transaction = this.TransactionManager.SetupTransaction(ref connection, null);
-                    this.TransactionManager.SetFullAccessState(true);
+                    transaction = transactionManager.SetupTransaction(ref connection, null);
+                    transactionManager.SetFullAccessState(true);
 
                     var partition =
-                        this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
+                        requestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                     // Save revision history for EngineeringModel's entries
-                    this.RevisionService.SaveRevisions(transaction, partition, actorId, EngineeringModelSetupSideEffect.FirstRevision);
+                    revisionService.SaveRevisions(transaction, partition, actorId, EngineeringModelSetupSideEffect.FirstRevision);
 
                     // commit revision history
                     transaction.Commit();
@@ -1371,9 +1172,9 @@ namespace CometServer.Modules
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void CreateMissingParticipantPermissions(NpgsqlTransaction transaction)
+        private void CreateMissingParticipantPermissions(NpgsqlTransaction transaction, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDefaultPermissionProvider defaultPermissionProvider)
         {
-            var participantRoles = this.ParticipantRoleService.GetShallow(
+            var participantRoles = participantRoleService.GetShallow(
                 transaction,
                 TopContainer,
                 null,
@@ -1382,7 +1183,7 @@ namespace CometServer.Modules
             // Find and create all missing permissions for each Participant
             foreach (var participantRole in participantRoles)
             {
-                this.FindAndCreateMissingParticipantPermissions(participantRole, transaction);
+                this.FindAndCreateMissingParticipantPermissions(participantRole, transaction, participantPermissionService, defaultPermissionProvider);
             }
         }
 
@@ -1395,9 +1196,9 @@ namespace CometServer.Modules
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void FindAndCreateMissingParticipantPermissions(ParticipantRole participantRole, NpgsqlTransaction transaction)
+        private void FindAndCreateMissingParticipantPermissions(ParticipantRole participantRole, NpgsqlTransaction transaction, IParticipantPermissionService participantPermissionService,  IDefaultPermissionProvider defaultPermissionProvider)
         {
-            var participantPermissions = this.ParticipantPermissionService.GetShallow(
+            var participantPermissions = participantPermissionService.GetShallow(
                 transaction,
                 TopContainer,
                 participantRole.ParticipantPermission,
@@ -1405,7 +1206,7 @@ namespace CometServer.Modules
 
             foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
             {
-                var defaultPermission = this.DefaultPermissionProvider.GetDefaultParticipantPermission(classKind);
+                var defaultPermission = defaultPermissionProvider.GetDefaultParticipantPermission(classKind);
 
                 if (defaultPermission == ParticipantAccessRightKind.NONE)
                 {
@@ -1422,7 +1223,7 @@ namespace CometServer.Modules
                         };
 
                         participantRole.ParticipantPermission.Add(permission.Iid);
-                        this.ParticipantPermissionService.CreateConcept(transaction, TopContainer, permission, participantRole);
+                        participantPermissionService.CreateConcept(transaction, TopContainer, permission, participantRole);
                     }
                 }
             }
@@ -1434,9 +1235,9 @@ namespace CometServer.Modules
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void CreateMissingPersonPermissions(NpgsqlTransaction transaction)
+        private void CreateMissingPersonPermissions(NpgsqlTransaction transaction, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider)
         {
-            var personRoles = this.PersonRoleService.GetShallow(
+            var personRoles = personRoleService.GetShallow(
                 transaction,
                 TopContainer,
                 null,
@@ -1445,7 +1246,7 @@ namespace CometServer.Modules
             // Find and create all missing permissions for each Person
             foreach (var personRole in personRoles)
             {
-                this.FindAndCreateMissingPersonPermissions(personRole, transaction);
+                this.FindAndCreateMissingPersonPermissions(personPermissionService, defaultPermissionProvider, personRole, transaction);
             }
         }
 
@@ -1458,9 +1259,9 @@ namespace CometServer.Modules
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void FindAndCreateMissingPersonPermissions(PersonRole personRole, NpgsqlTransaction transaction)
+        private void FindAndCreateMissingPersonPermissions(IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, PersonRole personRole, NpgsqlTransaction transaction)
         {
-            var personPermissions = this.PersonPermissionService.GetShallow(
+            var personPermissions = personPermissionService.GetShallow(
                 transaction,
                 TopContainer,
                 personRole.PersonPermission,
@@ -1468,7 +1269,7 @@ namespace CometServer.Modules
 
             foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
             {
-                var defaultPermission = this.DefaultPermissionProvider.GetDefaultPersonPermission(classKind);
+                var defaultPermission = defaultPermissionProvider.GetDefaultPersonPermission(classKind);
 
                 if (defaultPermission == PersonAccessRightKind.NONE)
                 {
@@ -1485,7 +1286,7 @@ namespace CometServer.Modules
                         };
 
                         personRole.PersonPermission.Add(permission.Iid);
-                        this.PersonPermissionService.CreateConcept(transaction, TopContainer, permission, personRole);
+                        personPermissionService.CreateConcept(transaction, TopContainer, permission, personRole);
                     }
                 }
             }

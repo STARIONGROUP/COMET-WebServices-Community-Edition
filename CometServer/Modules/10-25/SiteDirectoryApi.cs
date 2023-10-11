@@ -101,78 +101,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Initializes a new instance of the &lt;see cref="ExchangeFileImportyApi"/&gt;
         /// </summary>
-        /// <param name="modelCreatorManager">
-        /// The (injected) <see cref="IModelCreatorManager"/>
-        /// </param>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        /// <param name="credentialsService">
-        /// The (injected) <see cref="ICredentialsService"/>
-        /// </param>
-        /// <param name="headerInfoProvider">
-        /// The (injected) <see cref="IHeaderInfoProvider"/>
-        /// </param>
-        /// <param name="serviceProvider">
-        /// The (injected) <see cref="Services.IServiceProvider"/>
-        /// </param>
-        /// <param name="permissionService">
-        /// The (injected) <see cref="IPermissionService"/>
-        /// </param>
-        /// <param name="requestUtils">
-        /// The (injected) <see cref="IRequestUtils"/>
-        /// </param>
-        /// <param name="metaInfoProvider">
-        /// The (injected) <see cref="IMetaInfoProvider"/>
-        /// </param>
-        /// <param name="operationProcessor">
-        /// The (injected) <see cref="IOperationProcessor"/>
-        /// </param>
-        /// <param name="fileBinaryService">
-        /// The (injected) <see cref="IFileBinaryService"/>
-        /// </param>
-        /// <param name="fileArchiveService">
-        /// The (injected) <see cref="IFileArchiveService"/>
-        /// </param>
-        /// <param name="revisionService">
-        /// The (injected) <see cref="IRevisionService"/>
-        /// </param>
-        /// <param name="revisionResolver">
-        /// The (injected) <see cref="IRevisionResolver"/>
-        /// </param>
-        /// <param name="transactionManager">
-        /// The (injected) <see cref="ICdp4TransactionManager"/>
-        /// </param>
-        /// <param name="jsonSerializer">
-        /// The (injected) <see cref="ICdp4JsonSerializer"/>
-        /// </param>
-        /// <param name="permissionInstanceFilterService">
-        /// The (injected) <see cref="IPermissionInstanceFilterService"/>
-        /// </param>
-        public SiteDirectoryApi(IModelCreatorManager modelCreatorManager, 
-            IAppConfigService appConfigService, 
-            ICredentialsService credentialsService, 
-            IHeaderInfoProvider headerInfoProvider, 
-            Services.IServiceProvider serviceProvider, 
-            IPermissionService permissionService, 
-            IRequestUtils requestUtils, 
-            IMetaInfoProvider metaInfoProvider, 
-            IOperationProcessor operationProcessor, 
-            IFileBinaryService fileBinaryService, 
-            IFileArchiveService fileArchiveService, 
-            IRevisionService revisionService, 
-            IRevisionResolver revisionResolver, 
-            ICdp4TransactionManager transactionManager, 
-            ICdp4JsonSerializer jsonSerializer, 
-            IPermissionInstanceFilterService permissionInstanceFilterService) : base(appConfigService, credentialsService, headerInfoProvider, serviceProvider, permissionService, requestUtils, metaInfoProvider, operationProcessor, fileBinaryService, fileArchiveService, revisionService, revisionResolver, transactionManager, jsonSerializer, permissionInstanceFilterService)
+        public SiteDirectoryApi(IAppConfigService appConfigService) : base(appConfigService)
         {
-            this.ModelCreatorManager = modelCreatorManager;
         }
-
-        /// <summary>
-        /// Gets or sets the model creator manager service.
-        /// </summary>
-        public IModelCreatorManager ModelCreatorManager { get; set; }
 
         /// <summary>
         /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
@@ -182,7 +116,8 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("SiteDirectory", async (HttpRequest req, HttpResponse res) =>
+            app.MapGet("SiteDirectory",
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer,  IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
                     if (!req.HttpContext.User.Identity.IsAuthenticated)
                     {
@@ -194,7 +129,7 @@ namespace CometServer.Modules
                     {
                         try
                         {
-                            await this.Authorize(req.HttpContext.User.Identity.Name);
+                            await this.Authorize(this.AppConfigService, credentialsService,req.HttpContext.User.Identity.Name);
                         }
                         catch (AuthorizationException e)
                         {
@@ -202,12 +137,13 @@ namespace CometServer.Modules
                             await res.AsJson("not authorized");
                         }
 
-                        await this.GetResponseData(req, res);
+                        await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService);
                     }
                 });
 
-            app.MapGet("SiteDirectory/{*path}", async (HttpRequest req, HttpResponse res) =>
-            {
+            app.MapGet("SiteDirectory/{*path}",
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
+                {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
@@ -217,7 +153,7 @@ namespace CometServer.Modules
                 {
                     try
                     {
-                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
                     catch (AuthorizationException e)
                     {
@@ -225,12 +161,12 @@ namespace CometServer.Modules
                         await res.AsJson("not authorized");
                     }
 
-                    await this.GetResponseData(req, res);
-                }
-            });
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService);
+                }});
 
-            app.MapPost("SiteDirectory/{iid:guid}", async (HttpRequest req, HttpResponse res) =>
-            {
+            app.MapPost("SiteDirectory/{iid:guid}",
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
+                {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
@@ -240,7 +176,7 @@ namespace CometServer.Modules
                 {
                     try
                     {
-                        await this.Authorize(req.HttpContext.User.Identity.Name);
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
                     catch (AuthorizationException e)
                     {
@@ -248,9 +184,8 @@ namespace CometServer.Modules
                         await res.AsJson("not authorized");
                     }
 
-                    await this.PostResponseData(req, res);
-                }
-            });
+                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, permissionInstanceFilterService, modelCreatorManager);
+                }});
         }
 
         /// <summary>
@@ -265,12 +200,12 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
+        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            this.TransactionManager.SetCachedDtoReadEnabled(true);
+            transactionManager.SetCachedDtoReadEnabled(true);
 
             var sw = Stopwatch.StartNew();
             var requestToken = this.GenerateRandomToken();
@@ -281,22 +216,22 @@ namespace CometServer.Modules
 
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
-                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
-                var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
+                var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
                 IReadOnlyList<Thing> things = null;
 
                 // get prepared data source transaction
-                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
+                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
 
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
 
-                    things = this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToList();
+                    things = revisionService.Get(transaction, TopContainer, fromRevision, true).ToList();
                 }
-                else if (this.RevisionResolver.TryResolve(transaction, TopContainer, this.RequestUtils.QueryParameters.RevisionFrom, this.RequestUtils.QueryParameters.RevisionTo, out var resolvedValues))
+                else if (revisionResolver.TryResolve(transaction, TopContainer, requestUtils.QueryParameters.RevisionFrom, requestUtils.QueryParameters.RevisionTo, out var resolvedValues))
                 {
                     var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
@@ -309,14 +244,14 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    things = this.RevisionService.Get(transaction, TopContainer, guid, resolvedValues.FromRevision, resolvedValues.ToRevision).ToList();
+                    things = revisionService.Get(transaction, TopContainer, guid, resolvedValues.FromRevision, resolvedValues.ToRevision).ToList();
                 }
                 else
                 {
                     // gather all Things as indicated by the request URI 
                     var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
                     
-                    things = this.GetContainmentResponse(transaction, TopContainer, routeSegments).ToList();
+                    things = this.GetContainmentResponse(requestUtils, transactionManager, serviceProvider, metaInfoProvider, transaction, TopContainer, routeSegments).ToList();
                 }
 
                 await transaction.CommitAsync();
@@ -327,9 +262,9 @@ namespace CometServer.Modules
                 sw.Start();
                 Logger.Info("return {0} response started", requestToken);
 
-                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
+                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
 
-                await this.WriteJsonResponse(things, version, httpResponse, HttpStatusCode.OK, requestToken);
+                await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
             }
             catch (SecurityException ex)
             {
@@ -386,7 +321,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse)
+        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -400,9 +335,9 @@ namespace CometServer.Modules
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
-                this.RequestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
 
-                var version = this.RequestUtils.GetRequestDataModelVersion(httpRequest);
+                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
                 
                 var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
                 
@@ -412,56 +347,56 @@ namespace CometServer.Modules
                     throw new InvalidOperationException($"Multipart post messages are not allowed for the {TopContainer} route");
                 }
 
-                this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
-                var operationData = this.JsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
+                jsonSerializer.Initialize(metaInfoProvider, version);
+                var operationData = jsonSerializer.Deserialize<CdpPostOperation>(httpRequest.Body);
 
-                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
+                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
 
                 // defer all reference data check until after transaction commit
                 using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED", transaction.Connection, transaction))
                 {
-                    command.ExecuteAndLogNonQuery(this.TransactionManager.CommandLogger);
+                    command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
                 }
 
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
-                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, TopContainer);
+                var transactionRevision = revisionService.GetRevisionForTransaction(transaction, TopContainer);
 
-                this.OperationProcessor.Process(operationData, transaction, TopContainer);
+                operationProcessor.Process(operationData, transaction, TopContainer);
 
                 // save revision-history
-                var actor = this.CredentialsService.Credentials.Person.Iid;
-                var changedThings = this.RevisionService.SaveRevisions(transaction, TopContainer, actor, transactionRevision).ToList();
+                var actor = credentialsService.Credentials.Person.Iid;
+                var changedThings = revisionService.SaveRevisions(transaction, TopContainer, actor, transactionRevision).ToList();
 
                 // commit the operation + revision-history
                 await transaction.CommitAsync();
 
-                if (this.ModelCreatorManager.IsUserTriggerDisable)
+                if (modelCreatorManager.IsUserTriggerDisable)
                 {
                     // re-enable user triggers
-                    transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
-                    this.ModelCreatorManager.EnableUserTrigger(transaction);
+                    transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                    modelCreatorManager.EnableUserTrigger(transaction);
                     await transaction.CommitAsync();
                 }
 
-                if (this.RequestUtils.QueryParameters.RevisionNumber == -1)
+                if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    await this.WriteJsonResponse(changedThings, version, httpResponse);
+                    await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, version, httpResponse);
                     return;
                 }
 
                 // get the latest revision state including revisions that may have happened meanwhile
                 Logger.Info(this.ConstructLog(httpRequest));
-                var fromRevision = this.RequestUtils.QueryParameters.RevisionNumber;
+                var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
-                transaction = this.TransactionManager.SetupTransaction(ref connection, this.CredentialsService.Credentials);
-                var revisionResponse = this.RevisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
+                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                var revisionResponse = revisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
                 await transaction.CommitAsync();
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                await this.WriteJsonResponse(revisionResponse, version, httpResponse);
+                await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, version, httpResponse);
             }
             catch (InvalidOperationException ex)
             {
@@ -537,9 +472,9 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private IEnumerable<Thing> GetContainmentResponse(NpgsqlTransaction transaction, string partition, string[] routeParams)
+        private IEnumerable<Thing> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, NpgsqlTransaction transaction, string partition, string[] routeParams)
         {
-            var processor = new ResourceProcessor(transaction, this.ServiceProvider, this.RequestUtils, this.MetaInfoProvider);
+            var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
             if (routeParams.Length == 1)
             {
@@ -554,19 +489,19 @@ namespace CometServer.Modules
             }
             else
             {
-                var things = this.ProcessRequestPath(processor, TopContainer, partition, routeParams, out var resolvedResourcePath);
+                var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition, routeParams, out var resolvedResourcePath);
 
                 foreach (var thing in things)
                 {
                     yield return thing;
                 }
 
-                if (resolvedResourcePath.Count() > 1 && this.RequestUtils.QueryParameters.IncludeReferenceData)
+                if (resolvedResourcePath.Count() > 1 && requestUtils.QueryParameters.IncludeReferenceData)
                 {
                     // add reference data information if the resource is a model reference data library
                     if (resolvedResourcePath.Last().GetType() == typeof(ModelReferenceDataLibrary))
                     {
-                        foreach (var thing in this.CollectReferenceDataLibraryChain(processor, (ModelReferenceDataLibrary)resolvedResourcePath.Last()))
+                        foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, processor, (ModelReferenceDataLibrary)resolvedResourcePath.Last()))
                         {
                             yield return thing;
                         }
