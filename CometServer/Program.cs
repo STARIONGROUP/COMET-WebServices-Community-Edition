@@ -1,10 +1,10 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Startup.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
 //
-//    This file is part of Comet Server Community Edition. 
+//    This file is part of CDP4-COMET Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
 //    The Comet Server Community Edition is free software; you can redistribute it and/or
@@ -63,7 +63,7 @@ namespace CometServer
         /// </param>
         public static async Task<int> Main(string[] args)
         {
-            Console.Title = "COMET WebServices";
+            Console.Title = "CDP4-COMET WebServices";
 
             try
             {
@@ -83,7 +83,7 @@ namespace CometServer
                     .Build();
 
                 Logger.Info("################################################################");
-                Logger.Info($"Starting COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
+                Logger.Info($"Starting CDP4-COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
 
@@ -105,7 +105,7 @@ namespace CometServer
                 var dataStoreAvailable = DataStoreConnectionChecker.CheckConnection(appConfigService);
                 if (!dataStoreAvailable)
                 {
-                    Logger.Warn("The COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                    Logger.Warn("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
                     return 0;
                 }
                 else
@@ -119,11 +119,11 @@ namespace CometServer
                 var configuration = host.Services.GetService<IConfiguration>();
                 var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
 
-                Logger.Info("COMET REST API Ready to accept connections at {0}", uri);
+                Logger.Info("CDP4-COMET REST API Ready to accept connections at {0}", uri);
 
                 await host.RunAsync();
 
-                Logger.Info("Terminated COMET WebServices cleanly");
+                Logger.Info("Terminated CDP4-COMET WebServices cleanly");
                 return 0;
             }
             catch (Exception e)

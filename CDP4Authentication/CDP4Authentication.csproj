@@ -5,7 +5,7 @@
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Authentication-CE</Title>
     <Version>8.0.0</Version>
-    <Description>Library to support the implementation of authentication</Description>
+    <Description>CDP4-COMET Library to support the implementation of authentication</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
     <RepositoryUrl>https://github.com/RHEAGROUP/CDP4-SDK-Community-Edition.git</RepositoryUrl>

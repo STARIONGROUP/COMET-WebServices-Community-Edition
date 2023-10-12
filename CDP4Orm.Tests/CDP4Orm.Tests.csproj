@@ -4,7 +4,7 @@
     <TargetFramework>net7.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Orm-CE.Tests</Title>
-    <Description>CDP4 Data-Model Object Relational Mapping</Description>
+    <Description>CDP4-COMET Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
     <Configurations>Debug;Release</Configurations>

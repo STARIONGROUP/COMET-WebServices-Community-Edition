@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
-    <Title>CDP4Orm-CE.Tests</Title>
-    <Description>CDP4 Data-Model Object Relational Mapping</Description>
+    <Title>CDP4WspDatabaseAuthentication.Tests</Title>
+      <Description>CDP4-COMET WSP Database authentication Tests</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
     <Configurations>Debug;Release</Configurations>
