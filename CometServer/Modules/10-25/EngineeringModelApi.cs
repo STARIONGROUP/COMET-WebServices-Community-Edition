@@ -2,7 +2,7 @@
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -60,11 +60,15 @@ namespace CometServer.Modules
     using Npgsql;
 
     using Thing = CDP4Common.DTO.Thing;
+
     using CometServer.Configuration;
+
     using CDP4JsonSerializer;
 
+    using CometServer.Services.CherryPick;
+
     using IServiceProvider = CometServer.Services.IServiceProvider;
-    
+
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
     /// </summary>
@@ -85,13 +89,16 @@ namespace CometServer.Modules
         /// </summary>
         private static readonly string[] SupportedGetQueryParameters =
         {
-            QueryParameters.ExtentQuery, 
+            QueryParameters.ExtentQuery,
             QueryParameters.IncludeReferenceDataQuery,
-            QueryParameters.IncludeAllContainersQuery, 
+            QueryParameters.IncludeAllContainersQuery,
             QueryParameters.IncludeFileDataQuery,
-            QueryParameters.RevisionNumberQuery, 
-            QueryParameters.RevisionFromQuery, 
-            QueryParameters.RevisionToQuery
+            QueryParameters.RevisionNumberQuery,
+            QueryParameters.RevisionFromQuery,
+            QueryParameters.RevisionToQuery,
+            QueryParameters.ClassKindQuery,
+            QueryParameters.CategoryQuery,
+            QueryParameters.CherryPickQuery
         };
 
         /// <summary>
@@ -122,7 +129,7 @@ namespace CometServer.Modules
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapGet("EngineeringModel/{*path}", 
-                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService) =>
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
             {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -141,7 +148,7 @@ namespace CometServer.Modules
                         await res.AsJson("not authorized");
                     }
 
-                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService, obfuscationService);
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
                 }
             });
 
@@ -182,7 +189,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService)
+        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -199,8 +206,8 @@ namespace CometServer.Modules
 
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
-
-                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
+                requestUtils.QueryParameters = new QueryParameters(queryParameters);
                 
                 var version = requestUtils.GetRequestDataModelVersion(httpRequest);
 
@@ -252,6 +259,12 @@ namespace CometServer.Modules
                 }
                 else
                 {
+                    if (requestUtils.QueryParameters.CherryPick)
+                    {
+                        requestUtils.QueryParameters.ExtentDeep = true;
+                        requestUtils.QueryParameters.IncludeReferenceData = true;
+                    }
+
                     if (routeSegments.Length == 4 && routeSegments[2] == "iteration" && requestUtils.QueryParameters.ExtentDeep)
                     {
                         string[] engineeringModelRouteSegments = { routeSegments[0], routeSegments[1] };
@@ -273,6 +286,37 @@ namespace CometServer.Modules
                         httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                         return;
                     }
+                }
+
+                if (requestUtils.QueryParameters.CherryPick)
+                {
+                    if (routeSegments.Length != 4 || routeSegments[2] != "iteration")
+                    {
+                        await httpResponse.AsJson($"The {QueryParameters.CherryPickQuery} feature is only available when reading an iteration");
+                        httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        return;
+                    }
+
+                    if (!requestUtils.QueryParameters.ClassKinds.Any() || !requestUtils.QueryParameters.CategoriesId.Any())
+                    {
+                        await httpResponse.AsJson($"The {QueryParameters.ClassKindQuery} and {QueryParameters.CategoryQuery} parameters are required to use {QueryParameters.CherryPickQuery}");
+                        httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        return;
+                    }
+
+                    resourceResponse = this.CherryPick(requestUtils, cherryPickService, containmentService, resourceResponse);
+                }
+                else if (requestUtils.QueryParameters.ClassKinds.Any())
+                {
+                    await httpResponse.AsJson($"The {QueryParameters.ClassKindQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled");
+                    httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                    return;
+                }
+                else if (requestUtils.QueryParameters.CategoriesId.Any())
+                {
+                    await httpResponse.AsJson($"The {QueryParameters.CategoryQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled");
+                    httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                    return;
                 }
 
                 await transaction.CommitAsync();
@@ -354,6 +398,26 @@ namespace CometServer.Modules
         }
 
         /// <summary>
+        /// Cherry Picks <see cref="Thing" />s inside read <see cref="Thing"/>s based on provided <see cref="ClassKind"/> and <see cref="Category"/> filters
+        /// </summary>
+        /// <param name="resourceResponse">A collection of read <see cref="Thing"/>s</param>
+        /// <returns></returns>
+        private List<Thing> CherryPick(IRequestUtils requestUtils, ICherryPickService cherryPickService, IContainmentService containmentService, IReadOnlyList<Thing> resourceResponse)
+        {
+            var cherryPickedThings = cherryPickService.CherryPick(resourceResponse, requestUtils.QueryParameters.ClassKinds, requestUtils.QueryParameters.CategoriesId)
+                .ToList();
+
+            var containedThings = containmentService.QueryContainedThings(cherryPickedThings, resourceResponse, true,
+                ClassKind.Parameter, ClassKind.ParameterOverride, ClassKind.ParameterValueSet, ClassKind.ParameterOverrideValueSet);
+
+            var containers = containmentService.QueryContainersTree(cherryPickedThings, resourceResponse);
+
+            cherryPickedThings.AddRange(containedThings);
+            cherryPickedThings.AddRange(containers);
+            return cherryPickedThings.DistinctBy(x => x.Iid).ToList();
+        }
+
+        /// <summary>
         /// Handles the POST requset
         /// </summary>
         /// <param name="httpRequest">
@@ -379,7 +443,8 @@ namespace CometServer.Modules
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
-                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
+                requestUtils.QueryParameters = new QueryParameters(queryParameters);
 
                 var multiPartBoundary = httpRequest.GetMultipartBoundary();
 

@@ -2,7 +2,7 @@
 // <copyright file="SiteDirectoryApi.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -216,7 +216,8 @@ namespace CometServer.Modules
 
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
-                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
+                requestUtils.QueryParameters = new QueryParameters(queryParameters);
 
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
@@ -335,7 +336,8 @@ namespace CometServer.Modules
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
-                requestUtils.QueryParameters = new QueryParameters(httpRequest.Query);
+                var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
+                requestUtils.QueryParameters = new QueryParameters(queryParameters);
 
                 var version = requestUtils.GetRequestDataModelVersion(httpRequest);
                 

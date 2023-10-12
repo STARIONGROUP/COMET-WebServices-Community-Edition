@@ -1,18 +1,18 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="QueryParameters.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
-//    This file is part of Comet Server Community Edition. 
-//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of CDP4-COMET Server Community Edition. 
+//    The CDP4-COMET Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
-//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    The CDP4-COMET Server Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    The CDP4-COMET Server Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    GNU Affero General Public License for more details.
@@ -29,7 +29,10 @@ namespace CometServer.Services.Protocol
     using System.Globalization;
     using System.Linq;
 
+    using CDP4Common.CommonData;
     using CDP4Common.DTO;
+    
+    using CometServer.Extensions;
 
     using Microsoft.AspNetCore.Http;
 
@@ -69,26 +72,42 @@ namespace CometServer.Services.Protocol
         public const string RevisionNumberQuery = "revisionNumber";
 
         /// <summary>
-        /// The revision number FROM which the request to get the revisions of a <see cref="Thing"/> is done
+        /// The revision number FROM which the request to get the revisions of a <see cref="CDP4Common.DTO.Thing"/> is done
         /// </summary>
         public const string RevisionFromQuery = "revisionFrom";
 
         /// <summary>
-        /// The revision number TO which the request to get the revisions of a <see cref="Thing"/> is done
+        /// The revision number TO which the request to get the revisions of a <see cref="CDP4Common.DTO.Thing"/> is done
         /// </summary>
         public const string RevisionToQuery = "revisionTo";
+
+        /// <summary>
+        /// The collection of <see cref="CDP4Common.CommonData.ClassKind"/> used to retrieve <see cref="CDP4Common.DTO.Thing"/> during a cherry picking operation
+        /// </summary>
+        public const string ClassKindQuery = "classkind";
+
+        /// <summary>
+        /// The collection <see cref="Category"/> shortname used to filter <see cref="CDP4Common.DTO.Thing"/> during a cherry picking operation
+        /// </summary>
+        public const string CategoryQuery = "category";
+
+        /// <summary>
+        /// The flag to enable Cherry Pick feature
+        /// </summary>
+        public const string CherryPickQuery = "cherryPick";
 
         /// <summary>
         /// The query parameter definitions.
         /// </summary>
         private readonly Dictionary<string, string[]> queryParameterDefinitions = new Dictionary<string, string[]>
-                               {
-                                   { ExtentQuery, new[] { "deep", "shallow" } },
-                                   { IncludeReferenceDataQuery, new[] { "true", "false" } },
-                                   { IncludeAllContainersQuery, new[] { "true", "false" } },
-                                   { IncludeFileDataQuery, new[] { "true", "false" } },
-                                   { ExportQuery, new[] { "true", "false" } }
-                               };
+        {
+            { ExtentQuery, new[] { "deep", "shallow" } },
+            { IncludeReferenceDataQuery, new[] { "true", "false" } },
+            { IncludeAllContainersQuery, new[] { "true", "false" } },
+            { IncludeFileDataQuery, new[] { "true", "false" } },
+            { ExportQuery, new[] { "true", "false" } },
+            { CherryPickQuery, new [] {"true", "false"} }
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryParameters"/> class.
@@ -101,22 +120,25 @@ namespace CometServer.Services.Protocol
         /// <summary>
         /// Initializes a new instance of the <see cref="QueryParameters"/> class.
         /// </summary>
-        /// <param name="queryCollection">
+        /// <param name="queryParameters">
         /// The query Parameters.
         /// </param>
-        public QueryParameters(IQueryCollection queryCollection)
+        public QueryParameters(Dictionary<string, object> queryParameters)
         {
             this.SetupQueryParameterDefaults();
 
             // process the query information against the supported query parameters
-            this.ExtentDeep = this.ProcessQueryParameter(queryCollection, ExtentQuery, "deep");
-            this.IncludeReferenceData = this.ProcessQueryParameter(queryCollection, IncludeReferenceDataQuery, "true");
-            this.IncludeAllContainers = this.ProcessQueryParameter(queryCollection, IncludeAllContainersQuery, "true");
-            this.IncludeFileData = this.ProcessQueryParameter(queryCollection, IncludeFileDataQuery, "true");
-            this.Export = this.ProcessQueryParameter(queryCollection, ExportQuery, "true");
-            this.RevisionNumber = this.ProcessQueryParameter(queryCollection, RevisionNumberQuery);
-            this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryCollection, RevisionFromQuery);
-            this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryCollection, RevisionToQuery);
+            this.ExtentDeep = this.ProcessQueryParameter(queryParameters, ExtentQuery, "deep");
+            this.IncludeReferenceData = this.ProcessQueryParameter(queryParameters, IncludeReferenceDataQuery, "true");
+            this.IncludeAllContainers = this.ProcessQueryParameter(queryParameters, IncludeAllContainersQuery, "true");
+            this.IncludeFileData = this.ProcessQueryParameter(queryParameters, IncludeFileDataQuery, "true");
+            this.Export = this.ProcessQueryParameter(queryParameters, ExportQuery, "true");
+            this.RevisionNumber = this.ProcessQueryParameter(queryParameters, RevisionNumberQuery);
+            this.RevisionFrom = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionFromQuery);
+            this.RevisionTo = this.ProcessRevisionHistoryQueryParameter(queryParameters, RevisionToQuery);
+            this.ClassKinds = this.ProcessClassKindsQueryParameter(queryParameters, ClassKindQuery);
+            this.CategoriesId = this.ProcessCategoryQueryParameter(queryParameters, CategoryQuery);
+            this.CherryPick = this.ProcessQueryParameter(queryParameters, CherryPickQuery, "true");
         }
 
         /// <summary>
@@ -160,6 +182,21 @@ namespace CometServer.Services.Protocol
         public object RevisionTo { get; set; }
 
         /// <summary>
+        /// Gets or sets a collection of <see cref="ClassKind"/> to used during the cherry picking request
+        /// </summary>
+        public IEnumerable<ClassKind> ClassKinds { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection of <see cref="Category"/>s id to used during the cherry picking request
+        /// </summary>
+        public IEnumerable<Guid> CategoriesId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the flag to enable the Cherry Pick feature
+        /// </summary>
+        public bool CherryPick { get; set; }
+
+        /// <summary>
         /// The validate query parameter.
         /// </summary>
         /// <param name="queryParameter">
@@ -175,7 +212,7 @@ namespace CometServer.Services.Protocol
         {
             if (!this.queryParameterDefinitions.ContainsKey(queryParameter))
             {
-                throw new Exception($"Query parameter {queryParameter} is not supported");
+                throw new Exception(string.Format("Query parameter {0} is not supported", queryParameter));
             }
 
             if (!this.queryParameterDefinitions[queryParameter].Contains(value))
@@ -185,10 +222,10 @@ namespace CometServer.Services.Protocol
         }
 
         /// <summary>
-        /// Extracts a QueryParameter based on the <paramref name="key"/> from the <see cref="IQueryCollection"/>
+        /// The process query parameter.
         /// </summary>
-        /// <param name="queryCollection">
-        /// The <see cref="IQueryCollection"/> that may contain query parameters
+        /// <param name="queryParameters">
+        /// The query Parameters.
         /// </param>
         /// <param name="key">
         /// The key.
@@ -199,75 +236,139 @@ namespace CometServer.Services.Protocol
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected bool ProcessQueryParameter(IQueryCollection queryCollection, string key, string trueValue)
+        protected bool ProcessQueryParameter(Dictionary<string, object> queryParameters, string key, string trueValue)
         {
-            if (!queryCollection.TryGetValue(key, out var queryParameterValue))
+            if (!queryParameters.ContainsKey(key))
             {
                 return false;
             }
 
+            var queryParameterValue = (string)queryParameters[key];
             this.ValidateQueryParameter(key, queryParameterValue);
 
             return queryParameterValue == trueValue;
         }
 
         /// <summary>
-        /// Extracts the Revision QueryParameter from the <see cref="IQueryCollection"/>
+        /// The process query parameter.
         /// </summary>
-        /// <param name="queryCollection">
-        /// The <see cref="IQueryCollection"/> that may contain query parameters
+        /// <param name="queryParameters">
+        /// The query Parameters.
         /// </param>
         /// <param name="key">
-        /// The key of the Query Parameter to process
+        /// The key.
         /// </param>
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected int ProcessQueryParameter(IQueryCollection queryCollection, string key)
+        protected int ProcessQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
-            if (!queryCollection.TryGetValue(key, out var queryParameterValue))
+            if (!queryParameters.ContainsKey(key))
             {
                 return -1;
             }
 
-            if (!int.TryParse(queryParameterValue, out var revisionNumber))
+            int revNumber;
+
+            if (!int.TryParse(queryParameters[RevisionNumberQuery].ToString(), out revNumber))
             {
                 return -1;
             }
 
-            return revisionNumber;
+            return revNumber;
         }
 
         /// <summary>
-        /// Extracts the RevisionHistory QueryParameter from the <see cref="IQueryCollection"/>
+        /// The process query parameter.
         /// </summary>
-        /// <param name="queryCollection">
-        /// The <see cref="IQueryCollection"/> that may contain query parameters
+        /// <param name="queryParameters">
+        /// The query Parameters.
         /// </param>
         /// <param name="key">
-        /// The key of the Query Parameter to process
+        /// The key.
         /// </param>
         /// <returns>
-        /// The revisionhistory query parameter as <see cref="int"/> or as <see cref="DateTime"/>
+        /// The <see cref="bool"/>.
         /// </returns>
-        protected object ProcessRevisionHistoryQueryParameter(IQueryCollection queryCollection, string key)
+        protected object ProcessRevisionHistoryQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
-            if (!queryCollection.TryGetValue(key, out var queryParameterValue))
+            if (!queryParameters.ContainsKey(key))
             {
                 return null;
             }
 
-            if (int.TryParse(queryParameterValue, out var revNumber))
+            if (int.TryParse(queryParameters[key].ToString(), out var revNumber))
             {
                 return revNumber;
             }
 
-            if (!DateTime.TryParseExact(queryParameterValue, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp))
+            if (!DateTime.TryParseExact(queryParameters[key].ToString(), "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var timestamp))
             {
                 throw new ArgumentOutOfRangeException(key);
             }
 
             return timestamp;
+        }
+
+        /// <summary>
+        /// Process the <see cref="CategoryQuery"/> parameter
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The collection of <see cref="string"/>
+        /// </returns>
+        /// <exception cref="ArgumentException">If the provided values do not match the array pattern</exception>
+        protected IEnumerable<Guid> ProcessCategoryQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            return !queryParameters.ContainsKey(key) ? Enumerable.Empty<Guid>() : queryParameters[key].ToString().FromShortGuidArray();
+        }
+
+        /// <summary>
+        /// Process the <see cref="ClassKindQuery"/> parameter
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The collection of <see cref="ClassKind"/>
+        /// </returns>
+        /// <exception cref="ArgumentException">If the provided values do not match the array pattern</exception>
+        /// <exception cref="ArgumentOutOfRangeException">If one of the provided values inside the array is not a <see cref="ClassKind"/></exception>
+        protected IEnumerable<ClassKind> ProcessClassKindsQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            if (!queryParameters.ContainsKey(key))
+            {
+                return Enumerable.Empty<ClassKind>();
+            }
+
+            var collectionOfClassKinds = queryParameters[key].ToString();
+
+            if (!collectionOfClassKinds.TryParseCollectionOfValues(out var retrievedValues))
+            {
+                throw new ArgumentException($"The {ClassKindQuery} parameter should match the array pattern");
+            }
+
+            var classKinds = new List<ClassKind>();
+
+            foreach (var retrievedValue in retrievedValues)
+            {
+                if (!Enum.TryParse<ClassKind>(retrievedValue, true, out var classKind))
+                {
+                    throw new ArgumentOutOfRangeException($"Unrecognized ClassKind value: {retrievedValue}");
+                }
+
+                classKinds.Add(classKind);
+            }
+
+            return classKinds;
         }
 
         /// <summary>
@@ -278,8 +379,9 @@ namespace CometServer.Services.Protocol
             this.ExtentDeep = false;
             this.IncludeReferenceData = false;
             this.IncludeAllContainers = false;
-            this.IncludeFileData = false;            
-            this.Export = false;            
+            this.IncludeFileData = false;
+            this.Export = false;
+            this.CherryPick = false;
         }
     }
 }

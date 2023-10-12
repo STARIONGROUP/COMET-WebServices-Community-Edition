@@ -2,7 +2,7 @@
 // <copyright file="Startup.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -51,6 +51,7 @@ namespace CometServer
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.ChangeLog;
+    using CometServer.Services.CherryPick;
     using CometServer.Services.DataStore;
     using CometServer.Services.Email;
     using CometServer.Services.Operations;
@@ -206,6 +207,10 @@ namespace CometServer
             builder.RegisterType<ZipArchiveWriter>().As<IZipArchiveWriter>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<ModelCreatorManager>().As<IModelCreatorManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<MigrationService>().As<IMigrationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+
+            // CherryPick support
+            builder.RegisterType<CherryPickService>().As<ICherryPickService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<ContainmentService>().As<IContainmentService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
             Logger.Info("Finish Configuration of Application Container in {0} [ms]", sw.ElapsedMilliseconds);
         }
