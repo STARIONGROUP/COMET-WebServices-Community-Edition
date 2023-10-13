@@ -330,6 +330,8 @@ namespace CometServer.Modules
             }
             catch (Exception ex)
             {
+                Logger.Error(ex, "DataStore restored failed");
+
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("DataStore restored failed");
             }

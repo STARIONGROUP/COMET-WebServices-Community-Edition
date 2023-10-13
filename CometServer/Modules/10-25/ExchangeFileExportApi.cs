@@ -41,6 +41,7 @@ namespace CometServer.Modules
 
     using CometServer.Authorization;
     using CometServer.Configuration;
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Protocol;
@@ -107,7 +108,17 @@ namespace CometServer.Modules
                 }
                 else
                 {
-                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    try
+                    {
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException e)
+                    {
+                        Logger.Warn(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
+                    }
 
                     await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
                 }
@@ -177,7 +188,7 @@ namespace CometServer.Modules
 
                 await using var filestream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
                 
-                await httpResponse.FromStream(filestream, this.MimeTypeOctetStream, new ContentDisposition("EngineeringModelZipFileName"));
+                await httpResponse.FromStream(filestream, HttpConstants.MimeTypeOctetStream, new ContentDisposition("EngineeringModelZipFileName"));
             }
             catch (InvalidOperationException ex)
             {

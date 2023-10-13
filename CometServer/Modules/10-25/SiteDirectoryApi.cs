@@ -38,11 +38,14 @@ namespace CometServer.Modules
 
     using CDP4JsonSerializer;
 
+    using CDP4MessagePackSerializer;
+
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
+    using CometServer.Extensions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -117,7 +120,7 @@ namespace CometServer.Modules
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapGet("SiteDirectory",
-                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer,  IPermissionInstanceFilterService permissionInstanceFilterService) =>
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
                     if (!req.HttpContext.User.Identity.IsAuthenticated)
                     {
@@ -133,16 +136,18 @@ namespace CometServer.Modules
                         }
                         catch (AuthorizationException e)
                         {
+                            Logger.Warn(e, $"The GET REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+
                             res.UpdateWithNotAutherizedSettings();
                             await res.AsJson("not authorized");
                         }
 
-                        await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService);
+                        await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
                     }
                 });
 
             app.MapGet("SiteDirectory/{*path}",
-                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -157,15 +162,17 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
+                        Logger.Warn(e, $"The GET REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
                     }
 
-                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, permissionInstanceFilterService);
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
                 }});
 
             app.MapPost("SiteDirectory/{iid:guid}",
-                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
+                async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
                 {
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
@@ -180,11 +187,13 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
+                        Logger.Warn(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
                     }
 
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, permissionInstanceFilterService, modelCreatorManager);
+                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                 }});
         }
 
@@ -200,7 +209,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
+        protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -209,7 +218,9 @@ namespace CometServer.Modules
 
             var sw = Stopwatch.StartNew();
             var requestToken = this.GenerateRandomToken();
-            
+
+            var contentTypeKind = httpRequest.QueryContentTypeKind();
+
             try
             {
                 Logger.Info(this.ConstructLog(httpRequest,$"{requestToken} database operations started"));
@@ -265,7 +276,15 @@ namespace CometServer.Modules
 
                 var version = requestUtils.GetRequestDataModelVersion(httpRequest);
 
-                await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
+                        break;
+                    case ContentTypeKind.MESSAGEPACK:
+                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
+                        break;
+                }
             }
             catch (SecurityException ex)
             {
@@ -322,7 +341,7 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
+        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -330,7 +349,9 @@ namespace CometServer.Modules
             var sw = new Stopwatch();
             sw.Start();
             var requestToken = this.GenerateRandomToken();
-            
+
+            var contentTypeKind = httpRequest.QueryContentTypeKind();
+
             try
             {
                 Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
@@ -383,7 +404,16 @@ namespace CometServer.Modules
                 if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
-                    await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, version, httpResponse);
+
+                    switch (contentTypeKind)
+                    {
+                        case ContentTypeKind.JSON:
+                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, version, httpResponse);
+                            break;
+                        case ContentTypeKind.MESSAGEPACK:
+                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, version, httpResponse);
+                            break;
+                    }
                     return;
                 }
 
@@ -398,7 +428,15 @@ namespace CometServer.Modules
 
                 Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
 
-                await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, version, httpResponse);
+                switch (contentTypeKind)
+                {
+                    case ContentTypeKind.JSON:
+                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, version, httpResponse);
+                        break;
+                    case ContentTypeKind.MESSAGEPACK:
+                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, version, httpResponse);
+                        break;
+                }
             }
             catch (InvalidOperationException ex)
             {

@@ -2,7 +2,7 @@
 // <copyright file="HeaderInfoProvider.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -61,54 +61,9 @@ namespace CometServer.Services
         public HeaderInfoProvider()
         {
             // setup version info at runtime bootstrap
-            this.responseHeaders.Add(this.Cdp4ServerHeader, Cdp4ServerHeaderVersion.Value);
-            this.responseHeaders.Add(this.CometServerHeader, CometServerHeaderVersion.Value);
-            this.responseHeaders.Add(this.Cdp4CommonHeader, Cdp4CommonHeaderVersion.Value);
-            this.responseHeaders.Add(this.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
-        }
-
-        /// <summary>
-        /// Gets the CDP4 server response header.
-        /// </summary>
-        public string Cdp4ServerHeader
-        {
-            get
-            {
-                return "CDP4-Server";
-            }
-        }
-
-        /// <summary>
-        /// Gets the COMET server response header.
-        /// </summary>
-        public string CometServerHeader
-        {
-            get
-            {
-                return "COMET-Server";
-            }
-        }
-
-        /// <summary>
-        /// Gets the CDP4 common response header.
-        /// </summary>
-        public string Cdp4CommonHeader
-        {
-            get
-            {
-                return "CDP4-Common";
-            }
-        }
-
-        /// <summary>
-        /// Gets the content type response header.
-        /// </summary>
-        public string ContentTypeHeader
-        {
-            get
-            {
-                return "Content-Type";
-            }
+            this.responseHeaders.Add(HttpConstants.Cdp4ServerHeader, Cdp4ServerHeaderVersion.Value);
+            this.responseHeaders.Add(HttpConstants.CometServerHeader, CometServerHeaderVersion.Value);
+            this.responseHeaders.Add(HttpConstants.Cdp4CommonHeader, Cdp4CommonHeaderVersion.Value);
         }
 
         /// <summary>
@@ -118,7 +73,7 @@ namespace CometServer.Services
         {
             get
             {
-                return this.responseHeaders[this.Cdp4ServerHeader];
+                return this.responseHeaders[HttpConstants.Cdp4ServerHeader];
             }
         }
 
@@ -129,7 +84,7 @@ namespace CometServer.Services
         {
             get
             {
-                return this.responseHeaders[this.CometServerHeader];
+                return this.responseHeaders[HttpConstants.CometServerHeader];
             }
         }
 
@@ -140,7 +95,7 @@ namespace CometServer.Services
         {
             get
             {
-                return this.responseHeaders[this.Cdp4CommonHeader];
+                return this.responseHeaders[HttpConstants.Cdp4CommonHeader];
             }
         }
 
@@ -151,7 +106,7 @@ namespace CometServer.Services
         {
             get
             {
-                return this.responseHeaders[this.ContentTypeHeader];
+                return this.responseHeaders[HttpConstants.ContentTypeHeader];
             }
         }
 
@@ -161,30 +116,31 @@ namespace CometServer.Services
         /// <param name="response">
         /// The <see cref="HttpResponse"/> response.
         /// </param>
-        public void RegisterResponseHeaders(HttpResponse response)
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> that is used to determine what the value of the
+        /// Content-Type header needs to be
+        /// </param>
+        public void RegisterResponseHeaders(HttpResponse response, ContentTypeKind contentTypeKind, string boundary)
         {
-            response.Headers.Add(this.Cdp4ServerHeader, this.Cdp4ServerVersion);
-            response.Headers.Add(this.CometServerHeader, this.CometServerVersion);
-            response.Headers.Add(this.Cdp4CommonHeader, this.Cdp4CommonVersion);
+            response.Headers.Add(HttpConstants.Cdp4ServerHeader, this.Cdp4ServerVersion);
+            response.Headers.Add(HttpConstants.CometServerHeader, this.CometServerVersion);
+            response.Headers.Add(HttpConstants.Cdp4CommonHeader, this.Cdp4CommonVersion);
 
-            if (!response.Headers.ContainsKey(this.ContentTypeHeader))
+            switch (contentTypeKind)
             {
-                response.Headers.Add(this.ContentTypeHeader, this.ContentTypeVersion);
-            }            
-        }
-
-        /// <summary>
-        /// Register the multipart CDP4 content-type header to the passed in response.
-        /// </summary>
-        /// <param name="response">
-        /// The <see cref="HttpResponse"/> response.
-        /// </param>
-        /// <param name="boundaryString">
-        /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
-        /// </param>
-        public void RegisterMultipartResponseContentTypeHeader(HttpResponse response, string boundaryString)
-        {
-            response.Headers.Add(this.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundaryString}");
+                case ContentTypeKind.JSON:
+                    response.Headers.Add(HttpConstants.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
+                    break;
+                case ContentTypeKind.MESSAGEPACK:
+                    response.Headers.Add(HttpConstants.ContentTypeHeader, "application/msgpack; ecss-e-tm-10-25; version=1.0.0");
+                    break;
+                case ContentTypeKind.MULTIPARTMIXED:
+                    response.Headers.Add(HttpConstants.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundary}");
+                    break;
+                case ContentTypeKind.IGNORE:
+                    // The Content-Type header does not need to be set as it is already present
+                    break;
+            }
         }
 
         /// <summary>

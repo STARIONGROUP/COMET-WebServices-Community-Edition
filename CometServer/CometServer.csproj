@@ -33,6 +33,7 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="7.0.0" />
     <PackageReference Include="MailKit" Version="4.2.0" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="24.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -51,10 +52,6 @@
     <None Update="NLog.dll.nlog">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Extensions\" />
   </ItemGroup>
 
   <Target Name="CopyAuthenticationPlugins" AfterTargets="Build">

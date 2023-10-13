@@ -2,17 +2,17 @@
 // <copyright file="IHeaderInfoProvider.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
-//    This file is part of Comet Server Community Edition. 
-//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of CDP4-COMET Server Community Edition. 
+//    The CDP4-COMET Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
-//    The Comet Server Community Edition is free software; you can redistribute it and/or
+//    The CDP4-COMET Server Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+//    The CDP4-COMET Server Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    GNU Affero General Public License for more details.
@@ -31,26 +31,6 @@ namespace CometServer.Services
     /// </summary>
     public interface IHeaderInfoProvider
     {
-        /// <summary>
-        /// Gets the CDP4 server response header.
-        /// </summary>
-        string Cdp4ServerHeader { get; }
-
-        /// <summary>
-        /// Gets the COMET server response header.
-        /// </summary>
-        string CometServerHeader { get; }
-        
-        /// <summary>
-        /// Gets the CDP4 common response header.
-        /// </summary>
-        string Cdp4CommonHeader { get; }
-
-        /// <summary>
-        /// Gets the content type response header.
-        /// </summary>
-        string ContentTypeHeader { get; }
-
         /// <summary>
         /// Gets the CDP4 server response version.
         /// </summary>
@@ -75,19 +55,12 @@ namespace CometServer.Services
         /// Register the CDP4 headers to the passed in response.
         /// </summary>
         /// <param name="response">
-        /// The nancy response.
+        /// The <see cref="HttpResponse"/> response.
         /// </param>
-        void RegisterResponseHeaders(HttpResponse response);
-
-        /// <summary>
-        /// Register the multipart CDP4 content-type header to the passed in response.
-        /// </summary>
-        /// <param name="response">
-        /// The nancy response.
+        /// <param name="contentTypeKind">
+        /// The <see cref="ContentTypeKind"/> that is used to determine what the value of the
+        /// Content-Type header needs to be
         /// </param>
-        /// <param name="boundaryString">
-        /// The boundary text in a Multipart MIME message <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
-        /// </param>
-        void RegisterMultipartResponseContentTypeHeader(HttpResponse response, string boundaryString);
+        public void RegisterResponseHeaders(HttpResponse response, ContentTypeKind contentTypeKind, string boundary);
     }
 }

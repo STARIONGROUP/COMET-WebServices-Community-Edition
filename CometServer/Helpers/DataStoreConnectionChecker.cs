@@ -70,7 +70,7 @@ namespace CometServer.Helpers
 
                     return true;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     Logger.Info("Waiting for the data store at {0}:{1} to become availble in {2} [s]", 
                         appConfigService.AppConfig.Backtier.HostName,

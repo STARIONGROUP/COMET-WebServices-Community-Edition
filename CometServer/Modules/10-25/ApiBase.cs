@@ -2,7 +2,7 @@
 // <copyright file="ApiBase.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -41,6 +41,8 @@ namespace CometServer.Modules
 
     using CDP4JsonSerializer;
 
+    using CDP4MessagePackSerializer;
+
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
@@ -64,39 +66,9 @@ namespace CometServer.Modules
     public abstract class ApiBase : CarterModule
     {
         /// <summary>
-        /// The Multipart message boundary string <see href="https://www.w3.org/Protocols/rfc1341/7_2_Multipart.html"/>
-        /// </summary>
-        protected const string BoundaryString = "----Boundary";
-
-        /// <summary>
         /// The site directory data.
         /// </summary>
         protected const string SiteDirectoryData = "SiteDirectory";
-
-        /// <summary>
-        /// The mime type JSON.
-        /// </summary>
-        protected readonly string MimeTypeJson = "application/json";
-
-        /// <summary>
-        /// The mime type octet stream.
-        /// </summary>
-        protected readonly string MimeTypeOctetStream = "application/octet-stream";
-
-        /// <summary>
-        /// The content type header.
-        /// </summary>
-        protected readonly string ContentTypeHeader = "Content-Type";
-
-        /// <summary>
-        /// The content disposition header.
-        /// </summary>
-        protected const string ContentDispositionHeader = "Content-Disposition";
-
-        /// <summary>
-        /// The content length header.
-        /// </summary>
-        private const string ContentLengthHeader = "Content-Length";
 
         /// <summary>
         /// The model reference data library type name.
@@ -383,12 +355,45 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteJsonResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
-            headerInfoProvider.RegisterResponseHeaders(httpResponse);
+            headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.JSON, "");
 
             httpResponse.StatusCode = (int)statusCode;
 
             var resultStream = new MemoryStream();
-            this.CreateFilteredResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
+            this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
+            resultStream.Seek(0, SeekOrigin.Begin);
+            await resultStream.CopyToAsync(httpResponse.Body);
+        }
+
+        /// <summary>
+        /// Writes <see cref="Thing"/>s to a target <see cref="HttpResponse"/>
+        /// </summary>
+        /// <param name="resourceResponse">
+        /// The resource collection to serialize.
+        /// </param>
+        /// <param name="requestDataModelVersion">
+        /// The data model version of this request to use with serialization.
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <param name="statusCode">
+        /// The optional HTML status Code.
+        /// </param>
+        /// <param name="requestToken">
+        /// optional request token
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task WriteMessagePackResponse(IHeaderInfoProvider headerInfoProvider, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
+        {
+            headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MESSAGEPACK, "");
+
+            httpResponse.StatusCode = (int)statusCode;
+
+            var resultStream = new MemoryStream();
+            this.CreateFilteredMessagePackResponseStream(messagePackSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
             resultStream.Seek(0, SeekOrigin.Begin);
             await resultStream.CopyToAsync(httpResponse.Body);
         }
@@ -411,9 +416,9 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected async Task WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected void WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            headerInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+            headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
 
             httpResponse.StatusCode = (int)statusCode;
 
@@ -438,12 +443,12 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected async Task WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected void WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
-            headerInfoProvider.RegisterMultipartResponseContentTypeHeader(httpResponse, BoundaryString);
+            headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
 
-            await this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
+            this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
         }
 
         /// <summary>
@@ -521,15 +526,29 @@ namespace CometServer.Modules
         /// random token</returns>
         protected string GenerateRandomToken()
         {
-            using (var cryptoServiceProvider = new RNGCryptoServiceProvider())
+            const int length = 12;
+            const string validCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz123456789";
+
+            var stringBuilder = new StringBuilder(length);
+            var randomBytes = new byte[length];
+
+            using (var rng = RandomNumberGenerator.Create())
             {
-                byte[] data = new byte[4];
-                cryptoServiceProvider.GetBytes(data);
-                var result = BitConverter.ToString(data).Replace("-", string.Empty);
-                return result;
+                // Fill the array with a cryptographically strong sequence of random bytes
+                rng.GetBytes(randomBytes);
+
+                // Convert each byte into a character from the valid character set
+                for (int i = 0; i < length; i++)
+                {
+                    // Convert the byte to an index into the valid character set
+                    int index = randomBytes[i] % validCharacters.Length;
+                    stringBuilder.Append(validCharacters[index]);
+                }
             }
+
+            return stringBuilder.ToString();
         }
-        
+
         /// <summary>
         /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
         /// </summary>
@@ -545,19 +564,54 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateFilteredResponseStream(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> dtos, Stream stream, Version requestDataModelVersion, string requestToken = "")
+        private void CreateFilteredJsonResponseStream(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService,
+            IReadOnlyList<Thing> dtos,
+            Stream stream,
+            Version requestDataModelVersion,
+            string requestToken = "")
         {
             var filteredDtos = permissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
 
             var sw = new Stopwatch();
             sw.Start();
-            Logger.Debug("{0} start serializing dtos", requestToken);
-
+            Logger.Debug("{0} start serializing dtos as JSON", requestToken);
             jsonSerializer.Initialize(metaInfoProvider, requestDataModelVersion);
             jsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            Logger.Debug("serializing dtos {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+            Logger.Debug("serializing dtos as JSON {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+        }
+
+        /// <summary>
+        /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
+        /// </summary>
+        /// <param name="dtos">
+        /// The DTO's that needs to be serialized to a stream
+        /// </param>
+        /// <param name="stream">
+        /// Stream to which to write the serializer output
+        /// </param>
+        /// <param name="requestDataModelVersion">
+        /// The data model version of this request to use with serialization.
+        /// </param>
+        /// <param name="requestToken">
+        /// optional request token
+        /// </param>
+        private void CreateFilteredMessagePackResponseStream(IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService,
+            IReadOnlyList<Thing> dtos,
+            Stream stream,
+            Version requestDataModelVersion,
+            string requestToken = "")
+        {
+            var filteredDtos = permissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
+
+            var sw = new Stopwatch();
+            sw.Start();
+            Logger.Debug("{0} start serializing dtos as MessagePack", requestToken);
+            messagePackSerializer.SerializeToStream(filteredDtos, stream);
+            sw.Stop();
+
+            Logger.Debug("serializing dtos as MessagePack {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -583,10 +637,10 @@ namespace CometServer.Modules
                 return;
             }
 
-            var content = new MultipartContent("mixed", BoundaryString);
+            var content = new MultipartContent("mixed", HttpConstants.BoundaryString);
             using (var stream = new MemoryStream())
             {
-                this.CreateFilteredResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
+                this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
 
                 // rewind stream prior to reading
                 stream.Position = 0;
@@ -594,7 +648,7 @@ namespace CometServer.Modules
                 // write out the json content to the first multipart content entry
                 var jsonContent = new StringContent(new StreamReader(stream).ReadToEnd());
                 jsonContent.Headers.Clear();
-                jsonContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeJson);
+                jsonContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeJson);
                 content.Add(jsonContent);
 
                 stream.Flush();
@@ -613,11 +667,11 @@ namespace CometServer.Modules
 
                 // write out the binary content to the first multipart content entry
                 var binaryContent = new ByteArrayContent(buffer);
-                binaryContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
+                binaryContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeOctetStream);
 
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
-                binaryContent.Headers.Add(ContentDispositionHeader, $"attachment; filename={hash}");
-                binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
+                binaryContent.Headers.Add(HttpConstants.ContentDispositionHeader, $"attachment; filename={hash}");
+                binaryContent.Headers.Add(HttpConstants.ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
             }
 
@@ -644,17 +698,17 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private async Task PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
+        private void PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
             var folderPath = fileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
 
             try
             {
-                var content = new MultipartContent("mixed", BoundaryString);
+                var content = new MultipartContent("mixed", HttpConstants.BoundaryString);
 
                 using (var stream = new MemoryStream())
                 {
-                    this.CreateFilteredResponseStream(metaInfoProvider,jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
+                    this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
 
                     // rewind stream prior to reading
                     stream.Position = 0;
@@ -662,7 +716,7 @@ namespace CometServer.Modules
                     // write out the json content to the first multipart content entry
                     var jsonContent = new StringContent(new StreamReader(stream).ReadToEnd());
                     jsonContent.Headers.Clear();
-                    jsonContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeJson);
+                    jsonContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeJson);
                     content.Add(jsonContent);
 
                     stream.Flush();
@@ -680,12 +734,12 @@ namespace CometServer.Modules
                 }
 
                 var binaryContent = new ByteArrayContent(buffer);
-                binaryContent.Headers.Add(this.ContentTypeHeader, this.MimeTypeOctetStream);
+                binaryContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeOctetStream);
 
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
-                binaryContent.Headers.Add(ContentDispositionHeader, $"attachment; filename={folderPath + ".zip"}");
+                binaryContent.Headers.Add(HttpConstants.ContentDispositionHeader, $"attachment; filename={folderPath + ".zip"}");
 
-                binaryContent.Headers.Add(ContentLengthHeader, fileSize.ToString());
+                binaryContent.Headers.Add(HttpConstants.ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
 
                 // stream the multipart content to the request contents target stream
@@ -708,7 +762,7 @@ namespace CometServer.Modules
         /// </remarks>
         private void AddMultiPartMimeEndpoint(Stream targetStream)
         {
-            var endLine = Encoding.Default.GetBytes($"\r\n--{BoundaryString}--");
+            var endLine = Encoding.Default.GetBytes($"\r\n--{HttpConstants.BoundaryString}--");
             targetStream.Write(endLine, 0, endLine.Length);
         }
         
