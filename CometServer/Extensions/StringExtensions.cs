@@ -26,6 +26,7 @@ namespace CometServer.Extensions
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
 
     /// <summary>
@@ -106,6 +107,72 @@ namespace CometServer.Extensions
         {
             var buffer = Convert.FromBase64String(shortGuid.Replace("_", "/").Replace("-", "+") + "==");
             return new Guid(buffer);
+        }
+
+        /// <summary>
+        /// Parse the identifier input as GUID.
+        /// </summary>
+        /// <param name="input">
+        /// The input string which is to be parsed.
+        /// </param>
+        /// <returns>
+        /// The parsed GUID identifier
+        /// </returns>
+        /// <exception cref="Exception">
+        /// If the supplied input is not a valid GUID string representation
+        /// </exception>
+        public static Guid ParseIdentifier(this string input)
+        {
+            if (!Guid.TryParse(input, out var identifier))
+            {
+                throw new FormatException($"An invalid Identifier was supplied: {input}");
+            }
+
+            return identifier;
+        }
+
+        /// <summary>
+        /// Coverts the first characther of a string to lowercase
+        /// </summary>
+        /// <param name="input">
+        /// The input instring
+        /// </param>
+        /// <returns>
+        /// The updated <see cref="string"/>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// If supplied input is null or empty
+        /// </exception>
+        public static string FirstLetterToLower(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentException("string can't be empty!");
+            }
+
+            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToLower()}{input.Substring(1)}";
+        }
+
+        /// <summary>
+        /// Coverts the first characther of a string to uppercase
+        /// </summary>
+        /// <param name="input">
+        /// The input instring
+        /// </param>
+        /// <returns>
+        /// The updated <see cref="string"/>.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// If supplied input is null or empty
+        /// </exception>
+        public static string CapitalizeFirstLetter(this string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                throw new ArgumentException("string can't be empty!");
+            }
+
+            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToUpper()}{input.Substring(1)}";
         }
     }
 }

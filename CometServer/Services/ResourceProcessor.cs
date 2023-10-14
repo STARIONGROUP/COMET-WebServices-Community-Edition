@@ -31,6 +31,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CometServer.Extensions;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;

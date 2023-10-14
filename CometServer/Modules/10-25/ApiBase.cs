@@ -45,6 +45,7 @@ namespace CometServer.Modules
 
     using CometServer.Authorization;
     using CometServer.Configuration;
+    using CometServer.Extensions;
     using CometServer.Helpers;
     
     using Microsoft.AspNetCore.Http;
