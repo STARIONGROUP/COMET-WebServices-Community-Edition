@@ -37,6 +37,8 @@ namespace CometServer.Services
 
     using Npgsql;
 
+    using ThingNotFoundException = Exceptions.ThingNotFoundException;
+
     /// <summary>
     /// The handcoded part of the <see cref="DomainFileStore"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
@@ -147,7 +149,7 @@ namespace CometServer.Services
         {
             if (!this.IsAllowedAccordingToIsHidden(transaction, thing))
             {
-                throw new Exception("Resource not found");
+                throw new ThingNotFoundException("Resource not found");
             }
         }
 

@@ -31,7 +31,8 @@ namespace CometServer.Services.Protocol
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
-    
+
+    using CometServer.Exceptions;
     using CometServer.Extensions;
 
     /// <summary>
@@ -210,12 +211,12 @@ namespace CometServer.Services.Protocol
         {
             if (!this.queryParameterDefinitions.ContainsKey(queryParameter))
             {
-                throw new Exception(string.Format("Query parameter {0} is not supported", queryParameter));
+                throw new QueryParameterNotSupportedException($"Query parameter {queryParameter} is not supported");
             }
 
             if (!this.queryParameterDefinitions[queryParameter].Contains(value))
             {
-                throw new Exception("Invalid query parameter value supplied");
+                throw new QueryParameterNotSupportedException("Invalid query parameter value supplied");
             }
         }
 

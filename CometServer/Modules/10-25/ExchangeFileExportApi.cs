@@ -120,6 +120,7 @@ namespace CometServer.Modules
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
+                        return;
                     }
 
                     await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);

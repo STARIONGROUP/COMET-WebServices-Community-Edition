@@ -31,6 +31,7 @@ namespace CometServer.Services
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
 
@@ -99,7 +100,7 @@ namespace CometServer.Services
             // 2. collect missing container info from the datastore
             var resolvableContainer = new ContainerInfo();
             var partionedResolveInfoGroup = resolvableInfo.Values.Where(x => !this.MetaInfoProvider.GetMetaInfo(x.InstanceInfo.TypeName).IsTopContainer && (x.ContainerInfo == null || x.ContainerInfo.Equals(resolvableContainer)))
-                                            .GroupBy(x => string.Format("{0}|{1}", x.Partition, x.InstanceInfo.TypeName));
+                                            .GroupBy(x => $"{x.Partition}|{x.InstanceInfo.TypeName}");
 
             this.ResolveContainersFromDataStore(transaction, resolvableInfo, partionedResolveInfoGroup);
 
@@ -109,7 +110,7 @@ namespace CometServer.Services
             // At this point the partition info should be fully resolved, break if not
             if (resolvableInfo.Values.Any(x => !x.IsPartitionResolved))
             {
-                throw new Exception("Not all partition info could be resolved!");
+                throw new ResolveException("Not all partition info could be resolved");
             }
 
             // 3. resolve instance info for any remaining un-resolved items
@@ -120,7 +121,7 @@ namespace CometServer.Services
             // All items should be resolved, break if not
             if (resolvableInfo.Values.Any(x => !x.IsResolved))
             {
-                throw new Exception("Not all items could be resolved!");
+                throw new ResolveException("Not all items could be resolved");
             }
         }
 
@@ -139,10 +140,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> type name of the supplied item.
         /// </returns> 
-        public string ResolveTypeNameByGuid(
-            NpgsqlTransaction transaction,
-            string partition,
-            Guid iid)
+        public string ResolveTypeNameByGuid(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             var resolveInfo = this.ResolveDao.Read(
                 transaction,
@@ -151,7 +149,7 @@ namespace CometServer.Services
 
             if (resolveInfo.Count == 0)
             {
-                throw new Exception("TypeName could not be resolved for iid " + iid + ".");
+                throw new ResolveException($"TypeName could not be resolved for iid {iid}.");
             }
 
             return resolveInfo[0].InstanceInfo.TypeName;
@@ -194,7 +192,7 @@ namespace CometServer.Services
                         var resolvedItem = resolvedItems.SingleOrDefault(x => x.Iid == unresolved.InstanceInfo.Iid);
                         if (resolvedItem == null)
                         {
-                            throw new Exception("Could not resolve item!");
+                            throw new ResolveException("Could not resolve item!");
                         }
 
                         // set resolved item

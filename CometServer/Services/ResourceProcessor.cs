@@ -31,8 +31,8 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CometServer.Exceptions;
     using CometServer.Extensions;
-    using CometServer.Helpers;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
 
@@ -164,7 +164,7 @@ namespace CometServer.Services
 
             if (!containment.Contains(id))
             {
-                throw new Exception("Resource not found");
+                throw new ThingNotFoundException($"Resource not found: {propertyName}.{id}");
             }
         }
 

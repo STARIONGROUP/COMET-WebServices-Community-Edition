@@ -139,6 +139,7 @@ namespace CometServer.Modules
 
                             res.UpdateWithNotAutherizedSettings();
                             await res.AsJson("not authorized");
+                            return;
                         }
 
                         await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
@@ -165,6 +166,7 @@ namespace CometServer.Modules
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
+                        return;
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
@@ -190,6 +192,7 @@ namespace CometServer.Modules
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
+                        return;
                     }
 
                     await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);

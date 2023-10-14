@@ -38,6 +38,7 @@ namespace CometServer.Tests.Services.Supplemental
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
+
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -160,7 +161,7 @@ namespace CometServer.Tests.Services.Supplemental
             Assert.DoesNotThrow(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(false);
-            Assert.Throws<Exception>(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.Throws<CometServer.Exceptions.ThingNotFoundException >(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
 
             domainFileStore.IsHidden = false;
             Assert.DoesNotThrow(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));

@@ -151,6 +151,7 @@ namespace CometServer.Modules
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
+                        return;
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
@@ -177,6 +178,7 @@ namespace CometServer.Modules
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
+                        return;
                     }
 
                     await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, fileBinaryService, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
@@ -794,7 +796,7 @@ namespace CometServer.Modules
 
             if (modelSetups.Count != 1)
             {
-                throw new Exception("Engineering model could not be resolved");
+                throw new ThingNotFoundException($"EngineeringModelSetup representing EngineeringModel {requestedModelId} could not be resolved");
             }
 
             // override query parameters to return only extent shallow
@@ -827,7 +829,7 @@ namespace CometServer.Modules
 
                 if (iterations.Count != 1)
                 {
-                    throw new Exception("Iteration could not be resolved");
+                    throw new ThingNotFoundException($"Iteration {requestedIterationId} could not be resolved");
                 }
 
                 return (Iteration)iterations.Single();
