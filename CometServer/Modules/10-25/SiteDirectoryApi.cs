@@ -490,8 +490,18 @@ namespace CometServer.Modules
             }
             finally
             {
-                transaction?.Dispose();
-                connection?.Dispose();
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.DisposeAsync();
+                }
+
+                sw.Stop();
+                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 

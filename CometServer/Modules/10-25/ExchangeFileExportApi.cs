@@ -234,13 +234,23 @@ namespace CometServer.Modules
             }
             finally
             {
-                transaction?.Dispose();
-                connection?.Dispose();
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.DisposeAsync();
+                }
 
                 if (System.IO.File.Exists(zipFilePath))
                 {
                     System.IO.File.Delete(zipFilePath);
                 }
+
+                sw.Stop();
+                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 

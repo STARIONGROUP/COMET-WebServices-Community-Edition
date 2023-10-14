@@ -410,9 +410,18 @@ namespace CometServer.Modules
             }
             finally
             {
-                transaction?.Dispose();
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
 
-                connection?.Dispose();
+                if (connection != null)
+                {
+                    await connection.DisposeAsync();
+                }
+
+                sw.Stop();
+                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 
@@ -647,9 +656,18 @@ namespace CometServer.Modules
             }
             finally
             {
-                transaction?.Dispose();
-                connection?.Dispose();
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.DisposeAsync();
+                }
+
                 sw.Stop();
+                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 
@@ -678,7 +696,7 @@ namespace CometServer.Modules
                     if (Logger.IsTraceEnabled)
                     {
                         var streamReader = new StreamReader(bodyStream);
-                        var multipartjson = streamReader.ReadToEnd();
+                        var multipartjson = await streamReader.ReadToEndAsync();
                         bodyStream.Position = 0;
 
                         Logger.Trace("multipart post JSON: {0}", multipartjson);
@@ -751,7 +769,6 @@ namespace CometServer.Modules
                 yield return thing;
             }
 
-            var credentials = credentialsService.Credentials;
             if (requestUtils.QueryParameters.IncludeReferenceData)
             {
                 transactionManager.SetDefaultContext(resourceProcessor.Transaction);
