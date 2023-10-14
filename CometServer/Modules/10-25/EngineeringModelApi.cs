@@ -259,8 +259,8 @@ namespace CometServer.Modules
 
                     if (!Guid.TryParse(iid, out var guid))
                     {
+                        httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                         await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
-                        httpResponse.StatusCode = (int) HttpStatusCode.BadRequest;
                         return;
                     }
                     
@@ -291,8 +291,8 @@ namespace CometServer.Modules
 
                     if (!resourceResponse.Any())
                     {
-                        await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
                         httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
                         return;
                     }
                 }
@@ -301,15 +301,15 @@ namespace CometServer.Modules
                 {
                     if (routeSegments.Length != 4 || routeSegments[2] != "iteration")
                     {
-                        await httpResponse.AsJson($"The {QueryParameters.CherryPickQuery} feature is only available when reading an iteration");
                         httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await httpResponse.AsJson($"The {QueryParameters.CherryPickQuery} feature is only available when reading an iteration");
                         return;
                     }
 
                     if (!requestUtils.QueryParameters.ClassKinds.Any() || !requestUtils.QueryParameters.CategoriesId.Any())
                     {
-                        await httpResponse.AsJson($"The {QueryParameters.ClassKindQuery} and {QueryParameters.CategoryQuery} parameters are required to use {QueryParameters.CherryPickQuery}");
                         httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await httpResponse.AsJson($"The {QueryParameters.ClassKindQuery} and {QueryParameters.CategoryQuery} parameters are required to use {QueryParameters.CherryPickQuery}");
                         return;
                     }
 
@@ -317,14 +317,14 @@ namespace CometServer.Modules
                 }
                 else if (requestUtils.QueryParameters.ClassKinds.Any())
                 {
-                    await httpResponse.AsJson($"The {QueryParameters.ClassKindQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled");
                     httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await httpResponse.AsJson($"The {QueryParameters.ClassKindQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled");
                     return;
                 }
                 else if (requestUtils.QueryParameters.CategoriesId.Any())
                 {
-                    await httpResponse.AsJson($"The {QueryParameters.CategoryQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled");
                     httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await httpResponse.AsJson($"The {QueryParameters.CategoryQuery} parameters can only be used with {QueryParameters.CherryPickQuery} enabled");
                     return;
                 }
 

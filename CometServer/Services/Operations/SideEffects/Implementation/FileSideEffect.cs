@@ -77,7 +77,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            this.CheckSecurity(thing, transaction, partition);
+            this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(File thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.CheckSecurity(thing, transaction, partition);
+            this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -115,11 +115,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CheckSecurity(File file, NpgsqlTransaction transaction, string partition)
+        private void HasWriteAccess(File file, NpgsqlTransaction transaction, string partition)
         {
             this.FileService.CheckFileLock(transaction, partition, file);
 
-            this.DomainFileStoreService.CheckSecurity(
+            this.DomainFileStoreService.HasWriteAccess(
                 file,
                 transaction,
                 partition);

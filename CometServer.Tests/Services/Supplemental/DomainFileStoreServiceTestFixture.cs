@@ -113,12 +113,15 @@ namespace CometServer.Tests.Services.Supplemental
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), file)).Returns(true);
 
-            var credentials = new Credentials();
-            credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
-            {
-                UserName = "jdoe"
-            };
-            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+            this.credentialsService.Setup(x => x.Credentials)
+                .Returns(
+                    new Credentials
+                    {
+                        Person = new AuthenticationPerson(Guid.NewGuid(), 0)
+                        {
+                            UserName = "TestRunner"
+                        }
+                    });
 
             // Without a domainFileStoreSelector, SingleOrDefault(domainFileStoreSelector) could fail, because multiple <see cref="DomainFileStore"/>s could exist.
             // Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
@@ -164,47 +167,96 @@ namespace CometServer.Tests.Services.Supplemental
         }
 
         [Test]
-        [TestCaseSource(nameof(TestCases))]
-        public void VerifyCheckSecurity<T>(T thing, bool shouldFail) where T : Thing
+        [TestCaseSource(nameof(TestWriteCases))]
+        public void VerifyHasReadAccess<T>(T thing, bool shouldFail) where T : Thing
         {
             if (shouldFail)
             {
-                Assert.Throws<SecurityException>(() => this.domainFileStoreService.CheckSecurity(
-                    thing,
-                    this.transaction.Object,
-                    this.iterationPartitionName));
-
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
-
-                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.CheckSecurity(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.HasReadAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
             }
             else
             {
-                Assert.DoesNotThrow(() => this.domainFileStoreService.CheckSecurity(
+                Assert.That(this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.True);
+
+                domainFileStore.IsHidden = true;
+
+                Assert.That(() => this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.True);
+
+                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(false);
+
+                Assert.That(this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.False);
+
+                domainFileStore.IsHidden = false;
+
+                Assert.That(this.domainFileStoreService.HasReadAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName), Is.True);
+            }
+        }
+
+        [Test]
+        [TestCaseSource(nameof(TestWriteCases))]
+        public void VerifyCheckSecurity<T>(T thing, bool shouldFail) where T : Thing
+        {
+            if (shouldFail)
+            {
+                Assert.Throws<SecurityException>(() => this.domainFileStoreService.HasWriteAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName));
+
+                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
+
+                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.HasWriteAccess(
+                    thing,
+                    this.transaction.Object,
+                    this.iterationPartitionName));
+            }
+            else
+            {
+                Assert.DoesNotThrow(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
 
                 domainFileStore.IsHidden = true;
 
-                Assert.DoesNotThrow(() => this.domainFileStoreService.CheckSecurity(
+                Assert.DoesNotThrow(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
 
                 this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
 
-                Assert.Throws<SecurityException>(() => this.domainFileStoreService.CheckSecurity(
+                Assert.Throws<SecurityException>(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName));
             }
         }
 
-        public static IEnumerable TestCases()
+        public static IEnumerable TestWriteCases()
+        {
+            yield return new object[] { file, false };
+            yield return new object[] { folder, false };
+            yield return new object[] { domainFileStore, false };
+            yield return new object[] { new ElementDefinition(), true };
+        }
+
+        public static IEnumerable TestReadCases()
         {
             yield return new object[] { file, false };
             yield return new object[] { folder, false };

@@ -125,7 +125,6 @@ namespace CometServer.Modules
                     if (!req.HttpContext.User.Identity.IsAuthenticated)
                     {
                         res.UpdateWithNotAuthenticatedSettings();
-                       
                         await res.AsJson("not authenticated");
                     }
                     else
@@ -251,8 +250,8 @@ namespace CometServer.Modules
 
                     if (!Guid.TryParse(iid, out var guid))
                     {
-                        await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
                         httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
                         return;
                     }
 
@@ -447,7 +446,6 @@ namespace CometServer.Modules
 
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
-                // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
@@ -460,7 +458,6 @@ namespace CometServer.Modules
 
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
-                // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
@@ -473,7 +470,6 @@ namespace CometServer.Modules
 
                 Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
-                // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
@@ -486,7 +482,6 @@ namespace CometServer.Modules
 
                 Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
-                // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }

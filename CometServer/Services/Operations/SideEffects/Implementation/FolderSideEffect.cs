@@ -134,7 +134,7 @@ namespace CometServer.Services.Operations.SideEffects
                     containingFolderId);
             }
 
-            this.CheckSecurity(thing, transaction, partition);
+            this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -157,7 +157,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override void BeforeDelete(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.CheckSecurity(thing, transaction, partition);
+            this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -259,9 +259,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CheckSecurity(Folder folder, NpgsqlTransaction transaction, string partition)
+        private void HasWriteAccess(Folder folder, NpgsqlTransaction transaction, string partition)
         {
-            this.DomainFileStoreService.CheckSecurity(
+            this.DomainFileStoreService.HasWriteAccess(
                 folder,
                 transaction,
                 partition);

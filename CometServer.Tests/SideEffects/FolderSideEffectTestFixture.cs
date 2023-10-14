@@ -192,7 +192,7 @@ namespace CometServer.Tests.SideEffects
         {
            this.sideEffect.BeforeDelete(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
@@ -202,7 +202,7 @@ namespace CometServer.Tests.SideEffects
 
             this.sideEffect.BeforeUpdate(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), this.rawUpdateInfo);
 
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
@@ -210,7 +210,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect.BeforeCreate(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Never);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Never);
         }
     }
 }

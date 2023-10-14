@@ -117,18 +117,29 @@ namespace CometServer.Services
         /// <returns>The active <see cref="Iteration"/></returns>
         public Iteration GetActiveIteration(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            Iteration iteration = null;
+
             if (this.activeIterationId != Guid.Empty)
             {
+                // If there is a cached activeIterationId try to find that first.
                 var activeIterations = this.GetShallow(transaction, partition, new [] { this.activeIterationId }, securityContext).OfType<Iteration>().ToArray();
-                if (activeIterations.Length != 1)
+
+                if (activeIterations.Length > 1)
                 {
-                    throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
+                    throw new ThingNotFoundException($"The active iteration-setup could not be found for partition {partition}.");
                 }
 
-                return activeIterations.Single();
+                if (activeIterations.Length == 1)
+                {
+                    iteration =  activeIterations.Single();
+                }
             }
-            else
+
+            if (iteration == null)
             {
+                // Might also be that the cached activeIterationId cannot be found anymoreF
+                // For example as a result of copy EngineeringModelSetup based on an existing EngineeringModelSetup where the active Iteration.Iid is replaced at some point. The Iteration having the cached activeIterationId as its Iid will not be there anymore.
+                // In this case we try to find the new active Iteration.Iid.
                 var iterations = this.GetShallow(transaction, partition, null, securityContext).OfType<Iteration>().ToArray();
 
                 var activeIterationSetups =
@@ -151,8 +162,15 @@ namespace CometServer.Services
 
                 var activeIteration = activeIterations.Single();
                 this.activeIterationId = activeIteration.Iid;
-                return activeIteration;
+                iteration = activeIteration;
             }
+
+            if (iteration == null)
+            {
+                throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
+            }
+
+            return iteration;
         }
 
         /// <summary>

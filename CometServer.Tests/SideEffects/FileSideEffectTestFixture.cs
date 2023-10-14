@@ -81,7 +81,7 @@ namespace CometServer.Tests.SideEffects
         {
            this.sideEffect.BeforeDelete(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
@@ -89,7 +89,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect.BeforeUpdate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
 
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect.BeforeCreate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<File>(), null, It.IsAny<string>()), Times.Never);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -105,7 +105,7 @@ namespace CometServer.Tests.SideEffects
         {
             //Locked by me
             this.sideEffect.BeforeUpdate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
-            this.domainFileStoreService.Verify(x => x.CheckSecurity(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
 
             //Locked by someone else
             this.fileService.Setup(x => x.CheckFileLock(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();

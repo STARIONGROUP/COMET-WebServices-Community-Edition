@@ -2,7 +2,7 @@
 // <copyright file="IDomainFileStoreService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Ahmed Abulwafa Ahmed
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of Comet Server Community Edition. 
 //    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -34,6 +34,21 @@ namespace CometServer.Services
     public partial interface IDomainFileStoreService
     {
         /// <summary>
+        /// Checks if the <see cref="Participant"/> is allowed to read (and therefore also write to) a <see cref="DomainFileStore"/>
+        /// based on the state of the <see cref="DomainFileStore"/>'s <see cref="DomainFileStore.IsHidden"/> property.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> to check.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        bool IsAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing);
+
+        /// <summary>
         /// Check the security related functionality
         /// </summary>
         /// <param name="thing">
@@ -45,6 +60,20 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        void CheckSecurity(Thing thing, IDbTransaction transaction, string partition);
+        void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition);
+
+        /// <summary>
+        /// Check the security related functionality
+        /// </summary>
+        /// <param name="thing">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition);
     }
 }

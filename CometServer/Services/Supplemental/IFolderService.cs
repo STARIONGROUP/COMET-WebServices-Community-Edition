@@ -1,22 +1,23 @@
-// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IFileService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
-//
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
-//
-//    This file is part of Comet Server Community Edition. 
-//    The Comet Server Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
-//
-//    The Comet Server Community Edition is free software; you can redistribute it and/or
+ï»¿// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="IFolderService.cs" company="RHEA System S.A.">
+//    Copyright (c) 2015-2023 RHEA System S.A.
+// 
+//    Author: Sam GerenÃ©, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine ThÃ©ate
+// 
+//    This file is part of CDP4 Web Services Community Edition.
+//    The CDP4 Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+// 
+//    The CDP4 Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
-//
-//    The Comet Server Community Edition is distributed in the hope that it will be useful,
+// 
+//    The CDP4 Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    GNU Affero General Public License for more details.
-//
+//    Lesser General Public License for more details.
+// 
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
@@ -29,9 +30,9 @@ namespace CometServer.Services
     using Npgsql;
 
     /// <summary>
-    /// The File Service Interface which uses the ORM layer to interact with the data model.
+    /// The Folder Service Interface which uses the ORM layer to interact with the data model.
     /// </summary>
-    public partial interface IFileService
+    public partial interface IFolderService
     {
         /// <summary>
         /// Checks if the <see cref="Participant"/> is allowed to read (and therefore also write to) a <see cref="DomainFileStore"/>
@@ -50,19 +51,5 @@ namespace CometServer.Services
         /// The <see cref="bool"/>.
         /// </returns>
         bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition);
-
-        /// <summary>
-        /// Checks is a file lock is present and throws an error when it is set by another user
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="file">
-        /// The <see cref="File"/> to check
-        /// </param>
-        void CheckFileLock(NpgsqlTransaction transaction, string partition, File file);
     }
 }
