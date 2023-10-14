@@ -79,6 +79,14 @@ namespace CometServer.Services
         /// </summary>
         public static readonly string CometServerHeader = "COMET-Server";
 
+        /// <summary>
+        /// The accept CDP version header.
+        /// </summary>
+        public static readonly string AcceptCdpVersionHeader = "Accept-CDP";
 
+        /// <summary>
+        /// The default data model version.
+        /// </summary>
+        public static readonly string DefaultDataModelVersion = "1.0.0";
     }
 }

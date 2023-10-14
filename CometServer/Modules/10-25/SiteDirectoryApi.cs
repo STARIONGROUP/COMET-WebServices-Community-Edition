@@ -273,7 +273,7 @@ namespace CometServer.Modules
                 sw.Start();
                 Logger.Info("return {0} response started", requestToken);
 
-                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
+                var version = httpRequest.QueryDataModelVersion();
 
                 switch (contentTypeKind)
                 {
@@ -359,8 +359,8 @@ namespace CometServer.Modules
                 var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
                 requestUtils.QueryParameters = new QueryParameters(queryParameters);
 
-                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
-                
+                var version = httpRequest.QueryDataModelVersion();
+
                 var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
                 
                 if (isMultiPart)

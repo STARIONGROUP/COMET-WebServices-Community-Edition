@@ -217,8 +217,8 @@ namespace CometServer.Modules
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
                 var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
                 requestUtils.QueryParameters = new QueryParameters(queryParameters);
-                
-                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
+
+                var version = httpRequest.QueryDataModelVersion();
 
                 // the route pattern enforces that there is at least one route segment
                 var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
@@ -504,7 +504,7 @@ namespace CometServer.Modules
                     bodyStream = httpRequest.Body;
                 }
 
-                jsonSerializer.Initialize(metaInfoProvider, requestUtils.GetRequestDataModelVersion(httpRequest));
+                jsonSerializer.Initialize(metaInfoProvider, httpRequest.QueryDataModelVersion());
                 var operationData = jsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
 
                 // get prepared data source transaction
@@ -561,10 +561,10 @@ namespace CometServer.Modules
                     switch (contentTypeKind)
                     {
                         case ContentTypeKind.JSON:
-                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
+                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, httpRequest.QueryDataModelVersion(), httpResponse);
                             break;
                         case ContentTypeKind.MESSAGEPACK:
-                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
+                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, httpRequest.QueryDataModelVersion(), httpResponse);
                             break;
                     }
                     return;
@@ -584,10 +584,10 @@ namespace CometServer.Modules
                 switch (contentTypeKind)
                 {
                     case ContentTypeKind.JSON:
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
+                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, httpRequest.QueryDataModelVersion(), httpResponse);
                         break;
                     case ContentTypeKind.MESSAGEPACK:
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, requestUtils.GetRequestDataModelVersion(httpRequest), httpResponse);
+                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, httpRequest.QueryDataModelVersion(), httpResponse);
                         break;
                 }
             }

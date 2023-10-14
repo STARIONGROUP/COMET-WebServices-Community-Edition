@@ -55,11 +55,6 @@ namespace CometServer.Services
         IQueryParameters OverrideQueryParameters { set; }
 
         /// <summary>
-        /// Gets the get request data model version.
-        /// </summary>
-        Version GetRequestDataModelVersion(HttpRequest httpRequest);
-
-        /// <summary>
         /// Construct the engineering model partition identifier from the passed in engineeringModel id.
         /// </summary>
         /// <param name="engineeringModelIid">

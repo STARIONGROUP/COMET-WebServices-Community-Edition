@@ -46,6 +46,7 @@ namespace CometServer.Modules
     using CDP4Orm.MigrationEngine;
 
     using CometServer.Configuration;
+    using CometServer.Extensions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -223,7 +224,7 @@ namespace CometServer.Modules
             // drop existing data stores
             this.DropDataStoreAndPrepareNew(dataStoreController);
 
-            var version = requestUtils.GetRequestDataModelVersion(request);
+            var version = request.QueryDataModelVersion();
 
             // handle exchange processing
             if (!this.UpsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null))
@@ -292,7 +293,7 @@ namespace CometServer.Modules
             // drop existing data stores
             this.DropDataStoreAndPrepareNew(dataStoreController);
 
-            var version = requestUtils.GetRequestDataModelVersion(request);
+            var version = request.QueryDataModelVersion();
 
             // handle exchange processing
             if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))

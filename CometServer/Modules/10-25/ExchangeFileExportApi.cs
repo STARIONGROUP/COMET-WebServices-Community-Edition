@@ -43,6 +43,7 @@ namespace CometServer.Modules
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
+    using CometServer.Extensions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Protocol;
@@ -172,7 +173,7 @@ namespace CometServer.Modules
                     throw new InvalidOperationException($"Multipart post messages are not allowed for the {TopContainer} route");
                 }
 
-                var version = requestUtils.GetRequestDataModelVersion(httpRequest);
+                var version = httpRequest.QueryDataModelVersion();
                 jsonSerializer.Initialize(metaInfoProvider, version);
                 
                 var iids = jsonSerializer.Deserialize<List<Guid>>(httpRequest.Body);

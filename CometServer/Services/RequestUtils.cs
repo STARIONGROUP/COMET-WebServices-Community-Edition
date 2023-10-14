@@ -39,16 +39,6 @@ namespace CometServer.Services
     public class RequestUtils : IRequestUtils
     {
         /// <summary>
-        /// The default data model version.
-        /// </summary>
-        private const string DefaultDataModelVersion = "1.0.0";
-
-        /// <summary>
-        /// The accept CDP version header.
-        /// </summary>
-        private const string AcceptCdpVersionHeader = "Accept-CDP";
-
-        /// <summary>
         /// The query parameters of the request.
         /// </summary>
         private IQueryParameters queryParameters;
@@ -88,22 +78,6 @@ namespace CometServer.Services
         /// </summary>
         public IQueryParameters OverrideQueryParameters { private get;  set; }
 
-        /// <summary>
-        /// Gets the get request data model version.
-        /// </summary>
-        public Version GetRequestDataModelVersion(HttpRequest httpRequest)
-        {
-            string versionHeader;
-
-            if (httpRequest.Headers.TryGetValue(AcceptCdpVersionHeader, out var versionHeaderValue))
-            {
-                versionHeader = versionHeaderValue;
-                return new Version(versionHeader);
-            }
-
-            return new Version(DefaultDataModelVersion);
-        }
-        
         /// <summary>
         /// Construct the engineering model partition identifier from the passed in engineeringModel id.
         /// </summary>

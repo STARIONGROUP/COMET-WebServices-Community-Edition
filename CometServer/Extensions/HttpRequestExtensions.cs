@@ -24,6 +24,7 @@
 
 namespace CometServer.Extensions
 {
+    using System;
     using System.Linq;
 
     using CometServer.Services;
@@ -54,6 +55,23 @@ namespace CometServer.Extensions
             }
 
             return contentTypeKind;
+        }
+
+        /// <summary>
+        /// Queries the requested CDP-Model <see cref="Version"/>
+        /// </summary>
+        /// <returns>
+        /// a <see cref="Version"/> value based on the <see cref="HttpRequest.ContentType"/>
+        /// </returns>
+        public static Version QueryDataModelVersion(this HttpRequest httpRequest)
+        {
+            if (httpRequest.Headers.TryGetValue(HttpConstants.AcceptCdpVersionHeader, out var versionHeaderValue))
+            {
+                string versionHeader= versionHeaderValue;
+                return new Version(versionHeader);
+            }
+
+            return new Version(HttpConstants.DefaultDataModelVersion);
         }
     }
 }
