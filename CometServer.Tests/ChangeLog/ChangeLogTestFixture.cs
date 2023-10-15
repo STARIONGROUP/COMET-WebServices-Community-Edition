@@ -36,13 +36,14 @@ namespace CometServer.Tests.Services
     using CDP4Common.Types;
 
     using CDP4Orm.Dao;
-    using CDP4Orm.Dao.Resolve;
 
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.ChangeLog;
     using CometServer.Services.Operations;
+
+    using Microsoft.Extensions.Logging;
 
     using Moq;
 
@@ -55,11 +56,12 @@ namespace CometServer.Tests.Services
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
-    /// Suite of tests for the <see cref="ChangeLogTestFixture"/>
+    /// Suite of tests for the <see cref="ChangeLogService"/>
     /// </summary>
     [TestFixture]
     public class ChangeLogTestFixture
     {
+        private Mock<ILogger<ChangeLogService>> logger;
         private Mock<IServiceProvider> serviceProvider;
         private Mock<IOperationProcessor> operationProcessor;
         private Mock<IRequestUtils> requestUtils;
@@ -119,6 +121,7 @@ namespace CometServer.Tests.Services
         [SetUp]
         public void Setup()
         {
+            this.logger = new Mock<ILogger<ChangeLogService>>();
             this.serviceProvider = new Mock<IServiceProvider>();
             this.operationProcessor = new Mock<IOperationProcessor>();
             this.requestUtils = new Mock<IRequestUtils>();
@@ -162,7 +165,8 @@ namespace CometServer.Tests.Services
                 ResolveService = this.resolveService.Object,
                 TransactionManager = this.transactionManager.Object,
                 DataModelUtils = this.dataModelUtils,
-                MetaInfoProvider = this.metaInfoProvider.Object
+                MetaInfoProvider = this.metaInfoProvider.Object,
+                Logger = this.logger.Object
             };
 
             this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing>());

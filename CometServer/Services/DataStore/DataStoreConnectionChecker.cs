@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Helpers
+namespace CometServer.Services.DataStore
 {
     using System;
     using System.Threading;
@@ -30,7 +30,7 @@ namespace CometServer.Helpers
     using CometServer.Configuration;
     using CometServer.Services;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -38,30 +38,32 @@ namespace CometServer.Helpers
     /// The purpose of the <see cref="DataStoreConnectionChecker"/> is to check whether a connection can be made to the databse
     /// and wait for it before returning
     /// </summary>
-    public static class DataStoreConnectionChecker
+    public class DataStoreConnectionChecker : IDataStoreConnectionChecker
     {
         /// <summary>
-        /// The Logger
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<DataStoreConnectionChecker> Logger { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
         /// Checks whether a connection to the Data store can be made
         /// </summary>
-        /// <param name="appConfigService">
-        /// The <see cref="IAppConfigService"/> that provides application settings
-        /// </param>
         /// <returns>
         /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
         /// </returns>
-        public static bool CheckConnection(IAppConfigService appConfigService)
+        public bool CheckConnection()
         {
-            var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.DatabaseManage));
+            var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.DatabaseManage));
 
             var startTime = DateTime.UtcNow;
-            var remainingSeconds = appConfigService.AppConfig.Midtier.BacktierWaitTime;
-            
-            while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(appConfigService.AppConfig.Midtier.BacktierWaitTime))
+            var remainingSeconds = this.AppConfigService.AppConfig.Midtier.BacktierWaitTime;
+
+            while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(this.AppConfigService.AppConfig.Midtier.BacktierWaitTime))
             {
                 try
                 {
@@ -72,9 +74,9 @@ namespace CometServer.Helpers
                 }
                 catch (Exception)
                 {
-                    Logger.Info("Waiting for the data store at {0}:{1} to become availble in {2} [s]", 
-                        appConfigService.AppConfig.Backtier.HostName,
-                        appConfigService.AppConfig.Backtier.Port,
+                    this.Logger.LogInformation("Waiting for the data store at {0}:{1} to become availble in {2} [s]",
+                        this.AppConfigService.AppConfig.Backtier.HostName,
+                        this.AppConfigService.AppConfig.Backtier.Port,
                         remainingSeconds);
 
                     Thread.Sleep(5000);

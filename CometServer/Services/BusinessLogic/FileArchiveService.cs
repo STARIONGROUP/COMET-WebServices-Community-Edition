@@ -39,7 +39,7 @@ namespace CometServer.Services
 
     using Ionic.Zip;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -53,9 +53,9 @@ namespace CometServer.Services
     public class FileArchiveService : IFileArchiveService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<FileArchiveService> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="ICredentialsService"/> for the current request
@@ -120,7 +120,7 @@ namespace CometServer.Services
                 catch (Exception exception)
                 {
                     var logMessage = $"An attempt to create a file structure was unsuccsessful. Exited with the error: {exception.Message}.";
-                    Logger.Error(logMessage);
+                    this.Logger.LogError(logMessage);
 
                     this.DeleteFileStructure(folderPath);
                 }
@@ -158,7 +158,7 @@ namespace CometServer.Services
             System.IO.File.Delete(folderPath + ".zip");
 
             var logMessage = $"File structure {folderPath} and archive {folderPath + ".zip"} are deleted.";
-            Logger.Info(logMessage);
+            this.Logger.LogInformation(logMessage);
         }
 
         /// <summary>
@@ -172,7 +172,7 @@ namespace CometServer.Services
             Directory.Delete(folderPath, true);
 
             var logMessage = $"File structure {folderPath} is deleted.";
-            Logger.Info(logMessage);
+            this.Logger.LogInformation(logMessage);
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace CometServer.Services
             Directory.CreateDirectory(folderPath);
 
             var logMessage = $"Temporary folder {folderPath} is created.";
-            Logger.Info(logMessage);
+            this.Logger.LogInformation(logMessage);
 
             return folderPath;
         }
@@ -217,7 +217,7 @@ namespace CometServer.Services
         private void CreateFileStructureOnDisk(Thing thing, string partition, string folderPath, string[] routeSegments)
         {
             var logMessage = $"File structure creation is started into the temporary folder {folderPath}.";
-            Logger.Info(logMessage);
+            this.Logger.LogInformation(logMessage);
 
             var credentials = this.CredentialsService.Credentials;
 
@@ -297,7 +297,7 @@ namespace CometServer.Services
                     transaction.Rollback();
                 }
 
-                Logger.Error(ex, "Failed to create a file structure on the disk.");
+                this.Logger.LogError(ex, "Failed to create a file structure on the disk.");
             }
             finally
             {
@@ -398,7 +398,7 @@ namespace CometServer.Services
             Directory.CreateDirectory(path);
 
             var logMessage = $"Directory {path} is created.";
-            Logger.Info(logMessage);
+            this.Logger.LogInformation(logMessage);
 
             // Recursively create all child folders
             // Get folders that is of the root folder
@@ -486,7 +486,7 @@ namespace CometServer.Services
 
                 var logMessage = $"File {subFileRevision.ContentHash}/{subFileRevision.Name + extension} is copied from {storageFilePath} to {folderPath}.";
 
-                Logger.Info(logMessage);
+                this.Logger.LogInformation(logMessage);
             }
         }
     }

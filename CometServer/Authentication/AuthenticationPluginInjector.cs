@@ -26,6 +26,7 @@ namespace CometServer.Authentication
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Reflection;
@@ -33,6 +34,8 @@ namespace CometServer.Authentication
     using Autofac;
 
     using CDP4Authentication;
+
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// The injector loads up authenticator plugins.
@@ -45,10 +48,17 @@ namespace CometServer.Authentication
         private const string AuthenticatorPluginFolder = "Authentication";
 
         /// <summary>
+        /// The <see cref="ILogger"/> used to log
+        /// </summary>
+        private readonly ILogger<AuthenticationPluginInjector> logger;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticationPluginInjector"/> class.
         /// </summary>
-        public AuthenticationPluginInjector()
+        public AuthenticationPluginInjector(ILogger<AuthenticationPluginInjector> logger)
         {
+            this.logger = logger;
+
             this.Plugins = this.LoadPlugins().ToList();
         }
 
@@ -87,6 +97,10 @@ namespace CometServer.Authentication
         /// <returns>The <see cref="List{T}"/> of <see cref="IAuthenticatorPlugin"/> modules</returns>
         private IEnumerable<IAuthenticatorPlugin> LoadPlugins()
         {
+            var sw = Stopwatch.StartNew();
+
+            this.logger.LogInformation("Loading authentication plugins");
+
             var pluginFolders = this.GetFolders();
 
             var builder = new ContainerBuilder();
@@ -111,6 +125,8 @@ namespace CometServer.Authentication
             {
                 yield return authenticatorPlugin;
             }
+
+            this.logger.LogInformation("Authentication plugins loaded in {sw} [ms]", sw.ElapsedMilliseconds);
         }
     }
 }

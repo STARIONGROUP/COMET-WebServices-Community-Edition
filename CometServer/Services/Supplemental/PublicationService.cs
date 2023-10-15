@@ -24,8 +24,6 @@
 
 namespace CometServer.Services
 {
-    using NLog;
-
     using Npgsql;
 
     /// <summary>
@@ -33,11 +31,6 @@ namespace CometServer.Services
     /// </summary>
     public sealed partial class PublicationService
     {
-        /// <summary>
-        /// The Logger
-        /// </summary>
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// Deletes all data from the current publication table
         /// </summary>

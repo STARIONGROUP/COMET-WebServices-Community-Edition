@@ -35,34 +35,62 @@ namespace CometServer
     using CometServer.Configuration;
     using CometServer.Services;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Npgsql;
 
     /// <summary>
     /// The migration engine that handle database migration at start-up
     /// </summary>
-    public static class MigrationEngine
+    public class MigrationEngine : IMigrationEngine
     {
         /// <summary>
-        /// The Logger
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<MigrationEngine> logger;
+
+        /// <summary>
+        /// The (injected) <see cref="ILoggerFactory"/>
+        /// </summary>
+        private readonly ILoggerFactory loggerFactory;
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IMigrationService"/>
+        /// </summary>
+        public IMigrationService MigrationService { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MigrationEngine"/> class.
+        /// </summary>
+        /// <param name="loggerFactory">
+        /// The (injected) <see cref="ILoggerFactory"/> us to create typed loggers
+        /// </param>
+        public MigrationEngine(ILoggerFactory loggerFactory)
+        {
+            this.loggerFactory = loggerFactory;
+            this.logger = this.loggerFactory == null ? NullLogger<MigrationEngine>.Instance : this.loggerFactory.CreateLogger<MigrationEngine>();
+        }
 
         /// <summary>
         /// Apply migration scripts at start-up
         /// </summary>
-        public static void MigrateAllAtStartUp(IAppConfigService appConfigService)
+        public void MigrateAllAtStartUp()
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
             var sw = Stopwatch.StartNew();
 
-            Logger.Info("Start migration");
+            this.logger.LogInformation("Start migration");
 
             try
             {
-                connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+                connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
 
                 // ensure an open connection
                 if (connection.State != ConnectionState.Open)
@@ -73,7 +101,7 @@ namespace CometServer
                     }
                     catch (PostgresException e)
                     {
-                        Logger.Warn("Could not connect to the database for migration, the database might not exist yet. Skipping migration. Error message: {0}", e.Message);
+                        this.logger.LogWarning("Could not connect to the database for migration, the database might not exist yet. Skipping migration. Error message: {message}", e.Message);
                         return;
                     }
                 }
@@ -131,7 +159,7 @@ namespace CometServer
                 }
 
                 // exclude migration of already applied migrations at start up
-                migrations.AddRange(MigrationService.GetMigrations(true).Where(x => !existingMigrations.Contains(x.MigrationMetaData.Version)));
+                migrations.AddRange(this.MigrationService.GetMigrations(true).Where(x => !existingMigrations.Contains(x.MigrationMetaData.Version)));
                 foreach (var migration in migrations.Where(x => x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.SiteDirectory || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All).OrderBy(x => x.MigrationMetaData.Version))
                 {
                     migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.SiteDirectory.ToString())).ToList());
@@ -158,7 +186,7 @@ namespace CometServer
                     transaction.Rollback();
                 }
 
-                Logger.Error(exception, "An error occured during migration.");
+                this.logger.LogError(exception, "An error occured during migration.");
                 throw;
             }
             finally
@@ -173,7 +201,7 @@ namespace CometServer
                     connection.Dispose();
                 }
 
-                Logger.Info("Migration done in {0} ms.", sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Migration done in {sw} ms.", sw.ElapsedMilliseconds);
             }
         }
     }

@@ -32,7 +32,7 @@ namespace CometServer.Services
 
     using CometServer.Configuration;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// The purpose of the <see cref="FileBinaryService"/> is to provide file functions for storage to- and retrieval from the 
@@ -46,11 +46,6 @@ namespace CometServer.Services
         private const int FileStorageDistributionLevels = 6;
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="FileBinaryService"/> class.
         /// </summary>
         public FileBinaryService()
@@ -61,6 +56,11 @@ namespace CometServer.Services
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ILogger"/>
+        /// </summary>
+        public ILogger<FileBinaryService> Logger { get; set; }
 
         /// <summary>
         /// Check whether the file is already persisted.
@@ -115,12 +115,12 @@ namespace CometServer.Services
             var sw = new Stopwatch();
             sw.Start();
             
-            Logger.Debug("Store Binary Data with hash: {0} started", hash);
+            this.Logger.LogDebug("Store Binary Data with hash: {0} started", hash);
 
             string filePath;
             if (this.TryGetFileStoragePath(hash, out filePath))
             {
-                Logger.Debug("The file already exists: {0}/{1}", filePath, hash);
+                this.Logger.LogDebug("The file already exists: {0}/{1}", filePath, hash);
 
                 // return as file already exists
                 sw.Stop();
@@ -130,15 +130,15 @@ namespace CometServer.Services
             // create the path for the file
             var stroragePath = this.GetBinaryStoragePath(hash, true);
             filePath = Path.Combine(stroragePath, hash);
-            Logger.Debug("New File storage path: ", filePath);
+            this.Logger.LogDebug("New File storage path: ", filePath);
 
             using (var fileStream = File.Create(filePath))
             {
                 data.Seek(0, SeekOrigin.Begin);
                 data.CopyTo(fileStream);
             }
-            
-            Logger.Debug("File {0} stored in {1} [ms]", filePath, sw.ElapsedMilliseconds);
+
+            this.Logger.LogDebug("File {0} stored in {1} [ms]", filePath, sw.ElapsedMilliseconds);
         }
 
         /// <summary>

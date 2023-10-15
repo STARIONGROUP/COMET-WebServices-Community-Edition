@@ -36,7 +36,7 @@ namespace CometServer.Services.Operations.SideEffects
     using CDP4Common.Exceptions;
     using CDP4Common.Types;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -51,9 +51,9 @@ namespace CometServer.Services.Operations.SideEffects
     public sealed class ParameterSubscriptionSideEffect : OperationSideEffect<ParameterSubscription>
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<ParameterSubscriptionSideEffect> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IParameterSubscriptionValueSetService"/>
@@ -311,7 +311,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (existingSubscription != null)
             {
-                Logger.Warn("A subscription already exist on parameter {0}.", container.Iid);
+                this.Logger.LogWarning("A subscription already exist on parameter {0}.", container.Iid);
                 return false;
             }
 

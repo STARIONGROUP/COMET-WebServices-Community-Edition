@@ -52,19 +52,18 @@ namespace CometServer.Authentication
         private readonly ILogger<BasicAuthenticatonMiddleware> logger;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BasicAuthMiddleware"/>
+        /// Initializes a new instance of the <see cref="BasicAuthenticatonMiddleware"/>
         /// </summary>
         /// <param name="next">
         /// The <see cref="RequestDelegate"/> of the request pipeline
         /// </param>
-        /// <param name="loggerFactory">
-        /// The <see cref="ILoggerFactory"/> to enable logging
+        /// <param name="logger">
+        /// The <see cref="ILogger{BasicAuthenticatonMiddleware}"/> to enable logging
         /// </param>
-        public BasicAuthenticatonMiddleware(RequestDelegate next, ILoggerFactory loggerFactory)
+        public BasicAuthenticatonMiddleware(RequestDelegate next, ILogger<BasicAuthenticatonMiddleware> logger)
         {
+            this.logger = logger;
             this.next = next;
-
-            this.logger = loggerFactory.CreateLogger<BasicAuthenticatonMiddleware>();
         }
 
         /// <summary>
@@ -84,10 +83,12 @@ namespace CometServer.Authentication
         {
             var sw = Stopwatch.StartNew();
 
-            string username = string.Empty;
+            var username = string.Empty;
 
             try
             {
+                this.logger.LogTrace("starting basic auithentication");
+
                 var authHeader = AuthenticationHeaderValue.Parse(context.Request.Headers["Authorization"]);
                 if (authHeader != null && authHeader.Scheme != "Basic")
                 {
@@ -110,7 +111,6 @@ namespace CometServer.Authentication
 
                     var identity = new ClaimsIdentity(claims, "Basic");
                     var principal = new ClaimsPrincipal(identity);
-                    var authenticationTicket = new AuthenticationTicket(principal, "Basic");
 
                     var authProperties = new AuthenticationProperties
                     {
@@ -123,12 +123,14 @@ namespace CometServer.Authentication
 
                     context.User = principal;
                 }
+
+                this.logger.LogTrace("{username} authenticated using Basic Auth in {sw} [ms]", username, sw.ElapsedMilliseconds);
             }
             catch(Exception ex)
             {
                 // do nothing if invalid auth header
                 // user is not attached to context so request won't have access to secure routes
-                this.logger.LogDebug(ex, $"The {username} could not be authenticated using Basic Authentication" );
+                this.logger.LogWarning(ex, "The {username} could not be authenticated using Basic Authentication", username);
             }
 
             await this.next(context);

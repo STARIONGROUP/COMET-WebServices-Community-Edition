@@ -26,6 +26,7 @@ namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
 
     using CDP4Common.DTO;
@@ -44,6 +45,8 @@ namespace CometServer.Authorization
     using ParameterValueSet = CDP4Common.DTO.ParameterValueSet;
     using ParameterValueSetBase = CDP4Common.DTO.ParameterValueSetBase;
 
+    using Microsoft.Extensions.Logging;
+
     /// <summary>
     /// The obfuscation service obscures properties and children of Element Definitions based on OrganizationalParticipation of
     /// an EngineeringModelSetup
@@ -54,6 +57,11 @@ namespace CometServer.Authorization
         /// A cache of obfuscated things to be used to ensure <see cref="ModelLogEntry"/>s are cleaned up.
         /// </summary>
         private HashSet<Guid> obfuscatedCache;
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ILogger"/>
+        /// </summary>
+        public ILogger<ObfuscationService> Logger { get; set; }
 
         /// <summary>
         /// Obfuscates the entire response
@@ -69,6 +77,9 @@ namespace CometServer.Authorization
                 // if member of the defaultorganization for engineering model, do nothing
                 return;
             }
+
+            var sw = Stopwatch.StartNew();
+            this.Logger.LogTrace("Starting to Obfuscating the response for user:{user}", credentials.UserName);
 
             // gather all parts of the response once
             var elementDefinitions = resourceResponse.OfType<ElementDefinition>().ToList();
@@ -128,6 +139,8 @@ namespace CometServer.Authorization
                     }
                 }
             }
+
+            this.Logger.LogTrace("Response Obfuscated the response for user:{user} in {sw} [ms]", credentials.UserName, sw.ElapsedMilliseconds);
         }
 
         /// <summary>

@@ -34,11 +34,11 @@ namespace CometServer.Services.Supplemental
     using CDP4Common.DTO;
     
     using CDP4Orm.Dao;
-    
+
     using Helpers;
-    
-    using NLog;
-    
+
+    using Microsoft.Extensions.Logging;
+
     using Npgsql;
     
     using Thing = CDP4Common.DTO.Thing;
@@ -49,14 +49,14 @@ namespace CometServer.Services.Supplemental
     public class PermissionInstanceFilterService : IPermissionInstanceFilterService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
         /// The site directory data.
         /// </summary>
         protected const string SiteDirectoryData = "SiteDirectory";
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ILogger"/>
+        /// </summary>
+        public ILogger<PermissionInstanceFilterService> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IMetaInfoProvider"/>
@@ -98,7 +98,7 @@ namespace CometServer.Services.Supplemental
             // do not do anything if no role/permission in things
             if (personRoles.Length == 0 && participantRoles.Length == 0 && personPermissions.Length == 0 && participantPermissions.Length == 0)
             {
-                Logger.Info("Filtering-out permissions took {0} ms (no filtering required)", sw.ElapsedMilliseconds);
+                this.Logger.LogInformation("Filtering-out permissions took {sw} ms (no filtering required)", sw.ElapsedMilliseconds);
                 return things;
             }
 
@@ -129,7 +129,7 @@ namespace CometServer.Services.Supplemental
             }
 
             // filter-out permissions
-            Logger.Info("Filtering-out permissions took {0} ms", sw.ElapsedMilliseconds);
+            this.Logger.LogInformation("Filtering-out permissions took {sw} ms", sw.ElapsedMilliseconds);
 
             return things.Where(
                 x => (x.ClassKind != ClassKind.PersonPermission && x.ClassKind != ClassKind.ParticipantPermission) ||
@@ -177,7 +177,7 @@ namespace CometServer.Services.Supplemental
             }
             catch (Exception e)
             {
-                Logger.Error("Getting participant permission ids failed: {0}", e.Message);
+                this.Logger.LogError("Getting participant permission ids failed: {e.Message}", e.Message);
                 throw;
             }
             finally
@@ -233,7 +233,7 @@ namespace CometServer.Services.Supplemental
             }
             catch (Exception e)
             {
-                Logger.Error("Getting participant permission ids failed: {0}", e.Message);
+                this.Logger.LogError("Getting participant permission ids failed: {e.Message}", e.Message);
                 throw;
             }
             finally

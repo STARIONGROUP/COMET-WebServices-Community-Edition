@@ -56,12 +56,10 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
     using Microsoft.AspNetCore.Routing;
-
-    using NLog;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Npgsql;
-
-    using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
     /// This is an API endpoint class to support interaction with the site directory contained model data
@@ -74,9 +72,9 @@ namespace CometServer.Modules
         private const string TopContainer = "SiteDirectory";
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// A <see cref="ILogger{SiteDirectoryApi}"/> instance
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<SiteDirectoryApi> logger;
 
         /// <summary>
         /// The supported get query parameters.
@@ -107,8 +105,12 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        public SiteDirectoryApi(IAppConfigService appConfigService) : base(appConfigService)
+        /// <param name="loggerFactory">
+        /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
+        /// </param>
+        public SiteDirectoryApi(IAppConfigService appConfigService, ILoggerFactory loggerFactory) : base(appConfigService, loggerFactory)
         {
+            this.logger = loggerFactory == null ? NullLogger<SiteDirectoryApi>.Instance : loggerFactory.CreateLogger<SiteDirectoryApi>();
         }
 
         /// <summary>
@@ -135,7 +137,7 @@ namespace CometServer.Modules
                         }
                         catch (AuthorizationException e)
                         {
-                            Logger.Warn(e, $"The GET REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+                            this.logger.LogWarning(e, $"The GET REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
 
                             res.UpdateWithNotAutherizedSettings();
                             await res.AsJson("not authorized");
@@ -162,7 +164,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        Logger.Warn(e, $"The GET REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+                        this.logger.LogWarning(e, $"The GET REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -188,7 +190,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        Logger.Warn(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+                        this.logger.LogWarning(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -208,6 +210,22 @@ namespace CometServer.Modules
         /// <param name="httpResponse">
         /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
@@ -225,7 +243,7 @@ namespace CometServer.Modules
 
             try
             {
-                Logger.Info(this.ConstructLog(httpRequest,$"{requestToken} database operations started"));
+                this.logger.LogInformation(this.ConstructLog(httpRequest,$"{requestToken} database operations started"));
 
                 // validate (and set) the supplied query parameters
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedGetQueryParameters);
@@ -271,10 +289,10 @@ namespace CometServer.Modules
                 await transaction.CommitAsync();
 
                 sw.Stop();
-                Logger.Info("Database operations {0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Database operations {requestToken} completed in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 sw.Start();
-                Logger.Info("return {0} response started", requestToken);
+                this.logger.LogInformation("return {requestToken} response started", requestToken);
 
                 var version = httpRequest.QueryDataModelVersion();
 
@@ -294,8 +312,8 @@ namespace CometServer.Modules
                 {
                     await transaction.RollbackAsync();
                 }
-
-                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                
+                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -307,8 +325,8 @@ namespace CometServer.Modules
                 {
                     await transaction.RollbackAsync();
                 }
-
-                Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -327,7 +345,7 @@ namespace CometServer.Modules
                 }
 
                 sw.Stop();
-                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Response {requestToken} returned in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 
@@ -339,6 +357,22 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="httpResponse">
         /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
         /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
@@ -356,7 +390,7 @@ namespace CometServer.Modules
 
             try
             {
-                Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
+                this.logger.LogInformation(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
                 var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
@@ -405,7 +439,7 @@ namespace CometServer.Modules
 
                 if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
-                    Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                    this.logger.LogInformation("{requestToken} completed in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                     switch (contentTypeKind)
                     {
@@ -420,7 +454,7 @@ namespace CometServer.Modules
                 }
 
                 // get the latest revision state including revisions that may have happened meanwhile
-                Logger.Info(this.ConstructLog(httpRequest));
+                this.logger.LogInformation(this.ConstructLog(httpRequest));
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
@@ -428,7 +462,7 @@ namespace CometServer.Modules
                 var revisionResponse = revisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
                 await transaction.CommitAsync();
 
-                Logger.Info("{0} completed in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("{requestToken} completed in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 switch (contentTypeKind)
                 {
@@ -447,7 +481,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -459,7 +493,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -471,7 +505,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -483,7 +517,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -501,13 +535,22 @@ namespace CometServer.Modules
                 }
 
                 sw.Stop();
-                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Response {requestToken} returned in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 
         /// <summary>
         /// Get the SiteDirectory containment response from the request path.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>

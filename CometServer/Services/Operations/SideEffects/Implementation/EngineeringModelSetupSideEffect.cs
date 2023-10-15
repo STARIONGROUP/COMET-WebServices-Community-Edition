@@ -36,7 +36,7 @@ namespace CometServer.Services.Operations.SideEffects
     using CometServer.Authorization;
     using CometServer.Services.Authorization;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -54,9 +54,9 @@ namespace CometServer.Services.Operations.SideEffects
         public const int FirstRevision = 1;
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<EngineeringModelSetupSideEffect> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IEngineeringModelService"/>
@@ -146,7 +146,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (!siteDir.DefaultParticipantRole.HasValue)
             {
                 var errorMessage = "The Default Participant Role must be set on the Site Directory";
-                Logger.Error(errorMessage);
+                this.Logger.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
 
@@ -218,10 +218,10 @@ namespace CometServer.Services.Operations.SideEffects
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
-                Logger.Info("Create a Copy of an EngineeringModel");
+                this.Logger.LogInformation("Create a Copy of an EngineeringModel");
                 this.CreateCopyEngineeringModel(thing, container, transaction, partition, securityContext);
 
-                Logger.Info("Create revisions for created EngineeringModel");
+                this.Logger.LogInformation("Create revisions for created EngineeringModel");
                 this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 return;
@@ -296,7 +296,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (!this.EngineeringModelService.CreateConcept(transaction, newEngineeringModelPartition, engineeringModel, container))
             {
                 var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
-                Logger.Error(errorMessage);
+                this.Logger.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
 
@@ -305,7 +305,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (!this.IterationService.CreateConcept(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
             {
                 var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";
-                Logger.Error(errorMessage);
+                this.Logger.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
 
@@ -338,7 +338,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (!this.OptionService.CreateConcept(transaction, partition, newOption, container))
             {
                 var errorMessage = $"There was a problem creating the new Option: {newOption.Iid} contained by Iteration: {container.Iid}";
-                Logger.Error(errorMessage);
+                this.Logger.LogError(errorMessage);
                 throw new InvalidOperationException(errorMessage);
             }
         }

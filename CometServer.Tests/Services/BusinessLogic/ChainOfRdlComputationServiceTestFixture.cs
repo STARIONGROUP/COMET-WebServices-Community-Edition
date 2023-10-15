@@ -33,11 +33,13 @@ namespace CometServer.Tests.Services.BusinessLogic
 
     using CometServer.Services;
 
-    using NUnit.Framework;
+    using Microsoft.Extensions.Logging;
 
     using Moq;
 
     using Npgsql;
+
+    using NUnit.Framework;
 
     /// <summary>
     /// Suite of tests for the <see cref="ChainOfRdlComputationService"/> class
@@ -45,6 +47,8 @@ namespace CometServer.Tests.Services.BusinessLogic
     [TestFixture]
     public class ChainOfRdlComputationServiceTestFixture
     {
+        private Mock<ILogger<ChainOfRdlComputationService>> logger = new Mock<ILogger<ChainOfRdlComputationService>>();
+ 
         private Mock<IModelReferenceDataLibraryDao> modelReferenceDataLibraryDao = new Mock<IModelReferenceDataLibraryDao>();
 
         private Mock<ISiteReferenceDataLibraryDao> siteReferenceDataLibraryDao = new Mock<ISiteReferenceDataLibraryDao>();
@@ -66,6 +70,7 @@ namespace CometServer.Tests.Services.BusinessLogic
                 .Returns(this.siteReferenceDataLibraries);
 
             this.chainOfRdlComputationService = new ChainOfRdlComputationService();
+            this.chainOfRdlComputationService.Logger = this.logger.Object;
             this.chainOfRdlComputationService.ModelReferenceDataLibraryDao = this.modelReferenceDataLibraryDao.Object;
             this.chainOfRdlComputationService.SiteReferenceDataLibraryDao = this.siteReferenceDataLibraryDao.Object;
         }

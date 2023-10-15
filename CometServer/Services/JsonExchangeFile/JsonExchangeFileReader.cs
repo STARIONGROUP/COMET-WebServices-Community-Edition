@@ -36,12 +36,11 @@ namespace CometServer.Services
     using CDP4JsonSerializer;
 
     using CDP4Orm.Dao;
-
     using Ionic.Zip;
-    
-    using Newtonsoft.Json.Linq;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
+
+    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// The purpose of the <see cref="JsonExchangeFileReader"/> is toread data from
@@ -55,10 +54,10 @@ namespace CometServer.Services
         private const string ExchangeFileNameFormat = "{0}.json";
 
         /// <summary>
-        /// The NLog logger
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        
+        public ILogger<JsonExchangeFileReader> Logger { get; set; }
+
         /// <summary>
         /// Gets or sets the (injected) <see cref="IMetaInfoProvider"/>
         /// </summary>
@@ -209,7 +208,7 @@ namespace CometServer.Services
                     var siteDirectoryZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
 
                     var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, siteDirectoryZipEntry, password);
-                    Logger.Info("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+                    this.Logger.LogInformation("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
 
                     var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
                     var processedRdls = new List<string>();
@@ -231,7 +230,7 @@ namespace CometServer.Services
                         var modelRdlZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(modelRdlFilePath));
                         var modelRdlItems = this.ReadInfoFromArchiveEntry(version, modelRdlZipEntry, password);
 
-                        Logger.Info("{0} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
+                        this.Logger.LogInformation("{0} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
                         returned.AddRange(modelRdlItems);
 
                         // load the reference data libraries as per the containment chain
@@ -239,7 +238,7 @@ namespace CometServer.Services
 
                         while (requiredRdl != null)
                         {
-                            Logger.Info("Required Reference Data Library encountered: {0}", requiredRdl);
+                            this.Logger.LogInformation("Required Reference Data Library encountered: {0}", requiredRdl);
 
                             var siteRdlDto =
                                 (SiteReferenceDataLibrary)
@@ -255,7 +254,7 @@ namespace CometServer.Services
 
                                 var siteRdlItems = this.ReadInfoFromArchiveEntry(version, siteRdlZipEntry, password);
 
-                                Logger.Info("{0} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
+                                this.Logger.LogInformation("{0} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
                                 returned.AddRange(siteRdlItems);
 
                                 // register this processedRdl
@@ -267,14 +266,14 @@ namespace CometServer.Services
                         }
                     }
 
-                    Logger.Info("{0} Site Directory items encountered", returned.Count);
+                    this.Logger.LogInformation("{0} Site Directory items encountered", returned.Count);
                     return returned;
                 }
             }
             catch (Exception ex)
             {
                 var msg = $"Failed to load file: {ex.Message}";
-                Logger.Error(msg);
+                this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
             }
@@ -313,14 +312,14 @@ namespace CometServer.Services
                     var engineeringModelZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(engineeringModelFilePath));
                     var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, engineeringModelZipEntry, password);
 
-                    Logger.Info("{0} Engineering Model item(s) encountered", engineeringModelItems.Count);
+                    this.Logger.LogInformation("{0} Engineering Model item(s) encountered", engineeringModelItems.Count);
                     return engineeringModelItems;
                 }
             }
             catch (Exception ex)
             {
                 var msg = string.Format("{0}: {1}", "Failed to load file. Error", ex.Message);
-                Logger.Error(msg);
+                this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
             }
@@ -359,14 +358,14 @@ namespace CometServer.Services
                     var iterationZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(iterationFilePath));
                     var iterationItems = this.ReadInfoFromArchiveEntry(version, iterationZipEntry, password);
 
-                    Logger.Info("{0} Iteration item(s) encountered", iterationItems.Count);
+                    this.Logger.LogInformation("{0} Iteration item(s) encountered", iterationItems.Count);
                     return iterationItems;
                 }
             }
             catch (Exception ex)
             {
                 var msg = string.Format("{0}: {1}", "Failed to load file. Error", ex.Message);
-                Logger.Error(msg);
+                this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
             }
@@ -399,7 +398,7 @@ namespace CometServer.Services
 
                 using (var stream = this.ReadStreamFromArchive(fileZipEntry, archivePassword))
                 {
-                    Logger.Info("Store file binary with hash {0}", hash);
+                    this.Logger.LogInformation("Store file binary with hash {0}", hash);
                     this.FileBinaryService.StoreBinaryData(hash, stream);
                 }
             }
@@ -434,7 +433,7 @@ namespace CometServer.Services
             }
 
             watch.Stop();
-            Logger.Info("JSON Deserializer completed in {0} ", watch.Elapsed);
+            this.Logger.LogInformation("JSON Deserializer completed in {0} ", watch.Elapsed);
             return returned.ToList();
         }
 
@@ -472,13 +471,13 @@ namespace CometServer.Services
             catch (Exception ex)
             {
                 var msg = $"{"Failed to open file. Error"}: {ex.Message}";
-                Logger.Error(msg);
+                this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
             }
 
             watch.Stop();
-            Logger.Info("JSONFile GET completed in {0} ", watch.Elapsed);
+            this.Logger.LogInformation("JSONFile GET completed in {0} ", watch.Elapsed);
 
             return new MemoryStream(extractStream.ToArray());
         }
@@ -529,7 +528,7 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                Logger.Error($"Failed to load file. Error: {ex.Message}");
+                this.Logger.LogError($"Failed to load file. Error: {ex.Message}");
             }
 
             return credentials;
@@ -540,7 +539,7 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="stream">Input stream <see cref="Stream"/></param>
         /// <returns>List of <see cref="MigrationPasswordCredentials"/></returns>
-        private static List<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
+        private List<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
         {
             var credentialsList = new List<MigrationPasswordCredentials>();
 
@@ -568,7 +567,7 @@ namespace CometServer.Services
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Failed to load file. Error: {ex.Message}");
+                    this.Logger.LogError($"Failed to load file. Error: {ex.Message}");
                 }
                 finally
                 {

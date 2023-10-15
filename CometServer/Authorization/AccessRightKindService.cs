@@ -30,6 +30,8 @@ namespace CometServer.Authorization
     using CDP4Common.CommonData;
     using CDP4Common.Helpers;
 
+    using Microsoft.Extensions.Logging;
+
     /// <summary>
     /// The purpose of the <see cref="AccessRightKindService"/> is to provide a service that returns the <see cref="PersonAccessRightKind"/>
     /// and <see cref="ParticipantAccessRightKind"/> for a specific type
@@ -64,6 +66,11 @@ namespace CometServer.Authorization
         public IDefaultPermissionProvider DefaultPermissionProvider { get; set; }
 
         /// <summary>
+        /// The <see cref="ILogger"/> used to log
+        /// </summary>
+        public ILogger<AccessRightKindService> Logger { get; set; }
+
+        /// <summary>
         /// Queries <see cref="PersonAccessRightKind"/> for the supplied object type.
         /// </summary>
         /// <param name="credentials">
@@ -75,6 +82,8 @@ namespace CometServer.Authorization
         /// <returns><see cref="PersonAccessRightKind"/> for the supplied object type.</returns>
         public PersonAccessRightKind QueryPersonAccessRightKind(Credentials credentials, string typeName)
         {
+            this.Logger.LogTrace("Query PersonAccessRightKind {typeName} for {credentials}", typeName, credentials);
+
             // the PersonAccessRightKind already exists in the personAccessRightKindCache, return it
             if (this.personAccessRightKindCache.TryGetValue(typeName, out var personAccessRightKind))
             {
@@ -104,6 +113,8 @@ namespace CometServer.Authorization
         /// <returns><see cref="ParticipantAccessRightKind"/> for the supplied object type.</returns>
         public ParticipantAccessRightKind QueryParticipantAccessRightKind(Credentials credentials, string typeName)
         {
+            this.Logger.LogTrace("Query ParticipantAccessRightKind {typeName} for {credentials}", typeName, credentials);
+
             // the ParticipantAccessRightKind already exists in the participantAccessRightKindCache, return it
             if (this.participantAccessRightKindCache.TryGetValue(typeName, out var participantAccessRightKind))
             {

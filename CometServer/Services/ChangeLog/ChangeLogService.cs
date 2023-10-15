@@ -44,7 +44,7 @@ namespace CometServer.Services.ChangeLog
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -60,9 +60,9 @@ namespace CometServer.Services.ChangeLog
     public class ChangeLogService : IChangeLogService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<ChangeLogService> Logger { get; set; }
 
         /// <summary>
         /// Property names that are excluded from <see cref="CDP4Common.DTO.LogEntryChangelogItem.ChangeDescription"/> text.
@@ -186,7 +186,7 @@ namespace CometServer.Services.ChangeLog
         public bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things)
         {
             var sw = Stopwatch.StartNew();
-            Logger.Info("Starting to append changelog data");
+            this.Logger.LogInformation("Starting to append changelog data");
             
             var isCachedDtoReadEnabled = this.TransactionManager.IsCachedDtoReadEnabled(transaction);
 
@@ -328,7 +328,7 @@ namespace CometServer.Services.ChangeLog
             }
             catch (Exception ex)
             {
-                Logger.Error(ex);
+                this.Logger.LogError(ex, "operation failed");
             }
             finally
             {
@@ -345,7 +345,7 @@ namespace CometServer.Services.ChangeLog
 
             sw.Stop();
 
-            Logger.Info($"Finished appending to changelog data in {sw.ElapsedMilliseconds} [ms]");
+            this.Logger.LogInformation($"Finished appending to changelog data in {sw.ElapsedMilliseconds} [ms]");
 
             return result;
         }
@@ -1129,7 +1129,7 @@ namespace CometServer.Services.ChangeLog
             catch (Exception ex)
             {
                 // Ignore
-                Logger.Error(ex);
+                this.Logger.LogError(ex, "operation failed");
             }
 
             return null;
@@ -1181,8 +1181,7 @@ namespace CometServer.Services.ChangeLog
             }
             catch (Exception ex)
             {
-                // Ignore
-                Logger.Error(ex);
+                this.Logger.LogError(ex, "operation failed");
             }
 
             return null;

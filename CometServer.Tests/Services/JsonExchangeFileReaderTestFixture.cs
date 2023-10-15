@@ -30,15 +30,21 @@ namespace CometServer.Tests.Services
     using CDP4JsonSerializer;
 
     using CometServer.Services;
-    
+
+    using Microsoft.Extensions.Logging;
+
+    using Moq;
+
     using NUnit.Framework;
 
     /// <summary>
-    /// Suite of tests for the <see cref="ExchangeFileProcessor"/> class
+    /// Suite of tests for the <see cref="JsonExchangeFileReader"/> class
     /// </summary>
     [TestFixture]
     public class JsonExchangeFileReaderTestFixture
     {
+        private Mock<ILogger<JsonExchangeFileReader>> logger;
+
         private MetaInfoProvider metaInfoProvider;
 
         private JsonExchangeFileReader jsonExchangeFileReader;
@@ -52,6 +58,8 @@ namespace CometServer.Tests.Services
         [SetUp]
         public void SetUp()
         {
+            this.logger = new Mock<ILogger<JsonExchangeFileReader>>();
+
             this.metaInfoProvider = new MetaInfoProvider();
 
             this.jsonSerializer = new Cdp4JsonSerializer();
@@ -60,7 +68,8 @@ namespace CometServer.Tests.Services
             {
                 MetaInfoProvider = this.metaInfoProvider,
                 FileBinaryService =  this.fileBinaryService,
-                JsonSerializer = this.jsonSerializer
+                JsonSerializer = this.jsonSerializer,
+                Logger = this.logger.Object
             };
 
             this.testFilePath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Data", "Data.zip");

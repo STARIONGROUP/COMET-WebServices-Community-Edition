@@ -52,8 +52,8 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Http.Extensions;
     using Microsoft.AspNetCore.Routing;
-
-    using NLog;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     using Npgsql;
 
@@ -68,15 +68,10 @@ namespace CometServer.Modules
         private const string TopContainer = "SiteDirectory";
 
         /// <summary>
-        /// The site reference data library type name.
-        /// </summary>
-        private const string EngineeringModelZipFileName = "filename=AnnexC3ModelExport.zip";
-
-        /// <summary>
         /// A <see cref="NLog.Logger"/> instance
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-        
+        private readonly ILogger<ExchangeFileExportApi> logger;
+
         /// <summary>
         /// The supported post query parameter.
         /// </summary>
@@ -88,8 +83,15 @@ namespace CometServer.Modules
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileExportApi"/> class
         /// </summary>
-        public ExchangeFileExportApi(IAppConfigService appConfigService) : base(appConfigService)
+        /// <param name="appConfigService">
+        /// The (injected) <see cref="IAppConfigService"/> used to read application configuration
+        /// </param>
+        /// <param name="loggerFactory">
+        /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
+        /// </param>
+        public ExchangeFileExportApi(IAppConfigService appConfigService, ILoggerFactory loggerFactory) : base(appConfigService, loggerFactory)
         {
+            this.logger = loggerFactory == null ? NullLogger<ExchangeFileExportApi>.Instance : loggerFactory.CreateLogger<ExchangeFileExportApi>();
         }
 
         /// <summary>
@@ -116,7 +118,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        Logger.Warn(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+                        this.logger.LogWarning(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -136,6 +138,22 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="httpResponse">
         /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
         /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
@@ -161,7 +179,7 @@ namespace CometServer.Modules
 
             try
             {
-                Logger.Info(this.ConstructLog(httpRequest, $"{requestToken} started"));
+                this.logger.LogInformation(this.ConstructLog(httpRequest, $"{requestToken} started"));
 
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
                 var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
@@ -199,8 +217,8 @@ namespace CometServer.Modules
                 {
                     await transaction.RollbackAsync();
                 }
-
-                Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
@@ -213,7 +231,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                Logger.Debug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -226,7 +244,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                Logger.Error(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -250,13 +268,17 @@ namespace CometServer.Modules
                 }
 
                 sw.Stop();
-                Logger.Info("Response {0} returned in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Response {requestToken} returned in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
         }
 
         /// <summary>
         /// Queries the <see cref="EngineeringModelSetup"/>s that are to be exported on the basis of the provided unique identifiers
         /// </summary>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
         /// <param name="iids">
         /// The unique identifiers of the <see cref="EngineeringModelSetup"/>s that are to be exported
         /// </param>

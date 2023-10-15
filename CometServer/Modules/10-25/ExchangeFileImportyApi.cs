@@ -38,7 +38,6 @@ namespace CometServer.Modules
     using Carter.ModelBinding;
     using Carter.Response;
 
-    using CDP4Common.CommonData;
     using CDP4Common.DTO;
     using CDP4Common.Helpers;
 
@@ -57,14 +56,9 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
-
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
-
-    using IServiceProvider = CometServer.Services.IServiceProvider;
-    using Thing = CDP4Common.DTO.Thing;
-    using TopContainer = CDP4Common.DTO.TopContainer;
 
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
@@ -83,9 +77,9 @@ namespace CometServer.Modules
         private const int IterationNumberSequenceInitialization = 1;
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<ExchangeFileImportyApi> logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/>
@@ -93,9 +87,13 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        public ExchangeFileImportyApi(IAppConfigService appConfigService)
+        /// <param name="logger">
+        /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
+        /// </param>
+        public ExchangeFileImportyApi(IAppConfigService appConfigService, ILogger<ExchangeFileImportyApi> logger)
         {
             this.AppConfigService = appConfigService;
+            this.logger = logger;
         }
 
         /// <summary>
@@ -112,12 +110,12 @@ namespace CometServer.Modules
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/Data/Exchange", async (HttpRequest req, HttpResponse res,
-                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) => {
+                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) => {
                 await this.SeedDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
             });
 
             app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res,
-                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) => {
+                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) => {
                 await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
             });
 
@@ -129,9 +127,6 @@ namespace CometServer.Modules
         /// <summary>
         /// Restore the data store.
         /// </summary>
-        /// <param name="request">
-        /// The <see cref="HttpRequest"/> that is being handled
-        /// </param>
         /// <param name="response">
         /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
@@ -145,7 +140,7 @@ namespace CometServer.Modules
         {
             if (!this.AppConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
-                Logger.Info("Data restore API invoked but it was disabled from configuration, cancel further processing...");
+                this.logger.LogInformation("Data restore API invoked but it was disabled from configuration, cancel further processing...");
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("restore is not allowed");
@@ -153,21 +148,21 @@ namespace CometServer.Modules
 
             try
             {
-                Logger.Info("Starting data store rollback");
+                this.logger.LogInformation("Starting data store rollback");
                 dataStoreController.RestoreDataStore();
 
                 // TODO: check what to do with this in origianl CDP4 code
                 // reset the credential cache as the underlying datastore was reset
                 //this.WebServiceAuthentication.ResetCredentialCache();
 
-                Logger.Info("Finished data store rollback");
+                this.logger.LogInformation("Finished data store rollback");
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("DataStore restored");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Error occured during data store rollback");
+                this.logger.LogError(ex, "Error occured during data store rollback");
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("DataStore restored failed");
@@ -204,20 +199,26 @@ namespace CometServer.Modules
         /// <summary>
         /// Asynchronously import the data store.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <returns>
         /// The <see cref="Task{Response}"/>.
         /// </returns>
-        internal async Task ImportDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
+        internal async Task ImportDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
         {
             if (!this.AppConfigService.AppConfig.Backtier.IsDbImportEnabled)
             {
-                Logger.Info("Data store import API invoked but it was disabled from configuration, cancel further processing...");
+                this.logger.LogInformation("Data store import API invoked but it was disabled from configuration, cancel further processing...");
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("Data store import is not allowed");
             }
 
-            Logger.Info("Starting data store importing");
+            this.logger.LogInformation("Starting data store importing");
 
             var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
@@ -241,7 +242,7 @@ namespace CometServer.Modules
             catch (Exception ex)
             {
                 // swallow exception but log it
-                Logger.Error(ex, "Unable to remove file {0}", temporarysSeedFilePath);
+                this.logger.LogError(ex, "Unable to remove file {temporarysSeedFilePath}", temporarysSeedFilePath);
             }
 
             try
@@ -250,14 +251,14 @@ namespace CometServer.Modules
                 // reset the credential cache as the underlying datastore was reset
                 //this.WebServiceAuthentication.ResetCredentialCache();
 
-                Logger.Info("Finished the data store import");
+                this.logger.LogInformation("Finished the data store import");
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("Datastore imported");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "Unable to import the datastore");
+                this.logger.LogError(ex, "Unable to import the datastore");
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("Data store import failed");
@@ -273,20 +274,26 @@ namespace CometServer.Modules
         /// <param name="response">
         /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task SeedDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
+        internal async Task SeedDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
             if (!this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled)
             {
-                Logger.Info("Data store seed API invoked but it was disabled from configuration, cancel further processing...");
+                this.logger.LogInformation("Data store seed API invoked but it was disabled from configuration, cancel further processing...");
                 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("seed is not allowed");
             }
 
-            Logger.Info("Starting data store seeding");
+            this.logger.LogInformation("Starting data store seeding");
 
             var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
@@ -310,7 +317,7 @@ namespace CometServer.Modules
             catch (Exception ex)
             {
                 // swallow exception but log it
-                Logger.Error(ex, "Unable to remove file");
+                this.logger.LogError(ex, "Unable to remove file");
             }
 
             try
@@ -326,14 +333,14 @@ namespace CometServer.Modules
                 // reset the credential cache as the underlying datastore was reset
                 //this.WebServiceAuthentication.ResetCredentialCache();
 
-                Logger.Info("Finished the data store seed");
+                this.logger.LogInformation("Finished the data store seed");
 
                 response.StatusCode = (int) HttpStatusCode.OK;
                 await response.AsJson("Datastore seeded");
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "DataStore restored failed");
+                this.logger.LogError(ex, "DataStore restored failed");
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("DataStore restored failed");
@@ -343,6 +350,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Parse the url segments and return the data as serialized JSON
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <param name="fileName">
         /// The exchange file name.
         /// </param>
@@ -355,7 +368,7 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful, false if not
         /// </returns>
-        private bool InsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
+        private bool InsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -366,7 +379,7 @@ namespace CometServer.Modules
                 if (seed)
                 {
                     // clear database schemas if seeding
-                    Logger.Info("Start clearing the current data store");
+                    this.logger.LogInformation("Start clearing the current data store");
                     transaction = transactionManager.SetupTransaction(ref connection, null);
                     transactionManager.SetFullAccessState(true);
                     this.ClearDatabaseSchemas(transaction);
@@ -377,7 +390,7 @@ namespace CometServer.Modules
                 }
 
                 sw.Start();
-                Logger.Info("Start seeding the data");
+                this.logger.LogInformation("Start seeding the data");
 
                 // use new transaction to for inserting the data
                 transaction = transactionManager.SetupTransaction(ref connection, null);
@@ -402,7 +415,7 @@ namespace CometServer.Modules
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
                 if (topContainer == null)
                 {
-                    Logger.Error("No Topcontainer item encountered");
+                    this.logger.LogError("No Topcontainer item encountered");
                     throw new NoNullAllowedException("Topcontainer item needs to be present in the dataset");
                 }
 
@@ -411,7 +424,7 @@ namespace CometServer.Modules
                 // setup Site Directory schema
                 using (var siteDirCommand = new NpgsqlCommand())
                 {
-                    Logger.Info("Start Site Directory structure");
+                    this.logger.LogInformation("Start Site Directory structure");
                     siteDirCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.SiteDirectoryDefinition.sql");
 
                     siteDirCommand.Connection = transaction.Connection;
@@ -516,7 +529,7 @@ namespace CometServer.Modules
 
                             // should return one iteration
                             var iteration =
-                                iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
+                                iterationItems.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.Iteration) as Iteration;
                             if (iteration == null || !iterationService.CreateConcept(
                                     transaction,
                                     dataPartition,
@@ -541,7 +554,7 @@ namespace CometServer.Modules
 
                 transaction.Commit();
                 sw.Stop();
-                Logger.Info("Finished seeding the data store in {0} [ms]", sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Finished seeding the data store in {sw} [ms]", sw.ElapsedMilliseconds);
 
                 return result;
             }
@@ -552,7 +565,7 @@ namespace CometServer.Modules
                     transaction.Rollback();
                 }
 
-                Logger.Error(ex, "Error occured during data store seeding");
+                this.logger.LogError(ex, "Error occured during data store seeding");
 
                 return false;
             }
@@ -574,6 +587,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Import data and use Upsert flow to add/update data. Return the data as serialized JSON
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <param name="fileName">
         /// The exchange file name.
         /// </param>
@@ -583,7 +602,7 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful
         /// </returns>
-        private bool UpsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null)
+        private bool UpsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -593,7 +612,7 @@ namespace CometServer.Modules
                 var sw = new Stopwatch();
 
                 // clear database schemas if seeding
-                Logger.Info("Start clearing the current data store");
+                this.logger.LogInformation("Start clearing the current data store");
                 transaction = transactionManager.SetupTransaction(ref connection, null);
                 transactionManager.SetFullAccessState(true);
                 this.ClearDatabaseSchemas(transaction);
@@ -603,7 +622,7 @@ namespace CometServer.Modules
                 connection.ReloadTypes();
 
                 sw.Start();
-                Logger.Info("Start importing the data");
+                this.logger.LogInformation("Start importing the data");
 
                 // use new transaction to for inserting the data
                 transaction = transactionManager.SetupTransaction(ref connection, null);
@@ -629,7 +648,7 @@ namespace CometServer.Modules
 
                 if (topContainer == null)
                 {
-                    Logger.Error("No Topcontainer item encountered");
+                    this.logger.LogError("No Topcontainer item encountered");
                     throw new NoNullAllowedException("Topcontainer item needs to be present in the dataset");
                 }
 
@@ -638,7 +657,7 @@ namespace CometServer.Modules
                 // setup Site Directory schema
                 using (var siteDirCommand = new NpgsqlCommand())
                 {
-                    Logger.Info("Start Site Directory structure");
+                    this.logger.LogInformation("Start Site Directory structure");
                     siteDirCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.SiteDirectoryDefinition.sql");
 
                     siteDirCommand.Connection = transaction.Connection;
@@ -758,7 +777,7 @@ namespace CometServer.Modules
                             // should return one iteration
                             // for the every model EngineeringModel schema ends with the same ID as Iteration schema
                             var iteration =
-                                iterationItems.SingleOrDefault(x => x.ClassKind == ClassKind.Iteration) as Iteration;
+                                iterationItems.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.Iteration) as Iteration;
 
                             iterationInsertResult = false;
 
@@ -779,7 +798,7 @@ namespace CometServer.Modules
                                 {
                                     // Compute differences between iterations
                                     var thingsToBeDeleted = previousIterationItems
-                                        .Where(thing => thing.ClassKind != ClassKind.Iteration &&
+                                        .Where(thing => thing.ClassKind != CDP4Common.CommonData.ClassKind.Iteration &&
                                                         !iterationItems.Select(id => id.Iid).Contains(thing.Iid)).ToList();
 
                                     // Remove differences between iterations
@@ -834,7 +853,7 @@ namespace CometServer.Modules
                 transaction.Commit();
 
                 sw.Stop();
-                Logger.Info("Finished importing the data store in {0} [ms]", sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Finished importing the data store in {sw} [ms]", sw.ElapsedMilliseconds);
 
                 return result;
             }
@@ -845,7 +864,7 @@ namespace CometServer.Modules
                     transaction.Rollback();
                 }
 
-                Logger.Error(ex, "Error occured during data store import");
+                this.logger.LogError(ex, "Error occured during data store import");
 
                 return false;
             }
@@ -867,6 +886,9 @@ namespace CometServer.Modules
         /// <summary>
         /// Persist the file binary data in the reference zip archive.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
         /// <param name="fileName">
         /// The file path of the zip archive being processed.
         /// </param>
@@ -954,7 +976,7 @@ namespace CometServer.Modules
         /// </summary>
         private void DropDataStoreAndPrepareNew(IDataStoreController dataStoreController)
         {
-            Logger.Info("start dropping existing data stores");
+            this.logger.LogInformation("start dropping existing data stores");
 
             var backtierConfig = this.AppConfigService.AppConfig.Backtier;
 
@@ -967,7 +989,7 @@ namespace CometServer.Modules
                 // Drop the existing database
                 using (var cmd = new NpgsqlCommand())
                 {
-                    Logger.Debug("Drop the data store");
+                    this.logger.LogDebug("Drop the data store");
 
                     dataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
 
@@ -981,7 +1003,7 @@ namespace CometServer.Modules
                 // Drop the existing restore database
                 using (var cmd = new NpgsqlCommand())
                 {
-                    Logger.Debug("Drop the restore data store");
+                    this.logger.LogDebug("Drop the restore data store");
 
                     cmd.Connection = connection;
                     
@@ -993,7 +1015,7 @@ namespace CometServer.Modules
                 // Create a new database
                 using (var cmd = new NpgsqlCommand())
                 {
-                    Logger.Debug("Create the data store");
+                    this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
 
                     cmd.CommandText = $"CREATE DATABASE {backtierConfig.Database} WITH OWNER = {backtierConfig.UserName} TEMPLATE = {backtierConfig.DatabaseManage} ENCODING = 'UTF8';";
@@ -1008,6 +1030,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Create revision history for SiteDirectory and retrieve first person Id
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <param name="personId">
         /// First person Id <see cref="Person" />
         /// </param>
@@ -1036,12 +1064,12 @@ namespace CometServer.Modules
             catch (NpgsqlException ex)
             {
                 transaction?.Rollback();
-                Logger.Error(ex, "Error occured during revision history creation");
+                this.logger.LogError(ex, "Error occured during revision history creation");
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
-                Logger.Error(ex, "Error occured during revision history creation");
+                this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
@@ -1053,6 +1081,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Create revision history for each EngineeringModel in the database.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <param name="revisionNumber">
         /// The revision number we want to create revision records for
         /// </param>
@@ -1085,12 +1119,12 @@ namespace CometServer.Modules
             catch (NpgsqlException ex)
             {
                 transaction?.Rollback();
-                Logger.Error(ex, "Error occured during revision history creation");
+                this.logger.LogError(ex, "Error occured during revision history creation");
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
-                Logger.Error(ex, "Error occured during revision history creation");
+                this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
@@ -1102,6 +1136,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Create revision history for each entry in the database.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         private void CreateRevisionHistoryForEachEntry(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
             NpgsqlConnection connection = null;
@@ -1157,12 +1197,12 @@ namespace CometServer.Modules
             catch (NpgsqlException ex)
             {
                 transaction?.Rollback();
-                Logger.Error(ex, "Error occured during revision history creation");
+                this.logger.LogError(ex, "Error occured during revision history creation");
             }
             catch (Exception ex)
             {
                 transaction?.Rollback();
-                Logger.Error(ex, "Error occured during revision history creation");
+                this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
@@ -1209,17 +1249,17 @@ namespace CometServer.Modules
                 participantRole.ParticipantPermission,
                 new RequestSecurityContext { ContainerReadAllowed = true }).OfType<ParticipantPermission>().ToList();
 
-            foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
+            foreach (var classKind in Enum.GetValues(typeof(CDP4Common.CommonData.ClassKind)).Cast<CDP4Common.CommonData.ClassKind>())
             {
                 var defaultPermission = defaultPermissionProvider.GetDefaultParticipantPermission(classKind);
 
-                if (defaultPermission == ParticipantAccessRightKind.NONE)
+                if (defaultPermission == CDP4Common.CommonData.ParticipantAccessRightKind.NONE)
                 {
                     var participantPermission = participantPermissions.Find(x => x.ObjectClass == classKind);
 
                     if (participantPermission == null)
                     {
-                        Logger.Debug("Create ParticipantPermission for class {0} for ParticipantRole {1}", classKind, participantRole.Iid);
+                        this.logger.LogDebug("Create ParticipantPermission for class {classKind} for ParticipantRole {participantRole}", classKind, participantRole.Iid);
 
                         var permission = new ParticipantPermission(Guid.NewGuid(), 0)
                         {
@@ -1272,17 +1312,17 @@ namespace CometServer.Modules
                 personRole.PersonPermission,
                 new RequestSecurityContext { ContainerReadAllowed = true }).OfType<PersonPermission>().ToList();
 
-            foreach (var classKind in Enum.GetValues(typeof(ClassKind)).Cast<ClassKind>())
+            foreach (var classKind in Enum.GetValues(typeof(CDP4Common.CommonData.ClassKind)).Cast<CDP4Common.CommonData.ClassKind>())
             {
                 var defaultPermission = defaultPermissionProvider.GetDefaultPersonPermission(classKind);
 
-                if (defaultPermission == PersonAccessRightKind.NONE)
+                if (defaultPermission == CDP4Common.CommonData.PersonAccessRightKind.NONE)
                 {
                     var personPermission = personPermissions.Find(x => x.ObjectClass == classKind);
 
                     if (personPermission == null)
                     {
-                        Logger.Debug("Create PersonPermission for class {0} for PersonRole {1}", classKind, personRole.Iid);
+                        this.logger.LogDebug("Create PersonPermission for class {classKind} for PersonRole {personRole}", classKind, personRole.Iid);
 
                         var permission = new PersonPermission(Guid.NewGuid(), 0)
                         {

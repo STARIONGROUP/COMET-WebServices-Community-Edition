@@ -28,6 +28,9 @@ namespace CDP4Orm.MigrationEngine
     using System.Linq;
     using System.Reflection;
 
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
+
     using Npgsql;
 
     /// <summary>
@@ -39,6 +42,29 @@ namespace CDP4Orm.MigrationEngine
         /// The namespace of the migration scripts
         /// </summary>
         public const string MIGRATION_SCRIPT_NAMESPACE = "CDP4Orm.MigrationScript.";
+
+        /// <summary>
+        /// The (injected) <see cref="ILoggerFactory"/> used to created typed loggers
+        /// </summary>
+        private readonly ILoggerFactory loggerFactory;
+
+        /// <summary>
+        /// The <see cref="ILogger{MigrationService}"/> used to log
+        /// </summary>
+        private readonly ILogger<MigrationService> logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MigrationService"/> class.
+        /// </summary>
+        /// <param name="loggerFactory">
+        /// The (injected) <see cref="ILoggerFactory"/> used to created typed loggers
+        /// </param>
+        public MigrationService(ILoggerFactory loggerFactory)
+        {
+            this.loggerFactory = loggerFactory;
+
+            this.logger = this.loggerFactory == null ? NullLogger<MigrationService>.Instance : this.loggerFactory.CreateLogger<MigrationService>();
+        }
 
         /// <summary>
         /// Aplply the full set of migrations on a partition
@@ -59,7 +85,7 @@ namespace CDP4Orm.MigrationEngine
         /// Gets all migration scripts
         /// </summary>
         /// <returns>The List of <see cref="MigrationBase"/></returns>
-        public static IReadOnlyList<MigrationBase> GetMigrations(bool isStartup)
+        public IReadOnlyList<MigrationBase> GetMigrations(bool isStartup)
         {
             var assembly = Assembly.GetExecutingAssembly();
             var resourceFullNames = assembly.GetManifestResourceNames().Where(x => x.StartsWith(MIGRATION_SCRIPT_NAMESPACE) && x.EndsWith(".sql"));
@@ -78,10 +104,12 @@ namespace CDP4Orm.MigrationEngine
                 switch (migrationMetaData.MigrationScriptKind)
                 {
                     case CDP4Orm.MigrationEngine.MigrationScriptKind.NonThingTableMigrationTemplate:
-                        migration = new NonThingTableMigration(migrationMetaData);
+                        var nonThingTableMigrationLogger = this.loggerFactory == null ? NullLogger<NonThingTableMigration>.Instance : this.loggerFactory.CreateLogger<NonThingTableMigration>();
+                        migration = new NonThingTableMigration(migrationMetaData, nonThingTableMigrationLogger);
                         break;
                     default:
-                        migration = new GenericMigration(migrationMetaData);
+                        var genericMigrationLogger = this.loggerFactory == null ? NullLogger<GenericMigration>.Instance : this.loggerFactory.CreateLogger<GenericMigration>();
+                        migration = new GenericMigration(migrationMetaData, genericMigrationLogger);
                         break;
                 }
 

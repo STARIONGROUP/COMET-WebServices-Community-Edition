@@ -37,6 +37,8 @@ namespace CometServer.Tests.SideEffects
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
 
+    using Microsoft.Extensions.Logging;
+
     using Moq;
 
     using Npgsql;
@@ -49,9 +51,23 @@ namespace CometServer.Tests.SideEffects
     [TestFixture]
     public class ParameterSubscriptionSideEffectTestFixture
     {
+        private Mock<ILogger<ParameterSubscriptionSideEffect>> logger;
+        private Mock<ISecurityContext> securityContext;
+        private Mock<IParameterSubscriptionValueSetService> parameterSubscriptionValueSetService;
+        private Mock<IParameterValueSetService> parameterValueSetService;
+        private Mock<IParameterOverrideValueSetService> parameterValueSetOverrideService;
+        private Mock<IParameterSubscriptionService> parameterSubscriptionService;
+        private Mock<IParameterService> parameterService;
+        private Mock<IParameterOverrideService> parameterOverrideService;
+        private Mock<IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
+
+        private NpgsqlTransaction npgsqlTransaction;
+        private ParameterSubscriptionSideEffect sideEffect;
+
         [SetUp]
         public void Setup()
         {
+            this.logger = new Mock<ILogger<ParameterSubscriptionSideEffect>>();
             this.securityContext = new Mock<ISecurityContext>();
             this.npgsqlTransaction = null;
             this.parameterValueSetService = new Mock<IParameterValueSetService>();
@@ -82,22 +98,11 @@ namespace CometServer.Tests.SideEffects
                 ParameterSubscriptionService = this.parameterSubscriptionService.Object,
                 ParameterService = this.parameterService.Object,
                 ParameterOverrideService = this.parameterOverrideService.Object,
-                OrganizationalParticipationResolverService = this.organizationalParticipationResolverService.Object
+                OrganizationalParticipationResolverService = this.organizationalParticipationResolverService.Object,
+                Logger = this.logger.Object
             };
         }
-
-        private Mock<ISecurityContext> securityContext;
-        private Mock<IParameterSubscriptionValueSetService> parameterSubscriptionValueSetService;
-        private Mock<IParameterValueSetService> parameterValueSetService;
-        private Mock<IParameterOverrideValueSetService> parameterValueSetOverrideService;
-        private Mock<IParameterSubscriptionService> parameterSubscriptionService;
-        private Mock<IParameterService> parameterService;
-        private Mock<IParameterOverrideService> parameterOverrideService;
-        private Mock<IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
-
-        private NpgsqlTransaction npgsqlTransaction;
-        private ParameterSubscriptionSideEffect sideEffect;
-
+        
         [Test]
         public void CheckThatMultipleSubscriptionCannotBeCreatedForSameOwner()
         {

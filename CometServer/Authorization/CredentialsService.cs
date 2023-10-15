@@ -39,7 +39,7 @@ namespace CometServer.Authorization
     using CometServer.Exceptions;
     using CometServer.Services;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -51,9 +51,9 @@ namespace CometServer.Authorization
     public class CredentialsService : ICredentialsService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<CredentialsService> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="IEngineeringModelSetupDao"/>
@@ -142,19 +142,19 @@ namespace CometServer.Authorization
             
             if (person == null)
             {
-                Logger.Trace("The user {0} does not exist and cannot be resolved", username);
+                this.Logger.LogTrace("The user {username} does not exist and cannot be resolved", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
             if (!person.IsActive)
             {
-                Logger.Trace("The user {0} is not Active and cannot be authorized", username);
+                this.Logger.LogTrace("The user {username} is not Active and cannot be authorized", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
             if (person.IsDeprecated)
             {
-                Logger.Trace("The user {0} is Deprecated and cannot be authorized", username);
+                this.Logger.LogTrace("The user {username} is Deprecated and cannot be authorized", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
@@ -290,7 +290,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the participant from the backtier");
+                this.Logger.LogError(ex, "There was an error while retrieving the participant for person {person} from the backtier", person.UserName);
                 return null;
             }
         }
@@ -315,7 +315,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the selected domain from the backtier");
+                this.Logger.LogError(ex, "There was an error while retrieving the selected domain from the backtier");
                 return null;
             }
         }
@@ -344,7 +344,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the participant permissions from the backtier");
+                this.Logger.LogError(ex, "There was an error while retrieving the participant permissions from the backtier");
                 return null;
             }
         }
@@ -364,7 +364,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the person's organizational participation");
+                this.Logger.LogError(ex, "There was an error while retrieving the person's organizational participation");
                 return null;
             }
         }
@@ -392,7 +392,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the person permissions from the backtier");
+                this.Logger.LogError(ex, "There was an error while retrieving the person permissions from the backtier");
                 return null;
             }
         }
@@ -418,7 +418,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the person permissions from the backtier");
+                this.Logger.LogError(ex, "There was an error while retrieving the person permissions from the backtier");
                 return null;
             }
         }
@@ -448,7 +448,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, LoggerUtils.GetLogMessage(person, string.Empty, false, "There was an error while retrieving the person roles from the backtier"));
+                this.Logger.LogError(ex, LoggerUtils.GetLogMessage(person, string.Empty, false, "There was an error while retrieving the person roles from the backtier"));
                 return null;
             }
         }
@@ -473,7 +473,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                Logger.Error(ex, "There was an error while retrieving the participant role from the backtier");
+                this.Logger.LogError(ex, "There was an error while retrieving the participant role from the backtier");
                 return null;
             }
         }

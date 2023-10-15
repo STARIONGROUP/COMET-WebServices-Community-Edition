@@ -35,7 +35,7 @@ namespace CometServer.Authentication
     using CometServer.Configuration;
     using CometServer.Services;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -46,9 +46,9 @@ namespace CometServer.Authentication
     public class AuthenticationPersonAuthenticator : IAuthenticationPersonAuthenticator
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// The <see cref="ILogger"/> used to log
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<AuthenticationPersonAuthenticator> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the authentication plugin injector that holds all the authentication plugins.
@@ -112,7 +112,7 @@ namespace CometServer.Authentication
             {
                 transaction?.RollbackAsync();
 
-                Logger.Error(ex, "There was an error while authenticating the user credentials");
+                this.Logger.LogError(ex, "There was an error while authenticating the user credentials");
                 return null;
             }
             finally

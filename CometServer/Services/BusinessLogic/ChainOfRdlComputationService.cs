@@ -32,7 +32,7 @@ namespace CometServer.Services
 
     using CDP4Orm.Dao;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -46,9 +46,9 @@ namespace CometServer.Services
     public class ChainOfRdlComputationService : IChainOfRdlComputationService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<ChainOfRdlComputationService> Logger { get; set; }
 
         /// <summary>
         /// The site directory data.
@@ -93,7 +93,7 @@ namespace CometServer.Services
         {
             if (this.cachedModelReferenceDataLibraries == null || !this.cachedModelReferenceDataLibraries.Any())
             {
-                Logger.Debug("Retrieving the ModelReferenceDataLibrary objects from the cached tables in the datastore");
+                this.Logger.LogDebug("Retrieving the ModelReferenceDataLibrary objects from the cached tables in the datastore");
 
                 var modelReferenceDataLibraries = this.ModelReferenceDataLibraryDao.Read(transaction, SiteDirectoryPartition, null, true);
 
@@ -104,7 +104,7 @@ namespace CometServer.Services
 
             if (this.cachedSiteReferenceDataLibraries == null || !this.cachedSiteReferenceDataLibraries.Any())
             {
-                Logger.Debug("Retrieving the SiteReferenceDataLibrary objects from the cached tables in the datastore");
+                this.Logger.LogDebug("Retrieving the SiteReferenceDataLibrary objects from the cached tables in the datastore");
 
                 var siteReferenceDataLibraries = this.SiteReferenceDataLibraryDao.Read(transaction, SiteDirectoryPartition, null, true);
 
@@ -119,21 +119,21 @@ namespace CometServer.Services
             {
                 if (engineeringModelSetup.RequiredRdl.Count > 1)
                 {
-                    Logger.Warn($"The EngineeringModelSetup { engineeringModelSetup.Iid } has more than 1 required rdl, this is not allowed, this EngineeringModelSetup is ignored");
+                    this.Logger.LogWarning($"The EngineeringModelSetup { engineeringModelSetup.Iid } has more than 1 required rdl, this is not allowed, this EngineeringModelSetup is ignored");
                     continue;
                 }
 
                 var modelReferenceDataLibararyIid = engineeringModelSetup.RequiredRdl.SingleOrDefault();
                 if (modelReferenceDataLibararyIid == Guid.Empty)
                 {
-                    Logger.Warn($"The EngineeringModelSetup { engineeringModelSetup.Iid } does not have a required rdl, this is not allowed, this EngineeringModelSetup is ignored");
+                    this.Logger.LogWarning($"The EngineeringModelSetup { engineeringModelSetup.Iid } does not have a required rdl, this is not allowed, this EngineeringModelSetup is ignored");
                     continue;
                 }
 
                 var modelReferenceDataLibarary = this.cachedModelReferenceDataLibraries.SingleOrDefault(x => x.Iid == modelReferenceDataLibararyIid);
                 if (modelReferenceDataLibarary == null)
-                {
-                    Logger.Warn($"The ModelReferenceDataLibarary { modelReferenceDataLibararyIid } could not be found, there is a fault in the data, the EngineeringModelSetup {engineeringModelSetup.Iid} is ignored");
+                { 
+                    this.Logger.LogWarning($"The ModelReferenceDataLibarary { modelReferenceDataLibararyIid } could not be found, there is a fault in the data, the EngineeringModelSetup {engineeringModelSetup.Iid} is ignored");
                     continue;
                 }
                 else

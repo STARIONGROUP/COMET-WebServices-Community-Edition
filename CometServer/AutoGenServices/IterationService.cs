@@ -32,6 +32,9 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Orm.Dao;
     using CometServer.Services.Authorization;
+
+    using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
@@ -513,7 +516,7 @@ namespace CometServer.Services
                 }
                 else
                 {
-                    Logger.Trace("The person {0} does not have a read permission for {1}.", this.CredentialsService.Credentials.Person.UserName, thing.GetType().Name);
+                    this.Logger.LogTrace("The person {0} does not have a read permission for {1}.", this.CredentialsService.Credentials.Person.UserName, thing.GetType().Name);
                 }
             }
 

@@ -26,6 +26,8 @@ namespace CDP4Orm.MigrationEngine
 {
     using Npgsql;
 
+    using System.Collections.Generic;
+
     /// <summary>
     /// The interface for the migration service which is responsible for applying all migration scripts
     /// </summary>
@@ -38,5 +40,11 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="partition">The target partition</param>
         /// <param name="isStartup"> Asserts whether the <see cref= "IMigrationService" /> is called on startup</param>
         void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup);
+
+        /// <summary>
+        /// Gets all migration scripts
+        /// </summary>
+        /// <returns>The List of <see cref="MigrationBase"/></returns>
+        IReadOnlyList<MigrationBase> GetMigrations(bool isStartup);
     }
 }

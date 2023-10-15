@@ -26,6 +26,7 @@ namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.Linq;
 
     using CDP4Common.CommonData;
@@ -33,6 +34,8 @@ namespace CometServer.Authorization
 
     using CometServer.Services;
     using CometServer.Services.Authorization;
+
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -44,6 +47,11 @@ namespace CometServer.Authorization
     /// </summary>
     public class OrganizationalParticipationResolverService : IOrganizationalParticipationResolverService
     {
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ILogger"/>
+        /// </summary>
+        public ILogger<OrganizationalParticipationResolverService> Logger { get; set; }
+
         /// <summary>
         /// Gets or sets the <see cref="IElementDefinitionService" />
         /// </summary>
@@ -78,6 +86,8 @@ namespace CometServer.Authorization
         /// </returns>
         public bool ResolveApplicableOrganizationalParticipations(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid)
         {
+            this.Logger.LogTrace("Resolve OrganizationalParticipation {iteration}.{thing} for Participant {organizationalParticipantIid}", iteration, thing, organizationalParticipantIid);
+
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             this.ResolveElementDefinitionTree(transaction, partition, iteration, organizationalParticipantIid, securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
@@ -127,6 +137,8 @@ namespace CometServer.Authorization
         /// </remarks>
         public void ValidateCreateOrganizationalParticipation(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
+            this.Logger.LogTrace("Validate Create OrganizationalParticipation {container}.{thing}", container, thing);
+
             if (partition == "SiteDirectory")
             {
                 return;

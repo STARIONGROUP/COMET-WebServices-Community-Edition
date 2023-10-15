@@ -34,27 +34,22 @@ namespace CometServer
 
     using CometServer.ChangeNotification;
     using CometServer.Configuration;
-    using CometServer.Helpers;
+    using CometServer.Services.DataStore;
 
     using Hangfire;
+    using Hangfire.Logging;
 
     using Microsoft.Extensions.Hosting;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// The <see cref="Program"/> is the entry point for the console application
     /// </summary>
     public class Program
     {
-        /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// The entry point of the application
         /// </summary>
@@ -65,70 +60,70 @@ namespace CometServer
         {
             Console.Title = "CDP4-COMET WebServices";
 
+            var host = Host.CreateDefaultBuilder(args)
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureWebHostDefaults(webHostBuilder =>
+                {
+                    webHostBuilder
+                        .UseKestrel(options =>
+                            options.AllowSynchronousIO = true
+                        )
+                        .UseStartup<Startup>();
+                })
+                .Build();
+
+            var logger = host.Services.GetService<ILogger<Program>>();
+
             try
             {
-                // ASP.NET Core 3.0+:
-                // The UseServiceProviderFactory call attaches the
-                // Autofac provider to the generic hosting mechanism.
-                var host = Host.CreateDefaultBuilder(args)
-                    .UseServiceProviderFactory(new AutofacServiceProviderFactory())
-                    .ConfigureWebHostDefaults(webHostBuilder =>
-                    {
-                        webHostBuilder
-                            .UseKestrel(options => 
-                                options.AllowSynchronousIO = true
-                            )
-                            .UseStartup<Startup>();
-                    })
-                    .Build();
-
-                Logger.Info("################################################################");
-                Logger.Info($"Starting CDP4-COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
+                logger.LogInformation("################################################################");
+                logger.LogInformation($"Starting CDP4-COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
 
-                Logger.Info("Configuration Loaded:");
+                logger.LogInformation("Configuration Loaded:");
 
-                Logger.Debug($"Midtier-UploadDirectory: {appConfigService.AppConfig.Midtier.UploadDirectory}");
-                Logger.Debug($"Midtier-FileStorageDirectory: {appConfigService.AppConfig.Midtier.FileStorageDirectory}");
-                Logger.Debug($"Backtier-HostName: {appConfigService.AppConfig.Backtier.HostName}");
-                Logger.Debug($"Backtier-Port: {appConfigService.AppConfig.Backtier.Port}");
-                Logger.Debug($"Backtier-Database: {appConfigService.AppConfig.Backtier.Database}");
-                Logger.Debug($"Backtier-DatabaseRestore: {appConfigService.AppConfig.Backtier.DatabaseRestore}");
-                Logger.Debug($"Backtier-DatabaseManage: {appConfigService.AppConfig.Backtier.DatabaseManage}");
-                Logger.Debug($"Backtier-StatementTimeout: {appConfigService.AppConfig.Backtier.StatementTimeout}");
-                Logger.Debug($"Backtier-IsDbSeedEnabled: {appConfigService.AppConfig.Backtier.IsDbSeedEnabled}");
-                Logger.Debug($"Backtier-IsDbImportEnabled: {appConfigService.AppConfig.Backtier.IsDbImportEnabled}");
-                Logger.Debug($"Backtier-IsDbRestoreEnabled: {appConfigService.AppConfig.Backtier.IsDbRestoreEnabled}");
+                logger.LogInformation($"Midtier-UploadDirectory: {appConfigService.AppConfig.Midtier.UploadDirectory}");
+                logger.LogInformation($"Midtier-FileStorageDirectory: {appConfigService.AppConfig.Midtier.FileStorageDirectory}");
+                logger.LogInformation($"Backtier-HostName: {appConfigService.AppConfig.Backtier.HostName}");
+                logger.LogInformation($"Backtier-Port: {appConfigService.AppConfig.Backtier.Port}");
+                logger.LogInformation($"Backtier-Database: {appConfigService.AppConfig.Backtier.Database}");
+                logger.LogInformation($"Backtier-DatabaseRestore: {appConfigService.AppConfig.Backtier.DatabaseRestore}");
+                logger.LogInformation($"Backtier-DatabaseManage: {appConfigService.AppConfig.Backtier.DatabaseManage}");
+                logger.LogInformation($"Backtier-StatementTimeout: {appConfigService.AppConfig.Backtier.StatementTimeout}");
+                logger.LogInformation($"Backtier-IsDbSeedEnabled: {appConfigService.AppConfig.Backtier.IsDbSeedEnabled}");
+                logger.LogInformation($"Backtier-IsDbImportEnabled: {appConfigService.AppConfig.Backtier.IsDbImportEnabled}");
+                logger.LogInformation($"Backtier-IsDbRestoreEnabled: {appConfigService.AppConfig.Backtier.IsDbRestoreEnabled}");
 
-                var dataStoreAvailable = DataStoreConnectionChecker.CheckConnection(appConfigService);
+                var dataStoreConnectionChecker = host.Services.GetService<IDataStoreConnectionChecker>();
+                var dataStoreAvailable = dataStoreConnectionChecker.CheckConnection();
 
                 if (!dataStoreAvailable)
                 {
-                    Logger.Warn("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                    logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
                     return 0;
                 }
-                else
-                {
-                    Logger.Info("The data-store has become available for connections within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
-                }
+                
+                logger.LogInformation("The data-store has become available for connections within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                
+                var migrationEngine = host.Services.GetService<IMigrationEngine>();
+                migrationEngine.MigrateAllAtStartUp();
 
-                MigrationEngine.MigrateAllAtStartUp(appConfigService);
-                ConfigureRecurringJobs(appConfigService);
+                ConfigureRecurringJobs(appConfigService, logger);
 
                 var configuration = host.Services.GetService<IConfiguration>();
                 var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
 
-                Logger.Info("CDP4-COMET REST API Ready to accept connections at {0}", uri);
+                logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {0}", uri);
 
                 await host.RunAsync();
 
-                Logger.Info("Terminated CDP4-COMET WebServices cleanly");
+                logger.LogInformation("Terminated CDP4-COMET WebServices cleanly");
                 return 0;
             }
             catch (Exception e)
             {
-                Logger.Fatal("An unhandled exception occurred during startup-bootstrapping");
+                logger.LogCritical(e,"An unhandled exception occurred during startup-bootstrapping");
                 return -1;
             }
         }
@@ -139,7 +134,7 @@ namespace CometServer
         /// <param name="appConfigService">
         /// The <see cref="IAppConfigService"/> that provides the configuration used to configure the recurring jobs
         /// </param>
-        public static void ConfigureRecurringJobs(IAppConfigService appConfigService)
+        public static void ConfigureRecurringJobs(IAppConfigService appConfigService, ILogger<Program> logger)
         {
             var sw = Stopwatch.StartNew();
 
@@ -152,7 +147,7 @@ namespace CometServer
                 RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
             }
 
-            Logger.Info($"Cron jobs configured in {sw.ElapsedMilliseconds} ms");
+            logger.LogInformation($"Cron jobs configured in {sw.ElapsedMilliseconds} ms");
         }
     }
 }

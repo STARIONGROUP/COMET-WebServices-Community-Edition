@@ -49,17 +49,14 @@ namespace CometServer.Modules
     using CometServer.Helpers;
     
     using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
-    using NLog;
-    
     using Npgsql;
 
     using Services;
     using Services.Authorization;
     using Services.Protocol;
-
-    using IServiceProvider = Services.IServiceProvider;
-    using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
     /// This is an API abstract base class which holds utility functionalities
@@ -80,11 +77,11 @@ namespace CometServer.Modules
         /// The site reference data library type name.
         /// </summary>
         private const string SiteReferenceDataLibraryType = "SiteReferenceDataLibrary";
-        
+
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// The <see cref="ILogger{ApiBase}"/> used to log
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<ApiBase> logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
@@ -92,8 +89,13 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService)
+        /// <param name="loggerFactory">
+        /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
+        /// </param>
+        protected ApiBase(IAppConfigService appConfigService, ILoggerFactory loggerFactory)
         {
+            this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
+
             this.AppConfigService = appConfigService;
         }
 
@@ -107,6 +109,13 @@ namespace CometServer.Modules
         /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
         /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
         /// </summary>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="appConfigService">
+        /// The <see cref="IAppConfigService"/> used to read applicaton settings
+        /// </param>
         /// <param name="username">
         /// The username used to authorize
         /// </param>
@@ -129,7 +138,7 @@ namespace CometServer.Modules
             }
             catch (Exception ex)
             {
-                Logger.Error(ex);
+                this.logger.LogError(ex, "Authorization failed for {username}", username);
 
                 transaction?.RollbackAsync();
 
@@ -153,6 +162,9 @@ namespace CometServer.Modules
         /// <summary>
         /// Process the get request and return the requested resources.
         /// </summary>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
         /// <param name="processor">
         /// The resource accessor
         /// </param>
@@ -167,6 +179,9 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="resourcePath">
         /// The resource Path.
+        /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
         /// </param>
         /// <returns>
         /// The collection of retrieved <see cref="CDP4Common.DTO.Thing"/>.
@@ -304,6 +319,9 @@ namespace CometServer.Modules
         /// <summary>
         /// Construct a request log message.
         /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> for which the log message is to be constructed
+        /// </param>
         /// <param name="message">
         /// The log message.
         /// </param>
@@ -322,13 +340,16 @@ namespace CometServer.Modules
         /// <summary>
         /// Construct a request log message.
         /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> for which the failure log is constructed
+        /// </param>
         /// <param name="message">
         /// The log message.
         /// </param>
         /// <returns>
         /// A formatted string ready for logging.
         /// </returns>
-        protected string ConstructFailureLog(HttpRequest httpRequest,string message = null)
+        protected string ConstructFailureLog(HttpRequest httpRequest, string message = null)
         {
             return this.ConstructLog(httpRequest, message, false);
         }
@@ -351,6 +372,18 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
@@ -369,6 +402,12 @@ namespace CometServer.Modules
         /// <summary>
         /// Writes <see cref="Thing"/>s to a target <see cref="HttpResponse"/>
         /// </summary>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <param name="resourceResponse">
         /// The resource collection to serialize.
         /// </param>
@@ -402,6 +441,18 @@ namespace CometServer.Modules
         /// <summary>
         /// Create a multipart response for the included file revisions.
         /// </summary>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <param name="fileRevisions">
         /// The file revisions.
         /// </param>
@@ -441,6 +492,21 @@ namespace CometServer.Modules
         /// <param name="statusCode">
         /// The optional HTTP status Code.
         /// </param>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The (injected) <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The (injected) <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="fileArchiveService">
+        /// The (injected) <see cref="IFileArchiveService"/> to store and retrieve files to and from the filesystem
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The (injected) <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
@@ -455,8 +521,11 @@ namespace CometServer.Modules
         /// <summary>
         /// Read the current state of the top container.
         /// </summary>
+        /// <param name="serviceProvider">
+        /// The <see cref="Services.IServiceProvider"/> that provides the service registry
+        /// </param>
         /// <param name="transaction">
-        /// The transaction.
+        /// The databse transaction.
         /// </param>
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
@@ -467,7 +536,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A top container instance.
         /// </returns>
-        protected Thing GetTopContainer(IServiceProvider serviceProvider, NpgsqlTransaction transaction, string partition, string topContainer)
+        protected Thing GetTopContainer(Services.IServiceProvider serviceProvider, NpgsqlTransaction transaction, string partition, string topContainer)
         {
             return serviceProvider.MapToReadService(topContainer).GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
         }
@@ -475,6 +544,9 @@ namespace CometServer.Modules
         /// <summary>
         /// Collect and return the reference data library chain.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
         /// <param name="processor">
         /// The processor instance.
         /// </param>
@@ -499,6 +571,9 @@ namespace CometServer.Modules
         /// <summary>
         /// Collect and return the reference data library chain.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
         /// <param name="processor">
         /// The processor instance.
         /// </param>
@@ -553,6 +628,15 @@ namespace CometServer.Modules
         /// <summary>
         /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
         /// </summary>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <param name="dtos">
         /// The DTO's that needs to be serialized to a stream
         /// </param>
@@ -575,17 +659,20 @@ namespace CometServer.Modules
 
             var sw = new Stopwatch();
             sw.Start();
-            Logger.Debug("{0} start serializing dtos as JSON", requestToken);
+            this.logger.LogDebug("{requestToken} start serializing dtos as JSON", requestToken);
             jsonSerializer.Initialize(metaInfoProvider, requestDataModelVersion);
             jsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            Logger.Debug("serializing dtos as JSON {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+            this.logger.LogDebug("serializing dtos as JSON - {requestToken} in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
         /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
         /// </summary>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <param name="dtos">
         /// The DTO's that needs to be serialized to a stream
         /// </param>
@@ -608,16 +695,25 @@ namespace CometServer.Modules
 
             var sw = new Stopwatch();
             sw.Start();
-            Logger.Debug("{0} start serializing dtos as MessagePack", requestToken);
+            this.logger.LogDebug("{requestToken} start serializing dtos as MessagePack", requestToken);
             messagePackSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            Logger.Debug("serializing dtos as MessagePack {0} in {1} [ms]", requestToken, sw.ElapsedMilliseconds);
+            this.logger.LogDebug("serializing dtos as MessagePack - {requestToken} in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
         /// Prepare a multi part response based on all included fileRevisions in the response.
         /// </summary>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="fileBinaryService">
+        ///
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <param name="targetStream">
         /// The target Stream.
         /// </param>
@@ -629,6 +725,9 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="requestDataModelVersion">
         /// The request data model version.
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
         /// </param>
         private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
@@ -684,6 +783,15 @@ namespace CometServer.Modules
         /// <summary>
         /// Prepare an archived response based on a folder or fileStore in the response.
         /// </summary>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
         /// <param name="targetStream">
         /// The target Stream.
         /// </param>
@@ -766,10 +874,13 @@ namespace CometServer.Modules
             var endLine = Encoding.Default.GetBytes($"\r\n--{HttpConstants.BoundaryString}--");
             targetStream.Write(endLine, 0, endLine.Length);
         }
-        
+
         /// <summary>
         /// Setup the security context for the library data retrieval.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
         /// <returns>
         /// The <see cref="RequestSecurityContext"/>.
         /// </returns>
@@ -785,6 +896,9 @@ namespace CometServer.Modules
         /// <summary>
         /// The retrieve chained reference data.
         /// </summary>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
         /// <param name="processor">
         /// The processor.
         /// </param>

@@ -339,7 +339,7 @@ namespace CDP4Orm.Dao
             {
                 thing = jsonObject.ToDto();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 thing = null;
             }

@@ -33,7 +33,7 @@ namespace CometServer.Services
     
     using CometServer.Services.Authorization;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -45,9 +45,9 @@ namespace CometServer.Services
     public class DefaultValueArrayFactory : IDefaultValueArrayFactory
     {
         /// <summary>
-        /// The NLog logger
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<DefaultValueArrayFactory> Logger { get; set; }
 
         /// <summary>
         /// A cache of <see cref="ValueArray{string}" /> that has been computed for <see cref="ParameterType" />
@@ -95,7 +95,7 @@ namespace CometServer.Services
         /// </param>
         public void Load(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            Logger.Trace("Loading reference data");
+            this.Logger.LogTrace("Loading reference data");
 
             var sw = Stopwatch.StartNew();
 
@@ -118,7 +118,7 @@ namespace CometServer.Services
                 this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            Logger.Trace("Cache initialized with {0} ParameterTypes, {1} DependentParameterTypeAssignments, {2} IndependentParameterTypeAssignments and {3} ParameterTypeComponents in {4}",
+            this.Logger.LogTrace("Cache initialized with {0} ParameterTypes, {1} DependentParameterTypeAssignments, {2} IndependentParameterTypeAssignments and {3} ParameterTypeComponents in {4}",
                 this.parameterTypeCache.Count,
                 dependentParameterTypeAssignments.Count,
                 independentParameterTypeAssignments.Count,
@@ -167,7 +167,7 @@ namespace CometServer.Services
             if (!this.parameterTypeCache.TryGetValue(parameterTypeIid, out parameterType))
             {
                 var execptionMessage = $"The ParameterType with iid {parameterTypeIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                Logger.Error(execptionMessage);
+                this.Logger.LogError(execptionMessage);
                 throw new KeyNotFoundException(execptionMessage);
             }
 
@@ -255,13 +255,13 @@ namespace CometServer.Services
 
             if (sampledFunctionParameterType.IndependentParameterType.Count == 0)
             {
-                Logger.Warn("The SampledFunctionParameterType with Iid {0} does not contain any IndependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
+                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {0} does not contain any IndependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
                 return 0;
             }
 
             if (sampledFunctionParameterType.DependentParameterType.Count == 0)
             {
-                Logger.Warn("The SampledFunctionParameterType with Iid {0} does not contain any DependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
+                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {0} does not contain any DependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
                 return 0;
             }
 
@@ -273,14 +273,14 @@ namespace CometServer.Services
                 if (!this.parameterTypeAssignmentCache.TryGetValue(parameterTypeAssignmentIid, out var parameterTypeAssignment))
                 {
                     var exceptionMessage = $"The ParameterTypeAssignment with Iid {parameterTypeAssignmentIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                    Logger.Error(exceptionMessage);
+                    this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 
                 if (!this.parameterTypeCache.TryGetValue(parameterTypeAssignment.ParameterType, out var parameterType))
                 {
                     var exceptionMessage = $"The ParameterType {parameterTypeAssignment.ParameterType} of the ParameterTypeAssignment {((Thing)parameterTypeAssignment).Iid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                    Logger.Error(exceptionMessage);
+                    this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 
@@ -302,14 +302,14 @@ namespace CometServer.Services
                 if (!this.parameterTypeAssignmentCache.TryGetValue(parameterTypeAssignmentIid, out var parameterTypeAssignment))
                 {
                     var exceptionMessage = $"The ParameterTypeAssignment with Iid {parameterTypeAssignmentIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                    Logger.Error(exceptionMessage);
+                    this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 
                 if (!this.parameterTypeCache.TryGetValue(parameterTypeAssignment.ParameterType, out var parameterType))
                 {
                     var exceptionMessage = $"The ParameterType {parameterTypeAssignment.ParameterType} of the ParameterTypeAssignment {((Thing)parameterTypeAssignment).Iid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                    Logger.Error(exceptionMessage);
+                    this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 
@@ -341,7 +341,7 @@ namespace CometServer.Services
 
             if (compoundParameterType.Component.Count == 0)
             {
-                Logger.Warn("The CompoundParameterType with Iid {0} does not contain any ParameterTypeComponents", compoundParameterType.Iid);
+                this.Logger.LogWarning("The CompoundParameterType with Iid {0} does not contain any ParameterTypeComponents", compoundParameterType.Iid);
                 return 0;
             }
 
@@ -353,7 +353,7 @@ namespace CometServer.Services
                 if (!this.parameterTypeComponentCache.TryGetValue(parameterTypeComponentIid, out parameterTypeComponent))
                 {
                     var exceptionMessage = $"The ParameterTypeComponent with Iid {parameterTypeComponentIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                    Logger.Error(exceptionMessage);
+                    this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 
@@ -362,7 +362,7 @@ namespace CometServer.Services
                 if (!this.parameterTypeCache.TryGetValue(parameterTypeComponent.ParameterType, out parameterType))
                 {
                     var exceptionMessage = $"The ParameterType {parameterTypeComponent.ParameterType} of the ParameterTypeComponent {parameterTypeComponent.Iid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
-                    Logger.Error(exceptionMessage);
+                    this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 

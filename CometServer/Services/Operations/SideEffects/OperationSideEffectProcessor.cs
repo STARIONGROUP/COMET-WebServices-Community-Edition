@@ -33,8 +33,6 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CometServer.Services.Authorization;
 
-    using NLog;
-
     using Npgsql;
 
     /// <summary>
@@ -43,11 +41,6 @@ namespace CometServer.Services.Operations.SideEffects
     /// </summary>
     public class OperationSideEffectProcessor : IOperationSideEffectProcessor
     {
-        /// <summary>
-        /// A <see cref="NLog.Logger" /> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// The operation side effect map.
         /// </summary>
@@ -74,21 +67,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// </remarks>
         public OperationSideEffectProcessor(IEnumerable<IOperationSideEffect> operationSideEffects)
         {
-            try
+            foreach (var operationSideEffect in operationSideEffects)
             {
-                Logger.Debug("Construct OperationSideEffectProcessor");
-
-                foreach (var operationSideEffect in operationSideEffects)
-                {
-                    this.operationSideEffectMap.Add(operationSideEffect.RegistryKey, operationSideEffect);
-                }
-
-                Logger.Debug("Finished OperationSideEffectProcessor");
-            }
-            catch (Exception ex)
-            {
-                Logger.Error(ex);
-                throw;
+                this.operationSideEffectMap.Add(operationSideEffect.RegistryKey, operationSideEffect);
             }
         }
 

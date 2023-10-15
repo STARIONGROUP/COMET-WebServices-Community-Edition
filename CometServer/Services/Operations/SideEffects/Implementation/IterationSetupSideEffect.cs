@@ -36,8 +36,6 @@ namespace CometServer.Services.Operations.SideEffects
 
     using Helpers;
 
-    using NLog;
-
     using Npgsql;
 
     using System;
@@ -48,11 +46,6 @@ namespace CometServer.Services.Operations.SideEffects
     /// </summary>
     public sealed class IterationSetupSideEffect : OperationSideEffect<IterationSetup>
     {
-        /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// Gets or sets the <see cref="IEngineeringModelService"/>
         /// </summary>

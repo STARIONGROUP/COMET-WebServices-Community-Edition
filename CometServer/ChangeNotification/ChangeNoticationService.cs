@@ -49,7 +49,7 @@ namespace CometServer.ChangeNotification
 
     using Newtonsoft.Json;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -59,11 +59,6 @@ namespace CometServer.ChangeNotification
     public class ChangeNoticationService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
-        /// <summary>
         /// The DI container used to resolve the services required to interact with the database
         /// </summary>
         private readonly IContainer container;
@@ -72,6 +67,11 @@ namespace CometServer.ChangeNotification
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ILogger"/>
+        /// </summary>
+        public ILogger<ChangeNoticationService> Logger { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeNoticationService"/>
@@ -194,11 +194,11 @@ namespace CometServer.ChangeNotification
                 }
                 catch (PostgresException postgresException)
                 {
-                    Logger.Error("Could not connect to the database to process Change Notifications. Error message: {0}", postgresException.Message);
+                    this.Logger.LogCritical("Could not connect to the database to process Change Notifications. Error message: {postgresException.Message}", postgresException.Message);
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(ex);
+                    this.Logger.LogCritical(ex, "The ChangeNoticationService failed");
                 }
                 finally
                 {
@@ -207,7 +207,7 @@ namespace CometServer.ChangeNotification
                         await connection.CloseAsync();
                     }
 
-                    Logger.Info($"ChangeNotifications processed in {sw.ElapsedMilliseconds} [ms]");
+                    this.Logger.LogInformation("ChangeNotifications processed in {sw} [ms]", sw.ElapsedMilliseconds);
                 }
             }
         }

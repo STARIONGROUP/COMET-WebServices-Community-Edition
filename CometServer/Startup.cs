@@ -69,18 +69,11 @@ namespace CometServer
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
-    using NLog;
-
     /// <summary>
     /// The <see cref="Startup"/> used to configure the application
     /// </summary>
     public class Startup
     {
-        /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// The Cookie Scheme used by the COMET API
         /// </summary>
@@ -144,9 +137,6 @@ namespace CometServer
         // Don't build the container; that gets done for you.
         public void ConfigureContainer(ContainerBuilder builder)
         {
-            var sw = Stopwatch.StartNew();
-            Logger.Info("Start Configuration of Application Container - Instance per Lifetime Scoped Services");
-
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
 
@@ -183,6 +173,8 @@ namespace CometServer
             builder.RegisterType<OperationProcessor>().As<IOperationProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             //  database services
+            builder.RegisterType<MigrationEngine>().As<IMigrationEngine>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<DataStoreConnectionChecker>().As<IDataStoreConnectionChecker>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<Cdp4TransactionManager>().As<ICdp4TransactionManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<CommandLogger>().As<ICommandLogger>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterAssemblyTypes(typeof(BaseDao).Assembly).Where(x => typeof(BaseDao).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
@@ -213,8 +205,6 @@ namespace CometServer
             // CherryPick support
             builder.RegisterType<CherryPickService>().As<ICherryPickService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<ContainmentService>().As<IContainmentService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
-
-            Logger.Info("Finish Configuration of Application Container in {0} [ms]", sw.ElapsedMilliseconds);
         }
 
         /// <summary>

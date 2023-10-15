@@ -32,7 +32,7 @@ namespace CDP4Orm.MigrationEngine
 
     using CDP4Common.CommonData;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -53,14 +53,18 @@ namespace CDP4Orm.MigrationEngine
         /// <summary>
         /// The Logger
         /// </summary>
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<NonThingTableMigration> logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NonThingTableMigration"/> class
         /// </summary>
         /// <param name="migrationFileMetadata">The migration metadata</param>
-        internal NonThingTableMigration(MigrationMetaData migrationFileMetadata) : base(migrationFileMetadata)
+        /// <param name="logger">
+        /// The <see cref="ILogger{onThingTableMigration}"/>
+        /// </param>
+        internal NonThingTableMigration(MigrationMetaData migrationFileMetadata, ILogger<NonThingTableMigration> logger) : base(migrationFileMetadata)
         {
+            this.logger = logger;
         }
 
         /// <summary>
@@ -68,7 +72,7 @@ namespace CDP4Orm.MigrationEngine
         /// </summary>
         public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
-            Logger.Info("Start migration script {0}", this.MigrationMetaData.ResourceName);
+            this.logger.LogInformation("Start migration script {0}", this.MigrationMetaData.ResourceName);
 
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName);
             if (resource == null)
@@ -92,7 +96,7 @@ namespace CDP4Orm.MigrationEngine
                 var nonThingTableList = new List<string>();
                 using (var tableListCmd = new NpgsqlCommand())
                 {
-                    Logger.Info("Getting all non-Thing table for schema {0}", applicableSchema);
+                    this.logger.LogInformation("Getting all non-Thing table for schema {0}", applicableSchema);
 
                     var cmdTxt = "SELECT table_name FROM information_schema.tables WHERE table_schema = :schemaName AND table_type = 'BASE TABLE';";
 
@@ -112,7 +116,7 @@ namespace CDP4Orm.MigrationEngine
                         }
                     }
 
-                    Logger.Info("Non-Thing table fetched: {0}", nonThingTableList.Count);
+                    this.logger.LogInformation("Non-Thing table fetched: {0}", nonThingTableList.Count);
                 }
 
                 using (var sqlCommand = new NpgsqlCommand())
@@ -128,7 +132,7 @@ namespace CDP4Orm.MigrationEngine
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;
                     sqlCommand.ExecuteNonQuery();
-                    Logger.Info("End migration script {0}", this.MigrationMetaData.ResourceName);
+                    this.logger.LogInformation("End migration script {0}", this.MigrationMetaData.ResourceName);
                 }
 
                 base.ApplyMigration(transaction, existingSchemas);

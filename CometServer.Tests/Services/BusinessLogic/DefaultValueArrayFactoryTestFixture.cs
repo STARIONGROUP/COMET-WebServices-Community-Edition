@@ -33,6 +33,8 @@ namespace CometServer.Tests.Services.BusinessLogic
     using CometServer.Services;
     using CometServer.Services.Authorization;
 
+    using Microsoft.Extensions.Logging;
+
     using Moq;
 
     using Npgsql;
@@ -60,8 +62,8 @@ namespace CometServer.Tests.Services.BusinessLogic
         private Dictionary<Guid, IndependentParameterTypeAssignment> independentParameterTypeAssignments;
         private Dictionary<Guid, DependentParameterTypeAssignment> dependentParameterTypeAssignments;
 
+        private Mock<ILogger<DefaultValueArrayFactory>> logger = new Mock<ILogger<DefaultValueArrayFactory>>();
         private Mock<ICachedReferenceDataService> cachedReferenceDataService;
-        
         private Mock<ISecurityContext> secutrityContext;
         private NpgsqlTransaction transaction;
 
@@ -82,6 +84,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignments(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.independentParameterTypeAssignments);
 
             this.defaultValueArrayFactory = new DefaultValueArrayFactory();
+            this.defaultValueArrayFactory.Logger = this.logger.Object;
             this.defaultValueArrayFactory.CachedReferenceDataService = this.cachedReferenceDataService.Object;
         }
 

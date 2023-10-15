@@ -36,8 +36,8 @@ namespace CometServer.Services.Email
 
     using MimeKit;
 
-    using NLog;
-    
+    using Microsoft.Extensions.Logging;
+
     using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
     /// <summary>
@@ -46,9 +46,9 @@ namespace CometServer.Services.Email
     public class EmailService : IEmailService
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<EmailService> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IAppConfigService"/>
@@ -115,7 +115,7 @@ namespace CometServer.Services.Email
                 await smtpClient.DisconnectAsync(true);
             }
 
-            Logger.Log(LogLevel.Debug, $"{subject} - Emails sent");
+            this.Logger.LogDebug("{subject} - Emails sent", subject);
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace CometServer.Services.Email
                 }
                 else
                 {
-                    Logger.Log(LogLevel.Debug, $"The file-path {filepath} does not exist, the associated attachment could not be created.");
+                    this.Logger.LogDebug("The file-path {filepath} does not exist, the associated attachment could not be created.", filepath);
                 }
             }
         }

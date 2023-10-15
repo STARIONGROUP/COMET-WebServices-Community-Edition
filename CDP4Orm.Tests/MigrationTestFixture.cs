@@ -24,7 +24,11 @@
 
 namespace CDP4Orm.Tests
 {
+    using Microsoft.Extensions.Logging;
+
     using MigrationEngine;
+
+    using Moq;
 
     using NUnit.Framework;
 
@@ -34,10 +38,22 @@ namespace CDP4Orm.Tests
     [TestFixture]
     public class MigrationTestFixture
     {
+        private Mock<ILoggerFactory> loggerFactory;
+
+        private MigrationService migrationService;
+
+        [SetUp]
+        public void SetUp()
+        {
+            this.loggerFactory = new Mock<ILoggerFactory>();
+
+            this.migrationService = new MigrationService(this.loggerFactory.Object);
+        }
+
         [Test]
         public void VerifyThatAllScriptsAreRegistered()
         {
-            var migrations = MigrationService.GetMigrations(true);
+            var migrations = this.migrationService.GetMigrations(true);
             Assert.IsNotEmpty(migrations);
         }
     }

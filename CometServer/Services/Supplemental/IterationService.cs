@@ -36,7 +36,7 @@ namespace CometServer.Services
 
     using Helpers;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -46,9 +46,9 @@ namespace CometServer.Services
     public sealed partial class IterationService
     {
         /// <summary>
-        /// The Logger
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<IterationService> Logger { get; set; }
 
         /// <summary>
         /// The cached active iteration identifier in the context of the current request
@@ -184,14 +184,14 @@ namespace CometServer.Services
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         public void PopulateDataFromLastIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
         {
-            Logger.Info("Creating new iteration using the last iteration");
+            this.Logger.LogInformation("Creating new iteration using the last iteration");
             var start = Stopwatch.StartNew();
 
             var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
 
             this.IterationDao.MoveToNextIterationFromLast(transaction, iterationPartition, newiteration);
             this.PublicationService.DeleteAll(transaction, iterationPartition);
-            Logger.Info("End populate data for new iteration. Operation took {0} ms", start.ElapsedMilliseconds);
+            this.Logger.LogInformation("End populate data for new iteration. Operation took {sw} ms", start.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -205,14 +205,14 @@ namespace CometServer.Services
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         public void PopulateDataFromOlderIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
         {
-            Logger.Info("Creating new iteration using the source iteration number {0}", sourceIterationSetup.IterationNumber);
+            this.Logger.LogInformation("Creating new iteration using the source iteration number {sourceIterationSetup}", sourceIterationSetup.IterationNumber);
             var start = Stopwatch.StartNew();
             var engineeringModelPartition = iterationPartition.Replace(Cdp4TransactionManager.ITERATION_PARTITION_PREFIX, Cdp4TransactionManager.ENGINEERING_MODEL_PARTITION_PREFIX);
 
             // Set end-validity for all current data
             this.IterationDao.SetIterationValidityEnd(transaction, iterationPartition);
 
-            Logger.Info("Setting end validity took {0} ms", start.ElapsedMilliseconds);
+            this.Logger.LogInformation("Setting end validity took {start} ms", start.ElapsedMilliseconds);
             start.Reset();
             start.Start();
 
@@ -234,12 +234,12 @@ namespace CometServer.Services
             var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
             this.IterationDao.MoveToNextIterationFromLast(transaction, iterationPartition, newiteration);
 
-            Logger.Info("Inserting data took {0} ms", start.ElapsedMilliseconds);
+            this.Logger.LogInformation("Inserting data took {sw} ms", start.ElapsedMilliseconds);
 
             // Delete Publications (cascading all things that references them)
             this.PublicationService.DeleteAll(transaction, iterationPartition);
 
-            Logger.Info("End populate data for new iteration");
+            this.Logger.LogInformation("End populate data for new iteration");
         }
 
         /// <summary>

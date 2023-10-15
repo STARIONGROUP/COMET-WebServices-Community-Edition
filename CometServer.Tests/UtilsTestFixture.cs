@@ -40,6 +40,8 @@ namespace CometServer.Tests
     using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
 
+    using Microsoft.Extensions.Logging;
+
     using Moq;
 
     using NUnit.Framework;
@@ -59,6 +61,8 @@ namespace CometServer.Tests
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
         
         private readonly string mockedId = Guid.NewGuid().ToString();
+
+        private Mock<ILoggerFactory> loggerFactory;
 
         private Mock<IModelCreatorManager> modelCreatorManager;
 
@@ -116,6 +120,7 @@ namespace CometServer.Tests
         public void Setup()
         {
             this.modelCreatorManager = new Mock<IModelCreatorManager>();
+            this.loggerFactory = new Mock<ILoggerFactory>();
             this.appConfigService = new Mock<IAppConfigService>();
             this.credentialsService = new Mock<ICredentialsService>();
             this.headerInfoProvider = new Mock<IHeaderInfoProvider>();
@@ -136,12 +141,10 @@ namespace CometServer.Tests
         public void VerifyOnlyResourceReturned()
         {
             var mockedProcessor = this.SetupMockProcessor();
-            
-            List<Thing> containmentCollection;
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.loggerFactory.Object);
 
-            var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
+            var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
 
             CollectionAssert.AreEquivalent(new[] { this.modelSetup }, result);
         }
@@ -150,15 +153,13 @@ namespace CometServer.Tests
         public void VerifyResourceWithContainmentReturned()
         {
             var mockedProcessor = this.SetupMockProcessor();
-            
-            List<Thing> containmentCollection;
 
             // set query parameter override
             this.requestUtils.OverrideQueryParameters = new QueryParameters { IncludeAllContainers = true };
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.loggerFactory.Object);
 
-            var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out containmentCollection);
+            var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
             
             // reset query parameter override
             this.requestUtils.OverrideQueryParameters = null;

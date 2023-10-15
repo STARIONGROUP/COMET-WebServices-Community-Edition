@@ -28,7 +28,7 @@ namespace CometServer.Services.DataStore
 
     using Configuration;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -38,9 +38,9 @@ namespace CometServer.Services.DataStore
     public class DataStoreController : IDataStoreController
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<DataStoreController> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IAppConfigService"/>
@@ -52,7 +52,7 @@ namespace CometServer.Services.DataStore
         /// </summary>
         public void CloneDataStore()
         {
-            Logger.Info("start data store clone process");
+            this.Logger.LogInformation("start data store clone process");
 
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
@@ -63,7 +63,7 @@ namespace CometServer.Services.DataStore
                 // Create a clone of the database
                 using (var cmd = new NpgsqlCommand())
                 {
-                    Logger.Debug("Clone the data store");
+                    this.Logger.LogDebug("Clone the data store");
 
                     this.DropDataStoreConnections(backtier.Database, connection);
 
@@ -86,7 +86,7 @@ namespace CometServer.Services.DataStore
         /// </exception>
         public void RestoreDataStore()
         {
-            Logger.Info("start data store restore process");
+            this.Logger.LogInformation("start data store restore process");
 
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
@@ -98,7 +98,7 @@ namespace CometServer.Services.DataStore
                 // Drop the existing database
                 using (var cmd = new NpgsqlCommand())
                 {
-                    Logger.Debug("Drop the data store");
+                    this.Logger.LogDebug("Drop the data store");
 
                     this.DropDataStoreConnections(backtier.Database, connection);
 
@@ -112,7 +112,7 @@ namespace CometServer.Services.DataStore
                 // Create a new database with a restore template
                 using (var cmd = new NpgsqlCommand())
                 {
-                    Logger.Debug("Clone the restore data store");
+                    this.Logger.LogDebug("Clone the restore data store");
 
                     cmd.Connection = connection;
 
@@ -138,7 +138,7 @@ namespace CometServer.Services.DataStore
         {
             using (var cmd = new NpgsqlCommand())
             {
-                Logger.Debug("Drop all connections to the data store");
+                this.Logger.LogDebug("Drop all connections to the data store");
 
                 NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, dataStoreName)));
 

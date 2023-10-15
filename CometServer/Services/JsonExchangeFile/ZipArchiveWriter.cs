@@ -34,21 +34,23 @@ namespace CometServer.Services
 
     using ICSharpCode.SharpZipLib.Zip;
 
-    using NLog;
-    
+    using Microsoft.Extensions.Logging;
+
     public class ZipArchiveWriter : IZipArchiveWriter
     {
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<ZipArchiveWriter> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="ICdp4JsonSerializer"/>
         /// </summary>
         public ICdp4JsonSerializer JsonSerializer { get; set; }
 
-
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IFileBinaryService"/>
+        /// </summary>
         public IFileBinaryService FileBinaryService { get; set; }
 
         /// <summary>

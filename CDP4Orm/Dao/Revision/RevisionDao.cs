@@ -32,10 +32,10 @@ namespace CDP4Orm.Dao.Revision
 
     using CDP4JsonSerializer;
 
+    using Microsoft.Extensions.Logging;
+    
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-
-    using NLog;
 
     using Npgsql;
 
@@ -99,9 +99,9 @@ namespace CDP4Orm.Dao.Revision
         private const string ChangesSinceRevision = ">";
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// The <see cref="ILogger"/> used to log
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<RevisionDao> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the Command logger.
@@ -179,6 +179,8 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="actor">The identifier of the person who made this revision</param>
         public void WriteRevision(NpgsqlTransaction transaction, string partition, Thing thing, Guid actor)
         {
+            this.Logger.LogDebug("WriteRevision of {thing} to {partition} by {actor}", thing, partition, actor);
+
             var table = this.GetThingRevisionTableName(thing);
 
             var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\")", IidKey, RevisionColumnName, InstantColumn, ActorColumn, JsonColumnName);
@@ -633,7 +635,7 @@ namespace CDP4Orm.Dao.Revision
             }
             catch (Exception e)
             {
-                Logger.Error(e, "An error occured when converting the JSONB to DTO on the revision-history query.");
+                this.Logger.LogError(e, "An error occured when converting the JSONB to DTO on the revision-history query.");
                 thing = null;
             }
 

@@ -31,8 +31,6 @@ namespace CometServer.Services
 
     using CometServer.Services.Protocol;
 
-    using Microsoft.AspNetCore.Http;
-
     /// <summary>
     /// A utils class available in the context of a request.
     /// </summary>
@@ -76,7 +74,7 @@ namespace CometServer.Services
         /// Gets or sets the override query parameters to be used for specific processing logic.
         /// set to null to use request query parameters
         /// </summary>
-        public IQueryParameters OverrideQueryParameters { private get;  set; }
+        public IQueryParameters OverrideQueryParameters { private get; set; }
 
         /// <summary>
         /// Construct the engineering model partition identifier from the passed in engineeringModel id.

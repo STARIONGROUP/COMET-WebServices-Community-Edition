@@ -26,6 +26,7 @@ namespace CometServer.Authentication
 {
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Logging.Abstractions;
 
     /// <summary>
     /// The purpose of the <see cref="CookieAuthenticationMiddleWare"/> is to add cookie authentication to the pipeline
@@ -40,7 +41,7 @@ namespace CometServer.Authentication
         /// <summary>
         /// The <see cref="ILogger"/> used for logging
         /// </summary>
-        private readonly ILogger<BasicAuthenticatonMiddleware> logger;
+        private readonly ILogger<CookieAuthenticationMiddleWare> logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CookieAuthenticationMiddleWare"/>
@@ -55,7 +56,7 @@ namespace CometServer.Authentication
         {
             this.next = next;
 
-            this.logger = loggerFactory.CreateLogger<BasicAuthenticatonMiddleware>();
+            this.logger = loggerFactory == null ? NullLogger<CookieAuthenticationMiddleWare>.Instance : loggerFactory.CreateLogger<CookieAuthenticationMiddleWare>();
         }
     }
 }

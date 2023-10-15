@@ -37,6 +37,8 @@ namespace CometServer.Tests.Services.Supplemental
     using CometServer.Services;
     using CometServer.Services.Supplemental;
 
+    using Microsoft.Extensions.Logging;
+
     using Moq;
 
     using Npgsql;
@@ -52,6 +54,9 @@ namespace CometServer.Tests.Services.Supplemental
     public class PermissionInstanceFilterServiceTestFixture
     {
         private const string SiteDirectoryData = "SiteDirectory";
+
+        private Mock<ILogger<PermissionInstanceFilterService>> logger;
+
         private Mock<ICdp4TransactionManager> transactionManager;
 
         private Mock<IParticipantPermissionDao> participantPermissionDao;
@@ -135,8 +140,7 @@ namespace CometServer.Tests.Services.Supplemental
                                                 }
                                         };
 
-
-            
+            this.logger = new Mock<ILogger<PermissionInstanceFilterService>>();
 
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             NpgsqlConnection connection = null;
@@ -174,9 +178,9 @@ namespace CometServer.Tests.Services.Supplemental
                 MetadataProvider = this.metaInfoProvider,
                 TransactionManager = this.transactionManager.Object,
                 ParticipantPermissionDao = this.participantPermissionDao.Object,
-                PersonPermissionDao = this.personPermissionDao.Object
+                PersonPermissionDao = this.personPermissionDao.Object,
+                Logger = this.logger.Object
             };
-
         }
 
         [Test]

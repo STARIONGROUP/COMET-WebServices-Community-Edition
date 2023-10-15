@@ -45,7 +45,7 @@ namespace CometServer.Services.Operations
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -75,9 +75,9 @@ namespace CometServer.Services.Operations
         private const string RevisionNumberKey = "RevisionNumber";
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<CredentialsService> Logger { get; set; }
 
         /// <summary>
         /// The base properties of a DTO which can not be updated directly.
@@ -923,8 +923,8 @@ namespace CometServer.Services.Operations
                                 // remove link information
                                 if (!service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, iid, deletedValue))
                                 {
-                                    Logger.Info(
-                                        "The item '{0}' with iid: '{1}' in '{2}.{3}' was already deleted: continue processing.",
+                                    this.Logger.LogInformation(
+                                        "The item '{propInfo.TypeName}' with iid: '{deletedValue}' in '{typeName}.{propInfo.Name}' was already deleted: continue processing.",
                                         propInfo.TypeName,
                                         deletedValue,
                                         typeName,
@@ -950,9 +950,9 @@ namespace CometServer.Services.Operations
 
                                 // remove link information
                                 if (!service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, iid, deletedOrderedItem))
-                                { 
-                                        Logger.Info(
-                                            "The ordered item '{0}' with value: '{1}' in '{2}.{3}' was already deleted: continue processing.",
+                                {
+                                    this.Logger.LogInformation(
+                                            "The ordered item '{propInfo.TypeName}' with value: '{deletedOrderedItem.V}' in '{typeName}.{propInfo.Name}' was already deleted: continue processing.",
                                             propInfo.TypeName,
                                             deletedOrderedItem.V,
                                             typeName,
@@ -1007,8 +1007,7 @@ namespace CometServer.Services.Operations
 
                             if (persistedItem != null)
                             {
-                                throw new InvalidOperationException(
-                                    string.Format("Item '{0}' with Iid: '{1}' already exists", createInfo.TypeName, createInfo.Iid));
+                                throw new InvalidOperationException($"Item '{createInfo.TypeName}' with Iid: '{createInfo.Iid}' already exists");
                             }
 
                             // get the (cached) containment information for this create request
@@ -1025,7 +1024,7 @@ namespace CometServer.Services.Operations
                             // call before create hook
                             if (resolvedInfo.Thing is ParameterValueSet || !this.OperationSideEffectProcessor.BeforeCreate(resolvedInfo.Thing, resolvedContainerInfo.Thing, transaction, resolvedInfo.Partition, securityContext))
                             {
-                                Logger.Warn("Skipping create operation of thing {0} with id {1} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
+                                this.Logger.LogWarning("Skipping create operation of thing {createInfo.TypeName} with id {createInfo.Iid} as a consequence of the side-effect.", createInfo.TypeName, createInfo.Iid);
                                 continue;
                             }
 
@@ -1174,8 +1173,8 @@ namespace CometServer.Services.Operations
 
                 if (updatableThing == null)
                 {
-                    Logger.Info(
-                        "The requested update resource '{0}' with iid: '{1}' could not be retrieved.",
+                    this.Logger.LogInformation(
+                        "The requested update resource '{updateInfoKey.TypeName}' with iid: '{updateInfoKey.Iid}' could not be retrieved.",
                         updateInfoKey.TypeName,
                         updateInfoKey.Iid);
 
@@ -1263,8 +1262,8 @@ namespace CometServer.Services.Operations
 
                                     if (containedThing == null)
                                     {
-                                        Logger.Info(
-                                            "The containment change of item '{0}' with iid: '{1}' was not completed as the item could not be retrieved.",
+                                        this.Logger.LogInformation(
+                                            "The containment change of item '{propInfo.TypeName}' with iid: '{containedIid}' was not completed as the item could not be retrieved.",
                                             propInfo.TypeName,
                                             containedIid);
 
@@ -1277,13 +1276,12 @@ namespace CometServer.Services.Operations
                                     // try apply containment change
                                     if (!isUpdated)
                                     {
-                                        Logger.Info(
-                                            "The containment change of item '{0}' with iid: '{1}' to container '{2}' with '{3}' could not be performed.",
+                                        this.Logger.LogInformation(
+                                            "The containment change of item '{propInfo.TypeName}' with iid: '{containedIid}' to container '{resolvedInfo.InstanceInfo.TypeName}' with '{resolvedInfo.InstanceInfo.Iid}' could not be performed.",
                                             propInfo.TypeName,
                                             containedIid,
                                             resolvedInfo.InstanceInfo.TypeName,
                                             resolvedInfo.InstanceInfo.Iid);
-
                                     }
 
                                     isAnyUpdated = isAnyUpdated || isUpdated;
@@ -1321,9 +1319,9 @@ namespace CometServer.Services.Operations
                                     isUpdated = service.ReorderCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate);
 
                                     if (!isUpdated)
-                                    { 
-                                        Logger.Info(
-                                            "The item '{0}' order update from sequence {1} to {2} of {3}.{4} with iid: '{5}' could not be performed.",
+                                    {
+                                        this.Logger.LogInformation(
+                                            "The item '{orderedItemUpdate.V}' order update from sequence {orderedItemUpdate.K} to {orderedItemUpdate.M} of {resolvedInfo.InstanceInfo.TypeName}.{propertyName} with iid: '{updatableThing.Iid}' could not be performed.",
                                             orderedItemUpdate.V,
                                             orderedItemUpdate.K,
                                             orderedItemUpdate.M,
@@ -1352,8 +1350,8 @@ namespace CometServer.Services.Operations
 
                                     if (containedThing == null)
                                     {
-                                        Logger.Info(
-                                            "The contained item '{0}' with iid: '{1}' could not be retrieved.",
+                                        this.Logger.LogInformation(
+                                            "The contained item '{propInfo.TypeName}' with iid: '{containedItemIid}' could not be retrieved.",
                                             propInfo.TypeName,
                                             containedItemIid);
 
@@ -1376,8 +1374,8 @@ namespace CometServer.Services.Operations
 
                                     if (!isUpdated)
                                     {
-                                            Logger.Info(
-                                                "The contained item '{0}' with iid: '{1}' could not be reordered.",
+                                        this.Logger.LogInformation(
+                                                "The contained item '{propInfo.TypeName}' with iid: '{containedItemIid}' could not be reordered.",
                                                 propInfo.TypeName,
                                                 containedItemIid);
                                     }
@@ -1458,7 +1456,7 @@ namespace CometServer.Services.Operations
         {
             if (!this.operationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
             {
-                Logger.Info("The item '{0}' with iid: '{1}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
+                this.Logger.LogInformation("The item '{dtoInfo.TypeName}' with iid: '{dtoInfo.Iid}' was already deleted: continue processing.", dtoInfo.TypeName, dtoInfo.Iid);
                 return;
             }
 

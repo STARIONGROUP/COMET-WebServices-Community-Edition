@@ -37,8 +37,8 @@ namespace CometServer.Authorization
     using CometServer.Services;
     using CometServer.Services.Authorization;
 
-    using NLog;
-    
+    using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     using Thing = CDP4Common.DTO.Thing;
@@ -94,9 +94,9 @@ namespace CometServer.Authorization
         public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
+        /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        public ILogger<PermissionService> Logger { get; set; }
 
         /// <summary>
         /// Gets the list of <see cref="Participant"/> of the current <see cref="Person"/> that is represented by the current <see cref="Credentials"/> 
@@ -120,7 +120,7 @@ namespace CometServer.Authorization
         /// </returns>
         public bool CanRead(string typeName, ISecurityContext securityContext, string partition)
         {
-            Logger.Debug("Type CanRead: {0}:{1}", typeName, partition);
+            this.Logger.LogDebug("Type CanRead: {typeName}:{partition}", typeName, partition);
 
             if (partition == SiteDirectory)
             {
@@ -202,7 +202,7 @@ namespace CometServer.Authorization
         /// <returns>True if the given <see cref="Thing"/> can be read.</returns>
         public bool CanRead(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            Logger.Debug("Database CanRead: {0}:{1}:{2}", thing.ClassKind, thing.Iid, partition);
+            this.Logger.LogDebug("Database CanRead: {ClassKind}:{IId}:{partition}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))
@@ -307,7 +307,7 @@ namespace CometServer.Authorization
         /// <returns>True if the given <see cref="Thing"/> can be written.</returns>
         public bool CanWrite(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext)
         {
-            Logger.Debug("Database CanWrite: {0}:{1}:{2}", thing.ClassKind, thing.Iid, partition);
+            this.Logger.LogDebug("Database CanWrite: {ClassKind}:{IId}:{partition}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))

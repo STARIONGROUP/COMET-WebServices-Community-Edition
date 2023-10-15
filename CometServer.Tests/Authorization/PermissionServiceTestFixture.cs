@@ -40,6 +40,8 @@ namespace CometServer.Tests.Authorization
     using CometServer.Services;
     using CometServer.Services.Authorization;
 
+    using Microsoft.Extensions.Logging;
+
     using Moq;
 
     using Npgsql;
@@ -74,6 +76,7 @@ namespace CometServer.Tests.Authorization
         private Mock<ICredentialsService> credentialsService;
         private Mock<IAccessRightKindService> accessRightKindService;
         private Mock<IResolveService> resolveService;
+        private Mock<ILogger<PermissionService>> logger;
         private Mock<ParticipantDao> participantDao;
 
         private AuthenticationPerson authenticationPerson;
@@ -112,7 +115,7 @@ namespace CometServer.Tests.Authorization
 
             credentials.EngineeringModelSetup.Participant.Add(this.participant.Iid);
 
-            
+            this.logger = new Mock<ILogger<PermissionService>>();
 
             this.credentialsService = new Mock<ICredentialsService>();
             this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
@@ -120,6 +123,7 @@ namespace CometServer.Tests.Authorization
             this.permissionService = new PermissionService();
 
             this.permissionService.CredentialsService = this.credentialsService.Object;
+            this.permissionService.Logger = this.logger.Object;
 
             this.resolveService = new Mock<IResolveService>();
 

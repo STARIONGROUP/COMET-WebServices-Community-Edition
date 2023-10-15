@@ -32,7 +32,7 @@ namespace CDP4Orm.MigrationEngine
 
     using Dao;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -44,14 +44,15 @@ namespace CDP4Orm.MigrationEngine
         /// <summary>
         /// The Logger
         /// </summary>
-        private static Logger Logger = LogManager.GetCurrentClassLogger();
+        private readonly ILogger<GenericMigration> logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericMigration"/> class
         /// </summary>
         /// <param name="migrationMetadata">Themigration metadata</param>
-        internal GenericMigration(MigrationMetaData migrationMetadata) : base(migrationMetadata)
+        internal GenericMigration(MigrationMetaData migrationMetadata, ILogger<GenericMigration> logger) : base(migrationMetadata)
         {
+            this.logger = logger;
         }
 
         /// <summary>
@@ -61,7 +62,7 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="existingSchemas">The schema on which the migration shall be applied on</param>
         public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
-            Logger.Info("Start migration script {0}", this.MigrationMetaData.ResourceName);
+            this.logger.LogInformation("Start migration script {this.MigrationMetaData.ResourceName}", this.MigrationMetaData.ResourceName);
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName);
             if (resource == null)
             {
@@ -74,7 +75,7 @@ namespace CDP4Orm.MigrationEngine
 
             if (applicableSchemas.Count == 0)
             {
-                Logger.Info(" no schema to apply the migration on");
+                this.logger.LogInformation(" no schema to apply the migration on");
                 return;
             }
 
@@ -103,7 +104,7 @@ namespace CDP4Orm.MigrationEngine
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;
                     sqlCommand.ExecuteNonQuery();
-                    Logger.Info("End migration script {0}", this.MigrationMetaData.ResourceName);
+                    this.logger.LogInformation("End migration script {this.MigrationMetaData.ResourceName}", this.MigrationMetaData.ResourceName);
                 }
             }
 

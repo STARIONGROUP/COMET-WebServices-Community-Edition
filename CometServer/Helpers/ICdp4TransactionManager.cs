@@ -35,7 +35,7 @@ namespace CometServer.Helpers
     using Npgsql;
 
     /// <summary>
-    /// The TransactionManager interface.
+    /// A wrapper interface for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
     /// </summary>
     public interface ICdp4TransactionManager
     {

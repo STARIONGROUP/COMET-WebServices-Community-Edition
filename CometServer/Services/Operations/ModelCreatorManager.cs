@@ -34,7 +34,7 @@ namespace CometServer.Services.Operations
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
 
-    using NLog;
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -43,11 +43,6 @@ namespace CometServer.Services.Operations
     /// </summary>
     public class ModelCreatorManager : IModelCreatorManager
     {
-        /// <summary>
-        /// A <see cref="NLog.Logger"/> instance
-        /// </summary>
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
-
         /// <summary>
         /// The Site-Directory partition name
         /// </summary>
@@ -72,6 +67,11 @@ namespace CometServer.Services.Operations
         /// Gets a value that indicates whether tre user trigger were disabled
         /// </summary>
         public bool IsUserTriggerDisable { get; private set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ILogger{ModelCreatorManager}"/>
+        /// </summary>
+        public ILogger<ModelCreatorManager> Logger { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IMetaInfoProvider"/> (injected)
@@ -213,18 +213,18 @@ namespace CometServer.Services.Operations
             this.DisableUserTrigger(transaction);
 
             // copy all data from the source to the target partition
-            Logger.Debug("Copy EngineeringModel data from {0} to {1}", sourcePartition, targetPartition);
-            this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);            
-            Logger.Debug("Copy Iteration data from {0} to {1}", sourceIterationPartition, targetIterationPartition);
+            this.Logger.LogDebug("Copy EngineeringModel data from {0} to {1}", sourcePartition, targetPartition);
+            this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
+            this.Logger.LogDebug("Copy Iteration data from {0} to {1}", sourceIterationPartition, targetIterationPartition);
             this.IterationService.CopyIteration(transaction, sourceIterationPartition, targetIterationPartition);
 
             // wipe the organizational participations
             this.IterationService.DeleteAllrganizationalParticipantThings(transaction, targetIterationPartition);
 
             // change id on Thing table for all other things
-            Logger.Debug("Modify Identifiers of EngineeringModel {0} data", targetPartition);
+            this.Logger.LogDebug("Modify Identifiers of EngineeringModel {0} data", targetPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition);
-            Logger.Debug("Modify Identifiers of Iteration {0} data", targetIterationPartition);
+            this.Logger.LogDebug("Modify Identifiers of Iteration {0} data", targetIterationPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
@@ -238,7 +238,7 @@ namespace CometServer.Services.Operations
             newEngineeringModel.Iid = newModelSetup.EngineeringModelIid;
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
-            Logger.Debug("Modify Identifier of new EngineeringModel {0} to {1}", oldIid, newModelSetup.EngineeringModelIid);
+            this.Logger.LogDebug("Modify Identifier of new EngineeringModel {0} to {1}", oldIid, newModelSetup.EngineeringModelIid);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, newEngineeringModel, oldIid);
 
             if (!this.EngineeringModelService.UpdateConcept(transaction, targetPartition, newEngineeringModel, null))
@@ -251,7 +251,7 @@ namespace CometServer.Services.Operations
             modelThings.AddRange(this.IterationService.GetDeep(transaction, targetPartition, null, securityContext));
 
             var sw = Stopwatch.StartNew();
-            Logger.Debug("start modify {0} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
+            this.Logger.LogDebug("start modify {0} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
             foreach (var modelThing in modelThings)
             {
                 var model = modelThing as EngineeringModel;
@@ -302,8 +302,9 @@ namespace CometServer.Services.Operations
                     
                     service.UpdateConcept(transaction, partition, modelThing, container);
                 }
-            }            
-            Logger.Debug("modified {0} references of things contained in the new engineering-model-setup in {1} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
+            }
+
+            this.Logger.LogDebug("modified {modelThings.Count} references of things contained in the new engineering-model-setup in {sw} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
 
             // IMPORTANT: re-enable user trigger once the current transaction is commited commited
         }
@@ -317,10 +318,10 @@ namespace CometServer.Services.Operations
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            Logger.Debug("disable triggers for EngineeringModel {0}", partition);
+            this.Logger.LogDebug("disable triggers for EngineeringModel {partition}", partition);
             this.EngineeringModelService.ModifyUserTrigger(transaction, partition, false);
 
-            Logger.Debug("disable triggers for Iteration {0}", iterationPartition);
+            this.Logger.LogDebug("disable triggers for Iteration {iterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, false);
 
             this.IsUserTriggerDisable = true;
@@ -340,10 +341,10 @@ namespace CometServer.Services.Operations
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            Logger.Debug("enable triggers for EngineeringModel {0}", partition);
+            this.Logger.LogDebug("enable triggers for EngineeringModel {partition}", partition);
             this.EngineeringModelService.ModifyUserTrigger(transaction, partition, true);
 
-            Logger.Debug("enable triggers for Iteration {0}", iterationPartition);
+            this.Logger.LogDebug("enable triggers for Iteration {iterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, true);
         }
     }
