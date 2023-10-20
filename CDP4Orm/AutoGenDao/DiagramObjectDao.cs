@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"DiagramObject_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"DiagramObject_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -146,6 +153,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.DiagramObject(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.Bounds.AddRange(Array.ConvertAll((string[])reader["Bounds"], Guid.Parse));
             dto.DepictedThing = reader["DepictedThing"] is DBNull ? (Guid?)null : Guid.Parse(reader["DepictedThing"].ToString());
             dto.DiagramElement.AddRange(Array.ConvertAll((string[])reader["DiagramElement"], Guid.Parse));
@@ -218,7 +226,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramObject\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary);");
@@ -270,7 +278,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramObject\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary)");
@@ -398,5 +406,90 @@ namespace CDP4Orm.Dao
             result = base.Delete(transaction, partition, iid);
             return result;
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="DiagramObjectDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"DiagramElementThing\".\"DepictedThing\",");
+
+            sqlBuilder.Append(" \"DiagramElementThing\".\"SharedStyle\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"DiagramElementContainer_Bounds\".\"Bounds\",'{}'::text[]) AS \"Bounds\",");
+            sqlBuilder.Append(" COALESCE(\"DiagramElementContainer_DiagramElement\".\"DiagramElement\",'{}'::text[]) AS \"DiagramElement\",");
+            sqlBuilder.Append(" COALESCE(\"DiagramElementThing_LocalStyle\".\"LocalStyle\",'{}'::text[]) AS \"LocalStyle\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramThingBase_Data\"() AS \"DiagramThingBase\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramElementContainer_Data\"() AS \"DiagramElementContainer\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramElementThing_Data\"() AS \"DiagramElementThing\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramShape_Data\"() AS \"DiagramShape\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramObject_Data\"() AS \"DiagramObject\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Bounds\".\"Container\" AS \"Iid\", array_agg(\"Bounds\".\"Iid\"::text) AS \"Bounds\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Bounds_Data\"() AS \"Bounds\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramElementContainer_Data\"() AS \"DiagramElementContainer\" ON \"Bounds\".\"Container\" = \"DiagramElementContainer\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Bounds\".\"Container\") AS \"DiagramElementContainer_Bounds\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DiagramElementThing\".\"Container\" AS \"Iid\", array_agg(\"DiagramElementThing\".\"Iid\"::text) AS \"DiagramElement\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DiagramElementThing_Data\"() AS \"DiagramElementThing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramElementContainer_Data\"() AS \"DiagramElementContainer\" ON \"DiagramElementThing\".\"Container\" = \"DiagramElementContainer\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"DiagramElementThing\".\"Container\") AS \"DiagramElementContainer_DiagramElement\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"OwnedStyle\".\"Container\" AS \"Iid\", array_agg(\"OwnedStyle\".\"Iid\"::text) AS \"LocalStyle\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"OwnedStyle_Data\"() AS \"OwnedStyle\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DiagramElementThing_Data\"() AS \"DiagramElementThing\" ON \"OwnedStyle\".\"Container\" = \"DiagramElementThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"OwnedStyle\".\"Container\") AS \"DiagramElementThing_LocalStyle\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DiagramObject_Audit\".\"Actor\", \"DiagramObject_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DiagramObject_Audit\" AS \"DiagramObject_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"DiagramObject_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"DiagramObject_Audit\".\"Iid\", \"DiagramObject_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"DiagramThingBase\".\"ValueTypeDictionary\" || \"DiagramElementContainer\".\"ValueTypeDictionary\" || \"DiagramElementThing\".\"ValueTypeDictionary\" || \"DiagramShape\".\"ValueTypeDictionary\" || \"DiagramObject\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

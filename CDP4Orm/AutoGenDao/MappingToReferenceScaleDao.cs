@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"MappingToReferenceScale_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"MappingToReferenceScale_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -143,6 +150,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.MappingToReferenceScale(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.DependentScaleValue = Guid.Parse(reader["DependentScaleValue"].ToString());
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
@@ -191,7 +199,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"MappingToReferenceScale\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"DependentScaleValue\", \"ReferenceScaleValue\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :container, :dependentScaleValue, :referenceScaleValue);");
@@ -239,7 +247,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"MappingToReferenceScale\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"Container\", \"DependentScaleValue\", \"ReferenceScaleValue\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :container, :dependentScaleValue, :referenceScaleValue)");
@@ -365,5 +373,72 @@ namespace CDP4Orm.Dao
             result = base.Delete(transaction, partition, iid);
             return result;
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="MappingToReferenceScaleDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"MappingToReferenceScale\".\"Container\",");
+
+            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"MappingToReferenceScale\".\"DependentScaleValue\",");
+
+            sqlBuilder.Append(" \"MappingToReferenceScale\".\"ReferenceScaleValue\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"MappingToReferenceScale_Data\"() AS \"MappingToReferenceScale\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"MappingToReferenceScale_Audit\".\"Actor\", \"MappingToReferenceScale_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"MappingToReferenceScale_Audit\" AS \"MappingToReferenceScale_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"MappingToReferenceScale_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"MappingToReferenceScale_Audit\".\"Iid\", \"MappingToReferenceScale_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"MappingToReferenceScale\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

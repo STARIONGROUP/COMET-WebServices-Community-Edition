@@ -248,6 +248,26 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
+        /// Build a SQL read query for the current Dao
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public abstract string BuildReadQuery(string partition);
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public abstract string BuildJoinForActorProperty(string partition);
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public abstract string GetValueTypeSet();
+
+        /// <summary>
         /// Log the command message if a logger is injected
         /// </summary>
         /// <param name="command">the command to log</param>

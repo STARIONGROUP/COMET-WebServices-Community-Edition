@@ -40,6 +40,11 @@ namespace CDP4Orm.Dao.Authentication
     public class AuthenticationPersonDao : IAuthenticationPersonDao
     {
         /// <summary>
+        /// Gets or sets the <see cref="IPersonDao"/> (injected)
+        /// </summary>
+        public IPersonDao PersonDao { get; set; }
+
+        /// <summary>
         /// Read the data from the database.
         /// </summary>
         /// <param name="transaction">
@@ -62,11 +67,11 @@ namespace CDP4Orm.Dao.Authentication
 
             var sqlBuilder = new System.Text.StringBuilder();
 
-            sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Person_View\"", partition);
+            sqlBuilder.Append(this.PersonDao.BuildReadQuery(partition));
 
             if (!string.IsNullOrWhiteSpace(userName))
             {
-                sqlBuilder.Append(" WHERE \"ValueTypeSet\" -> 'ShortName' = :shortname");
+                sqlBuilder.Append($" WHERE {this.PersonDao.GetValueTypeSet()} -> 'ShortName' = :shortname");
                 command.Parameters.Add("shortname", NpgsqlDbType.Varchar).Value = userName;
             }
 

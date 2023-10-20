@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -70,7 +76,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"RequiredRdl\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :requiredRdl);");
@@ -118,7 +124,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReferenceDataLibrary\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"RequiredRdl\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :requiredRdl)");
@@ -426,7 +432,7 @@ namespace CDP4Orm.Dao
         public override bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
             var isReordered = base.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
- 
+
             switch (propertyName)
             {
                 case "BaseQuantityKind":
@@ -436,13 +442,13 @@ namespace CDP4Orm.Dao
                     }
 
                 default:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
 
             return isReordered;
-      }
+        }
 
         /// <summary>
         /// Reorder an item in an association link table.
@@ -579,9 +585,9 @@ namespace CDP4Orm.Dao
                     }
 
                 default:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
 
             return isDeleted;
@@ -664,5 +670,157 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="ReferenceDataLibraryDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"ReferenceDataLibrary\".\"RequiredRdl\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_Alias\".\"Alias\",'{}'::text[]) AS \"Alias\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_Definition\".\"Definition\",'{}'::text[]) AS \"Definition\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_HyperLink\".\"HyperLink\",'{}'::text[]) AS \"HyperLink\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_BaseQuantityKind\".\"BaseQuantityKind\",'{}'::text[]) AS \"BaseQuantityKind\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_BaseUnit\".\"BaseUnit\",'{}'::text[]) AS \"BaseUnit\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_Constant\".\"Constant\",'{}'::text[]) AS \"Constant\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_DefinedCategory\".\"DefinedCategory\",'{}'::text[]) AS \"DefinedCategory\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_FileType\".\"FileType\",'{}'::text[]) AS \"FileType\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_Glossary\".\"Glossary\",'{}'::text[]) AS \"Glossary\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_ParameterType\".\"ParameterType\",'{}'::text[]) AS \"ParameterType\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_ReferenceSource\".\"ReferenceSource\",'{}'::text[]) AS \"ReferenceSource\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_Rule\".\"Rule\",'{}'::text[]) AS \"Rule\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_Scale\".\"Scale\",'{}'::text[]) AS \"Scale\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_Unit\".\"Unit\",'{}'::text[]) AS \"Unit\",");
+            sqlBuilder.Append(" COALESCE(\"ReferenceDataLibrary_UnitPrefix\".\"UnitPrefix\",'{}'::text[]) AS \"UnitPrefix\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Alias\".\"Container\" AS \"Iid\", array_agg(\"Alias\".\"Iid\"::text) AS \"Alias\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Alias_Data\"() AS \"Alias\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"Alias\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Alias\".\"Container\") AS \"DefinedThing_Alias\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Definition\".\"Container\" AS \"Iid\", array_agg(\"Definition\".\"Iid\"::text) AS \"Definition\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Definition_Data\"() AS \"Definition\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"Definition\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Definition\".\"Container\") AS \"DefinedThing_Definition\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"HyperLink\".\"Container\" AS \"Iid\", array_agg(\"HyperLink\".\"Iid\"::text) AS \"HyperLink\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"HyperLink_Data\"() AS \"HyperLink\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"HyperLink\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"HyperLink\".\"Container\") AS \"DefinedThing_HyperLink\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReferenceDataLibrary\" AS \"Iid\", array_agg(\"BaseQuantityKind\"::text) AS \"BaseQuantityKind\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ReferenceDataLibrary_BaseQuantityKind_Data\"() AS \"ReferenceDataLibrary_BaseQuantityKind\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"ReferenceDataLibrary\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ReferenceDataLibrary\") AS \"ReferenceDataLibrary_BaseQuantityKind\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReferenceDataLibrary\" AS \"Iid\", array_agg(\"BaseUnit\"::text) AS \"BaseUnit\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ReferenceDataLibrary_BaseUnit_Data\"() AS \"ReferenceDataLibrary_BaseUnit\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"ReferenceDataLibrary\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ReferenceDataLibrary\") AS \"ReferenceDataLibrary_BaseUnit\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Constant\".\"Container\" AS \"Iid\", array_agg(\"Constant\".\"Iid\"::text) AS \"Constant\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Constant_Data\"() AS \"Constant\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"Constant\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Constant\".\"Container\") AS \"ReferenceDataLibrary_Constant\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Category\".\"Container\" AS \"Iid\", array_agg(\"Category\".\"Iid\"::text) AS \"DefinedCategory\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Category_Data\"() AS \"Category\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"Category\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Category\".\"Container\") AS \"ReferenceDataLibrary_DefinedCategory\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"FileType\".\"Container\" AS \"Iid\", array_agg(\"FileType\".\"Iid\"::text) AS \"FileType\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"FileType_Data\"() AS \"FileType\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"FileType\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"FileType\".\"Container\") AS \"ReferenceDataLibrary_FileType\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Glossary\".\"Container\" AS \"Iid\", array_agg(\"Glossary\".\"Iid\"::text) AS \"Glossary\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Glossary_Data\"() AS \"Glossary\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"Glossary\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Glossary\".\"Container\") AS \"ReferenceDataLibrary_Glossary\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ParameterType\".\"Container\" AS \"Iid\", array_agg(\"ParameterType\".\"Iid\"::text) AS \"ParameterType\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParameterType_Data\"() AS \"ParameterType\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"ParameterType\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ParameterType\".\"Container\") AS \"ReferenceDataLibrary_ParameterType\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReferenceSource\".\"Container\" AS \"Iid\", array_agg(\"ReferenceSource\".\"Iid\"::text) AS \"ReferenceSource\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ReferenceSource_Data\"() AS \"ReferenceSource\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"ReferenceSource\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ReferenceSource\".\"Container\") AS \"ReferenceDataLibrary_ReferenceSource\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Rule\".\"Container\" AS \"Iid\", array_agg(\"Rule\".\"Iid\"::text) AS \"Rule\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Rule_Data\"() AS \"Rule\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"Rule\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Rule\".\"Container\") AS \"ReferenceDataLibrary_Rule\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"MeasurementScale\".\"Container\" AS \"Iid\", array_agg(\"MeasurementScale\".\"Iid\"::text) AS \"Scale\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"MeasurementScale_Data\"() AS \"MeasurementScale\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"MeasurementScale\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"MeasurementScale\".\"Container\") AS \"ReferenceDataLibrary_Scale\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"MeasurementUnit\".\"Container\" AS \"Iid\", array_agg(\"MeasurementUnit\".\"Iid\"::text) AS \"Unit\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"MeasurementUnit_Data\"() AS \"MeasurementUnit\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"MeasurementUnit\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"MeasurementUnit\".\"Container\") AS \"ReferenceDataLibrary_Unit\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"UnitPrefix\".\"Container\" AS \"Iid\", array_agg(\"UnitPrefix\".\"Iid\"::text) AS \"UnitPrefix\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"UnitPrefix_Data\"() AS \"UnitPrefix\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"UnitPrefix\".\"Container\" = \"ReferenceDataLibrary\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"UnitPrefix\".\"Container\") AS \"ReferenceDataLibrary_UnitPrefix\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReferenceDataLibrary_Audit\".\"Actor\", \"ReferenceDataLibrary_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ReferenceDataLibrary_Audit\" AS \"ReferenceDataLibrary_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"ReferenceDataLibrary_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"ReferenceDataLibrary_Audit\".\"Iid\", \"ReferenceDataLibrary_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"DefinedThing\".\"ValueTypeDictionary\" || \"ReferenceDataLibrary\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

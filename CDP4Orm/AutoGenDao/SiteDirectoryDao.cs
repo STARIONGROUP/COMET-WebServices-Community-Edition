@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"SiteDirectory_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"SiteDirectory_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -147,6 +154,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.SiteDirectory(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.Annotation.AddRange(Array.ConvertAll((string[])reader["Annotation"], Guid.Parse));
             dto.DefaultParticipantRole = reader["DefaultParticipantRole"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultParticipantRole"].ToString());
             dto.DefaultPersonRole = reader["DefaultPersonRole"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultPersonRole"].ToString());
@@ -233,7 +241,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteDirectory\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole);");
@@ -288,7 +296,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"SiteDirectory\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :defaultParticipantRole, :defaultPersonRole)");
@@ -421,5 +429,135 @@ namespace CDP4Orm.Dao
             result = base.Delete(transaction, partition, iid);
             return result;
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="SiteDirectoryDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"SiteDirectory\".\"DefaultParticipantRole\",");
+
+            sqlBuilder.Append(" \"SiteDirectory\".\"DefaultPersonRole\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_Annotation\".\"Annotation\",'{}'::text[]) AS \"Annotation\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_Domain\".\"Domain\",'{}'::text[]) AS \"Domain\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_DomainGroup\".\"DomainGroup\",'{}'::text[]) AS \"DomainGroup\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_LogEntry\".\"LogEntry\",'{}'::text[]) AS \"LogEntry\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_Model\".\"Model\",'{}'::text[]) AS \"Model\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_NaturalLanguage\".\"NaturalLanguage\",'{}'::text[]) AS \"NaturalLanguage\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_Organization\".\"Organization\",'{}'::text[]) AS \"Organization\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_ParticipantRole\".\"ParticipantRole\",'{}'::text[]) AS \"ParticipantRole\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_Person\".\"Person\",'{}'::text[]) AS \"Person\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_PersonRole\".\"PersonRole\",'{}'::text[]) AS \"PersonRole\",");
+            sqlBuilder.Append(" COALESCE(\"SiteDirectory_SiteReferenceDataLibrary\".\"SiteReferenceDataLibrary\",'{}'::text[]) AS \"SiteReferenceDataLibrary\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"TopContainer_Data\"() AS \"TopContainer\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteDirectoryDataAnnotation\".\"Container\" AS \"Iid\", array_agg(\"SiteDirectoryDataAnnotation\".\"Iid\"::text) AS \"Annotation\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectoryDataAnnotation_Data\"() AS \"SiteDirectoryDataAnnotation\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"SiteDirectoryDataAnnotation\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"SiteDirectoryDataAnnotation\".\"Container\") AS \"SiteDirectory_Annotation\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DomainOfExpertise\".\"Container\" AS \"Iid\", array_agg(\"DomainOfExpertise\".\"Iid\"::text) AS \"Domain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertise_Data\"() AS \"DomainOfExpertise\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"DomainOfExpertise\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"DomainOfExpertise\".\"Container\") AS \"SiteDirectory_Domain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DomainOfExpertiseGroup\".\"Container\" AS \"Iid\", array_agg(\"DomainOfExpertiseGroup\".\"Iid\"::text) AS \"DomainGroup\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertiseGroup_Data\"() AS \"DomainOfExpertiseGroup\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"DomainOfExpertiseGroup\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"DomainOfExpertiseGroup\".\"Container\") AS \"SiteDirectory_DomainGroup\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteLogEntry\".\"Container\" AS \"Iid\", array_agg(\"SiteLogEntry\".\"Iid\"::text) AS \"LogEntry\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteLogEntry_Data\"() AS \"SiteLogEntry\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"SiteLogEntry\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"SiteLogEntry\".\"Container\") AS \"SiteDirectory_LogEntry\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"EngineeringModelSetup\".\"Container\" AS \"Iid\", array_agg(\"EngineeringModelSetup\".\"Iid\"::text) AS \"Model\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelSetup_Data\"() AS \"EngineeringModelSetup\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"EngineeringModelSetup\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"EngineeringModelSetup\".\"Container\") AS \"SiteDirectory_Model\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"NaturalLanguage\".\"Container\" AS \"Iid\", array_agg(\"NaturalLanguage\".\"Iid\"::text) AS \"NaturalLanguage\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"NaturalLanguage_Data\"() AS \"NaturalLanguage\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"NaturalLanguage\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"NaturalLanguage\".\"Container\") AS \"SiteDirectory_NaturalLanguage\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Organization\".\"Container\" AS \"Iid\", array_agg(\"Organization\".\"Iid\"::text) AS \"Organization\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Organization_Data\"() AS \"Organization\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"Organization\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Organization\".\"Container\") AS \"SiteDirectory_Organization\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ParticipantRole\".\"Container\" AS \"Iid\", array_agg(\"ParticipantRole\".\"Iid\"::text) AS \"ParticipantRole\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParticipantRole_Data\"() AS \"ParticipantRole\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"ParticipantRole\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ParticipantRole\".\"Container\") AS \"SiteDirectory_ParticipantRole\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Person\".\"Container\" AS \"Iid\", array_agg(\"Person\".\"Iid\"::text) AS \"Person\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Person_Data\"() AS \"Person\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"Person\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Person\".\"Container\") AS \"SiteDirectory_Person\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"PersonRole\".\"Container\" AS \"Iid\", array_agg(\"PersonRole\".\"Iid\"::text) AS \"PersonRole\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"PersonRole_Data\"() AS \"PersonRole\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"PersonRole\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"PersonRole\".\"Container\") AS \"SiteDirectory_PersonRole\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteReferenceDataLibrary\".\"Container\" AS \"Iid\", array_agg(\"SiteReferenceDataLibrary\".\"Iid\"::text) AS \"SiteReferenceDataLibrary\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteReferenceDataLibrary_Data\"() AS \"SiteReferenceDataLibrary\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"SiteReferenceDataLibrary\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"SiteReferenceDataLibrary\".\"Container\") AS \"SiteDirectory_SiteReferenceDataLibrary\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteDirectory_Audit\".\"Actor\", \"SiteDirectory_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectory_Audit\" AS \"SiteDirectory_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"SiteDirectory_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"SiteDirectory_Audit\".\"Iid\", \"SiteDirectory_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"TopContainer\".\"ValueTypeDictionary\" || \"SiteDirectory\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

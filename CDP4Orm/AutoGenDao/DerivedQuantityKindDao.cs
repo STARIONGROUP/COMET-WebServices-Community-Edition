@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"DerivedQuantityKind_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"DerivedQuantityKind_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -148,6 +155,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.DerivedQuantityKind(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
             dto.DefaultScale = Guid.Parse(reader["DefaultScale"].ToString());
@@ -226,7 +234,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DerivedQuantityKind\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid);");
@@ -271,7 +279,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DerivedQuantityKind\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid)");
@@ -372,5 +380,106 @@ namespace CDP4Orm.Dao
             result = base.Delete(transaction, partition, iid);
             return result;
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="DerivedQuantityKindDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"QuantityKind\".\"DefaultScale\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_Alias\".\"Alias\",'{}'::text[]) AS \"Alias\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_Definition\".\"Definition\",'{}'::text[]) AS \"Definition\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_HyperLink\".\"HyperLink\",'{}'::text[]) AS \"HyperLink\",");
+            sqlBuilder.Append(" COALESCE(\"ParameterType_Category\".\"Category\",'{}'::text[]) AS \"Category\",");
+            sqlBuilder.Append(" COALESCE(\"QuantityKind_PossibleScale\".\"PossibleScale\",'{}'::text[]) AS \"PossibleScale\",");
+            sqlBuilder.Append(" COALESCE(\"DerivedQuantityKind_QuantityKindFactor\".\"QuantityKindFactor\",'{}'::text[]) AS \"QuantityKindFactor\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ParameterType_Data\"() AS \"ParameterType\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ScalarParameterType_Data\"() AS \"ScalarParameterType\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"QuantityKind_Data\"() AS \"QuantityKind\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DerivedQuantityKind_Data\"() AS \"DerivedQuantityKind\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Alias\".\"Container\" AS \"Iid\", array_agg(\"Alias\".\"Iid\"::text) AS \"Alias\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Alias_Data\"() AS \"Alias\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"Alias\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Alias\".\"Container\") AS \"DefinedThing_Alias\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Definition\".\"Container\" AS \"Iid\", array_agg(\"Definition\".\"Iid\"::text) AS \"Definition\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Definition_Data\"() AS \"Definition\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"Definition\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Definition\".\"Container\") AS \"DefinedThing_Definition\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"HyperLink\".\"Container\" AS \"Iid\", array_agg(\"HyperLink\".\"Iid\"::text) AS \"HyperLink\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"HyperLink_Data\"() AS \"HyperLink\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"HyperLink\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"HyperLink\".\"Container\") AS \"DefinedThing_HyperLink\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ParameterType\" AS \"Iid\", array_agg(\"Category\"::text) AS \"Category\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParameterType_Category_Data\"() AS \"ParameterType_Category\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ParameterType_Data\"() AS \"ParameterType\" ON \"ParameterType\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ParameterType\") AS \"ParameterType_Category\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"QuantityKind\" AS \"Iid\", array_agg(\"PossibleScale\"::text) AS \"PossibleScale\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"QuantityKind_PossibleScale_Data\"() AS \"QuantityKind_PossibleScale\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"QuantityKind_Data\"() AS \"QuantityKind\" ON \"QuantityKind\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"QuantityKind\") AS \"QuantityKind_PossibleScale\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"QuantityKindFactor\".\"Container\" AS \"Iid\", ARRAY[array_agg(\"QuantityKindFactor\".\"Sequence\"::text), array_agg(\"QuantityKindFactor\".\"Iid\"::text)] AS \"QuantityKindFactor\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"QuantityKindFactor_Data\"() AS \"QuantityKindFactor\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DerivedQuantityKind_Data\"() AS \"DerivedQuantityKind\" ON \"QuantityKindFactor\".\"Container\" = \"DerivedQuantityKind\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"QuantityKindFactor\".\"Container\") AS \"DerivedQuantityKind_QuantityKindFactor\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DerivedQuantityKind_Audit\".\"Actor\", \"DerivedQuantityKind_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DerivedQuantityKind_Audit\" AS \"DerivedQuantityKind_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"DerivedQuantityKind_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"DerivedQuantityKind_Audit\".\"Iid\", \"DerivedQuantityKind_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"DefinedThing\".\"ValueTypeDictionary\" || \"ParameterType\".\"ValueTypeDictionary\" || \"ScalarParameterType\".\"ValueTypeDictionary\" || \"QuantityKind\".\"ValueTypeDictionary\" || \"DerivedQuantityKind\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

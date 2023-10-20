@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"EngineeringModel_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"EngineeringModel_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -144,6 +151,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.EngineeringModel(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.Book.AddRange(Utils.ParseOrderedList<Guid>(reader["Book"] as string[,]));
             dto.CommonFileStore.AddRange(Array.ConvertAll((string[])reader["CommonFileStore"], Guid.Parse));
             dto.EngineeringModelSetup = Guid.Parse(reader["EngineeringModelSetup"].ToString());
@@ -202,7 +210,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"EngineeringModel\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"EngineeringModelSetup\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :engineeringModelSetup);");
@@ -248,7 +256,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"EngineeringModel\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"EngineeringModelSetup\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :engineeringModelSetup)");
@@ -388,7 +396,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ActionItem\" SELECT * FROM \"{1}\".\"ActionItem\";", targetPartition, sourcePartition);
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"ActionItem\" SET \"ValidFrom\" = \"SiteDirectory\".get_transaction_time(), \"ValidTo\" = 'infinity';", targetPartition);
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Approval\" SELECT * FROM \"{1}\".\"Approval\";", targetPartition, sourcePartition);
@@ -562,5 +570,103 @@ namespace CDP4Orm.Dao
                 this.ExecuteAndLogCommand(command);
             }
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="EngineeringModelDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"EngineeringModel\".\"EngineeringModelSetup\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModel_Book\".\"Book\",'{}'::text[]) AS \"Book\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModel_CommonFileStore\".\"CommonFileStore\",'{}'::text[]) AS \"CommonFileStore\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModel_GenericNote\".\"GenericNote\",'{}'::text[]) AS \"GenericNote\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModel_Iteration\".\"Iteration\",'{}'::text[]) AS \"Iteration\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModel_LogEntry\".\"LogEntry\",'{}'::text[]) AS \"LogEntry\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModel_ModellingAnnotation\".\"ModellingAnnotation\",'{}'::text[]) AS \"ModellingAnnotation\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"TopContainer_Data\"() AS \"TopContainer\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Book\".\"Container\" AS \"Iid\", ARRAY[array_agg(\"Book\".\"Sequence\"::text), array_agg(\"Book\".\"Iid\"::text)] AS \"Book\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Book_Data\"() AS \"Book\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" ON \"Book\".\"Container\" = \"EngineeringModel\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Book\".\"Container\") AS \"EngineeringModel_Book\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"CommonFileStore\".\"Container\" AS \"Iid\", array_agg(\"CommonFileStore\".\"Iid\"::text) AS \"CommonFileStore\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"CommonFileStore_Data\"() AS \"CommonFileStore\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" ON \"CommonFileStore\".\"Container\" = \"EngineeringModel\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"CommonFileStore\".\"Container\") AS \"EngineeringModel_CommonFileStore\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"EngineeringModelDataNote\".\"Container\" AS \"Iid\", array_agg(\"EngineeringModelDataNote\".\"Iid\"::text) AS \"GenericNote\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelDataNote_Data\"() AS \"EngineeringModelDataNote\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" ON \"EngineeringModelDataNote\".\"Container\" = \"EngineeringModel\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"EngineeringModelDataNote\".\"Container\") AS \"EngineeringModel_GenericNote\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Iteration\".\"Container\" AS \"Iid\", array_agg(\"Iteration\".\"Iid\"::text) AS \"Iteration\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Iteration_Data\"() AS \"Iteration\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" ON \"Iteration\".\"Container\" = \"EngineeringModel\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Iteration\".\"Container\") AS \"EngineeringModel_Iteration\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModelLogEntry\".\"Container\" AS \"Iid\", array_agg(\"ModelLogEntry\".\"Iid\"::text) AS \"LogEntry\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModelLogEntry_Data\"() AS \"ModelLogEntry\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" ON \"ModelLogEntry\".\"Container\" = \"EngineeringModel\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModelLogEntry\".\"Container\") AS \"EngineeringModel_LogEntry\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModellingAnnotationItem\".\"Container\" AS \"Iid\", array_agg(\"ModellingAnnotationItem\".\"Iid\"::text) AS \"ModellingAnnotation\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_Data\"() AS \"ModellingAnnotationItem\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModel_Data\"() AS \"EngineeringModel\" ON \"ModellingAnnotationItem\".\"Container\" = \"EngineeringModel\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModellingAnnotationItem\".\"Container\") AS \"EngineeringModel_ModellingAnnotation\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"EngineeringModel_Audit\".\"Actor\", \"EngineeringModel_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModel_Audit\" AS \"EngineeringModel_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"EngineeringModel_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"EngineeringModel_Audit\".\"Iid\", \"EngineeringModel_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"TopContainer\".\"ValueTypeDictionary\" || \"EngineeringModel\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

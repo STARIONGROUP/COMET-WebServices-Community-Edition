@@ -185,7 +185,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("SELECT \"ValueTypeSet\" FROM \"{0}\".\"Person_View\"", partition);
+                sqlBuilder.Append(this.BuildReadQuery(partition));
 
                 if (person != null)
                 {

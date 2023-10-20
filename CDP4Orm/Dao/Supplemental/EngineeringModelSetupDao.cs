@@ -66,7 +66,7 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new System.Text.StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"EngineeringModelSetup_View\"", partition);
+                sqlBuilder.Append(this.BuildReadQuery(partition));
 
                 if (!personId.Equals(Guid.Empty))
                 {

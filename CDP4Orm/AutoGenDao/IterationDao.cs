@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"Iteration_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Iteration_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -144,6 +151,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.Iteration(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.ActualFiniteStateList.AddRange(Array.ConvertAll((string[])reader["ActualFiniteStateList"], Guid.Parse));
             dto.DefaultOption = reader["DefaultOption"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultOption"].ToString());
             dto.DiagramCanvas.AddRange(Array.ConvertAll((string[])reader["DiagramCanvas"], Guid.Parse));
@@ -220,7 +228,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Iteration\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement);");
@@ -275,7 +283,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Iteration\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultOption\", \"IterationSetup\", \"TopElement\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultOption, :iterationSetup, :topElement)");
@@ -793,5 +801,176 @@ namespace CDP4Orm.Dao
                 this.ExecuteAndLogCommand(command);
             }
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="IterationDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+            var partitionId = partition.Substring(partition.IndexOf('_') +1);
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Iteration\".\"Container\",");
+
+            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"Iteration\".\"DefaultOption\",");
+
+            sqlBuilder.Append(" \"Iteration\".\"IterationSetup\",");
+
+            sqlBuilder.Append(" \"Iteration\".\"TopElement\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_ActualFiniteStateList\".\"ActualFiniteStateList\",'{}'::text[]) AS \"ActualFiniteStateList\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_DiagramCanvas\".\"DiagramCanvas\",'{}'::text[]) AS \"DiagramCanvas\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_DomainFileStore\".\"DomainFileStore\",'{}'::text[]) AS \"DomainFileStore\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_Element\".\"Element\",'{}'::text[]) AS \"Element\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_ExternalIdentifierMap\".\"ExternalIdentifierMap\",'{}'::text[]) AS \"ExternalIdentifierMap\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_Goal\".\"Goal\",'{}'::text[]) AS \"Goal\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_Option\".\"Option\",'{}'::text[]) AS \"Option\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_PossibleFiniteStateList\".\"PossibleFiniteStateList\",'{}'::text[]) AS \"PossibleFiniteStateList\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_Publication\".\"Publication\",'{}'::text[]) AS \"Publication\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_Relationship\".\"Relationship\",'{}'::text[]) AS \"Relationship\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_RequirementsSpecification\".\"RequirementsSpecification\",'{}'::text[]) AS \"RequirementsSpecification\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_RuleVerificationList\".\"RuleVerificationList\",'{}'::text[]) AS \"RuleVerificationList\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_SharedDiagramStyle\".\"SharedDiagramStyle\",'{}'::text[]) AS \"SharedDiagramStyle\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_Stakeholder\".\"Stakeholder\",'{}'::text[]) AS \"Stakeholder\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_StakeholderValue\".\"StakeholderValue\",'{}'::text[]) AS \"StakeholderValue\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_StakeholderValueMap\".\"StakeholderValueMap\",'{}'::text[]) AS \"StakeholderValueMap\",");
+            sqlBuilder.Append(" COALESCE(\"Iteration_ValueGroup\".\"ValueGroup\",'{}'::text[]) AS \"ValueGroup\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ActualFiniteStateList\".\"Container\" AS \"Iid\", array_agg(\"ActualFiniteStateList\".\"Iid\"::text) AS \"ActualFiniteStateList\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"ActualFiniteStateList_Data\"() AS \"ActualFiniteStateList\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"ActualFiniteStateList\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ActualFiniteStateList\".\"Container\") AS \"Iteration_ActualFiniteStateList\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DiagramCanvas\".\"Container\" AS \"Iid\", array_agg(\"DiagramCanvas\".\"Iid\"::text) AS \"DiagramCanvas\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"DiagramCanvas_Data\"() AS \"DiagramCanvas\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"DiagramCanvas\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"DiagramCanvas\".\"Container\") AS \"Iteration_DiagramCanvas\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"DomainFileStore\".\"Container\" AS \"Iid\", array_agg(\"DomainFileStore\".\"Iid\"::text) AS \"DomainFileStore\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"DomainFileStore_Data\"() AS \"DomainFileStore\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"DomainFileStore\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"DomainFileStore\".\"Container\") AS \"Iteration_DomainFileStore\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ElementDefinition\".\"Container\" AS \"Iid\", array_agg(\"ElementDefinition\".\"Iid\"::text) AS \"Element\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"ElementDefinition_Data\"() AS \"ElementDefinition\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"ElementDefinition\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ElementDefinition\".\"Container\") AS \"Iteration_Element\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ExternalIdentifierMap\".\"Container\" AS \"Iid\", array_agg(\"ExternalIdentifierMap\".\"Iid\"::text) AS \"ExternalIdentifierMap\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"ExternalIdentifierMap_Data\"() AS \"ExternalIdentifierMap\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"ExternalIdentifierMap\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ExternalIdentifierMap\".\"Container\") AS \"Iteration_ExternalIdentifierMap\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Goal\".\"Container\" AS \"Iid\", array_agg(\"Goal\".\"Iid\"::text) AS \"Goal\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Goal_Data\"() AS \"Goal\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"Goal\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Goal\".\"Container\") AS \"Iteration_Goal\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Option\".\"Container\" AS \"Iid\", ARRAY[array_agg(\"Option\".\"Sequence\"::text), array_agg(\"Option\".\"Iid\"::text)] AS \"Option\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Option_Data\"() AS \"Option\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"Option\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Option\".\"Container\") AS \"Iteration_Option\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"PossibleFiniteStateList\".\"Container\" AS \"Iid\", array_agg(\"PossibleFiniteStateList\".\"Iid\"::text) AS \"PossibleFiniteStateList\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"PossibleFiniteStateList_Data\"() AS \"PossibleFiniteStateList\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"PossibleFiniteStateList\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"PossibleFiniteStateList\".\"Container\") AS \"Iteration_PossibleFiniteStateList\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Publication\".\"Container\" AS \"Iid\", array_agg(\"Publication\".\"Iid\"::text) AS \"Publication\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Publication_Data\"() AS \"Publication\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"Publication\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Publication\".\"Container\") AS \"Iteration_Publication\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Relationship\".\"Container\" AS \"Iid\", array_agg(\"Relationship\".\"Iid\"::text) AS \"Relationship\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Relationship_Data\"() AS \"Relationship\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"Relationship\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Relationship\".\"Container\") AS \"Iteration_Relationship\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"RequirementsSpecification\".\"Container\" AS \"Iid\", array_agg(\"RequirementsSpecification\".\"Iid\"::text) AS \"RequirementsSpecification\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"RequirementsSpecification_Data\"() AS \"RequirementsSpecification\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"RequirementsSpecification\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"RequirementsSpecification\".\"Container\") AS \"Iteration_RequirementsSpecification\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"RuleVerificationList\".\"Container\" AS \"Iid\", array_agg(\"RuleVerificationList\".\"Iid\"::text) AS \"RuleVerificationList\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"RuleVerificationList_Data\"() AS \"RuleVerificationList\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"RuleVerificationList\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"RuleVerificationList\".\"Container\") AS \"Iteration_RuleVerificationList\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"SharedStyle\".\"Container\" AS \"Iid\", array_agg(\"SharedStyle\".\"Iid\"::text) AS \"SharedDiagramStyle\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"SharedStyle_Data\"() AS \"SharedStyle\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"SharedStyle\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"SharedStyle\".\"Container\") AS \"Iteration_SharedDiagramStyle\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Stakeholder\".\"Container\" AS \"Iid\", array_agg(\"Stakeholder\".\"Iid\"::text) AS \"Stakeholder\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"Stakeholder_Data\"() AS \"Stakeholder\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"Stakeholder\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Stakeholder\".\"Container\") AS \"Iteration_Stakeholder\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"StakeholderValue\".\"Container\" AS \"Iid\", array_agg(\"StakeholderValue\".\"Iid\"::text) AS \"StakeholderValue\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"StakeholderValue_Data\"() AS \"StakeholderValue\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"StakeholderValue\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"StakeholderValue\".\"Container\") AS \"Iteration_StakeholderValue\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"StakeHolderValueMap\".\"Container\" AS \"Iid\", array_agg(\"StakeHolderValueMap\".\"Iid\"::text) AS \"StakeholderValueMap\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"StakeHolderValueMap_Data\"() AS \"StakeHolderValueMap\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"StakeHolderValueMap\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"StakeHolderValueMap\".\"Container\") AS \"Iteration_StakeholderValueMap\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ValueGroup\".\"Container\" AS \"Iid\", array_agg(\"ValueGroup\".\"Iid\"::text) AS \"ValueGroup\"");
+            sqlBuilder.AppendFormat(" FROM \"Iteration_{0}\".\"ValueGroup_Data\"() AS \"ValueGroup\"", partitionId);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Iteration_Data\"() AS \"Iteration\" ON \"ValueGroup\".\"Container\" = \"Iteration\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ValueGroup\".\"Container\") AS \"Iteration_ValueGroup\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Iteration_Audit\".\"Actor\", \"Iteration_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Iteration_Audit\" AS \"Iteration_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"Iteration_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"Iteration_Audit\".\"Iid\", \"Iteration_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"Iteration\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

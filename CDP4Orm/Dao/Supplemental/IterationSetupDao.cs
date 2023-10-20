@@ -60,8 +60,8 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"IterationSetup_View\"", partition);
-                sqlBuilder.Append(" WHERE \"ValueTypeSet\" -> 'IterationIid' = :iterationIid");
+                sqlBuilder.Append($"{this.BuildReadQuery(partition)}");
+                sqlBuilder.Append($" WHERE {this.GetValueTypeSet()} -> 'IterationIid' = :iterationIid");
                 command.Parameters.Add("iterationIid", NpgsqlDbType.Text).Value = iterationId.ToString();
 
                 sqlBuilder.Append(";");
@@ -104,7 +104,7 @@ namespace CDP4Orm.Dao
             {
                 var sqlBuilder = new StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"IterationSetup_View\"", partition);
+                sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition)}");
                 sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\"::text = :engineeringModelSetupId)", partition);
 
                 command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();

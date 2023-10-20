@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"ReviewItemDiscrepancy_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"ReviewItemDiscrepancy_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -150,6 +157,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.ReviewItemDiscrepancy(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.ApprovedBy.AddRange(Array.ConvertAll((string[])reader["ApprovedBy"], Guid.Parse));
             dto.Author = Guid.Parse(reader["Author"].ToString());
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
@@ -240,7 +248,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReviewItemDiscrepancy\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid);");
@@ -285,7 +293,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ReviewItemDiscrepancy\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid)");
@@ -386,5 +394,109 @@ namespace CDP4Orm.Dao
             result = base.Delete(transaction, partition, iid);
             return result;
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="ReviewItemDiscrepancyDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"EngineeringModelDataAnnotation\".\"Author\",");
+
+            sqlBuilder.Append(" \"EngineeringModelDataAnnotation\".\"PrimaryAnnotatedThing\",");
+
+            sqlBuilder.Append(" \"ModellingAnnotationItem\".\"Owner\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModelDataAnnotation_Discussion\".\"Discussion\",'{}'::text[]) AS \"Discussion\",");
+            sqlBuilder.Append(" COALESCE(\"EngineeringModelDataAnnotation_RelatedThing\".\"RelatedThing\",'{}'::text[]) AS \"RelatedThing\",");
+            sqlBuilder.Append(" COALESCE(\"ModellingAnnotationItem_ApprovedBy\".\"ApprovedBy\",'{}'::text[]) AS \"ApprovedBy\",");
+            sqlBuilder.Append(" COALESCE(\"ModellingAnnotationItem_Category\".\"Category\",'{}'::text[]) AS \"Category\",");
+            sqlBuilder.Append(" COALESCE(\"ModellingAnnotationItem_SourceAnnotation\".\"SourceAnnotation\",'{}'::text[]) AS \"SourceAnnotation\",");
+            sqlBuilder.Append(" COALESCE(\"ReviewItemDiscrepancy_Solution\".\"Solution\",'{}'::text[]) AS \"Solution\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"GenericAnnotation_Data\"() AS \"GenericAnnotation\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModelDataAnnotation_Data\"() AS \"EngineeringModelDataAnnotation\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModellingAnnotationItem_Data\"() AS \"ModellingAnnotationItem\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReviewItemDiscrepancy_Data\"() AS \"ReviewItemDiscrepancy\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"EngineeringModelDataDiscussionItem\".\"Container\" AS \"Iid\", array_agg(\"EngineeringModelDataDiscussionItem\".\"Iid\"::text) AS \"Discussion\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelDataDiscussionItem_Data\"() AS \"EngineeringModelDataDiscussionItem\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModelDataAnnotation_Data\"() AS \"EngineeringModelDataAnnotation\" ON \"EngineeringModelDataDiscussionItem\".\"Container\" = \"EngineeringModelDataAnnotation\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"EngineeringModelDataDiscussionItem\".\"Container\") AS \"EngineeringModelDataAnnotation_Discussion\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModellingThingReference\".\"Container\" AS \"Iid\", array_agg(\"ModellingThingReference\".\"Iid\"::text) AS \"RelatedThing\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingThingReference_Data\"() AS \"ModellingThingReference\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"EngineeringModelDataAnnotation_Data\"() AS \"EngineeringModelDataAnnotation\" ON \"ModellingThingReference\".\"Container\" = \"EngineeringModelDataAnnotation\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModellingThingReference\".\"Container\") AS \"EngineeringModelDataAnnotation_RelatedThing\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Approval\".\"Container\" AS \"Iid\", array_agg(\"Approval\".\"Iid\"::text) AS \"ApprovedBy\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Approval_Data\"() AS \"Approval\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModellingAnnotationItem_Data\"() AS \"ModellingAnnotationItem\" ON \"Approval\".\"Container\" = \"ModellingAnnotationItem\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Approval\".\"Container\") AS \"ModellingAnnotationItem_ApprovedBy\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModellingAnnotationItem\" AS \"Iid\", array_agg(\"Category\"::text) AS \"Category\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_Category_Data\"() AS \"ModellingAnnotationItem_Category\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModellingAnnotationItem_Data\"() AS \"ModellingAnnotationItem\" ON \"ModellingAnnotationItem\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModellingAnnotationItem\") AS \"ModellingAnnotationItem_Category\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModellingAnnotationItem\" AS \"Iid\", array_agg(\"SourceAnnotation\"::text) AS \"SourceAnnotation\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_SourceAnnotation_Data\"() AS \"ModellingAnnotationItem_SourceAnnotation\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModellingAnnotationItem_Data\"() AS \"ModellingAnnotationItem\" ON \"ModellingAnnotationItem\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModellingAnnotationItem\") AS \"ModellingAnnotationItem_SourceAnnotation\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Solution\".\"Container\" AS \"Iid\", array_agg(\"Solution\".\"Iid\"::text) AS \"Solution\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Solution_Data\"() AS \"Solution\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReviewItemDiscrepancy_Data\"() AS \"ReviewItemDiscrepancy\" ON \"Solution\".\"Container\" = \"ReviewItemDiscrepancy\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Solution\".\"Container\") AS \"ReviewItemDiscrepancy_Solution\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReviewItemDiscrepancy_Audit\".\"Actor\", \"ReviewItemDiscrepancy_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ReviewItemDiscrepancy_Audit\" AS \"ReviewItemDiscrepancy_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"ReviewItemDiscrepancy_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"ReviewItemDiscrepancy_Audit\".\"Iid\", \"ReviewItemDiscrepancy_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"GenericAnnotation\".\"ValueTypeDictionary\" || \"EngineeringModelDataAnnotation\".\"ValueTypeDictionary\" || \"ModellingAnnotationItem\".\"ValueTypeDictionary\" || \"ReviewItemDiscrepancy\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

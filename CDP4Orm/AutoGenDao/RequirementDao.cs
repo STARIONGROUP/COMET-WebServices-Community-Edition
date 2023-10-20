@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"Requirement_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Requirement_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -146,6 +153,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.Requirement(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.Alias.AddRange(Array.ConvertAll((string[])reader["Alias"], Guid.Parse));
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
             dto.Definition.AddRange(Array.ConvertAll((string[])reader["Definition"], Guid.Parse));
@@ -220,7 +228,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Requirement\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"Group\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :group);");
@@ -274,7 +282,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Requirement\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"Group\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :group)");
@@ -563,7 +571,7 @@ namespace CDP4Orm.Dao
 
                 result = this.ExecuteAndLogCommand(command) > 0;
             }
-            
+
             return result;
         }
 
@@ -601,9 +609,9 @@ namespace CDP4Orm.Dao
                     }
 
                 default:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
 
             return isDeleted;
@@ -646,5 +654,110 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="RequirementDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Requirement\".\"Container\",");
+
+            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"SimpleParameterizableThing\".\"Owner\",");
+
+            sqlBuilder.Append(" \"Requirement\".\"Group\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_Alias\".\"Alias\",'{}'::text[]) AS \"Alias\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_Definition\".\"Definition\",'{}'::text[]) AS \"Definition\",");
+            sqlBuilder.Append(" COALESCE(\"DefinedThing_HyperLink\".\"HyperLink\",'{}'::text[]) AS \"HyperLink\",");
+            sqlBuilder.Append(" COALESCE(\"SimpleParameterizableThing_ParameterValue\".\"ParameterValue\",'{}'::text[]) AS \"ParameterValue\",");
+            sqlBuilder.Append(" COALESCE(\"Requirement_Category\".\"Category\",'{}'::text[]) AS \"Category\",");
+            sqlBuilder.Append(" COALESCE(\"Requirement_ParametricConstraint\".\"ParametricConstraint\",'{}'::text[]) AS \"ParametricConstraint\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SimpleParameterizableThing_Data\"() AS \"SimpleParameterizableThing\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Requirement_Data\"() AS \"Requirement\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Alias\".\"Container\" AS \"Iid\", array_agg(\"Alias\".\"Iid\"::text) AS \"Alias\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Alias_Data\"() AS \"Alias\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"Alias\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Alias\".\"Container\") AS \"DefinedThing_Alias\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Definition\".\"Container\" AS \"Iid\", array_agg(\"Definition\".\"Iid\"::text) AS \"Definition\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Definition_Data\"() AS \"Definition\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"Definition\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Definition\".\"Container\") AS \"DefinedThing_Definition\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"HyperLink\".\"Container\" AS \"Iid\", array_agg(\"HyperLink\".\"Iid\"::text) AS \"HyperLink\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"HyperLink_Data\"() AS \"HyperLink\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"HyperLink\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"HyperLink\".\"Container\") AS \"DefinedThing_HyperLink\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"SimpleParameterValue\".\"Container\" AS \"Iid\", array_agg(\"SimpleParameterValue\".\"Iid\"::text) AS \"ParameterValue\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SimpleParameterValue_Data\"() AS \"SimpleParameterValue\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SimpleParameterizableThing_Data\"() AS \"SimpleParameterizableThing\" ON \"SimpleParameterValue\".\"Container\" = \"SimpleParameterizableThing\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"SimpleParameterValue\".\"Container\") AS \"SimpleParameterizableThing_ParameterValue\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Requirement\" AS \"Iid\", array_agg(\"Category\"::text) AS \"Category\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Requirement_Category_Data\"() AS \"Requirement_Category\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Requirement_Data\"() AS \"Requirement\" ON \"Requirement\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Requirement\") AS \"Requirement_Category\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ParametricConstraint\".\"Container\" AS \"Iid\", ARRAY[array_agg(\"ParametricConstraint\".\"Sequence\"::text), array_agg(\"ParametricConstraint\".\"Iid\"::text)] AS \"ParametricConstraint\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParametricConstraint_Data\"() AS \"ParametricConstraint\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Requirement_Data\"() AS \"Requirement\" ON \"ParametricConstraint\".\"Container\" = \"Requirement\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ParametricConstraint\".\"Container\") AS \"Requirement_ParametricConstraint\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Requirement_Audit\".\"Actor\", \"Requirement_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Requirement_Audit\" AS \"Requirement_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"Requirement_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"Requirement_Audit\".\"Iid\", \"Requirement_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"DefinedThing\".\"ValueTypeDictionary\" || \"SimpleParameterizableThing\".\"ValueTypeDictionary\" || \"Requirement\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

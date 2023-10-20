@@ -138,7 +138,7 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully reordered.
         /// </returns>
         bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate);
- 
+
         /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name.
         /// </summary>
@@ -161,7 +161,7 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully created.
         /// </returns>
         bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// </summary>
@@ -178,7 +178,7 @@ namespace CDP4Orm.Dao
         /// True if the concept was successfully deleted.
         /// </returns>
         bool Delete(NpgsqlTransaction transaction, string partition, Guid iid);
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
@@ -197,7 +197,7 @@ namespace CDP4Orm.Dao
         /// True if the concept was successfully deleted.
         /// </returns>
         bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid);
-        
+
         /// <summary>
         /// Delete the supplied value from the association link table indicated by the supplied property name.
         /// </summary>

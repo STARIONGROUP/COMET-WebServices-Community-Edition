@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"Person_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"Person_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -150,6 +157,7 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.Person(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.DefaultDomain = reader["DefaultDomain"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultDomain"].ToString());
             dto.DefaultEmailAddress = reader["DefaultEmailAddress"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultEmailAddress"].ToString());
             dto.DefaultTelephoneNumber = reader["DefaultTelephoneNumber"] is DBNull ? (Guid?)null : Guid.Parse(reader["DefaultTelephoneNumber"].ToString());
@@ -250,7 +258,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Person\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultDomain\", \"DefaultEmailAddress\", \"DefaultTelephoneNumber\", \"Organization\", \"Role\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultDomain, :defaultEmailAddress, :defaultTelephoneNumber, :organization, :role);");
@@ -313,7 +321,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Person\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultDomain\", \"DefaultEmailAddress\", \"DefaultTelephoneNumber\", \"Organization\", \"Role\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :defaultDomain, :defaultEmailAddress, :defaultTelephoneNumber, :organization, :role)");
@@ -492,8 +500,99 @@ namespace CDP4Orm.Dao
 
                 result = this.ExecuteAndLogCommand(command) > 0;
             }
-            
+
             return result;
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="PersonDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"Person\".\"Container\",");
+
+            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"Person\".\"DefaultDomain\",");
+
+            sqlBuilder.Append(" \"Person\".\"DefaultEmailAddress\",");
+
+            sqlBuilder.Append(" \"Person\".\"DefaultTelephoneNumber\",");
+
+            sqlBuilder.Append(" \"Person\".\"Organization\",");
+
+            sqlBuilder.Append(" \"Person\".\"Role\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"Person_EmailAddress\".\"EmailAddress\",'{}'::text[]) AS \"EmailAddress\",");
+            sqlBuilder.Append(" COALESCE(\"Person_TelephoneNumber\".\"TelephoneNumber\",'{}'::text[]) AS \"TelephoneNumber\",");
+            sqlBuilder.Append(" COALESCE(\"Person_UserPreference\".\"UserPreference\",'{}'::text[]) AS \"UserPreference\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Person_Data\"() AS \"Person\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"EmailAddress\".\"Container\" AS \"Iid\", array_agg(\"EmailAddress\".\"Iid\"::text) AS \"EmailAddress\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EmailAddress_Data\"() AS \"EmailAddress\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Person_Data\"() AS \"Person\" ON \"EmailAddress\".\"Container\" = \"Person\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"EmailAddress\".\"Container\") AS \"Person_EmailAddress\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"TelephoneNumber\".\"Container\" AS \"Iid\", array_agg(\"TelephoneNumber\".\"Iid\"::text) AS \"TelephoneNumber\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"TelephoneNumber_Data\"() AS \"TelephoneNumber\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Person_Data\"() AS \"Person\" ON \"TelephoneNumber\".\"Container\" = \"Person\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"TelephoneNumber\".\"Container\") AS \"Person_TelephoneNumber\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"UserPreference\".\"Container\" AS \"Iid\", array_agg(\"UserPreference\".\"Iid\"::text) AS \"UserPreference\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"UserPreference_Data\"() AS \"UserPreference\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Person_Data\"() AS \"Person\" ON \"UserPreference\".\"Container\" = \"Person\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"UserPreference\".\"Container\") AS \"Person_UserPreference\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Person_Audit\".\"Actor\", \"Person_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Person_Audit\" AS \"Person_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"Person_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"Person_Audit\".\"Iid\", \"Person_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"Person\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

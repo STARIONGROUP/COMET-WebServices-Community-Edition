@@ -23,15 +23,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.DTO;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -66,6 +72,7 @@ namespace CDP4Orm.Dao
                 if (isCachedDtoReadEnabledAndInstant)
                 {
                     sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"ModelLogEntry_Cache\"", partition);
+                    sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
                     {
@@ -96,9 +103,9 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"ModelLogEntry_View\"", partition);
+                    sqlBuilder.Append(this.BuildReadQuery(partition));
 
-                    if (ids != null && ids.Any()) 
+                    if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
@@ -147,10 +154,11 @@ namespace CDP4Orm.Dao
             var revisionNumber = int.Parse(valueDict["RevisionNumber"]);
 
             var dto = new CDP4Common.DTO.ModelLogEntry(iid, revisionNumber);
+            dto.Actor = reader["Actor"] is DBNull ? (Guid?)null : Guid.Parse(reader["Actor"].ToString());
             dto.AffectedDomainIid.AddRange(Array.ConvertAll((string[])reader["AffectedDomainIid"], Guid.Parse));
-            
+
             dto.AffectedItemIid.AddRange(Array.ConvertAll((string[])reader["AffectedItemIid"], Guid.Parse));
-            
+
             dto.Author = reader["Author"] is DBNull ? (Guid?)null : Guid.Parse(reader["Author"].ToString());
             dto.Category.AddRange(Array.ConvertAll((string[])reader["Category"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
@@ -228,7 +236,7 @@ namespace CDP4Orm.Dao
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry\"", partition);
                     sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\")");
                     sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :author);");
@@ -289,7 +297,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                    
+
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"ModelLogEntry\"", partition);
                 sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\")");
                 sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :author)");
@@ -763,9 +771,9 @@ namespace CDP4Orm.Dao
                     }
 
                 default:
-                {
-                    break;
-                }
+                    {
+                        break;
+                    }
             }
 
             return isDeleted;
@@ -884,5 +892,94 @@ namespace CDP4Orm.Dao
                 return this.ExecuteAndLogCommand(command) > 0;
             }
         }
+
+        /// <summary>
+        /// Build a SQL read query for the current <see cref="ModelLogEntryDao" />
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL read query</returns>
+        public override string BuildReadQuery(string partition)
+        {
+
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
+            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
+
+            sqlBuilder.Append(" \"ModelLogEntry\".\"Container\",");
+
+            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
+
+            sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"ModelLogEntry\".\"Author\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
+            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
+            sqlBuilder.Append(" COALESCE(\"ModelLogEntry_Category\".\"Category\",'{}'::text[]) AS \"Category\",");
+            sqlBuilder.Append(" COALESCE(\"ModelLogEntry_LogEntryChangelogItem\".\"LogEntryChangelogItem\",'{}'::text[]) AS \"LogEntryChangelogItem\",");
+            sqlBuilder.Append(" COALESCE(\"ModelLogEntry_AffectedDomainIid\".\"AffectedDomainIid\",'{}'::text[]) AS \"AffectedDomainIid\",");
+            sqlBuilder.Append(" COALESCE(\"ModelLogEntry_AffectedItemIid\".\"AffectedItemIid\",'{}'::text[]) AS \"AffectedItemIid\",");
+
+            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModelLogEntry_Data\"() AS \"ModelLogEntry\" USING (\"Iid\")", partition);
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModelLogEntry\" AS \"Iid\", array_agg(\"Category\"::text) AS \"Category\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModelLogEntry_Category_Data\"() AS \"ModelLogEntry_Category\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModelLogEntry_Data\"() AS \"ModelLogEntry\" ON \"ModelLogEntry\" = \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModelLogEntry\") AS \"ModelLogEntry_Category\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"LogEntryChangelogItem\".\"Container\" AS \"Iid\", array_agg(\"LogEntryChangelogItem\".\"Iid\"::text) AS \"LogEntryChangelogItem\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"LogEntryChangelogItem_Data\"() AS \"LogEntryChangelogItem\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModelLogEntry_Data\"() AS \"ModelLogEntry\" ON \"LogEntryChangelogItem\".\"Container\" = \"ModelLogEntry\".\"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"LogEntryChangelogItem\".\"Container\") AS \"ModelLogEntry_LogEntryChangelogItem\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModelLogEntry\" AS \"Iid\", array_agg(\"AffectedDomainIid\"::text) AS \"AffectedDomainIid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModelLogEntry_AffectedDomainIid_Data\"() AS \"ModelLogEntry_AffectedDomainIid\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModelLogEntry_Data\"() AS \"ModelLogEntry\" ON \"ModelLogEntry\"= \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModelLogEntry\") AS \"ModelLogEntry_AffectedDomainIid\" USING (\"Iid\")");
+
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModelLogEntry\" AS \"Iid\", array_agg(\"AffectedItemIid\"::text) AS \"AffectedItemIid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModelLogEntry_AffectedItemIid_Data\"() AS \"ModelLogEntry_AffectedItemIid\"", partition);
+            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ModelLogEntry_Data\"() AS \"ModelLogEntry\" ON \"ModelLogEntry\"= \"Iid\"", partition);
+            sqlBuilder.Append(" GROUP BY \"ModelLogEntry\") AS \"ModelLogEntry_AffectedItemIid\" USING (\"Iid\")");
+
+            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
+        /// </summary>
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public override string BuildJoinForActorProperty(string partition)
+        {
+            var sqlBuilder = new StringBuilder();
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ModelLogEntry_Audit\".\"Actor\", \"ModelLogEntry_Audit\".\"Iid\"");
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModelLogEntry_Audit\" AS \"ModelLogEntry_Audit\"", partition);
+            sqlBuilder.Append(" WHERE \"ModelLogEntry_Audit\".\"ValidTo\" = 'infinity'");
+            sqlBuilder.Append(" GROUP BY \"ModelLogEntry_Audit\".\"Iid\", \"ModelLogEntry_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"ModelLogEntry\".\"ValueTypeDictionary\"";
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
