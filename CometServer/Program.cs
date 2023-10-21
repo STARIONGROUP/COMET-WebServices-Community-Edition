@@ -34,16 +34,18 @@ namespace CometServer
 
     using CometServer.ChangeNotification;
     using CometServer.Configuration;
+    using CometServer.Resources;
     using CometServer.Services.DataStore;
 
     using Hangfire;
-    using Hangfire.Logging;
-
+    
     using Microsoft.Extensions.Hosting;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
+
+    using Serilog;
 
     /// <summary>
     /// The <see cref="Program"/> is the entry point for the console application
@@ -60,7 +62,7 @@ namespace CometServer
         {
             Console.Title = "CDP4-COMET WebServices";
 
-            var host = Host.CreateDefaultBuilder(args)
+            var builder = Host.CreateDefaultBuilder(args)
                 .UseServiceProviderFactory(new AutofacServiceProviderFactory())
                 .ConfigureWebHostDefaults(webHostBuilder =>
                 {
@@ -70,12 +72,24 @@ namespace CometServer
                         )
                         .UseStartup<Startup>();
                 })
-                .Build();
+                .UseSerilog((hostingContext, loggerConfiguration) =>
+                {
+                    loggerConfiguration
+                        .ReadFrom.Configuration(hostingContext.Configuration) // Read configuration from appsettings.json
+                        .WriteTo.Console(); // Add the console sink for logging to the console
+                });
+
+            var host = builder.Build();
 
             var logger = host.Services.GetService<ILogger<Program>>();
 
             try
             {
+                var resourceLoader = host.Services.GetService<IResourceLoader>();
+                var logo = resourceLoader.QueryLogo();
+
+                logger.LogInformation(logo);
+
                 logger.LogInformation("################################################################");
                 logger.LogInformation($"Starting CDP4-COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
 

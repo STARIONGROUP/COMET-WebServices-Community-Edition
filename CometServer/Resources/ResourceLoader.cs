@@ -31,7 +31,7 @@ namespace CometServer.Resources
     /// <summary>
     /// Class responsible for loading embedded resources.
     /// </summary>
-    public class ResourceLoader
+    public class ResourceLoader : IResourceLoader
     {
         /// <summary>
         /// Load an embedded resource
@@ -51,6 +51,34 @@ namespace CometServer.Resources
             using var reader = new StreamReader(stream ?? throw new MissingManifestResourceException());
 
             return reader.ReadToEnd();
+        }
+
+        /// <summary>
+        /// queries the version number from the executing assembly
+        /// </summary>
+        /// <returns>
+        /// a string representation of the version of the application
+        /// </returns>
+        public string QueryVersion()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            return assembly.GetName().Version?.ToString();
+        }
+
+        /// <summary>
+        /// Queries the logo with version info from the embedded resources
+        /// </summary>
+        /// <returns>
+        /// the logo
+        /// </returns>
+        public string QueryLogo()
+        {
+            var version = this.QueryVersion();
+
+            var logo = this.LoadEmbeddedResource("CometServer.Resources.ascii-art.txt")
+                .Replace("COMETWebServicesVersion", version);
+
+            return logo;
         }
     }
 }

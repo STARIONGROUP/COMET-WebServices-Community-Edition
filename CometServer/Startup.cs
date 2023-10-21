@@ -51,6 +51,7 @@ namespace CometServer
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Helpers;
+    using CometServer.Resources;
     using CometServer.Services;
     using CometServer.Services.ChangeLog;
     using CometServer.Services.CherryPick;
@@ -68,6 +69,7 @@ namespace CometServer
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Serilog;
 
     /// <summary>
     /// The <see cref="Startup"/> used to configure the application
@@ -113,6 +115,8 @@ namespace CometServer
         /// </param>
         public void ConfigureServices(IServiceCollection services)
         {
+            
+
             services.AddHangfire(globalConfiguration => globalConfiguration.UseMemoryStorage());
 
             services.AddCors(options =>
@@ -139,7 +143,8 @@ namespace CometServer
         {
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
-
+            builder.RegisterType<ResourceLoader>().As<IResourceLoader>().SingleInstance();
+            
             // 10-25 helpers
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().SingleInstance();
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().SingleInstance();
@@ -220,6 +225,8 @@ namespace CometServer
             {
                 app.UseExceptionHandler("/errorhandler");
             }
+
+            app.UseSerilogRequestLogging();
 
             GlobalConfiguration.Configuration.UseMemoryStorage();
             app.UseHangfireDashboard("/hangfire");

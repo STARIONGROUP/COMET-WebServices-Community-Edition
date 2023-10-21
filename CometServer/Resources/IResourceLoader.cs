@@ -39,5 +39,21 @@ namespace CometServer.Resources
         /// a string containing the contents of the embedded resource
         /// </returns>
         string LoadEmbeddedResource(string path);
+
+        /// <summary>
+        /// queries the version number from the executing assembly
+        /// </summary>
+        /// <returns>
+        /// a string representation of the version of the application
+        /// </returns>
+        string QueryVersion();
+
+        /// <summary>
+        /// Queries the logo with version info from the embedded resources
+        /// </summary>
+        /// <returns>
+        /// the logo
+        /// </returns>
+        string QueryLogo();
     }
 }
