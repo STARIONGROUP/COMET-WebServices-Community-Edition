@@ -85,52 +85,64 @@ namespace CometServer.Authentication
 
             var username = string.Empty;
 
-            try
+            this.logger.LogTrace("starting basic auithentication");
+
+            var authorizationHeader = context.Request.Headers["Authorization"];
+
+            if (string.IsNullOrEmpty(authorizationHeader))
             {
-                this.logger.LogTrace("starting basic auithentication");
-
-                var authHeader = AuthenticationHeaderValue.Parse(context.Request.Headers["Authorization"]);
-                if (authHeader != null && authHeader.Scheme != "Basic")
-                {
-                    await this.next(context);
-                    return;
-                }
-
-                var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
-                var basicAuthcredentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
-                username = basicAuthcredentials[0];
-                var password = basicAuthcredentials[1];
-
-                var authenticationPerson = await authenticationPersonAuthenticator.Authenticate(username, password);
-
-                if (authenticationPerson != null)
-                {
-                    var claims = new[] {
-                        new Claim(ClaimTypes.Name, username),
-                    };
-
-                    var identity = new ClaimsIdentity(claims, "Basic");
-                    var principal = new ClaimsPrincipal(identity);
-
-                    var authProperties = new AuthenticationProperties
-                    {
-                        AllowRefresh = true,
-                        IsPersistent = false,
-                    };
-
-                    // sign in and add cookie
-                    await context.SignInAsync("CDP4", principal, authProperties);
-
-                    context.User = principal;
-                }
-
-                this.logger.LogTrace("{username} authenticated using Basic Auth in {sw} [ms]", username, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("no Authorization header provided");
             }
-            catch(Exception ex)
+            else
             {
-                // do nothing if invalid auth header
-                // user is not attached to context so request won't have access to secure routes
-                this.logger.LogWarning(ex, "The {username} could not be authenticated using Basic Authentication", username);
+                try
+                {
+                    var authHeader = AuthenticationHeaderValue.Parse(authorizationHeader);
+
+                    if (authHeader != null && authHeader.Scheme != "Basic")
+                    {
+                        await this.next(context);
+                        return;
+                    }
+
+                    var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
+                    var basicAuthcredentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
+                    username = basicAuthcredentials[0];
+                    var password = basicAuthcredentials[1];
+
+                    var authenticationPerson = await authenticationPersonAuthenticator.Authenticate(username, password);
+
+                    if (authenticationPerson != null)
+                    {
+                        var claims = new[]
+                        {
+                            new Claim(ClaimTypes.Name, username),
+                        };
+
+                        var identity = new ClaimsIdentity(claims, "Basic");
+                        var principal = new ClaimsPrincipal(identity);
+
+                        var authProperties = new AuthenticationProperties
+                        {
+                            AllowRefresh = true,
+                            IsPersistent = false,
+                        };
+
+                        // sign in and add cookie
+                        await context.SignInAsync("CDP4", principal, authProperties);
+
+                        context.User = principal;
+                    }
+
+                    this.logger.LogTrace("{username} authenticated using Basic Auth in {sw} [ms]", username, sw.ElapsedMilliseconds);
+                }
+                catch(Exception ex)
+
+                {
+                    // do nothing if invalid auth header
+                    // user is not attached to context so request won't have access to secure routes
+                    this.logger.LogWarning(ex, "The {username} could not be authenticated using Basic Authentication", username);
+                }
             }
 
             await this.next(context);

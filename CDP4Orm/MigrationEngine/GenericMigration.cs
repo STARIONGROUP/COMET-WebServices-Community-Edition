@@ -62,7 +62,7 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="existingSchemas">The schema on which the migration shall be applied on</param>
         public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
-            this.logger.LogInformation("Start migration script {this.MigrationMetaData.ResourceName}", this.MigrationMetaData.ResourceName);
+            this.logger.LogInformation("Start migration script {ResourceName}", this.MigrationMetaData.ResourceName);
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName);
             if (resource == null)
             {
@@ -104,7 +104,7 @@ namespace CDP4Orm.MigrationEngine
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;
                     sqlCommand.ExecuteNonQuery();
-                    this.logger.LogInformation("End migration script {this.MigrationMetaData.ResourceName}", this.MigrationMetaData.ResourceName);
+                    this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
                 }
             }
 

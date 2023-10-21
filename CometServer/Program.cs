@@ -148,6 +148,9 @@ namespace CometServer
         /// <param name="appConfigService">
         /// The <see cref="IAppConfigService"/> that provides the configuration used to configure the recurring jobs
         /// </param>
+        /// <param name="logger">
+        /// The <see cref="ILogger{Program}"/> used to log
+        /// </param>
         public static void ConfigureRecurringJobs(IAppConfigService appConfigService, ILogger<Program> logger)
         {
             var sw = Stopwatch.StartNew();

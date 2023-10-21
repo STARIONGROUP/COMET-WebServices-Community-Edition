@@ -42,6 +42,7 @@ namespace CometServer.Configuration
             this.Midtier = new MidtierConfig();
             this.Changelog = new ChangelogConfig();
             this.EmailService = new EmailConfig();
+            this.HealthConfig = new HealthConfig();
         }
 
         /// <summary>
@@ -55,6 +56,7 @@ namespace CometServer.Configuration
             this.Midtier = new MidtierConfig(configuration);
             this.Changelog = new ChangelogConfig(configuration);
             this.EmailService = new EmailConfig(configuration);
+            this.HealthConfig = new HealthConfig(configuration);
         }
 
         /// <summary>
@@ -66,6 +68,11 @@ namespace CometServer.Configuration
         /// Gets or sets the back tier configuration.
         /// </summary>
         public BacktierConfig Backtier { get; set; }
+
+        /// <summary>
+        /// Gets or sets the health configuration.
+        /// </summary>
+        public HealthConfig HealthConfig { get; set; }
 
         /// <summary>
         /// Gets or sets the email service configuration.

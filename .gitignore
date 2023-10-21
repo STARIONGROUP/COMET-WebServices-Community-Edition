@@ -76,4 +76,5 @@ CDP4.v12.suo
 
 /CometServer/upload/*
 CometServer/storage/*
+CometServer/logs/*
 

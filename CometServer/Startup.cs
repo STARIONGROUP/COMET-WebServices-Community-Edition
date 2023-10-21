@@ -24,7 +24,6 @@
 
 namespace CometServer
 {
-    using System.Diagnostics;
     using System.Linq;
 
     using Autofac;
@@ -69,6 +68,9 @@ namespace CometServer
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+
+    using Prometheus;
+
     using Serilog;
 
     /// <summary>
@@ -115,8 +117,6 @@ namespace CometServer
         /// </param>
         public void ConfigureServices(IServiceCollection services)
         {
-            
-
             services.AddHangfire(globalConfiguration => globalConfiguration.UseMemoryStorage());
 
             services.AddCors(options =>
@@ -236,6 +236,9 @@ namespace CometServer
             app.UseCors();
             app.UseAuthentication();
             app.UseBasicAuthenticatonMiddleware();
+
+            app.UseMetricServer();
+            app.UseHttpMetrics();
 
             app.UseEndpoints(builder =>
             {

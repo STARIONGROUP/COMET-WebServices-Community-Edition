@@ -72,7 +72,7 @@ namespace CDP4Orm.MigrationEngine
         /// </summary>
         public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
-            this.logger.LogInformation("Start migration script {0}", this.MigrationMetaData.ResourceName);
+            this.logger.LogInformation("Start migration script {ResourceName}", this.MigrationMetaData.ResourceName);
 
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName);
             if (resource == null)
@@ -96,7 +96,7 @@ namespace CDP4Orm.MigrationEngine
                 var nonThingTableList = new List<string>();
                 using (var tableListCmd = new NpgsqlCommand())
                 {
-                    this.logger.LogInformation("Getting all non-Thing table for schema {0}", applicableSchema);
+                    this.logger.LogInformation("Getting all non-Thing table for schema {applicableSchema}", applicableSchema);
 
                     var cmdTxt = "SELECT table_name FROM information_schema.tables WHERE table_schema = :schemaName AND table_type = 'BASE TABLE';";
 
@@ -116,7 +116,7 @@ namespace CDP4Orm.MigrationEngine
                         }
                     }
 
-                    this.logger.LogInformation("Non-Thing table fetched: {0}", nonThingTableList.Count);
+                    this.logger.LogInformation("Non-Thing table fetched: {Count}", nonThingTableList.Count);
                 }
 
                 using (var sqlCommand = new NpgsqlCommand())
@@ -132,7 +132,7 @@ namespace CDP4Orm.MigrationEngine
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;
                     sqlCommand.ExecuteNonQuery();
-                    this.logger.LogInformation("End migration script {0}", this.MigrationMetaData.ResourceName);
+                    this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
                 }
 
                 base.ApplyMigration(transaction, existingSchemas);
