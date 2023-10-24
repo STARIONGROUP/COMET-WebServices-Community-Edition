@@ -809,7 +809,7 @@ namespace CDP4Orm.Dao
         /// <returns>The built SQL read query</returns>
         public override string BuildReadQuery(string partition)
         {
-            var partitionId = partition.Substring(partition.IndexOf('_') +1);
+            var partitionId = partition.Substring(partition.IndexOf('_') + 1);
             var sqlBuilder = new StringBuilder();
             sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
             sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());

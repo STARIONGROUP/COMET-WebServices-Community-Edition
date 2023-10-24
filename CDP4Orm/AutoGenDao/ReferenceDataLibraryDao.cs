@@ -734,7 +734,7 @@ namespace CDP4Orm.Dao
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"DefinedThing_Data\"() AS \"DefinedThing\" ON \"HyperLink\".\"Container\" = \"DefinedThing\".\"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"HyperLink\".\"Container\") AS \"DefinedThing_HyperLink\" USING (\"Iid\")");
 
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReferenceDataLibrary\" AS \"Iid\", array_agg(\"BaseQuantityKind\"::text) AS \"BaseQuantityKind\"");
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ReferenceDataLibrary\" AS \"Iid\", ARRAY[array_agg(\"Sequence\"::text), array_agg(\"BaseQuantityKind\"::text)] AS \"BaseQuantityKind\"");
             sqlBuilder.AppendFormat(" FROM \"{0}\".\"ReferenceDataLibrary_BaseQuantityKind_Data\"() AS \"ReferenceDataLibrary_BaseQuantityKind\"", partition);
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ReferenceDataLibrary_Data\"() AS \"ReferenceDataLibrary\" ON \"ReferenceDataLibrary\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"ReferenceDataLibrary\") AS \"ReferenceDataLibrary_BaseQuantityKind\" USING (\"Iid\")");

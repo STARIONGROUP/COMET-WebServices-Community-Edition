@@ -848,7 +848,7 @@ namespace CDP4Orm.Dao
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ActualFiniteStateList_Data\"() AS \"ActualFiniteStateList\" ON \"ActualFiniteStateList\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"ActualFiniteStateList\") AS \"ActualFiniteStateList_ExcludeOption\" USING (\"Iid\")");
 
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"ActualFiniteStateList\" AS \"Iid\", array_agg(\"PossibleFiniteStateList\"::text) AS \"PossibleFiniteStateList\"");
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"ActualFiniteStateList\" AS \"Iid\", ARRAY[array_agg(\"Sequence\"::text), array_agg(\"PossibleFiniteStateList\"::text)] AS \"PossibleFiniteStateList\"");
             sqlBuilder.AppendFormat(" FROM \"{0}\".\"ActualFiniteStateList_PossibleFiniteStateList_Data\"() AS \"ActualFiniteStateList_PossibleFiniteStateList\"", partition);
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ActualFiniteStateList_Data\"() AS \"ActualFiniteStateList\" ON \"ActualFiniteStateList\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"ActualFiniteStateList\") AS \"ActualFiniteStateList_PossibleFiniteStateList\" USING (\"Iid\")");

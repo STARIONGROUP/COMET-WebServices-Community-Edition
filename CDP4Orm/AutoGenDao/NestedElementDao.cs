@@ -728,7 +728,7 @@ namespace CDP4Orm.Dao
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
 
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"NestedElement\" AS \"Iid\", array_agg(\"ElementUsage\"::text) AS \"ElementUsage\"");
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"NestedElement\" AS \"Iid\", ARRAY[array_agg(\"Sequence\"::text), array_agg(\"ElementUsage\"::text)] AS \"ElementUsage\"");
             sqlBuilder.AppendFormat(" FROM \"{0}\".\"NestedElement_ElementUsage_Data\"() AS \"NestedElement_ElementUsage\"", partition);
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"NestedElement_Data\"() AS \"NestedElement\" ON \"NestedElement\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"NestedElement\") AS \"NestedElement_ElementUsage\" USING (\"Iid\")");

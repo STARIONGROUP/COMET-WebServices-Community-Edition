@@ -750,7 +750,7 @@ namespace CDP4Orm.Dao
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
 
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"FileRevision\" AS \"Iid\", array_agg(\"FileType\"::text) AS \"FileType\"");
+            sqlBuilder.Append(" LEFT JOIN (SELECT \"FileRevision\" AS \"Iid\", ARRAY[array_agg(\"Sequence\"::text), array_agg(\"FileType\"::text)] AS \"FileType\"");
             sqlBuilder.AppendFormat(" FROM \"{0}\".\"FileRevision_FileType_Data\"() AS \"FileRevision_FileType\"", partition);
             sqlBuilder.AppendFormat(" JOIN \"{0}\".\"FileRevision_Data\"() AS \"FileRevision\" ON \"FileRevision\" = \"Iid\"", partition);
             sqlBuilder.Append(" GROUP BY \"FileRevision\") AS \"FileRevision_FileType\" USING (\"Iid\")");

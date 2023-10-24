@@ -937,6 +937,21 @@ namespace CometServer.Tests
         {
             throw new NotImplementedException();
         }
+
+        public string BuildReadQuery(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildJoinForActorProperty(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetValueTypeSet()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class TestParameterOverrideDao : IParameterOverrideDao
@@ -997,6 +1012,21 @@ namespace CometServer.Tests
         {
             throw new NotImplementedException();
         }
+
+        public string BuildReadQuery(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildJoinForActorProperty(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetValueTypeSet()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class TestElementDefinitionDao : IElementDefinitionDao
@@ -1053,6 +1083,21 @@ namespace CometServer.Tests
         }
 
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildReadQuery(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildJoinForActorProperty(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetValueTypeSet()
         {
             throw new NotImplementedException();
         }
