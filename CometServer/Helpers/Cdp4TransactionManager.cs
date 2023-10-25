@@ -189,12 +189,26 @@ namespace CometServer.Helpers
                 return DateTime.UtcNow;
             }
 
+            return (DateTime)this.GetRawSessionInstant(transaction);
+        }
+
+        /// <summary>
+        /// Get the raw current session time instant value from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        public object GetRawSessionInstant(NpgsqlTransaction transaction)
+        {
             using (var command = new NpgsqlCommand(
-                string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_instant"),
-                transaction.Connection,
-                transaction))
+                       "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
+                       transaction.Connection,
+                       transaction))
             { 
-                return (DateTime)command.ExecuteScalar();
+                return command.ExecuteScalar();
             }
         }
 

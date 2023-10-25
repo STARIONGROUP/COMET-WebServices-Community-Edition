@@ -262,63 +262,6 @@ namespace CDP4Orm.Dao
             result = base.Delete(transaction, partition, iid);
             return result;
         }
-
-        /// <summary>
-        /// Build a SQL read query for the current <see cref="ThingReferenceDao" />
-        /// </summary>
-        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
-        /// <returns>The built SQL read query</returns>
-        public override string BuildReadQuery(string partition)
-        {
-
-            var sqlBuilder = new StringBuilder();
-            sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
-            sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
-
-            sqlBuilder.Append(" \"Actor\",");
-
-            sqlBuilder.Append(" \"ThingReference\".\"ReferencedThing\",");
-            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
-            sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
-
-            sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"ThingReference_Data\"() AS \"ThingReference\" USING (\"Iid\")", partition);
-
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
-            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
-
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
-            sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
-
-            sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
-            return sqlBuilder.ToString();
-        }
-
-        /// <summary>
-        /// Build a SQL LEFT JOIN to retrieve the Actor column
-        /// </summary>
-        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
-        /// <returns>The built SQL LEFT JOIN</returns>
-        public override string BuildJoinForActorProperty(string partition)
-        {
-            var sqlBuilder = new StringBuilder();
-            sqlBuilder.Append(" LEFT JOIN (SELECT \"ThingReference_Audit\".\"Actor\", \"ThingReference_Audit\".\"Iid\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ThingReference_Audit\" AS \"ThingReference_Audit\"", partition);
-            sqlBuilder.Append(" WHERE \"ThingReference_Audit\".\"ValidTo\" = 'infinity'");
-            sqlBuilder.Append(" GROUP BY \"ThingReference_Audit\".\"Iid\", \"ThingReference_Audit\".\"Actor\") AS \"Actor\" USING (\"Iid\")");
-            return sqlBuilder.ToString();
-        }
-
-        /// <summary>
-        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
-        /// </summary>        
-        /// <returns>The ValueTypeSet combination</returns>
-        public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"ThingReference\".\"ValueTypeDictionary\"";
     }
 }
 

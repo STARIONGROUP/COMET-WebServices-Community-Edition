@@ -114,6 +114,17 @@ namespace CometServer.Helpers
         DateTime GetSessionInstant(NpgsqlTransaction transaction);
 
         /// <summary>
+        /// Get the raw current session time instant value from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The transaction.
+        /// </param>
+        /// <returns>
+        /// The current session instant as an <see cref="object"/>.
+        /// </returns>
+        object GetRawSessionInstant(NpgsqlTransaction transaction);
+
+        /// <summary>
         /// Indicate whether the full access was granted for the current person.
         /// </summary>
         /// <returns>
