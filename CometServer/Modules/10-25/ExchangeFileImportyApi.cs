@@ -474,6 +474,8 @@ namespace CometServer.Modules
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
+                        this.logger.LogInformation("Inserting data for EngineeringModelSetuo {shortname}:{name}", engineeringModelSetup.ShortName, engineeringModelSetup.Name);
+
                         // cleanup before handling TopContainer
                         requestUtils.Cache.Clear();
 
@@ -485,6 +487,7 @@ namespace CometServer.Modules
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
                         if (engineeringModel == null)
                         {
+                            this.logger.LogWarning("The EngineeringModel Thing for {shortname} could not be found, seeding will abort", engineeringModelSetup.ShortName);
                             result = false;
                             break;
                         }
@@ -560,11 +563,6 @@ namespace CometServer.Modules
             }
             catch (Exception ex)
             {
-                if (transaction != null)
-                {
-                    transaction.Rollback();
-                }
-
                 this.logger.LogError(ex, "Error occured during data store seeding");
 
                 return false;
@@ -976,7 +974,9 @@ namespace CometServer.Modules
         /// </summary>
         private void DropDataStoreAndPrepareNew(IDataStoreController dataStoreController)
         {
-            this.logger.LogInformation("start dropping existing data stores");
+            var sw = Stopwatch.StartNew();
+
+            this.logger.LogInformation("dropping existing data stores");
 
             var backtierConfig = this.AppConfigService.AppConfig.Backtier;
 
@@ -1025,6 +1025,8 @@ namespace CometServer.Modules
 
                 connection.Close();
             }
+
+            this.logger.LogInformation("dropping existing data stores completed in {sw} [ms]", sw.ElapsedMilliseconds);
         }
 
         /// <summary>
