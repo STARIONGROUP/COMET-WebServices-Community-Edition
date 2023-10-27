@@ -56,10 +56,13 @@ namespace CDP4Orm.Dao.Authentication
         /// <param name="userName">
         /// UserName to retrieve from the database.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="AuthenticationPerson"/>.
         /// </returns>
-        public async Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName)
+        public async Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName, DateTime? instant = null)
         {
             var result = new List<AuthenticationPerson>();
 
@@ -67,12 +70,17 @@ namespace CDP4Orm.Dao.Authentication
 
             var sqlBuilder = new System.Text.StringBuilder();
 
-            sqlBuilder.Append(this.PersonDao.BuildReadQuery(partition));
+            sqlBuilder.Append(this.PersonDao.BuildReadQuery(partition, instant));
 
             if (!string.IsNullOrWhiteSpace(userName))
             {
                 sqlBuilder.Append($" WHERE {this.PersonDao.GetValueTypeSet()} -> 'ShortName' = :shortname");
                 command.Parameters.Add("shortname", NpgsqlDbType.Varchar).Value = userName;
+            }
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
             }
 
             sqlBuilder.Append(";");

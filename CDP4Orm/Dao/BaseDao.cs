@@ -251,8 +251,11 @@ namespace CDP4Orm.Dao
         /// Build a SQL read query for the current Dao
         /// </summary>
         /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>The built SQL read query</returns>
-        public abstract string BuildReadQuery(string partition);
+        public abstract string BuildReadQuery(string partition, DateTime? instant);
 
         /// <summary>
         /// Build a SQL LEFT JOIN to retrieve the Actor column

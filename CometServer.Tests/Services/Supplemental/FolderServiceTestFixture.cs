@@ -97,7 +97,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
 
             this.folderDao
                 .Setup(
-                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
+                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
                 .Returns(new[] { this.folder });
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);

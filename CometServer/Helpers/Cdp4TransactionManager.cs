@@ -464,7 +464,7 @@ namespace CometServer.Helpers
         /// </returns>
         private IterationSetup GetIterationContext(NpgsqlTransaction transaction, Guid iterationIid)
         {
-            return this.IterationSetupDao.ReadByIteration(transaction, "SiteDirectory", iterationIid).SingleOrDefault();
+            return this.IterationSetupDao.ReadByIteration(transaction, "SiteDirectory", iterationIid, (DateTime)this.GetRawSessionInstant(transaction)).SingleOrDefault();
         }
 
         /// <summary>

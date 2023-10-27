@@ -56,19 +56,24 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="DomainOfExpertise"/>.
         /// </returns>
-        public IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId)
+        public IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null)
         {
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
 
-                sqlBuilder.Append(this.BuildReadQuery(partition));
+                sqlBuilder.Append(this.BuildReadQuery(partition, instant));
 
                 if (!personId.Equals(Guid.Empty) && !engineeringModelSetupId.Equals(Guid.Empty))
                 {
                     sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\" = :engineeringModelSetupId ))", partition);
                     command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
                     command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Uuid).Value = engineeringModelSetupId;
+                }
+
+                if (instant.HasValue && instant.Value != DateTime.MaxValue)
+                {
+                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
                 }
 
                 sqlBuilder.Append(";");

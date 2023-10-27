@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModellingAnnotationItemDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -610,6 +610,347 @@ namespace CDP4Orm.Dao
 
                 return this.ExecuteAndLogCommand(command) > 0;
             }
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetThingDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetGenericAnnotationDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"GenericAnnotation\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"GenericAnnotation_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetEngineeringModelDataAnnotationDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Author\", \"PrimaryAnnotatedThing\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelDataAnnotation\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelDataAnnotation_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetModellingAnnotationItemDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"Owner\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetThing_ExcludedDomainDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = "\"Thing\",\"ExcludedDomain\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetThing_ExcludedPersonDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = "\"Thing\",\"ExcludedPerson\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetEngineeringModelDataDiscussionItemDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelDataDiscussionItem\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelDataDiscussionItem_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetModellingThingReferenceDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingThingReference\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingThingReference_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetApprovalDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\", \"Owner\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Approval\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Approval_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetModellingAnnotationItem_CategoryDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = "\"ModellingAnnotationItem\",\"Category\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_Category\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_Category_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetModellingAnnotationItem_SourceAnnotationDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = "\"ModellingAnnotationItem\",\"SourceAnnotation\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_SourceAnnotation\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"ModellingAnnotationItem_SourceAnnotation_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
         }
     }
 }

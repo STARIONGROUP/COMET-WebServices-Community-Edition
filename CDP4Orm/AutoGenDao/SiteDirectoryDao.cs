@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -60,10 +60,13 @@ namespace CDP4Orm.Dao
         /// <param name="isCachedDtoReadEnabledAndInstant">
         /// The value indicating whether to get cached last state of Dto from revision history.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="CDP4Common.DTO.SiteDirectory"/>.
         /// </returns>
-        public virtual IEnumerable<CDP4Common.DTO.SiteDirectory> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false)
+        public virtual IEnumerable<CDP4Common.DTO.SiteDirectory> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             using (var command = new NpgsqlCommand())
             {
@@ -103,12 +106,17 @@ namespace CDP4Orm.Dao
                 }
                 else
                 {
-                    sqlBuilder.Append(this.BuildReadQuery(partition));
+                    sqlBuilder.Append(this.BuildReadQuery(partition, instant));
 
                     if (ids != null && ids.Any())
                     {
                         sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
+                    }
+
+                    if (instant.HasValue && instant.Value != DateTime.MaxValue)
+                    {
+                        command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
                     }
 
                     sqlBuilder.Append(";");
@@ -434,8 +442,11 @@ namespace CDP4Orm.Dao
         /// Build a SQL read query for the current <see cref="SiteDirectoryDao" />
         /// </summary>
         /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>The built SQL read query</returns>
-        public override string BuildReadQuery(string partition)
+        public override string BuildReadQuery(string partition, DateTime? instant)
         {
 
             var sqlBuilder = new StringBuilder();
@@ -462,73 +473,73 @@ namespace CDP4Orm.Dao
             sqlBuilder.Append(" COALESCE(\"SiteDirectory_SiteReferenceDataLibrary\".\"SiteReferenceDataLibrary\",'{}'::text[]) AS \"SiteReferenceDataLibrary\",");
 
             sqlBuilder.Remove(sqlBuilder.Length - 1, 1);
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Data\"() AS \"Thing\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"TopContainer_Data\"() AS \"TopContainer\" USING (\"Iid\")", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" USING (\"Iid\")", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"Thing\"", this.GetThingDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"TopContainer\" USING (\"Iid\")", this.GetTopContainerDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" USING (\"Iid\")", this.GetSiteDirectoryDataSql(partition, instant));
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedDomain\"::text) AS \"ExcludedDomain\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Data\"() AS \"Thing_ExcludedDomain\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"Thing_ExcludedDomain\"", this.GetThing_ExcludedDomainDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"Thing\" ON \"Thing\" = \"Iid\"", this.GetThingDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedDomain\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"Thing\" AS \"Iid\", array_agg(\"ExcludedPerson\"::text) AS \"ExcludedPerson\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Data\"() AS \"Thing_ExcludedPerson\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"Thing_Data\"() AS \"Thing\" ON \"Thing\" = \"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"Thing_ExcludedPerson\"", this.GetThing_ExcludedPersonDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"Thing\" ON \"Thing\" = \"Iid\"", this.GetThingDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"Thing\") AS \"Thing_ExcludedPerson\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteDirectoryDataAnnotation\".\"Container\" AS \"Iid\", array_agg(\"SiteDirectoryDataAnnotation\".\"Iid\"::text) AS \"Annotation\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectoryDataAnnotation_Data\"() AS \"SiteDirectoryDataAnnotation\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"SiteDirectoryDataAnnotation\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"SiteDirectoryDataAnnotation\"", this.GetSiteDirectoryDataAnnotationDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"SiteDirectoryDataAnnotation\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"SiteDirectoryDataAnnotation\".\"Container\") AS \"SiteDirectory_Annotation\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"DomainOfExpertise\".\"Container\" AS \"Iid\", array_agg(\"DomainOfExpertise\".\"Iid\"::text) AS \"Domain\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertise_Data\"() AS \"DomainOfExpertise\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"DomainOfExpertise\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"DomainOfExpertise\"", this.GetDomainOfExpertiseDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"DomainOfExpertise\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"DomainOfExpertise\".\"Container\") AS \"SiteDirectory_Domain\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"DomainOfExpertiseGroup\".\"Container\" AS \"Iid\", array_agg(\"DomainOfExpertiseGroup\".\"Iid\"::text) AS \"DomainGroup\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertiseGroup_Data\"() AS \"DomainOfExpertiseGroup\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"DomainOfExpertiseGroup\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"DomainOfExpertiseGroup\"", this.GetDomainOfExpertiseGroupDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"DomainOfExpertiseGroup\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"DomainOfExpertiseGroup\".\"Container\") AS \"SiteDirectory_DomainGroup\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteLogEntry\".\"Container\" AS \"Iid\", array_agg(\"SiteLogEntry\".\"Iid\"::text) AS \"LogEntry\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteLogEntry_Data\"() AS \"SiteLogEntry\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"SiteLogEntry\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"SiteLogEntry\"", this.GetSiteLogEntryDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"SiteLogEntry\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"SiteLogEntry\".\"Container\") AS \"SiteDirectory_LogEntry\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"EngineeringModelSetup\".\"Container\" AS \"Iid\", array_agg(\"EngineeringModelSetup\".\"Iid\"::text) AS \"Model\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelSetup_Data\"() AS \"EngineeringModelSetup\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"EngineeringModelSetup\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"EngineeringModelSetup\"", this.GetEngineeringModelSetupDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"EngineeringModelSetup\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"EngineeringModelSetup\".\"Container\") AS \"SiteDirectory_Model\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"NaturalLanguage\".\"Container\" AS \"Iid\", array_agg(\"NaturalLanguage\".\"Iid\"::text) AS \"NaturalLanguage\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"NaturalLanguage_Data\"() AS \"NaturalLanguage\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"NaturalLanguage\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"NaturalLanguage\"", this.GetNaturalLanguageDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"NaturalLanguage\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"NaturalLanguage\".\"Container\") AS \"SiteDirectory_NaturalLanguage\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"Organization\".\"Container\" AS \"Iid\", array_agg(\"Organization\".\"Iid\"::text) AS \"Organization\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Organization_Data\"() AS \"Organization\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"Organization\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"Organization\"", this.GetOrganizationDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"Organization\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"Organization\".\"Container\") AS \"SiteDirectory_Organization\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"ParticipantRole\".\"Container\" AS \"Iid\", array_agg(\"ParticipantRole\".\"Iid\"::text) AS \"ParticipantRole\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParticipantRole_Data\"() AS \"ParticipantRole\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"ParticipantRole\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"ParticipantRole\"", this.GetParticipantRoleDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"ParticipantRole\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"ParticipantRole\".\"Container\") AS \"SiteDirectory_ParticipantRole\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"Person\".\"Container\" AS \"Iid\", array_agg(\"Person\".\"Iid\"::text) AS \"Person\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Person_Data\"() AS \"Person\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"Person\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"Person\"", this.GetPersonDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"Person\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"Person\".\"Container\") AS \"SiteDirectory_Person\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"PersonRole\".\"Container\" AS \"Iid\", array_agg(\"PersonRole\".\"Iid\"::text) AS \"PersonRole\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"PersonRole_Data\"() AS \"PersonRole\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"PersonRole\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"PersonRole\"", this.GetPersonRoleDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"PersonRole\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"PersonRole\".\"Container\") AS \"SiteDirectory_PersonRole\" USING (\"Iid\")");
 
             sqlBuilder.Append(" LEFT JOIN (SELECT \"SiteReferenceDataLibrary\".\"Container\" AS \"Iid\", array_agg(\"SiteReferenceDataLibrary\".\"Iid\"::text) AS \"SiteReferenceDataLibrary\"");
-            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteReferenceDataLibrary_Data\"() AS \"SiteReferenceDataLibrary\"", partition);
-            sqlBuilder.AppendFormat(" JOIN \"{0}\".\"SiteDirectory_Data\"() AS \"SiteDirectory\" ON \"SiteReferenceDataLibrary\".\"Container\" = \"SiteDirectory\".\"Iid\"", partition);
+            sqlBuilder.AppendFormat(" FROM ({0}) AS \"SiteReferenceDataLibrary\"", this.GetSiteReferenceDataLibraryDataSql(partition, instant));
+            sqlBuilder.AppendFormat(" JOIN ({0}) AS \"SiteDirectory\" ON \"SiteReferenceDataLibrary\".\"Container\" = \"SiteDirectory\".\"Iid\"", this.GetSiteDirectoryDataSql(partition, instant));
             sqlBuilder.Append(" GROUP BY \"SiteReferenceDataLibrary\".\"Container\") AS \"SiteDirectory_SiteReferenceDataLibrary\" USING (\"Iid\")");
 
             sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
@@ -555,6 +566,502 @@ namespace CDP4Orm.Dao
         /// </summary>        
         /// <returns>The ValueTypeSet combination</returns>
         public override string GetValueTypeSet() => "\"Thing\".\"ValueTypeDictionary\" || \"TopContainer\".\"ValueTypeDictionary\" || \"SiteDirectory\".\"ValueTypeDictionary\"";
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetThingDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetTopContainerDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"TopContainer\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"TopContainer_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetSiteDirectoryDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"DefaultParticipantRole\", \"DefaultPersonRole\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectory\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectory_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetThing_ExcludedDomainDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = "\"Thing\",\"ExcludedDomain\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedDomain_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetThing_ExcludedPersonDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = "\"Thing\",\"ExcludedPerson\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Thing_ExcludedPerson_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetSiteDirectoryDataAnnotationDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\", \"PrimaryAnnotatedThing\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectoryDataAnnotation\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteDirectoryDataAnnotation_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetDomainOfExpertiseDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertise\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertise_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetDomainOfExpertiseGroupDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertiseGroup\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"DomainOfExpertiseGroup_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetSiteLogEntryDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"Author\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteLogEntry\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteLogEntry_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetEngineeringModelSetupDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultOrganizationalParticipant\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelSetup\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"EngineeringModelSetup_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetNaturalLanguageDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"NaturalLanguage\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"NaturalLanguage_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetOrganizationDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Organization\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Organization_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetParticipantRoleDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParticipantRole\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"ParticipantRole_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetPersonDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"DefaultDomain\", \"DefaultEmailAddress\", \"DefaultTelephoneNumber\", \"Organization\", \"Role\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"Person\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"Person_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetPersonRoleDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"PersonRole\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"PersonRole_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Gets a DataSql string for a specific table
+        /// </summary>        
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The DataSql string</returns>
+        private string GetSiteReferenceDataLibraryDataSql(string partition, DateTime? instant)
+        {
+            var sqlBuilder = new StringBuilder();
+
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            sqlBuilder.AppendFormat(" SELECT {0}", fields);
+            sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteReferenceDataLibrary\"", partition);
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                sqlBuilder.Append(" WHERE \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+                sqlBuilder.Append(" UNION ALL");
+                sqlBuilder.AppendFormat(" SELECT {0}", fields);
+                sqlBuilder.AppendFormat(" FROM \"{0}\".\"SiteReferenceDataLibrary_Audit\"", partition);
+                sqlBuilder.Append(" WHERE \"Action\" <> 'I'");
+                sqlBuilder.Append(" AND \"ValidFrom\" < :instant");
+                sqlBuilder.Append(" AND \"ValidTo\" >= :instant");
+            }
+
+            return sqlBuilder.ToString();
+        }
     }
 }
 

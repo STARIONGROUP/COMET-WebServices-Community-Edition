@@ -185,7 +185,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.Append(this.BuildReadQuery(partition));
+                sqlBuilder.Append(this.BuildReadQuery(partition, null));
 
                 if (person != null)
                 {

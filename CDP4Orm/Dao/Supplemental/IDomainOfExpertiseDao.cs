@@ -51,9 +51,12 @@ namespace CDP4Orm.Dao
         /// <param name="engineeringModelSetupId">
         /// The <see cref="EngineeringModelSetup.Iid"/> to retrieve domain info for from the database.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="DomainOfExpertise"/>.
         /// </returns>
-        IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId);
+        IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant);
     }
 }

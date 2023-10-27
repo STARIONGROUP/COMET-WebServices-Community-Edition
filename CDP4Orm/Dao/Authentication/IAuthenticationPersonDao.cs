@@ -24,6 +24,7 @@
 
 namespace CDP4Orm.Dao.Authentication
 {
+    using System;
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
@@ -48,9 +49,12 @@ namespace CDP4Orm.Dao.Authentication
         /// <param name="userName">
         /// UserName to retrieve from the database.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="AuthenticationPerson"/>.
         /// </returns>
-        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName);
+        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName, DateTime? instant);
     }
 }

@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementDefinitionService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2022 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -23,6 +23,10 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
+
 namespace CometServer.Services
 {
     using System;
@@ -32,6 +36,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Orm.Dao;
     using CometServer.Services.Authorization;
+    using Microsoft.Extensions.Logging;
     using Npgsql;
 
     /// <summary>
@@ -370,7 +375,7 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var elementDefinitionColl = new List<Thing>(this.ElementDefinitionDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction)));
+            var elementDefinitionColl = new List<Thing>(this.ElementDefinitionDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
 
             return this.AfterGet(elementDefinitionColl, transaction, partition, idFilter);
         }
@@ -559,3 +564,7 @@ namespace CometServer.Services
         }
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

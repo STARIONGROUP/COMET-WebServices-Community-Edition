@@ -100,7 +100,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.fileDao
                 .Setup(
-                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
+                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
                 .Returns(new[] { this.file });
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
