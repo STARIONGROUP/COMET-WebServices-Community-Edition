@@ -56,13 +56,13 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="DomainOfExpertise"/>.
         /// </returns>
-        public IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId)
+        public IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null)
         {
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"DomainOfExpertise_View\"", partition);
+                sqlBuilder.Append(this.BuildReadQuery(partition, instant));
 
                 if (!personId.Equals(Guid.Empty) && !engineeringModelSetupId.Equals(Guid.Empty))
                 {
@@ -71,14 +71,16 @@ namespace CDP4Orm.Dao
                     command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Uuid).Value = engineeringModelSetupId;
                 }
 
+                if (instant.HasValue && instant.Value != DateTime.MaxValue)
+                {
+                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+                }
+
                 sqlBuilder.Append(";");
 
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
                 command.CommandText = sqlBuilder.ToString();
-
-                // log the sql command 
-                this.LogCommand(command);
 
                 using (var reader = command.ExecuteReader())
                 {

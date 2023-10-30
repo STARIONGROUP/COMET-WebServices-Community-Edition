@@ -63,8 +63,6 @@ namespace CDP4Orm.Dao
                 command.Transaction = transaction;
                 command.CommandText = sql;
 
-                // log the sql command 
-                this.LogCommand(command);
                 object response = command.ExecuteScalar();
                 int iterationNumber;
 
@@ -99,8 +97,6 @@ namespace CDP4Orm.Dao
                 command.Transaction = transaction;
                 command.CommandText = sql;
 
-                // log the sql command 
-                this.LogCommand(command);
                 command.ExecuteNonQuery();
             }
         }
@@ -127,8 +123,6 @@ namespace CDP4Orm.Dao
                 command.Transaction = transaction;
                 command.CommandText = sql;
 
-                // log the sql command 
-                this.LogCommand(command);
                 command.ExecuteNonQuery();
             }
         }
@@ -153,8 +147,6 @@ namespace CDP4Orm.Dao
                 command.Transaction = transaction;
                 command.CommandText = sql;
 
-                // log the sql command 
-                this.LogCommand(command);
                 command.ExecuteNonQuery();
             }
         }

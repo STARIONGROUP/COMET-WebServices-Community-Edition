@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IReviewItemDiscrepancyDao.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2021 RHEA System S.A.
+//    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
 //
@@ -22,6 +22,10 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------
 
 namespace CDP4Orm.Dao
 {
@@ -50,10 +54,13 @@ namespace CDP4Orm.Dao
         /// <param name="isCachedDtoReadEnabledAndInstant">
         /// The value indicating whether to get cached last state of Dto from revision history.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="CDP4Common.DTO.ReviewItemDiscrepancy"/>.
         /// </returns>
-        IEnumerable<CDP4Common.DTO.ReviewItemDiscrepancy> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false);
+        IEnumerable<CDP4Common.DTO.ReviewItemDiscrepancy> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null);
 
         /// <summary>
         /// Write a database record from the supplied data transfer object.
@@ -138,7 +145,7 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully reordered.
         /// </returns>
         bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate);
- 
+
         /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name.
         /// </summary>
@@ -161,7 +168,7 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully created.
         /// </returns>
         bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// </summary>
@@ -178,7 +185,7 @@ namespace CDP4Orm.Dao
         /// True if the concept was successfully deleted.
         /// </returns>
         bool Delete(NpgsqlTransaction transaction, string partition, Guid iid);
- 
+
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
         /// A "Raw" Delete means that the delete is performed without calling BeforeDelete or AfterDelete.
@@ -197,7 +204,7 @@ namespace CDP4Orm.Dao
         /// True if the concept was successfully deleted.
         /// </returns>
         bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid);
-        
+
         /// <summary>
         /// Delete the supplied value from the association link table indicated by the supplied property name.
         /// </summary>
@@ -222,3 +229,7 @@ namespace CDP4Orm.Dao
         bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
     }
 }
+
+// ------------------------------------------------------------------------------------------------
+// --------THIS IS AN AUTOMATICALLY GENERATED FILE. ANY MANUAL CHANGES WILL BE OVERWRITTEN!--------
+// ------------------------------------------------------------------------------------------------

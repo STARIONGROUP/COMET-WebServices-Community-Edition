@@ -185,7 +185,7 @@ namespace CDP4Orm.Dao
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("SELECT \"ValueTypeSet\" FROM \"{0}\".\"Person_View\"", partition);
+                sqlBuilder.Append(this.BuildReadQuery(partition, null));
 
                 if (person != null)
                 {
@@ -198,9 +198,6 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
                 command.CommandText = sqlBuilder.ToString();
-
-                // log the sql command 
-                this.LogCommand(command);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -298,7 +295,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
             catch

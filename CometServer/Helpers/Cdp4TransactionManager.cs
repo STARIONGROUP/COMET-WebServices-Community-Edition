@@ -114,11 +114,6 @@ namespace CometServer.Helpers
         public IIterationSetupDao IterationSetupDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        public ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
@@ -183,18 +178,26 @@ namespace CometServer.Helpers
         /// </returns>
         public DateTime GetSessionInstant(NpgsqlTransaction transaction)
         {
-            if (!this.CommandLogger.ExecuteCommands)
-            {
-                // if commands are not executed return now time
-                return DateTime.UtcNow;
-            }
+            return (DateTime)this.GetRawSessionInstant(transaction);
+        }
 
+        /// <summary>
+        /// Get the raw current session time instant value from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <returns>
+        /// The <see cref="object"/>.
+        /// </returns>
+        public object GetRawSessionInstant(NpgsqlTransaction transaction)
+        {
             using (var command = new NpgsqlCommand(
-                string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_instant"),
-                transaction.Connection,
-                transaction))
+                       "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
+                       transaction.Connection,
+                       transaction))
             { 
-                return (DateTime)command.ExecuteScalar();
+                return command.ExecuteScalar();
             }
         }
 
@@ -263,12 +266,6 @@ namespace CometServer.Helpers
         /// </returns>
         public DateTime GetSessionTimeFrameStart(NpgsqlTransaction transaction)
         {
-            if (!this.CommandLogger.ExecuteCommands)
-            {
-                // if commands are not executed return now time
-                return DateTime.UtcNow;
-            }
-
             using (var command = new NpgsqlCommand(
                 string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_timeframe_start"),
                 transaction.Connection,
@@ -289,12 +286,6 @@ namespace CometServer.Helpers
         /// </returns>
         public DateTime GetTransactionTime(NpgsqlTransaction transaction)
         {
-            if (!this.CommandLogger.ExecuteCommands)
-            {
-                // if commands are not executed return now time
-                return DateTime.UtcNow;
-            }
-
             using (var command = new NpgsqlCommand(
                         string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_transaction_time"),
                         transaction.Connection,
@@ -318,8 +309,7 @@ namespace CometServer.Helpers
             
             using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
             {
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
+                command.ExecuteNonQuery();
             }
         }
 
@@ -340,8 +330,7 @@ namespace CometServer.Helpers
             {
                 command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
 
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
+                command.ExecuteNonQuery();
             }
         }
 
@@ -431,8 +420,7 @@ namespace CometServer.Helpers
             {
                 command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
 
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
+                command.ExecuteNonQuery();
             }
         }
 
@@ -450,7 +438,7 @@ namespace CometServer.Helpers
         /// </returns>
         private IterationSetup GetIterationContext(NpgsqlTransaction transaction, Guid iterationIid)
         {
-            return this.IterationSetupDao.ReadByIteration(transaction, "SiteDirectory", iterationIid).SingleOrDefault();
+            return this.IterationSetupDao.ReadByIteration(transaction, "SiteDirectory", iterationIid, (DateTime)this.GetRawSessionInstant(transaction)).SingleOrDefault();
         }
 
         /// <summary>
@@ -507,8 +495,7 @@ namespace CometServer.Helpers
                     command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
                 }
 
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
+                command.ExecuteNonQuery();
             }
         }
 
@@ -534,8 +521,7 @@ namespace CometServer.Helpers
 
             using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
             {
-                // log the sql command
-                this.CommandLogger.ExecuteAndLog(command);
+                command.ExecuteNonQuery();
             }
         }
     }

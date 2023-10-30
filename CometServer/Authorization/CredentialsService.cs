@@ -137,7 +137,7 @@ namespace CometServer.Authorization
         /// </param>
         public async Task ResolveCredentials(NpgsqlTransaction transaction, string username)
         {
-            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username);
+            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null);
             var person = persons.SingleOrDefault();
             
             if (person == null)

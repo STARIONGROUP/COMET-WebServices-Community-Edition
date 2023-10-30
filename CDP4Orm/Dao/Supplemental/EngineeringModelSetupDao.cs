@@ -57,21 +57,29 @@ namespace CDP4Orm.Dao
         /// <param name="personId">
         /// The <see cref="Person.Iid"/> to retrieve participant info for from the database.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="EngineeringModelSetup"/>.
         /// </returns>
-        public IEnumerable<EngineeringModelSetup> ReadByPerson(NpgsqlTransaction transaction, string partition, Guid personId)
+        public IEnumerable<EngineeringModelSetup> ReadByPerson(NpgsqlTransaction transaction, string partition, Guid personId, DateTime? instant = null)
         {
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"EngineeringModelSetup_View\"", partition);
+                sqlBuilder.Append(this.BuildReadQuery(partition, null));
 
                 if (!personId.Equals(Guid.Empty))
                 {
                     sqlBuilder.AppendFormat(" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')", partition);
                     command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
+                }
+
+                if (instant.HasValue && instant.Value != DateTime.MaxValue)
+                {
+                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
                 }
 
                 sqlBuilder.Append(";");
@@ -80,9 +88,6 @@ namespace CDP4Orm.Dao
                 command.Transaction = transaction;
                 command.CommandText = sqlBuilder.ToString();
                 
-                // log the sql command 
-                this.LogCommand(command);
-
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -146,7 +151,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
 
             this.MigrationService.ApplyMigrations(transaction, engineeringModelPartition, false);

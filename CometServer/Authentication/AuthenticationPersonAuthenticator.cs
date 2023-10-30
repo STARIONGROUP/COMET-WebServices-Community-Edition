@@ -87,7 +87,7 @@ namespace CometServer.Authentication
                 await connection.OpenAsync();
                 transaction = await connection.BeginTransactionAsync();
 
-                var authenticationPerson = (await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username)).SingleOrDefault();
+                var authenticationPerson = (await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null)).SingleOrDefault();
                 
                 await transaction.CommitAsync();
 

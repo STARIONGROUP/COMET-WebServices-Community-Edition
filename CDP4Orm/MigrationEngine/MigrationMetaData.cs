@@ -34,14 +34,19 @@ namespace CDP4Orm.MigrationEngine
     internal enum MigrationScriptKind
     {
         /// <summary>
-        /// Assertion that the migration script is only applied on Non-Thing table
+        /// Assertion that the migration script is only applied on Non-Thing tables
         /// </summary>
         NonThingTableMigrationTemplate,
 
         /// <summary>
         /// Assertion that the migration script is only applied on start-up
         /// </summary>
-        OnStartUpOnly
+        OnStartUpOnly,
+
+        /// <summary>
+        /// Assertion that the migration script is only applied on Thing Audit tables
+        /// </summary>
+        ThingAuditTableMigrationTemplate,
     }
 
     /// <summary>

@@ -51,27 +51,32 @@ namespace CDP4Orm.Dao
         /// <param name="iterationId">
         /// The iteration Id.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="CDP4Common.DTO.IterationSetup"/>.
         /// </returns>
-        public virtual IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId)
+        public virtual IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null)
         {
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"IterationSetup_View\"", partition);
-                sqlBuilder.Append(" WHERE \"ValueTypeSet\" -> 'IterationIid' = :iterationIid");
+                sqlBuilder.Append($"{this.BuildReadQuery(partition, instant)}");
+                sqlBuilder.Append($" WHERE {this.GetValueTypeSet()} -> 'IterationIid' = :iterationIid");
                 command.Parameters.Add("iterationIid", NpgsqlDbType.Text).Value = iterationId.ToString();
+
+                if (instant.HasValue && instant.Value != DateTime.MaxValue)
+                {
+                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+                }
 
                 sqlBuilder.Append(";");
 
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
                 command.CommandText = sqlBuilder.ToString();
-
-                // log the sql command 
-                this.LogCommand(command);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -95,28 +100,33 @@ namespace CDP4Orm.Dao
         /// <param name="engineeringModelSetupId">
         /// The <see cref="EngineeringModelSetup"/> Id.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="CDP4Common.DTO.IterationSetup"/>.
         /// </returns>
-        public IEnumerable<IterationSetup> ReadByEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid engineeringModelSetupId)
+        public IEnumerable<IterationSetup> ReadByEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid engineeringModelSetupId, DateTime? instant = null)
         {
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new StringBuilder();
 
-                sqlBuilder.AppendFormat("SELECT * FROM \"{0}\".\"IterationSetup_View\"", partition);
+                sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition, instant)}");
                 sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\"::text = :engineeringModelSetupId)", partition);
 
                 command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();
+
+                if (instant.HasValue && instant.Value != DateTime.MaxValue)
+                {
+                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+                }
 
                 sqlBuilder.Append(";");
 
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
                 command.CommandText = sqlBuilder.ToString();
-
-                // log the sql command 
-                this.LogCommand(command);
 
                 using (var reader = command.ExecuteReader())
                 {

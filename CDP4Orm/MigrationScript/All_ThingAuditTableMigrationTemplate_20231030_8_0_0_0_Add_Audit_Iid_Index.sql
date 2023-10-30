@@ -1,0 +1,4 @@
+﻿CREATE INDEX IF NOT EXISTS "Idx_TABLE_REPLACE_Iid"
+	ON "SchemaName_Replace"."TABLE_REPLACE" USING btree
+	("Iid" ASC NULLS LAST)
+	TABLESPACE pg_default;

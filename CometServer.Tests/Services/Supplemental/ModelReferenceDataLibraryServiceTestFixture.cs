@@ -95,7 +95,8 @@ namespace CometServer.Tests.Services.Supplemental
                         It.IsAny<NpgsqlTransaction>(), 
                         It.IsAny<string>(), 
                         It.IsAny<IEnumerable<Guid>>(), 
-                        It.IsAny<bool>()))
+                        It.IsAny<bool>(),
+                        null))
                 .Returns(new List<EngineeringModelSetup>());
 
             Assert.Throws<InvalidOperationException>(
@@ -110,7 +111,8 @@ namespace CometServer.Tests.Services.Supplemental
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(), 
+                    null))
                 .Returns(new List<EngineeringModelSetup> {this.engineeringModelSetup});
 
             Assert.Throws<InvalidOperationException>(
@@ -125,14 +127,16 @@ namespace CometServer.Tests.Services.Supplemental
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(),
+                    null))
                 .Returns(new List<EngineeringModelSetup> { this.engineeringModelSetup });
 
             this.modelReferenceDataLibraryDao.Setup( x => x.Read(
                 It.IsAny<NpgsqlTransaction>(),
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(),
-                It.IsAny<bool>()))
+                It.IsAny<bool>(), 
+                null))
                 .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary});
 
             var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
@@ -147,7 +151,8 @@ namespace CometServer.Tests.Services.Supplemental
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(), 
+                    null))
                 .Returns(new List<EngineeringModelSetup> { this.engineeringModelSetup });
 
             this.engineeringModelSetup.RequiredRdl.Add(this.modelReferenceDataLibrary.Iid);
@@ -156,14 +161,16 @@ namespace CometServer.Tests.Services.Supplemental
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new [] { this.modelReferenceDataLibrary.Iid},
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(),
+                    null))
                 .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary });
 
             this.siteReferenceDataLibraryDao.Setup(x => x.Read(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.siteReferenceDataLibrary1.Iid },
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(), 
+                    null))
                 .Returns(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary1 });
 
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
@@ -180,7 +187,8 @@ namespace CometServer.Tests.Services.Supplemental
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(),
+                    null))
                 .Returns(new List<EngineeringModelSetup> { this.engineeringModelSetup });
 
             this.engineeringModelSetup.RequiredRdl.Add(this.modelReferenceDataLibrary.Iid);
@@ -189,21 +197,24 @@ namespace CometServer.Tests.Services.Supplemental
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.modelReferenceDataLibrary.Iid },
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(),
+                    null))
                 .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary });
 
             this.siteReferenceDataLibraryDao.Setup(x => x.Read(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.siteReferenceDataLibrary1.Iid },
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(),
+                    null))
                 .Returns(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary1 });
 
             this.siteReferenceDataLibraryDao.Setup(x => x.Read(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.siteReferenceDataLibrary2.Iid },
-                    It.IsAny<bool>()))
+                    It.IsAny<bool>(),
+                    null))
                 .Returns(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary2 });
 
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;

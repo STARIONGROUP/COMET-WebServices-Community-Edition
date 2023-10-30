@@ -586,7 +586,7 @@ namespace CometServer.Modules
                 // defer all reference data check until after transaction commit
                 using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction))
                 {
-                    command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                    command.ExecuteNonQuery();
                 }
 
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
@@ -683,6 +683,20 @@ namespace CometServer.Modules
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
+            catch (ThingNotFoundException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized (Thing Not Found) request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+
+                // error handling: Use Unauthorized as a user is not allowed to see if the thing is not there or a user is not allowed to see it
+                httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            
             catch (Exception ex)
             {
                 if (transaction != null)

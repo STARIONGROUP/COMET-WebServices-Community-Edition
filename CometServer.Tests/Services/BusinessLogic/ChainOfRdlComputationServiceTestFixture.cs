@@ -64,9 +64,9 @@ namespace CometServer.Tests.Services.BusinessLogic
         {
             this.CreateTestData();
 
-            this.modelReferenceDataLibraryDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
+            this.modelReferenceDataLibraryDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
                 .Returns(this.modelReferenceDataLibraries);
-            this.siteReferenceDataLibraryDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
+            this.siteReferenceDataLibraryDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
                 .Returns(this.siteReferenceDataLibraries);
 
             this.chainOfRdlComputationService = new ChainOfRdlComputationService();

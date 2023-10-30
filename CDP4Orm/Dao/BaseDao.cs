@@ -46,11 +46,6 @@ namespace CDP4Orm.Dao
         public IDataModelUtils DataModelUtils { get; set; }
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        public ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// The <see cref="DateTime"/> of the current <see cref="NpgsqlTransaction"/>
         /// </summary>
         private DateTime currentTransactionDatetime;
@@ -248,37 +243,27 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Log the command message if a logger is injected
+        /// Build a SQL read query for the current Dao
         /// </summary>
-        /// <param name="command">the command to log</param>
-        protected void LogCommand(NpgsqlCommand command)
-        {
-            if (this.CommandLogger == null)
-            {
-                return;
-            }
-
-            this.CommandLogger.Log(command);
-        }
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>The built SQL read query</returns>
+        public abstract string BuildReadQuery(string partition, DateTime? instant);
 
         /// <summary>
-        /// Log the command message if a logger is injected
+        /// Build a SQL LEFT JOIN to retrieve the Actor column
         /// </summary>
-        /// <param name="command">
-        /// the command to log
-        /// </param>
-        /// <returns>
-        /// The <see cref="int"/>.
-        /// </returns>
-        protected int ExecuteAndLogCommand(NpgsqlCommand command)
-        {
-            if (this.CommandLogger == null)
-            {
-                return 0;
-            }
+        /// <param name="partition">The database partition (schema) where the requested resource will be stored.</param>
+        /// <returns>The built SQL LEFT JOIN</returns>
+        public abstract string BuildJoinForActorProperty(string partition);
 
-            return command.ExecuteAndLogNonQuery(this.CommandLogger);
-        }
+        /// <summary>
+        /// Gets the ValueTypeSet combination, based one ValueTypeDictionary
+        /// </summary>        
+        /// <returns>The ValueTypeSet combination</returns>
+        public abstract string GetValueTypeSet();
 
         /// <summary>
         /// Deletes all data from the <paramref name="table"/>
@@ -297,7 +282,7 @@ namespace CDP4Orm.Dao
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
         }
 

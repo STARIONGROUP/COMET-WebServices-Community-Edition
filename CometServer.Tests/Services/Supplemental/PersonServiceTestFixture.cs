@@ -77,7 +77,7 @@ namespace CometServer.Tests.Services.Supplemental
             };
             this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
 
-            this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>()))
+            this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
                 .Returns(new[] { this.person });
 
             this.personService = new PersonService

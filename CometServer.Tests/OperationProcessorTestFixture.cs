@@ -884,7 +884,7 @@ namespace CometServer.Tests
         private List<Thing> writtenThings = new List<Thing>();
         public int WrittenThingCount => this.writtenThings.Count;
 
-        public IEnumerable<Parameter> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false)
+        public IEnumerable<Parameter> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
             if (queriedIds == null)
@@ -937,6 +937,21 @@ namespace CometServer.Tests
         {
             throw new NotImplementedException();
         }
+
+        public string BuildReadQuery(string partition, DateTime? instant)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildJoinForActorProperty(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetValueTypeSet()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class TestParameterOverrideDao : IParameterOverrideDao
@@ -944,7 +959,7 @@ namespace CometServer.Tests
         private List<Thing> writtenThings = new List<Thing>();
         public int WrittenThingCount => this.writtenThings.Count;
 
-        public IEnumerable<ParameterOverride> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false)
+        public IEnumerable<ParameterOverride> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
             if (queriedIds == null)
@@ -997,6 +1012,21 @@ namespace CometServer.Tests
         {
             throw new NotImplementedException();
         }
+
+        public string BuildReadQuery(string partition, DateTime? instant)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildJoinForActorProperty(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetValueTypeSet()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class TestElementDefinitionDao : IElementDefinitionDao
@@ -1005,7 +1035,7 @@ namespace CometServer.Tests
 
         public int WrittenThingCount => this.writtenThings.Count;
 
-        public IEnumerable<ElementDefinition> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false)
+        public IEnumerable<ElementDefinition> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
             if (queriedIds == null)
@@ -1053,6 +1083,21 @@ namespace CometServer.Tests
         }
 
         public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildReadQuery(string partition, DateTime? instant)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string BuildJoinForActorProperty(string partition)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetValueTypeSet()
         {
             throw new NotImplementedException();
         }

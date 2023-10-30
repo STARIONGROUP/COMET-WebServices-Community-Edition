@@ -45,11 +45,6 @@ namespace CometServer.Helpers
         IterationSetup IterationSetup { get;}
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// Setup a new transaction instance. 
         /// </summary>
         /// <param name="connection">
@@ -112,6 +107,17 @@ namespace CometServer.Helpers
         /// The <see cref="DateTime"/>.
         /// </returns>
         DateTime GetSessionInstant(NpgsqlTransaction transaction);
+
+        /// <summary>
+        /// Get the raw current session time instant value from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The transaction.
+        /// </param>
+        /// <returns>
+        /// The current session instant as an <see cref="object"/>.
+        /// </returns>
+        object GetRawSessionInstant(NpgsqlTransaction transaction);
 
         /// <summary>
         /// Indicate whether the full access was granted for the current person.
