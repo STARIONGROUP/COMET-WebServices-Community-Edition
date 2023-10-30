@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="NonThingTableMigration.cs" company="RHEA System S.A.">
+// <copyright file="ThingAuditTableMigration.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -24,25 +24,24 @@
 
 namespace CDP4Orm.MigrationEngine
 {
+    using System;
     using System.Collections.Generic;
-
-    using CDP4Common.DTO;
 
     using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// A migration script handler class that is used to handle migration script template that are applied on every non-thing table
     /// </summary>
-    public class NonThingTableMigration : ThingTableMigrationBase
+    public class ThingAuditTableMigration : ThingTableMigrationBase
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="NonThingTableMigration"/> class
+        /// Initializes a new instance of the <see cref="ThingAuditTableMigration"/> class
         /// </summary>
         /// <param name="migrationFileMetadata">The migration metadata</param>
         /// <param name="logger">
-        /// The <see cref="ILogger{T}"></see> of type <see cref="NonThingTableMigration"/>/>
+        /// The <see cref="ILogger{T}"></see> of type <see cref="ThingAuditTableMigration"/>/>
         /// </param>
-        public NonThingTableMigration(MigrationMetaData migrationFileMetadata, ILogger<NonThingTableMigration> logger) : base(migrationFileMetadata, logger)
+        public ThingAuditTableMigration(MigrationMetaData migrationFileMetadata, ILogger<ThingAuditTableMigration> logger) : base(migrationFileMetadata, logger)
         {
         }
 
@@ -52,7 +51,7 @@ namespace CDP4Orm.MigrationEngine
         /// <returns></returns>
         protected override string GetTableNameTemplate()
         {
-            return "Non-Thing";
+            return "Thing Audit";
         }
 
         /// <summary>
@@ -63,7 +62,10 @@ namespace CDP4Orm.MigrationEngine
         /// <returns>True is the entry is allowed to be used in the Migration</returns>
         protected override bool ApplyFilter(List<string> thingTypes, string tableName)
         {
-            return tableName != nameof(Thing) && thingTypes.Contains(tableName);
+            return tableName.EndsWith("_Audit") &&
+                   thingTypes.Contains(
+                       tableName.Substring(0, tableName.LastIndexOf("_Audit", StringComparison.Ordinal)
+                       ));
         }
     }
 }

@@ -75,6 +75,7 @@ namespace CDP4Orm.MigrationEngine
         public void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup)
         {
             var migrations = GetMigrations(isStartup).Where(x => partition.StartsWith(x.MigrationMetaData.MigrationScriptApplicationKind.ToString()) || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All);
+
             foreach (var migrationBase in migrations.OrderBy(x => x.MigrationMetaData.Version))
             {
                 migrationBase.ApplyMigration(transaction, new [] { partition });
@@ -92,6 +93,7 @@ namespace CDP4Orm.MigrationEngine
 
             var migrationScriptMetadatas = resourceFullNames.Select(x => new MigrationMetaData(x)).ToList();
             var migrationList = new List<MigrationBase>();
+
             foreach (var migrationMetaData in migrationScriptMetadatas)
             {
                 if (migrationMetaData.MigrationScriptKind.HasValue && migrationMetaData.MigrationScriptKind.Value == MigrationScriptKind.OnStartUpOnly && !isStartup)
@@ -101,12 +103,19 @@ namespace CDP4Orm.MigrationEngine
                 }
 
                 MigrationBase migration;
+
                 switch (migrationMetaData.MigrationScriptKind)
                 {
-                    case CDP4Orm.MigrationEngine.MigrationScriptKind.NonThingTableMigrationTemplate:
+                    case MigrationScriptKind.NonThingTableMigrationTemplate:
                         var nonThingTableMigrationLogger = this.loggerFactory == null ? NullLogger<NonThingTableMigration>.Instance : this.loggerFactory.CreateLogger<NonThingTableMigration>();
                         migration = new NonThingTableMigration(migrationMetaData, nonThingTableMigrationLogger);
                         break;
+
+                    case MigrationScriptKind.ThingAuditTableMigrationTemplate:
+                        var thingAuditTableMigrationLogger = this.loggerFactory == null ? NullLogger<ThingAuditTableMigration>.Instance : this.loggerFactory.CreateLogger<ThingAuditTableMigration>();
+                        migration = new ThingAuditTableMigration(migrationMetaData, thingAuditTableMigrationLogger);
+                        break;
+                    
                     default:
                         var genericMigrationLogger = this.loggerFactory == null ? NullLogger<GenericMigration>.Instance : this.loggerFactory.CreateLogger<GenericMigration>();
                         migration = new GenericMigration(migrationMetaData, genericMigrationLogger);
