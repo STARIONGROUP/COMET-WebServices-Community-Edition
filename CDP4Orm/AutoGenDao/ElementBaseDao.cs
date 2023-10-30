@@ -88,7 +88,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
                 elementBase.Category.ForEach(x => this.AddCategory(transaction, partition, elementBase.Iid, x));
             }
@@ -139,7 +139,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
             elementBase.Category.ForEach(x => this.UpsertCategory(transaction, partition, elementBase.Iid, x));
 
@@ -222,7 +222,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 
@@ -265,7 +265,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 
@@ -311,7 +311,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
 
@@ -446,7 +446,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 

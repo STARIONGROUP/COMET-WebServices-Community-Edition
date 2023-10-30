@@ -100,7 +100,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
 
@@ -162,7 +162,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
 
             return true;
@@ -222,7 +222,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
 

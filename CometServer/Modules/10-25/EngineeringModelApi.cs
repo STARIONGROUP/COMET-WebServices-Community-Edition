@@ -586,7 +586,7 @@ namespace CometServer.Modules
                 // defer all reference data check until after transaction commit
                 using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction))
                 {
-                    command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                    command.ExecuteNonQuery();
                 }
 
                 // retrieve the revision for this transaction (or get next revision if it does not exist)

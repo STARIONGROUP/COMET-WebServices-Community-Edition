@@ -104,11 +104,6 @@ namespace CDP4Orm.Dao.Revision
         public ILogger<RevisionDao> Logger { get; set; }
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        public ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IResolveDao"/> that retrieve metadata of an object
         /// </summary>
         public IResolveDao ResolveDao { get; set; }
@@ -237,9 +232,6 @@ namespace CDP4Orm.Dao.Revision
                     command.Parameters.Add("fromrevision", NpgsqlDbType.Integer).Value = revisionFrom;
                     command.Parameters.Add("torevision", NpgsqlDbType.Integer).Value = revisionTo;
 
-                    // log the sql command 
-                    this.CommandLogger.Log(command);
-
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -349,9 +341,6 @@ namespace CDP4Orm.Dao.Revision
                 {
                     command.Parameters.Add("toRevision", NpgsqlDbType.Integer).Value = toRevision;
                 }
-
-                // log the sql command 
-                this.CommandLogger.ExecuteAndLog(command);
             }
         }
 
@@ -396,9 +385,6 @@ namespace CDP4Orm.Dao.Revision
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
-                // log the sql command 
-                this.CommandLogger.Log(command);
-
                 using (var reader = command.ExecuteReader())
                 {
                     return this.MapToRevisionRegistryInfoList(reader).ToList();
@@ -470,9 +456,6 @@ namespace CDP4Orm.Dao.Revision
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
                 command.Parameters.Add("revision", NpgsqlDbType.Integer).Value = revision;
-
-                // log the sql command 
-                this.CommandLogger.Log(command);
 
                 using (var reader = command.ExecuteReader())
                 {
@@ -554,9 +537,6 @@ namespace CDP4Orm.Dao.Revision
             {
                 command.Parameters.Add("revision", NpgsqlDbType.Integer).Value = revision;
                 
-                // log the sql command 
-                this.CommandLogger.Log(command);
-
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())

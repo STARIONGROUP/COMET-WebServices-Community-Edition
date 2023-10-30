@@ -412,10 +412,5 @@ namespace CDP4Orm.Dao
         {
             return new DtoInfo(classlessDto[ClassKindKey].ToString(), (Guid)classlessDto[IidKey]);
         }
-
-        public static int ExecuteAndLogNonQuery(this NpgsqlCommand command, ICommandLogger logger)
-        {
-            return logger.ExecuteAndLog(command);
-        }
     }
 }

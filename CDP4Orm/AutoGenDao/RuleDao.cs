@@ -94,7 +94,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
 
@@ -150,7 +150,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
 
             return true;
@@ -204,7 +204,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
 
@@ -249,7 +249,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    isHandled = this.ExecuteAndLogCommand(command) > 0;
+                    isHandled = command.ExecuteNonQuery() > 0;
                 }
             }
 
@@ -294,7 +294,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                result = this.ExecuteAndLogCommand(command) > 0;
+                result = command.ExecuteNonQuery() > 0;
             }
 
             return result;

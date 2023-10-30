@@ -63,11 +63,6 @@ namespace CDP4Orm.Dao.Resolve
         private const string SameAsConnectedPartitionKey = "SameAsConnectedPartition";
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        public ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// Read the data from the database.
         /// </summary>
         /// <param name="transaction">
@@ -142,9 +137,6 @@ namespace CDP4Orm.Dao.Resolve
             {
                 command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
                 
-                // log the sql command 
-                this.CommandLogger.Log(command);
-
                 using (var reader = command.ExecuteReader())
                 {
                     while (reader.Read())
@@ -243,9 +235,6 @@ namespace CDP4Orm.Dao.Resolve
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
                 command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
-
-                // log the sql command 
-                this.CommandLogger.Log(command);
 
                 using (var reader = command.ExecuteReader())
                 {

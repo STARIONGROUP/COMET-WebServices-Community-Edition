@@ -46,11 +46,6 @@ namespace CDP4Orm.Dao
         public IDataModelUtils DataModelUtils { get; set; }
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        public ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// The <see cref="DateTime"/> of the current <see cref="NpgsqlTransaction"/>
         /// </summary>
         private DateTime currentTransactionDatetime;
@@ -271,39 +266,6 @@ namespace CDP4Orm.Dao
         public abstract string GetValueTypeSet();
 
         /// <summary>
-        /// Log the command message if a logger is injected
-        /// </summary>
-        /// <param name="command">the command to log</param>
-        protected void LogCommand(NpgsqlCommand command)
-        {
-            if (this.CommandLogger == null)
-            {
-                return;
-            }
-
-            this.CommandLogger.Log(command);
-        }
-
-        /// <summary>
-        /// Log the command message if a logger is injected
-        /// </summary>
-        /// <param name="command">
-        /// the command to log
-        /// </param>
-        /// <returns>
-        /// The <see cref="int"/>.
-        /// </returns>
-        protected int ExecuteAndLogCommand(NpgsqlCommand command)
-        {
-            if (this.CommandLogger == null)
-            {
-                return 0;
-            }
-
-            return command.ExecuteAndLogNonQuery(this.CommandLogger);
-        }
-
-        /// <summary>
         /// Deletes all data from the <paramref name="table"/>
         /// </summary>
         /// <param name="transaction">The current transaction</param>
@@ -320,7 +282,7 @@ namespace CDP4Orm.Dao
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
         }
 

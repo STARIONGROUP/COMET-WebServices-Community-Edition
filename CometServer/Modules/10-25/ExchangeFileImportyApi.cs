@@ -398,7 +398,7 @@ namespace CometServer.Modules
 
                 // important, make sure to defer the constraints
                 var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                command.ExecuteNonQuery();
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
                 transactionManager.SetAuditLoggingState(transaction, false);
@@ -429,7 +429,7 @@ namespace CometServer.Modules
 
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
-                    siteDirCommand.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                    siteDirCommand.ExecuteNonQuery();
                 }
 
                 // apply migration on new SiteDirectory partition
@@ -571,9 +571,6 @@ namespace CometServer.Modules
             }
             finally
             {
-                // clean log (will happen at end of request as well due to IOC lifetime
-                transactionManager.CommandLogger.ClearLog();
-
                 transaction?.Dispose();
 
                 if (connection != null)
@@ -630,7 +627,7 @@ namespace CometServer.Modules
 
                 // important, make sure to defer the constraints
                 var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                command.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                command.ExecuteNonQuery();
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
                 transactionManager.SetAuditLoggingState(transaction, true);
@@ -662,7 +659,7 @@ namespace CometServer.Modules
 
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
-                    siteDirCommand.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                    siteDirCommand.ExecuteNonQuery();
                 }
 
                 // apply migration on new SiteDirectory partition
@@ -827,7 +824,7 @@ namespace CometServer.Modules
 
                                 // important, make sure to defer the constraints
                                 var constraintcommand = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction);
-                                constraintcommand.ExecuteAndLogNonQuery(transactionManager.CommandLogger);
+                                constraintcommand.ExecuteNonQuery();
 
                                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
                                 transactionManager.SetAuditLoggingState(transaction, true);
@@ -870,9 +867,6 @@ namespace CometServer.Modules
             }
             finally
             {
-                // clean log (will happen at end of request as well due to IOC lifetime
-                transactionManager.CommandLogger.ClearLog();
-
                 transaction?.Dispose();
 
                 if (connection != null)

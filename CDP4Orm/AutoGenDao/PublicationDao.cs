@@ -89,9 +89,6 @@ namespace CDP4Orm.Dao
                     command.Transaction = transaction;
                     command.CommandText = sqlBuilder.ToString();
 
-                    // log the sql command 
-                    this.LogCommand(command);
-
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
@@ -124,9 +121,6 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
                     command.CommandText = sqlBuilder.ToString();
-
-                    // log the sql command 
-                    this.LogCommand(command);
 
                     using (var reader = command.ExecuteReader())
                     {
@@ -231,7 +225,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
                 publication.Domain.ForEach(x => this.AddDomain(transaction, partition, publication.Iid, x));
                 publication.PublishedParameter.ForEach(x => this.AddPublishedParameter(transaction, partition, publication.Iid, x));
@@ -289,7 +283,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                this.ExecuteAndLogCommand(command);
+                command.ExecuteNonQuery();
             }
             publication.Domain.ForEach(x => this.UpsertDomain(transaction, partition, publication.Iid, x));
             publication.PublishedParameter.ForEach(x => this.UpsertPublishedParameter(transaction, partition, publication.Iid, x));
@@ -379,7 +373,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 
@@ -422,7 +416,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
         /// <summary>
@@ -459,7 +453,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 
@@ -502,7 +496,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 
@@ -554,7 +548,7 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    this.ExecuteAndLogCommand(command);
+                    command.ExecuteNonQuery();
                 }
             }
 
@@ -695,7 +689,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 
@@ -733,7 +727,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return this.ExecuteAndLogCommand(command) > 0;
+                return command.ExecuteNonQuery() > 0;
             }
         }
 

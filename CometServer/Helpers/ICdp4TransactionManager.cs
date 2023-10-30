@@ -45,11 +45,6 @@ namespace CometServer.Helpers
         IterationSetup IterationSetup { get;}
 
         /// <summary>
-        /// Gets or sets the Command logger.
-        /// </summary>
-        ICommandLogger CommandLogger { get; set; }
-
-        /// <summary>
         /// Setup a new transaction instance. 
         /// </summary>
         /// <param name="connection">
