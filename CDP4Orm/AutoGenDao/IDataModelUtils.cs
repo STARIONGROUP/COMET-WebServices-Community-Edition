@@ -58,6 +58,6 @@ namespace CDP4Orm.Dao
         /// <remarks>
         /// A collection of possible partitions as string
         /// </remarks>
-        IList<string> GetSourcePartition(string typeName);
+        IReadOnlyList<string> GetSourcePartition(string typeName);
     }
 }

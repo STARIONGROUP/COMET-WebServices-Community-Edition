@@ -331,7 +331,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        private IList<string> ResolvePartition(string partition, string typeName)
+        private IReadOnlyList<string> ResolvePartition(string partition, string typeName)
         {
             if (partition == CDP4Orm.Dao.Utils.SiteDirectoryPartition)
             {

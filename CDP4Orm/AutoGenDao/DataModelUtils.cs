@@ -338,7 +338,7 @@ namespace CDP4Orm.Dao
         /// <remarks>
         /// A collection of possible partitions as string
         /// </remarks>
-        public IList<string> GetSourcePartition(string typeName)
+        public IReadOnlyList<string> GetSourcePartition(string typeName)
         {
             var partitionInfo = this.typePartitionMap.Where(kvp => kvp.Value.Contains(typeName)).Select(x => x.Key).ToList();
 
