@@ -227,6 +227,8 @@ namespace CometServer
 
             app.UseSerilogRequestLogging();
 
+            app.UseStaticFiles();
+
             GlobalConfiguration.Configuration.UseMemoryStorage();
             app.UseHangfireDashboard("/hangfire");
             app.UseHangfireServer();

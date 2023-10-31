@@ -60,6 +60,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
   <Target Name="CopyAuthenticationPlugins" AfterTargets="Build">
     <ItemGroup>
       <CDP4DatabaseAuthentication Include="$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\CDP4DatabaseAuthentication.dll;$(ProjectDir)..\CDP4DatabaseAuthentication\bin\$(Configuration)\config.json" />
