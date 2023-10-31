@@ -270,9 +270,13 @@ namespace CometServer.Services
             foreach (var unresolved in unresolvedItems)
             {
                 var resolvedPartition = this.ResolvePartition(partition, unresolved.InstanceInfo.TypeName);
-                if (resolvedPartition != null)
+
+                if (resolvedPartition.Any())
                 {
-                    unresolved.Partition = resolvedPartition;
+                    if (resolvedPartition.Count == 1)
+                    {
+                        unresolved.Partition = resolvedPartition.Single();
+                    }
                 }
             }
         }
@@ -327,29 +331,38 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        private string ResolvePartition(string partition, string typeName)
+        private IReadOnlyList<string> ResolvePartition(string partition, string typeName)
         {
             if (partition == CDP4Orm.Dao.Utils.SiteDirectoryPartition)
             {
-                return partition;
+                return new List<string>{ partition };
             }
 
-            var staticTypeInfo = this.DataModelUtils.GetSourcePartition(typeName);
+            var staticTypeInfos = this.DataModelUtils.GetSourcePartition(typeName);
 
-            if (staticTypeInfo == "SiteDirectory")
+            var result = new List<string>();
+
+            if (staticTypeInfos.Any())
             {
-                return staticTypeInfo;
+                foreach (var staticTypeInfo in staticTypeInfos)
+                {
+                    if (staticTypeInfo == "SiteDirectory")
+                    {
+                        result.Add(staticTypeInfo);
+                    }
+
+                    if (staticTypeInfo != null)
+                    {
+                        // source partition info found
+                        result.Add(partition.StartsWith(staticTypeInfo)
+                            ? partition
+                            : partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, staticTypeInfo)
+                        );
+                    }
+                }
             }
 
-            if (staticTypeInfo != null)
-            {
-                // source partition info found
-                return partition.StartsWith(staticTypeInfo)
-                           ? partition
-                           : partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, staticTypeInfo);
-            }
-
-            return null;
+            return result;
         }
 
         /// <summary>

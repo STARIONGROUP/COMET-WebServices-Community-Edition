@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DataModelUtils.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
@@ -137,6 +137,9 @@ namespace CDP4Orm.Dao
                         "EngineeringModel",
                         "EngineeringModelDataDiscussionItem",
                         "EngineeringModelDataNote",
+                        "File",
+                        "FileRevision",
+                        "Folder",
                         "Iteration",
                         "LogEntryChangelogItem",
                         "ModellingAnnotationItem",
@@ -324,22 +327,19 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Get the source partition for a passed in concrete type.
+        /// Get the source partition(s) for a passed in concrete type.
         /// </summary>
         /// <param name="typeName">
         /// The concrete type name.
         /// </param>
         /// <returns>
-        /// The partition name for the passed in concrete type, otherwise null
+        /// A collection of possible partitions as string
         /// </returns>
-        /// <remarks>
-        /// Null is returned if there is no type map entry or there are multiple
-        /// </remarks>
-        public string GetSourcePartition(string typeName)
+        public IReadOnlyList<string> GetSourcePartition(string typeName)
         {
             var partitionInfo = this.typePartitionMap.Where(kvp => kvp.Value.Contains(typeName)).Select(x => x.Key).ToList();
 
-            return partitionInfo.Count() == 1 ? partitionInfo.Single() : null;
+            return partitionInfo;
         }
     }
 }
