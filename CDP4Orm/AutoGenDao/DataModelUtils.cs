@@ -327,17 +327,14 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Get the source partition for a passed in concrete type.
+        /// Get the source partition(s) for a passed in concrete type.
         /// </summary>
         /// <param name="typeName">
         /// The concrete type name.
         /// </param>
         /// <returns>
-        /// The partition name for the passed in concrete type, otherwise null
-        /// </returns>
-        /// <remarks>
         /// A collection of possible partitions as string
-        /// </remarks>
+        /// </returns>
         public IReadOnlyList<string> GetSourcePartition(string typeName)
         {
             var partitionInfo = this.typePartitionMap.Where(kvp => kvp.Value.Contains(typeName)).Select(x => x.Key).ToList();
