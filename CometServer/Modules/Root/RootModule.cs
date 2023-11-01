@@ -25,7 +25,8 @@
 namespace CometServer.Modules
 {
     using Carter;
-    using Carter.Response;
+
+    using CometServer.Resources;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
@@ -37,26 +38,23 @@ namespace CometServer.Modules
     public class RootModule : CarterModule
     {
         /// <summary>
-         /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
-         /// </summary>
-         /// <param name="app">
-         /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
-         /// </param>
+        /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
+        /// </summary>
+        /// <param name="app">
+        /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
+        /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/", async (HttpRequest req, HttpResponse res) => {
+            app.MapGet("/", async (HttpRequest req, HttpResponse res, IResourceLoader resourceLoader) =>
+            {
+                var rootPageTemplate = resourceLoader.QueryRootPage()
+                    .Replace("{{basePath}}", req.PathBase)
+                    .Replace("{{sdkVersion}}", resourceLoader.QuerySDKVersion())
+                    .Replace("{{apiVersion}}", resourceLoader.QueryVersion());
 
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-
-                    // TODO: check whether this json should be added
-                    await res.AsJson("not authenticated");
-                }
-                else
-                {
-                    res.Redirect("/app");
-                }
+                await res.WriteAsync(rootPageTemplate);
+                res.ContentType = "text/html";
+                await res.CompleteAsync();
             });
         }
     }

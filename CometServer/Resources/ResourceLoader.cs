@@ -28,6 +28,8 @@ namespace CometServer.Resources
     using System.Reflection;
     using System.Resources;
 
+    using CDP4Common.DTO;
+
     /// <summary>
     /// Class responsible for loading embedded resources.
     /// </summary>
@@ -61,8 +63,33 @@ namespace CometServer.Resources
         /// </returns>
         public string QueryVersion()
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var assembly = Assembly.GetExecutingAssembly();
             return assembly.GetName().Version?.ToString();
+        }
+
+        /// <summary>
+        /// queries the version number from the CDP4Common library
+        /// </summary>
+        /// <returns>
+        /// a string representation of the version of the CDP4-COMET SDK
+        /// </returns>
+        public string QuerySDKVersion()
+        {
+            var assembly = typeof(Thing).Assembly;
+            return assembly.GetName().Version?.ToString();
+        }
+
+        /// <summary>
+        /// queries the template HTML of the root page
+        /// </summary>
+        /// <returns>
+        /// a string representation of the template HTML of the root page
+        /// </returns>
+        public string QueryRootPage()
+        {
+            var rootPage = this.LoadEmbeddedResource("CometServer.Resources.RootPage.html");
+
+            return rootPage;
         }
 
         /// <summary>

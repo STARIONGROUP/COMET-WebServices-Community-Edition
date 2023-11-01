@@ -49,6 +49,22 @@ namespace CometServer.Resources
         string QueryVersion();
 
         /// <summary>
+        /// queries the version number from the CDP4Common library
+        /// </summary>
+        /// <returns>
+        /// a string representation of the version of the CDP4-COMET SDK
+        /// </returns>
+        string QuerySDKVersion();
+
+        /// <summary>
+        /// queries the template HTML of the root page
+        /// </summary>
+        /// <returns>
+        /// a string representation of the template HTML of the root page
+        /// </returns>
+        string QueryRootPage();
+
+        /// <summary>
         /// Queries the logo with version info from the embedded resources
         /// </summary>
         /// <returns>

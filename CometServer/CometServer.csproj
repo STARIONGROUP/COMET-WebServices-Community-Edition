@@ -16,6 +16,8 @@
 
   <ItemGroup>
     <None Remove="Resources\ascii-art.txt" />
+    <None Remove="Resources\rhealogo.png" />
+    <None Remove="Resources\RootPage.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +51,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\ascii-art.txt" />
+    <EmbeddedResource Include="Resources\RootPage.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -58,10 +61,6 @@
     <None Update="NLog.dll.nlog">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
   </ItemGroup>
 
   <Target Name="CopyAuthenticationPlugins" AfterTargets="Build">
