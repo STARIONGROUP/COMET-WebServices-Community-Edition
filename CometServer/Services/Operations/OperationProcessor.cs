@@ -354,7 +354,7 @@ namespace CometServer.Services.Operations
                     if (!this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
                     {
                         throw new InvalidOperationException(
-                            $"FileRevision with iid:'{fileRevision.Iid}' with content Hash [{fileRevision.ContentHash}] does not exist");
+                            $"Physical file that belongs to FileRevision with iid:'{fileRevision.Iid}' with content Hash [{fileRevision.ContentHash}] does not exist");
                     }
                 }
             }

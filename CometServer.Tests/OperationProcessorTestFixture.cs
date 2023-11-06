@@ -116,6 +116,7 @@ namespace CometServer.Tests
         {
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
+            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationSideEffectProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
 

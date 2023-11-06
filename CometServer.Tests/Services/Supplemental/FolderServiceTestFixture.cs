@@ -59,7 +59,9 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         private NpgsqlTransaction transaction;
         private Mock<ICdp4TransactionManager> transactionManager;
         private string iterationPartitionName;
+        private string engineeringModelPartitionName;
         private Person person;
+        private Mock<ICommonFileStoreService> commonFileStoreService;
 
         [SetUp]
         public void Setup()
@@ -69,6 +71,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.permissionService = new Mock<IPermissionService>();
             this.credentialsService = new Mock<ICredentialsService>();
             this.domainFileStoreService = new Mock<IDomainFileStoreService>();
+            this.commonFileStoreService = new Mock<ICommonFileStoreService>();
             this.transaction = null;
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.person = new Person(Guid.NewGuid(), 0);
@@ -78,10 +81,12 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
                 PermissionService = this.permissionService.Object,
                 FolderDao = this.folderDao.Object,
                 TransactionManager = this.transactionManager.Object,
-                DomainFileStoreService = this.domainFileStoreService.Object
+                DomainFileStoreService = this.domainFileStoreService.Object,
+                CommonFileStoreService = this.commonFileStoreService.Object
             };
 
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
+            this.engineeringModelPartitionName = "EngineeringModel_" + Guid.NewGuid();
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.folder)).Returns(true);
 
@@ -104,7 +109,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         }
 
         [Test]
-        public void VerifyContainerIsInstanceReadAllowed()
+        public void VerifyContainerIsInstanceReadAllowedForDomainFileStore()
         {
             this.domainFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
 
@@ -113,6 +118,18 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.domainFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(false);
 
             Assert.That(this.folderService.IsAllowedAccordingToIsHidden(this.transaction, this.folder, this.iterationPartitionName), Is.False);
+        }
+
+        [Test]
+        public void VerifyContainerIsInstanceReadAllowedForCommonFileStore()
+        {
+            this.commonFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.engineeringModelPartitionName)).Returns(true);
+
+            Assert.That(this.folderService.IsAllowedAccordingToIsHidden(this.transaction, this.folder, this.engineeringModelPartitionName), Is.True);
+
+            this.commonFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.engineeringModelPartitionName)).Returns(false);
+
+            Assert.That(this.folderService.IsAllowedAccordingToIsHidden(this.transaction, this.folder, this.engineeringModelPartitionName), Is.False);
         }
     }
 }

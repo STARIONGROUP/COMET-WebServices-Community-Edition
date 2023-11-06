@@ -73,6 +73,7 @@ namespace CometServer.Services
         /// <summary>
         /// Checks if the <see cref="Participant"/> is allowed to read (and therefore also write to) a <see cref="DomainFileStore"/>
         /// based on the state of the <see cref="DomainFileStore"/>'s <see cref="DomainFileStore.IsHidden"/> property.
+        /// This is not applicable to <see cref="CommonFileStore"/> data.
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -88,7 +89,12 @@ namespace CometServer.Services
         /// </returns>
         public bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            return this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+            if (partition.StartsWith("Iteration"))
+            {
+                return this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+            }
+
+            return true;
         }
 
         /// <summary>

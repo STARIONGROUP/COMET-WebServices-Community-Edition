@@ -58,6 +58,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.transactionManager = new Mock<ICdp4TransactionManager>();
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
+            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
             this.iterationService = new IterationService
             {
                 IterationDao = this.iterationDaoService.Object,
@@ -75,7 +76,7 @@ namespace CometServer.Tests.Services.Supplemental
             var it1 = new Iteration(setup1.IterationIid, 0) { IterationSetup = setup1.Iid};
             var it2 = new Iteration(setup2.IterationIid, 0) { IterationSetup = setup2.Iid};
 
-            this.iterationDaoService.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), "", It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null)).Returns(new[] {it1, it2});
+            this.iterationDaoService.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), "", It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue)).Returns(new[] {it1, it2});
             this.iterationSetupService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new[] {setup1, setup2});
 
             var active = this.iterationService.GetActiveIteration(null, "", null);
