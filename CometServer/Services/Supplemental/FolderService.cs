@@ -39,6 +39,11 @@ namespace CometServer.Services
         public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="ICommonFileStoreService"/>.
+        /// </summary>
+        public ICommonFileStoreService CommonFileStoreService { get; set; }
+
+        /// <summary>
         /// Check whether a read operation is allowed based on the object instance.
         /// </summary>
         /// <param name="transaction">
@@ -59,6 +64,11 @@ namespace CometServer.Services
 
             if (result)
             {
+                if (partition.StartsWith("EngineeringModel_"))
+                {
+                    return true;
+                }
+
                 result = this.IsAllowedAccordingToIsHidden(transaction, thing, partition);
             }
 
@@ -83,7 +93,14 @@ namespace CometServer.Services
         /// </returns>
         public bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            return this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+            if (partition.StartsWith("EngineeringModel_"))
+            {
+                return this.CommonFileStoreService.HasReadAccess(thing, transaction, partition);
+            }
+            else
+            {
+                return this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+            }
         }
     }
 }

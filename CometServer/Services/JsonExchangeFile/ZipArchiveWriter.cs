@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
 
     using CDP4Common.DTO;
 
@@ -200,7 +201,13 @@ namespace CometServer.Services
         /// </param>
         public void WriteFileRevisionsToZipFile(EngineeringModelSetup engineeringModelSetup, IEnumerable<FileRevision> fileRevisions, ZipOutputStream zipOutputStream)
         {
-            foreach (var fileRevision in fileRevisions)
+            var uniqueContent = 
+                fileRevisions
+                    .Select(x => x.ContentHash)
+                    .Distinct()
+                    .Select(x => new { ContentHash = x });
+
+            foreach (var fileRevision in uniqueContent)
             {
                 if (this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
                 {

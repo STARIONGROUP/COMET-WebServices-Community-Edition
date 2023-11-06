@@ -80,9 +80,8 @@ namespace CometServer.Tests.Services.Supplemental
                 CredentialsService = this.credentialsService.Object,
                 FileDao = this.fileDao.Object,
                 TransactionManager = this.transactionManager.Object,
-                DomainFileStoreService = this.domainFileStoreService.Object
+                DomainFileStoreService = this.domainFileStoreService.Object,
             };
-
 
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
 
@@ -100,10 +99,11 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.fileDao
                 .Setup(
-                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
+                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
                 .Returns(new[] { this.file });
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
+            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
         }
 
         [Test]

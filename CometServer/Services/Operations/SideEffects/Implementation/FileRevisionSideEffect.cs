@@ -43,6 +43,11 @@ namespace CometServer.Services.Operations.SideEffects
         public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="ICommonFileStoreService"/>.
+        /// </summary>
+        public ICommonFileStoreService CommonFileStoreService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IFileService"/>.
         /// </summary>
         public IFileService FileService { get; set; }
@@ -99,7 +104,7 @@ namespace CometServer.Services.Operations.SideEffects
         }
 
         /// <summary>
-        /// Checks the <see cref="DomainFileStore"/> and file lock security
+        /// Checks the <see cref="FileStore"/> and file lock security
         /// </summary>
         /// <param name="container">
         /// The container instance of the <see cref="Thing"/> that is inspected.
@@ -119,10 +124,20 @@ namespace CometServer.Services.Operations.SideEffects
 
             this.FileService.CheckFileLock(transaction, partition, file);
 
-            this.DomainFileStoreService.HasWriteAccess(
-                file,
-                transaction,
-                partition);
+            if (partition.StartsWith("EngineeringModel_"))
+            {
+                this.CommonFileStoreService.HasWriteAccess(
+                    file,
+                    transaction,
+                    partition);
+            }
+            else
+            {
+                this.DomainFileStoreService.HasWriteAccess(
+                    file,
+                    transaction,
+                    partition);
+            }
         }
     }
 }

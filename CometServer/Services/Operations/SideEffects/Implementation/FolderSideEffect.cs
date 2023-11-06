@@ -52,6 +52,11 @@ namespace CometServer.Services.Operations.SideEffects
         public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="ICommonFileStoreService"/>.
+        /// </summary>
+        public ICommonFileStoreService CommonFileStoreService { get; set; }
+
+        /// <summary>
         /// Allows derived classes to override and execute additional logic before a create operation.
         /// </summary>
         /// <param name="thing">
@@ -248,7 +253,7 @@ namespace CometServer.Services.Operations.SideEffects
         }
 
         /// <summary>
-        /// Checks the <see cref="DomainFileStore"/> security
+        /// Checks the <see cref="FileStore"/> security
         /// </summary>
         /// <param name="folder">
         /// The instance of the <see cref="Folder"/> that is inspected.
@@ -261,10 +266,20 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private void HasWriteAccess(Folder folder, NpgsqlTransaction transaction, string partition)
         {
-            this.DomainFileStoreService.HasWriteAccess(
-                folder,
-                transaction,
-                partition);
+            if (partition.StartsWith("EngineeringModel_"))
+            {
+                this.CommonFileStoreService.HasWriteAccess(
+                    folder,
+                    transaction,
+                    partition);
+            }
+            else
+            {
+                this.DomainFileStoreService.HasWriteAccess(
+                    folder,
+                    transaction,
+                    partition);
+            }
         }
     }
 }

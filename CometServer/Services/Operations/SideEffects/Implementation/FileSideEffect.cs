@@ -37,6 +37,11 @@ namespace CometServer.Services.Operations.SideEffects
     public sealed class FileSideEffect : OperationSideEffect<File>
     {
         /// <summary>
+        /// Gets or sets the <see cref="ICommonFileStoreService"/>.
+        /// </summary>
+        public ICommonFileStoreService CommonFileStoreService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDomainFileStoreService"/>.
         /// </summary>
         public IDomainFileStoreService DomainFileStoreService { get; set; }
@@ -119,10 +124,20 @@ namespace CometServer.Services.Operations.SideEffects
         {
             this.FileService.CheckFileLock(transaction, partition, file);
 
-            this.DomainFileStoreService.HasWriteAccess(
-                file,
-                transaction,
-                partition);
+            if (partition.StartsWith("EngineeringModel_"))
+            {
+                this.CommonFileStoreService.HasWriteAccess(
+                    file,
+                    transaction,
+                    partition);
+            }
+            else
+            {
+                this.DomainFileStoreService.HasWriteAccess(
+                    file,
+                    transaction,
+                    partition);
+            }
         }
     }
 }

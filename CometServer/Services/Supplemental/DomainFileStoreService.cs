@@ -248,33 +248,33 @@ namespace CometServer.Services
         /// </param>
         public bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
         {
-            if (partition.Contains("Iteration"))
+            if (!partition.Contains("Iteration"))
             {
-                var thingType = thing.GetType();
-                
-                if (!this.domainFileStoreSelectors.ContainsKey(thingType))
-                {
-                    throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {thingType.Name}");
-                }
-
-                var domainFileStoreSelector = this.domainFileStoreSelectors[thingType].Invoke(thing.Iid);
-
-                //is DomainFileStore hidden
-                var engineeringModelPartition = partition.Replace(
-                    CDP4Orm.Dao.Utils.IterationSubPartition,
-                    CDP4Orm.Dao.Utils.EngineeringModelPartition);
-
-                var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
-
-                var domainFileStore =
-                    this.GetShallow(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext())
-                        .Cast<DomainFileStore>()
-                        .SingleOrDefault(domainFileStoreSelector);
-
-                return domainFileStore != null && this.IsAllowedAccordingToIsHidden(transaction, domainFileStore);
+                throw new Cdp4ModelValidationException("Wrong partition was resolved for the DomainFileStore");
             }
 
-            return true;
+            var thingType = thing.GetType();
+            
+            if (!this.domainFileStoreSelectors.ContainsKey(thingType))
+            {
+                throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {thingType.Name}");
+            }
+
+            var domainFileStoreSelector = this.domainFileStoreSelectors[thingType].Invoke(thing.Iid);
+
+            //is DomainFileStore hidden
+            var engineeringModelPartition = partition.Replace(
+                CDP4Orm.Dao.Utils.IterationSubPartition,
+                CDP4Orm.Dao.Utils.EngineeringModelPartition);
+
+            var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
+
+            var domainFileStore =
+                this.GetShallow(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext())
+                    .Cast<DomainFileStore>()
+                    .SingleOrDefault(domainFileStoreSelector);
+
+            return domainFileStore != null && this.IsAllowedAccordingToIsHidden(transaction, domainFileStore);
         }
     }
 }

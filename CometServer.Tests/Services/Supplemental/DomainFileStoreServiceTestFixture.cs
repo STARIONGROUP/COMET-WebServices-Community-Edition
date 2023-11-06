@@ -131,10 +131,11 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.domainFileStoreDao
                 .Setup(
-                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
+                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
                 .Returns(new[] { domainFileStore, extraDomainFileStoreToTestDomainFileStoreSelectors });
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
+            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
         }
 
         [Test]
