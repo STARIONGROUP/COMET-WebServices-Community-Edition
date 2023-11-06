@@ -24,7 +24,10 @@
 
 namespace CometServer
 {
+    using System;
+    using System.IO;
     using System.Linq;
+    using System.Reflection;
 
     using Autofac;
 
@@ -68,10 +71,13 @@ namespace CometServer
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
 
     using Prometheus;
 
     using Serilog;
+
+    using IServiceProvider = System.IServiceProvider;
 
     /// <summary>
     /// The <see cref="Startup"/> used to configure the application
@@ -214,7 +220,7 @@ namespace CometServer
         /// <summary>
         /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         /// </summary>
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, ILogger<Startup> logger)
         {
             if (environment.IsDevelopment())
             {
@@ -244,6 +250,30 @@ namespace CometServer
             app.UseEndpoints(builder =>
             {
                 builder.MapCarter();
+
+                try
+                {
+                    //These routes should be added after we run .MapCarter()
+                    var currentExecutableDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    var externalDlls = Directory.GetFiles(currentExecutableDirectory, "CarterModule.*.dll");
+
+                    foreach (var externalDll in externalDlls)
+                    {
+                        var assembly = Assembly.LoadFile(externalDll);
+                        var validExportedTypes = assembly.GetExportedTypes().Where(x => x.IsAssignableTo(typeof(CarterModule)));
+
+                        foreach (var validExportedType in validExportedTypes)
+                        {
+                            var moduleInstance = Activator.CreateInstance(validExportedType);
+                            logger.LogDebug("Loading external Carter module: {0}", validExportedType.Name);
+                            validExportedType.InvokeMember("AddRoutes", BindingFlags.InvokeMethod, null, moduleInstance, new object[] { builder });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError("Error encountered while loading external Carter modules", ex);
+                }
             });
         }
     }
