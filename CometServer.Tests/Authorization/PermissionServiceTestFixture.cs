@@ -159,6 +159,66 @@ namespace CometServer.Tests.Authorization
         }
 
         [Test]
+        public void VerifyCreateEngineeringModelSetup()
+        {
+            //-------------------------------------------------------------
+            // Setup
+            //-------------------------------------------------------------
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), ClassKind.EngineeringModelSetup.ToString()))
+                .Returns(PersonAccessRightKind.MODIFY_IF_PARTICIPANT);
+
+            Assert.IsTrue(
+                this.permissionService.CanWrite(
+                    null,
+                    new EngineeringModelSetup(),
+                    ClassKind.EngineeringModelSetup.ToString(),
+                    SiteDirectoryPartition,
+                    ServiceBase.CreateOperation,
+                    new RequestSecurityContext()
+                ));
+
+            Assert.IsFalse(
+                this.permissionService.CanWrite(
+                    null,
+                    new EngineeringModelSetup(),
+                    ClassKind.EngineeringModelSetup.ToString(),
+                    SiteDirectoryPartition,
+                    ServiceBase.UpdateOperation,
+                    new RequestSecurityContext()
+                ));
+
+            //-------------------------------------------------------------
+            // Setup
+            //-------------------------------------------------------------
+            this.accessRightKindService.Setup(
+                    x =>
+                        x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), ClassKind.EngineeringModelSetup.ToString()))
+                .Returns(PersonAccessRightKind.MODIFY);
+
+            Assert.IsTrue(
+                this.permissionService.CanWrite(
+                    null,
+                    new EngineeringModelSetup(),
+                    ClassKind.EngineeringModelSetup.ToString(),
+                    SiteDirectoryPartition,
+                    ServiceBase.CreateOperation,
+                    new RequestSecurityContext()
+                ));
+
+            Assert.IsTrue(
+                this.permissionService.CanWrite(
+                    null,
+                    new EngineeringModelSetup(),
+                    ClassKind.EngineeringModelSetup.ToString(),
+                    SiteDirectoryPartition,
+                    ServiceBase.UpdateOperation,
+                    new RequestSecurityContext()
+                ));
+        }
+
+        [Test]
         [TestCaseSource(nameof(TestCases))]
         public void VerifySameAsContainerPermissionAutorization(Thing containerThing, Thing thing, string partition)
         {
