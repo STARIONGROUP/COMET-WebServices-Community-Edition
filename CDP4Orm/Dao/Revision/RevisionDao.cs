@@ -341,6 +341,8 @@ namespace CDP4Orm.Dao.Revision
                 {
                     command.Parameters.Add("toRevision", NpgsqlDbType.Integer).Value = toRevision;
                 }
+
+                command.ExecuteNonQuery();
             }
         }
 
