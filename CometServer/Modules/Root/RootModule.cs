@@ -52,8 +52,8 @@ namespace CometServer.Modules
                     .Replace("{{sdkVersion}}", resourceLoader.QuerySDKVersion())
                     .Replace("{{apiVersion}}", resourceLoader.QueryVersion());
 
-                await res.WriteAsync(rootPageTemplate);
                 res.ContentType = "text/html";
+                await res.WriteAsync(rootPageTemplate);
                 await res.CompleteAsync();
             });
         }
