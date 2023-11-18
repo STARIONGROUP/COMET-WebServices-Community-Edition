@@ -37,8 +37,6 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
 
-    using CDP4Orm.Dao;
-
     using CDP4JsonSerializer;
 
     using CDP4MessagePackSerializer;
@@ -145,7 +143,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        this.logger.LogWarning(e, "The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -170,9 +168,9 @@ namespace CometServer.Modules
                     {
                         await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
-                    catch (AuthorizationException e)
+                    catch (AuthorizationException)
                     {
-                        this.logger.LogWarning(e, "The POST REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The POST REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -407,7 +405,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -651,7 +649,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int) HttpStatusCode.Forbidden;
@@ -664,7 +662,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] \n {ex.Message}"));
+                this.logger.LogError(this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] \n {ex.Message}"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -677,7 +675,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -690,7 +688,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized (Thing Not Found) request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized (Thing Not Found) request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling: Use Unauthorized as a user is not allowed to see if the thing is not there or a user is not allowed to see it
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;

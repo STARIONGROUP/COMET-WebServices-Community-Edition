@@ -118,7 +118,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        this.logger.LogWarning(e, $"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+                        this.logger.LogWarning($"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -231,7 +231,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
