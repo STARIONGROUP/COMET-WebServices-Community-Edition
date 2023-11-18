@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CometServer-CE.Tests</Title>
     <Description>Unit tests Library for the Comet Server</Description>

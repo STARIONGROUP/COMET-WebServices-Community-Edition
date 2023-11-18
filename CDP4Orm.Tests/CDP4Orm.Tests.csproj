@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Orm-CE.Tests</Title>
     <Description>CDP4-COMET Data-Model Object Relational Mapping</Description>

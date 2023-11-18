@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4Orm-CE</Title>
     <Version>8.0.0</Version>
