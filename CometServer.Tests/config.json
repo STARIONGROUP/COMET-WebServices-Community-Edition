@@ -1,0 +1,17 @@
+{
+  "Midtier": {
+    "Protocol": "http",
+    "HostName": "localhost",
+    "Port": 5000
+  },
+  "Backtier": {
+    "HostName": "cdp4-postgresql",
+    "Port": 5432,
+    "UserName": "cdp4",
+    "Password": "cdp4",
+    "Database": "cdp4server"
+  },
+  "Defaults": {
+    "ParticipantRole": "34585c65-d20c-41de-b17c-40d611618eb8"
+  } 
+}

@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  
+  comet_db:
+    image: rheagroup/cdp4-database-community-edition:latest
+    container_name: comet-db
+    shm_size: 2gb
+    restart: always
+    command: postgres -c max_locks_per_transaction=1024
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+    hostname: comet-db
+    networks:
+      comet:
+        aliases:
+          - comet-db
+    ports:
+      - '5432:5432'
+    expose:
+      - '5432'
+    volumes:
+      - comet-db-data:/var/lib/postgresql/data
+      - comet-db-logs:/logs
+  
+  comet_webservices:
+    image: rheagroup/comet-webservices-community-edition:8.0.0-rc13
+    container_name: comet-webservices
+    shm_size: 512m
+    restart: always
+    hostname: comet-webservices
+    networks:
+      comet:
+        aliases:
+          - comet-webservices
+    depends_on:
+      - comet_db
+    ports:
+      - "5000:5000"
+    expose:
+      - '5000'
+    volumes:
+      - comet-ws-logs:/app/logs
+      - comet-ws-storage:/app/storage
+      - comet-ws-uplaod:/app/upload
+
+networks:
+  comet:
+
+volumes:
+  comet-db-data:
+  comet-db-logs:
+  comet-ws-logs:
+  comet-ws-storage:
+  comet-ws-uplaod:
