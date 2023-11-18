@@ -45,7 +45,6 @@ namespace CometServer.Configuration
             this.DatabaseRestore = "cdp4serverrestore";
             this.DatabaseManage = "cdp4manage";
             this.StatementTimeout = 120;
-            this.LogSqlCommands = false;
             this.IsDbImportEnabled = false;
             this.IsDbSeedEnabled = false;
             this.IsDbRestoreEnabled = false;
@@ -67,7 +66,6 @@ namespace CometServer.Configuration
             this.DatabaseRestore = configuration["Backtier:DatabaseRestore"];
             this.DatabaseManage = configuration["Backtier:DatabaseManage"];
             this.StatementTimeout = int.Parse(configuration["Backtier:StatementTimeout"]);
-            this.LogSqlCommands = bool.Parse(configuration["Backtier:LogSqlCommands"]);
             this.IsDbImportEnabled = bool.Parse(configuration["Backtier:IsDbImportEnabled"]);
             this.IsDbSeedEnabled = bool.Parse(configuration["Backtier:IsDbSeedEnabled"]);
             this.IsDbRestoreEnabled = bool.Parse(configuration["Backtier:IsDbRestoreEnabled"]);
@@ -115,11 +113,6 @@ namespace CometServer.Configuration
         /// Default is 120 seconds
         /// </remarks>
         public int StatementTimeout { get; set; }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether SQL commands are logged
-        /// </summary>
-        public bool LogSqlCommands { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether database import is enabled.
