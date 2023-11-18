@@ -225,7 +225,7 @@ namespace CometServer.Modules
             var requestToken = this.GenerateRandomToken();
 
             var contentTypeKind = httpRequest.QueryContentTypeKind();
-            
+
             try
             {
                 this.logger.LogInformation(this.ConstructLog(httpRequest, $"{requestToken} started"));
@@ -243,6 +243,7 @@ namespace CometServer.Modules
                 var resourceResponse = new List<Thing>();
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
                 var iterationContextId = Guid.Empty;
+
                 var iterationContextRequest = routeSegments.Length >= 4 &&
                                               routeSegments[2] == "iteration" &&
                                               Guid.TryParse(routeSegments[3], out iterationContextId);
@@ -280,7 +281,7 @@ namespace CometServer.Modules
                         await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
                         return;
                     }
-                    
+
                     resourceResponse.AddRange(revisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
                 }
                 else
@@ -362,10 +363,11 @@ namespace CometServer.Modules
                 }
 
                 var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
+
                 if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
+                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
@@ -408,6 +410,18 @@ namespace CometServer.Modules
                 this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (ThingNotFoundException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning(this.ConstructFailureLog(httpRequest, $"{requestToken} thing not found in {sw.ElapsedMilliseconds} [ms]: {ex.Message}"));
+
+                httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)

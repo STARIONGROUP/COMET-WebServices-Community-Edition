@@ -317,6 +317,18 @@ namespace CometServer.Modules
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
+            catch (ThingNotFoundException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning(this.ConstructFailureLog(httpRequest, $"{requestToken} thing not found in {sw.ElapsedMilliseconds} [ms]: {ex.Message}"));
+
+                httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
             catch (Exception ex)
             {
                 if (transaction != null)
@@ -479,7 +491,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogWarning(this.ConstructFailureLog(httpRequest,$"{ex.Message}: {requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
                 await httpResponse.AsJson($"exception:{ex.Message}");
