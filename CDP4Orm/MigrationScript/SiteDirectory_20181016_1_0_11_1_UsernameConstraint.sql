@@ -1,1 +1,0 @@
-﻿CREATE UNIQUE INDEX IF NOT EXISTS hstore_key_shortname_unique ON  "SiteDirectory"."Person"(("ValueTypeDictionary" -> 'ShortName'))
