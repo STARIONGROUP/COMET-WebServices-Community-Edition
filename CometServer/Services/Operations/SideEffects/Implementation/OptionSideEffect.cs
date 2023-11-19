@@ -33,6 +33,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Orm.Dao;
 
+    using CometServer.Exceptions;
     using CometServer.Services.Authorization;
 
     using Npgsql;
@@ -319,6 +320,11 @@ namespace CometServer.Services.Operations.SideEffects
                 .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
                 .Cast<EngineeringModelSetup>()
                 .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
+
+            if (engineeringModelSetup == null)
+            {
+                throw new InvalidOperationException($"The corresponding EngineeringModelSetup of Option {thing.Iid} could not be found. It is impossible to verify whether the new Option can be created");
+            }
 
             if (engineeringModelSetup.Kind == CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE)
             {

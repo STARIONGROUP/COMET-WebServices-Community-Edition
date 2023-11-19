@@ -249,6 +249,31 @@ namespace CometServer.Tests.SideEffects
                         this.engineeringModel), Times.Never);
         }
 
+        [Test]
+        public void Verify_that_when_container_engineeringmodeletup_is_not_found_an_exception_is_thrown()
+        {
+            this.engineeringModelSetup.Kind = CDP4Common.SiteDirectoryData.EngineeringModelKind.STUDY_MODEL;
+            this.options.Add(this.option1);
+            this.options.Add(this.option2);
+
+            this.SetupMethodCallsForDeleteOptionTest();
+
+            this.engineeringModelSetupService
+                .Setup(x => x.GetShallow(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                    null, this.securityContext.Object))
+            .Returns(Array.Empty<EngineeringModelSetup>());
+
+            Assert.That(() =>
+            {
+                this.optionSideEffect.BeforeCreate(
+                    this.option1,
+                    this.iteration,
+                    this.npgsqlTransaction,
+                    this.iterationPartition,
+                    this.securityContext.Object);
+            }, Throws.TypeOf<InvalidOperationException>());
+        }
+
         /// <summary>
         ///  Sets up fake method calls on mocked classes specifically for the unit tests that check
         ///  <see cref="Iteration.DefaultOption" /> handling when an <see cref="Option" /> is deleted.
