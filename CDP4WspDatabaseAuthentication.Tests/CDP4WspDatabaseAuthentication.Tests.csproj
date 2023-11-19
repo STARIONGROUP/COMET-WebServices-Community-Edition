@@ -4,9 +4,9 @@
     <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CDP4WspDatabaseAuthentication.Tests</Title>
-      <Description>CDP4-COMET WSP Database authentication Tests</Description>
+    <Description>CDP4-COMET WSP Database authentication Tests</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
-    <Authors>Sam, Merlin, Alex, Naron, Alexander</Authors>
+    <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>
     <Configurations>Debug;Release</Configurations>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -19,12 +19,19 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+
+    <PackageReference Include="coverlet.collector" Version="6.0.0">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.msbuild" Version="6.0.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
-    <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
-    <ProjectReference Include="..\CDP4WSPDatabaseAuthentication\CDP4WspDatabaseAuthentication.csproj" />
+    <ProjectReference Include="..\CDP4WspDatabaseAuthentication\CDP4WspDatabaseAuthentication.csproj" />
   </ItemGroup>
  
 </Project>

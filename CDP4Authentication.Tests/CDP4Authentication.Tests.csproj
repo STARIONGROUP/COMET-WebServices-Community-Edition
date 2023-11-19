@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
-    <Title>CometServer-CE.Tests</Title>
-    <Description>Unit tests Library for the Comet Server</Description>
+    <Title>CDP4Authentication.Tests</Title>
+    <Description>CDP4-COMET Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>
     <Configurations>Debug;Release</Configurations>
@@ -12,13 +12,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="8.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.20.69" />
-    <PackageReference Include="nunit" Version="3.14.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit.Console" Version="3.16.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+       <PrivateAssets>all</PrivateAssets>
+       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
     <PackageReference Include="coverlet.collector" Version="6.0.0">
@@ -29,24 +29,11 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CometServer\CometServer.csproj" />
+    <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <None Update="config.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Data\Data.zip">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Data\" />
-    <Folder Include="Services\CherryPick\" />
-  </ItemGroup>
- 
+
 </Project>

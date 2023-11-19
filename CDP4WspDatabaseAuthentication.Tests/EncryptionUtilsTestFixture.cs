@@ -28,8 +28,9 @@ namespace CDP4WspDatabaseAuthentication.Tests
 
     using NUnit.Framework;
 
+
     [TestFixture]
-    public class EncryptionUtilsTestFixture
+    public class WspEncryptionUtilsTestFixture
     {
         [Test]
         public void VerifyThatWspPasswordCompareWorks()
@@ -38,14 +39,14 @@ namespace CDP4WspDatabaseAuthentication.Tests
             var salt = EncryptionUtils.GenerateRandomSaltString();
             var serverSalt = EncryptionUtils.GenerateRandomSaltString();
 
-            var encryptedPassword = CDP4WspDatabaseAuthentication.EncryptionUtils.BuildWspSaltedString(password,
+            var encryptedPassword = WspEncryptionUtils.BuildWspSaltedString(password,
                 salt, serverSalt);
 
             const string passwordToTest = "pass";
             const string wrongPasswordToTest = "pass1";
 
-            Assert.IsTrue(CDP4WspDatabaseAuthentication.EncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt));
-            Assert.IsFalse(CDP4WspDatabaseAuthentication.EncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt));
+            Assert.IsTrue(WspEncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt));
+            Assert.IsFalse(WspEncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt));
         }
     }
 }

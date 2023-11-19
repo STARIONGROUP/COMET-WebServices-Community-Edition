@@ -115,7 +115,7 @@ namespace CDP4WspDatabaseAuthentication
 
             foreach (var serverSalt in serverSalts)
             {
-                result = EncryptionUtils.CompareWspSaltedString(password, person.Password, person.Salt, serverSalt);
+                result = WspEncryptionUtils.CompareWspSaltedString(password, person.Password, person.Salt, serverSalt);
 
                 if (result)
                 {

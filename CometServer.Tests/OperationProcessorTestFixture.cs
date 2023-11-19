@@ -49,8 +49,6 @@ namespace CometServer.Tests
     using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Protocol;
 
-    using Microsoft.Extensions.Logging;
-
     using Moq;
 
     using Npgsql;
@@ -86,8 +84,6 @@ namespace CometServer.Tests
 
         private const string QuantityKindTypeString = "QuantityKind";
 
-        private Mock<ILogger<OperationSideEffectProcessor>> logger;
-
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
 
         private readonly OperationSideEffectProcessor operationSideEffectProcessor = new OperationSideEffectProcessor(new List<IOperationSideEffect>());
@@ -108,8 +104,6 @@ namespace CometServer.Tests
         private Mock<IPermissionService> permissionService;
 
         private OperationProcessor operationProcessor;
-
-        private CdpPostOperation operation;
 
         [SetUp]
         public void TestSetup()

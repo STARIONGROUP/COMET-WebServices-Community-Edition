@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EncryptionUtils.cs" company="RHEA System S.A.">
+// <copyright file="WspEncryptionUtils.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -31,7 +31,7 @@ namespace CDP4WspDatabaseAuthentication
     /// <summary>
     /// Provides static helper methods to help with encryption
     /// </summary>
-    public static class EncryptionUtils
+    public static class WspEncryptionUtils
     {
         /// <summary>
         /// Compares the input string with an encrypted string. (WSP specific)

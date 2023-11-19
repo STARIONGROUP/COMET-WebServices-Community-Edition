@@ -22,7 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4Orm.Tests
+namespace CDP4Authentication.Tests
 {
     using System;
 

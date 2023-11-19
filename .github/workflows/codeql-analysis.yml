@@ -1,0 +1,49 @@
+name: "CodeQL Analysis"
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+  pull_request:
+  schedule:
+    - cron: '42 2 * * 3'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+
+    # Initializes the CodeQL tools for scanning.
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+
+    - name: Install dependencies
+      run: dotnet restore COMET-WebServices.sln
+
+    - name: Build
+      run: dotnet build COMET-WebServices.sln --no-restore
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
