@@ -14,7 +14,7 @@ GOTO End
 
 :Setup
 
-ECHO Releasing COMET Webservices Version %version%
+ECHO Releasing CDP4-COMET Webservices Version %version%
 
 set dry=false
 

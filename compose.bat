@@ -26,7 +26,7 @@ GOTO End
 
 :Serv
 rem Need to build the application in Release before making the image
-CALL MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
+CALL MSBuild.exe COMET-WebServices.sln -property:Configuration=Release -restore
 START /B docker-compose -f docker-compose-nginx.yml up --build
 GOTO End
 
@@ -36,7 +36,7 @@ GOTO End
 
 :Build
 rem Need to build the application in Release before making the image
-CALL MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
+CALL MSBuild.exe COMET-WebServices.sln -property:Configuration=Release -restore
 START /B docker-compose up --build
 GOTO End
 
@@ -64,7 +64,7 @@ GOTO End
 :Rebuild
 START /B docker-compose down
 rem Need to build the application in Release before making the image
-START /B MSBuild.exe CDP4-Server.sln -property:Configuration=Release -restore
+START /B MSBuild.exe COMET-WebServices.sln -property:Configuration=Release -restore
 START /B docker-compose up --build -d
 GOTO End
 

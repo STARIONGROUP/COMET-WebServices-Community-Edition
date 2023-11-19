@@ -16,36 +16,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Additional permission under GNU GPL version 3 section 7
 
-If you modify this Program, or any covered work, by linking or combining it with Autofac (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
+If you modify this Program, or any covered work, by linking or combining it with any of the software libraries listed below (or modified versions of these library), the licensors of this Program grant you additional permission to convey the resulting work.
 
-If you modify this Program, or any covered work, by linking or combining it with DotNetZip (or a modified version of that library), containing parts covered by the terms of Microsoft Public License (Ms-PL), BSD License, Apache version 2 License, and zlib License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Microsoft.Owin (or a modified version of that library), containing parts covered by the terms of MS-.NET-Library License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Microsoft.Owin.Diagnostics (or a modified version of that library), containing parts covered by the terms of MS-.NET-Library License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Microsoft.Owin.Host.HttpListener (or a modified version of that library), containing parts covered by the terms of MS-.NET-Library License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Microsoft.Owin.Hosting (or a modified version of that library), containing parts covered by the terms of MS-.NET-Library License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Microsoft.Owin.SelfHost (or a modified version of that library), containing parts covered by the terms of MS-.NET-Library License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Mono.Posix-4.5 (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Nancy (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Nancy.Bootstrapper.Autofac (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Nancy.Owin (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Newtonsoft.Json (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with NLog (or a modified version of that library), containing parts covered by the terms of BSD 3-clause "New" or "Revised" License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Npgsql (or a modified version of that library), containing parts covered by the terms of PostgreSQL license, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with NUnit (or a modified version of that library), containing parts covered by the terms of NUnit License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with Owin-Contrib (or a modified version of that library), containing parts covered by the terms of Apache 2 License, the licensors of this Program grant you additional permission to convey the resulting work.
-
-If you modify this Program, or any covered work, by linking or combining it with System.Threading.Tasks.Extensions (or a modified version of that library), containing parts covered by the terms of MIT License, the licensors of this Program grant you additional permission to convey the resulting work.
+Autofac.Extensions.DependencyInjection          8.0.0   MIT	            https://licenses.nuget.org/MIT
+Carter	                                        7.2.0   MIT	            https://licenses.nuget.org/MIT
+CDP4JsonSerializer-CE                           24.2.0  LGPL-3.0-only   https://licenses.nuget.org/LGPL-3.0-only
+CDP4MessagePackSerializer-CE                    24.2.0  LGPL-3.0-only   https://licenses.nuget.org/LGPL-3.0-only
+coverlet.collector                              6.0.0   MIT	            https://licenses.nuget.org/MIT
+coverlet.msbuild                                6.0.0   MIT	            https://licenses.nuget.org/MIT
+DotNetZip                                       1.16.0                  https://raw.githubusercontent.com/haf/DotNetZip.Semverd/master/LICENSE
+FluentValidation                                11.8.0  Apache-2.0      https://licenses.nuget.org/Apache-2.0
+Hangfire.AspNetCore                             1.8.6                   https://raw.github.com/HangfireIO/Hangfire/master/LICENSE.md
+HangFire.Autofac                                2.4.1                   https://raw.github.com/HangfireIO/Hangfire.Autofac/master/LICENSE
+Hangfire.Core                                   1.8.6                   https://raw.github.com/HangfireIO/Hangfire/master/LICENSE.md
+Hangfire.MemoryStorage                          1.8.0                   http://www.apache.org/licenses/LICENSE-2.0
+MailKit                                         4.3.0   MIT             https://licenses.nuget.org/MIT
+Microsoft.AspNetCore.Authentication.Negotiate   8.0.0   MIT             https://licenses.nuget.org/MIT
+Microsoft.AspNetCore.TestHost                   8.0.0   MIT             https://licenses.nuget.org/MIT
+Microsoft.Extensions.Caching.Memory             8.0.0   MIT             https://licenses.nuget.org/MIT
+Microsoft.Extensions.Logging.Abstractions       8.0.0   MIT             https://licenses.nuget.org/MIT
+Microsoft.NET.Test.Sdk                          17.8.0  MIT             https://aka.ms/deprecateLicenseUrl
+Moq                                             4.20.69 BSD-3-Clause    https://licenses.nuget.org/BSD-3-Clause
+Newtonsoft.Json                                 13.0.3  MIT             https://licenses.nuget.org/MIT
+Npgsql                                          7.0.6   PostgreSQL      https://licenses.nuget.org/PostgreSQL
+nunit                                           3.14.0                  https://aka.ms/deprecateLicenseUrl
+NUnit.Console                                   3.16.3                  https://aka.ms/deprecateLicenseUrl
+NUnit3TestAdapter                               4.5.0   MIT	            https://licenses.nuget.org/MIT
+prometheus-net                                  8.1.0   MIT             https://licenses.nuget.org/MIT
+prometheus-net.AspNetCore                       8.1.0   MIT             https://licenses.nuget.org/MIT
+Serilog.AspNetCore                              8.0.0   Apache-2.0      https://licenses.nuget.org/Apache-2.0
+Serilog.Sinks.Async                             1.5.0   Apache-2.0      https://licenses.nuget.org/Apache-2.0
+Serilog.Sinks.Grafana.Loki                      8.2.0   LICENSE         https://aka.ms/deprecateLicenseUrl
+SharpZipLib                                     1.4.2   MIT             https://licenses.nuget.org/MIT
+System.Configuration.ConfigurationManager       8.0.0   MIT             https://licenses.nuget.org/MIT
+System.Resources.Extensions                     8.0.0   MIT             https://licenses.nuget.org/MIT
