@@ -1,4 +1,4 @@
-<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.jpg" width="250">
+<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.jpg">
 
 ## Introduction
 
@@ -26,21 +26,23 @@ Development | ![Build Status](https://github.com/RHEAGROUP/COMET-WebServices-Com
 ## Statistics
 
   - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/RHEAGROUP/COMET-WebServices-Community-Edition/total.svg)
-  - Issues:![GitHub issues](https://img.shields.io/github/issues/RHEAGROUP/COMET-WebServices-Community-Edition.svg)
+  - Issues: ![GitHub issues](https://img.shields.io/github/issues/RHEAGROUP/COMET-WebServices-Community-Edition.svg)
 
 ## SonarQube Status:
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=alert_status)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=sqale_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=reliability_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=security_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=coverage)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=bugs)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=ncloc)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=sqale_index)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=vulnerabilities)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
 
 ## COMET-SDK
 
