@@ -1,8 +1,8 @@
-<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.png" width="250">
+<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.jpg" width="250">
 
 ## Introduction
 
-The COMET Webservices is the RHEA Group Concurrent Design REST API. COMET is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
+The CDP4-COMET Webservices is the RHEA Group **Concurrent Design** REST API based on ECSS-E-TM-10-25. COMET is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
 
 Read the [Wiki](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
 
@@ -16,42 +16,39 @@ To read more about Concurrent Design and how to use the COMET IME Desktop applic
 
 ## Build Status
 
-AppVeyor is used to build and test the COMET Webservices
+GitHub actions are used to build and test the library
 
 Branch | Build Status
 ------- | :------------
-Master |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmyvbgvdncq4sd9/branch/master?svg=true)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/branch/master)
-Development |  [![Build status](https://ci.appveyor.com/api/projects/status/7wmyvbgvdncq4sd9/branch/development?svg=true)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/branch/development)
-
-[![Build history](https://buildstats.info/appveyor/chart/rheagroup/cdp4-webservices-community-edition)](https://ci.appveyor.com/project/rheagroup/cdp4-webservices-community-edition/history)
+Master | ![Build Status](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=master)
+Development | ![Build Status](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=development)
 
 ## Statistics
 
-  - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/RHEAGROUP/CDP4-WebServices-Community-Edition/total.svg)
-  - Issues:![GitHub issues](https://img.shields.io/github/issues/RHEAGROUP/CDP4-WebServices-Community-Edition.svg)
+  - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/RHEAGROUP/COMET-WebServices-Community-Edition/total.svg)
+  - Issues:![GitHub issues](https://img.shields.io/github/issues/RHEAGROUP/COMET-WebServices-Community-Edition.svg)
 
 ## SonarQube Status:
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
 
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=coverage)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=ncloc)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=sqale_index)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-WebServices-Community-Edition)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=alert_status)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=sqale_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=reliability_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=security_rating)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=coverage)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=bugs)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=ncloc)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=sqale_index)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition=vulnerabilities)](https://sonarcloud.io/dashboard?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
 
 
 ## COMET-SDK
 
-The COMET Webservices make use of the [COMET-SDK](http://sdk.cdp4.org/).
+The COMET Webservices make use of the [COMET-SDK](https://github.com/RHEAGROUP/COMET-SDK-Community-Edition).
 
 ## Web Framework
 
-The COMET Webservices are built on top of the [Nancy](http://nancyfx.org/). Nancy is a lightweight, low-ceremony, framework for building HTTP based services on .NET and Mono. 
+The COMET Webservices are built on top of the [Carter](https://github.com/CarterCommunity/Carter). Carter is a framework that is a thin layer of extension methods and functionality over ASP.NET Core allowing the code to be more explicit and most importantly more enjoyable.
 
 ## ecss-10-25-annexc-integration-tests
 
