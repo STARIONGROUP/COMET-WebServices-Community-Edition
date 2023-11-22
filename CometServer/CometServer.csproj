@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CometServer-CE</Title>
-    <Version>8.0.0-rc13</Version>
+    <Version>8.0.0-rc14</Version>
     <Description>CDP4-COMET Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>

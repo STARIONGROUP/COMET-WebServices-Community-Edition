@@ -30,4 +30,9 @@ COPY --from=build-env /app/CDP4DatabaseAuthentication/bin/Release/config.json /a
 COPY --from=build-env /app/CDP4WspDatabaseAuthentication/bin/Release/CDP4WspDatabaseAuthentication.dll /app/Authentication/CDP4WspDatabase/CDP4WspDatabaseAuthentication.dll
 COPY --from=build-env /app/CDP4WspDatabaseAuthentication/bin/Release/config.json /app/Authentication/CDP4WspDatabase/config.json
 
+# Create a user and give the user access to the working directory
+RUN useradd -m cdp4comet
+RUN chown -R cdp4comet /app
+USER cdp4comet
+
 CMD ["dotnet", "CometServer.dll"]
