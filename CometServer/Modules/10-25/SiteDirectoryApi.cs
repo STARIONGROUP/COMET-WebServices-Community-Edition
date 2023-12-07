@@ -131,7 +131,7 @@ namespace CometServer.Modules
                     {
                         try
                         {
-                            await this.Authorize(this.AppConfigService, credentialsService,req.HttpContext.User.Identity.Name);
+                            await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                         }
                         catch (AuthorizationException)
                         {

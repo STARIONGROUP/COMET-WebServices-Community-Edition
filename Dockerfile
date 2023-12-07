@@ -8,9 +8,9 @@ COPY CometServer CometServer
 
 RUN dotnet build CDP4DatabaseAuthentication -c Release
 RUN dotnet build CDP4WspDatabaseAuthentication -c Release
-RUN dotnet publish CometServer -c Release
+RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish 
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
 WORKDIR /app
 RUN mkdir /app/logs
 RUN mkdir /app/storage
@@ -21,6 +21,9 @@ RUN mkdir /app/Authentication/CDP4Database
 RUN mkdir /app/Authentication/CDP4WspDatabase
 
 COPY --from=build-env /app/CometServer/bin/Release/publish .
+RUN rm /app/appsettings.Development.json
+RUN mv /app/appsettings.Production.json /app/appsettings.json
+RUN rm /app/System.Drawing.Common.dll
 
 # COPY CDP4DatabaseAuthentication plugin
 COPY --from=build-env /app/CDP4DatabaseAuthentication/bin/Release/CDP4DatabaseAuthentication.dll /app/Authentication/CDP4Database/CDP4DatabaseAuthentication.dll
@@ -30,9 +33,7 @@ COPY --from=build-env /app/CDP4DatabaseAuthentication/bin/Release/config.json /a
 COPY --from=build-env /app/CDP4WspDatabaseAuthentication/bin/Release/CDP4WspDatabaseAuthentication.dll /app/Authentication/CDP4WspDatabase/CDP4WspDatabaseAuthentication.dll
 COPY --from=build-env /app/CDP4WspDatabaseAuthentication/bin/Release/config.json /app/Authentication/CDP4WspDatabase/config.json
 
-# Create a user and give the user access to the working directory
-RUN useradd -m cdp4comet
-RUN chown -R cdp4comet /app
-USER cdp4comet
-
+# set to use the non-root USER here
+RUN chown -R $APP_UID /app
+USER $APP_UID 
 CMD ["dotnet", "CometServer.dll"]

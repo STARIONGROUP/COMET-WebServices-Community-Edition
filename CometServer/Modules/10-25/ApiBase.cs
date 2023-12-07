@@ -124,15 +124,13 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
         {
-            NpgsqlConnection connection = null;
-            NpgsqlTransaction transaction = null;
-
             try
             {
-                connection = new NpgsqlConnection(Services.Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+                await using var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+
                 await connection.OpenAsync();
 
-                transaction = await connection.BeginTransactionAsync();
+                await using var transaction = await connection.BeginTransactionAsync();
 
                 await credentialsService.ResolveCredentials(transaction, username);
             }
@@ -140,22 +138,7 @@ namespace CometServer.Modules
             {
                 this.logger.LogWarning("Authorization failed for {username}", username);
 
-                transaction?.RollbackAsync();
-
                 throw;
-            }
-            finally
-            {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.CloseAsync();
-                    await connection.DisposeAsync();
-                }
             }
         }
 

@@ -144,6 +144,7 @@ namespace CometServer.Modules
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("restore is not allowed");
+                return;
             }
 
             try
@@ -291,6 +292,7 @@ namespace CometServer.Modules
                 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("seed is not allowed");
+                return;
             }
 
             this.logger.LogInformation("Starting data store seeding");
@@ -307,6 +309,7 @@ namespace CometServer.Modules
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
+                return;
             }
 
             // Remove the exchange file after processing (saving space)
@@ -335,7 +338,7 @@ namespace CometServer.Modules
 
                 this.logger.LogInformation("Finished the data store seed");
 
-                response.StatusCode = (int) HttpStatusCode.OK;
+                response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("Datastore seeded");
             }
             catch (Exception ex)
