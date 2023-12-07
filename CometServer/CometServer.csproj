@@ -25,8 +25,8 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Carter" Version="7.2.0" />
-    <PackageReference Include="FluentValidation" Version="11.8.0" />
+    <PackageReference Include="Carter" Version="8.0.0" />
+    <PackageReference Include="FluentValidation" Version="11.8.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     <PackageReference Include="DotNetZip" Version="1.16.0" />
@@ -34,8 +34,8 @@
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.6" />
     <PackageReference Include="HangFire.Autofac" Version="2.4.1" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.0" />
-    <PackageReference Include="prometheus-net" Version="8.1.0" />
-    <PackageReference Include="prometheus-net.AspNetCore" Version="8.1.0" />
+    <PackageReference Include="prometheus-net" Version="8.2.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
     <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.2.0" />
@@ -43,7 +43,7 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="MailKit" Version="4.3.0" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="24.2.0" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="24.3.0" />
   </ItemGroup>
 
   <ItemGroup>
