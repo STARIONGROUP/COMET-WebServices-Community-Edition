@@ -40,6 +40,7 @@ namespace CometServer.Services.ChangeLog
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
@@ -325,6 +326,10 @@ namespace CometServer.Services.ChangeLog
                         result = true;
                     }
                 }
+            }
+            catch (ResolveException ex)
+            {
+                this.Logger.LogDebug(ex.Message);
             }
             catch (Exception ex)
             {

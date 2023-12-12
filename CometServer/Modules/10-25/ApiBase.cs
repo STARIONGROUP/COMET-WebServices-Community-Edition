@@ -136,9 +136,9 @@ namespace CometServer.Modules
 
                 await credentialsService.ResolveCredentials(transaction, username);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                this.logger.LogError(ex, "Authorization failed for {username}", username);
+                this.logger.LogWarning("Authorization failed for {username}", username);
 
                 transaction?.RollbackAsync();
 

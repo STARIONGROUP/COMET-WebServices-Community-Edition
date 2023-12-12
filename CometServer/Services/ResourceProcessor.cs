@@ -252,7 +252,12 @@ namespace CometServer.Services
             this.RequestUtils.OverrideQueryParameters = new QueryParameters();
             
             // collect the specified containment resource
-            var containementResource = this.GetResource(serviceType, topContainer, new[] { identifier }, containerSecurityContext).Single();
+            var containementResource = this.GetResource(serviceType, topContainer, new[] { identifier }, containerSecurityContext).SingleOrDefault();
+
+            if (containementResource == null)
+            {
+                throw new ThingNotFoundException($"{serviceType} {identifier} not found");
+            }
 
             // reset query parameters
             this.RequestUtils.OverrideQueryParameters = null;

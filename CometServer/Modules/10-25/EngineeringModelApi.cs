@@ -37,8 +37,6 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
 
-    using CDP4Orm.Dao;
-
     using CDP4JsonSerializer;
 
     using CDP4MessagePackSerializer;
@@ -145,7 +143,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        this.logger.LogWarning(e, "The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -170,9 +168,9 @@ namespace CometServer.Modules
                     {
                         await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
-                    catch (AuthorizationException e)
+                    catch (AuthorizationException)
                     {
-                        this.logger.LogWarning(e, "The POST REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The POST REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -227,7 +225,7 @@ namespace CometServer.Modules
             var requestToken = this.GenerateRandomToken();
 
             var contentTypeKind = httpRequest.QueryContentTypeKind();
-            
+
             try
             {
                 this.logger.LogInformation(this.ConstructLog(httpRequest, $"{requestToken} started"));
@@ -245,6 +243,7 @@ namespace CometServer.Modules
                 var resourceResponse = new List<Thing>();
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
                 var iterationContextId = Guid.Empty;
+
                 var iterationContextRequest = routeSegments.Length >= 4 &&
                                               routeSegments[2] == "iteration" &&
                                               Guid.TryParse(routeSegments[3], out iterationContextId);
@@ -282,7 +281,7 @@ namespace CometServer.Modules
                         await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
                         return;
                     }
-                    
+
                     resourceResponse.AddRange(revisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
                 }
                 else
@@ -364,10 +363,11 @@ namespace CometServer.Modules
                 }
 
                 var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
+
                 if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
+                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
@@ -407,9 +407,21 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (ThingNotFoundException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning(this.ConstructFailureLog(httpRequest, $"{requestToken} thing not found in {sw.ElapsedMilliseconds} [ms]: {ex.Message}"));
+
+                httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)
@@ -651,7 +663,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int) HttpStatusCode.Forbidden;
@@ -664,7 +676,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] \n {ex.Message}"));
+                this.logger.LogError(this.ConstructFailureLog(httpRequest,$"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] \n {ex.Message}"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -677,7 +689,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -690,7 +702,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogDebug(ex, this.ConstructFailureLog(httpRequest, $"unauthorized (Thing Not Found) request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized (Thing Not Found) request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling: Use Unauthorized as a user is not allowed to see if the thing is not there or a user is not allowed to see it
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;

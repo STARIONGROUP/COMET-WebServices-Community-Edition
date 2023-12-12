@@ -192,7 +192,7 @@ namespace CometServer.Services
                         var resolvedItem = resolvedItems.SingleOrDefault(x => x.Iid == unresolved.InstanceInfo.Iid);
                         if (resolvedItem == null)
                         {
-                            throw new ResolveException("Could not resolve item!");
+                            throw new ResolveException($"Could not resolve item {unresolved.InstanceInfo.TypeName}:{unresolved.InstanceInfo.Iid}");
                         }
 
                         // set resolved item
