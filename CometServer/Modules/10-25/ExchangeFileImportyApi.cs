@@ -307,6 +307,7 @@ namespace CometServer.Modules
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
+                return;
             }
 
             // Remove the exchange file after processing (saving space)
