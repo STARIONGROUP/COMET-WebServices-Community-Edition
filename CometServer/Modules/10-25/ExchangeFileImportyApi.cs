@@ -302,6 +302,8 @@ namespace CometServer.Modules
 
             var version = request.QueryDataModelVersion();
 
+            this.logger.LogInformation("Seeding version {version.ToString()}");
+
             // handle exchange processing
             if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
@@ -407,6 +409,13 @@ namespace CometServer.Modules
                 // get sitedirectory data
                 var items = jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
 
+                var siteRdlCount = items.OfType<SiteReferenceDataLibrary>().Count();
+                var seededSiteRdlCount = 0;
+                var engineeringModelCount = items.OfType<EngineeringModelSetup>().Count();
+                var seededEngineeringModelCount = 0;
+
+                this.logger.LogInformation($"{siteRdlCount} Site Reference Data Libraries and {engineeringModelCount} Engineering Models will be seeded");
+
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
                 {
@@ -445,6 +454,7 @@ namespace CometServer.Modules
                         serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
+                    seededSiteRdlCount++;
                 }
 
                 if (result)
@@ -466,6 +476,8 @@ namespace CometServer.Modules
                     // Add missing Person permissions
                     this.CreateMissingPersonPermissions(transaction, personRoleService, personPermissionService, defaultPermissionProvider);
 
+                    this.logger.LogInformation($"{seededSiteRdlCount}/{siteRdlCount} Site Reference Data Libraries and {seededEngineeringModelCount}/{engineeringModelCount} Engineering Models seeded");
+
                     var engineeringModelSetups =
                         items.OfType<EngineeringModelSetup>()
                             .ToList();
@@ -475,7 +487,7 @@ namespace CometServer.Modules
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
                     {
-                        this.logger.LogInformation("Inserting data for EngineeringModelSetuo {shortname}:{name}", engineeringModelSetup.ShortName, engineeringModelSetup.Name);
+                        this.logger.LogInformation("Inserting data for EngineeringModelSetup {shortname}:{name}", engineeringModelSetup.ShortName, engineeringModelSetup.Name);
 
                         // cleanup before handling TopContainer
                         requestUtils.Cache.Clear();
@@ -553,10 +565,20 @@ namespace CometServer.Modules
 
                         // extract any referenced file data to disk if not already present
                         this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+
+                        seededEngineeringModelCount++;
+
+                        this.logger.LogInformation($"{seededSiteRdlCount}/{siteRdlCount} Site Reference Data Libraries and {seededEngineeringModelCount}/{engineeringModelCount} Engineering Models seeded");
+
                     }
                 }
 
+                var commitSw = new Stopwatch();
+                commitSw.Start();
+                this.logger.LogInformation("Committing transaction...");
                 transaction.Commit();
+                commitSw.Stop();
+                this.logger.LogInformation("Transaction committed in {commitSw} [ms]", commitSw.ElapsedMilliseconds);
                 sw.Stop();
                 this.logger.LogInformation("Finished seeding the data store in {sw} [ms]", sw.ElapsedMilliseconds);
 
