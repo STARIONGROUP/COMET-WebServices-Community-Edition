@@ -33,6 +33,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
 
     using CometServer.Authorization;
+    using CometServer.Exceptions;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
 
@@ -239,7 +240,12 @@ namespace CometServer.Services
         private ExchangeFileHeader CreateExchangeFileHeader(Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var person = siteDirectoryCache.Values.OfType<Person>().SingleOrDefault(x => x.ShortName == this.CredentialsService.Credentials.Person.UserName);
-            
+
+            if (person == null)
+            {
+                throw new ThingNotFoundException($"The Person object represented by {this.CredentialsService.Credentials.Person.UserName} could not be found");
+            }
+
             EmailAddress email = null;
 
             if (person.DefaultEmailAddress != null)

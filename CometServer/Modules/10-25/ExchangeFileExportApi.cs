@@ -186,6 +186,7 @@ namespace CometServer.Modules
                 requestUtils.QueryParameters = new QueryParameters(queryParameters);
 
                 var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
+
                 if (isMultiPart)
                 {
                     // multipart message received
@@ -194,7 +195,7 @@ namespace CometServer.Modules
 
                 var version = httpRequest.QueryDataModelVersion();
                 jsonSerializer.Initialize(metaInfoProvider, version);
-                
+
                 var iids = jsonSerializer.Deserialize<List<Guid>>(httpRequest.Body);
 
                 var engineeringModelSetups = this.QueryExportEngineeringModelSetups(credentialsService, iids);
@@ -208,8 +209,21 @@ namespace CometServer.Modules
                 httpResponse.StatusCode = (int)HttpStatusCode.OK;
 
                 await using var filestream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
-                
+
                 await httpResponse.FromStream(filestream, HttpConstants.MimeTypeOctetStream, new ContentDisposition("EngineeringModelZipFileName"));
+            }
+            catch (ThingNotFoundException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] due to {ex.Message}"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (InvalidOperationException ex)
             {
@@ -217,7 +231,7 @@ namespace CometServer.Modules
                 {
                     await transaction.RollbackAsync();
                 }
-                
+
                 this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
