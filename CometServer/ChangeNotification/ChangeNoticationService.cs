@@ -150,7 +150,7 @@ namespace CometServer.ChangeNotification
 
                         var emailAddresses = this.GetEmailAdressess(transaction, person).ToList();
 
-                        if (!emailAddresses.Any())
+                        if (emailAddresses.Count == 0)
                         {
                             continue;
                         }
@@ -167,7 +167,7 @@ namespace CometServer.ChangeNotification
 
                         foreach (var changeNotificationSubscriptionUserPreference in changeNotificationSubscriptionUserPreferences)
                         {
-                            if (changeNotificationSubscriptionUserPreference.Value.ChangeNotificationSubscriptions.Any()
+                            if (changeNotificationSubscriptionUserPreference.Value.ChangeNotificationSubscriptions.Count != 0
                                 && changeNotificationSubscriptionUserPreference.Value.ChangeNotificationReportType != ChangeNotificationReportType.None)
                             {
                                 var changelogSections = changelogBodyComposer.CreateChangelogSections(
@@ -223,7 +223,7 @@ namespace CometServer.ChangeNotification
         /// </returns>
         private IEnumerable<EmailAddress> GetEmailAdressess(NpgsqlTransaction transaction, Person person)
         {
-            if (!person.EmailAddress.Any())
+            if (person.EmailAddress.Count == 0)
             {
                 yield break;
             }
@@ -231,7 +231,7 @@ namespace CometServer.ChangeNotification
             var emailAddressDao = this.container.Resolve<IEmailAddressDao>();
             var emailAddresses = emailAddressDao.Read(transaction, "SiteDirectory", person.EmailAddress).ToList();
 
-            if (!emailAddresses.Any())
+            if (emailAddresses.Count == 0)
             {
                 yield break;
             }

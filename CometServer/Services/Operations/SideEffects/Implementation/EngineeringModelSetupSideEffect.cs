@@ -150,7 +150,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new InvalidOperationException(errorMessage);
             }
 
-            if (!thing.SourceEngineeringModelSetupIid.HasValue && !thing.ActiveDomain.Any())
+            if (!thing.SourceEngineeringModelSetupIid.HasValue && thing.ActiveDomain.Count == 0)
             {
                 // new engineeringmodelsetup without active domain, set the user's default domain as the active domain
                 var defaultDomain = this.CredentialsService.Credentials.Person.DefaultDomain;
@@ -168,7 +168,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
-                if (thing.RequiredRdl.Any())
+                if (thing.RequiredRdl.Count != 0)
                 {
                     throw new InvalidOperationException("The RequiredRdl cannot be specified if the EngineeringModel is created based on an existing EngineeringModel.");
                 }

@@ -364,7 +364,7 @@ namespace CometServer.Authorization
             }
 
             // obfuscation check. Regardless of other things, if a Thing is obfuscated for person, disallow write
-            if (this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && (
+            if (this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && (
                     thing.ClassKind == ClassKind.ElementDefinition ||
                     thing.ClassKind == ClassKind.ElementUsage ||
                     thing.ClassKind == ClassKind.Parameter ||

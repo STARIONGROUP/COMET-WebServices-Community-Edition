@@ -893,7 +893,7 @@ namespace CometServer.Modules
         private static void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, string password = null)
         {
             var fileRevisions = requestUtils.Cache.OfType<FileRevision>().ToList();
-            if (!fileRevisions.Any())
+            if (fileRevisions.Count == 0)
             {
                 // nothing to do
                 return;

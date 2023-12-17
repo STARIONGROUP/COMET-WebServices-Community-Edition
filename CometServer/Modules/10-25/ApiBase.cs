@@ -278,7 +278,7 @@ namespace CometServer.Modules
                         partition,
                         new[] { identifier },
                         authorizedContext).ToList();
-                    if (!resource.Any())
+                    if (resource.Count == 0)
                     {
                         continue;
                     }
@@ -714,7 +714,7 @@ namespace CometServer.Modules
         /// </param>
         private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
-            if (!fileRevisions.Any())
+            if (fileRevisions.Count == 0)
             {
                 // do nothing if no file revisions are present
                 return;

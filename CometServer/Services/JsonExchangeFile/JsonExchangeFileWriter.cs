@@ -182,7 +182,7 @@ namespace CometServer.Services
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
                 var engineeringModelThings = this.EngineeringModelService.GetDeep(transaction, engineeringModelPartition, new List<Guid> { engineeringModelSetup.EngineeringModelIid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
 
-                if (engineeringModelSetup.OrganizationalParticipant.Any())
+                if (engineeringModelSetup.OrganizationalParticipant.Count != 0)
                 {
                     this.ObfuscationService.ObfuscateResponse(engineeringModelThings, this.CredentialsService.Credentials);
                 }
@@ -201,7 +201,7 @@ namespace CometServer.Services
 
                      var iterationThings = this.IterationService.GetDeep(transaction, engineeringModelPartition, new List<Guid> { iterationSetup.IterationIid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
 
-                     if (engineeringModelSetup.OrganizationalParticipant.Any())
+                     if (engineeringModelSetup.OrganizationalParticipant.Count != 0)
                      {
                          this.ObfuscationService.ObfuscateResponse(iterationThings, this.CredentialsService.Credentials);
                      }

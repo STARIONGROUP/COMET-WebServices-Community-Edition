@@ -307,7 +307,7 @@ namespace CometServer.Modules
                     // gather all Things as indicated by the request URI 
                     resourceResponse.AddRange(this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, routeSegments));
 
-                    if (!resourceResponse.Any())
+                    if (resourceResponse.Count == 0)
                     {
                         httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                         await httpResponse.AsJson("The identifier of the object to query was not found or the route is invalid.");
@@ -351,7 +351,7 @@ namespace CometServer.Modules
                 this.logger.LogInformation("{requestToken} completed in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
 
                 // obfuscate if needed
-                if (modelSetup.OrganizationalParticipant.Any())
+                if (modelSetup.OrganizationalParticipant.Count != 0)
                 {
                     sw = new Stopwatch();
                     sw.Start();

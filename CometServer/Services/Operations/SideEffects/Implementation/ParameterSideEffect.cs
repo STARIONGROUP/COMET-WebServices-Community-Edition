@@ -345,7 +345,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Remove the subscriptions owned by the new owner of the Parameter on all parameterOverrides
-                foreach (var parameterOverride in parameterOverrides.Where(o => o.ParameterSubscription.Any()))
+                foreach (var parameterOverride in parameterOverrides.Where(o => o.ParameterSubscription.Count != 0))
                 {
                     var subscriptionToRemove = parameterSubscriptions.SingleOrDefault(
                         s => parameterOverride.ParameterSubscription.Contains(s.Iid)

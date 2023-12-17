@@ -289,7 +289,7 @@ namespace CometServer.Services.ChangeLog
                         }
                     }
 
-                    if (newLogEntryChangelogItems.Any())
+                    if (newLogEntryChangelogItems.Count != 0)
                     {
                         modelLogEntry.LogEntryChangelogItem.AddRange(newLogEntryChangelogItems.Select(x => x.Iid));
 
@@ -1122,7 +1122,7 @@ namespace CometServer.Services.ChangeLog
 
                 var possibleContainers = service.GetShallow(transaction, containerPartition, null, securityContext).ToList();
 
-                if (!possibleContainers.Any())
+                if (possibleContainers.Count == 0)
                 {
                     return null;
                 }
@@ -1165,7 +1165,7 @@ namespace CometServer.Services.ChangeLog
                 var possibleContainers =
                     this.OperationProcessor.OperationOriginalThingCache.Where(x => x.ClassKind.ToString() == containerClassType).ToList();
 
-                if (!possibleContainers.Any())
+                if (possibleContainers.Count == 0)
                 {
                     foreach (var possibleContainerThing in changedThings)
                     {
@@ -1273,7 +1273,7 @@ namespace CometServer.Services.ChangeLog
 
             var possibleContainers = containerThings.Where(x => x.ClassKind.ToString() == containerClassType).ToList();
 
-            if (!possibleContainers.Any())
+            if (possibleContainers.Count == 0)
             {
                 foreach (var possibleContainerThing in containerThings)
                 {
@@ -1461,7 +1461,7 @@ namespace CometServer.Services.ChangeLog
                     .Cast<PossibleFiniteState>()
                     .ToList(); 
 
-            if (!possibleFiniteStates.Any())
+            if (possibleFiniteStates.Count == 0)
             {
                 return;
             }

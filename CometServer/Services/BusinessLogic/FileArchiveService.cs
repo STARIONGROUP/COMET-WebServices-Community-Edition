@@ -235,7 +235,7 @@ namespace CometServer.Services
                     transaction,
                     authorizedContext);
 
-                if (things.Any())
+                if (things.Count != 0)
                 {
                     // Get all folders
                     var folders = things.Where(i => i.GetType() == typeof(Folder)).Cast<Folder>().ToList();
@@ -404,7 +404,7 @@ namespace CometServer.Services
             // Get folders that is of the root folder
             var subFolders = folders.Where(folder => folder.ContainingFolder == rootFolder.Iid).ToList();
 
-            if (subFolders.Any())
+            if (subFolders.Count != 0)
             {
                 foreach (var subFolder in subFolders)
                 {
@@ -457,7 +457,7 @@ namespace CometServer.Services
                                                                        && file.FileRevision.Contains(fileRevision.Iid))
                                                    .ToList();
 
-                if (tempSubFileRevisions.Any())
+                if (tempSubFileRevisions.Count != 0)
                 {
                     var subFileRevision =
                         tempSubFileRevisions.Aggregate((i1, i2) => i1.RevisionNumber > i2.RevisionNumber ? i1 : i2);

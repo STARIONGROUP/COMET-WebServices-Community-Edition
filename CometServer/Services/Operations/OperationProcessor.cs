@@ -889,7 +889,7 @@ namespace CometServer.Services.Operations
                 // check if the delete info has any properties set other than Iid, revision and classkind properties
                 var operationProperties = deleteInfo.Where(x => !this.baseProperties.Contains(x.Key)).ToList();
 
-                if (!operationProperties.Any())
+                if (operationProperties.Count == 0)
                 {
                     var dtoInfo = deleteInfo.GetInfoPlaceholder();
                     this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
@@ -983,7 +983,7 @@ namespace CometServer.Services.Operations
             // re-order create
             ReorderCreateOrder(operation);
 
-            if (operation.Create.Any())
+            if (operation.Create.Count != 0)
             {
                 var operationInfoPlaceholders = operation.Create.Select(x => x.GetInfoPlaceholder());
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
@@ -1065,7 +1065,7 @@ namespace CometServer.Services.Operations
         /// </exception>
         private void ApplyCopyOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
-            if (!operation.Copy.Any())
+            if (operation.Copy.Count == 0)
             {
                 return;
             }
@@ -1409,7 +1409,7 @@ namespace CometServer.Services.Operations
                     // get persisted thing
                     var updatedThing = GetPersistedItem(transaction, resolvedInfo.Partition, service, resolvedInfo.InstanceInfo.Iid, securityContext);
 
-                    if (orderedListToBeChecked.Any())
+                    if (orderedListToBeChecked.Count != 0)
                     {
                         OrderedItemListValidation(transaction, updatedThing, orderedListToBeChecked, metaInfo);
                     }

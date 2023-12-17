@@ -154,7 +154,7 @@ namespace CometServer.ChangeNotification
                     .Where(x => x.Person == person.Iid && x.IsActive)
                     .ToList();
 
-            if (!participants.Any())
+            if (participants.Count == 0)
             {
                 yield return CreateParticipantNotActiveSection(engineeringModelSetup);
 
@@ -166,7 +166,7 @@ namespace CometServer.ChangeNotification
                     .Where(x => engineeringModelSetup.Participant.Contains(x.Iid))
                     .ToList();
 
-            if (!engineeringModelParticipants.Any())
+            if (engineeringModelParticipants.Count == 0)
             {
                 yield return CreateNoEngineeringModelParticipantSection(engineeringModelSetup);
 
@@ -179,7 +179,7 @@ namespace CometServer.ChangeNotification
                     .Distinct()
                     .ToList();
 
-            if (!domains.Any())
+            if (domains.Count == 0)
             {
                 yield return CreateNoDomainOfExpertiseSection(engineeringModelSetup);
 
@@ -196,7 +196,7 @@ namespace CometServer.ChangeNotification
                         && x.ModifiedOn < endDateTime)
                     .ToList();
 
-            if (!modelLogEntries.Any() || !modelLogEntries.SelectMany(x => x.LogEntryChangelogItem).Any())
+            if (modelLogEntries.Count == 0 || !modelLogEntries.SelectMany(x => x.LogEntryChangelogItem).Any())
             {
                 yield return CreateNoModelLogEntriesSection(engineeringModelSetup);
 

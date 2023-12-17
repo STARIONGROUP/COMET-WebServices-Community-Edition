@@ -69,7 +69,7 @@ namespace CometServer.Services
 
             var revisions = this.RevisionDao.ReadRevisionRegistry(transaction, partition).ToList();
 
-            if (revisions.Any())
+            if (revisions.Count != 0)
             {
                 resolvedRevisionFrom = revisions.OrderBy(x => x.Revision).First().Revision;
                 resolvedRevisionTo = revisions.OrderBy(x => x.Revision).Last().Revision;
