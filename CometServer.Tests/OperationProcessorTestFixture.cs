@@ -503,6 +503,9 @@ namespace CometServer.Tests
 
         private List<Thing> copySourceDtos;
 
+        private static readonly string[] DefaultValueArray = new[] { "-" };
+
+
         [Test]
         public void VerifyCopyElementDefWorks()
         {
@@ -611,10 +614,10 @@ namespace CometServer.Tests
                     {
                         var vs = new ParameterValueSet(guid, 1)
                         {
-                            Manual = new ValueArray<string>(new [] { "-" }),
-                            Computed = new ValueArray<string>(new [] { "-" }),
-                            Reference = new ValueArray<string>(new [] { "-" }),
-                            Published = new ValueArray<string>(new [] { "-" })
+                            Manual = new ValueArray<string>(DefaultValueArray),
+                            Computed = new ValueArray<string>(DefaultValueArray),
+                            Reference = new ValueArray<string>(DefaultValueArray),
+                            Published = new ValueArray<string>(DefaultValueArray)
                         };
 
                         list.Add(vs);
@@ -632,10 +635,10 @@ namespace CometServer.Tests
                     {
                         var vs = new ParameterOverrideValueSet(guid, 1)
                         {
-                            Manual = new ValueArray<string>(new[] { "-" }),
-                            Computed = new ValueArray<string>(new[] { "-" }),
-                            Reference = new ValueArray<string>(new[] { "-" }),
-                            Published = new ValueArray<string>(new[] { "-" })
+                            Manual = new ValueArray<string>(DefaultValueArray),
+                            Computed = new ValueArray<string>(DefaultValueArray),
+                            Reference = new ValueArray<string>(DefaultValueArray),
+                            Published = new ValueArray<string>(DefaultValueArray)
                         };
 
                         list.Add(vs);
