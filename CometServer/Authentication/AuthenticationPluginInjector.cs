@@ -60,6 +60,11 @@ namespace CometServer.Authentication
             this.logger = logger;
 
             this.Plugins = this.LoadPlugins().ToList();
+
+            foreach (var authenticatorConnector in this.Plugins.SelectMany(authenticatorPlugin => authenticatorPlugin.Connectors))
+            {
+                logger.LogInformation(authenticatorConnector.IsUp ? "The {name} is loaded and is Up" : "The {name} is loaded and is Down", authenticatorConnector.Name);
+            }
         }
 
         /// <summary>
