@@ -114,11 +114,11 @@ namespace CometServer
 
                 if (!dataStoreAvailable)
                 {
-                    logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                    logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {BacktierWaitTime}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
                     return 0;
                 }
                 
-                logger.LogInformation("The data-store has become available for connections within the configured BacktierWaitTime: {0}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
+                logger.LogInformation("The data-store has become available for connections within the configured BacktierWaitTime: {BacktierWaitTime}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
                 
                 var migrationEngine = host.Services.GetService<IMigrationEngine>();
                 migrationEngine.MigrateAllAtStartUp();
@@ -128,7 +128,7 @@ namespace CometServer
                 var configuration = host.Services.GetService<IConfiguration>();
                 var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
 
-                logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {0}", uri);
+                logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {uri}", uri);
 
                 await host.RunAsync();
 

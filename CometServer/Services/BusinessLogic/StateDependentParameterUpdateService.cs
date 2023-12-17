@@ -99,7 +99,7 @@ namespace CometServer.Services
         {
             if (iteration == null)
             {
-                throw new ArgumentNullException("iteration");
+                throw new ArgumentNullException(nameof(iteration));
             }
 
             var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Where(i => i is Parameter).Cast<Parameter>()

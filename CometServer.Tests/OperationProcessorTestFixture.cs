@@ -275,7 +275,7 @@ namespace CometServer.Tests
             var metaInfo = new PossibleFiniteStateListMetaInfo();
 
             Assert.DoesNotThrow(
-                () => this.operationProcessor.OrderedItemListValidation(
+                () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
                     new List<string> { "PossibleState" },
@@ -313,7 +313,7 @@ namespace CometServer.Tests
             var metaInfo = new PossibleFiniteStateListMetaInfo();
 
             var exception = Assert.Throws<BadRequestException>(
-                () => this.operationProcessor.OrderedItemListValidation(
+                () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
                     new List<string> { "PossibleState" },
@@ -353,7 +353,7 @@ namespace CometServer.Tests
             var metaInfo = new PossibleFiniteStateListMetaInfo();
 
             var exception = Assert.Throws<BadRequestException>(
-                () => this.operationProcessor.OrderedItemListValidation(
+                () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
                     new List<string> { "PossibleState" },
@@ -485,23 +485,26 @@ namespace CometServer.Tests
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateUpdateOperations(postOperation));
+                () => OperationProcessor.ValidateUpdateOperations(postOperation));
 
             postOperation.Update.Clear();
             postOperation.Update.Add(updateObjectWithoutClassKind);
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateUpdateOperations(postOperation));
+                () => OperationProcessor.ValidateUpdateOperations(postOperation));
 
             var completeUpdateObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, Guid.NewGuid() } };
             postOperation.Update.Clear();
             postOperation.Update.Add(completeUpdateObject);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateUpdateOperations(postOperation));
+            Assert.DoesNotThrow(() => OperationProcessor.ValidateUpdateOperations(postOperation));
         }
 
         private List<Thing> copySourceDtos;
+
+        private static readonly string[] DefaultValueArray = new[] { "-" };
+
 
         [Test]
         public void VerifyCopyElementDefWorks()
@@ -611,10 +614,10 @@ namespace CometServer.Tests
                     {
                         var vs = new ParameterValueSet(guid, 1)
                         {
-                            Manual = new ValueArray<string>(new [] { "-" }),
-                            Computed = new ValueArray<string>(new [] { "-" }),
-                            Reference = new ValueArray<string>(new [] { "-" }),
-                            Published = new ValueArray<string>(new [] { "-" })
+                            Manual = new ValueArray<string>(DefaultValueArray),
+                            Computed = new ValueArray<string>(DefaultValueArray),
+                            Reference = new ValueArray<string>(DefaultValueArray),
+                            Published = new ValueArray<string>(DefaultValueArray)
                         };
 
                         list.Add(vs);
@@ -632,10 +635,10 @@ namespace CometServer.Tests
                     {
                         var vs = new ParameterOverrideValueSet(guid, 1)
                         {
-                            Manual = new ValueArray<string>(new[] { "-" }),
-                            Computed = new ValueArray<string>(new[] { "-" }),
-                            Reference = new ValueArray<string>(new[] { "-" }),
-                            Published = new ValueArray<string>(new[] { "-" })
+                            Manual = new ValueArray<string>(DefaultValueArray),
+                            Computed = new ValueArray<string>(DefaultValueArray),
+                            Reference = new ValueArray<string>(DefaultValueArray),
+                            Published = new ValueArray<string>(DefaultValueArray)
                         };
 
                         list.Add(vs);

@@ -74,8 +74,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
-            SpecializedQuantityKind thing,
+        public override void BeforeUpdate(SpecializedQuantityKind thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
@@ -120,7 +119,7 @@ namespace CometServer.Services.Operations.SideEffects
                     .Cast<SpecializedQuantityKind>().ToList();
 
                 // Check whether containing folder is acyclic
-                if (!this.IsSpecializedQuantityKindAcyclic(parameterTypes, kindId, thing.Iid))
+                if (!IsSpecializedQuantityKindAcyclic(parameterTypes, kindId, thing.Iid))
                 {
                     throw new AcyclicValidationException(
                         string.Format(
@@ -150,11 +149,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of parameter types ids.
         /// </returns>
-        private List<Guid> GetParameterTypeIdsFromRdlChain(
-            NpgsqlTransaction transaction,
-            string partition,
-            ISecurityContext securityContext,
-            Guid? rdlId)
+        private List<Guid> GetParameterTypeIdsFromRdlChain(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Guid? rdlId)
         {
             var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
@@ -186,10 +181,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether a specialized quantity kind will not lead to cyclic dependency.
         /// </returns>
-        private bool IsSpecializedQuantityKindAcyclic(
-            List<SpecializedQuantityKind> parameterTypes,
-            Guid generalKindId,
-            Guid specializedQuantityKindId)
+        private static bool IsSpecializedQuantityKindAcyclic(List<SpecializedQuantityKind> parameterTypes, Guid generalKindId, Guid specializedQuantityKindId)
         {
             Guid? nextGeneralKindId = generalKindId;
 

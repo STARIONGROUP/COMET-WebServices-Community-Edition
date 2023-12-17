@@ -68,7 +68,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override void BeforeUpdate(Participant thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            this.ValidateSelectedDomain(thing, rawUpdateInfo);
+            ValidateSelectedDomain(thing, rawUpdateInfo);
         }
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The raw <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be edited likely: it can/will change the operation processor outcome.
         /// </param>
-        private void ValidateSelectedDomain(Participant thing, ClasslessDTO rawUpdateInfo)
+        private static void ValidateSelectedDomain(Participant thing, ClasslessDTO rawUpdateInfo)
         {
             if (rawUpdateInfo.ContainsKey(SelectedDomainKey))
             {

@@ -61,7 +61,7 @@ namespace CometServer.Services.CherryPick
 
                 allRetrievedThings.AddRange(containedThings);
                 containers = containedThings;
-            } while (containedThings.Any() && queryDeep);
+            } while (containedThings.Count != 0 && queryDeep);
 
             return allRetrievedThings;
         }

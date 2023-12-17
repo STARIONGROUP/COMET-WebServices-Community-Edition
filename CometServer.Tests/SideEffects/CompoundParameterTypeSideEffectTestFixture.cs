@@ -66,8 +66,6 @@ namespace CometServer.Tests.SideEffects
 
         private CompoundParameterType compoundParameterTypeB;
 
-        private CompoundParameterType compoundParameterTypeC;
-
         private BooleanParameterType booleanParameterTypeD;
 
         private ParameterTypeComponent parameterTypeComponentA;

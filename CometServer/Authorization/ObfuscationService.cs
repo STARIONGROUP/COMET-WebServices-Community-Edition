@@ -122,7 +122,7 @@ namespace CometServer.Authorization
                 var affectedItemHashSet = new HashSet<Guid>(modelLogEntry.AffectedItemIid);
                 affectedItemHashSet.IntersectWith(this.obfuscatedCache);
 
-                if (!affectedItemHashSet.Any())
+                if (affectedItemHashSet.Count == 0)
                 {
                     continue;
                 }

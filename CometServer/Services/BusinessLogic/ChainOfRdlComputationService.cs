@@ -91,7 +91,7 @@ namespace CometServer.Services
         /// </returns>
         public IEnumerable<Guid> QueryReferenceDataLibraryDependency(NpgsqlTransaction transaction, IEnumerable<EngineeringModelSetup> engineeringModelSetups)
         {
-            if (this.cachedModelReferenceDataLibraries == null || !this.cachedModelReferenceDataLibraries.Any())
+            if (this.cachedModelReferenceDataLibraries == null || this.cachedModelReferenceDataLibraries.Count == 0)
             {
                 this.Logger.LogDebug("Retrieving the ModelReferenceDataLibrary objects from the cached tables in the datastore");
 
@@ -102,7 +102,7 @@ namespace CometServer.Services
                 this.cachedModelReferenceDataLibraries.AddRange(modelReferenceDataLibraries);
             }
 
-            if (this.cachedSiteReferenceDataLibraries == null || !this.cachedSiteReferenceDataLibraries.Any())
+            if (this.cachedSiteReferenceDataLibraries == null || this.cachedSiteReferenceDataLibraries.Count == 0)
             {
                 this.Logger.LogDebug("Retrieving the SiteReferenceDataLibrary objects from the cached tables in the datastore");
 

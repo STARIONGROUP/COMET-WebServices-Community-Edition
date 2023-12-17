@@ -213,18 +213,18 @@ namespace CometServer.Services.Operations
             this.DisableUserTrigger(transaction);
 
             // copy all data from the source to the target partition
-            this.Logger.LogDebug("Copy EngineeringModel data from {0} to {1}", sourcePartition, targetPartition);
+            this.Logger.LogDebug("Copy EngineeringModel data from {sourcePartition} to {targetPartition}", sourcePartition, targetPartition);
             this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
-            this.Logger.LogDebug("Copy Iteration data from {0} to {1}", sourceIterationPartition, targetIterationPartition);
+            this.Logger.LogDebug("Copy Iteration data from {sourceIterationPartition} to {targetIterationPartition}", sourceIterationPartition, targetIterationPartition);
             this.IterationService.CopyIteration(transaction, sourceIterationPartition, targetIterationPartition);
 
             // wipe the organizational participations
             this.IterationService.DeleteAllrganizationalParticipantThings(transaction, targetIterationPartition);
 
             // change id on Thing table for all other things
-            this.Logger.LogDebug("Modify Identifiers of EngineeringModel {0} data", targetPartition);
+            this.Logger.LogDebug("Modify Identifiers of EngineeringModel {targetPartition} data", targetPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition);
-            this.Logger.LogDebug("Modify Identifiers of Iteration {0} data", targetIterationPartition);
+            this.Logger.LogDebug("Modify Identifiers of Iteration {targetIterationPartition} data", targetIterationPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
@@ -238,7 +238,7 @@ namespace CometServer.Services.Operations
             newEngineeringModel.Iid = newModelSetup.EngineeringModelIid;
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
-            this.Logger.LogDebug("Modify Identifier of new EngineeringModel {0} to {1}", oldIid, newModelSetup.EngineeringModelIid);
+            this.Logger.LogDebug("Modify Identifier of new EngineeringModel {oldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, newEngineeringModel, oldIid);
 
             if (!this.EngineeringModelService.UpdateConcept(transaction, targetPartition, newEngineeringModel, null))
@@ -251,7 +251,7 @@ namespace CometServer.Services.Operations
             modelThings.AddRange(this.IterationService.GetDeep(transaction, targetPartition, null, securityContext));
 
             var sw = Stopwatch.StartNew();
-            this.Logger.LogDebug("start modify {0} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
+            this.Logger.LogDebug("start modify {Count} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
             foreach (var modelThing in modelThings)
             {
                 var model = modelThing as EngineeringModel;
@@ -304,7 +304,7 @@ namespace CometServer.Services.Operations
                 }
             }
 
-            this.Logger.LogDebug("modified {modelThings.Count} references of things contained in the new engineering-model-setup in {sw} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
+            this.Logger.LogDebug("modified {Count} references of things contained in the new engineering-model-setup in {Count} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
 
             // IMPORTANT: re-enable user trigger once the current transaction is commited commited
         }

@@ -100,7 +100,7 @@ namespace CDP4Orm.Dao.Resolve
                 {
                     while (reader.Read())
                     {
-                        yield return this.MapToSiteDirectoryDto(reader);
+                        yield return MapToSiteDirectoryDto(reader);
                     }
                 }
             }
@@ -154,7 +154,7 @@ namespace CDP4Orm.Dao.Resolve
                 {
                     while (reader.Read())
                     {
-                        yield return this.MapToEngineeringModelDto(reader, connectedPartition, subPartition);
+                        yield return MapToEngineeringModelDto(reader, connectedPartition, subPartition);
                     }
                 }
             }
@@ -175,7 +175,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// A deserialized instance of <see cref="ContainerInfo"/>.
         /// </returns>
-        private ResolveInfo MapToEngineeringModelDto(NpgsqlDataReader reader, string connectedPartition, string subPartition)
+        private static ResolveInfo MapToEngineeringModelDto(NpgsqlDataReader reader, string connectedPartition, string subPartition)
         {
             var typeInfo = reader["TypeInfo"].ToString();
             var iid = (Guid)reader["Iid"];
@@ -197,7 +197,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// A deserialized instance of <see cref="ResolveInfo"/>.
         /// </returns>
-        private ResolveInfo MapToSiteDirectoryDto(NpgsqlDataReader reader)
+        private static ResolveInfo MapToSiteDirectoryDto(NpgsqlDataReader reader)
         {
             var typeInfo = reader["TypeInfo"].ToString();
             var iid = (Guid)reader["Iid"];

@@ -141,7 +141,7 @@ namespace CDP4Orm.Dao.Resolve
                 {
                     while (reader.Read())
                     {
-                        yield return this.MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
+                        yield return MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
                     }
                 }
             }
@@ -159,7 +159,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// A deserialized instance of <see cref="ContainerInfo"/>.
         /// </returns>
-        private Tuple<Guid, ContainerInfo> MapToSiteDirectoryContainmentInfo(NpgsqlDataReader reader, string connectedPartition)
+        private static Tuple<Guid, ContainerInfo> MapToSiteDirectoryContainmentInfo(NpgsqlDataReader reader, string connectedPartition)
         {
             var containedIid = (Guid)reader[ContainedIidKey];
 
@@ -240,7 +240,7 @@ namespace CDP4Orm.Dao.Resolve
                 {
                     while (reader.Read())
                     {
-                        yield return this.MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
+                        yield return MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
                     }
                 }
             }
@@ -261,7 +261,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// A deserialized instance of <see cref="ContainerInfo"/>.
         /// </returns>
-        private Tuple<Guid, ContainerInfo> MapToEngineeringModelContainmentInfo(NpgsqlDataReader reader, string connectedPartition, string otherPartition)
+        private static Tuple<Guid, ContainerInfo> MapToEngineeringModelContainmentInfo(NpgsqlDataReader reader, string connectedPartition, string otherPartition)
         {
             var containedIid = (Guid)reader[ContainedIidKey];
 

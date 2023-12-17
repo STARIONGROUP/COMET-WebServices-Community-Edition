@@ -74,7 +74,7 @@ namespace CometServer.Services.DataStore
                 }
                 catch (Exception)
                 {
-                    this.Logger.LogInformation("Waiting for the data store at {0}:{1} to become availble in {2} [s]",
+                    this.Logger.LogInformation("Waiting for the data store at {HostName}:{Port} to become availble in {remainingSeconds} [s]",
                         this.AppConfigService.AppConfig.Backtier.HostName,
                         this.AppConfigService.AppConfig.Backtier.Port,
                         remainingSeconds);

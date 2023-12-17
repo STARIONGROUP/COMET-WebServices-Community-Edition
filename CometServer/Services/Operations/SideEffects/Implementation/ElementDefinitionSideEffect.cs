@@ -104,7 +104,7 @@ namespace CometServer.Services.Operations.SideEffects
         public override bool BeforeCreate(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // inject the organizational participant of the creator to the ED before creating
-            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
+            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
             {
                 if (!thing.OrganizationalParticipant.Contains(this.CredentialsService.Credentials.OrganizationalParticipant.Iid))
                 {

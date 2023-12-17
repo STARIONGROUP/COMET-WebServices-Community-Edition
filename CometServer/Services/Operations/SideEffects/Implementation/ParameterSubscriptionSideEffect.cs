@@ -43,7 +43,6 @@ namespace CometServer.Services.Operations.SideEffects
     using ParameterOrOverrideBase = CDP4Common.DTO.ParameterOrOverrideBase;
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
-    using ParameterValueSetBase = CDP4Common.DTO.ParameterValueSetBase;
 
     /// <summary>
     /// The purpose of the <see cref="ParameterSubscriptionSideEffect"/> Side-Effect class is to execute additional logic before and after a specific operation is performed.
@@ -133,7 +132,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new InvalidOperationException("The owner cannot be empty.");
             }
 
-            this.CheckOwnership(thing, container);
+            CheckOwnership(thing, container);
 
             return this.IsUniqueSubscription(transaction, partition, securityContext, thing, container);
         }
@@ -263,7 +262,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext, 
             ClasslessDTO rawUpdateInfo)
         {
-            this.CheckOwnership(thing, container);
+            CheckOwnership(thing, container);
         }
         
         /// <summary>
@@ -275,7 +274,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="container">
         /// The container instance of the <see cref="Thing"/> that is inspected.
         /// </param>
-        private void CheckOwnership(ParameterSubscription thing, Thing container)
+        private static void CheckOwnership(ParameterSubscription thing, Thing container)
         {
             if (thing.Owner == ((CDP4Common.DTO.ParameterOrOverrideBase)container).Owner)
             {

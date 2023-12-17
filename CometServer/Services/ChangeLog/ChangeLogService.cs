@@ -264,16 +264,16 @@ namespace CometServer.Services.ChangeLog
 
                         if (changedThing is IOwnedThing ownedThing && !this.DataModelUtils.IsDerived(changedThing.ClassKind.ToString(), nameof(IOwnedThing.Owner)))
                         {
-                            this.AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
-                            this.AddIfNotExists(newLogEntryChangelogItem.AffectedReferenceIid, ownedThing.Owner);
+                            AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
+                            AddIfNotExists(newLogEntryChangelogItem.AffectedReferenceIid, ownedThing.Owner);
                         }
 
                         if (changedThing is ICategorizableThing categorizableThing)
                         {
                             foreach (var categoryIid in categorizableThing.Category)
                             {
-                                this.AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
-                                this.AddIfNotExists(newLogEntryChangelogItem.AffectedReferenceIid, categoryIid);
+                                AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
+                                AddIfNotExists(newLogEntryChangelogItem.AffectedReferenceIid, categoryIid);
                             }
                         }
                     }
@@ -281,7 +281,7 @@ namespace CometServer.Services.ChangeLog
                     foreach (var deleteInfo in operation.Delete)
                     {
                         var newLogEntryChangelogItem =
-                            this.CreateDeleteLogEntryChangelogItems(transaction, partition, operation, deleteInfo, modelLogEntry, changedThings);
+                            this.CreateDeleteLogEntryChangelogItems(transaction, partition, deleteInfo, modelLogEntry, changedThings);
 
                         if (newLogEntryChangelogItem != null)
                         {
@@ -289,7 +289,7 @@ namespace CometServer.Services.ChangeLog
                         }
                     }
 
-                    if (newLogEntryChangelogItems.Any())
+                    if (newLogEntryChangelogItems.Count != 0)
                     {
                         modelLogEntry.LogEntryChangelogItem.AddRange(newLogEntryChangelogItems.Select(x => x.Iid));
 
@@ -380,13 +380,13 @@ namespace CometServer.Services.ChangeLog
         /// </returns>
         private LogEntryChangelogItem CreateAddOrUpdateLogEntryChangelogItem(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, CdpPostOperation operation, IReadOnlyList<Thing> changedThings)
         {
-            if (!this.IsAddLogEntryChangeLogItemAllowed(changedThing.ClassKind))
+            if (!IsAddLogEntryChangeLogItemAllowed(changedThing.ClassKind))
             {
                 return null;
             }
 
             var logEntryChangeLogItem = new LogEntryChangelogItem(Guid.NewGuid(), 0);
-            this.AddIfNotExists(modelLogEntry.AffectedItemIid, changedThing.Iid);
+            AddIfNotExists(modelLogEntry.AffectedItemIid, changedThing.Iid);
 
             if (operation.Create.SingleOrDefault(x => x.Iid == changedThing.Iid) is { })
             {
@@ -426,12 +426,12 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The created <see cref="CDP4Common.CommonData.LogEntryChangelogItem"/>s.
         /// </returns>
-        private LogEntryChangelogItem CreateDeleteLogEntryChangelogItems(NpgsqlTransaction transaction, string partition, CdpPostOperation operation, ClasslessDTO deleteInfo, ModelLogEntry modelLogEntry, IReadOnlyList<Thing> changedThings)
+        private LogEntryChangelogItem CreateDeleteLogEntryChangelogItems(NpgsqlTransaction transaction, string partition, ClasslessDTO deleteInfo, ModelLogEntry modelLogEntry, IReadOnlyList<Thing> changedThings)
         {
-            if (Enum.TryParse<ClassKind>(deleteInfo[nameof(Thing.ClassKind)].ToString(), out var classKind) && this.IsAddLogEntryChangeLogItemAllowed(classKind))
+            if (Enum.TryParse<ClassKind>(deleteInfo[nameof(Thing.ClassKind)].ToString(), out var classKind) && IsAddLogEntryChangeLogItemAllowed(classKind))
             {
                 var newLogEntryChangelogItem = new LogEntryChangelogItem(Guid.NewGuid(), 0);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, (Guid) deleteInfo[nameof(Thing.Iid)]);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, (Guid) deleteInfo[nameof(Thing.Iid)]);
 
                 var deletedThing = this.OperationProcessor.OperationOriginalThingCache.FirstOrDefault(x => x.Iid == (Guid) deleteInfo[nameof(Thing.Iid)]);
 
@@ -474,16 +474,16 @@ namespace CometServer.Services.ChangeLog
 
             if (createdThing is IOwnedThing ownedThing && !this.DataModelUtils.IsDerived(createdThing.ClassKind.ToString(), nameof(IOwnedThing.Owner)))
             {
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, ownedThing.Owner);
+                AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, ownedThing.Owner);
             }
 
             if (createdThing is ICategorizableThing categorizableThing)
             {
                 foreach (var categoryIid in categorizableThing.Category)
                 {
-                    this.AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
-                    this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, categoryIid);
+                    AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
+                    AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, categoryIid);
                 }
             }
 
@@ -493,8 +493,8 @@ namespace CometServer.Services.ChangeLog
 
             if (containerThing != null)
             {
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
 
                 stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
             }
@@ -503,14 +503,14 @@ namespace CometServer.Services.ChangeLog
 
             foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
             }
 
             foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
+                AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
             }
 
             foreach (var extraChangeDescription in affectedThingsData.ExtraChangeDescriptions)
@@ -558,16 +558,16 @@ namespace CometServer.Services.ChangeLog
 
             if (updatedThing is IOwnedThing ownedThing && !this.DataModelUtils.IsDerived(updatedThing.ClassKind.ToString(), nameof(IOwnedThing.Owner)))
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, ownedThing.Owner);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, ownedThing.Owner);
+                AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
             }
 
             if (updatedThing is ICategorizableThing categorizableThing)
             {
                 foreach (var categoryIid in categorizableThing.Category)
                 {
-                    this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, categoryIid);
-                    this.AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
+                    AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, categoryIid);
+                    AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
                 }
             }
 
@@ -575,14 +575,14 @@ namespace CometServer.Services.ChangeLog
 
             foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
             }
 
             foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
+                AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
             }
 
             var stringBuilder = new StringBuilder();
@@ -596,8 +596,8 @@ namespace CometServer.Services.ChangeLog
 
             if (containerThing != null)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
                 stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
             }
 
@@ -713,7 +713,7 @@ namespace CometServer.Services.ChangeLog
 
                 if (orgValue is IEnumerable)
                 {
-                    if (this.TryGetName(changedValueThing, out var changedThingName))
+                    if (TryGetName(changedValueThing, out var changedThingName))
                     {
                         stringBuilder.AppendLine($"  - {propertyName}: Added => {changedThingName}");
                         return;
@@ -731,7 +731,7 @@ namespace CometServer.Services.ChangeLog
                     {
                         var orgValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
 
-                        if (this.TryGetName(changedValueThing, out var changedThingName) && this.TryGetName(orgValueThing, out var orgThingName))
+                        if (TryGetName(changedValueThing, out var changedThingName) && TryGetName(orgValueThing, out var orgThingName))
                         {
                             stringBuilder.AppendLine($"  - {propertyName}: {orgThingName} => {changedThingName}");
                             return;
@@ -796,16 +796,16 @@ namespace CometServer.Services.ChangeLog
 
             if (deletedThing is IOwnedThing ownedThing && !this.DataModelUtils.IsDerived(deletedThing.ClassKind.ToString(), nameof(IOwnedThing.Owner)))
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, ownedThing.Owner);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, ownedThing.Owner);
+                AddIfNotExists(modelLogEntry.AffectedDomainIid, ownedThing.Owner);
             }
 
             if (deletedThing is ICategorizableThing categorizableThing)
             {
                 foreach (var categoryIid in categorizableThing.Category)
                 {
-                    this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, categoryIid);
-                    this.AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
+                    AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, categoryIid);
+                    AddIfNotExists(modelLogEntry.AffectedItemIid, categoryIid);
                 }
             }
 
@@ -813,14 +813,14 @@ namespace CometServer.Services.ChangeLog
 
             foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedItemId);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, affectedItemId);
             }
 
             foreach (var affectedDomainId in affectedThingsData.AffectedDomainIds)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
-                this.AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, affectedDomainId);
+                AddIfNotExists(modelLogEntry.AffectedDomainIid, affectedDomainId);
             }
 
             var stringBuilder = new StringBuilder();
@@ -834,8 +834,8 @@ namespace CometServer.Services.ChangeLog
 
             if (containerThing != null)
             {
-                this.AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
-                this.AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
+                AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
+                AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
                 stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
             }
 
@@ -888,13 +888,13 @@ namespace CometServer.Services.ChangeLog
             {
                 case Parameter parameter:
                 {
-                    this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.ParameterType);
+                        AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.ParameterType);
 
                     if (this.ParameterTypeService.GetShallow(transaction, siteDirectoryPartition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
                     {
                         foreach (var category in parameterType.Category)
                         {
-                            this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
+                                AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
                     }
 
@@ -905,7 +905,7 @@ namespace CometServer.Services.ChangeLog
                         {
                             foreach (var parameterSubscription in parameter.ParameterSubscription)
                             {
-                                this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription);
+                                    AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription);
                             }
                         }
                     }
@@ -918,8 +918,8 @@ namespace CometServer.Services.ChangeLog
 
                     if (getContainerReferences)
                     {
-                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, parameter.Owner);
-                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.Iid);
+                            AddIfNotExists(affectedThingsData.AffectedDomainIds, parameter.Owner);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.Iid);
                     }
 
                     break;
@@ -938,11 +938,11 @@ namespace CometServer.Services.ChangeLog
 
                         foreach (var category in elementUsage.Category)
                         {
-                            this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
+                                AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
 
-                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, elementUsage.Owner);
-                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, elementUsage.Iid);
+                            AddIfNotExists(affectedThingsData.AffectedDomainIds, elementUsage.Owner);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, elementUsage.Iid);
                     }
 
                     break;
@@ -955,11 +955,11 @@ namespace CometServer.Services.ChangeLog
 
                         foreach (var category in elementDefinition.Category)
                         {
-                            this.AddIfNotExists(affectedThingsData.AffectedItemIds, category);
+                                AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
 
-                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, elementDefinition.Owner);
-                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, elementDefinition.Iid);
+                            AddIfNotExists(affectedThingsData.AffectedDomainIds, elementDefinition.Owner);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, elementDefinition.Iid);
                     }
 
                     break;
@@ -974,7 +974,7 @@ namespace CometServer.Services.ChangeLog
                         {
                             foreach (var parameterSubscription in parameterOverride.ParameterSubscription)
                             {
-                                this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription);
+                                    AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription);
                             }
                         }
                     }
@@ -997,8 +997,8 @@ namespace CometServer.Services.ChangeLog
 
                     if (getContainerReferences)
                     {
-                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, parameterOverride.Owner);
-                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterOverride.Iid);
+                            AddIfNotExists(affectedThingsData.AffectedDomainIds, parameterOverride.Owner);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, parameterOverride.Iid);
                     }
 
                     break;
@@ -1051,8 +1051,8 @@ namespace CometServer.Services.ChangeLog
 
                     if (getContainerReferences)
                     {
-                        this.AddIfNotExists(affectedThingsData.AffectedDomainIds, parameterSubscription.Owner);
-                        this.AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription.Iid);
+                            AddIfNotExists(affectedThingsData.AffectedDomainIds, parameterSubscription.Owner);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, parameterSubscription.Iid);
                     }
 
                     break;
@@ -1122,12 +1122,12 @@ namespace CometServer.Services.ChangeLog
 
                 var possibleContainers = service.GetShallow(transaction, containerPartition, null, securityContext).ToList();
 
-                if (!possibleContainers.Any())
+                if (possibleContainers.Count == 0)
                 {
                     return null;
                 }
 
-                var addContainer = this.GetContainerFromPossibleContainers(updatedThing, possibleContainers, containerPropertyName);
+                var addContainer = GetContainerFromPossibleContainers(updatedThing, possibleContainers, containerPropertyName);
 
                 return addContainer;
             }
@@ -1165,7 +1165,7 @@ namespace CometServer.Services.ChangeLog
                 var possibleContainers =
                     this.OperationProcessor.OperationOriginalThingCache.Where(x => x.ClassKind.ToString() == containerClassType).ToList();
 
-                if (!possibleContainers.Any())
+                if (possibleContainers.Count == 0)
                 {
                     foreach (var possibleContainerThing in changedThings)
                     {
@@ -1180,7 +1180,7 @@ namespace CometServer.Services.ChangeLog
                     }
                 }
 
-                var addContainer = this.GetContainerFromPossibleContainers(deletedThing, possibleContainers, containerPropertyName);
+                var addContainer = GetContainerFromPossibleContainers(deletedThing, possibleContainers, containerPropertyName);
 
                 return addContainer;
             }
@@ -1207,7 +1207,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// <paramref name="updatedThing"/>'s container <see cref="Thing"/> if found, otherwise null
         /// </returns>
-        private Thing GetContainerFromPossibleContainers(Thing updatedThing, List<Thing> possibleContainers, string containerPropertyName)
+        private static Thing GetContainerFromPossibleContainers(Thing updatedThing, List<Thing> possibleContainers, string containerPropertyName)
         {
             var propInfo =
                 possibleContainers
@@ -1273,7 +1273,7 @@ namespace CometServer.Services.ChangeLog
 
             var possibleContainers = containerThings.Where(x => x.ClassKind.ToString() == containerClassType).ToList();
 
-            if (!possibleContainers.Any())
+            if (possibleContainers.Count == 0)
             {
                 foreach (var possibleContainerThing in containerThings)
                 {
@@ -1284,7 +1284,7 @@ namespace CometServer.Services.ChangeLog
                 }
             }
 
-            return this.GetContainerFromPossibleContainers(thing, possibleContainers, containerPropertyName);
+            return GetContainerFromPossibleContainers(thing, possibleContainers, containerPropertyName);
         }
 
         /// <summary>
@@ -1310,12 +1310,12 @@ namespace CometServer.Services.ChangeLog
 
             var description = thing.ClassKind.ToString();
 
-            if (this.TryGetName(thing, out var namedThingName))
+            if (TryGetName(thing, out var namedThingName))
             {
                 description = $"{description} => {namedThingName}";
             }
 
-            if (this.TryGetShortName(thing, out var shortNamedThingShortName))
+            if (TryGetShortName(thing, out var shortNamedThingShortName))
             {
                 description = $"{description} ({shortNamedThingShortName})";
             }
@@ -1426,7 +1426,7 @@ namespace CometServer.Services.ChangeLog
         /// </summary>
         /// <param name="guids">The <see cref="ICollection{T}"/> of type <see cref="Guid"/></param>
         /// <param name="newGuid">The <see cref="Guid"/></param>
-        private void AddIfNotExists(ICollection<Guid> guids, Guid newGuid)
+        private static void AddIfNotExists(ICollection<Guid> guids, Guid newGuid)
         {
             if (!guids.Contains(newGuid))
             {
@@ -1461,7 +1461,7 @@ namespace CometServer.Services.ChangeLog
                     .Cast<PossibleFiniteState>()
                     .ToList(); 
 
-            if (!possibleFiniteStates.Any())
+            if (possibleFiniteStates.Count == 0)
             {
                 return;
             }
@@ -1502,7 +1502,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// True if creation is allowed, otherwise false.
         /// </returns>
-        private bool IsAddLogEntryChangeLogItemAllowed(ClassKind classKind)
+        private static bool IsAddLogEntryChangeLogItemAllowed(ClassKind classKind)
         {
             var relevantClassKinds = new List<ClassKind>
             {
@@ -1525,7 +1525,7 @@ namespace CometServer.Services.ChangeLog
         /// <param name="thing">The <see cref="Thing"/></param>
         /// <param name="name">The <see cref="INamedThing.Name"/></param>
         /// <returns>True, if the <see cref="Thing"/> has a readable <see cref="INamedThing.Name"/> property, otherwise false</returns>
-        private bool TryGetName(Thing thing, out string name)
+        private static bool TryGetName(Thing thing, out string name)
         {
             name = null;
 
@@ -1551,7 +1551,7 @@ namespace CometServer.Services.ChangeLog
         /// <param name="thing">The <see cref="Thing"/></param>
         /// <param name="shortName">The <see cref="IShortNamedThing.ShortName"/></param>
         /// <returns>True, if the <see cref="Thing"/> has a readable <see cref="IShortNamedThing.ShortName"/> property, otherwise false</returns>
-        private bool TryGetShortName(Thing thing, out string shortName)
+        private static bool TryGetShortName(Thing thing, out string shortName)
         {
             shortName = null;
 

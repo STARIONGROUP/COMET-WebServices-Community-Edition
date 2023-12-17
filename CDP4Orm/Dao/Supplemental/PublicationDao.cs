@@ -40,7 +40,7 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The current partition</param>
         public void DeleteAll(NpgsqlTransaction transaction, string partition)
         {
-            this.DeleteAll(transaction, partition, ClassKind.Publication.ToString());
+            DeleteAll(transaction, partition, ClassKind.Publication.ToString());
         }
     }
 }

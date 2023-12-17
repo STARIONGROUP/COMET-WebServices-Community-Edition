@@ -160,11 +160,6 @@ namespace CometServer.Services
                 iteration = activeIteration;
             }
 
-            if (iteration == null)
-            {
-                throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
-            }
-
             return iteration;
         }
 

@@ -74,7 +74,7 @@ namespace CometServer.Services.Operations.SideEffects
                 return;
             }
 
-            if (!glossary.Term.Any())
+            if (glossary.Term.Count == 0)
             {
                 return;
             }

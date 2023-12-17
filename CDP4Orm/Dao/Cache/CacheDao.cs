@@ -84,7 +84,7 @@ namespace CDP4Orm.Dao.Cache
         /// <param name="thing">The revised <see cref="CDP4Common.DTO.Thing"/></param>
         public void Write(NpgsqlTransaction transaction, string partition, Thing thing)
         {
-            var table = this.GetThingCacheTableName(thing);
+            var table = GetThingCacheTableName(thing);
 
             var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\")", IidKey, RevisionColumnName, JsonColumnName);
             var values = "(:iid, :revisionnumber, :jsonb)";
@@ -106,7 +106,7 @@ namespace CDP4Orm.Dao.Cache
         /// </summary>
         /// <param name="thing">The <see cref="Thing"/></param>
         /// <returns>The name of the revision table</returns>
-        private string GetThingCacheTableName(Thing thing)
+        private static string GetThingCacheTableName(Thing thing)
         {
             return thing.ClassKind + CacheTableSuffix;
         }

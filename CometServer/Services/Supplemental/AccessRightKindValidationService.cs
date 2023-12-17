@@ -127,7 +127,7 @@ namespace CometServer.Services
                 throw new InvalidCastException("The supplied thing is not an instance of ParticipantPermission.");
             }
 
-            if (!this.IsOwnedClassKind(participantPermission.ObjectClass.ToString())
+            if (!IsOwnedClassKind(participantPermission.ObjectClass.ToString())
                 && participantPermission.AccessRight == ParticipantAccessRightKind.MODIFY_IF_OWNER)
             {
                 return false;
@@ -145,10 +145,11 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/> whether the classKind is owned.
         /// </returns>
-        private bool IsOwnedClassKind(string typeName)
+        private static bool IsOwnedClassKind(string typeName)
         {
             // for some reason single multiples type matching the conditions
             var type = typeof(Thing).Assembly.GetTypes().FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.FullName) && x.FullName.Contains($"{typeof(Thing).Namespace}.{typeName}"));
+
             if (type == null)
             {
                 throw new InvalidOperationException($"No type associated to classkind {typeName}");

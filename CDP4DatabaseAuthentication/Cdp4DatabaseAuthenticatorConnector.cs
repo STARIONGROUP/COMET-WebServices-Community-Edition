@@ -87,7 +87,7 @@ namespace CDP4DatabaseAuthentication
         /// </returns>
         public override bool Authenticate(AuthenticationPerson person, string password)
         {
-            return this.ValidatePassword(password, person);
+            return ValidatePassword(password, person);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace CDP4DatabaseAuthentication
         /// <returns>
         /// True if the passwords match.
         /// </returns>
-        private bool ValidatePassword(string password, AuthenticationPerson person)
+        private static bool ValidatePassword(string password, AuthenticationPerson person)
         {
             return EncryptionUtils.CompareSaltedStrings(password, person.Password, person.Salt);
         }

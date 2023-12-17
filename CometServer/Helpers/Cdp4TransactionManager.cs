@@ -345,7 +345,7 @@ namespace CometServer.Helpers
         /// </param>
         public void SetIterationContext(NpgsqlTransaction transaction, string partition)
         {
-            this.ApplyIterationContext(transaction, partition, this.IterationSetup);
+            ApplyIterationContext(transaction, partition, this.IterationSetup);
         }
 
         /// <summary>
@@ -383,8 +383,8 @@ namespace CometServer.Helpers
         private NpgsqlTransaction GetTransaction(ref NpgsqlConnection connection, Credentials credentials)
         {
             var transaction = this.SetupNewTransaction(ref connection);
-            this.CreateTransactionInfoTable(transaction);
-            this.CreateDefaultTransactionInfoEntry(transaction, credentials);
+            CreateTransactionInfoTable(transaction);
+            CreateDefaultTransactionInfoEntry(transaction, credentials);
 
             return transaction;
         }
@@ -401,7 +401,7 @@ namespace CometServer.Helpers
         /// <param name="iterationSetup">
         /// The iteration Setup.
         /// </param>
-        private void ApplyIterationContext(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
+        private static void ApplyIterationContext(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
         {
             if (iterationSetup == null)
             {
@@ -479,14 +479,14 @@ namespace CometServer.Helpers
         /// <param name="credentials">
         /// The credentials.
         /// </param>
-        private void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
+        private static void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
         {
             // insert actor from the request credentials otherwise use default (null) user
             var sqlBuilder = new StringBuilder();
             var isCredentialSet = credentials != null;
 
             sqlBuilder.AppendFormat("INSERT INTO {0} ({1}, {2})", TransactionInfoTable, UserIdColumn, TransactionTimeColumn);
-            sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? string.Format(":{0}", UserIdColumn) : "null");
+            sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? $":{UserIdColumn}" : "null");
 
             using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
             {
@@ -505,7 +505,7 @@ namespace CometServer.Helpers
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void CreateTransactionInfoTable(NpgsqlTransaction transaction)
+        private static void CreateTransactionInfoTable(NpgsqlTransaction transaction)
         {
             // setup transaction_info table that is valid only for this transaction
             var sqlBuilder = new StringBuilder();

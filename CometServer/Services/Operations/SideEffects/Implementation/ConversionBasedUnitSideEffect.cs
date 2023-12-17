@@ -93,9 +93,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (referenceUnitId == thing.Iid)
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "ConversionBasedUnit {0} cannot have itself as a RefernceUnit",
-                            thing.Iid));
+                        $"ConversionBasedUnit {thing.Iid} cannot have itself as a RefernceUnit");
                 }
 
                 // Get RDL chain and collect units' ids
@@ -110,9 +108,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (!unitIdsFromChain.Contains(referenceUnitId))
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "ConversionBasedUnit {0} cannot have a RefernceUnit from outside the RDL chain",
-                            thing.Iid));
+                        $"ConversionBasedUnit {thing.Iid} cannot have a RefernceUnit from outside the RDL chain");
                 }
 
                 // Get all ConversionBasedUnits
@@ -121,13 +117,10 @@ namespace CometServer.Services.Operations.SideEffects
                     .ToList();
 
                 // Check reference unit that it is acyclic
-                if (!this.IsReferenceUnitAcyclic(units, referenceUnitId, thing.Iid))
+                if (!IsReferenceUnitAcyclic(units, referenceUnitId, thing.Iid))
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "ConversionBasedUnit {0} cannot have a RefernceUnit {1} that leads to cyclic dependency",
-                            thing.Iid,
-                            referenceUnitId));
+                        $"ConversionBasedUnit {thing.Iid} cannot have a RefernceUnit {referenceUnitId} that leads to cyclic dependency");
                 }
             }
         }
@@ -186,10 +179,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether a reference unit will not lead to cyclic dependency.
         /// </returns>
-        private bool IsReferenceUnitAcyclic(
-            List<ConversionBasedUnit> units,
-            Guid referenceUnitId,
-            Guid conversionBasedUnitId)
+        private static bool IsReferenceUnitAcyclic(List<ConversionBasedUnit> units, Guid referenceUnitId, Guid conversionBasedUnitId)
         {
             Guid? nextContainingGroupId = referenceUnitId;
 

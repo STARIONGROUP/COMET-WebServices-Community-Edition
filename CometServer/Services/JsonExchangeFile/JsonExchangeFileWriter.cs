@@ -33,6 +33,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
 
     using CometServer.Authorization;
+    using CometServer.Exceptions;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
 
@@ -181,7 +182,7 @@ namespace CometServer.Services
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
                 var engineeringModelThings = this.EngineeringModelService.GetDeep(transaction, engineeringModelPartition, new List<Guid> { engineeringModelSetup.EngineeringModelIid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
 
-                if (engineeringModelSetup.OrganizationalParticipant.Any())
+                if (engineeringModelSetup.OrganizationalParticipant.Count != 0)
                 {
                     this.ObfuscationService.ObfuscateResponse(engineeringModelThings, this.CredentialsService.Credentials);
                 }
@@ -200,7 +201,7 @@ namespace CometServer.Services
 
                      var iterationThings = this.IterationService.GetDeep(transaction, engineeringModelPartition, new List<Guid> { iterationSetup.IterationIid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
 
-                     if (engineeringModelSetup.OrganizationalParticipant.Any())
+                     if (engineeringModelSetup.OrganizationalParticipant.Count != 0)
                      {
                          this.ObfuscationService.ObfuscateResponse(iterationThings, this.CredentialsService.Credentials);
                      }
@@ -239,7 +240,12 @@ namespace CometServer.Services
         private ExchangeFileHeader CreateExchangeFileHeader(Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var person = siteDirectoryCache.Values.OfType<Person>().SingleOrDefault(x => x.ShortName == this.CredentialsService.Credentials.Person.UserName);
-            
+
+            if (person == null)
+            {
+                throw new ThingNotFoundException($"The Person object represented by {this.CredentialsService.Credentials.Person.UserName} could not be found");
+            }
+
             EmailAddress email = null;
 
             if (person.DefaultEmailAddress != null)
@@ -346,7 +352,7 @@ namespace CometServer.Services
 
             foreach (var engineeringModelSetup in engineeringModelSetupsToBeRemoved)
             {
-                this.PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, engineeringModelSetup);
+                PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, engineeringModelSetup);
             }
 
             foreach (var engineeringModelSetup in engineeringModelSetupsToBeRemoved)
@@ -378,7 +384,7 @@ namespace CometServer.Services
 
                 if (!keepPerson)
                 {
-                    this.PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, person);
+                    PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, person);
                     siteDirectory.Person.Remove(person.Iid);
                 }
             }
@@ -407,7 +413,7 @@ namespace CometServer.Services
 
                 if (!keepPersonRole)
                 {
-                    this.PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, personRole);
+                    PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, personRole);
                     siteDirectory.PersonRole.Remove(personRole.Iid);
                 }
             }
@@ -436,7 +442,7 @@ namespace CometServer.Services
 
                 if (!keepParticipantRole)
                 {
-                    this.PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, participantRole);
+                    PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, participantRole);
                     siteDirectory.ParticipantRole.Remove(participantRole.Iid);
                 }
             }
@@ -479,7 +485,7 @@ namespace CometServer.Services
 
                 if (!keepDomainOfExpertise)
                 {
-                    this.PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, domainOfExpertise);
+                    PruneThingAndContainedThingsFromThingCache(ref siteDirectoryCache, domainOfExpertise);
                     siteDirectory.Domain.Remove(domainOfExpertise.Iid);
                 }
             }
@@ -518,7 +524,7 @@ namespace CometServer.Services
                 var modelrdl = (ReferenceDataLibrary) modelReferenceDataLibrary;
                 result.Add(modelrdl);
 
-                var rdls = this.QueryRequiredRdl(modelrdl, siteDirectoryCache);
+                var rdls = QueryRequiredRdl(modelrdl, siteDirectoryCache);
 
                 foreach (var rdl in rdls)
                 {
@@ -529,7 +535,7 @@ namespace CometServer.Services
             return result;
         }
 
-        private IEnumerable<ReferenceDataLibrary> QueryRequiredRdl(ReferenceDataLibrary referenceDataLibrary, Dictionary<Guid, Thing> siteDirectoryCache)
+        private static IEnumerable<ReferenceDataLibrary> QueryRequiredRdl(ReferenceDataLibrary referenceDataLibrary, Dictionary<Guid, Thing> siteDirectoryCache)
         {
             if (referenceDataLibrary.RequiredRdl.HasValue)
             {
@@ -538,7 +544,7 @@ namespace CometServer.Services
                     var rdl = (ReferenceDataLibrary) requiredRdl;
                     yield return rdl;
 
-                    var requiredRdls =  this.QueryRequiredRdl(rdl, siteDirectoryCache);
+                    var requiredRdls = QueryRequiredRdl(rdl, siteDirectoryCache);
 
                     foreach (var dataLibrary in requiredRdls)
                     {
@@ -562,7 +568,7 @@ namespace CometServer.Services
         /// Prunes
         /// </summary>
         /// <param name="thing"></param>
-        private void PruneThingAndContainedThingsFromThingCache(ref Dictionary<Guid, Thing> dictionary, Thing thing)
+        private static void PruneThingAndContainedThingsFromThingCache(ref Dictionary<Guid, Thing> dictionary, Thing thing)
         {
             foreach (var thingContainerList in thing.ContainerLists)
             {
@@ -570,7 +576,7 @@ namespace CometServer.Services
                 {
                     if (dictionary.TryGetValue(containedThingIdentifier, out var containedThing))
                     {
-                        this.PruneThingAndContainedThingsFromThingCache(ref dictionary, containedThing);
+                        PruneThingAndContainedThingsFromThingCache(ref dictionary, containedThing);
                     }
                 } 
             }

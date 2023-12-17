@@ -144,7 +144,7 @@ namespace CometServer.Authorization
                 return;
             }
 
-            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
+            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
             {
                 if (this.CredentialsService.Credentials.OrganizationalParticipant == null)
                 {

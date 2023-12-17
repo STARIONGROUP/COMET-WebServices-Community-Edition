@@ -193,7 +193,7 @@ namespace CometServer.Authorization
             var personOrganizationalParticipants = new List<OrganizationalParticipant>();
 
             // get org participation if the models have it enabled and person is part of an organization
-            if (allOrganizationalParticipants.Any() && person.Organization != null)
+            if (allOrganizationalParticipants.Count != 0 && person.Organization != null)
             {
                 personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(person.Organization.Value, allOrganizationalParticipants, transaction);
             }
@@ -244,13 +244,13 @@ namespace CometServer.Authorization
             var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
 
             // get org participation if the models have it enabled and person is part of an organization
-            if (allOrganizationalParticipants.Any() && this.credentials.OrganizationIid != null)
+            if (allOrganizationalParticipants.Count != 0 && this.credentials.OrganizationIid != null)
             {
                 var personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(this.credentials.OrganizationIid.Value, allOrganizationalParticipants, transaction);
                 this.credentials.OrganizationalParticipants = personOrganizationalParticipants;
             }
 
-            if (this.credentials.EngineeringModelSetup.OrganizationalParticipant.Any() && this.credentials.OrganizationIid != null && this.credentials.OrganizationalParticipants.Any())
+            if (this.credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && this.credentials.OrganizationIid != null && this.credentials.OrganizationalParticipants.Any())
             {
                 // transient settings for the particular EMS
                 // find the org participant

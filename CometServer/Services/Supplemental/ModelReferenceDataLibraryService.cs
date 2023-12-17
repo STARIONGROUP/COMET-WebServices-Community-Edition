@@ -72,7 +72,7 @@ namespace CometServer.Services
             }
 
             var requiredRdls = new List<ReferenceDataLibrary> { mrdl };
-            this.TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, mrdl), requiredRdls);
+            TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, mrdl), requiredRdls);
 
             return requiredRdls;
         }
@@ -98,8 +98,8 @@ namespace CometServer.Services
 
             if (requiredRdl != null)
             {
-                this.TryCopyToRequiredRdls(new[] { requiredRdl }, requiredRdls);
-                this.TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, requiredRdl), requiredRdls);
+                TryCopyToRequiredRdls(new[] { requiredRdl }, requiredRdls);
+                TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, requiredRdl), requiredRdls);
             }
 
             return requiredRdls;
@@ -110,7 +110,7 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="source">The source <see cref="IEnumerable{ReferenceDataLibrary}"/></param>
         /// <param name="target">The target <see cref="ICollection{ReferenceDataLibrary}"/></param>
-        private void TryCopyToRequiredRdls(IEnumerable<ReferenceDataLibrary> source, ICollection<ReferenceDataLibrary> target)
+        private static void TryCopyToRequiredRdls(IEnumerable<ReferenceDataLibrary> source, ICollection<ReferenceDataLibrary> target)
         {
             foreach (var possibleAdditionalRdl in source)
             {

@@ -278,7 +278,7 @@ namespace CometServer.Modules
                         partition,
                         new[] { identifier },
                         authorizedContext).ToList();
-                    if (!resource.Any())
+                    if (resource.Count == 0)
                     {
                         continue;
                     }
@@ -543,12 +543,12 @@ namespace CometServer.Modules
             IProcessor processor,
             EngineeringModelSetup modelSetup)
         {
-            var securityContext = this.SetupSecurityContextForLibraryRead(requestUtils);
+            var securityContext = SetupSecurityContextForLibraryRead(requestUtils);
 
             // retrieve the required model reference data library
             var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, modelSetup.RequiredRdl, securityContext);
 
-            return this.RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData);
+            return RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData);
         }
 
         /// <summary>
@@ -568,12 +568,12 @@ namespace CometServer.Modules
         /// </returns>
         protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IRequestUtils requestUtils, IProcessor processor, ModelReferenceDataLibrary modelReferenceDataLibrary)
         {
-            var securityContext = this.SetupSecurityContextForLibraryRead(requestUtils);
+            var securityContext = SetupSecurityContextForLibraryRead(requestUtils);
 
             // retrieve the required model reference data library with extent = deep
             var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, new[] { modelReferenceDataLibrary.Iid }, securityContext);
 
-            return this.RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData)
+            return RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData)
                 .Where(x => x.Iid != modelReferenceDataLibrary.Iid);
         }
 
@@ -714,7 +714,7 @@ namespace CometServer.Modules
         /// </param>
         private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
-            if (!fileRevisions.Any())
+            if (fileRevisions.Count == 0)
             {
                 // do nothing if no file revisions are present
                 return;
@@ -760,7 +760,7 @@ namespace CometServer.Modules
 
             // stream the multipart content to the request contents target stream
             content.CopyToAsync(targetStream).Wait();
-            this.AddMultiPartMimeEndpoint(targetStream);
+            AddMultiPartMimeEndpoint(targetStream);
         }
 
         /// <summary>
@@ -837,7 +837,7 @@ namespace CometServer.Modules
                 // stream the multipart content to the request contents target stream
                 content.CopyToAsync(targetStream).Wait();
 
-                this.AddMultiPartMimeEndpoint(targetStream);
+                AddMultiPartMimeEndpoint(targetStream);
             }
             finally
             {
@@ -852,7 +852,7 @@ namespace CometServer.Modules
         /// <remarks>
         /// Changes the <param name="targetStream"></param>
         /// </remarks>
-        private void AddMultiPartMimeEndpoint(Stream targetStream)
+        private static void AddMultiPartMimeEndpoint(Stream targetStream)
         {
             var endLine = Encoding.Default.GetBytes($"\r\n--{HttpConstants.BoundaryString}--");
             targetStream.Write(endLine, 0, endLine.Length);
@@ -867,7 +867,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="RequestSecurityContext"/>.
         /// </returns>
-        private RequestSecurityContext SetupSecurityContextForLibraryRead(IRequestUtils requestUtils)
+        private static RequestSecurityContext SetupSecurityContextForLibraryRead(IRequestUtils requestUtils)
         {
             // override query parameters to return full set
             requestUtils.OverrideQueryParameters =
@@ -894,7 +894,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A collection of retrieved reference data.
         /// </returns>
-        private IEnumerable<Thing> RetrieveChainedReferenceData(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
+        private static IEnumerable<Thing> RetrieveChainedReferenceData(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
         {
             var chainedReferenceDataColl = new List<Thing>();
 

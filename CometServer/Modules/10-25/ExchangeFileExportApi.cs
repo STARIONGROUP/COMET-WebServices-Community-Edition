@@ -186,6 +186,7 @@ namespace CometServer.Modules
                 requestUtils.QueryParameters = new QueryParameters(queryParameters);
 
                 var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
+
                 if (isMultiPart)
                 {
                     // multipart message received
@@ -194,10 +195,10 @@ namespace CometServer.Modules
 
                 var version = httpRequest.QueryDataModelVersion();
                 jsonSerializer.Initialize(metaInfoProvider, version);
-                
+
                 var iids = jsonSerializer.Deserialize<List<Guid>>(httpRequest.Body);
 
-                var engineeringModelSetups = this.QueryExportEngineeringModelSetups(credentialsService, iids);
+                var engineeringModelSetups = QueryExportEngineeringModelSetups(credentialsService, iids);
 
                 transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
 
@@ -208,8 +209,21 @@ namespace CometServer.Modules
                 httpResponse.StatusCode = (int)HttpStatusCode.OK;
 
                 await using var filestream = new FileStream(zipFilePath, FileMode.Open, FileAccess.Read);
-                
+
                 await httpResponse.FromStream(filestream, HttpConstants.MimeTypeOctetStream, new ContentDisposition("EngineeringModelZipFileName"));
+            }
+            catch (ThingNotFoundException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] due to {ex.Message}"));
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (InvalidOperationException ex)
             {
@@ -217,7 +231,7 @@ namespace CometServer.Modules
                 {
                     await transaction.RollbackAsync();
                 }
-                
+
                 this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
 
                 // error handling
@@ -292,7 +306,7 @@ namespace CometServer.Modules
         /// thrown when at least one of the provided <paramref name="iids"/> does not correspond to an <see cref="EngineeringModelSetup"/>
         /// the user has access to.
         /// </exception>
-        private IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (ICredentialsService credentialsService, IEnumerable<Guid> iids)
+        private static IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (ICredentialsService credentialsService, IEnumerable<Guid> iids)
         {
             if (!iids.Any())
             {

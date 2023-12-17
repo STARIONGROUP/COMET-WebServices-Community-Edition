@@ -66,8 +66,6 @@ namespace CometServer.Tests.SideEffects
 
         private ArrayParameterType arrayParameterTypeB;
 
-        private ArrayParameterType arrayParameterTypeC;
-
         private BooleanParameterType booleanParameterTypeD;
 
         private ParameterTypeComponent parameterTypeComponentA;

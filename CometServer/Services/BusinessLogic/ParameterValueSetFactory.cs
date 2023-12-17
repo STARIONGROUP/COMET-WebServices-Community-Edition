@@ -58,7 +58,7 @@ namespace CometServer.Services
         {
             if (valueArray.Any(value => value != "-"))
             {
-                throw new ArgumentException("The valueArray must be a default valueArray that only contains \"-\"", "valueArray");
+                throw new ArgumentException("The valueArray must be a default valueArray that only contains \"-\"", nameof(valueArray));
             }
 
             var parameterValueSet = new ParameterValueSet(Guid.NewGuid(), -1)

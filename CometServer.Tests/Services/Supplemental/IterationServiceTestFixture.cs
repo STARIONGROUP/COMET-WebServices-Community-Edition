@@ -68,7 +68,7 @@ namespace CometServer.Tests.Services.Supplemental
         }
 
         [Test]
-        public void TestGetActiveIteration()
+        public void Verify_that_GetActiveIteration_returns_the_expected_result()
         {
             var setup1 = new IterationSetup(Guid.NewGuid(), 0) {IterationIid = Guid.NewGuid(), FrozenOn = DateTime.Now };
             var setup2 = new IterationSetup(Guid.NewGuid(), 0) {IterationIid = Guid.NewGuid()};
@@ -81,7 +81,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             var active = this.iterationService.GetActiveIteration(null, "", null);
 
-            Assert.AreEqual(active.Iid, it2.Iid);
+            Assert.That(it2.Iid, Is.EqualTo(active.Iid));
         }
     }
 }

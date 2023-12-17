@@ -867,7 +867,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.iteration, this.parameter, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -948,7 +948,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.parameterValueSet_1, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -1030,7 +1030,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.elementUsage_1, this.elementDefinition_1, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -1124,7 +1124,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.elementDefinition_1, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -1202,7 +1202,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.elementUsage_1, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -1478,7 +1478,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.parameterOverride, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -1566,7 +1566,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.parameterOverrideValueSet_1, this.engineeringModel, this.existingModelLogEntry };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -1850,7 +1850,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.parameterSubscriptionValueSet_1, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>
@@ -2050,7 +2050,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.parameterOverrideSubscriptionValueSet_1, this.engineeringModel };
 
-            LogEntryChangelogItem[] createdLogEntries = { };
+            var createdLogEntries = Array.Empty<LogEntryChangelogItem>();
 
             this.operationProcessor.Setup(
                     x =>

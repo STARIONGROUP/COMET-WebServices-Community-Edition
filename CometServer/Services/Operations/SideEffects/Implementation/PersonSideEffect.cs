@@ -89,7 +89,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             string passwordValue;
 
-            if (this.TryExtractPasswordUpdate(rawUpdateInfo, out passwordValue))
+            if (TryExtractPasswordUpdate(rawUpdateInfo, out passwordValue))
             {
                 // A password change is invoked:
                 // encapsulate the new 'clear-text' password with a token to signal the ORM layer that further specific processing is required
@@ -145,7 +145,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        private bool TryExtractPasswordUpdate(ClasslessDTO rawUpdateInfo, out string passwordValue)
+        private static bool TryExtractPasswordUpdate(ClasslessDTO rawUpdateInfo, out string passwordValue)
         {
             if (!rawUpdateInfo.ContainsKey(PasswordKey))
             {
