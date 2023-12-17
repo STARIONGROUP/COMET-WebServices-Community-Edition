@@ -281,7 +281,7 @@ namespace CometServer.Services.ChangeLog
                     foreach (var deleteInfo in operation.Delete)
                     {
                         var newLogEntryChangelogItem =
-                            this.CreateDeleteLogEntryChangelogItems(transaction, partition, operation, deleteInfo, modelLogEntry, changedThings);
+                            this.CreateDeleteLogEntryChangelogItems(transaction, partition, deleteInfo, modelLogEntry, changedThings);
 
                         if (newLogEntryChangelogItem != null)
                         {
@@ -426,7 +426,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The created <see cref="CDP4Common.CommonData.LogEntryChangelogItem"/>s.
         /// </returns>
-        private LogEntryChangelogItem CreateDeleteLogEntryChangelogItems(NpgsqlTransaction transaction, string partition, CdpPostOperation operation, ClasslessDTO deleteInfo, ModelLogEntry modelLogEntry, IReadOnlyList<Thing> changedThings)
+        private LogEntryChangelogItem CreateDeleteLogEntryChangelogItems(NpgsqlTransaction transaction, string partition, ClasslessDTO deleteInfo, ModelLogEntry modelLogEntry, IReadOnlyList<Thing> changedThings)
         {
             if (Enum.TryParse<ClassKind>(deleteInfo[nameof(Thing.ClassKind)].ToString(), out var classKind) && IsAddLogEntryChangeLogItemAllowed(classKind))
             {

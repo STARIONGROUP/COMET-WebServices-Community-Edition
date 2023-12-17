@@ -219,7 +219,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
                 this.Logger.LogInformation("Create a Copy of an EngineeringModel");
-                this.CreateCopyEngineeringModel(thing, container, transaction, partition, securityContext);
+                this.CreateCopyEngineeringModel(thing, transaction, securityContext);
 
                 this.Logger.LogInformation("Create revisions for created EngineeringModel");
                 this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
@@ -227,7 +227,7 @@ namespace CometServer.Services.Operations.SideEffects
                 return;
             }
 
-            this.CreateDefaultEngineeringModel(thing, container, transaction, partition, securityContext);
+            this.CreateDefaultEngineeringModel(thing, container, transaction, partition);
 
             // Create revisions for created EngineeringModel
             this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
@@ -267,7 +267,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition</param>
         /// <param name="securityContext">The security context</param>
-        private void CreateCopyEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private void CreateCopyEngineeringModel(EngineeringModelSetup thing, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             // copy data from the source engineering-model
             this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
@@ -281,7 +281,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition</param>
         /// <param name="securityContext">The security context</param>
-        private void CreateDefaultEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private void CreateDefaultEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition)
         {
             // No need to create a model RDL for the created EngineeringModelSetup since is handled in the client. It happens in the same transaction as the creation of the EngineeringModelSetup itself
             var firstIterationSetup = this.CreateIterationSetup(thing, transaction, partition);

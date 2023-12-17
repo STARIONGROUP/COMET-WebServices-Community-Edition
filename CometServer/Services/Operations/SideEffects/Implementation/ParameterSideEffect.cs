@@ -374,7 +374,7 @@ namespace CometServer.Services.Operations.SideEffects
                 securityContext);
 
             // clean up old values
-            this.DeleteOldValueSet(transaction, partition, originalThing, parameterOverrides, parameterSubscriptions);
+            this.DeleteOldValueSet(transaction, partition, originalThing);
         }
 
         /// <summary>
@@ -666,7 +666,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="parameterSubscriptions">
         /// The <see cref="ParameterSubscription"/> which value-sets to reset
         /// </param>
-        private void DeleteOldValueSet(NpgsqlTransaction transaction, string partition, Parameter originalThing, IReadOnlyList<ParameterOverride> parameterOverrides, IReadOnlyList<ParameterSubscription> parameterSubscriptions)
+        private void DeleteOldValueSet(NpgsqlTransaction transaction, string partition, Parameter originalThing)
         {
             foreach (var valueset in originalThing.ValueSet)
             {

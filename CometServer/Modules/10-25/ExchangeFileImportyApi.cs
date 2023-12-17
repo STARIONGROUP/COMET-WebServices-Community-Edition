@@ -305,7 +305,7 @@ namespace CometServer.Modules
             var version = request.QueryDataModelVersion();
 
             // handle exchange processing
-            if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -371,7 +371,7 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful, false if not
         /// </returns>
-        private bool InsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
+        private bool InsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
