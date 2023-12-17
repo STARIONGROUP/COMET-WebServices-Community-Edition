@@ -54,12 +54,12 @@ namespace CometServer.Services
         {
             if (iteration == null)
             {
-                throw new ArgumentNullException("iteration");
+                throw new ArgumentNullException(nameof(iteration));
             }
 
             if (options == null)
             {
-                throw new ArgumentNullException("options");
+                throw new ArgumentNullException(nameof(options));
             }
 
             if (iteration.Option.Count != options.Count())
