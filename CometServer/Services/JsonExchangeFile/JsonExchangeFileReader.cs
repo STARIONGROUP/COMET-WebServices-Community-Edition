@@ -208,7 +208,7 @@ namespace CometServer.Services
                     var siteDirectoryZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
 
                     var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, siteDirectoryZipEntry, password);
-                    this.Logger.LogInformation("{0} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+                    this.Logger.LogInformation("{count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
 
                     var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
                     var processedRdls = new List<string>();
@@ -230,7 +230,7 @@ namespace CometServer.Services
                         var modelRdlZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(modelRdlFilePath));
                         var modelRdlItems = this.ReadInfoFromArchiveEntry(version, modelRdlZipEntry, password);
 
-                        this.Logger.LogInformation("{0} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
+                        this.Logger.LogInformation("{Count} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
                         returned.AddRange(modelRdlItems);
 
                         // load the reference data libraries as per the containment chain
@@ -238,7 +238,7 @@ namespace CometServer.Services
 
                         while (requiredRdl != null)
                         {
-                            this.Logger.LogInformation("Required Reference Data Library encountered: {0}", requiredRdl);
+                            this.Logger.LogInformation("Required Reference Data Library encountered: {requiredRdl}", requiredRdl);
 
                             var siteRdlDto =
                                 (SiteReferenceDataLibrary)
@@ -254,7 +254,7 @@ namespace CometServer.Services
 
                                 var siteRdlItems = this.ReadInfoFromArchiveEntry(version, siteRdlZipEntry, password);
 
-                                this.Logger.LogInformation("{0} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
+                                this.Logger.LogInformation("{Count} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
                                 returned.AddRange(siteRdlItems);
 
                                 // register this processedRdl
@@ -266,7 +266,7 @@ namespace CometServer.Services
                         }
                     }
 
-                    this.Logger.LogInformation("{0} Site Directory items encountered", returned.Count);
+                    this.Logger.LogInformation("{Count} Site Directory items encountered", returned.Count);
                     return returned;
                 }
             }
@@ -312,13 +312,13 @@ namespace CometServer.Services
                     var engineeringModelZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(engineeringModelFilePath));
                     var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, engineeringModelZipEntry, password);
 
-                    this.Logger.LogInformation("{0} Engineering Model item(s) encountered", engineeringModelItems.Count);
+                    this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
                     return engineeringModelItems;
                 }
             }
             catch (Exception ex)
             {
-                var msg = string.Format("{0}: {1}", "Failed to load file. Error", ex.Message);
+                var msg = $"Failed to load file. Error: {ex.Message}";
                 this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
@@ -358,13 +358,13 @@ namespace CometServer.Services
                     var iterationZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(iterationFilePath));
                     var iterationItems = this.ReadInfoFromArchiveEntry(version, iterationZipEntry, password);
 
-                    this.Logger.LogInformation("{0} Iteration item(s) encountered", iterationItems.Count);
+                    this.Logger.LogInformation("{Count} Iteration item(s) encountered", iterationItems.Count);
                     return iterationItems;
                 }
             }
             catch (Exception ex)
             {
-                var msg = string.Format("{0}: {1}", "Failed to load file. Error", ex.Message);
+                var msg = $"Failed to load file. Error: {ex.Message}";
                 this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
@@ -398,7 +398,7 @@ namespace CometServer.Services
 
                 using (var stream = this.ReadStreamFromArchive(fileZipEntry, archivePassword))
                 {
-                    this.Logger.LogInformation("Store file binary with hash {0}", hash);
+                    this.Logger.LogInformation("Store file binary with hash {hash}", hash);
                     this.FileBinaryService.StoreBinaryData(hash, stream);
                 }
             }
@@ -433,7 +433,7 @@ namespace CometServer.Services
             }
 
             watch.Stop();
-            this.Logger.LogInformation("JSON Deserializer completed in {0} ", watch.Elapsed);
+            this.Logger.LogInformation("JSON Deserializer completed in {ElapsedMilliseconds} [ms]", watch.ElapsedMilliseconds);
             return returned.ToList();
         }
 
@@ -470,14 +470,14 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                var msg = $"{"Failed to open file. Error"}: {ex.Message}";
+                var msg = $"Failed to open file. Error: {ex.Message}";
                 this.Logger.LogError(msg);
 
                 throw new FileLoadException(msg);
             }
 
             watch.Stop();
-            this.Logger.LogInformation("JSONFile GET completed in {0} ", watch.Elapsed);
+            this.Logger.LogInformation("JSONFile GET completed in {ElapsedMilliseconds} [ms]", watch.ElapsedMilliseconds);
 
             return new MemoryStream(extractStream.ToArray());
         }

@@ -115,12 +115,12 @@ namespace CometServer.Services
             var sw = new Stopwatch();
             sw.Start();
             
-            this.Logger.LogDebug("Store Binary Data with hash: {0} started", hash);
+            this.Logger.LogDebug("Store Binary Data with hash: {hash} started", hash);
 
             string filePath;
             if (this.TryGetFileStoragePath(hash, out filePath))
             {
-                this.Logger.LogDebug("The file already exists: {0}/{1}", filePath, hash);
+                this.Logger.LogDebug("The file already exists: {filePath}/{hash}", filePath, hash);
 
                 // return as file already exists
                 sw.Stop();
@@ -130,7 +130,7 @@ namespace CometServer.Services
             // create the path for the file
             var stroragePath = this.GetBinaryStoragePath(hash, true);
             filePath = Path.Combine(stroragePath, hash);
-            this.Logger.LogDebug("New File storage path: ", filePath);
+            this.Logger.LogDebug("New File storage path: {filePath}", filePath);
 
             using (var fileStream = File.Create(filePath))
             {
@@ -138,7 +138,7 @@ namespace CometServer.Services
                 data.CopyTo(fileStream);
             }
 
-            this.Logger.LogDebug("File {0} stored in {1} [ms]", filePath, sw.ElapsedMilliseconds);
+            this.Logger.LogDebug("File {filePath} stored in {ElapsedMilliseconds} [ms]", filePath, sw.ElapsedMilliseconds);
         }
 
         /// <summary>

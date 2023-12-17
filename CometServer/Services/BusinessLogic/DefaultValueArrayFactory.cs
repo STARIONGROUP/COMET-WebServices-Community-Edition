@@ -118,7 +118,7 @@ namespace CometServer.Services
                 this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            this.Logger.LogTrace("Cache initialized with {0} ParameterTypes, {1} DependentParameterTypeAssignments, {2} IndependentParameterTypeAssignments and {3} ParameterTypeComponents in {4}",
+            this.Logger.LogTrace("Cache initialized with {parameterTypeCache} ParameterTypes, {dependentParameterTypeAssignments} DependentParameterTypeAssignments, {independentParameterTypeAssignments} IndependentParameterTypeAssignments and {parameterTypeComponentCache} ParameterTypeComponents in {ElapsedMilliseconds}",
                 this.parameterTypeCache.Count,
                 dependentParameterTypeAssignments.Count,
                 independentParameterTypeAssignments.Count,
