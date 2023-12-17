@@ -55,24 +55,22 @@ namespace CDP4Orm.Dao
         /// </exception>
         public int GetNextIterationNumber(NpgsqlTransaction transaction, string partition)
         {
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var sql = $"SELECT nextval('\"{partition}\".\"IterationNumberSequence\"');";
+
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sql;
+
+            var response = command.ExecuteScalar();
+
+            if (response != null && int.TryParse(response.ToString(), out var iterationNumber))
             {
-                var sql = string.Format("SELECT nextval('\"{0}\".\"IterationNumberSequence\"');", partition);
-
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sql;
-
-                object response = command.ExecuteScalar();
-                int iterationNumber;
-
-                if (response != null && int.TryParse(response.ToString(), out iterationNumber))
-                {
-                    return iterationNumber;
-                }
-
-                throw new InvalidOperationException("The expected iterationNumber could not be retrieved.");
+                return iterationNumber;
             }
+
+            throw new InvalidOperationException("The expected iterationNumber could not be retrieved.");
         }
 
         /// <summary>
@@ -89,16 +87,15 @@ namespace CDP4Orm.Dao
         /// </param>
         public void ResetIterationNumberSequenceStartNumber(NpgsqlTransaction transaction, string partition, int iterationStartNumber)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sql = string.Format("ALTER SEQUENCE \"{0}\".\"IterationNumberSequence\" RESTART WITH {1};", partition, iterationStartNumber);
+            using var command = new NpgsqlCommand();
 
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sql;
+            var sql = $"ALTER SEQUENCE \"{partition}\".\"IterationNumberSequence\" RESTART WITH {iterationStartNumber};";
 
-                command.ExecuteNonQuery();
-            }
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sql;
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -108,23 +105,22 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The egineering-model partition to modify</param>
         public void ModifyIdentifier(NpgsqlTransaction transaction, string partition)
         {
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var valueTypeDictionaryContents = new Dictionary<string, string>
             {
-                var valueTypeDictionaryContents = new Dictionary<string, string>
-                                                      {
-                                                          { "RevisionNumber", "1" }
-                                                      };
+                { "RevisionNumber", "1" }
+            };
 
-                var sql = string.Format("UPDATE \"{0}\".\"Thing\" SET \"Iid\" = uuid_generate_v4() WHERE \"ValueTypeDictionary\" -> 'ClassKind' != 'EngineeringModel' AND \"ValueTypeDictionary\" -> 'ClassKind' != 'Iteration'; UPDATE \"{0}\".\"Thing\" SET \"ValueTypeDictionary\" = \"ValueTypeDictionary\" || :valueTypeDictionary;", partition);
+            var sql = $"UPDATE \"{partition}\".\"Thing\" SET \"Iid\" = uuid_generate_v4() WHERE \"ValueTypeDictionary\" -> 'ClassKind' != 'EngineeringModel' AND \"ValueTypeDictionary\" -> 'ClassKind' != 'Iteration'; UPDATE \"{partition}\".\"Thing\" SET \"ValueTypeDictionary\" = \"ValueTypeDictionary\" || :valueTypeDictionary;";
 
-                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+            command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
 
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sql;
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sql;
 
-                command.ExecuteNonQuery();
-            }
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -136,19 +132,18 @@ namespace CDP4Orm.Dao
         /// <param name="oldIid">The old identifier</param>
         public void ModifyIdentifier(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sql = string.Format("UPDATE \"{0}\".\"Thing\" SET \"Iid\" = :newIid WHERE \"Iid\" = :oldIid;", partition);
+            using var command = new NpgsqlCommand();
 
-                command.Parameters.Add("newIid", NpgsqlDbType.Uuid).Value = thing.Iid;
-                command.Parameters.Add("oldIid", NpgsqlDbType.Uuid).Value = oldIid;
+            var sql = $"UPDATE \"{partition}\".\"Thing\" SET \"Iid\" = :newIid WHERE \"Iid\" = :oldIid;";
 
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sql;
+            command.Parameters.Add("newIid", NpgsqlDbType.Uuid).Value = thing.Iid;
+            command.Parameters.Add("oldIid", NpgsqlDbType.Uuid).Value = oldIid;
 
-                command.ExecuteNonQuery();
-            }
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sql;
+
+            command.ExecuteNonQuery();
         }
     }
 }
