@@ -157,7 +157,7 @@ namespace CometServer.ChangeNotification
 
                         var changeNotificationSubscriptionUserPreferences = this.GetChangeLogSubscriptionUserPreferences(transaction, person);
 
-                        var endDateTime = this.GetEndDateTime(DayOfWeek.Monday);
+                        var endDateTime = GetEndDateTime(DayOfWeek.Monday);
                         var startDateTime = endDateTime.AddDays(-7);
                         var htmlStringBuilder = new StringBuilder();
                         var textStringBuilder = new StringBuilder();
@@ -255,7 +255,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The end <see cref="DateTime"/>
         /// </returns>
-        private DateTime GetEndDateTime(DayOfWeek dayOfWeek)
+        private static DateTime GetEndDateTime(DayOfWeek dayOfWeek)
         {
             var dt = DateTime.UtcNow;
             var diff = (7 + (dt.DayOfWeek - dayOfWeek)) % 7;

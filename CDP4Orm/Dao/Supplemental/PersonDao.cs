@@ -44,7 +44,7 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// The password change token is generated and only valid in the context of this class instance lifetime.
         /// </summary>
-        private readonly string passwordChangeToken = string.Format("_{0}_", Guid.NewGuid());
+        private readonly string passwordChangeToken = $"_{Guid.NewGuid()}_";
 
         /// <summary>
         /// Gets the password change token that is only valid in the context of this class instance lifetime.
@@ -92,7 +92,7 @@ namespace CDP4Orm.Dao
             if (isPasswordChangeRequest)
             {
                 this.ExtractPasswordFromTokenizedString(person);
-                this.ApplyPasswordChange(person, valueTypeDictionaryAdditions);
+                ApplyPasswordChange(person, valueTypeDictionaryAdditions);
             }
             else
             {
@@ -133,7 +133,7 @@ namespace CDP4Orm.Dao
         /// </returns>
         public new bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
-            this.ApplyPasswordChange(thing, valueTypeDictionaryAdditions);
+            ApplyPasswordChange(thing, valueTypeDictionaryAdditions);
 
             isHandled = false;
             return true;
@@ -177,21 +177,15 @@ namespace CDP4Orm.Dao
         /// </param>
         private void ExtractExistingSaltToValueDictionary(NpgsqlTransaction transaction, string partition, Person person, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
-            if(person == null)
-            {
-                throw new ArgumentNullException(nameof(person));
-            }
+            ArgumentNullException.ThrowIfNull(person);
 
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.Append(this.BuildReadQuery(partition, null));
 
-                if (person != null)
-                {
-                    sqlBuilder.Append(" WHERE \"Iid\" =:id");
-                    command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = person.Iid;
-                }
+                sqlBuilder.Append(" WHERE \"Iid\" =:id");
+                command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = person.Iid;
 
                 sqlBuilder.Append(";");
 
@@ -226,15 +220,15 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// The apply password change.
+        /// Applies the password change to the provided <see cref="Thing"/> which must be of type <see cref="Person"/>
         /// </summary>
         /// <param name="thing">
-        /// The thing.
+        /// The <see cref="Person"/> thing that is to be updated
         /// </param>
         /// <param name="valueTypeDictionaryAdditions">
         /// The value type dictionary additions.
         /// </param>
-        internal void ApplyPasswordChange(Thing thing, Dictionary<string, string> valueTypeDictionaryAdditions)
+        internal static void ApplyPasswordChange(Thing thing, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             var person = (Person)thing;
 
@@ -267,6 +261,7 @@ namespace CDP4Orm.Dao
         public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials)
         {
             var operationSuccess = true;
+
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
                 { "GivenName", !this.IsDerived(person, "GivenName") ? person.GivenName.Escape() : string.Empty },

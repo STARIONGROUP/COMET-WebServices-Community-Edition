@@ -140,7 +140,7 @@ namespace CometServer.ChangeNotification
 
             if (engineeringModelSetup == null)
             {
-                yield return this.CreateEngineeringModelNotFoundSection(changeNotificationSubscriptionUserPreference);
+                yield return CreateEngineeringModelNotFoundSection(changeNotificationSubscriptionUserPreference);
 
                 yield break;
             }
@@ -156,7 +156,7 @@ namespace CometServer.ChangeNotification
 
             if (!participants.Any())
             {
-                yield return this.CreateParticipantNotActiveSection(engineeringModelSetup);
+                yield return CreateParticipantNotActiveSection(engineeringModelSetup);
 
                 yield break;
             }
@@ -168,7 +168,7 @@ namespace CometServer.ChangeNotification
 
             if (!engineeringModelParticipants.Any())
             {
-                yield return this.CreateNoEngineeringModelParticipantSection(engineeringModelSetup);
+                yield return CreateNoEngineeringModelParticipantSection(engineeringModelSetup);
 
                 yield break;
             }
@@ -181,7 +181,7 @@ namespace CometServer.ChangeNotification
 
             if (!domains.Any())
             {
-                yield return this.CreateNoDomainOfExpertiseSection(engineeringModelSetup);
+                yield return CreateNoDomainOfExpertiseSection(engineeringModelSetup);
 
                 yield break;
             }
@@ -198,19 +198,19 @@ namespace CometServer.ChangeNotification
 
             if (!modelLogEntries.Any() || !modelLogEntries.SelectMany(x => x.LogEntryChangelogItem).Any())
             {
-                yield return this.CreateNoModelLogEntriesSection(engineeringModelSetup);
+                yield return CreateNoModelLogEntriesSection(engineeringModelSetup);
 
                 yield break;
             }
 
             if (!modelLogEntries.Any(x => x.AffectedDomainIid.Intersect(domains).Any()))
             {
-                yield return this.CreateNoRelevantChangesFoundSection(engineeringModelSetup);
+                yield return CreateNoRelevantChangesFoundSection(engineeringModelSetup);
 
                 yield break;
             }
 
-            var filteredModelLogEntries = this.FilterDomains(modelLogEntries, domains);
+            var filteredModelLogEntries = FilterDomains(modelLogEntries, domains);
 
             var modelLogEntryDataCreator = container.Resolve<IModelLogEntryDataCreator>();
 
@@ -259,7 +259,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The filtered <see cref="List{T}"/> of type <see cref="ModelLogEntry"/>.
         /// </returns>
-        private List<ModelLogEntry> FilterDomains(List<ModelLogEntry> modelLogEntries, List<Guid> domains)
+        private static List<ModelLogEntry> FilterDomains(List<ModelLogEntry> modelLogEntries, List<Guid> domains)
         {
             return modelLogEntries.Where(x => x.AffectedDomainIid.Intersect(domains).Any()).ToList();
         }
@@ -273,7 +273,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The created <see cref="ChangelogSection"/>
         /// </returns>
-        private ChangelogSection CreateNoRelevantChangesFoundSection(EngineeringModelSetup engineeringModelSetup)
+        private static ChangelogSection CreateNoRelevantChangesFoundSection(EngineeringModelSetup engineeringModelSetup)
         {
             return new ChangelogSection(
                 $"{engineeringModelSetup.Name}",
@@ -290,7 +290,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The created <see cref="ChangelogSection"/>
         /// </returns>
-        private ChangelogSection CreateNoModelLogEntriesSection(EngineeringModelSetup engineeringModelSetup)
+        private static ChangelogSection CreateNoModelLogEntriesSection(EngineeringModelSetup engineeringModelSetup)
         {            
             return new ChangelogSection(
                 $"{engineeringModelSetup.Name}", 
@@ -308,7 +308,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The created <see cref="ChangelogSection"/>
         /// </returns>
-        private ChangelogSection CreateNoDomainOfExpertiseSection(EngineeringModelSetup engineeringModelSetup)
+        private static ChangelogSection CreateNoDomainOfExpertiseSection(EngineeringModelSetup engineeringModelSetup)
         {
             return new ChangelogSection(
                     $"{engineeringModelSetup.Name}", 
@@ -325,7 +325,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The created <see cref="ChangelogSection"/>
         /// </returns>
-        private ChangelogSection CreateNoEngineeringModelParticipantSection(EngineeringModelSetup engineeringModelSetup)
+        private static ChangelogSection CreateNoEngineeringModelParticipantSection(EngineeringModelSetup engineeringModelSetup)
         {
             return new ChangelogSection(
                     $"{engineeringModelSetup.Name}", 
@@ -342,7 +342,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The created <see cref="ChangelogSection"/>
         /// </returns>
-        private ChangelogSection CreateParticipantNotActiveSection(EngineeringModelSetup engineeringModelSetup)
+        private static ChangelogSection CreateParticipantNotActiveSection(EngineeringModelSetup engineeringModelSetup)
         {
             return 
                 new ChangelogSection(
@@ -360,7 +360,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// The created <see cref="ChangelogSection"/>
         /// </returns>
-        private ChangelogSection CreateEngineeringModelNotFoundSection(ChangeNotificationSubscriptionUserPreference changeNotificationSubscriptionUserPreference)
+        private static ChangelogSection CreateEngineeringModelNotFoundSection(ChangeNotificationSubscriptionUserPreference changeNotificationSubscriptionUserPreference)
         {
             return 
                 new ChangelogSection(

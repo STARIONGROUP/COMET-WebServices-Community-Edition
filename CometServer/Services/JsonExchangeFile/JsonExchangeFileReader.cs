@@ -90,7 +90,7 @@ namespace CometServer.Services
         /// </returns>
         public IEnumerable<CDP4Common.DTO.Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
         {
-            var memoryStream = this.ReadFileToMemory(filePath);
+            var memoryStream = ReadFileToMemory(filePath);
             return this.ReadSiteDirectoryDataFromStream(version, memoryStream, password);
         }
 
@@ -114,7 +114,7 @@ namespace CometServer.Services
         /// </returns>
         public IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelFromfile(Version version,  string filePath,  string password, EngineeringModelSetup engineeringModelSetup)
         {
-            var memoryStream = this.ReadFileToMemory(filePath);
+            var memoryStream = ReadFileToMemory(filePath);
             return this.ReadEngineeringModelDataFromStream(version, memoryStream, password, engineeringModelSetup);
         }
 
@@ -138,7 +138,7 @@ namespace CometServer.Services
         /// </returns>
         public IEnumerable<CDP4Common.DTO.Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup)
         {
-            var memoryStream = this.ReadFileToMemory(filePath);
+            var memoryStream = ReadFileToMemory(filePath);
             return this.ReadIterationModelDataFromStream(version, memoryStream, password, iterationSetup);
         }
         
@@ -156,7 +156,7 @@ namespace CometServer.Services
         /// </param>
         public void StoreFileBinary(string filePath, string password, string fileHash)
         {
-            var memoryStream = this.ReadFileToMemory(filePath);
+            var memoryStream = ReadFileToMemory(filePath);
             this.ExtractFileBinaryByHash(memoryStream, password, fileHash);
         }
 
@@ -169,7 +169,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="MemoryStream"/>.
         /// </returns>
-        private MemoryStream ReadFileToMemory(string filePath)
+        private static MemoryStream ReadFileToMemory(string filePath)
         {
             var memoryStream = new MemoryStream();
 
@@ -496,7 +496,7 @@ namespace CometServer.Services
         /// </returns>
         public IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password)
         {
-            var memoryStream = this.ReadFileToMemory(filePath);
+            var memoryStream = ReadFileToMemory(filePath);
             return this.ReadMigrationJsonFromStream(memoryStream, password);
         }
 

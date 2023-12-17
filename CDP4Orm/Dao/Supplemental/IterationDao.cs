@@ -133,16 +133,16 @@ namespace CDP4Orm.Dao
         /// </param>
         public void MoveToNextIterationFromLast(NpgsqlTransaction transaction, string partition, Thing thing)
         {
-            this.UpdateContainment(transaction, partition, typeof(Option), thing);
-            this.UpdateContainment(transaction, partition, typeof(Publication), thing);
-            this.UpdateContainment(transaction, partition, typeof(PossibleFiniteStateList), thing);
-            this.UpdateContainment(transaction, partition, typeof(ElementDefinition), thing);
-            this.UpdateContainment(transaction, partition, typeof(Relationship), thing);
-            this.UpdateContainment(transaction, partition, typeof(ExternalIdentifierMap), thing);
-            this.UpdateContainment(transaction, partition, typeof(RequirementsSpecification), thing);
-            this.UpdateContainment(transaction, partition, typeof(DomainFileStore), thing);
-            this.UpdateContainment(transaction, partition, typeof(ActualFiniteStateList), thing);
-            this.UpdateContainment(transaction, partition, typeof(RuleVerificationList), thing);
+            UpdateContainment(transaction, partition, typeof(Option), thing);
+            UpdateContainment(transaction, partition, typeof(Publication), thing);
+            UpdateContainment(transaction, partition, typeof(PossibleFiniteStateList), thing);
+            UpdateContainment(transaction, partition, typeof(ElementDefinition), thing);
+            UpdateContainment(transaction, partition, typeof(Relationship), thing);
+            UpdateContainment(transaction, partition, typeof(ExternalIdentifierMap), thing);
+            UpdateContainment(transaction, partition, typeof(RequirementsSpecification), thing);
+            UpdateContainment(transaction, partition, typeof(DomainFileStore), thing);
+            UpdateContainment(transaction, partition, typeof(ActualFiniteStateList), thing);
+            UpdateContainment(transaction, partition, typeof(RuleVerificationList), thing);
         }
 
         /// <summary>
@@ -160,7 +160,7 @@ namespace CDP4Orm.Dao
         /// <param name="thing">
         /// The thing DTO that is to be persisted.
         /// </param>
-        private void UpdateContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing thing)
+        private static void UpdateContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing thing)
         {
             using (var command = new NpgsqlCommand())
             {

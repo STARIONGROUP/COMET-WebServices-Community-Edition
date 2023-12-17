@@ -157,20 +157,14 @@ namespace CometServer.Services.Operations.SideEffects
             if (requiredRdlId == thing.Iid)
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "SiteReferenceDataLibrary {0} {1} cannot have itself as a required SiteReferenceDataLibrary.",
-                        thing.Name,
-                        thing.Iid));
+                    $"SiteReferenceDataLibrary {thing.Name} {thing.Iid} cannot have itself as a required SiteReferenceDataLibrary.");
             }
 
             // Check that required rdl is from the same siteDirectory
             if (!((SiteDirectory)container).SiteReferenceDataLibrary.Contains(requiredRdlId))
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "SiteReferenceDataLibrary {0} {1} cannot have a SiteReferenceDataLibrary from outside the current SiteDirectory.",
-                        thing.Name,
-                        thing.Iid));
+                    $"SiteReferenceDataLibrary {thing.Name} {thing.Iid} cannot have a SiteReferenceDataLibrary from outside the current SiteDirectory.");
             }
 
             // Get all rdls from the SiteDirectory
@@ -181,14 +175,10 @@ namespace CometServer.Services.Operations.SideEffects
                 securityContext).Cast<SiteReferenceDataLibrary>().ToList();
 
             // Check whether required rdl is acyclic
-            if (!this.IsRdlAcyclic(rdls, requiredRdlId, thing.Iid))
+            if (!IsRdlAcyclic(rdls, requiredRdlId, thing.Iid))
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "SiteReferenceDataLibrary {0} {1} cannot have a requred rdl {2} that leads to cyclic dependency",
-                        thing.Name,
-                        thing.Iid,
-                        requiredRdlId));
+                    $"SiteReferenceDataLibrary {thing.Name} {thing.Iid} cannot have a requred rdl {requiredRdlId} that leads to cyclic dependency");
             }
         }
 
@@ -207,7 +197,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether a required rdl will not lead to cyclic dependency.
         /// </returns>
-        private bool IsRdlAcyclic(List<SiteReferenceDataLibrary> rdls, Guid requiredRdlId, Guid rdlId)
+        private static bool IsRdlAcyclic(List<SiteReferenceDataLibrary> rdls, Guid requiredRdlId, Guid rdlId)
         {
             Guid? nextRequiredRdlId = requiredRdlId;
 

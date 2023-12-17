@@ -93,7 +93,7 @@ namespace CDP4Orm.Dao.Authentication
 
             while (await reader.ReadAsync())
             {
-                var authenticationPerson = this.MapToDto(reader);
+                var authenticationPerson = MapToDto(reader);
                 result.Add(authenticationPerson);
             }
 
@@ -109,7 +109,7 @@ namespace CDP4Orm.Dao.Authentication
         /// <returns>
         /// A deserialized instance of <see cref="AuthenticationPerson"/>.
         /// </returns>
-        private AuthenticationPerson MapToDto(NpgsqlDataReader reader)
+        private static AuthenticationPerson MapToDto(NpgsqlDataReader reader)
         {
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
             var iid = Guid.Parse(reader["Iid"].ToString());

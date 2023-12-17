@@ -45,10 +45,10 @@ namespace CometServer.Tests.Services.BusinessLogic
         [SetUp]
         public void SetUp()
         {
-            var defaultValues = this.createValues("-");
+            var defaultValues = CreateValues("-");
             this.defaultValueArray = new ValueArray<string>(defaultValues);
 
-            var nonDefaultValues = this.createValues("1");
+            var nonDefaultValues = CreateValues("1");
             this.nonDefaultValueArray = new ValueArray<string>(nonDefaultValues);
 
             this.parameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory();
@@ -72,7 +72,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             Assert.AreEqual(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL, parameterSubscriptionValueSet.ValueSwitch);
         }
 
-        private IEnumerable<string> createValues(string value)
+        private static IEnumerable<string> CreateValues(string value)
         {
             var defaultValue = new List<string>(3);
             for (var i = 0; i < 3; i++)

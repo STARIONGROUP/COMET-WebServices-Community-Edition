@@ -256,7 +256,7 @@ namespace CometServer.Modules
                     : transactionManager.SetupTransaction(ref connection, credentials);
 
                 var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
-                var modelSetup = this.DetermineEngineeringModelSetup(requestUtils, transactionManager, processor, routeSegments);
+                var modelSetup = DetermineEngineeringModelSetup(requestUtils, transactionManager, processor, routeSegments);
                 var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
                 // set the participant information
@@ -331,7 +331,7 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    resourceResponse = this.CherryPick(requestUtils, cherryPickService, containmentService, resourceResponse);
+                    resourceResponse = CherryPick(requestUtils, cherryPickService, containmentService, resourceResponse);
                 }
                 else if (requestUtils.QueryParameters.ClassKinds.Any())
                 {
@@ -462,7 +462,7 @@ namespace CometServer.Modules
         /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
         /// </param>
         /// <returns></returns>
-        private List<Thing> CherryPick(IRequestUtils requestUtils, ICherryPickService cherryPickService, IContainmentService containmentService, IReadOnlyList<Thing> resourceResponse)
+        private static List<Thing> CherryPick(IRequestUtils requestUtils, ICherryPickService cherryPickService, IContainmentService containmentService, IReadOnlyList<Thing> resourceResponse)
         {
             var cherryPickedThings = cherryPickService.CherryPick(resourceResponse, requestUtils.QueryParameters.ClassKinds, requestUtils.QueryParameters.CategoriesId)
                 .ToList();
@@ -545,7 +545,7 @@ namespace CometServer.Modules
                     await httpRequest.Body.CopyToAsync(requestStream);
 
                     bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, multiPartBoundary);
-                    fileDictionary = await this.ExtractFilesFromMultipartMessage(fileBinaryService, requestStream, multiPartBoundary);
+                    fileDictionary = await ExtractFilesFromMultipartMessage(fileBinaryService, requestStream, multiPartBoundary);
 
                     // - New File: 
                     //      create -> File, FileRevision
@@ -581,7 +581,7 @@ namespace CometServer.Modules
 
                 var resourceProcessor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
-                var modelSetup = this.DetermineEngineeringModelSetup(requestUtils, transactionManager, resourceProcessor, routeSegments);
+                var modelSetup = DetermineEngineeringModelSetup(requestUtils, transactionManager, resourceProcessor, routeSegments);
 
                 var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
@@ -591,7 +591,7 @@ namespace CometServer.Modules
                     credentialsService.ResolveParticipantCredentials(transaction);
                     credentialsService.Credentials.IsParticipant = true;
 
-                    var iteration = this.DetermineIteration(resourceProcessor, partition, routeSegments);
+                    var iteration = DetermineIteration(resourceProcessor, partition, routeSegments);
                     credentialsService.Credentials.Iteration = iteration;
                 }
 
@@ -777,13 +777,19 @@ namespace CometServer.Modules
         /// <summary>
         /// Extracts the files from the multi-part message
         /// </summary>
+        /// <param name="fileBinaryService"> <see cref="IFileBinaryService"/> used to operate on files
+        /// The (injected) 
+        /// </param>
         /// <param name="stream">
         /// The <see cref="Stream"/> that contains the multi-part messsage
+        /// </param>
+        /// <param name="boundary">
+        /// The multipart boundary string.
         /// </param>
         /// <returns>
         /// A <see cref="Stream"/> that contains the posted multipart message
         /// </returns>
-        private async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(IFileBinaryService fileBinaryService, Stream stream, string boundary)
+        private static async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(IFileBinaryService fileBinaryService, Stream stream, string boundary)
         {
             var fileDictionary = new Dictionary<string, Stream>();
 
@@ -870,7 +876,7 @@ namespace CometServer.Modules
         /// <exception cref="Exception">
         /// If engineering model could not be resolved
         /// </exception>
-        private EngineeringModelSetup DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string[] routeSegments)
+        private static EngineeringModelSetup DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string[] routeSegments)
         {
             // override query parameters to return only extent shallow
             requestUtils.OverrideQueryParameters = new QueryParameters();
@@ -910,7 +916,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The resolved <see cref="Iteration"/>.
         /// </returns>
-        private Iteration DetermineIteration(IProcessor processor, string partition, string[] routeSegments)
+        private static Iteration DetermineIteration(IProcessor processor, string partition, string[] routeSegments)
         {
             if (routeSegments.Length >= 4 && routeSegments[2] == "iteration")
             {

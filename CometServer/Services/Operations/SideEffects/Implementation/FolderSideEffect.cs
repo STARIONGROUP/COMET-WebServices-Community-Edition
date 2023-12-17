@@ -213,7 +213,7 @@ namespace CometServer.Services.Operations.SideEffects
                 .Cast<Folder>().ToList();
 
             // Check whether containing folder is acyclic
-            if (!this.IsFolderAcyclic(folders, containingFolderId, thing.Iid))
+            if (!IsFolderAcyclic(folders, containingFolderId, thing.Iid))
             {
                 throw new AcyclicValidationException(
                     $"Folder {thing.Name} {thing.Iid} cannot have a containing Folder {containingFolderId} that leads to cyclic dependency");
@@ -235,7 +235,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether a containing folder will not lead to cyclic dependency.
         /// </returns>
-        private bool IsFolderAcyclic(List<Folder> folders, Guid containingFolderId, Guid folderId)
+        private static bool IsFolderAcyclic(List<Folder> folders, Guid containingFolderId, Guid folderId)
         {
             Guid? nextContainingFolderId = containingFolderId;
 

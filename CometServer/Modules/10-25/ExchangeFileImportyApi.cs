@@ -385,7 +385,7 @@ namespace CometServer.Modules
                     this.logger.LogInformation("Start clearing the current data store");
                     transaction = transactionManager.SetupTransaction(ref connection, null);
                     transactionManager.SetFullAccessState(true);
-                    this.ClearDatabaseSchemas(transaction);
+                    ClearDatabaseSchemas(transaction);
                     transaction.Commit();
 
                     // Flushes the type cache and reload the types for this connection
@@ -442,7 +442,7 @@ namespace CometServer.Modules
                 if (topContainer.GetType().Name == "SiteDirectory")
                 {
                     // make sure single iterationsetups are set to unfrozen before persitence
-                    this.FixSingleIterationSetups(items);
+                    FixSingleIterationSetups(items);
                     var siteDirectoryService =
                         serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
@@ -508,7 +508,7 @@ namespace CometServer.Modules
                         this.CreateMissingParticipantPermissions(transaction, participantRoleService, participantPermissionService, defaultPermissionProvider);
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
@@ -554,7 +554,7 @@ namespace CometServer.Modules
                         }
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
                     }
                 }
 
@@ -613,7 +613,7 @@ namespace CometServer.Modules
                 this.logger.LogInformation("Start clearing the current data store");
                 transaction = transactionManager.SetupTransaction(ref connection, null);
                 transactionManager.SetFullAccessState(true);
-                this.ClearDatabaseSchemas(transaction);
+                ClearDatabaseSchemas(transaction);
                 transaction.Commit();
 
                 // Flushes the type cache and reload the types for this connection
@@ -671,7 +671,7 @@ namespace CometServer.Modules
                 if (topContainer.GetType().Name == "SiteDirectory")
                 {
                     // make sure single iterationsetups are set to unfrozen before persitence
-                    this.FixSingleIterationSetups(items);
+                    FixSingleIterationSetups(items);
 
                     var siteDirectoryService = serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
@@ -745,7 +745,7 @@ namespace CometServer.Modules
                         this.CreateMissingParticipantPermissions(transaction, participantRoleService, participantPermissionService, defaultPermissionProvider);
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
@@ -844,7 +844,7 @@ namespace CometServer.Modules
                         }
 
                         // extract any referenced file data to disk if not already present
-                        this.PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
                     }
                 }
 
@@ -890,7 +890,7 @@ namespace CometServer.Modules
         /// <param name="password">
         /// The archive password.
         /// </param>
-        private void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, string password = null)
+        private static void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, string password = null)
         {
             var fileRevisions = requestUtils.Cache.OfType<FileRevision>().ToList();
             if (!fileRevisions.Any())
@@ -913,7 +913,7 @@ namespace CometServer.Modules
         /// <param name="items">
         /// The read in items.
         /// </param>
-        private void FixSingleIterationSetups(List<Thing> items)
+        private static void FixSingleIterationSetups(List<Thing> items)
         {
             var engineeringModelSetups = items.OfType<EngineeringModelSetup>().ToList();
 
@@ -935,7 +935,7 @@ namespace CometServer.Modules
         /// <param name="transaction">
         /// The transaction.
         /// </param>
-        private void ClearDatabaseSchemas(NpgsqlTransaction transaction)
+        private static void ClearDatabaseSchemas(NpgsqlTransaction transaction)
         {
             // clear the current database data (except public and pg_catalog schemas)
             using (var cleanSchemaCommand = new NpgsqlCommand())

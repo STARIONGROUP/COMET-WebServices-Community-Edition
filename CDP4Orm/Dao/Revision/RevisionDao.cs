@@ -176,7 +176,7 @@ namespace CDP4Orm.Dao.Revision
         {
             this.Logger.LogDebug("WriteRevision of {thing} to {partition} by {actor}", thing, partition, actor);
 
-            var table = this.GetThingRevisionTableName(thing);
+            var table = GetThingRevisionTableName(thing);
 
             var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\")", IidKey, RevisionColumnName, InstantColumn, ActorColumn, JsonColumnName);
             var values = "(:iid, :revisionnumber, \"SiteDirectory\".get_transaction_time(), :actor, :jsonb)";
@@ -216,7 +216,7 @@ namespace CDP4Orm.Dao.Revision
 
             if (resolveInfo != null)
             {
-                var revisionTableName = this.GetThingRevisionTableName(resolveInfo);
+                var revisionTableName = GetThingRevisionTableName(resolveInfo);
 
                 var sqlQuery = string.Format(
                     "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
@@ -389,7 +389,7 @@ namespace CDP4Orm.Dao.Revision
             {
                 using (var reader = command.ExecuteReader())
                 {
-                    return this.MapToRevisionRegistryInfoList(reader).ToList();
+                    return MapToRevisionRegistryInfoList(reader).ToList();
                 }
             }
         }
@@ -403,7 +403,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// Enumerable of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        private IEnumerable<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
+        private static IEnumerable<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
         {
             while (reader.Read())
             {
@@ -463,7 +463,7 @@ namespace CDP4Orm.Dao.Revision
                 {
                     while (reader.Read())
                     {
-                        yield return this.MapToSiteDirectoryRevisionInfo(reader, partition);
+                        yield return MapToSiteDirectoryRevisionInfo(reader, partition);
                     }
                 }
             }
@@ -481,7 +481,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// A deserialized instance of <see cref="RevisionInfo"/>.
         /// </returns>
-        private RevisionInfo MapToSiteDirectoryRevisionInfo(NpgsqlDataReader reader, string connectedPartition)
+        private static RevisionInfo MapToSiteDirectoryRevisionInfo(NpgsqlDataReader reader, string connectedPartition)
         {
             var iid = (Guid)reader[IidKey];
             var typeInfo = reader[TypeInfoKey].ToString();
@@ -543,7 +543,7 @@ namespace CDP4Orm.Dao.Revision
                 {
                     while (reader.Read())
                     {
-                        yield return this.MapToEngineeringModelRevisionInfo(reader, connectedPartition, subPartition);
+                        yield return MapToEngineeringModelRevisionInfo(reader, connectedPartition, subPartition);
                     }
                 }
             }
@@ -564,7 +564,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// A deserialized instance of <see cref="RevisionInfo"/>.
         /// </returns>
-        private RevisionInfo MapToEngineeringModelRevisionInfo(NpgsqlDataReader reader, string connectedPartition, string subPartition)
+        private static RevisionInfo MapToEngineeringModelRevisionInfo(NpgsqlDataReader reader, string connectedPartition, string subPartition)
         {
             var iid = (Guid)reader[IidKey];
             var typeInfo = reader[TypeInfoKey].ToString();
@@ -585,7 +585,7 @@ namespace CDP4Orm.Dao.Revision
         /// </summary>
         /// <param name="resolveInfo">The <see cref="ResolveInfo"/></param>
         /// <returns>The name of the revision table</returns>
-        private string GetThingRevisionTableName(ResolveInfo resolveInfo)
+        private static string GetThingRevisionTableName(ResolveInfo resolveInfo)
         {
             return resolveInfo.InstanceInfo.TypeName + RevisionTableSuffix;
         }
@@ -595,7 +595,7 @@ namespace CDP4Orm.Dao.Revision
         /// </summary>
         /// <param name="thing">The <see cref="Thing"/></param>
         /// <returns>The name of the revision table</returns>
-        private string GetThingRevisionTableName(Thing thing)
+        private static string GetThingRevisionTableName(Thing thing)
         {
             return thing.ClassKind + RevisionTableSuffix;
         }

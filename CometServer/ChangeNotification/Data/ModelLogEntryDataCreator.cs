@@ -88,7 +88,7 @@ namespace CometServer.ChangeNotification.Data
 
             foreach (var changeNotificationSubscription in changeNotificationSubscriptionUserPreference.ChangeNotificationSubscriptions)
             {
-                var changeNotificationFilter = this.CreateChangeLogNotificationFilter(changeNotificationSubscription, domainOfExpertises);
+                var changeNotificationFilter = CreateChangeLogNotificationFilter(changeNotificationSubscription, domainOfExpertises);
 
                 foreach (var modelLogEntry in modelLogEntries.OrderBy(x => x.CreatedOn))
                 {
@@ -132,7 +132,7 @@ namespace CometServer.ChangeNotification.Data
         /// <returns>
         /// The <see cref="IChangeNotificationFilter"/>
         /// </returns>
-        private IChangeNotificationFilter CreateChangeLogNotificationFilter(ChangeNotificationSubscription changeNotificationSubscription, IEnumerable<DomainOfExpertise> domainOfExpertises)
+        private static IChangeNotificationFilter CreateChangeLogNotificationFilter(ChangeNotificationSubscription changeNotificationSubscription, IEnumerable<DomainOfExpertise> domainOfExpertises)
         {
             switch (changeNotificationSubscription.ChangeNotificationSubscriptionType)
             {

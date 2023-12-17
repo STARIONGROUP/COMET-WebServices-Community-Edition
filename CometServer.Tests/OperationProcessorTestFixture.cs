@@ -275,7 +275,7 @@ namespace CometServer.Tests
             var metaInfo = new PossibleFiniteStateListMetaInfo();
 
             Assert.DoesNotThrow(
-                () => this.operationProcessor.OrderedItemListValidation(
+                () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
                     new List<string> { "PossibleState" },
@@ -313,7 +313,7 @@ namespace CometServer.Tests
             var metaInfo = new PossibleFiniteStateListMetaInfo();
 
             var exception = Assert.Throws<BadRequestException>(
-                () => this.operationProcessor.OrderedItemListValidation(
+                () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
                     new List<string> { "PossibleState" },
@@ -353,7 +353,7 @@ namespace CometServer.Tests
             var metaInfo = new PossibleFiniteStateListMetaInfo();
 
             var exception = Assert.Throws<BadRequestException>(
-                () => this.operationProcessor.OrderedItemListValidation(
+                () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
                     new List<string> { "PossibleState" },
@@ -485,20 +485,20 @@ namespace CometServer.Tests
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateUpdateOperations(postOperation));
+                () => OperationProcessor.ValidateUpdateOperations(postOperation));
 
             postOperation.Update.Clear();
             postOperation.Update.Add(updateObjectWithoutClassKind);
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateUpdateOperations(postOperation));
+                () => OperationProcessor.ValidateUpdateOperations(postOperation));
 
             var completeUpdateObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, Guid.NewGuid() } };
             postOperation.Update.Clear();
             postOperation.Update.Add(completeUpdateObject);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateUpdateOperations(postOperation));
+            Assert.DoesNotThrow(() => OperationProcessor.ValidateUpdateOperations(postOperation));
         }
 
         private List<Thing> copySourceDtos;

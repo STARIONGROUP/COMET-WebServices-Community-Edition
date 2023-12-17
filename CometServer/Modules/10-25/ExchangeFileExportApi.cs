@@ -198,7 +198,7 @@ namespace CometServer.Modules
 
                 var iids = jsonSerializer.Deserialize<List<Guid>>(httpRequest.Body);
 
-                var engineeringModelSetups = this.QueryExportEngineeringModelSetups(credentialsService, iids);
+                var engineeringModelSetups = QueryExportEngineeringModelSetups(credentialsService, iids);
 
                 transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
 
@@ -306,7 +306,7 @@ namespace CometServer.Modules
         /// thrown when at least one of the provided <paramref name="iids"/> does not correspond to an <see cref="EngineeringModelSetup"/>
         /// the user has access to.
         /// </exception>
-        private IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (ICredentialsService credentialsService, IEnumerable<Guid> iids)
+        private static IEnumerable<EngineeringModelSetup> QueryExportEngineeringModelSetups (ICredentialsService credentialsService, IEnumerable<Guid> iids)
         {
             if (!iids.Any())
             {

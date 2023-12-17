@@ -271,19 +271,17 @@ namespace CDP4Orm.Dao
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition of the table to delete</param>
         /// <param name="table">The table to clear</param>
-        protected void DeleteAll(NpgsqlTransaction transaction, string partition, string table)
+        protected static void DeleteAll(NpgsqlTransaction transaction, string partition, string table)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
+            using var command = new NpgsqlCommand();
+            var sqlBuilder = new System.Text.StringBuilder();
 
-                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"{1}\";", partition, table);
+            sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"{1}\";", partition, table);
 
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.ExecuteNonQuery();
-            }
+            command.CommandText = sqlBuilder.ToString();
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -297,13 +295,11 @@ namespace CDP4Orm.Dao
             {
                 this.currentTransactionDataTimeTransaction = transaction;
 
-                using (var command = new NpgsqlCommand(
+                using var command = new NpgsqlCommand(
                     $"SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
                     transaction.Connection,
-                    transaction))
-                {
-                    this.currentTransactionDatetime = (DateTime)command.ExecuteScalar();
-                }
+                    transaction);
+                this.currentTransactionDatetime = (DateTime)command.ExecuteScalar();
             }
 
             return this.currentTransactionDatetime;

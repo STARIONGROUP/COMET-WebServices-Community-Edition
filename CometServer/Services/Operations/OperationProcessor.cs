@@ -369,7 +369,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateCopyOperations(CdpPostOperation operation)
+        internal static void ValidateCopyOperations(CdpPostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Copy.Any(x => x.Source.Thing.Iid == Guid.Empty))
@@ -421,7 +421,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateUpdateOperations(CdpPostOperation operation)
+        internal static void ValidateUpdateOperations(CdpPostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Update.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -492,8 +492,8 @@ namespace CometServer.Services.Operations
         {
             this.ValidateDeleteOperations(operation, transaction, partition);
             this.ValidateCreateOperations(operation, fileStore);
-            this.ValidateUpdateOperations(operation);
-            this.ValidateCopyOperations(operation);
+            ValidateUpdateOperations(operation);
+            ValidateCopyOperations(operation);
 
             this.RegisterUpdateContainersForResolvement(operation);
         }
@@ -799,11 +799,12 @@ namespace CometServer.Services.Operations
         /// <param name="persistedThing">
         /// The persisted thing to delete.
         /// </param>
-        private void DeletePersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Thing persistedThing)
+        private static void DeletePersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Thing persistedThing)
         {
             // get the persisted thing (full) so that permission can be checked against potential owner
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
             var thing = service.GetShallow(transaction, partition, new[] {persistedThing.Iid}, securityContext).FirstOrDefault();
+
             if (thing == null)
             {
                 return;
@@ -833,7 +834,7 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private IEnumerable<Thing> GetPersistedItems(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
+        private static IEnumerable<Thing> GetPersistedItems(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
         {
             return service.GetShallow(
                     transaction, partition, iids, securityContext);
@@ -860,7 +861,7 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private Thing GetPersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
+        private static Thing GetPersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
         {
             return service.GetShallow(
                     transaction, partition, new[] { iid }, securityContext)
@@ -980,7 +981,7 @@ namespace CometServer.Services.Operations
         private void ApplyCreateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
             // re-order create
-            this.ReorderCreateOrder(operation);
+            ReorderCreateOrder(operation);
 
             if (operation.Create.Any())
             {
@@ -997,7 +998,7 @@ namespace CometServer.Services.Operations
                         var service = this.ServiceProvider.MapToPersitableService(typeGroup.TypeName);
                         var typeGroupIids = typeGroup.Things.Select(x => x.Iid);
 
-                        var persistedItems = this.GetPersistedItems(transaction, partition, service, typeGroupIids, securityContext);
+                        var persistedItems = GetPersistedItems(transaction, partition, service, typeGroupIids, securityContext);
 
                         foreach (var createInfo in typeGroup.Things)
                         {
@@ -1037,7 +1038,7 @@ namespace CometServer.Services.Operations
                                 service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
                             }
 
-                            var createdItem = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
+                            var createdItem = GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
 
                             // call after create hook
                             this.OperationSideEffectProcessor.AfterCreate(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
@@ -1406,11 +1407,11 @@ namespace CometServer.Services.Operations
                     service.UpdateConcept(transaction, resolvedInfo.Partition, updatableThing, containerInfo);
                     
                     // get persisted thing
-                    var updatedThing = this.GetPersistedItem(transaction, resolvedInfo.Partition, service, resolvedInfo.InstanceInfo.Iid, securityContext);
+                    var updatedThing = GetPersistedItem(transaction, resolvedInfo.Partition, service, resolvedInfo.InstanceInfo.Iid, securityContext);
 
                     if (orderedListToBeChecked.Any())
                     {
-                        this.OrderedItemListValidation(transaction, updatedThing, orderedListToBeChecked, metaInfo);
+                        OrderedItemListValidation(transaction, updatedThing, orderedListToBeChecked, metaInfo);
                     }
 
                     // call after update hook
@@ -1427,7 +1428,7 @@ namespace CometServer.Services.Operations
         /// <param name="properties">The <see cref="List{T}"/> of type <see cref="string"/> that contains all propertynames to check</param>
         /// <param name="metaInfo">The <see cref="IMetaInfo"/> of the container <see cref="Thing"/> that contains the OrderedList properties</param>
         /// <exception cref="BadRequestException"></exception>
-        internal void OrderedItemListValidation(NpgsqlTransaction transaction, Thing updatedThing, List<string> properties, IMetaInfo metaInfo)
+        internal static void OrderedItemListValidation(NpgsqlTransaction transaction, Thing updatedThing, List<string> properties, IMetaInfo metaInfo)
         {
             foreach (var propertyName in properties)
             {
@@ -1488,7 +1489,7 @@ namespace CometServer.Services.Operations
 
             // delete the item
             var propertyService = this.ServiceProvider.MapToPersitableService(dtoInfo.TypeName);
-            this.DeletePersistedItem(transaction, resolvedInfo.Partition, propertyService, persistedThing);
+            DeletePersistedItem(transaction, resolvedInfo.Partition, propertyService, persistedThing);
 
             // call after delete hook
             this.OperationSideEffectProcessor.AfterDelete(persistedThing, container, originalThing, transaction, resolvedInfo.Partition, securityContext);
@@ -1501,7 +1502,7 @@ namespace CometServer.Services.Operations
         /// <remarks>
         /// This is done to make sure that some things that depend on other are created last
         /// </remarks>
-        private void ReorderCreateOrder(CdpPostOperation postOperation)
+        private static void ReorderCreateOrder(CdpPostOperation postOperation)
         {
             var subscriptions = postOperation.Create.OfType<ParameterSubscription>().ToArray();
 

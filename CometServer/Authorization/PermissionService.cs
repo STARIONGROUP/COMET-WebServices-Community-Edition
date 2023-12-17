@@ -334,7 +334,7 @@ namespace CometServer.Authorization
                     case PersonAccessRightKind.MODIFY_IF_PARTICIPANT:
                         {
                             return this.IsEngineeringModelSetupModifyAllowed(thing, modifyOperation) || 
-                                   this.IsCreateAllowedForOperationOnThing(thing, modifyOperation);
+                                   IsCreateAllowedForOperationOnThing(thing, modifyOperation);
                         }
 
                     case PersonAccessRightKind.MODIFY_OWN_PERSON:
@@ -459,7 +459,7 @@ namespace CometServer.Authorization
         /// <param name="thing">The <see cref="Thing"/> to check</param>
         /// <param name="modifyOperation">The kind of operation we are performing</param>
         /// <returns>True if create is allowed, otherwise false</returns>
-        private bool IsCreateAllowedForOperationOnThing(Thing thing, string modifyOperation)
+        private static bool IsCreateAllowedForOperationOnThing(Thing thing, string modifyOperation)
         {
             return modifyOperation == CreateOperation && thing is EngineeringModelSetup;
         }

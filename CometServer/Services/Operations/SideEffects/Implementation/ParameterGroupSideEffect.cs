@@ -207,20 +207,14 @@ namespace CometServer.Services.Operations.SideEffects
             if (containingGroupId == thing.Iid)
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "ParameterGroup {0} {1} cannot have itself as a containing ParameterGroup.",
-                        thing.Name,
-                        thing.Iid));
+                    $"ParameterGroup {thing.Name} {thing.Iid} cannot have itself as a containing ParameterGroup.");
             }
 
             // Check that containing group is from the same element definition
             if (!((ElementDefinition)container).ParameterGroup.Contains(containingGroupId))
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "ParameterGroup {0} {1} cannot have a ParameterGroup from outside the current elementDefinition.",
-                        thing.Name,
-                        thing.Iid));
+                    $"ParameterGroup {thing.Name} {thing.Iid} cannot have a ParameterGroup from outside the current elementDefinition.");
             }
 
             // Get all parameter groups from the container
@@ -231,14 +225,10 @@ namespace CometServer.Services.Operations.SideEffects
                 securityContext).Cast<ParameterGroup>().ToList();
 
             // Check whether containing parameter group is acyclic
-            if (!this.IsParameterGroupAcyclic(parameterGroups, containingGroupId, thing.Iid))
+            if (!IsParameterGroupAcyclic(parameterGroups, containingGroupId, thing.Iid))
             {
                 throw new AcyclicValidationException(
-                    string.Format(
-                        "ParameterGroup {0} {1} cannot have a containing ParameterGroup {2} that leads to cyclic dependency",
-                        thing.Name,
-                        thing.Iid,
-                        containingGroupId));
+                    $"ParameterGroup {thing.Name} {thing.Iid} cannot have a containing ParameterGroup {containingGroupId} that leads to cyclic dependency");
             }
         }
 
@@ -257,10 +247,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether a containing parameter group will not lead to cyclic dependency.
         /// </returns>
-        private bool IsParameterGroupAcyclic(
-            List<ParameterGroup> parameterGroups,
-            Guid containingGroupId,
-            Guid parameterGroupId)
+        private static bool IsParameterGroupAcyclic(List<ParameterGroup> parameterGroups, Guid containingGroupId, Guid parameterGroupId)
         {
             Guid? nextContainingGroupId = containingGroupId;
 

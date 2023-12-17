@@ -85,7 +85,7 @@ namespace CometServer.Services
             // also get all referenced element-definition as they dont exist in target iteration
             if (copyinfo.Source.IterationId.Value != copyinfo.Target.IterationId.Value)
             {
-                source.AddRange(this.GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, source, readservice, source.Select(x => x.Iid).ToList()));
+                source.AddRange(GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, source, readservice, source.Select(x => x.Iid).ToList()));
             }
 
             // revert context to current
@@ -120,7 +120,7 @@ namespace CometServer.Services
         /// <param name="readservice">The element-definition read service</param>
         /// <param name="allSourcesId">A list containing the identifier of all things to copy</param>
         /// <returns>A list containing additional <see cref="Thing"/> to copy</returns>guid
-        private IReadOnlyList<Thing> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
+        private static IReadOnlyList<Thing> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
         {
             var additionalSources = new List<Thing>();
             var usages = source.OfType<ElementUsage>().ToArray();
@@ -128,7 +128,7 @@ namespace CometServer.Services
             {
                 var getResults = readservice.GetDeep(transaction, partition, usages.Select(x => x.ElementDefinition).Distinct().Where(x => !allSourcesId.Contains(x)).ToArray(), securityContext).ToList();
                 additionalSources.AddRange(getResults);
-                additionalSources.AddRange(this.GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, getResults, readservice, allSourcesId.Union(getResults.Select(x => x.Iid)).ToList()));
+                additionalSources.AddRange(GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, getResults, readservice, allSourcesId.Union(getResults.Select(x => x.Iid)).ToList()));
             }
 
             return additionalSources;
