@@ -64,8 +64,6 @@ namespace CometServer.Tests.SideEffects
 
         private DerivedUnit derivedUnitB;
 
-        private DerivedUnit derivedUnitC;
-
         private SimpleUnit simpleUnitD;
 
         private UnitFactor unitFactorA;
