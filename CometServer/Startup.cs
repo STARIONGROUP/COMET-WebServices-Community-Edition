@@ -127,6 +127,7 @@ namespace CometServer
                         builder.AllowAnyOrigin();
                         builder.AllowAnyHeader();
                         builder.AllowAnyMethod();
+                        builder.WithExposedHeaders("*");
                     });
             });
 
