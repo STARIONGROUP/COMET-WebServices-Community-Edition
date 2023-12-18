@@ -75,7 +75,7 @@ namespace CDP4Orm.Dao
 
                 if (isCachedDtoReadEnabledAndInstant)
                 {
-                    sqlBuilder.AppendFormat("SELECT \"Jsonb\" FROM \"{0}\".\"Section_Cache\"", partition);
+                    sqlBuilder.AppendFormat("SELECT \"Jsonb\", \"Actor\" FROM \"{0}\".\"Section_Cache\"", partition);
                     sqlBuilder.Append(this.BuildJoinForActorProperty(partition));
 
                     if (ids != null && ids.Any())
