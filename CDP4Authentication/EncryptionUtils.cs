@@ -51,7 +51,8 @@ namespace CDP4Authentication
         /// </returns>
         private static byte[] GenerateSaltedHash(string inputString, byte[] salt)
         {
-            var algorithm = new SHA256Managed();
+            using var algorithm = SHA256.Create();
+
             var plainText = GetBytesFromString(inputString);
             var plainTextWithSaltBytes = new byte[plainText.Length + salt.Length];
 
