@@ -218,7 +218,7 @@ namespace CometServer.Services
         {
             foreach (var unresolvedItem in unresolvedItems)
             {
-                unresolvedItem.Partition = this.TryRetrievePartitionFromContainmentTree(
+                unresolvedItem.Partition = TryRetrievePartitionFromContainmentTree(
                     partition,
                     unresolvedItem.ContainerInfo,
                     resolvableInfo);
@@ -240,7 +240,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/>.
         /// </returns>
-        internal string TryRetrievePartitionFromContainmentTree(string partition, ContainerInfo containerInfo, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
+        internal static string TryRetrievePartitionFromContainmentTree(string partition, ContainerInfo containerInfo, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
         {
             if (containerInfo == null)
             {
@@ -253,7 +253,7 @@ namespace CometServer.Services
             // try to get the container recursively
             return container.IsPartitionResolved 
                 ? container.Partition 
-                : this.TryRetrievePartitionFromContainmentTree(partition, container.ContainerInfo, resolvableInfo);
+                : TryRetrievePartitionFromContainmentTree(partition, container.ContainerInfo, resolvableInfo);
         }
 
         /// <summary>

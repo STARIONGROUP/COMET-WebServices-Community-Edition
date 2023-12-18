@@ -85,10 +85,10 @@ namespace CDP4Orm.Dao.Resolve
             if (partition == Utils.SiteDirectoryPartition)
             {
                 // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-                return this.ReadInternalFromSiteDirectory(transaction, partition, typeName, ids).ToList();
+                return ReadInternalFromSiteDirectory(transaction, partition, typeName, ids).ToList();
             }
 
-            return this.ReadInternalFromEngineeringModel(transaction, partition, typeName, ids).ToList();
+            return ReadInternalFromEngineeringModel(transaction, partition, typeName, ids).ToList();
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private static IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -194,7 +194,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private static IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 

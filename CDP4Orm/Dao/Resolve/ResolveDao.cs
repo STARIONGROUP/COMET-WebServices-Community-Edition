@@ -58,11 +58,11 @@ namespace CDP4Orm.Dao.Resolve
             
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return this.ReadSiteDirectoryThing(transaction, partition, ids).ToList();
+                return ReadSiteDirectoryThing(transaction, partition, ids).ToList();
             }
 
             // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            return this.ReadEngineeringModelInternal(transaction, partition, ids).ToList();
+            return ReadEngineeringModelInternal(transaction, partition, ids).ToList();
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ResolveInfo"/>.
         /// </returns>
-        private IEnumerable<ResolveInfo> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        private static IEnumerable<ResolveInfo> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -124,7 +124,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <remarks>
         /// Do not use for SiteDirectory items
         /// </remarks>
-        private IEnumerable<ResolveInfo> ReadEngineeringModelInternal(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        private static IEnumerable<ResolveInfo> ReadEngineeringModelInternal(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
             

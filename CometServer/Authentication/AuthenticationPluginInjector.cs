@@ -91,7 +91,7 @@ namespace CometServer.Authentication
         /// <returns>
         /// The list of directories which contain the authenticator plugins.
         /// </returns>
-        private IEnumerable<string> GetFolders()
+        private static IEnumerable<string> GetFolders()
         {
             return Directory.GetDirectories(Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath ?? Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName, AuthenticatorPluginFolder)).ToList();
         }
@@ -106,7 +106,7 @@ namespace CometServer.Authentication
 
             this.logger.LogInformation("Loading authentication plugins");
 
-            var pluginFolders = this.GetFolders();
+            var pluginFolders = GetFolders();
 
             var builder = new ContainerBuilder();
 

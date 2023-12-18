@@ -300,7 +300,7 @@ namespace CometServer.Services.Operations.SideEffects
             var elementUsage = elementUsages.Find(x => x.Iid == containedElementId);
 
             return !(elementUsage.ElementDefinition == elementDefinitionId ||
-                     !this.IsReferencedElementDefinitionAcyclic(
+                     !IsReferencedElementDefinitionAcyclic(
                          elementDefinitions,
                          elementUsages,
                          elementUsage.ElementDefinition,
@@ -325,7 +325,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool" /> whether referenced element definition will not lead to cyclic dependency.
         /// </returns>
-        private bool IsReferencedElementDefinitionAcyclic(
+        private static bool IsReferencedElementDefinitionAcyclic(
             List<ElementDefinition> elementDefinitions,
             List<ElementUsage> elementUsages,
             Guid referencedElementDefinitionId,
@@ -338,7 +338,7 @@ namespace CometServer.Services.Operations.SideEffects
                 var elementUsage = elementUsages.Find(x => x.Iid == elementUsageId);
                 if (elementUsage.ElementDefinition != elementDefinitionId)
                 {
-                    if (!this.IsReferencedElementDefinitionAcyclic(
+                    if (!IsReferencedElementDefinitionAcyclic(
                         elementDefinitions,
                         elementUsages,
                         elementUsage.ElementDefinition,

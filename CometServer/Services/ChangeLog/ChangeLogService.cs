@@ -489,7 +489,7 @@ namespace CometServer.Services.ChangeLog
 
             var stringBuilder = new StringBuilder();
 
-            var containerThing = this.GetContainerFromChangedThings(createdThing, changedThings);
+            var containerThing = GetContainerFromChangedThings(createdThing, changedThings);
 
             if (containerThing != null)
             {
@@ -1261,7 +1261,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The <paramref name="thing"/>'s container <see cref="Thing"/>if found, otherwise null.
         /// </returns>
-        private Thing GetContainerFromChangedThings(Thing thing, IReadOnlyList<Thing> containerThings)
+        private static Thing GetContainerFromChangedThings(Thing thing, IReadOnlyList<Thing> containerThings)
         {
             var containerClassType = ContainerPropertyHelper.ContainerClassName(thing.ClassKind);
             var containerPropertyName = ContainerPropertyHelper.ContainerPropertyName(thing.ClassKind);

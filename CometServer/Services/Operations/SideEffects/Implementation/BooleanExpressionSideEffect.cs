@@ -178,7 +178,7 @@ namespace CometServer.Services.Operations.SideEffects
         private bool IsTermAcyclic(List<BooleanExpression> expressions, Guid termId, Guid parentTermId)
         {
             var termTreeList = new List<Guid>();
-            this.SetTermTreeList(expressions, termTreeList, termId);
+            SetTermTreeList(expressions, termTreeList, termId);
 
             return !termTreeList.Contains(parentTermId);
         }
@@ -195,7 +195,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="termId">
         /// The term id to set tree of ids for.
         /// </param>
-        private void SetTermTreeList(List<BooleanExpression> expressions, List<Guid> termTreeList, Guid termId)
+        private static void SetTermTreeList(List<BooleanExpression> expressions, List<Guid> termTreeList, Guid termId)
         {
             var term = expressions.Find(x => x.Iid == termId);
             List<Guid> referencedTermsId;
@@ -235,7 +235,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             foreach (var id in referencedTermsId)
             {
-                this.SetTermTreeList(expressions, termTreeList, id);
+                SetTermTreeList(expressions, termTreeList, id);
             }
 
             termTreeList.Add(termId);

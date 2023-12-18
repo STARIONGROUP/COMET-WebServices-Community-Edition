@@ -178,9 +178,9 @@ namespace CDP4Orm.Dao.Revision
 
             var table = GetThingRevisionTableName(thing);
 
-            var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\", \"{3}\", \"{4}\")", IidKey, RevisionColumnName, InstantColumn, ActorColumn, JsonColumnName);
+            var columns = $"(\"{IidKey}\", \"{RevisionColumnName}\", \"{InstantColumn}\", \"{ActorColumn}\", \"{JsonColumnName}\")";
             var values = "(:iid, :revisionnumber, \"SiteDirectory\".get_transaction_time(), :actor, :jsonb)";
-            var sqlQuery = string.Format("INSERT INTO \"{0}\".\"{1}\" {2} VALUES {3}", partition, table, columns, values);
+            var sqlQuery = $"INSERT INTO \"{partition}\".\"{table}\" {columns} VALUES {values}";
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
@@ -218,13 +218,7 @@ namespace CDP4Orm.Dao.Revision
             {
                 var revisionTableName = GetThingRevisionTableName(resolveInfo);
 
-                var sqlQuery = string.Format(
-                    "SELECT \"{0}\" FROM \"{1}\".\"{2}\" WHERE \"{3}\" = :iid AND \"{4}\" >= :fromrevision AND \"{4}\" <= :torevision",
-                    JsonColumnName,
-                    resolveInfo.Partition,
-                    revisionTableName,
-                    IidKey,
-                    RevisionColumnName);
+                var sqlQuery = $"SELECT \"{JsonColumnName}\" FROM \"{resolveInfo.Partition}\".\"{revisionTableName}\" WHERE \"{IidKey}\" = :iid AND \"{RevisionColumnName}\" >= :fromrevision AND \"{RevisionColumnName}\" <= :torevision";
 
                 using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
                 {
@@ -263,9 +257,7 @@ namespace CDP4Orm.Dao.Revision
         /// </returns>
         public int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition)
         {
-            var sqlQuery = string.Format(
-                "SELECT * FROM \"{0}\".get_current_revision();",
-                partition);
+            var sqlQuery = $"SELECT * FROM \"{partition}\".get_current_revision();";
 
             int revision;
 
@@ -323,11 +315,7 @@ namespace CDP4Orm.Dao.Revision
                 values.Add(toRevisionValue);
             }
 
-            var sqlQuery = string.Format(
-                "INSERT INTO \"{0}\".\"IterationRevisionLog\" ({1}) VALUES ({2})",
-                partition,
-                string.Join(", ", columns),
-                string.Join(", ", values));
+            var sqlQuery = $"INSERT INTO \"{partition}\".\"IterationRevisionLog\" ({string.Join(", ", columns)}) VALUES ({string.Join(", ", values)})";
 
             using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
             {
@@ -368,11 +356,11 @@ namespace CDP4Orm.Dao.Revision
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return this.ReadSiteDirectoryRevisions(transaction, partition, revision, comparator).ToList();
+                return ReadSiteDirectoryRevisions(transaction, partition, revision, comparator).ToList();
             }
 
             // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            return this.ReadEngineeringModelRevisions(transaction, partition, revision, comparator).ToList();
+            return ReadEngineeringModelRevisions(transaction, partition, revision, comparator).ToList();
         }
 
         /// <summary>
@@ -438,7 +426,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private IEnumerable<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static IEnumerable<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -509,7 +497,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private IEnumerable<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static IEnumerable<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 

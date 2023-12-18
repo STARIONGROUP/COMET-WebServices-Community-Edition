@@ -336,15 +336,15 @@ namespace CometServer.Services
         /// </remarks>
         private void PruneSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
-            this.PruneEngineeringModelSetupsFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
+            PruneEngineeringModelSetupsFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
             this.PruneSiteReferenceDataLibrariesFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
-            this.PrunePersonsFromSiteDiretoryCache(ref siteDirectoryCache);
-            this.PrunePersonRolesFromSiteDirectoryCache(ref siteDirectoryCache);
-            this.PruneParticipantRolesFromSiteDirectoryCache(ref siteDirectoryCache);
-            this.PruneDomainOfExpertiseFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
+            PrunePersonsFromSiteDiretoryCache(ref siteDirectoryCache);
+            PrunePersonRolesFromSiteDirectoryCache(ref siteDirectoryCache);
+            PruneParticipantRolesFromSiteDirectoryCache(ref siteDirectoryCache);
+            PruneDomainOfExpertiseFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
         }
 
-        private void PruneEngineeringModelSetupsFromSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PruneEngineeringModelSetupsFromSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var siteDirectory = siteDirectoryCache.Values.OfType<SiteDirectory>().Single();
 
@@ -361,7 +361,7 @@ namespace CometServer.Services
             }
         }
 
-        private void PrunePersonsFromSiteDiretoryCache(ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PrunePersonsFromSiteDiretoryCache(ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var siteDirectory = siteDirectoryCache.Values.OfType<SiteDirectory>().Single();
 
@@ -390,7 +390,7 @@ namespace CometServer.Services
             }
         }
 
-        private void PrunePersonRolesFromSiteDirectoryCache(ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PrunePersonRolesFromSiteDirectoryCache(ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var siteDirectory = siteDirectoryCache.Values.OfType<SiteDirectory>().Single();
 
@@ -419,7 +419,7 @@ namespace CometServer.Services
             }
         }
 
-        private void PruneParticipantRolesFromSiteDirectoryCache(ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PruneParticipantRolesFromSiteDirectoryCache(ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var siteDirectory = siteDirectoryCache.Values.OfType<SiteDirectory>().Single();
 
@@ -448,7 +448,7 @@ namespace CometServer.Services
             }
         }
 
-        private void PruneDomainOfExpertiseFromSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PruneDomainOfExpertiseFromSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var siteDirectory = siteDirectoryCache.Values.OfType<SiteDirectory>().Single();
 
@@ -497,7 +497,7 @@ namespace CometServer.Services
 
             foreach (var engineeringModelSetup in engineeringModelSetups)
             {
-                var chainOfRdls = this.QueryChainOfRdl(engineeringModelSetup, siteDirectoryCache);
+                var chainOfRdls = QueryChainOfRdl(engineeringModelSetup, siteDirectoryCache);
 
                 foreach (var referenceDataLibrary in chainOfRdls)
                 {
@@ -513,7 +513,7 @@ namespace CometServer.Services
             }
         }
 
-        private IEnumerable<ReferenceDataLibrary> QueryChainOfRdl(EngineeringModelSetup engineeringModelSetup, Dictionary<Guid, Thing> siteDirectoryCache)
+        private static IEnumerable<ReferenceDataLibrary> QueryChainOfRdl(EngineeringModelSetup engineeringModelSetup, Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var result = new List<ReferenceDataLibrary>();
 
@@ -552,16 +552,6 @@ namespace CometServer.Services
                     }
                 }
             }
-        }
-
-        private IEnumerable<FileRevision> QuerFileRevisionsFromEngineeringModel()
-        {
-            throw new NotImplementedException();
-        }
-
-        private IEnumerable<FileRevision> QuerFileRevisionsFromIteration()
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>

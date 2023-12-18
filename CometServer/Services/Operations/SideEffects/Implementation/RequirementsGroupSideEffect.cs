@@ -93,7 +93,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (requirementsGroupIds.Contains(thing.Iid))
                 {
                     throw new AcyclicValidationException(
-                        string.Format("RequirementsGroup {0} {1} cannot contain itself.", thing.Name, thing.Iid));
+                        $"RequirementsGroup {thing.Name} {thing.Iid} cannot contain itself.");
                 }
 
                 var requirementsGroups = this.RequirementsSpecificationService
@@ -111,11 +111,7 @@ namespace CometServer.Services.Operations.SideEffects
                     if (!this.IsRequirementsGroupAcyclic(requirementsGroups, groupIdsToCheck, requirementsGroupId))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "RequirementsGroup {0} {1} cannot contain RequirementsGroup {2} that leads to cyclic dependency",
-                                thing.Name,
-                                thing.Iid,
-                                requirementsGroupId));
+                            $"RequirementsGroup {thing.Name} {thing.Iid} cannot contain RequirementsGroup {requirementsGroupId} that leads to cyclic dependency");
                     }
                 }
             }
@@ -142,7 +138,7 @@ namespace CometServer.Services.Operations.SideEffects
             Guid requirementsGroupId)
         {
             var containedGroupsList = new List<Guid>();
-            this.SetContainedGroupsList(requirementsGroups, containedGroupsList, requirementsGroupId);
+            SetContainedGroupsList(requirementsGroups, containedGroupsList, requirementsGroupId);
             foreach (var id in groupIdsToCheck)
             {
                 if (containedGroupsList.Contains(id))
@@ -166,7 +162,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="requirementsGroupId">
         /// RequirementsGroup id to set list of ids for.
         /// </param>
-        private void SetContainedGroupsList(
+        private static void SetContainedGroupsList(
             List<RequirementsGroup> requirementsGroups,
             List<Guid> containedGroupsList,
             Guid requirementsGroupId)
@@ -175,7 +171,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             foreach (var id in requirementsGroup.Group)
             {
-                this.SetContainedGroupsList(requirementsGroups, containedGroupsList, id);
+                SetContainedGroupsList(requirementsGroups, containedGroupsList, id);
             }
 
             containedGroupsList.Add(requirementsGroupId);

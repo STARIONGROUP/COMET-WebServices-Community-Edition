@@ -90,7 +90,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (superCategoriesId.Contains(thing.Iid))
                 {
                     throw new AcyclicValidationException(
-                        string.Format("Category {0} {1} cannot have itself as a SuperCategory", thing.Name, thing.Iid));
+                        $"Category {thing.Name} {thing.Iid} cannot have itself as a SuperCategory");
                 }
 
                 // Get RDL chain and collect categories' ids
@@ -107,10 +107,7 @@ namespace CometServer.Services.Operations.SideEffects
                     if (!categoryIdsFromChain.Contains(superCategoryId))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "Category {0} {1} cannot have a SuperCategory from outside the RDL chain",
-                                thing.Name,
-                                thing.Iid));
+                            $"Category {thing.Name} {thing.Iid} cannot have a SuperCategory from outside the RDL chain");
                     }
                 }
 
@@ -123,11 +120,7 @@ namespace CometServer.Services.Operations.SideEffects
                     if (!this.IsSuperCategoryAcyclic(categories, superCategoryId, thing.Iid))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "Category {0} {1} cannot have a SuperCategory {2} that leads to cyclic dependency",
-                                thing.Name,
-                                thing.Iid,
-                                superCategoryId));
+                            $"Category {thing.Name} {thing.Iid} cannot have a SuperCategory {superCategoryId} that leads to cyclic dependency");
                     }
                 }
             }
@@ -190,7 +183,7 @@ namespace CometServer.Services.Operations.SideEffects
         private bool IsSuperCategoryAcyclic(List<Category> categories, Guid superCategoryId, Guid categoryId)
         {
             var superCategoryTreeList = new List<Guid>();
-            this.SetSuperCategoryTree(categories, superCategoryTreeList, superCategoryId);
+            SetSuperCategoryTree(categories, superCategoryTreeList, superCategoryId);
 
             return !superCategoryTreeList.Contains(categoryId);
         }
@@ -207,13 +200,13 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="superCategoryId">
         /// The super category id to set tree of ids for.
         /// </param>
-        private void SetSuperCategoryTree(List<Category> categories, List<Guid> superCategoryTreeList, Guid superCategoryId)
+        private static void SetSuperCategoryTree(List<Category> categories, List<Guid> superCategoryTreeList, Guid superCategoryId)
         {
             var superCategory = categories.Find(x => x.Iid == superCategoryId);
 
             foreach (var id in superCategory.SuperCategory)
             {
-                this.SetSuperCategoryTree(categories, superCategoryTreeList, id);
+                SetSuperCategoryTree(categories, superCategoryTreeList, id);
             }
 
             superCategoryTreeList.Add(superCategoryId);
