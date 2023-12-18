@@ -319,6 +319,11 @@ namespace CDP4Orm.Dao
             try
             {
                 thing = jsonObject.ToDto();
+
+                if (!reader.IsDBNull(1))
+                {
+                    thing.Actor= reader.GetGuid(1);
+                }
             }
             catch (Exception)
             {
