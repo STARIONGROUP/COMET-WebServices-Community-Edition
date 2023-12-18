@@ -457,7 +457,7 @@ namespace CometServer.Modules
                         serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
-                    seededSiteRdlCount++;
+                    seededSiteRdlCount = siteRdlCount;
                 }
 
                 if (result)
