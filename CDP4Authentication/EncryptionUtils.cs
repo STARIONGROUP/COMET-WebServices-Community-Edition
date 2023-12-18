@@ -51,8 +51,6 @@ namespace CDP4Authentication
         /// </returns>
         private static byte[] GenerateSaltedHash(string inputString, byte[] salt)
         {
-            using var algorithm = SHA256.Create();
-
             var plainText = GetBytesFromString(inputString);
             var plainTextWithSaltBytes = new byte[plainText.Length + salt.Length];
 
@@ -66,7 +64,7 @@ namespace CDP4Authentication
                 plainTextWithSaltBytes[plainText.Length + i] = salt[i];
             }
 
-            return algorithm.ComputeHash(plainTextWithSaltBytes);
+            return SHA256.HashData(plainTextWithSaltBytes);
         }
 
         /// <summary>
@@ -158,11 +156,13 @@ namespace CDP4Authentication
         /// </returns>
         private static byte[] GenerateRandomSaltBytes()
         {
-            var random = new RNGCryptoServiceProvider();
             var salt = new byte[SaltMaximumNumberOfBytes];
 
-            // Build the random bytes
-            random.GetNonZeroBytes(salt);
+            // Use RandomNumberGenerator.Create for a secure random number generator
+            using var random = RandomNumberGenerator.Create();
+
+            random.GetBytes(salt); // Use GetBytes instead of GetNonZeroBytes
+
             return salt;
         }
 
