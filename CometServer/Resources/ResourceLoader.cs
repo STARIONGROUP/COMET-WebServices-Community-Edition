@@ -24,6 +24,7 @@
 
 namespace CometServer.Resources
 {
+    using System.Diagnostics;
     using System.IO;
     using System.Reflection;
     using System.Resources;
@@ -64,7 +65,23 @@ namespace CometServer.Resources
         public string QueryVersion()
         {
             var assembly = Assembly.GetExecutingAssembly();
-            return assembly.GetName().Version?.ToString();
+
+            var infoVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            if (infoVersion != null)
+            {
+                var plusIndex = infoVersion.InformationalVersion.IndexOf('+');
+
+                if (plusIndex != -1)
+                {
+                    return infoVersion.InformationalVersion.Substring(0, plusIndex);
+                }
+
+                return infoVersion.InformationalVersion;
+            }
+
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
+            var fileVersion = fileVersionInfo.FileVersion;
+            return fileVersion;
         }
 
         /// <summary>

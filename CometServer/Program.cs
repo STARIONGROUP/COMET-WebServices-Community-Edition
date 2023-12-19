@@ -92,7 +92,7 @@ namespace CometServer
 
                 logger.LogInformation("################################################################");
 
-                logger.LogInformation($"Starting CDP4-COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
+                logger.LogInformation($"Starting CDP4-COMET Services v{resourceLoader.QueryVersion()}");
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
 
