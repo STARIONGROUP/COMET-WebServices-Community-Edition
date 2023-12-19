@@ -830,7 +830,7 @@ namespace CometServer.Modules
 
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
 
-                var fileInfo = new FileInfo($"{folderPath}.zio");
+                var fileInfo = new FileInfo($"{folderPath}.zip");
                 
                 binaryContent.Headers.Add(HttpConstants.ContentDispositionHeader, $"attachment; filename={fileInfo.Name}");
 
