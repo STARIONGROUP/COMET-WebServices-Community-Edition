@@ -34,6 +34,7 @@ namespace CometServer.Services
     using CDP4Common.Types;
 
     using CometServer.Authorization;
+    using CometServer.Configuration;
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
 
@@ -56,6 +57,11 @@ namespace CometServer.Services
         /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
         public ILogger<FileArchiveService> Logger { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// </summary>
+        public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="ICredentialsService"/> for the current request
@@ -112,6 +118,7 @@ namespace CometServer.Services
                 || resourceResponse[0].ClassKind == ClassKind.Folder)
             {
                 var folderPath = this.CreateTemporaryFolderOnDisk();
+
                 try
                 {
                     this.CreateFileStructureOnDisk(resourceResponse[0], partition, folderPath, routeSegments);
@@ -119,8 +126,7 @@ namespace CometServer.Services
                 }
                 catch (Exception exception)
                 {
-                    var logMessage = $"An attempt to create a file structure was unsuccsessful. Exited with the error: {exception.Message}.";
-                    this.Logger.LogError(logMessage);
+                    this.Logger.LogError("An attempt to create a file structure was unsuccsessful. Exited with the error: {exceptionMessage}.", exception.Message);
 
                     this.DeleteFileStructure(folderPath);
                 }
@@ -138,11 +144,10 @@ namespace CometServer.Services
         public void CreateZipArchive(string folderPath)
         {
             // Create a zip archive from the created file structure
-            using (ZipFile zip = new ZipFile())
-            {
-                zip.AddDirectory(folderPath);
-                zip.Save(folderPath + ".zip");
-            }
+            using var zip = new ZipFile();
+
+            zip.AddDirectory(folderPath);
+            zip.Save(folderPath + ".zip");
         }
 
         /// <summary>
@@ -157,8 +162,7 @@ namespace CometServer.Services
             Directory.Delete(folderPath, true);
             System.IO.File.Delete(folderPath + ".zip");
 
-            var logMessage = $"File structure {folderPath} and archive {folderPath + ".zip"} are deleted.";
-            this.Logger.LogInformation(logMessage);
+            this.Logger.LogInformation("File structure {folderPath} and archive {folderPath}.zip are deleted.", folderPath, folderPath);
         }
 
         /// <summary>
@@ -171,8 +175,7 @@ namespace CometServer.Services
         {
             Directory.Delete(folderPath, true);
 
-            var logMessage = $"File structure {folderPath} is deleted.";
-            this.Logger.LogInformation(logMessage);
+            this.Logger.LogInformation("File structure {folderPath} is deleted.", folderPath);
         }
 
         /// <summary>
@@ -186,15 +189,13 @@ namespace CometServer.Services
             // Specify a name for a random folder.
             var folderPath = Guid.NewGuid().ToString();
 
-            if (AppDomain.CurrentDomain.RelativeSearchPath != null)
-            {
-                folderPath = Path.Combine(AppDomain.CurrentDomain.RelativeSearchPath, folderPath);
-            }
+            folderPath = Path.Combine(this.AppConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory, folderPath);
+
+            this.Logger.LogDebug("Creating temporary folder {folderPath}.", folderPath);
 
             Directory.CreateDirectory(folderPath);
 
-            var logMessage = $"Temporary folder {folderPath} is created.";
-            this.Logger.LogInformation(logMessage);
+            this.Logger.LogInformation("Temporary folder {folderPath} is created.", folderPath);
 
             return folderPath;
         }
@@ -216,8 +217,7 @@ namespace CometServer.Services
         /// </param>
         private void CreateFileStructureOnDisk(Thing thing, string partition, string folderPath, string[] routeSegments)
         {
-            var logMessage = $"File structure creation is started into the temporary folder {folderPath}.";
-            this.Logger.LogInformation(logMessage);
+            this.Logger.LogInformation("File structure creation is started into the temporary folder {folderPath}.", folderPath);
 
             var credentials = this.CredentialsService.Credentials;
 
@@ -395,10 +395,12 @@ namespace CometServer.Services
             List<FileType> fileTypes)
         {
             var path = Path.Combine(folderPath, rootFolder.Name);
+
+            this.Logger.LogInformation("Starting to create Directory: {path}", path);
+            
             Directory.CreateDirectory(path);
 
-            var logMessage = $"Directory {path} is created.";
-            this.Logger.LogInformation(logMessage);
+            this.Logger.LogInformation("Directory {path} is created.", path);
 
             // Recursively create all child folders
             // Get folders that is of the root folder
@@ -474,19 +476,19 @@ namespace CometServer.Services
                 var extension = string.Empty;
                 foreach (var orderedItem in subFileRevision.FileType)
                 {
-                    string tempExtension = fileTypes.Single(x => x.Iid == Guid.Parse(orderedItem.V.ToString()))
+                    var tempExtension = fileTypes.Single(x => x.Iid == Guid.Parse(orderedItem.V.ToString()))
                         .Extension;
 
                     extension += "." + (tempExtension != "?" ? tempExtension : "unknown");
                 }
 
-                // Use Path class to manipulate file and directory paths.
                 var destFile = Path.Combine(folderPath, subFileRevision.Name + extension);
+
+                this.Logger.LogDebug("Copying {storageFilePath} to {destFile}", storageFilePath, destFile);
+
                 System.IO.File.Copy(storageFilePath, destFile, true);
 
-                var logMessage = $"File {subFileRevision.ContentHash}/{subFileRevision.Name + extension} is copied from {storageFilePath} to {folderPath}.";
-
-                this.Logger.LogInformation(logMessage);
+                this.Logger.LogInformation("File {subFileRevisionContentHash}/{subFileRevisionName}{extension} is copied from {storageFilePath} to {folderPath}.", subFileRevision.ContentHash, subFileRevision.Name, extension, storageFilePath, folderPath);
             }
         }
     }

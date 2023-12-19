@@ -39,6 +39,7 @@ namespace CometServer.Configuration
             // set defaults
             this.UploadDirectory = "upload";
             this.FileStorageDirectory = "storage";
+            this.TemporaryFileStorageDirectory = "tempstorage";
             this.IsExportEnabled = true;
             this.ExportDirectory = "export";
             this.BacktierWaitTime = 300;
@@ -54,6 +55,7 @@ namespace CometServer.Configuration
         {
             this.UploadDirectory = configuration["Midtier:UploadDirectory"];
             this.FileStorageDirectory = configuration["Midtier:FileStorageDirectory"];
+            this.TemporaryFileStorageDirectory = configuration["Midtier:TemporaryFileStorageDirectory"];
             this.IsExportEnabled = bool.Parse(configuration["Midtier:IsExportEnabled"]);
             this.ExportDirectory = configuration["Midtier:ExportDirectory"];
             this.BacktierWaitTime = int.Parse(configuration["Midtier:BacktierWaitTime"]);
@@ -74,6 +76,14 @@ namespace CometServer.Configuration
         /// The default value is storage
         /// </remarks>
         public string FileStorageDirectory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the temporary file directory that the mid tier uses
+        /// </summary>
+        /// <remarks>
+        /// The default value is tempstorage
+        /// </remarks>
+        public string TemporaryFileStorageDirectory { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the export route is enabled or not
