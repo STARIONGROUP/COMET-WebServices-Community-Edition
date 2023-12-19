@@ -91,9 +91,7 @@ namespace CometServer.Services
         /// </remarks>
         public Stream RetrieveBinaryData(string hash)
         {
-            string filePath;
-
-            if (!this.TryGetFileStoragePath(hash, out filePath))
+            if (!this.TryGetFileStoragePath(hash, out var filePath))
             {
                 throw new FileNotFoundException("The requested file does not exists");
             }
@@ -117,8 +115,7 @@ namespace CometServer.Services
             
             this.Logger.LogDebug("Store Binary Data with hash: {hash} started", hash);
 
-            string filePath;
-            if (this.TryGetFileStoragePath(hash, out filePath))
+            if (this.TryGetFileStoragePath(hash, out var filePath))
             {
                 this.Logger.LogDebug("The file already exists: {filePath}/{hash}", filePath, hash);
 
@@ -152,16 +149,14 @@ namespace CometServer.Services
         /// </returns>
         public string CalculateHashFromStream(Stream stream)
         {
-            using (var bufferedStream = new BufferedStream(stream))
-            {
-                using (var sha1 = new SHA1Managed())
-                {
-                    var hash = sha1.ComputeHash(bufferedStream);
-                    var formatted = new StringBuilder(2 * hash.Length);
-                    hash.ToList().ForEach(b => formatted.AppendFormat("{0:X2}", b));
-                    return formatted.ToString();
-                }
-            }
+            using var bufferedStream = new BufferedStream(stream);
+
+            using var sha1 = SHA1.Create();
+
+            var hash = sha1.ComputeHash(bufferedStream);
+            var formatted = new StringBuilder(2 * hash.Length);
+            hash.ToList().ForEach(b => formatted.AppendFormat("{0:X2}", b));
+            return formatted.ToString();
         }
 
         /// <summary>
@@ -198,14 +193,15 @@ namespace CometServer.Services
         /// </returns>
         private string GetBinaryStoragePath(string hash, bool create = false)
         {
-            var numberOfFileStorageDistributionLevels = FileStorageDistributionLevels;
-
             // using first numberOfFileStorageDistributionLevels hash characters; 
             // create a distributed folder structure numberOfFileStorageDistributionLevels levels deep in the application root of this Webserver
+
             var path = this.AppConfigService.AppConfig.Midtier.FileStorageDirectory;
-            foreach (var character in hash.ToLowerInvariant().Substring(0, numberOfFileStorageDistributionLevels).Select(x => x.ToString()))
+
+            foreach (var character in hash.ToLowerInvariant().Substring(0, FileStorageDistributionLevels).Select(x => x.ToString()))
             {
                 var currentPath = Path.Combine(path, character);
+
                 if (!Directory.Exists(currentPath) && create)
                 {
                     Directory.CreateDirectory(currentPath);

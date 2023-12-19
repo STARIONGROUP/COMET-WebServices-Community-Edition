@@ -100,6 +100,7 @@ namespace CometServer
 
                 logger.LogInformation($"Midtier-UploadDirectory: {appConfigService.AppConfig.Midtier.UploadDirectory}");
                 logger.LogInformation($"Midtier-FileStorageDirectory: {appConfigService.AppConfig.Midtier.FileStorageDirectory}");
+                logger.LogInformation($"Midtier-TemporaryFileStorageDirectory: {appConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory}");
                 logger.LogInformation($"Midtier-IsExportEnabled: {appConfigService.AppConfig.Midtier.IsExportEnabled}");
                 logger.LogInformation($"Midtier-ExportDirectory: {appConfigService.AppConfig.Midtier.ExportDirectory}");
                 logger.LogInformation($"Midtier-BacktierWaitTime: {appConfigService.AppConfig.Midtier.BacktierWaitTime}");

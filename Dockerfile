@@ -14,6 +14,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
 WORKDIR /app
 RUN mkdir /app/logs
 RUN mkdir /app/storage
+RUN mkdir /app/tempstorage
 RUN mkdir /app/upload
 
 RUN mkdir /app/Authentication/
