@@ -91,6 +91,7 @@ namespace CometServer
                 logger.LogInformation(logo);
 
                 logger.LogInformation("################################################################");
+
                 logger.LogInformation($"Starting CDP4-COMET Services v{Assembly.GetEntryAssembly().GetName().Version}");
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
@@ -99,6 +100,13 @@ namespace CometServer
 
                 logger.LogInformation($"Midtier-UploadDirectory: {appConfigService.AppConfig.Midtier.UploadDirectory}");
                 logger.LogInformation($"Midtier-FileStorageDirectory: {appConfigService.AppConfig.Midtier.FileStorageDirectory}");
+                logger.LogInformation($"Midtier-IsExportEnabled: {appConfigService.AppConfig.Midtier.IsExportEnabled}");
+                logger.LogInformation($"Midtier-ExportDirectory: {appConfigService.AppConfig.Midtier.ExportDirectory}");
+                logger.LogInformation($"Midtier-BacktierWaitTime: {appConfigService.AppConfig.Midtier.BacktierWaitTime}");
+
+                logger.LogInformation($"Changelog-CollectChanges: {appConfigService.AppConfig.Changelog.CollectChanges}");
+                logger.LogInformation($"Changelog-AllowEmailNotification: {appConfigService.AppConfig.Changelog.AllowEmailNotification}");
+
                 logger.LogInformation($"Backtier-HostName: {appConfigService.AppConfig.Backtier.HostName}");
                 logger.LogInformation($"Backtier-Port: {appConfigService.AppConfig.Backtier.Port}");
                 logger.LogInformation($"Backtier-Database: {appConfigService.AppConfig.Backtier.Database}");
@@ -108,6 +116,8 @@ namespace CometServer
                 logger.LogInformation($"Backtier-IsDbSeedEnabled: {appConfigService.AppConfig.Backtier.IsDbSeedEnabled}");
                 logger.LogInformation($"Backtier-IsDbImportEnabled: {appConfigService.AppConfig.Backtier.IsDbImportEnabled}");
                 logger.LogInformation($"Backtier-IsDbRestoreEnabled: {appConfigService.AppConfig.Backtier.IsDbRestoreEnabled}");
+
+                logger.LogInformation("################################################################");
 
                 var dataStoreConnectionChecker = host.Services.GetService<IDataStoreConnectionChecker>();
                 var dataStoreAvailable = dataStoreConnectionChecker.CheckConnection();
