@@ -32,6 +32,7 @@ namespace CometServer.Tests.SideEffects
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
 
+    using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
@@ -56,19 +57,25 @@ namespace CometServer.Tests.SideEffects
 
         private Mock<IEngineeringModelSetupService> modelSetupService;
 
+        private Mock<ICdp4TransactionManager> transactionManager;
+
         [SetUp]
         public void Setup()
         {
             this.RequestUtils = new Mock<IRequestUtils>();
             this.MetainfoProvider = new Mock<IMetaInfoProvider>();
             this.modelSetupService = new Mock<IEngineeringModelSetupService>();
+            this.transactionManager = new Mock<ICdp4TransactionManager>();
 
             this.modelCreatorManager = new ModelCreatorManager()
             {
                 RequestUtils = this.RequestUtils.Object,
                 MetainfoProvider = this.MetainfoProvider.Object,
-                EngineeringModelSetupService = this.modelSetupService.Object
+                EngineeringModelSetupService = this.modelSetupService.Object,
+                TransactionManager = this.transactionManager.Object
             };
+
+            this.transactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.Now);
 
             this.RequestUtils.Setup(x => x.QueryParameters).Returns(new QueryParameters());
             this.RequestUtils.Setup(x => x.Cache).Returns(new List<Thing>());
