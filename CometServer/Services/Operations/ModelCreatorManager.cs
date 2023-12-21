@@ -34,6 +34,8 @@ namespace CometServer.Services.Operations
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
 
+    using CometServer.Helpers;
+
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
@@ -117,6 +119,11 @@ namespace CometServer.Services.Operations
         }
 
         /// <summary>
+        /// Gets or sets the transaction manager.
+        /// </summary>
+        public ICdp4TransactionManager TransactionManager { get; set; }
+
+        /// <summary>
         /// Creates an <see cref="EngineeringModelSetup"/> from a source
         /// </summary>
         /// <param name="source">The identifier of the source <see cref="EngineeringModelSetup"/></param>
@@ -180,6 +187,7 @@ namespace CometServer.Services.Operations
                 var copy = (IterationSetup)this.originalToCopyMap[iterationSetup];
                 copy.IterationIid = Guid.NewGuid();
                 copy.SourceIterationSetup = iterationSetup.Iid;
+                copy.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
             }
 
             // populate the RequestUtils cache so that contained things are created when the engineering-model setup is created
