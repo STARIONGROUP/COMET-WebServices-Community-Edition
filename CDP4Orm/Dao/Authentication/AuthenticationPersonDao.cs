@@ -83,7 +83,7 @@ namespace CDP4Orm.Dao.Authentication
                 command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
             }
 
-            sqlBuilder.Append(";");
+            sqlBuilder.Append(';');
 
             command.Connection = transaction.Connection;
             command.Transaction = transaction;

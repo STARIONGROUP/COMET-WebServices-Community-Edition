@@ -53,42 +53,43 @@ namespace CDP4Orm.Dao
         /// <param name="engineeringModelSetupId">
         /// The <see cref="EngineeringModelSetup.Iid"/> to retrieve domain info for from the database.
         /// </param>
+        /// <param name="instant">
+        /// The instant as a <see cref="DateTime"/>
+        /// </param>
         /// <returns>
         /// List of instances of <see cref="DomainOfExpertise"/>.
         /// </returns>
         public IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null)
         {
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new System.Text.StringBuilder();
+
+            sqlBuilder.Append(this.BuildReadQuery(partition, instant));
+
+            if (!personId.Equals(Guid.Empty) && !engineeringModelSetupId.Equals(Guid.Empty))
             {
-                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\" = :engineeringModelSetupId ))", partition);
+                command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
+                command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Uuid).Value = engineeringModelSetupId;
+            }
 
-                sqlBuilder.Append(this.BuildReadQuery(partition, instant));
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+            }
 
-                if (!personId.Equals(Guid.Empty) && !engineeringModelSetupId.Equals(Guid.Empty))
-                {
-                    sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\" = :engineeringModelSetupId ))", partition);
-                    command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
-                    command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Uuid).Value = engineeringModelSetupId;
-                }
+            sqlBuilder.Append(';');
 
-                if (instant.HasValue && instant.Value != DateTime.MaxValue)
-                {
-                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
-                }
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
 
-                sqlBuilder.Append(";");
+            using var reader = command.ExecuteReader();
 
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sqlBuilder.ToString();
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return this.MapToDto(reader);
-                    }
-                }
+            while (reader.Read())
+            {
+                yield return this.MapToDto(reader);
             }
         }
     }
