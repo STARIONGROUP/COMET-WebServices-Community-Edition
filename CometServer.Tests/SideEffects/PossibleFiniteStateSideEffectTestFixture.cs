@@ -45,7 +45,7 @@ namespace CometServer.Tests.SideEffects
     {
         private PossibleFiniteStateSideEffect sideEffect = new PossibleFiniteStateSideEffect();
 
-        private NpgsqlTransaction transaction;
+        private NpgsqlTransaction transaction = null;
 
         private Mock<ISecurityContext> securityContext;
         private Mock<IActualFiniteStateListService> actualFiniteStateListService; 
@@ -109,7 +109,6 @@ namespace CometServer.Tests.SideEffects
 
         private List<string> initValue = new List<string> { "init" };
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
-
 
         [SetUp]
         public void Setup()

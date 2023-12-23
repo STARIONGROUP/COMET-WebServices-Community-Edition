@@ -92,8 +92,10 @@ namespace CometServer.Tests.SideEffects
 
             // There is a chain aptA -> ptcA -> aptB -> ptcB -> bptD
             this.booleanParameterTypeD = new BooleanParameterType { Iid = Guid.NewGuid() };
+
             this.parameterTypeComponentD =
                 new ParameterTypeComponent { Iid = Guid.NewGuid(), ParameterType = this.booleanParameterTypeD.Iid };
+
             this.parameterTypeComponentB =
                 new ParameterTypeComponent { Iid = Guid.NewGuid(), ParameterType = this.booleanParameterTypeD.Iid };
 
@@ -124,6 +126,7 @@ namespace CometServer.Tests.SideEffects
                                            this.booleanParameterTypeD.Iid 
                                         }
                     };
+
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
                                              {
                                                  Iid = Guid.NewGuid(),
@@ -138,6 +141,7 @@ namespace CometServer.Tests.SideEffects
                                              };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(
                     x => x.Get(
@@ -148,6 +152,7 @@ namespace CometServer.Tests.SideEffects
                 .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
+
             this.arrayParameterTypeService
                 .Setup(
                     x => x.Get(
@@ -163,6 +168,7 @@ namespace CometServer.Tests.SideEffects
                     new List<CompoundParameterType> { this.arrayParameterTypeA, this.arrayParameterTypeB });
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
+
             this.compoundParameterTypeService.Setup(
                 x => x.Get(
                     this.npgsqlTransaction,
@@ -176,6 +182,7 @@ namespace CometServer.Tests.SideEffects
                     It.IsAny<ISecurityContext>())).Returns(new List<ArrayParameterType>());
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.Get(
@@ -184,6 +191,7 @@ namespace CometServer.Tests.SideEffects
                         new List<Guid> { this.parameterTypeComponentA.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentA });
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.Get(
@@ -192,6 +200,7 @@ namespace CometServer.Tests.SideEffects
                         new List<Guid> { this.parameterTypeComponentB.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentB });
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.Get(
@@ -200,6 +209,7 @@ namespace CometServer.Tests.SideEffects
                         new List<Guid> { this.parameterTypeComponentC.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentC });
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.Get(
@@ -208,6 +218,7 @@ namespace CometServer.Tests.SideEffects
                         new List<Guid> { this.parameterTypeComponentD.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentD });
+
 
             this.sideEffect = new ArrayParameterTypeSideEffect()
                                   {

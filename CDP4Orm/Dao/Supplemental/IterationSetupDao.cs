@@ -59,32 +59,30 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null)
         {
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new StringBuilder();
+
+            sqlBuilder.Append($"{this.BuildReadQuery(partition, instant)}");
+            sqlBuilder.Append($" WHERE {this.GetValueTypeSet()} -> 'IterationIid' = :iterationIid");
+            command.Parameters.Add("iterationIid", NpgsqlDbType.Text).Value = iterationId.ToString();
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
             {
-                var sqlBuilder = new StringBuilder();
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+            }
 
-                sqlBuilder.Append($"{this.BuildReadQuery(partition, instant)}");
-                sqlBuilder.Append($" WHERE {this.GetValueTypeSet()} -> 'IterationIid' = :iterationIid");
-                command.Parameters.Add("iterationIid", NpgsqlDbType.Text).Value = iterationId.ToString();
+            sqlBuilder.Append(';');
 
-                if (instant.HasValue && instant.Value != DateTime.MaxValue)
-                {
-                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
-                }
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
 
-                sqlBuilder.Append(";");
+            using var reader = command.ExecuteReader();
 
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sqlBuilder.ToString();
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return this.MapToDto(reader);
-                    }
-                }
+            while (reader.Read())
+            {
+                yield return this.MapToDto(reader);
             }
         }
 
@@ -108,33 +106,31 @@ namespace CDP4Orm.Dao
         /// </returns>
         public IEnumerable<IterationSetup> ReadByEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid engineeringModelSetupId, DateTime? instant = null)
         {
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new StringBuilder();
+
+            sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition, instant)}");
+            sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\"::text = :engineeringModelSetupId)", partition);
+
+            command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
             {
-                var sqlBuilder = new StringBuilder();
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+            }
 
-                sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition, instant)}");
-                sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\"::text = :engineeringModelSetupId)", partition);
+            sqlBuilder.Append(';');
 
-                command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
 
-                if (instant.HasValue && instant.Value != DateTime.MaxValue)
-                {
-                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
-                }
+            using var reader = command.ExecuteReader();
 
-                sqlBuilder.Append(";");
-
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sqlBuilder.ToString();
-
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return this.MapToDto(reader);
-                    }
-                }
+            while (reader.Read())
+            {
+                yield return this.MapToDto(reader);
             }
         }
 

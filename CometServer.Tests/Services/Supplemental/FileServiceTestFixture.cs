@@ -46,13 +46,13 @@ namespace CometServer.Tests.Services.Supplemental
     using NUnit.Framework;
 
     /// <summary>
-    /// Suite of tests for the <see cref="FileService"/>
+    /// Suite of tests for the <see cref="FileService"/> class
     /// </summary>
     [TestFixture]
     public class FileServiceTestFixture
     {
         private File file;
-        private IFileService fileService;
+        private FileService fileService;
         private Mock<IDomainFileStoreService> domainFileStoreService;
         private Mock<IPermissionService> permissionService;
         private Mock<ICredentialsService> credentialsService;

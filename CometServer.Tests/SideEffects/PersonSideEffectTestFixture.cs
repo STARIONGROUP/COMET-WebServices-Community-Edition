@@ -39,8 +39,6 @@ namespace CometServer.Tests.SideEffects
 
     using Moq;
 
-    using Npgsql;
-
     using NUnit.Framework;
 
     /// <summary>
@@ -50,20 +48,14 @@ namespace CometServer.Tests.SideEffects
     public class PersonSideEffectTestFixture
     {
         private const string ClearTextPassword = "clearText";
+
         private const string PasswordKey = "Password";
+
         private const string TestValue = "Test";
 
-        /// <summary>
-        /// The <see cref="GlossarySideEffect"/> that is being tested
-        /// </summary>
         private PersonSideEffect personSideEffect;
         
-        /// <summary>
-        /// The mocked <see cref="ITermService"/> used to operate on <see cref="Term"/>s.
-        /// </summary>
         private Mock<IPersonDao> personDao;
-
-        private NpgsqlTransaction npgsqlTransaction;
 
         private ClasslessDTO rawUpdateinfo;
 
@@ -72,8 +64,6 @@ namespace CometServer.Tests.SideEffects
         [SetUp]
         public void SetUp()
         {
-            this.npgsqlTransaction = null;
-
             this.personDao = new Mock<IPersonDao>();
 
             this.credentialsService = new Mock<ICredentialsService>();
@@ -91,17 +81,15 @@ namespace CometServer.Tests.SideEffects
                                      };
 
             this.personSideEffect.BeforeUpdate(null, null, null, null, null, this.rawUpdateinfo);
-            var expectedPasswordText = string.Format(
-                "{1}{0}{1}",
-                ClearTextPassword,
-                this.personSideEffect.PersonDao.PasswordChangeToken);
+
+            var expectedPasswordText = $"{this.personSideEffect.PersonDao.PasswordChangeToken}{ClearTextPassword}{this.personSideEffect.PersonDao.PasswordChangeToken}";
             
             // assert same number of entries in raw update info object
-            Assert.AreEqual(2, this.rawUpdateinfo.Count);
-            Assert.AreEqual(TestValue, this.rawUpdateinfo[TestValue].ToString());
+            Assert.That(this.rawUpdateinfo.Count, Is.EqualTo(2));
+            Assert.That(this.rawUpdateinfo[TestValue].ToString(), Is.EqualTo(TestValue));
 
             // assert encapsulated cleartext password
-            Assert.AreEqual(expectedPasswordText, this.rawUpdateinfo[PasswordKey].ToString());
+            Assert.That(this.rawUpdateinfo[PasswordKey].ToString(), Is.EqualTo(expectedPasswordText));
         }
 
         [Test]
@@ -115,8 +103,8 @@ namespace CometServer.Tests.SideEffects
             this.personSideEffect.BeforeUpdate(null, null, null, null, null, this.rawUpdateinfo);
 
             // assert same number of entries in raw update info object
-            Assert.AreEqual(1, this.rawUpdateinfo.Count);
-            Assert.AreEqual(TestValue, this.rawUpdateinfo[TestValue].ToString());
+            Assert.That(this.rawUpdateinfo.Count, Is.EqualTo(1));
+            Assert.That(this.rawUpdateinfo[TestValue].ToString(), Is.EqualTo(TestValue));
         }
 
         [Test]
@@ -180,7 +168,6 @@ namespace CometServer.Tests.SideEffects
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("Update to role of the Person making the request is not allowed"));
         }
-
 
         [Test]
         public void Verify_that_when_Person_tries_to_update_themselves_setting_isactive_to_false_or_isdeprecated_to_true_is_not_allowed()

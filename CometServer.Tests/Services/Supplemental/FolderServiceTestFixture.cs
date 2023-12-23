@@ -45,13 +45,13 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
     using NUnit.Framework;
 
     /// <summary>
-    /// Suite of tests for the <see cref="FolderService"/>
+    /// Suite of tests for the <see cref="FolderService"/> class
     /// </summary>
     [TestFixture]
     public class FolderServiceTestFixture
     {
         private Folder folder;
-        private IFolderService folderService;
+        private FolderService folderService;
         private Mock<IDomainFileStoreService> domainFileStoreService;
         private Mock<IPermissionService> permissionService;
         private Mock<ICredentialsService> credentialsService;

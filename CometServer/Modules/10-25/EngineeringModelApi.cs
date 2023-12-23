@@ -640,6 +640,7 @@ namespace CometServer.Modules
                             await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, httpRequest.QueryDataModelVersion(), httpResponse);
                             break;
                     }
+
                     return;
                 }
 
@@ -965,8 +966,7 @@ namespace CometServer.Modules
                 return true;
             }
 
-            if (routeSegmentList.Count == domainFileStoreRouteSegment + 4 && routeSegmentList[domainFileStoreRouteSegment + 2] == "folder"
-            )
+            if (routeSegmentList.Count == domainFileStoreRouteSegment + 4 && routeSegmentList[domainFileStoreRouteSegment + 2] == "folder")
             {
                 return true;
             }
@@ -993,8 +993,7 @@ namespace CometServer.Modules
                 return true;
             }
 
-            if (routeSegmentList.Count == commonFileStoreRouteSegment + 4 && routeSegmentList[commonFileStoreRouteSegment + 2] == "folder"
-            )
+            if (routeSegmentList.Count == commonFileStoreRouteSegment + 4 && routeSegmentList[commonFileStoreRouteSegment + 2] == "folder")
             {
                 return true;
             }

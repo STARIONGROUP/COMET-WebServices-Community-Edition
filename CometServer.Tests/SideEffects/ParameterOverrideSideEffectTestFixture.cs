@@ -68,6 +68,8 @@ namespace CometServer.Tests.SideEffects
 
         private ParameterOverrideSideEffect sideEffect;
 
+        private static readonly string[] valueArrayValues = new [] {"1"};
+
         [SetUp]
         public void Setup()
         {
@@ -85,16 +87,16 @@ namespace CometServer.Tests.SideEffects
 
             this.parameter = new Parameter(Guid.NewGuid(), 1);
             this.valueset = new ParameterValueSet(Guid.NewGuid(), 1);
-            this.valueset.Manual = new ValueArray<string>(new [] {"1"});
-            this.valueset.Computed = new ValueArray<string>(new [] {"1"});
-            this.valueset.Formula = new ValueArray<string>(new [] {"1"});
-            this.valueset.Published = new ValueArray<string>(new [] {"1"});
-            this.valueset.Reference = new ValueArray<string>(new [] {"1"});
+
+            this.valueset.Manual = new ValueArray<string>(valueArrayValues);
+            this.valueset.Computed = new ValueArray<string>(valueArrayValues);
+            this.valueset.Formula = new ValueArray<string>(valueArrayValues);
+            this.valueset.Published = new ValueArray<string>(valueArrayValues);
+            this.valueset.Reference = new ValueArray<string>(valueArrayValues); 
             this.parameter.ValueSet.Add(this.valueset.Iid);
             this.parameter.ParameterType = Guid.NewGuid();
             this.parameter.Owner = Guid.NewGuid();
 
-            
             this.sideEffect = new ParameterOverrideSideEffect
                               {
                                   ParameterValueSetService = this.valueSetService.Object,
@@ -130,7 +132,6 @@ namespace CometServer.Tests.SideEffects
             this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(null, "partition", It.IsAny<ParameterOverrideValueSet>(), this.parameterOverride, -1), Times.Exactly(1));
         }
 
-
         [Test]
         public void VerifyOwnerChangedSideEffects()
         {
@@ -152,6 +153,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterSubscriptionService.
                 Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(subscription.Iid)), this.securityContext.Object)).
                 Returns(new[] {subscription});
+
             this.parameterSubscriptionService.
                 Setup(x => x.DeleteConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>())).Returns(true);
 
@@ -173,9 +175,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterSubscriptionService.Setup(x => x.GetShallow(null, It.IsAny<string>(), null, this.securityContext.Object)).Returns(new[] { subscription2, subscription1 });
 
-
             this.sideEffect.AfterCreate(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
-
 
             this.parameterSubscriptionService.Verify(x => x.CreateConcept(null, It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>(), It.IsAny<long>()), Times.Exactly(2));
             this.subscriptionValueSetService.Verify(x => x.CreateConcept(null, It.IsAny<string>(), It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Exactly(2));

@@ -114,6 +114,8 @@ namespace CometServer.Tests.SideEffects
         [SetUp]
         public void Setup()
         {
+            this.transaction = null;
+
             this.securityContext = new Mock<ISecurityContext>();
             this.actualFiniteStateListService = new Mock<IActualFiniteStateListService>();
             this.actualFiniteStateService = new Mock<IActualFiniteStateService>();

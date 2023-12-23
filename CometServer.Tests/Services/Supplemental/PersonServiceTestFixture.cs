@@ -51,7 +51,7 @@ namespace CometServer.Tests.Services.Supplemental
     public class PersonServiceTestFixture
     {
         private Person person;
-        private IPersonService personService;
+        private PersonService personService;
         private Mock<IPermissionService> permissionService;
         private Mock<ICredentialsService> credentialsService;
         private Mock<IPersonDao> personDao;
@@ -71,10 +71,12 @@ namespace CometServer.Tests.Services.Supplemental
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
 
             var credentials = new Credentials();
+
             credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
             {
                 UserName = "jdoe"
             };
+
             this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
 
             this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
@@ -93,9 +95,10 @@ namespace CometServer.Tests.Services.Supplemental
         public void VerifyUpdateCredentials_Initialization()
         {
             var credentials = new MigrationPasswordCredentials(this.person.Iid, "hashedpassword", "salt");
-            Assert.AreEqual("hashedpassword", credentials.Password);
-            Assert.AreEqual("salt", credentials.Salt);
-            Assert.AreEqual(this.person.Iid, credentials.Iid);
+
+            Assert.That(credentials.Password, Is.EqualTo("hashedpassword"));
+            Assert.That(credentials.Salt, Is.EqualTo("salt"));
+            Assert.That(credentials.Iid, Is.EqualTo(this.person.Iid));
         }
 
         [Test]

@@ -121,6 +121,7 @@ namespace CometServer.Tests.SideEffects
         public void VerifyAfterCreate()
         {
             var sourceId = Guid.NewGuid();
+
             this.mockedIterationSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).
               Returns(new[] {new IterationSetup(sourceId, 0)});
 
@@ -181,7 +182,7 @@ namespace CometServer.Tests.SideEffects
                     "siteDirectory",
                     this.mockedSecurityContext.Object);
 
-            Assert.AreEqual(iterationSetup.Iid,originalThing.Iid);
+            Assert.That(iterationSetup.Iid, Is.EqualTo(originalThing.Iid));
 
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Never);
         }
@@ -200,7 +201,7 @@ namespace CometServer.Tests.SideEffects
                 "siteDirectory",
                 this.mockedSecurityContext.Object);
 
-            Assert.AreEqual(iterationSetup.IsDeleted, false);
+            Assert.That(iterationSetup.IsDeleted, Is.False);
 
             this.iterationSetupSideEffect.AfterDelete(
                 iterationSetup,
@@ -210,7 +211,7 @@ namespace CometServer.Tests.SideEffects
                 "siteDirectory",
                 this.mockedSecurityContext.Object);
 
-            Assert.AreEqual(iterationSetup.IsDeleted, true);
+            Assert.That(iterationSetup.IsDeleted, Is.True);
 
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
         }

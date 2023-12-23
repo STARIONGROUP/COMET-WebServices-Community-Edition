@@ -51,9 +51,8 @@ namespace CometServer.Tests.SideEffects
     /// Suite of tests for the <see cref="EngineeringModelSetupSideEffect"/>
     /// </summary>
     [TestFixture]
-    internal class EngineeringModelSetupSideEffectTestFixture
+    public class EngineeringModelSetupSideEffectTestFixture
     {
-        private Credentials credentials;
         private AuthenticationPerson authenticatedPerson;
         private EngineeringModelSetupSideEffect engineeringModelSetupSideEffect;
         private ModelCreatorManager modelCreatorManager;
@@ -79,7 +78,6 @@ namespace CometServer.Tests.SideEffects
         public void Setup()
         {
             this.authenticatedPerson = new AuthenticationPerson(Guid.NewGuid(), 1) { DefaultDomain = Guid.NewGuid() };
-            this.credentials = new Credentials() { Person = this.authenticatedPerson };
             
             this.iterationService = new Mock<IIterationService>();
             this.iterationSetupService = new Mock<IIterationSetupService>();
@@ -208,7 +206,8 @@ namespace CometServer.Tests.SideEffects
             var domainOfExpertise2 = new DomainOfExpertise(Guid.NewGuid(), 1);
             this.engineeringModelSetup.ActiveDomain.Add(domainOfExpertise2.Iid);
             
-            this.engineeringModelSetupSideEffect.AfterUpdate(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
+            Assert.That(() => this.engineeringModelSetupSideEffect.AfterUpdate(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object),
+                Throws.Nothing);
         }
 
         [Test]

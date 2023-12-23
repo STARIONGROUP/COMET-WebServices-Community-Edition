@@ -163,13 +163,23 @@ namespace CometServer.Tests.Services.Supplemental
                             this.participantPermission3
                         });
 
-            this.personPermission1 = new PersonPermission(this.personPermission1id, 1);
-            this.personPermission1.ObjectClass = ClassKind.DomainOfExpertise;
-            this.personPermission2 = new PersonPermission(this.personPermission2id, 1);
-            this.personPermission2.ObjectClass = ClassKind.IterationSetup;
-            this.personPermission3 = new PersonPermission(this.personPermission3id, 1);
-            this.personPermission3.ObjectClass = ClassKind.SiteDirectoryDataAnnotation;
+            this.personPermission1 = new PersonPermission(this.personPermission1id, 1)
+            {
+                ObjectClass = ClassKind.DomainOfExpertise
+            };
+
+            this.personPermission2 = new PersonPermission(this.personPermission2id, 1)
+            {
+                ObjectClass = ClassKind.IterationSetup
+            };
+
+            this.personPermission3 = new PersonPermission(this.personPermission3id, 1)
+            {
+                ObjectClass = ClassKind.SiteDirectoryDataAnnotation
+            };
+
             this.personPermissionDao = new Mock<IPersonPermissionDao>();
+
             this.personPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null)).Returns(
                 new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 });
 
@@ -198,9 +208,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             var result = this.service.FilterOutPermissions(this.personRoles, new Version("1.1.0")).OfType<PersonRole>().ToArray();
 
-            CollectionAssert.AreEquivalent(
-                result[0].PersonPermission,
-                new List<Guid> { this.personPermission1id, this.personPermission2id, this.personPermission3id });
+            Assert.That(result[0].PersonPermission, Is.EquivalentTo(new List<Guid> { this.personPermission1id, this.personPermission2id, this.personPermission3id }));
         }
 
         [Test]
@@ -208,9 +216,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             var result = this.service.FilterOutPermissions(this.participantRoles, new Version("1.0.0")).OfType<ParticipantRole>().ToArray();
 
-            CollectionAssert.AreEquivalent(
-                result[0].ParticipantPermission,
-                new List<Guid> { this.participantPermission1id, this.participantPermission2id });
+            Assert.That(result[0].ParticipantPermission, Is.EquivalentTo(new List<Guid> { this.participantPermission1id, this.participantPermission2id }));
         }
 
         [Test]
@@ -218,9 +224,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             var result = this.service.FilterOutPermissions(this.participantRoles, new Version("1.1.0")).OfType<ParticipantRole>().ToArray();
 
-            CollectionAssert.AreEquivalent(
-                result[0].ParticipantPermission,
-                new List<Guid> { this.participantPermission1id, this.participantPermission2id, this.participantPermission3id });
+            Assert.That(result[0].ParticipantPermission, Is.EquivalentTo(new List<Guid> { this.participantPermission1id, this.participantPermission2id, this.participantPermission3id }));
         }
 
         [Test]
@@ -229,19 +233,35 @@ namespace CometServer.Tests.Services.Supplemental
             var personRole = new PersonRole(Guid.NewGuid(), 0);
             var participantRole = new ParticipantRole(Guid.NewGuid(), 0);
 
-            this.personPermission1 = new PersonPermission(Guid.NewGuid(), 0);
-            this.personPermission1.ObjectClass = ClassKind.ActionItem;
-            this.personPermission2 = new PersonPermission(Guid.NewGuid(), 0);
-            this.personPermission2.ObjectClass = ClassKind.SiteDirectory;
-            this.personPermission3 = new PersonPermission(Guid.NewGuid(), 0);
-            this.personPermission3.ObjectClass = ClassKind.ActualFiniteState;
+            this.personPermission1 = new PersonPermission(Guid.NewGuid(), 0)
+            {
+                ObjectClass = ClassKind.ActionItem
+            };
 
-            this.participantPermission1 = new ParticipantPermission(Guid.NewGuid(), 0);
-            this.participantPermission1.ObjectClass = ClassKind.DiagramCanvas;
-            this.participantPermission2 = new ParticipantPermission(Guid.NewGuid(), 0);
-            this.participantPermission2.ObjectClass = ClassKind.EngineeringModel;
-            this.participantPermission3 = new ParticipantPermission(Guid.NewGuid(), 0);
-            this.participantPermission3.ObjectClass = ClassKind.ElementDefinition;
+            this.personPermission2 = new PersonPermission(Guid.NewGuid(), 0)
+            {
+                ObjectClass = ClassKind.SiteDirectory
+            };
+
+            this.personPermission3 = new PersonPermission(Guid.NewGuid(), 0)
+            {
+                ObjectClass = ClassKind.ActualFiniteState
+            };
+
+            this.participantPermission1 = new ParticipantPermission(Guid.NewGuid(), 0)
+            {
+                ObjectClass = ClassKind.DiagramCanvas
+            };
+
+            this.participantPermission2 = new ParticipantPermission(Guid.NewGuid(), 0)
+            {
+                ObjectClass = ClassKind.EngineeringModel
+            };
+
+            this.participantPermission3 = new ParticipantPermission(Guid.NewGuid(), 0)
+            {
+                ObjectClass = ClassKind.ElementDefinition
+            };
 
             personRole.PersonPermission.Add(this.personPermission3.Iid);
             personRole.PersonPermission.Add(this.personPermission2.Iid);
@@ -266,10 +286,11 @@ namespace CometServer.Tests.Services.Supplemental
             var result = this.service.FilterOutPermissions(
                 input,
                 new Version(1, 0)).ToArray();
-            Assert.IsFalse(result.Contains(this.personPermission1));
-            Assert.IsFalse(result.Contains(this.participantPermission1));
-            Assert.AreEqual(personRole.PersonPermission.Count, 2);
-            Assert.AreEqual(participantRole.ParticipantPermission.Count, 2);
+
+            Assert.That(result, Does.Not.Contain(this.personPermission1));
+            Assert.That(result, Does.Not.Contain(this.participantPermission1));
+            Assert.That(personRole.PersonPermission.Count, Is.EqualTo(2));
+            Assert.That(participantRole.ParticipantPermission.Count, Is.EqualTo(2));
         }
     }
 }

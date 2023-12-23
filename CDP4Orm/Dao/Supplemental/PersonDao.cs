@@ -179,31 +179,29 @@ namespace CDP4Orm.Dao
         {
             ArgumentNullException.ThrowIfNull(person);
 
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new System.Text.StringBuilder();
+            sqlBuilder.Append(this.BuildReadQuery(partition, null));
+            sqlBuilder.Append(" WHERE \"Iid\" =:id");
+
+            command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = person.Iid;
+
+            sqlBuilder.Append(';');
+
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
             {
-                var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.Append(this.BuildReadQuery(partition, null));
+                var valueDict = (Dictionary<string, string>) reader["ValueTypeSet"];
 
-                sqlBuilder.Append(" WHERE \"Iid\" =:id");
-                command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = person.Iid;
-
-                sqlBuilder.Append(";");
-
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sqlBuilder.ToString();
-
-                using (var reader = command.ExecuteReader())
+                if (valueDict.TryGetValue("Salt", out var existingSalt))
                 {
-                    while (reader.Read())
-                    {
-                        var valueDict = (Dictionary<string, string>) reader["ValueTypeSet"];
-
-                        if (valueDict.TryGetValue("Salt", out var existingSalt))
-                        {
-                            valueTypeDictionaryAdditions.Add("Salt", existingSalt.UnEscape());
-                        }
-                    }
+                    valueTypeDictionaryAdditions.Add("Salt", existingSalt.UnEscape());
                 }
             }
         }
@@ -276,22 +274,22 @@ namespace CDP4Orm.Dao
 
             try
             {
-                using (var command = new NpgsqlCommand())
-                {
-                    var sqlBuilder = new System.Text.StringBuilder();
+                using var command = new NpgsqlCommand();
 
-                    sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Person\"", partition);
-                    sqlBuilder.AppendFormat(" SET \"ValueTypeDictionary\" = :valueTypeDictionary");
-                    sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
-                    command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = credentials.Iid;
-                    command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+                var sqlBuilder = new System.Text.StringBuilder();
 
-                    command.CommandText = sqlBuilder.ToString();
-                    command.Connection = transaction.Connection;
-                    command.Transaction = transaction;
+                sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Person\"", partition);
+                sqlBuilder.Append(" SET \"ValueTypeDictionary\" = :valueTypeDictionary");
+                sqlBuilder.Append(" WHERE \"Iid\" = :iid;");
 
-                    command.ExecuteNonQuery();
-                }
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = credentials.Iid;
+                command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
+
+                command.CommandText = sqlBuilder.ToString();
+                command.Connection = transaction.Connection;
+                command.Transaction = transaction;
+
+                command.ExecuteNonQuery();
             }
             catch
             {

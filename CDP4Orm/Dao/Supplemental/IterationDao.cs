@@ -25,6 +25,7 @@
 namespace CDP4Orm.Dao
 {
     using System;
+    using System.Text;
 
     using CDP4Common.DTO;
 
@@ -44,17 +45,16 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void SetIterationValidityEnd(NpgsqlTransaction transaction, string partition)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("SELECT \"SiteDirectory\".end_all_current_data_validity(:partitionname);");
-                command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
+            using var command = new NpgsqlCommand();
 
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.ExecuteNonQuery();
-            }
+            const string sql = "SELECT \"SiteDirectory\".end_all_current_data_validity(:partitionname);";
+
+            command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
+
+            command.CommandText = sql;
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -65,18 +65,17 @@ namespace CDP4Orm.Dao
         /// <param name="instant">The instant that matches an iteration</param>
         public void InsertDataFromAudit(NpgsqlTransaction transaction, string partition, DateTime instant)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
-                sqlBuilder.AppendFormat("SELECT \"SiteDirectory\".insert_data_from_audit(:partitionname, :instant);");
-                command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
-                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+            using var command = new NpgsqlCommand();
 
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.ExecuteNonQuery();
-            }
+            const string sql = "SELECT \"SiteDirectory\".insert_data_from_audit(:partitionname, :instant);";
+
+            command.Parameters.Add("partitionname", NpgsqlDbType.Text).Value = partition;
+            command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+
+            command.CommandText = sql;
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -86,17 +85,16 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void DeleteAllIterationThings(NpgsqlTransaction transaction, string partition)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
+            using var command = new NpgsqlCommand();
 
-                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Thing\";", partition);
+            var sqlBuilder = new StringBuilder();
 
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.ExecuteNonQuery();
-            }
+            sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Thing\";", partition);
+
+            command.CommandText = sqlBuilder.ToString();
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -106,17 +104,16 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string partition)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                var sqlBuilder = new System.Text.StringBuilder();
+            using var command = new NpgsqlCommand();
 
-                sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"ElementDefinition_OrganizationalParticipant\";", partition);
+            var sqlBuilder = new StringBuilder();
 
-                command.CommandText = sqlBuilder.ToString();
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.ExecuteNonQuery();
-            }
+            sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"ElementDefinition_OrganizationalParticipant\";", partition);
+
+            command.CommandText = sqlBuilder.ToString();
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -162,15 +159,14 @@ namespace CDP4Orm.Dao
         /// </param>
         private static void UpdateContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing thing)
         {
-            using (var command = new NpgsqlCommand())
-            {
-                command.CommandText = string.Format("UPDATE \"{0}\".\"{1}\" SET \"Container\" = :container;", partition, containedType.Name);
-                command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = thing.Iid;
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
+            using var command = new NpgsqlCommand();
 
-                command.ExecuteNonQuery();
-            }
+            command.CommandText = $"UPDATE \"{partition}\".\"{containedType.Name}\" SET \"Container\" = :container;";
+            command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = thing.Iid;
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+
+            command.ExecuteNonQuery();
         }
     }
 }

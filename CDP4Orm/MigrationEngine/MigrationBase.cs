@@ -74,21 +74,20 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="transaction">The current transaction</param>
         protected void SaveMigrationMetadata(NpgsqlTransaction transaction)
         {
-            using (var sqlCommand = new NpgsqlCommand())
-            {
-                var cmdText = "INSERT INTO \"SiteDirectory\".\"MigrationManagement\" (\"version\", \"name\", \"date\", \"scope\", \"resource_name\") VALUES (:version, :name, :date, :scope, :resourceName) ON CONFLICT (\"version\") DO NOTHING;";
+            using var sqlCommand = new NpgsqlCommand();
 
-                sqlCommand.CommandText = cmdText;
-                sqlCommand.Parameters.Add("version", NpgsqlDbType.Text).Value = this.MigrationMetaData.Version.ToString();
-                sqlCommand.Parameters.Add("name", NpgsqlDbType.Text).Value = this.MigrationMetaData.Name;
-                sqlCommand.Parameters.Add("date", NpgsqlDbType.Text).Value = this.MigrationMetaData.MigrationScriptDate.ToString(CultureInfo.InvariantCulture);
-                sqlCommand.Parameters.Add("scope", NpgsqlDbType.Text).Value = this.MigrationMetaData.MigrationScriptApplicationKind.ToString();
-                sqlCommand.Parameters.Add("resourceName", NpgsqlDbType.Text).Value = this.MigrationMetaData.ResourceName;
+            const string cmdText = "INSERT INTO \"SiteDirectory\".\"MigrationManagement\" (\"version\", \"name\", \"date\", \"scope\", \"resource_name\") VALUES (:version, :name, :date, :scope, :resourceName) ON CONFLICT (\"version\") DO NOTHING;";
 
-                sqlCommand.Connection = transaction.Connection;
-                sqlCommand.Transaction = transaction;
-                sqlCommand.ExecuteNonQuery();
-            }
+            sqlCommand.CommandText = cmdText;
+            sqlCommand.Parameters.Add("version", NpgsqlDbType.Text).Value = this.MigrationMetaData.Version.ToString();
+            sqlCommand.Parameters.Add("name", NpgsqlDbType.Text).Value = this.MigrationMetaData.Name;
+            sqlCommand.Parameters.Add("date", NpgsqlDbType.Text).Value = this.MigrationMetaData.MigrationScriptDate.ToString(CultureInfo.InvariantCulture);
+            sqlCommand.Parameters.Add("scope", NpgsqlDbType.Text).Value = this.MigrationMetaData.MigrationScriptApplicationKind.ToString();
+            sqlCommand.Parameters.Add("resourceName", NpgsqlDbType.Text).Value = this.MigrationMetaData.ResourceName;
+
+            sqlCommand.Connection = transaction.Connection;
+            sqlCommand.Transaction = transaction;
+            sqlCommand.ExecuteNonQuery();
         }
     }
 }

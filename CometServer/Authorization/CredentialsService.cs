@@ -250,7 +250,7 @@ namespace CometServer.Authorization
                 this.credentials.OrganizationalParticipants = personOrganizationalParticipants;
             }
 
-            if (this.credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && this.credentials.OrganizationIid != null && this.credentials.OrganizationalParticipants.Any())
+            if (this.credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && this.credentials.OrganizationIid != null && this.credentials.OrganizationalParticipants.Count != 0)
             {
                 // transient settings for the particular EMS
                 // find the org participant

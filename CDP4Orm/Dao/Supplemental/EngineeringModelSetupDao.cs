@@ -65,36 +65,34 @@ namespace CDP4Orm.Dao
         /// </returns>
         public IEnumerable<EngineeringModelSetup> ReadByPerson(NpgsqlTransaction transaction, string partition, Guid personId, DateTime? instant = null)
         {
-            using (var command = new NpgsqlCommand())
+            using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new System.Text.StringBuilder();
+
+            sqlBuilder.Append(this.BuildReadQuery(partition, null));
+
+            if (!personId.Equals(Guid.Empty))
             {
-                var sqlBuilder = new System.Text.StringBuilder();
+                sqlBuilder.AppendFormat(" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')", partition);
+                command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
+            }
 
-                sqlBuilder.Append(this.BuildReadQuery(partition, null));
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+            }
 
-                if (!personId.Equals(Guid.Empty))
-                {
-                    sqlBuilder.AppendFormat(" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')", partition);
-                    command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
-                }
+            sqlBuilder.Append(';');
 
-                if (instant.HasValue && instant.Value != DateTime.MaxValue)
-                {
-                    command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
-                }
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
 
-                sqlBuilder.Append(";");
+            using var reader = command.ExecuteReader();
 
-                command.Connection = transaction.Connection;
-                command.Transaction = transaction;
-                command.CommandText = sqlBuilder.ToString();
-                
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return this.MapToDto(reader);
-                    }
-                }
+            while (reader.Read())
+            {
+                yield return this.MapToDto(reader);
             }
         }
 
@@ -135,12 +133,12 @@ namespace CDP4Orm.Dao
 
             replacementInfo.Add(new Tuple<string, string>(
                 "EngineeringModel_REPLACE",
-                string.Format("{0}", engineeringModelPartition)));
+                $"{engineeringModelPartition}"));
 
             // support iteration sub partition (schema) which will have the same engineeringmodel identifier applied
             replacementInfo.Add(new Tuple<string, string>(
                 "Iteration_REPLACE",
-                string.Format("{0}", iterationPartition)));
+                $"{iterationPartition}"));
 
             using (var command = new NpgsqlCommand())
             {

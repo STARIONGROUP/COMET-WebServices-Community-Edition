@@ -55,6 +55,6 @@ namespace CDP4Orm.Dao.Authentication
         /// <returns>
         /// List of instances of <see cref="AuthenticationPerson"/>.
         /// </returns>
-        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName, DateTime? instant);
+        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName, DateTime? instant = null);
     }
 }

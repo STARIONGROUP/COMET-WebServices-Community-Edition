@@ -97,7 +97,6 @@ namespace CometServer.Tests.SideEffects
 
         private ParameterSideEffect sideEffect;
 
-        private readonly Guid existingQuantityKindParameterTypeGuid = Guid.NewGuid();
         private readonly Guid existingNotQuantityKindParameterTypeGuid = Guid.NewGuid();
         private readonly Guid notExistingParameterTypeGuid = Guid.NewGuid();
         private readonly Guid scaleGuid = Guid.NewGuid();
@@ -107,6 +106,9 @@ namespace CometServer.Tests.SideEffects
 
         private const string ParameterTypeTestKey = "ParameterType";
         private const string ScaleTestKey = "Scale";
+
+        private static readonly string[] SetValueArrayValues = { "set" };
+        private static readonly string[] OverrideValueArrayValues = { "override" };
 
         [SetUp]
         public void Setup()
@@ -348,9 +350,9 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatAfterUpdateUpdateTheOVerrideAndSubscription()
         {
             var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
-            valueset.Manual = new ValueArray<string>(new[] { "set" });
-            valueset.Published = new ValueArray<string>(new[] { "set" });
-            valueset.Computed = new ValueArray<string>(new[] { "set" });
+            valueset.Manual = new ValueArray<string>( SetValueArrayValues);
+            valueset.Published = new ValueArray<string>(SetValueArrayValues);
+            valueset.Computed = new ValueArray<string>(SetValueArrayValues);
             valueset.ValueSwitch = ParameterSwitchKind.REFERENCE;
 
             this.parameter.ValueSet.Add(valueset.Iid);
@@ -358,9 +360,9 @@ namespace CometServer.Tests.SideEffects
 
             var overrideValueSet = new ParameterOverrideValueSet(Guid.NewGuid(), 1);
             overrideValueSet.ParameterValueSet = valueset.Iid;
-            overrideValueSet.Manual = new ValueArray<string>(new[] { "override" });
-            overrideValueSet.Published = new ValueArray<string>(new[] { "override" });
-            overrideValueSet.Computed = new ValueArray<string>(new[] { "override" });
+            overrideValueSet.Manual = new ValueArray<string>(OverrideValueArrayValues);
+            overrideValueSet.Published = new ValueArray<string>(OverrideValueArrayValues);
+            overrideValueSet.Computed = new ValueArray<string>(OverrideValueArrayValues);
             overrideValueSet.ValueSwitch = ParameterSwitchKind.REFERENCE;
 
             this.parameterOverride.ValueSet.Add(overrideValueSet.Iid);

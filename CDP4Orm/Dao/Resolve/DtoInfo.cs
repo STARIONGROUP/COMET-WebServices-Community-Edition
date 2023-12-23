@@ -71,6 +71,20 @@ namespace CDP4Orm.Dao.Resolve
         }
 
         /// <summary>
+        /// The equals.
+        /// </summary>
+        /// <param name="obj">
+        /// The object to compare with.
+        /// </param>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        public bool Equals(DtoInfo obj)
+        {
+            return obj != null && obj.TypeName == this.TypeName && obj.Iid == this.Iid;
+        }
+
+        /// <summary>
         /// The override of the hash code to allow this type to be used in hashed collections.
         /// </summary>
         /// <returns>
@@ -83,20 +97,6 @@ namespace CDP4Orm.Dao.Resolve
             hash = (hash * 7) + this.Iid.GetHashCode();
 
             return hash;
-        }
-
-        /// <summary>
-        /// The equals.
-        /// </summary>
-        /// <param name="obj">
-        /// The object to compare with.
-        /// </param>
-        /// <returns>
-        /// The <see cref="bool"/>.
-        /// </returns>
-        public bool Equals(DtoInfo obj)
-        {
-            return obj != null && obj.TypeName == this.TypeName && obj.Iid == this.Iid;
         }
     }
 }

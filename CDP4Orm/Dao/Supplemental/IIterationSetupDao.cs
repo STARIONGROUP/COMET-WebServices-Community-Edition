@@ -54,7 +54,7 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="IterationSetup"/>.
         /// </returns>
-        IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant);
+        IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null);
 
         /// <summary>
         /// Read the data from the database based on <see cref="EngineeringModelSetup.Iid"/>.
@@ -74,6 +74,6 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="IterationSetup"/>.
         /// </returns>
-        IEnumerable<IterationSetup> ReadByEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid engineeringModelSetupId, DateTime? instant);
+        IEnumerable<IterationSetup> ReadByEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid engineeringModelSetupId, DateTime? instant = null);
     }
 }
