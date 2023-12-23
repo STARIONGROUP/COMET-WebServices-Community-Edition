@@ -28,7 +28,6 @@ namespace CDP4WspDatabaseAuthentication.Tests
 
     using NUnit.Framework;
 
-
     [TestFixture]
     public class WspEncryptionUtilsTestFixture
     {
@@ -45,8 +44,8 @@ namespace CDP4WspDatabaseAuthentication.Tests
             const string passwordToTest = "pass";
             const string wrongPasswordToTest = "pass1";
 
-            Assert.IsTrue(WspEncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt));
-            Assert.IsFalse(WspEncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt));
+            Assert.That(WspEncryptionUtils.CompareWspSaltedString(passwordToTest, encryptedPassword, salt, serverSalt), Is.True);
+            Assert.That(WspEncryptionUtils.CompareWspSaltedString(wrongPasswordToTest, encryptedPassword, salt, serverSalt), Is.False);
         }
     }
 }

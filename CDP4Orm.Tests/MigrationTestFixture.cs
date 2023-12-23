@@ -54,7 +54,8 @@ namespace CDP4Orm.Tests
         public void VerifyThatAllScriptsAreRegistered()
         {
             var migrations = this.migrationService.GetMigrations(true);
-            Assert.IsNotEmpty(migrations);
+
+            Assert.That(migrations, Is.Not.Empty);
         }
     }
 }

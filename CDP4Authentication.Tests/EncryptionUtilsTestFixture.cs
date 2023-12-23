@@ -37,12 +37,12 @@ namespace CDP4Authentication.Tests
         public void VerifyThatSaltIsGenerated()
         {
             var saltString1 = EncryptionUtils.GenerateRandomSaltString();
-            Assert.IsNotNull(saltString1);
-            Assert.AreEqual(4 * (int)Math.Ceiling(32 / 3.0), saltString1.Length);
+            Assert.That(saltString1, Is.Not.Null);
+            Assert.That(saltString1.Length, Is.EqualTo(4 * (int)Math.Ceiling(32 / 3.0)));
 
             var saltString2 = EncryptionUtils.GenerateRandomSaltString();
-            Assert.AreNotEqual(saltString1,saltString2);
-            Assert.AreEqual(4 * (int)Math.Ceiling(32 / 3.0), saltString2.Length);
+            Assert.That(saltString1, Is.Not.EqualTo(saltString2));
+            Assert.That(saltString2.Length, Is.EqualTo(4 * (int)Math.Ceiling(32 / 3.0)));
         }
 
         [Test]
@@ -51,18 +51,13 @@ namespace CDP4Authentication.Tests
             var password = "pass";
             var salt = EncryptionUtils.GenerateRandomSaltString();
 
-            Console.WriteLine("Salt: {0}", salt);
-
             var passwordTest = "pass";
             var wrongPasswordTest = "testPassword121";
 
-            var encryptedPassword = EncryptionUtils.GenerateSaltedString(password,
-                salt);
+            var encryptedPassword = EncryptionUtils.GenerateSaltedString(password, salt);
 
-            Console.WriteLine("EncryptedPassword: {0}", encryptedPassword);
-
-            Assert.IsTrue(EncryptionUtils.CompareSaltedStrings(passwordTest, encryptedPassword, salt));
-            Assert.IsFalse(EncryptionUtils.CompareSaltedStrings(wrongPasswordTest, encryptedPassword, salt));
+            Assert.That(EncryptionUtils.CompareSaltedStrings(passwordTest, encryptedPassword, salt), Is.True);
+            Assert.That(EncryptionUtils.CompareSaltedStrings(wrongPasswordTest, encryptedPassword, salt), Is.False);
         }
 
         [Test]
@@ -73,7 +68,7 @@ namespace CDP4Authentication.Tests
             var bytes = EncryptionUtils.GetBytesFromString(password);
             var returned = EncryptionUtils.GetStringFromBytes(bytes);
 
-            Assert.AreEqual(password, returned);
+            Assert.That(returned, Is.EqualTo(password));
         }
     }
 }

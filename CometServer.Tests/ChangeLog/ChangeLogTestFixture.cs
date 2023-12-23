@@ -564,8 +564,8 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsFalse(result);
-
+            Assert.That(result, Is.False);
+            
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Never);
 
@@ -583,8 +583,8 @@ namespace CometServer.Tests.Services
 
             result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
-
+            Assert.That(result, Is.True);
+            
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
         }
@@ -608,7 +608,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -633,7 +633,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsFalse(result);
+            Assert.That(result, Is.False);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(0));
@@ -653,12 +653,12 @@ namespace CometServer.Tests.Services
 
             result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
         }
 
         [Test]
@@ -702,12 +702,12 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
             var expectedParameterAffectedReferenceItems = new[]
             {
@@ -797,12 +797,12 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedParameterAffectedReferenceItems = new[]
             {
@@ -883,12 +883,12 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -962,7 +962,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1044,7 +1044,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
@@ -1138,7 +1138,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
@@ -1216,7 +1216,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1292,7 +1292,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1400,7 +1400,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1492,7 +1492,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1580,7 +1580,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1674,7 +1674,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1778,7 +1778,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1864,7 +1864,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -1950,7 +1950,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
@@ -2064,7 +2064,7 @@ namespace CometServer.Tests.Services
 
             var result = this.changeLogService.TryAppendModelChangeLogData(null, this.partition, this.actor, 0, postOperation, things);
 
-            Assert.IsTrue(result);
+            Assert.That(result, Is.True);
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));

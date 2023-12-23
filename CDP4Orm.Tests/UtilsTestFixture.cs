@@ -46,7 +46,7 @@ namespace CDP4Orm.Tests
             const string hstoreSource = "\"TestKey1\" => \"TestValue1\", \"TestKey2\" => \"TestValue2\"";
             var expected = new Dictionary<string, string> { { "TestKey1", "TestValue1" }, { "TestKey2", "TestValue2" } };
 
-            CollectionAssert.AreEquivalent(expected, Utils.ParseHstoreString(hstoreSource));
+            Assert.That(Utils.ParseHstoreString(hstoreSource), Is.EquivalentTo(expected));
         }
 
         [Test]
@@ -55,7 +55,7 @@ namespace CDP4Orm.Tests
             const string hstoreSource = "\"TestKey1 \" =>   \"TestValue1\"   , \"TestKey2\"=>\"TestValue2\"";
             var expected = new Dictionary<string, string> { { "TestKey1", "TestValue1" }, { "TestKey2", "TestValue2" } };
 
-            CollectionAssert.AreEquivalent(expected, Utils.ParseHstoreString(hstoreSource));
+            Assert.That(Utils.ParseHstoreString(hstoreSource), Is.EquivalentTo(expected));
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace CDP4Orm.Tests
             const string hstoreSource = "\"TestKey1 \" =>   \"TestValue1\"   , \"TestKey2\"=>\"TestValue2\"";
             var expected = new Dictionary<string, string> { { "TestKey1", "TestValue1" }, { "TestKey2", "TestValue2" } };
 
-            CollectionAssert.AreEquivalent(expected, Utils.ParseHstoreString(hstoreSource));
+            Assert.That(Utils.ParseHstoreString(hstoreSource), Is.EquivalentTo(expected));
         }
 
         [Test]
@@ -73,7 +73,7 @@ namespace CDP4Orm.Tests
             const string enumSource = "Assembly";
             const AttributeTargets expected = AttributeTargets.Assembly;
 
-            Assert.AreEqual(expected, Utils.ParseEnum<AttributeTargets>(enumSource));
+            Assert.That(Utils.ParseEnum<AttributeTargets>(enumSource), Is.EqualTo(expected));
         }
 
         [Test]
@@ -82,20 +82,21 @@ namespace CDP4Orm.Tests
             const string enumSource = "Assembly,Class";
             var expected = new List<AttributeTargets> { AttributeTargets.Assembly, AttributeTargets.Class };
 
-            CollectionAssert.AreEquivalent(expected, Utils.ParseEnumArray<AttributeTargets>(enumSource));
+            Assert.That(Utils.ParseEnumArray<AttributeTargets>(enumSource), Is.EquivalentTo(expected));
         }
 
         [Test]
         public void VerifyOrderedListDeserialization()
         {
             var orderdListSource = new[,] { { "0", "1" }, { "item0", "item1" } };
+            
             var expected = (IEnumerable)new List<OrderedItem>
                                             {
                                                 new OrderedItem { K = 0, V = "item0" },
                                                 new OrderedItem { K = 1, V = "item1" }
                                             };
 
-            CollectionAssert.AreEqual(expected, Utils.ParseOrderedList<string>(orderdListSource));
+            Assert.That(Utils.ParseOrderedList<string>(orderdListSource), Is.EquivalentTo(expected));
         }
 
         [Test]
@@ -104,7 +105,7 @@ namespace CDP4Orm.Tests
             const string unescapedString = "This is not valid for \"hstore\" persistence";
             const string expectedEscapedString = "This is not valid for \\\"hstore\\\" persistence";
 
-            Assert.AreEqual(expectedEscapedString, unescapedString.Escape());
+            Assert.That(unescapedString.Escape(), Is.EqualTo(expectedEscapedString));
         }
 
         [Test]
@@ -116,11 +117,13 @@ namespace CDP4Orm.Tests
             var test = new ValueArray<string>(valuearray);
 
             var res = test.ToHstoreString();
-            Assert.AreEqual(expected, res);
+            
+            Assert.That(res, Is.EqualTo(expected));
 
             var back = res.FromHstoreToValueArray<string>();
-            Assert.AreEqual(valuearray[0], back[0]);
-            Assert.AreEqual(valuearray[1], back[1]);
+
+            Assert.That(back[0], Is.EqualTo(valuearray[0]));
+            Assert.That(back[1], Is.EqualTo(valuearray[1]));
         }
 
         [Test]
