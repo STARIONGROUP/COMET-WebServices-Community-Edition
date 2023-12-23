@@ -53,11 +53,6 @@ namespace CometServer.Services.Operations.SideEffects
         public IPersonDao PersonDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IPersonService"/>
-        /// </summary>
-        public IPersonService PersonService { get; set; }
-
-        /// <summary>
         /// Gets or sets the (injected) <see cref="ICredentialsService"/> used for authorization
         /// </summary>
         public ICredentialsService CredentialsService { get; set; }
@@ -124,11 +119,22 @@ namespace CometServer.Services.Operations.SideEffects
         public override void AfterUpdate(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var authenticatedCredentials = this.CredentialsService.Credentials;
+            
             if (authenticatedCredentials.Person.Iid == thing.Iid)
             {
                 if (thing.Role != originalThing.Role)
                 {
-                    throw new InvalidOperationException("Update to role of Person making the request is not allowed");
+                    throw new InvalidOperationException("Update to role of the Person making the request is not allowed");
+                }
+
+                if (!thing.IsActive)
+                {
+                    throw new InvalidOperationException("Update IsActive = false to own Person is not allowed");
+                }
+
+                if (thing.IsDeprecated)
+                {
+                    throw new InvalidOperationException("Update IsDeprecated = true to own Person is not allowed");
                 }
             }
         }

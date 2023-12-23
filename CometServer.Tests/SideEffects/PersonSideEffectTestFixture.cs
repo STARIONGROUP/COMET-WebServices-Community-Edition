@@ -24,10 +24,17 @@
 
 namespace CometServer.Tests.SideEffects
 {
+    using System;
+
+    using CDP4Authentication;
+
     using CDP4Common;
+    using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authorization;
+    using CometServer.Services;
     using CometServer.Services.Operations.SideEffects;
 
     using Moq;
@@ -60,6 +67,8 @@ namespace CometServer.Tests.SideEffects
 
         private ClasslessDTO rawUpdateinfo;
 
+        private Mock<ICredentialsService> credentialsService;
+
         [SetUp]
         public void SetUp()
         {
@@ -67,7 +76,9 @@ namespace CometServer.Tests.SideEffects
 
             this.personDao = new Mock<IPersonDao>();
 
-            this.personSideEffect = new PersonSideEffect { PersonDao = this.personDao.Object };
+            this.credentialsService = new Mock<ICredentialsService>();
+
+            this.personSideEffect = new PersonSideEffect { PersonDao = this.personDao.Object, CredentialsService = this.credentialsService.Object};
         }
 
         [Test]
@@ -106,6 +117,109 @@ namespace CometServer.Tests.SideEffects
             // assert same number of entries in raw update info object
             Assert.AreEqual(1, this.rawUpdateinfo.Count);
             Assert.AreEqual(TestValue, this.rawUpdateinfo[TestValue].ToString());
+        }
+
+        [Test]
+        public void Verify_that_when_Person_tries_to_update_themselves_not_setting_isactive_to_false_or_isdeprecated_to_true_is_allowed()
+        {
+            var personIid = Guid.NewGuid();
+            var personRileIid = Guid.NewGuid();
+
+            var credentials = new Credentials();
+            credentials.Person = new AuthenticationPerson(personIid, 1);
+
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+
+            var orginalPerson = new Person(personIid, 1)
+            {
+                Role = personRileIid,
+                IsActive = true,
+                IsDeprecated = false
+            };
+
+            var updatedPerson = new Person(personIid, 2)
+            {
+                Role = personRileIid,
+                IsActive = true,
+                IsDeprecated = false,
+                GivenName = "new name"
+            };
+
+            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+                Throws.Nothing);
+        }
+
+        [Test]
+        public void Verify_that_when_Person_tries_to_change_own_person_role_is_not_allowed()
+        {
+            var personIid = Guid.NewGuid();
+            var personRileIid = Guid.NewGuid();
+
+            var credentials = new Credentials
+            {
+                Person = new AuthenticationPerson(personIid, 1)
+            };
+
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+
+            var orginalPerson = new Person(personIid, 1)
+            {
+                Role = personRileIid,
+                IsActive = true,
+                IsDeprecated = false
+            };
+
+            var updatedPerson = new Person(personIid, 2)
+            {
+                Role = Guid.NewGuid(),
+                IsActive = true,
+                IsDeprecated = false
+            };
+
+            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+                Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.EqualTo("Update to role of the Person making the request is not allowed"));
+        }
+
+
+        [Test]
+        public void Verify_that_when_Person_tries_to_update_themselves_setting_isactive_to_false_or_isdeprecated_to_true_is_not_allowed()
+        {
+            var personIid = Guid.NewGuid();
+            var personRileIid = Guid.NewGuid();
+
+            var credentials = new Credentials
+            {
+                Person = new AuthenticationPerson(personIid, 1)
+            };
+
+            this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
+
+            var orginalPerson = new Person(personIid, 1)
+            {
+                Role = personRileIid,
+                IsActive = true,
+                IsDeprecated = false
+            };
+
+            var updatedPerson = new Person(personIid, 2)
+            {
+                Role = personRileIid,
+                IsActive = false,
+                IsDeprecated = false,
+                GivenName = "new name"
+            };
+
+            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+                Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.EqualTo("Update IsActive = false to own Person is not allowed"));
+
+            updatedPerson.IsActive = true;
+            updatedPerson.IsDeprecated = true;
+
+            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+                Throws.TypeOf<InvalidOperationException>()
+                    .With.Message.EqualTo("Update IsDeprecated = true to own Person is not allowed"));
         }
     }
 }
