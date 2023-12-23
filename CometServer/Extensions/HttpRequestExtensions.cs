@@ -73,5 +73,25 @@ namespace CometServer.Extensions
 
             return new Version(HttpConstants.DefaultDataModelVersion);
         }
+
+        /// <summary>
+        /// Queries the name of the user, method and path from the <see cref="HttpRequest"/>
+        /// and returns it as a concatenated string
+        /// </summary>
+        /// <param name="httpRequest">
+        /// The subject <see cref="HttpRequest"/>
+        /// </param>
+        /// <returns>
+        /// a string that contains the user name, method and path
+        /// </returns>
+        public static string QueryNameMethodPath(this HttpRequest httpRequest)
+        {
+            if (httpRequest.HttpContext.User.Identity == null || string.IsNullOrEmpty(httpRequest.HttpContext.User.Identity.Name))
+            {
+                return $"ANONYMOUS:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
+            }
+
+            return $"{httpRequest.HttpContext.User.Identity.Name}:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
+        }
     }
 }

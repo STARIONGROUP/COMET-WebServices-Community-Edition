@@ -448,7 +448,7 @@ namespace CometServer.Authorization
             }
             catch (Exception ex)
             {
-                this.Logger.LogError(ex, LoggerUtils.GetLogMessage(person, string.Empty, false, "There was an error while retrieving the person roles from the backtier"));
+                this.Logger.LogError(ex, "There was an error while retrieving the person roles from the backtier for person:{person}", person.UserName);
                 return null;
             }
         }

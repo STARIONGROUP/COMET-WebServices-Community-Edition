@@ -145,7 +145,8 @@ namespace CometServer
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
             builder.RegisterType<ResourceLoader>().As<IResourceLoader>().SingleInstance();
-            
+            builder.RegisterType<TokenGeneratorService>().As<ITokenGeneratorService>().SingleInstance();
+
             // 10-25 helpers
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().SingleInstance();
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().SingleInstance();

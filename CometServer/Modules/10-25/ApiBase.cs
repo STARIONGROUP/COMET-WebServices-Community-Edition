@@ -79,9 +79,14 @@ namespace CometServer.Modules
         private const string SiteReferenceDataLibraryType = "SiteReferenceDataLibrary";
 
         /// <summary>
-        /// The <see cref="ILogger{ApiBase}"/> used to log
+        /// The (injected) <see cref="ILogger{ApiBase}"/> used to log
         /// </summary>
         private readonly ILogger<ApiBase> logger;
+
+        /// <summary>
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </summary>
+        protected readonly ITokenGeneratorService TokenGeneratorService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
@@ -89,13 +94,16 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
+        /// <param name="tokenGeneratorService">
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </param>
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService, ILoggerFactory loggerFactory)
+        protected ApiBase(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
-
+            this.TokenGeneratorService = tokenGeneratorService;
             this.AppConfigService = appConfigService;
         }
 
@@ -297,44 +305,6 @@ namespace CometServer.Modules
             }
 
             return responseColl;
-        }
-
-        /// <summary>
-        /// Construct a request log message.
-        /// </summary>
-        /// <param name="httpRequest">
-        /// The <see cref="HttpRequest"/> for which the log message is to be constructed
-        /// </param>
-        /// <param name="message">
-        /// The log message.
-        /// </param>
-        /// <param name="success">
-        /// The success.
-        /// </param>
-        /// <returns>
-        /// A formatted string ready for logging.
-        /// </returns>
-        protected string ConstructLog(HttpRequest httpRequest, string message = null, bool success = true)
-        {
-            var requestMessage = $"[{httpRequest.Method}][{httpRequest.Path}]{(!string.IsNullOrWhiteSpace(message) ? $" : {message}" : string.Empty)}";
-            return LoggerUtils.GetLogMessage(httpRequest.HttpContext.User.Identity.Name, httpRequest.Host.ToString(), success, requestMessage);
-        }
-
-        /// <summary>
-        /// Construct a request log message.
-        /// </summary>
-        /// <param name="httpRequest">
-        /// The <see cref="HttpRequest"/> for which the failure log is constructed
-        /// </param>
-        /// <param name="message">
-        /// The log message.
-        /// </param>
-        /// <returns>
-        /// A formatted string ready for logging.
-        /// </returns>
-        protected string ConstructFailureLog(HttpRequest httpRequest, string message = null)
-        {
-            return this.ConstructLog(httpRequest, message, false);
         }
 
         /// <summary>
@@ -575,37 +545,6 @@ namespace CometServer.Modules
 
             return RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData)
                 .Where(x => x.Iid != modelReferenceDataLibrary.Iid);
-        }
-
-        /// <summary>
-        /// Generates a random string that is used as a token in log statements to match log statements related to the 
-        /// processing of one request
-        /// </summary>
-        /// <returns>
-        /// random token</returns>
-        protected string GenerateRandomToken()
-        {
-            const int length = 12;
-            const string validCharacters = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz123456789";
-
-            var stringBuilder = new StringBuilder(length);
-            var randomBytes = new byte[length];
-
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                // Fill the array with a cryptographically strong sequence of random bytes
-                rng.GetBytes(randomBytes);
-
-                // Convert each byte into a character from the valid character set
-                for (int i = 0; i < length; i++)
-                {
-                    // Convert the byte to an index into the valid character set
-                    int index = randomBytes[i] % validCharacters.Length;
-                    stringBuilder.Append(validCharacters[index]);
-                }
-            }
-
-            return stringBuilder.ToString();
         }
 
         /// <summary>

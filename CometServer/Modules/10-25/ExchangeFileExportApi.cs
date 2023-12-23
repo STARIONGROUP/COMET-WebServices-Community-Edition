@@ -31,7 +31,6 @@ namespace CometServer.Modules
     using System.Linq;
     using System.Net;
     using System.Net.Mime;
-    using System.Security;
     using System.Threading.Tasks;
 
     using Carter.Response;
@@ -86,10 +85,13 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/> used to read application configuration
         /// </param>
+        /// <param name="tokenGeneratorService">
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </param>
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public ExchangeFileExportApi(IAppConfigService appConfigService, ILoggerFactory loggerFactory) : base(appConfigService, loggerFactory)
+        public ExchangeFileExportApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<ExchangeFileExportApi>.Instance : loggerFactory.CreateLogger<ExchangeFileExportApi>();
         }
@@ -160,27 +162,29 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter)
         {
+            var reqsw = Stopwatch.StartNew();
+            var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+            
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+
             if (!this.AppConfigService.AppConfig.Midtier.IsExportEnabled)
             {
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
-                await httpResponse.AsJson("The export is not enabled on this server");
+                await httpResponse.AsJson("Annex C3 Export is not enabled on this server");
                 return;
             }
-            
+
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
-            transactionManager.SetCachedDtoReadEnabled(true);
+            this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
 
-            var sw = Stopwatch.StartNew();
-            var requestToken = this.GenerateRandomToken();
+            transactionManager.SetCachedDtoReadEnabled(true);
 
             var zipFilePath = "";
 
             try
             {
-                this.logger.LogInformation(this.ConstructLog(httpRequest, $"{requestToken} started"));
-
                 HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
                 var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
                 requestUtils.QueryParameters = new QueryParameters(queryParameters);
@@ -212,45 +216,6 @@ namespace CometServer.Modules
 
                 await httpResponse.FromStream(filestream, HttpConstants.MimeTypeOctetStream, new ContentDisposition("EngineeringModelZipFileName"));
             }
-            catch (ThingNotFoundException ex)
-            {
-                if (transaction != null)
-                {
-                    await transaction.RollbackAsync();
-                }
-
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms] due to {ex.Message}"));
-
-                // error handling
-                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
-                await httpResponse.AsJson($"exception:{ex.Message}");
-            }
-            catch (InvalidOperationException ex)
-            {
-                if (transaction != null)
-                {
-                    await transaction.RollbackAsync();
-                }
-
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
-
-                // error handling
-                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
-                await httpResponse.AsJson($"exception:{ex.Message}");
-            }
-            catch (SecurityException ex)
-            {
-                if (transaction != null)
-                {
-                    await transaction.RollbackAsync();
-                }
-
-                this.logger.LogDebug(this.ConstructFailureLog(httpRequest, $"unauthorized request {requestToken} returned after {sw.ElapsedMilliseconds} [ms]"));
-
-                // error handling
-                httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
-                await httpResponse.AsJson($"exception:{ex.Message}");
-            }
             catch (Exception ex)
             {
                 if (transaction != null)
@@ -258,7 +223,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, this.ConstructFailureLog(httpRequest, $"{requestToken} failed after {sw.ElapsedMilliseconds} [ms]"));
+                this.logger.LogError(ex, "{request}:{requestToken} - Request failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -281,8 +246,7 @@ namespace CometServer.Modules
                     System.IO.File.Delete(zipFilePath);
                 }
 
-                sw.Stop();
-                this.logger.LogInformation("Response {requestToken} returned in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 

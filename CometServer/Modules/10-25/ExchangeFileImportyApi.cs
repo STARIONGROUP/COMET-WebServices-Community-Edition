@@ -59,7 +59,7 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
-
+    
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
     /// </summary>
@@ -82,17 +82,26 @@ namespace CometServer.Modules
         private readonly ILogger<ExchangeFileImportyApi> logger;
 
         /// <summary>
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </summary>
+        private readonly ITokenGeneratorService tokenGeneratorService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/>
         /// </summary>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
+        /// <param name="tokenGeneratorService">
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </param>
         /// <param name="logger">
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </param>
-        public ExchangeFileImportyApi(IAppConfigService appConfigService, ILogger<ExchangeFileImportyApi> logger)
+        public ExchangeFileImportyApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportyApi> logger)
         {
             this.AppConfigService = appConfigService;
+            this.tokenGeneratorService = tokenGeneratorService;
             this.logger = logger;
         }
 
@@ -119,14 +128,17 @@ namespace CometServer.Modules
                 await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
             });
 
-            app.MapPost("/Data/Restore", async (HttpResponse res, IDataStoreController dataStoreController) => {
-                await this.RestoreDatastore(res, dataStoreController);
+            app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res, IDataStoreController dataStoreController) => {
+                await this.RestoreDatastore(req, res, dataStoreController);
             });
         }
 
         /// <summary>
         /// Restore the data store.
         /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> that is being handled
+        /// </param>
         /// <param name="response">
         /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
@@ -136,8 +148,13 @@ namespace CometServer.Modules
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        internal async Task RestoreDatastore(HttpResponse response, IDataStoreController dataStoreController)
+        internal async Task RestoreDatastore(HttpRequest httpRequest, HttpResponse response, IDataStoreController dataStoreController)
         {
+            var reqsw = Stopwatch.StartNew();
+            var requestToken = this.tokenGeneratorService.GenerateRandomToken();
+
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+
             if (!this.AppConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
                 this.logger.LogInformation("Data restore API invoked but it was disabled from configuration, cancel further processing...");
@@ -149,24 +166,25 @@ namespace CometServer.Modules
 
             try
             {
-                this.logger.LogInformation("Starting data store rollback");
+                this.logger.LogDebug("{request}:{requestToken} - Starting data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
+
                 dataStoreController.RestoreDataStore();
 
-                // TODO: check what to do with this in origianl CDP4 code
-                // reset the credential cache as the underlying datastore was reset
-                //this.WebServiceAuthentication.ResetCredentialCache();
-
-                this.logger.LogInformation("Finished data store rollback");
+                this.logger.LogDebug("{request}:{requestToken} - Finished data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("DataStore restored");
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Error occured during data store rollback");
+                this.logger.LogError(ex, "{request}:{requestToken} - Error occured during data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("DataStore restored failed");
+            }
+            finally
+            {
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
@@ -200,60 +218,59 @@ namespace CometServer.Modules
         /// <summary>
         /// Asynchronously import the data store.
         /// </summary>
+        /// <param name="httpRequest">
+        /// The <see cref="HttpRequest"/> that is being handled
+        /// </param>
+        /// <param name="response">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
         /// <param name="requestUtils">
         /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
         /// </param>
         /// <param name="transactionManager">
         /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
         /// </param>
+        /// <param name="jsonExchangeFileReader">
+        /// The (injected) <see cref="IJsonExchangeFileReader"/> used to read the provided Annex C3 archive
+        /// </param>
         /// <returns>
         /// The <see cref="Task{Response}"/>.
         /// </returns>
-        internal async Task ImportDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
+        internal async Task ImportDataStore(HttpRequest httpRequest, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController)
         {
+            var reqsw = Stopwatch.StartNew();
+            var requestToken = this.tokenGeneratorService.GenerateRandomToken();
+
             if (!this.AppConfigService.AppConfig.Backtier.IsDbImportEnabled)
             {
-                this.logger.LogInformation("Data store import API invoked but it was disabled from configuration, cancel further processing...");
+                this.logger.LogInformation("{request}:{requestToken} - Data store IMPORT API invoked but it was disabled from configuration, cancel further processing...", httpRequest.QueryNameMethodPath(), requestToken);
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
-                await response.AsJson("Data store import is not allowed");
+                await response.AsJson("Data store IMPORT is not allowed");
             }
 
-            this.logger.LogInformation("Starting data store importing");
-
-            var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
-
-            // drop existing data stores
-            this.DropDataStoreAndPrepareNew(dataStoreController);
-
-            var version = request.QueryDataModelVersion();
-
-            // handle exchange processing
-            if (!this.UpsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null))
-            {
-                response.StatusCode = (int)HttpStatusCode.BadRequest;
-                await response.AsJson("invalid seed file");
-                return;
-            }
-
-            // Remove the exchange file after processing (saving space)
-            try
-            {
-                System.IO.File.Delete(temporarysSeedFilePath);
-            }
-            catch (Exception ex)
-            {
-                // swallow exception but log it
-                this.logger.LogError(ex, "Unable to remove file {temporarysSeedFilePath}", temporarysSeedFilePath);
-            }
+            this.logger.LogInformation("{request}:{requestToken} - Starting data store IMPORT", httpRequest.QueryNameMethodPath(), requestToken);
+            
+            var temporarysSeedFilePath = string.Empty;
 
             try
             {
-                // TODO: check what to do with this in origianl CDP4 code
-                // reset the credential cache as the underlying datastore was reset
-                //this.WebServiceAuthentication.ResetCredentialCache();
+                temporarysSeedFilePath = await this.SaveTemporarySeedFile(httpRequest);
 
-                this.logger.LogInformation("Finished the data store import");
+                // drop existing data stores
+                this.DropDataStoreAndPrepareNew(dataStoreController);
+
+                var version = httpRequest.QueryDataModelVersion();
+
+                // handle exchange processing
+                if (!this.UpsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null))
+                {
+                    response.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await response.AsJson("invalid seed file");
+                    return;
+                }
+
+                this.logger.LogInformation("{request}:{requestToken} - Finished the data store import in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("Datastore imported");
@@ -264,6 +281,21 @@ namespace CometServer.Modules
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("Data store import failed");
+            }
+            finally
+            {
+                try
+                {
+                    // Remove the exchange file after processing (saving space)
+                    System.IO.File.Delete(temporarysSeedFilePath);
+                }
+                catch (Exception ex)
+                {
+                    // swallow exception but log it
+                    this.logger.LogWarning(ex, "{request}:{requestToken} - Unable to remove file {temporarysSeedFilePath}", httpRequest.QueryNameMethodPath(), requestToken, temporarysSeedFilePath);
+                }
+
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
@@ -282,22 +314,28 @@ namespace CometServer.Modules
         /// <param name="transactionManager">
         /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
         /// </param>
+        /// <param name="jsonExchangeFileReader">
+        /// The (injected) <see cref="IJsonExchangeFileReader"/> used to read the provided Annex C3 archive
+        /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
         internal async Task SeedDataStore(HttpRequest request, HttpResponse response, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
+            var reqsw = Stopwatch.StartNew();
+            var requestToken = this.tokenGeneratorService.GenerateRandomToken();
+
             if (!this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled)
             {
-                this.logger.LogInformation("Data store seed API invoked but it was disabled from configuration, cancel further processing...");
-                
+                this.logger.LogInformation("{request}:{requestToken} - Data store SEED API invoked but it was disabled from configuration, cancel further processing...", request.QueryNameMethodPath(), requestToken);
+
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
-                await response.AsJson("seed is not allowed");
+                await response.AsJson("SEED is not allowed");
                 return;
             }
 
-            this.logger.LogInformation("Starting data store seeding");
-
+            this.logger.LogInformation("{request}:{requestToken} - Starting data store SEED", request.QueryNameMethodPath(), requestToken);
+            
             var temporarysSeedFilePath = await this.SaveTemporarySeedFile(request);
 
             // drop existing data stores
@@ -305,7 +343,7 @@ namespace CometServer.Modules
 
             var version = request.QueryDataModelVersion();
 
-            this.logger.LogInformation("Seeding version {version.ToString()}");
+            this.logger.LogInformation("{request}:{requestToken} - Seeding version {version}", request.QueryNameMethodPath(), requestToken, version.ToString());
 
             // handle exchange processing
             if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
@@ -323,7 +361,7 @@ namespace CometServer.Modules
             catch (Exception ex)
             {
                 // swallow exception but log it
-                this.logger.LogError(ex, "Unable to remove file");
+                this.logger.LogError(ex, "{request}:{requestToken} - Unable to remove file {temporarysSeedFilePath}", request.QueryNameMethodPath(), requestToken, temporarysSeedFilePath);
             }
 
             try
@@ -335,18 +373,16 @@ namespace CometServer.Modules
                 // create a clone of the data store for future restore support
                 dataStoreController.CloneDataStore();
 
-                // TODO: check what to do with this in origianl CDP4 code
-                // reset the credential cache as the underlying datastore was reset
-                //this.WebServiceAuthentication.ResetCredentialCache();
+                reqsw.Stop();
 
-                this.logger.LogInformation("Finished the data store seed");
+                this.logger.LogInformation("{request}:{requestToken} - Finished the data store SEED in {ElapsedMilliseconds}", request.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 response.StatusCode = (int)HttpStatusCode.OK;
-                await response.AsJson("Datastore seeded");
+                await response.AsJson($"Datastore seeded in {reqsw.ElapsedMilliseconds} [ms]");
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "DataStore restored failed");
+                this.logger.LogError(ex, "{request}:{requestToken} - DataStore restored failed", request.QueryNameMethodPath(), requestToken);
 
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await response.AsJson("DataStore restored failed");

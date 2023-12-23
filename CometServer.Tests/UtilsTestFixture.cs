@@ -64,6 +64,8 @@ namespace CometServer.Tests
 
         private Mock<ILoggerFactory> loggerFactory;
 
+        private Mock<ITokenGeneratorService> tokenGeneratorService;
+
         private Mock<IModelCreatorManager> modelCreatorManager;
 
         private Mock<IAppConfigService> appConfigService;
@@ -135,6 +137,7 @@ namespace CometServer.Tests
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.jsonSerializer = new Mock<ICdp4JsonSerializer>();
             this.permissionInstanceFilterService= new Mock<IPermissionInstanceFilterService>();
+            this.tokenGeneratorService = new Mock<ITokenGeneratorService>();
         }
 
         [Test]
@@ -142,7 +145,7 @@ namespace CometServer.Tests
         {
             var mockedProcessor = this.SetupMockProcessor();
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.loggerFactory.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object);
 
             var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
 
@@ -157,7 +160,7 @@ namespace CometServer.Tests
             // set query parameter override
             this.requestUtils.OverrideQueryParameters = new QueryParameters { IncludeAllContainers = true };
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.loggerFactory.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object);
 
             var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
             

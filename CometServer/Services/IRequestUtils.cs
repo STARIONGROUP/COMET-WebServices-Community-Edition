@@ -31,8 +31,6 @@ namespace CometServer.Services
 
     using CometServer.Services.Protocol;
 
-    using Microsoft.AspNetCore.Http;
-
     /// <summary>
     /// The RequestUtils interface.
     /// </summary>
