@@ -51,11 +51,6 @@ namespace CometServer.Services.Operations
         private const string SITE_DIRECTORY_PARTITION = "SiteDirectory";
 
         /// <summary>
-        /// The collection os <see cref="Thing"/>s contained in the source <see cref="EngineeringModelSetup"/>
-        /// </summary>
-        private List<Thing> engineeringModelSetupThings;
-
-        /// <summary>
         /// The dictionary that contains original and copies
         /// </summary>
         private Dictionary<Thing, Thing> originalToCopyMap;
@@ -132,18 +127,18 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">The security context</param>
         public void CreateEngineeringModelSetupFromSource(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            this.engineeringModelSetupThings = new List<Thing>();
+            var engineeringModelSetupThings = new List<Thing>();
             this.originalToCopyMap = new Dictionary<Thing, Thing>();
 
             // retrieve all the site-directory data to copy
             this.RequestUtils.QueryParameters.IncludeReferenceData = true; // set to true only to retrieve all data to copy. set back to false once query is over
-            this.engineeringModelSetupThings.AddRange(this.EngineeringModelSetupService.GetDeep(transaction, SITE_DIRECTORY_PARTITION, new[] { source }, securityContext));
+            engineeringModelSetupThings.AddRange(this.EngineeringModelSetupService.GetDeep(transaction, SITE_DIRECTORY_PARTITION, new[] { source }, securityContext));
             this.RequestUtils.QueryParameters.IncludeReferenceData = false;
 
             this.newModelIid = setupToCreate.EngineeringModelIid;
 
             // create copy for all things, iteration-setup included
-            foreach (var engineeringModelSetupThing in this.engineeringModelSetupThings)
+            foreach (var engineeringModelSetupThing in engineeringModelSetupThings)
             {
                 if (engineeringModelSetupThing is EngineeringModelSetup)
                 {

@@ -1133,7 +1133,6 @@ namespace CometServer.Services.ChangeLog
             }
             catch (Exception ex)
             {
-                // Ignore
                 this.Logger.LogError(ex, "operation failed");
             }
 
@@ -1218,9 +1217,7 @@ namespace CometServer.Services.ChangeLog
 
             if (propInfo == null)
             {
-                {
-                    return null;
-                }
+                return null;
             }
 
             foreach (var container in possibleContainers)

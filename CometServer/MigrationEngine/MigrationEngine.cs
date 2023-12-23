@@ -51,11 +51,6 @@ namespace CometServer
         private readonly ILogger<MigrationEngine> logger;
 
         /// <summary>
-        /// The (injected) <see cref="ILoggerFactory"/>
-        /// </summary>
-        private readonly ILoggerFactory loggerFactory;
-
-        /// <summary>
         /// Gets or sets the (injected) <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
@@ -73,8 +68,7 @@ namespace CometServer
         /// </param>
         public MigrationEngine(ILoggerFactory loggerFactory)
         {
-            this.loggerFactory = loggerFactory;
-            this.logger = this.loggerFactory == null ? NullLogger<MigrationEngine>.Instance : this.loggerFactory.CreateLogger<MigrationEngine>();
+            this.logger = loggerFactory == null ? NullLogger<MigrationEngine>.Instance : loggerFactory.CreateLogger<MigrationEngine>();
         }
 
         /// <summary>

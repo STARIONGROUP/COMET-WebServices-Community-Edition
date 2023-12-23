@@ -148,7 +148,6 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Create the iteration for the IterationSetup
-            var iteration = new Iteration(thing.IterationIid, 1) { IterationSetup = thing.Iid };
             var engineeringModelIid = engineeringModelSetup.EngineeringModelIid;
 
             // switch partition to engineeringModel
@@ -300,7 +299,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new InvalidOperationException("It is not possible to delete the current iteration.");
             }
 
-            if (iterationSetup.IsDeleted != false)
+            if (iterationSetup.IsDeleted)
             {
                 return;
             }

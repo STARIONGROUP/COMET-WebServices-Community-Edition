@@ -33,8 +33,10 @@ namespace CometServer.Modules.Health
     using CDP4Orm.Dao;
 
     using CometServer.Configuration;
+    using CometServer.Extensions;
     using CometServer.Helpers;
-    
+    using CometServer.Services;
+
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
@@ -58,6 +60,11 @@ namespace CometServer.Modules.Health
         private readonly ILogger<HealthModule> logger;
 
         /// <summary>
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </summary>
+        private readonly ITokenGeneratorService tokenGeneratorService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HealthModule"/>
         /// </summary>
         /// <param name="logger">
@@ -66,10 +73,14 @@ namespace CometServer.Modules.Health
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        public HealthModule(ILogger<HealthModule> logger, IAppConfigService appConfigService)
+        /// <param name="tokenGeneratorService">
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </param>
+        public HealthModule(ILogger<HealthModule> logger, IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService)
         {
             this.logger = logger;
             this.appConfigService = appConfigService;
+            this.tokenGeneratorService = tokenGeneratorService;
         }
 
         /// <summary>
@@ -107,7 +118,9 @@ namespace CometServer.Modules.Health
         /// </returns>
         public IResult QueryStartp(HttpRequest req, HttpResponse res)
         {
-            this.logger.LogDebug("Quering the HEALTH-startup endpoint");
+            var requestToken = this.tokenGeneratorService.GenerateRandomToken();
+
+            this.logger.LogDebug("{request}:{requestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
 
             res.StatusCode = (int)HttpStatusCode.OK;
             return Results.Text("Started");
@@ -135,7 +148,9 @@ namespace CometServer.Modules.Health
         /// </returns>
         public async Task<IResult> QueryHealth(HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
         {
-            this.logger.LogDebug("Quering the HEALTH-healthz endpoint");
+            var requestToken = this.tokenGeneratorService.GenerateRandomToken();
+
+            this.logger.LogDebug("{request}:{requestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
 
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -146,14 +161,14 @@ namespace CometServer.Modules.Health
 
                 transaction = transactionManager.SetupTransaction(ref connection, null);
 
-                var things = siteDirectoryDao.Read(transaction, "SiteDirectory", null, false);
+                siteDirectoryDao.Read(transaction, "SiteDirectory", null, false);
 
                 res.StatusCode = (int)HttpStatusCode.OK;
                 return Results.Text("Healthy");
             }
-            catch (NpgsqlException e)
+            catch (NpgsqlException ex)
             {
-                this.logger.LogWarning(e, "The CDP4-COMET Server is not healthy");
+                this.logger.LogWarning("{request}:{requestToken} - The CDP4-COMET Server is not healthy: {excption}", req.QueryNameMethodPath(), requestToken, ex.Message);
             }
             finally
             {

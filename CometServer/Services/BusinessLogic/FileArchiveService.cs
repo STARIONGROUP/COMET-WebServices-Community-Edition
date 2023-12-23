@@ -28,6 +28,7 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Text;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -473,16 +474,16 @@ namespace CometServer.Services
                 this.FileBinaryService.TryGetFileStoragePath(subFileRevision.ContentHash, out var storageFilePath);
 
                 // Determine an extension for the file
-                var extension = string.Empty;
+                var extension = new StringBuilder();
                 foreach (var orderedItem in subFileRevision.FileType)
                 {
                     var tempExtension = fileTypes.Single(x => x.Iid == Guid.Parse(orderedItem.V.ToString()))
                         .Extension;
 
-                    extension += "." + (tempExtension != "?" ? tempExtension : "unknown");
+                    extension.Append('.').Append(tempExtension != "?" ? tempExtension : "unknown");
                 }
 
-                var destFile = Path.Combine(folderPath, subFileRevision.Name + extension);
+                var destFile = Path.Combine(folderPath, $"{subFileRevision.Name}{extension}");
 
                 this.Logger.LogDebug("Copying {storageFilePath} to {destFile}", storageFilePath, destFile);
 
