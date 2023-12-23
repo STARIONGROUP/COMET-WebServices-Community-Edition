@@ -119,21 +119,21 @@ namespace CometServer.Services
             {
                 if (engineeringModelSetup.RequiredRdl.Count > 1)
                 {
-                    this.Logger.LogWarning($"The EngineeringModelSetup { engineeringModelSetup.Iid } has more than 1 required rdl, this is not allowed, this EngineeringModelSetup is ignored");
+                    this.Logger.LogWarning("The EngineeringModelSetup { engineeringModelSetupIid } has more than 1 required rdl, this is not allowed, this EngineeringModelSetup is ignored", engineeringModelSetup.Iid);
                     continue;
                 }
 
                 var modelReferenceDataLibararyIid = engineeringModelSetup.RequiredRdl.SingleOrDefault();
                 if (modelReferenceDataLibararyIid == Guid.Empty)
                 {
-                    this.Logger.LogWarning($"The EngineeringModelSetup { engineeringModelSetup.Iid } does not have a required rdl, this is not allowed, this EngineeringModelSetup is ignored");
+                    this.Logger.LogWarning("The EngineeringModelSetup { engineeringModelSetupIid } does not have a required rdl, this is not allowed, this EngineeringModelSetup is ignored", engineeringModelSetup.Iid);
                     continue;
                 }
 
                 var modelReferenceDataLibarary = this.cachedModelReferenceDataLibraries.SingleOrDefault(x => x.Iid == modelReferenceDataLibararyIid);
                 if (modelReferenceDataLibarary == null)
                 { 
-                    this.Logger.LogWarning($"The ModelReferenceDataLibarary { modelReferenceDataLibararyIid } could not be found, there is a fault in the data, the EngineeringModelSetup {engineeringModelSetup.Iid} is ignored");
+                    this.Logger.LogWarning("The ModelReferenceDataLibarary { modelReferenceDataLibararyIid } could not be found, there is a fault in the data, the EngineeringModelSetup {engineeringModelSetupIid} is ignored", modelReferenceDataLibararyIid, engineeringModelSetup.Iid);
                     continue;
                 }
                 else

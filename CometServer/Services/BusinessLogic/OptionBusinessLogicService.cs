@@ -52,15 +52,9 @@ namespace CometServer.Services
         /// <param name="options">The current <see cref="Option"/>s</param>
         public void Initialize(Iteration iteration, IReadOnlyCollection<Option> options)
         {
-            if (iteration == null)
-            {
-                throw new ArgumentNullException(nameof(iteration));
-            }
+            ArgumentNullException.ThrowIfNull(iteration);
 
-            if (options == null)
-            {
-                throw new ArgumentNullException(nameof(options));
-            }
+            ArgumentNullException.ThrowIfNull(options);
 
             if (iteration.Option.Count != options.Count())
             {

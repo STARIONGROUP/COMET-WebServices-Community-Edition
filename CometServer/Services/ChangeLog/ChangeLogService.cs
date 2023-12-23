@@ -329,7 +329,7 @@ namespace CometServer.Services.ChangeLog
             }
             catch (ResolveException ex)
             {
-                this.Logger.LogDebug(ex.Message);
+                this.Logger.LogDebug("{message}", ex.Message);
             }
             catch (Exception ex)
             {
@@ -350,7 +350,7 @@ namespace CometServer.Services.ChangeLog
 
             sw.Stop();
 
-            this.Logger.LogInformation($"Finished appending to changelog data in {sw.ElapsedMilliseconds} [ms]");
+            this.Logger.LogInformation("Finished appending to changelog data in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
 
             return result;
         }

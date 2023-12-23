@@ -255,13 +255,13 @@ namespace CometServer.Services
 
             if (sampledFunctionParameterType.IndependentParameterType.Count == 0)
             {
-                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {0} does not contain any IndependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
+                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {sampledFunctionParameterType} does not contain any IndependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
                 return 0;
             }
 
             if (sampledFunctionParameterType.DependentParameterType.Count == 0)
             {
-                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {0} does not contain any DependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
+                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {sampledFunctionParameterType} does not contain any DependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
                 return 0;
             }
 
@@ -341,7 +341,7 @@ namespace CometServer.Services
 
             if (compoundParameterType.Component.Count == 0)
             {
-                this.Logger.LogWarning("The CompoundParameterType with Iid {0} does not contain any ParameterTypeComponents", compoundParameterType.Iid);
+                this.Logger.LogWarning("The CompoundParameterType with Iid {compoundParameterType} does not contain any ParameterTypeComponents", compoundParameterType.Iid);
                 return 0;
             }
 

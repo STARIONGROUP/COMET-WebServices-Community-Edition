@@ -140,12 +140,10 @@ namespace CometServer.Services
             }
 
             this.OldDefaultOption = null;
+
             if (this.IsOldOptionDependent)
             {
-                if (iteration == null)
-                {
-                    throw new ArgumentNullException(nameof(iteration));
-                }
+                ArgumentNullException.ThrowIfNull(iteration);
 
                 var options = this.OptionService.GetShallow(transaction, partition, iteration.Option.Select(x => Guid.Parse(x.V.ToString())), securityContext).Cast<Option>().ToList();
 

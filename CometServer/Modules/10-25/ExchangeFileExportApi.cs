@@ -120,7 +120,7 @@ namespace CometServer.Modules
                     }
                     catch (AuthorizationException e)
                     {
-                        this.logger.LogWarning($"The POST REQUEST was not authorized for {req.HttpContext.User.Identity.Name}");
+                        this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");

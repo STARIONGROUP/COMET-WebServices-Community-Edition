@@ -136,7 +136,7 @@ namespace CometServer.Services
                     this.parameterTypeCache.Add(parameterType.Iid, parameterType);
                 }
 
-                this.Logger.LogDebug($"ParameterTypes Queried in {sw.ElapsedMilliseconds} [ms]");
+                this.Logger.LogDebug("ParameterTypes Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
 
             return this.parameterTypeCache;
@@ -198,7 +198,7 @@ namespace CometServer.Services
                     this.dependentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
-                this.Logger.LogDebug($"DependentParameterTypeAssignments Queried in {sw.ElapsedMilliseconds} [ms]");
+                this.Logger.LogDebug("DependentParameterTypeAssignments Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
 
             return this.dependentParameterTypeAssignment;
@@ -229,7 +229,7 @@ namespace CometServer.Services
                     this.independentParameterTypeAssignment.Add(parameterTypeAssignment.Iid, parameterTypeAssignment);
                 }
 
-                this.Logger.LogDebug($"IndependentParameterTypeAssignment Queried in {sw.ElapsedMilliseconds} [ms]");
+                this.Logger.LogDebug("IndependentParameterTypeAssignment Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
 
             return this.independentParameterTypeAssignment;
@@ -260,7 +260,7 @@ namespace CometServer.Services
                     this.measurementScaleCache.Add(measurementScale.Iid, measurementScale);
                 }
 
-                this.Logger.LogDebug($"MeasurementScales Queried in {sw.ElapsedMilliseconds} [ms]");
+                this.Logger.LogDebug("MeasurementScales Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
 
             return this.measurementScaleCache;
@@ -291,7 +291,7 @@ namespace CometServer.Services
                     this.measurementUnitCache.Add(measurementUnit.Iid, measurementUnit);
                 }
 
-                this.Logger.LogDebug($"MeasurementUnits Queried in {sw.ElapsedMilliseconds} [ms]");
+                this.Logger.LogDebug("MeasurementUnits Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
 
             return this.measurementUnitCache;

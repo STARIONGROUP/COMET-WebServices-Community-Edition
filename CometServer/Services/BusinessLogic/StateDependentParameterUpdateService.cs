@@ -97,18 +97,17 @@ namespace CometServer.Services
         /// <param name="newOldActualStateMap">The map that links the new to old <see cref="CDP4Common.DTO.ActualFiniteState"/></param>
         public void UpdateAllStateDependentParameters(ActualFiniteStateList actualFiniteStateList, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ActualFiniteState, ActualFiniteState> newOldActualStateMap)
         {
-            if (iteration == null)
-            {
-                throw new ArgumentNullException(nameof(iteration));
-            }
+            ArgumentNullException.ThrowIfNull(iteration);
 
             var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Where(i => i is Parameter).Cast<Parameter>()
                 .Where(x => x.StateDependence == actualFiniteStateList.Iid).ToList();
+
             var parameterOverrides = this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext).Where(i => i is ParameterOverride).Cast<ParameterOverride>()
                 .Where(x => parameters.Select(p => p.Iid).Contains(x.Parameter)).ToList();
 
             // update the parameters with the new actual states
             var newOldParameterValueSetMap = new Dictionary<Parameter, IDictionary<ParameterValueSet, ParameterValueSet>>();
+
             foreach (var parameter in parameters)
             {
                 var tmpMap = new Dictionary<ParameterValueSet, ParameterValueSet>();
@@ -118,6 +117,7 @@ namespace CometServer.Services
 
             // update the parameter override from the updated parameters
             var parameterOrOVerrideValueSetMap = new Dictionary<ParameterOrOverrideBase, IReadOnlyDictionary<ParameterValueSetBase, ParameterValueSetBase>>();
+
             foreach (var pair in newOldParameterValueSetMap)
             {
                 parameterOrOVerrideValueSetMap.Add(pair.Key, pair.Value.ToDictionary(newSet => (ParameterValueSetBase)newSet.Key, oldSet => (ParameterValueSetBase)oldSet.Value));
@@ -133,8 +133,10 @@ namespace CometServer.Services
 
             // update the parameter subscription from the updated parameter/overide value sets
             var parameterOrOverrides = parameters.Cast<ParameterOrOverrideBase>().Union(parameterOverrides).ToList();
+
             var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, null, securityContext).Where(i => i is ParameterSubscription).Cast<ParameterSubscription>()
                 .Where(x => parameterOrOverrides.SelectMany(p => p.ParameterSubscription).Contains(x.Iid));
+
             foreach (var parameterSubscription in parameterSubscriptions)
             {
                 var subscribedParameterOrOverride = parameterOrOverrides.Single(x => x.ParameterSubscription.Contains(parameterSubscription.Iid));
@@ -196,6 +198,7 @@ namespace CometServer.Services
             foreach (var newOldStatePair in newOldActualStateMap)
             {
                 ParameterValueSet oldValueSet;
+
                 if (newOldStatePair.Value == null)
                 {
                     oldValueSet = null;
@@ -231,6 +234,7 @@ namespace CometServer.Services
             var defaultValue = this.DefaultValueSetFactory.CreateDefaultValueArray(parameter.ParameterType);
 
             var isOldValueNull = oldValue == null;
+
             var valueSet = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(isOldValueNull ? defaultValue : oldValue.Manual),
@@ -265,6 +269,7 @@ namespace CometServer.Services
             foreach (var newOldParameterValueSetPair in newOldParameterValueSetMap)
             {
                 ParameterOverrideValueSet newValueSet;
+
                 if (newOldParameterValueSetPair.Value != null)
                 {
                     // there should be a override value set counter-part
@@ -292,6 +297,7 @@ namespace CometServer.Services
         private ParameterOverrideValueSet CreateParameterOverrideValueSet(ParameterOverrideValueSet oldValue, ParameterValueSet parameterValueSet, ParameterOverride container, NpgsqlTransaction transaction, string partition)
         {
             var isOldValueNull = oldValue == null;
+
             var newValueSet = new ParameterOverrideValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(isOldValueNull ? parameterValueSet.Manual : oldValue.Manual),
@@ -345,6 +351,7 @@ namespace CometServer.Services
         private void CreateParameterSubscriptionValueSet(ParameterSubscriptionValueSet oldValue, ParameterValueSetBase valueSetBase, ParameterSubscription container, NpgsqlTransaction transaction, string partition)
         {
             var isOldValueNull = oldValue == null;
+
             var newValueSet = new ParameterSubscriptionValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>((oldValue == null) ? valueSetBase.Manual : oldValue.Manual),

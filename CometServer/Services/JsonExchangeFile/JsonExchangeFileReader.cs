@@ -36,6 +36,7 @@ namespace CometServer.Services
     using CDP4JsonSerializer;
 
     using CDP4Orm.Dao;
+
     using Ionic.Zip;
 
     using Microsoft.Extensions.Logging;
@@ -272,10 +273,9 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                var msg = $"Failed to load file: {ex.Message}";
-                this.Logger.LogError(msg);
+                this.Logger.LogError(ex, "Failed to load file");
 
-                throw new FileLoadException(msg);
+                throw new FileLoadException($"Failed to load file: {ex.Message}");
             }
         }
 
@@ -318,10 +318,9 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                var msg = $"Failed to load file. Error: {ex.Message}";
-                this.Logger.LogError(msg);
+                this.Logger.LogError(ex, "Failed to load file");
 
-                throw new FileLoadException(msg);
+                throw new FileLoadException($"Failed to load file. Error: {ex.Message}");
             }
         }
 
@@ -364,10 +363,9 @@ namespace CometServer.Services
             }
             catch (Exception ex)
             {
-                var msg = $"Failed to load file. Error: {ex.Message}";
-                this.Logger.LogError(msg);
+                this.Logger.LogError(ex, "Failed to load file");
 
-                throw new FileLoadException(msg);
+                throw new FileLoadException($"Failed to load file. Error: {ex.Message}");
             }
         }
 

@@ -49,11 +49,6 @@ namespace CDP4Orm.MigrationEngine
         private readonly ILoggerFactory loggerFactory;
 
         /// <summary>
-        /// The <see cref="ILogger{MigrationService}"/> used to log
-        /// </summary>
-        private readonly ILogger<MigrationService> logger;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="MigrationService"/> class.
         /// </summary>
         /// <param name="loggerFactory">
@@ -62,8 +57,6 @@ namespace CDP4Orm.MigrationEngine
         public MigrationService(ILoggerFactory loggerFactory)
         {
             this.loggerFactory = loggerFactory;
-
-            this.logger = this.loggerFactory == null ? NullLogger<MigrationService>.Instance : this.loggerFactory.CreateLogger<MigrationService>();
         }
 
         /// <summary>

@@ -453,7 +453,7 @@ namespace CometServer.Modules
                 var engineeringModelCount = items.OfType<EngineeringModelSetup>().Count();
                 var seededEngineeringModelCount = 0;
 
-                this.logger.LogInformation($"{siteRdlCount} Site Reference Data Libraries and {engineeringModelCount} Engineering Models will be seeded");
+                this.logger.LogInformation("{siteRdlCount} Site Reference Data Libraries and {engineeringModelCount} Engineering Models will be seeded", siteRdlCount, engineeringModelCount);
 
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
@@ -462,6 +462,7 @@ namespace CometServer.Modules
                 }
 
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
+
                 if (topContainer == null)
                 {
                     this.logger.LogError("No Topcontainer item encountered");
@@ -485,12 +486,12 @@ namespace CometServer.Modules
                 migrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
 
                 var result = false;
+
                 if (topContainer.GetType().Name == "SiteDirectory")
                 {
                     // make sure single iterationsetups are set to unfrozen before persitence
                     FixSingleIterationSetups(items);
-                    var siteDirectoryService =
-                        serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
+                    var siteDirectoryService = serviceProvider.MapToPersitableService<SiteDirectoryService>("SiteDirectory");
 
                     result = siteDirectoryService.Insert(transaction, "SiteDirectory", topContainer);
                     seededSiteRdlCount = siteRdlCount;
@@ -564,7 +565,7 @@ namespace CometServer.Modules
                                 x => engineeringModelSetup.IterationSetup.Contains(x.Iid)).ToList();
 
                         // get current maximum iterationNumber and increase by one for the next value
-                        int maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
+                        var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
                         engineeringModelDao.ResetIterationNumberSequenceStartNumber(
@@ -573,6 +574,7 @@ namespace CometServer.Modules
                             maxIterationNumber);
 
                         var iterationInsertResult = true;
+
                         foreach (var iterationSetup in iterationSetups)
                         {
                             requestUtils.Cache.Clear();
@@ -583,8 +585,8 @@ namespace CometServer.Modules
                             requestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration
-                            var iteration =
-                                iterationItems.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.Iteration) as Iteration;
+                            var iteration = iterationItems.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.Iteration) as Iteration;
+
                             if (iteration == null || !iterationService.CreateConcept(
                                     transaction,
                                     dataPartition,
@@ -833,8 +835,7 @@ namespace CometServer.Modules
 
                             // should return one iteration
                             // for the every model EngineeringModel schema ends with the same ID as Iteration schema
-                            var iteration =
-                                iterationItems.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.Iteration) as Iteration;
+                            var iteration = iterationItems.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.Iteration) as Iteration;
 
                             iterationInsertResult = false;
 

@@ -53,25 +53,16 @@ namespace CometServer.Services
         /// <returns>The default <see cref="ActualFiniteState"/> if any, null otherwise</returns>
         public ActualFiniteState GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, IReadOnlyList<PossibleFiniteStateList> possibleLists)
         {
-            if (actualList == null)
-            {
-                throw new ArgumentNullException(nameof(actualList));
-            }
+            ArgumentNullException.ThrowIfNull(actualList);
 
-            if (actualListStates == null)
-            {
-                throw new ArgumentNullException(nameof(actualListStates));
-            }
+            ArgumentNullException.ThrowIfNull(actualListStates);
 
             if (!actualList.ActualState.TrueForAll(x => actualListStates.Select(s => s.Iid).Contains(x)))
             {
                 throw new ArgumentException("Some Actual Finite States are missing.", nameof(actualListStates));
             }
 
-            if (possibleLists == null)
-            {
-                throw new ArgumentNullException(nameof(possibleLists));
-            }
+            ArgumentNullException.ThrowIfNull(possibleLists);
 
             if (!actualList.PossibleFiniteStateList.TrueForAll(x => possibleLists.Select(s => s.Iid).Contains(Guid.Parse(x.V.ToString()))))
             {
@@ -82,6 +73,7 @@ namespace CometServer.Services
             var actualPossibleLists = possibleLists.Where(p => actualList.PossibleFiniteStateList.Select(x => Guid.Parse(x.V.ToString())).Contains(p.Iid)).ToList();
 
             var defaultPossibleStates = new List<Guid>();
+
             foreach (var possibleFiniteStateList in actualPossibleLists)
             {
                 if (!possibleFiniteStateList.DefaultState.HasValue)

@@ -144,8 +144,7 @@ namespace CometServer.Services.Operations.SideEffects
                     return;
                 }
 
-                var baseErrorString =
-                    $"Could not set {nameof(Iteration)}.{nameof(Iteration.TopElement)} to null.";
+                var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.TopElement)} to null.";
 
                 var iterationSetup = this.IterationSetupService.GetShallow(transaction,
                     Utils.SiteDirectoryPartition,
@@ -205,10 +204,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
             else
             {
-                if (container == null)
-                {
-                    throw new ArgumentNullException(nameof(container));
-                }
+                ArgumentNullException.ThrowIfNull(container);
 
                 throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
                     nameof(container));
@@ -336,6 +332,7 @@ namespace CometServer.Services.Operations.SideEffects
             foreach (var elementUsageId in elementDefinition.ContainedElement)
             {
                 var elementUsage = elementUsages.Find(x => x.Iid == elementUsageId);
+
                 if (elementUsage.ElementDefinition != elementDefinitionId)
                 {
                     if (!IsReferencedElementDefinitionAcyclic(

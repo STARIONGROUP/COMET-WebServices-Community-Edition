@@ -92,31 +92,31 @@ namespace CometServer
 
                 logger.LogInformation("################################################################");
 
-                logger.LogInformation($"Starting CDP4-COMET Services v{resourceLoader.QueryVersion()}");
+                logger.LogInformation("Starting CDP4-COMET Services v{version}", resourceLoader.QueryVersion());
 
                 var appConfigService = host.Services.GetService<IAppConfigService>();
 
                 logger.LogInformation("Configuration Loaded:");
 
-                logger.LogInformation($"Midtier-UploadDirectory: {appConfigService.AppConfig.Midtier.UploadDirectory}");
-                logger.LogInformation($"Midtier-FileStorageDirectory: {appConfigService.AppConfig.Midtier.FileStorageDirectory}");
-                logger.LogInformation($"Midtier-TemporaryFileStorageDirectory: {appConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory}");
-                logger.LogInformation($"Midtier-IsExportEnabled: {appConfigService.AppConfig.Midtier.IsExportEnabled}");
-                logger.LogInformation($"Midtier-ExportDirectory: {appConfigService.AppConfig.Midtier.ExportDirectory}");
-                logger.LogInformation($"Midtier-BacktierWaitTime: {appConfigService.AppConfig.Midtier.BacktierWaitTime}");
+                logger.LogInformation("Midtier-UploadDirectory: {UploadDirectory}", appConfigService.AppConfig.Midtier.UploadDirectory);
+                logger.LogInformation("Midtier-FileStorageDirectory: {FileStorageDirectory}", appConfigService.AppConfig.Midtier.FileStorageDirectory);
+                logger.LogInformation("Midtier-TemporaryFileStorageDirectory: {TemporaryFileStorageDirectory}", appConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory);
+                logger.LogInformation("Midtier-IsExportEnabled: {IsExportEnabled}", appConfigService.AppConfig.Midtier.IsExportEnabled);
+                logger.LogInformation("Midtier-ExportDirectory: {ExportDirectory}", appConfigService.AppConfig.Midtier.ExportDirectory);
+                logger.LogInformation("Midtier-BacktierWaitTime: {BacktierWaitTime}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
 
-                logger.LogInformation($"Changelog-CollectChanges: {appConfigService.AppConfig.Changelog.CollectChanges}");
-                logger.LogInformation($"Changelog-AllowEmailNotification: {appConfigService.AppConfig.Changelog.AllowEmailNotification}");
+                logger.LogInformation("Changelog-CollectChanges: {CollectChanges}", appConfigService.AppConfig.Changelog.CollectChanges);
+                logger.LogInformation("Changelog-AllowEmailNotification: {AllowEmailNotification}", appConfigService.AppConfig.Changelog.AllowEmailNotification);
 
-                logger.LogInformation($"Backtier-HostName: {appConfigService.AppConfig.Backtier.HostName}");
-                logger.LogInformation($"Backtier-Port: {appConfigService.AppConfig.Backtier.Port}");
-                logger.LogInformation($"Backtier-Database: {appConfigService.AppConfig.Backtier.Database}");
-                logger.LogInformation($"Backtier-DatabaseRestore: {appConfigService.AppConfig.Backtier.DatabaseRestore}");
-                logger.LogInformation($"Backtier-DatabaseManage: {appConfigService.AppConfig.Backtier.DatabaseManage}");
-                logger.LogInformation($"Backtier-StatementTimeout: {appConfigService.AppConfig.Backtier.StatementTimeout}");
-                logger.LogInformation($"Backtier-IsDbSeedEnabled: {appConfigService.AppConfig.Backtier.IsDbSeedEnabled}");
-                logger.LogInformation($"Backtier-IsDbImportEnabled: {appConfigService.AppConfig.Backtier.IsDbImportEnabled}");
-                logger.LogInformation($"Backtier-IsDbRestoreEnabled: {appConfigService.AppConfig.Backtier.IsDbRestoreEnabled}");
+                logger.LogInformation("Backtier-HostName: {HostName}", appConfigService.AppConfig.Backtier.HostName);
+                logger.LogInformation("Backtier-Port: {Port}", appConfigService.AppConfig.Backtier.Port);
+                logger.LogInformation("Backtier-Database: {Database}", appConfigService.AppConfig.Backtier.Database);
+                logger.LogInformation("Backtier-DatabaseRestore: {DatabaseRestore}", appConfigService.AppConfig.Backtier.DatabaseRestore);
+                logger.LogInformation("Backtier-DatabaseManage: {DatabaseManage}", appConfigService.AppConfig.Backtier.DatabaseManage);
+                logger.LogInformation("Backtier-StatementTimeout: {StatementTimeout}", appConfigService.AppConfig.Backtier.StatementTimeout);
+                logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", appConfigService.AppConfig.Backtier.IsDbSeedEnabled);
+                logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", appConfigService.AppConfig.Backtier.IsDbImportEnabled);
+                logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", appConfigService.AppConfig.Backtier.IsDbRestoreEnabled);
 
                 logger.LogInformation("################################################################");
 
@@ -175,7 +175,7 @@ namespace CometServer
                 RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
             }
 
-            logger.LogInformation($"Cron jobs configured in {sw.ElapsedMilliseconds} ms");
+            logger.LogInformation("Cron jobs configured in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
         }
     }
 }

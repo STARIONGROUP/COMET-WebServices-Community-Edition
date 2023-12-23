@@ -170,6 +170,7 @@ namespace CometServer.Services.Operations.SideEffects
         public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+
             if (options.Count == 1 && options.Single().Iid == thing.Iid)
             {
                 throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
@@ -206,8 +207,7 @@ namespace CometServer.Services.Operations.SideEffects
                     return;
                 }
 
-                var baseErrorString =
-                    $"Could not set {nameof(Iteration)}.{nameof(Iteration.DefaultOption)} to null.";
+                var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.DefaultOption)} to null.";
 
                 var iterationSetup = this.IterationSetupService.GetShallow(transaction,
                     Utils.SiteDirectoryPartition,
@@ -267,10 +267,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
             else
             {
-                if (container == null)
-                {
-                    throw new ArgumentNullException(nameof(container));
-                }
+                ArgumentNullException.ThrowIfNull(container);
 
                 throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
                     nameof(container));
@@ -367,6 +364,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             // for each option dependent parameter, create new ParameterValueSets and cache them such that they can later be referenced by the newly created ParameterOverrideValueSets
             var optionDependentParameters = this.optionDependentParameterCache.Values.ToList();
+
             foreach (var optionDependentParameter in optionDependentParameters)
             {
                 this.CreateAndCacheParameterValueSetsAndCreateParameterSubscriptionValueSets(transaction, partition, option, optionDependentParameter, securityContext);
@@ -374,6 +372,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             // for each option dependent ParameterOverride check whether it references an option depedent Parameter; if this is the case, create a new ParameterOverrideValueSet that references the newly created option
             var parameterOverrideDtos = this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext).Cast<ParameterOverride>();
+
             foreach (var parameterOverrideDto in parameterOverrideDtos)
             {
                 if (this.optionDependentParameterCache.ContainsKey(parameterOverrideDto.Parameter))
@@ -412,6 +411,7 @@ namespace CometServer.Services.Operations.SideEffects
             var containerParameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, container.ParameterSubscription, securityContext).Cast<ParameterSubscription>().ToList();
 
             var actualFiniteStateListIid = container.StateDependence;
+
             if (actualFiniteStateListIid == null)
             {
                 var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, null, null, defaultValueArray);
@@ -430,6 +430,7 @@ namespace CometServer.Services.Operations.SideEffects
             this.QueryAndCacheAllActualFiniteStateLists(transaction, partition, securityContext);
 
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == actualFiniteStateListIid);
+
             foreach (var actualStateIid in actualFiniteStateList.ActualState)
             {
                 var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, actualStateIid, null, defaultValueArray);
@@ -466,9 +467,10 @@ namespace CometServer.Services.Operations.SideEffects
         private void CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(NpgsqlTransaction transaction, string partition, Option option, ParameterOverride container, ISecurityContext securityContext)
         {
             Parameter parameter;
+
             if (!this.optionDependentParameterCache.TryGetValue(container.Parameter, out parameter))
             {
-                throw new KeyNotFoundException(string.Format("The Parameter with iid {0} could not be found", container.Parameter));
+                throw new KeyNotFoundException($"The Parameter with iid {container.Parameter} could not be found");
             }
 
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(container.Parameter);
@@ -492,6 +494,7 @@ namespace CometServer.Services.Operations.SideEffects
             this.QueryAndCacheAllActualFiniteStateLists(transaction, partition, securityContext);
 
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == parameter.StateDependence);
+
             foreach (var actualStateIid in actualFiniteStateList.ActualState)
             {
                 var parameterValueSet = this.QueryParameterValueSet(parameter.Iid, option.Iid, actualStateIid);
@@ -553,9 +556,10 @@ namespace CometServer.Services.Operations.SideEffects
         private ParameterValueSet QueryParameterValueSet(Guid parameterIid, Guid optionIid, Guid? actualStateIid)
         {
             var parameterValuetSetCacheItem = this.createdParameterValuetSetCacheItems.SingleOrDefault(x => x.Parameter.Iid == parameterIid && x.ParameterValueSet.ActualOption == optionIid && x.ParameterValueSet.ActualState == actualStateIid);
+            
             if (parameterValuetSetCacheItem == null)
             {
-                throw new KeyNotFoundException(string.Format("The created ParameterValueSet with ActualOption {0} and actualStateIid {1} could not be found", optionIid, actualStateIid));
+                throw new KeyNotFoundException($"The created ParameterValueSet with ActualOption {optionIid} and actualStateIid {actualStateIid} could not be found");
             }
 
             return parameterValuetSetCacheItem.ParameterValueSet;
@@ -595,13 +599,13 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private void QueryAndCacheAllOptionDependentParameters(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // TODO: it may be a good idea to create an extra function in the ParameterDoa to retrieve the optiondependent parameters (task T2819 CDP4WEBSERVICES)
             if (this.optionDependentParameterCache.Count != 0)
             {
                 return;
             }
 
             var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Cast<Parameter>();
+
             foreach (var parameter in parameters)
             {
                 if (parameter.IsOptionDependent)
