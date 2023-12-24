@@ -72,9 +72,10 @@ namespace CometServer.Tests.Services.BusinessLogic
             Assert.That(parameterSubscriptionValueSet.ValueSwitch, Is.EqualTo(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL));
         }
 
-        private static IEnumerable<string> CreateValues(string value)
+        private static List<string> CreateValues(string value)
         {
             var defaultValue = new List<string>(3);
+
             for (var i = 0; i < 3; i++)
             {
                 defaultValue.Add(value);

@@ -26,6 +26,7 @@ namespace CometServer.Modules
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -836,7 +837,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A collection of retrieved reference data.
         /// </returns>
-        private static IEnumerable<Thing> RetrieveChainedReferenceData(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
+        private static ReadOnlyCollection<Thing> RetrieveChainedReferenceData(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
         {
             var chainedReferenceDataColl = new List<Thing>();
 
@@ -858,7 +859,8 @@ namespace CometServer.Modules
 
             // reset query parameters
             requestUtils.OverrideQueryParameters = null;
-            return chainedReferenceDataColl;
+
+            return chainedReferenceDataColl.AsReadOnly();
         }
     }
 }

@@ -26,6 +26,7 @@ namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -181,7 +182,7 @@ namespace CometServer.Authorization
         private Credentials ResolveCredentials(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             var personPermissions = new List<PersonPermission>();
-            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, person).ToList();
+            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, person);
 
             if (person.Role != null)
             {
@@ -224,6 +225,7 @@ namespace CometServer.Authorization
             }
 
             var participant = this.GetParticipant(transaction, this.credentials.Person, this.credentials.EngineeringModelSetup);
+
             if (participant == null)
             {
                 return;
@@ -333,14 +335,14 @@ namespace CometServer.Authorization
         /// The <see cref="IEnumerable{ParticipantPermission}"/> of the <see cref="ParticipantRole"/> connected to this
         /// <see cref="AuthenticationPerson"/> in the supplied <see cref="EngineeringModelSetup"/>.
         /// </returns>
-        private IEnumerable<ParticipantPermission> GetParticipantPermissions(NpgsqlTransaction transaction, Participant participant)
+        private ReadOnlyCollection<ParticipantPermission> GetParticipantPermissions(NpgsqlTransaction transaction, Participant participant)
         {
             // retrieve PersonRole
             var paricipantRole = this.GetParticipantRole(transaction, participant);
 
             try
             {
-                return this.ParticipantPermissionDao.Read(transaction, "SiteDirectory", paricipantRole.ParticipantPermission).ToList();
+                return this.ParticipantPermissionDao.Read(transaction, "SiteDirectory", paricipantRole.ParticipantPermission).ToList().AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -381,14 +383,14 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="IEnumerable{PersonPermission}"/> of the <see cref="PersonRole"/> connected to this <see cref="AuthenticationPerson"/>.
         /// </returns>
-        private IEnumerable<PersonPermission> GetPersonPermissions(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private ReadOnlyCollection<PersonPermission> GetPersonPermissions(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             // retrieve PersonRole
             var personRole = this.GetPersonRole(transaction, person);
 
             try
             {
-                return this.PersonPermissionDao.Read(transaction, "SiteDirectory", personRole.PersonPermission).ToList();
+                return this.PersonPermissionDao.Read(transaction, "SiteDirectory", personRole.PersonPermission).ToList().AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -409,7 +411,7 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="IEnumerable{EngineeringModelSetup}"/> of the <see cref="Person"/>.
         /// </returns>
-        private IEnumerable<EngineeringModelSetup> GetEngineeringModelSetups(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private List<EngineeringModelSetup> GetEngineeringModelSetups(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             try
             {
