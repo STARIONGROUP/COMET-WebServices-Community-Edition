@@ -67,7 +67,7 @@ namespace CometServer.Services
                 return false;
             }
 
-            var revisions = this.RevisionDao.ReadRevisionRegistry(transaction, partition).ToList();
+            var revisions = this.RevisionDao.ReadRevisionRegistry(transaction, partition);
 
             if (revisions.Count != 0)
             {

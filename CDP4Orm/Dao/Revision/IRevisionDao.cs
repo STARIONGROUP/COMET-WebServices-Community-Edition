@@ -25,7 +25,7 @@
 namespace CDP4Orm.Dao.Revision
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.ObjectModel;
 
     using CDP4Common.DTO;
 
@@ -51,7 +51,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        IEnumerable<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision);
+        ReadOnlyCollection<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision);
 
         /// <summary>
         /// Retrieves the data that was changed in the indicated revision.
@@ -68,7 +68,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        IEnumerable<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision);
+        ReadOnlyCollection<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision);
 
         /// <summary>
         /// Retrieves data from the RevisionRegistry table in the specific partition.
@@ -82,7 +82,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        IEnumerable<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition);
+        ReadOnlyCollection<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Read the revisions of a <see cref="Thing"/>
@@ -93,7 +93,7 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="revisionFrom">The oldest revision to query</param>
         /// <param name="revisionTo">The latest revision to query</param>
         /// <returns>The collection of revised <see cref="Thing"/></returns>
-        IEnumerable<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo);
+        ReadOnlyCollection<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo);
 
         /// <summary>
         /// Save The revision of a <see cref="Thing"/>

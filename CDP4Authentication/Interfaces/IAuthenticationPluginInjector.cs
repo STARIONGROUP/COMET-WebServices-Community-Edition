@@ -25,6 +25,7 @@
 namespace CDP4Authentication
 {
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
 
     /// <summary>
     /// An interface for the authenticator plugin injector.
@@ -34,11 +35,11 @@ namespace CDP4Authentication
         /// <summary>
         /// Gets the list of plugins that this plugin injector holds.
         /// </summary>
-        List<IAuthenticatorPlugin> Plugins { get; }
+        ReadOnlyCollection<IAuthenticatorPlugin> Plugins { get; }
 
         /// <summary>
         /// Gets the ranked list of injectors that all the <see cref="IAuthenticatorPlugin"/> contain.
         /// </summary>
-        List<IAuthenticatorConnector> Connectors { get; }
+        IEnumerable<IAuthenticatorConnector> Connectors { get; }
     }
 }

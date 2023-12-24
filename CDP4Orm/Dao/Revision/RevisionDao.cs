@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao.Revision
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Data;
     using System.Linq;
 
@@ -121,7 +122,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        public IEnumerable<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition)
+        public ReadOnlyCollection<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition)
         {
             return InternalGetRevisionRegistryInfo(transaction, partition);
         }
@@ -141,7 +142,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        public IEnumerable<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision)
+        public ReadOnlyCollection<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision)
         {
             return InternalGetRevisionInfo(transaction, partition, revision, ChangesSinceRevision);
         }
@@ -161,7 +162,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        public IEnumerable<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision)
+        public ReadOnlyCollection<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision)
         {
             return InternalGetRevisionInfo(transaction, partition, revision, ChangesInCurrentRevision);
         }
@@ -202,8 +203,10 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="revisionFrom">The oldest revision to query</param>
         /// <param name="revisionTo">The latest revision to query</param>
         /// <returns>The collection of revised <see cref="Thing"/></returns>
-        public IEnumerable<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
+        public ReadOnlyCollection<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
         {
+            var result = new List<Thing>();
+
             var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] { thingIid }).ToArray();
 
             if (resolveInfos.Length > 1)
@@ -233,10 +236,12 @@ namespace CDP4Orm.Dao.Revision
 
                     if (thing != null)
                     {
-                        yield return thing;
+                        result.Add(thing);
                     }
                 }
             }
+
+            return result.AsReadOnly();
         }
 
         /// <summary>
@@ -346,15 +351,14 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static IEnumerable<RevisionInfo> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static ReadOnlyCollection<RevisionInfo> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return ReadSiteDirectoryRevisions(transaction, partition, revision, comparator).ToList();
+                return ReadSiteDirectoryRevisions(transaction, partition, revision, comparator);
             }
 
-            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            return ReadEngineeringModelRevisions(transaction, partition, revision, comparator).ToList();
+            return ReadEngineeringModelRevisions(transaction, partition, revision, comparator);
         }
 
         /// <summary>
@@ -363,7 +367,7 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="transaction">The current transaction to the database.</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <returns>The collection of revised <see cref="Thing"/></returns>
-        private static IEnumerable<RevisionRegistryInfo> InternalGetRevisionRegistryInfo(NpgsqlTransaction transaction, string partition)
+        private static ReadOnlyCollection<RevisionRegistryInfo> InternalGetRevisionRegistryInfo(NpgsqlTransaction transaction, string partition)
         {
             var sqlQuery = $"SELECT \"Revision\", \"Instant\", \"Actor\" FROM \"{partition}\".\"RevisionRegistry\"";
 
@@ -371,7 +375,7 @@ namespace CDP4Orm.Dao.Revision
 
             using var reader = command.ExecuteReader();
 
-            return MapToRevisionRegistryInfoList(reader).ToList();
+            return MapToRevisionRegistryInfoList(reader);
         }
 
         /// <summary>
@@ -383,21 +387,25 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// Enumerable of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        private static IEnumerable<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
+        private static ReadOnlyCollection<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
         {
+            var result = new List<RevisionRegistryInfo>();
+
             while (reader.Read())
             {
                 var revision = reader["Revision"];
                 var instant = reader["Instant"];
                 var actor = reader["Actor"];
 
-                yield return new RevisionRegistryInfo
+                result.Add(new RevisionRegistryInfo
                 {
-                    Revision = (int?) revision ?? 0,
-                    Instant = (DateTime?) instant ?? DateTime.MinValue,
-                    Actor = actor == DBNull.Value ? Guid.Empty : (Guid) actor
-                };
+                    Revision = (int?)revision ?? 0,
+                    Instant = (DateTime?)instant ?? DateTime.MinValue,
+                    Actor = actor == DBNull.Value ? Guid.Empty : (Guid)actor
+                });
             }
+
+            return result.AsReadOnly();
         }
 
         /// <summary>
@@ -418,8 +426,10 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static IEnumerable<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static ReadOnlyCollection<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
+            var result = new List<RevisionInfo>();
+
             var sqlBuilder = new System.Text.StringBuilder();
 
             // get all Thing 'concepts' whose revisions are as per the supplied revision comparator
@@ -443,8 +453,10 @@ namespace CDP4Orm.Dao.Revision
 
             while (reader.Read())
             {
-                yield return MapToSiteDirectoryRevisionInfo(reader, partition);
+                result.Add(MapToSiteDirectoryRevisionInfo(reader, partition));
             }
+
+            return result.AsReadOnly();
         }
 
         /// <summary>
@@ -470,7 +482,7 @@ namespace CDP4Orm.Dao.Revision
         }
 
         /// <summary>
-        /// Internal read method that uses yield to return the data from the database.
+        /// Internal read method that returns the data from the database.
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -487,8 +499,10 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static IEnumerable<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static ReadOnlyCollection<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
+            var result = new List<RevisionInfo>();
+
             var sqlBuilder = new System.Text.StringBuilder();
 
             var connectedPartition = partition;
@@ -521,8 +535,10 @@ namespace CDP4Orm.Dao.Revision
 
             while (reader.Read())
             {
-                yield return MapToEngineeringModelRevisionInfo(reader, connectedPartition, subPartition);
+                result.Add(MapToEngineeringModelRevisionInfo(reader, connectedPartition, subPartition));
             }
+
+            return result.AsReadOnly();
         }
 
         /// <summary>

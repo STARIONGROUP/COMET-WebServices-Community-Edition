@@ -26,6 +26,7 @@ namespace CometServer.Authentication
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -59,7 +60,7 @@ namespace CometServer.Authentication
         {
             this.logger = logger;
 
-            this.Plugins = this.LoadPlugins().ToList();
+            this.Plugins = this.LoadPlugins();
 
             foreach (var authenticatorConnector in this.Plugins.SelectMany(authenticatorPlugin => authenticatorPlugin.Connectors))
             {
@@ -70,18 +71,18 @@ namespace CometServer.Authentication
         /// <summary>
         /// Gets the list of plugins.
         /// </summary>
-        public List<IAuthenticatorPlugin> Plugins { get; private set; }
+        public ReadOnlyCollection<IAuthenticatorPlugin> Plugins { get; private set; }
 
         /// <summary>
         /// Gets the connectors
         /// </summary>
-        public List<IAuthenticatorConnector> Connectors
+        public IEnumerable<IAuthenticatorConnector> Connectors
         {
             get
             {
                 return
                     this.Plugins.SelectMany(p => p.Connectors)
-                        .OrderByDescending(c => c.Properties.Rank).ToList();
+                        .OrderByDescending(c => c.Properties.Rank);
             }
         }
 
@@ -100,9 +101,11 @@ namespace CometServer.Authentication
         /// Retrieves all plugins that inherit the <see cref="IAuthenticatorPlugin"/> interface
         /// </summary>
         /// <returns>The <see cref="List{T}"/> of <see cref="IAuthenticatorPlugin"/> modules</returns>
-        private IEnumerable<IAuthenticatorPlugin> LoadPlugins()
+        private ReadOnlyCollection<IAuthenticatorPlugin> LoadPlugins()
         {
             var sw = Stopwatch.StartNew();
+
+            var result = new List<IAuthenticatorPlugin>();
 
             this.logger.LogInformation("Loading authentication plugins");
 
@@ -128,10 +131,12 @@ namespace CometServer.Authentication
 
             foreach (var authenticatorPlugin in container.Resolve<IEnumerable<IAuthenticatorPlugin>>())
             {
-                yield return authenticatorPlugin;
+                result.Add(authenticatorPlugin);
             }
 
             this.logger.LogInformation("Authentication plugins loaded in {sw} [ms]", sw.ElapsedMilliseconds);
+
+            return result.AsReadOnly();
         }
     }
 }

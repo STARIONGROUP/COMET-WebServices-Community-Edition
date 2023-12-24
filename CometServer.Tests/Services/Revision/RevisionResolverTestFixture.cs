@@ -106,7 +106,7 @@ namespace CometServer.Tests
                 this.revision3,
                 this.revision4,
                 this.revision5
-            };
+            }.AsReadOnly();
 
             this.revisionDao.Setup(x => x.ReadRevisionRegistry(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(revisionRegistryInfoList);
         }

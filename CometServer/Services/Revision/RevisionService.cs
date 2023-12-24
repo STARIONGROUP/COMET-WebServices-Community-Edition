@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
 
     using CDP4Common.DTO;
@@ -172,7 +173,8 @@ namespace CometServer.Services
         /// </returns>
         public IEnumerable<Thing> SaveRevisions(NpgsqlTransaction transaction, string partition, Guid actor, int revision)
         {
-            var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false, true).ToArray();
+            var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false, true);
+
             foreach (var thingRevInfo in thingRevisionInfos)
             {
                 this.RevisionDao.WriteRevision(transaction, thingRevInfo.RevisionInfo.Partition, thingRevInfo.Thing, actor);
@@ -244,8 +246,10 @@ namespace CometServer.Services
         /// <returns>
         /// A collection of <see cref="Thing"/> instances.
         /// </returns>
-        private IEnumerable<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse, bool useDefaultContext)
+        private ReadOnlyCollection<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse, bool useDefaultContext)
         {
+            var result = new List<ThingRevisionInfo>();
+
             if (useDefaultContext)
             {
                 // Set the transaction to retrieve the latest database state
@@ -286,17 +290,19 @@ namespace CometServer.Services
                     // Aggregate the retrieved versioned data
                     foreach (var delta in versionedThings)
                     {
-                        yield return new ThingRevisionInfo(
+                        result.Add(new ThingRevisionInfo(
                             delta,
                             new RevisionInfo
                                 {
                                     Iid = delta.Iid,
                                     Partition = resolvedPartition,
                                     TypeInfo = instanceType
-                                });
+                                }));
                     }
                 }
             }
+
+            return result.AsReadOnly();
         }
     }
 }
