@@ -198,9 +198,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             var result = this.service.FilterOutPermissions(this.personRoles, new Version("1.0.0")).OfType<PersonRole>().ToArray();
 
-            CollectionAssert.AreEquivalent(
-                result[0].PersonPermission,
-                new List<Guid> { this.personPermission1id, this.personPermission2id });
+            Assert.That(result[0].PersonPermission, Is.EquivalentTo(new List<Guid> { this.personPermission1id, this.personPermission2id }));
         }
 
         [Test]

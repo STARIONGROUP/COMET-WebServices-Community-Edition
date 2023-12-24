@@ -117,9 +117,9 @@ namespace CometServer.Tests
         {
             this.revisionResolver.TryResolve(It.IsAny<NpgsqlTransaction>(), "", fromRevision, toRevision, out var resolvedValues);
 
-            Assert.AreEqual(checkFromRevision, resolvedValues.FromRevision);
-            Assert.AreEqual(checkToRevision, resolvedValues.ToRevision);
-            Assert.AreEqual(checkRevisionCount, resolvedValues.RevisionRegistryInfoList.Count());
+            Assert.That(resolvedValues.FromRevision, Is.EqualTo(checkFromRevision));
+            Assert.That(resolvedValues.ToRevision, Is.EqualTo(checkToRevision));
+            Assert.That(resolvedValues.RevisionRegistryInfoList.Count(), Is.EqualTo(checkRevisionCount));
         }
 
         [Test]
@@ -128,9 +128,9 @@ namespace CometServer.Tests
         {
             this.revisionResolver.TryResolve(It.IsAny<NpgsqlTransaction>(), "", fromRevision, toRevision, out var resolvedValues);
 
-            Assert.AreEqual(checkFromRevision, resolvedValues.FromRevision);
-            Assert.AreEqual(checkToRevision, resolvedValues.ToRevision);
-            Assert.AreEqual(checkRevisionCount, resolvedValues.RevisionRegistryInfoList.Count());
+            Assert.That(resolvedValues.FromRevision, Is.EqualTo(checkFromRevision));
+            Assert.That(resolvedValues.ToRevision, Is.EqualTo(checkToRevision));
+            Assert.That(resolvedValues.RevisionRegistryInfoList.Count(), Is.EqualTo(checkRevisionCount));
         }
 
         public static IEnumerable IntTestCases()

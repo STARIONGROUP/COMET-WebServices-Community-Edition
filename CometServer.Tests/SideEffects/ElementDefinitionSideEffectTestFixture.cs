@@ -228,7 +228,8 @@ namespace CometServer.Tests.SideEffects
                 this.iterationPartition,
                 this.securityContext.Object);
 
-            Assert.IsNotNull(this.iteration.TopElement);
+            Assert.That(this.iteration.TopElement, Is.Not.Null);
+
             this.iterationService
                 .Verify(
                     x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
@@ -249,7 +250,8 @@ namespace CometServer.Tests.SideEffects
                 this.iterationPartition,
                 this.securityContext.Object);
 
-            Assert.IsNotNull(this.iteration.TopElement);
+            Assert.That(this.iteration.TopElement, Is.Not.Null);
+
             this.iterationService
                 .Verify(
                     x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
@@ -268,7 +270,8 @@ namespace CometServer.Tests.SideEffects
                 this.iterationPartition,
                 this.securityContext.Object);
 
-            Assert.IsNull(this.updatedIteration.TopElement);
+            Assert.That(this.updatedIteration.TopElement, Is.Null);
+
             this.iterationService
                 .Verify(
                     x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
@@ -329,7 +332,8 @@ namespace CometServer.Tests.SideEffects
                     this.securityContext.Object)
             );
 
-            Assert.IsNull(this.updatedIteration.TopElement);
+            Assert.That(this.updatedIteration.TopElement, Is.Null);
+
             this.iterationService
                 .Verify(
                     x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,

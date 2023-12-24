@@ -95,7 +95,7 @@ namespace CometServer.Tests.Services
                                              new OrderedItem { K = 1, V = parameterTypeComponent1 }
                                          };
 
-            CollectionAssert.AreEquivalent(resolvedList, outputResolvedList);
+            Assert.That(outputResolvedList, Is.EquivalentTo(resolvedList));
         }
     }
 }

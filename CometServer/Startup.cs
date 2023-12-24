@@ -65,7 +65,6 @@ namespace CometServer
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
 
@@ -84,11 +83,6 @@ namespace CometServer
         public const string CookieScheme = "CDP4";
 
         /// <summary>
-        /// The (injected) <see cref="IConfiguration"/> that provides access to configuration parameters
-        /// </summary>
-        private readonly IConfiguration configuration;
-
-        /// <summary>
         /// The (injected) <see cref="IWebHostEnvironment"/> that provides access to environment variables
         /// </summary>
         private readonly IWebHostEnvironment environment;
@@ -96,15 +90,11 @@ namespace CometServer
         /// <summary>
         /// Initializes a new instance of the <see cref="Startup"/> class.
         /// </summary>
-        /// <param name="configuration">
-        /// The <see cref="IConfiguration"/> of the application.
-        /// </param>
         /// <param name="environment">
         /// The <see cref="IWebHostEnvironment"/> of the application
         /// </param>
-        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
+        public Startup(IWebHostEnvironment environment)
         {
-            this.configuration = configuration;
             this.environment = environment;
         }
 

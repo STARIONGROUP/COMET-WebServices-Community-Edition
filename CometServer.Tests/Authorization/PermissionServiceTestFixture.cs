@@ -169,25 +169,22 @@ namespace CometServer.Tests.Authorization
                         x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), ClassKind.EngineeringModelSetup.ToString()))
                 .Returns(PersonAccessRightKind.MODIFY_IF_PARTICIPANT);
 
-            Assert.IsTrue(
-                this.permissionService.CanWrite(
-                    null,
-                    new EngineeringModelSetup(),
-                    ClassKind.EngineeringModelSetup.ToString(),
-                    SiteDirectoryPartition,
-                    ServiceBase.CreateOperation,
-                    new RequestSecurityContext()
-                ));
+            Assert.That(this.permissionService.CanWrite(
+                null,
+                new EngineeringModelSetup(),
+                ClassKind.EngineeringModelSetup.ToString(),
+                SiteDirectoryPartition,
+                ServiceBase.CreateOperation,
+                new RequestSecurityContext()), Is.True);
 
-            Assert.IsFalse(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     new EngineeringModelSetup(),
                     ClassKind.EngineeringModelSetup.ToString(),
                     SiteDirectoryPartition,
                     ServiceBase.UpdateOperation,
-                    new RequestSecurityContext()
-                ));
+                    new RequestSecurityContext()), Is.False);
 
             //-------------------------------------------------------------
             // Setup
@@ -197,25 +194,23 @@ namespace CometServer.Tests.Authorization
                         x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), ClassKind.EngineeringModelSetup.ToString()))
                 .Returns(PersonAccessRightKind.MODIFY);
 
-            Assert.IsTrue(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     new EngineeringModelSetup(),
                     ClassKind.EngineeringModelSetup.ToString(),
                     SiteDirectoryPartition,
                     ServiceBase.CreateOperation,
-                    new RequestSecurityContext()
-                ));
+                    new RequestSecurityContext()), Is.True);
 
-            Assert.IsTrue(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     new EngineeringModelSetup(),
                     ClassKind.EngineeringModelSetup.ToString(),
                     SiteDirectoryPartition,
                     ServiceBase.UpdateOperation,
-                    new RequestSecurityContext()
-                ));
+                    new RequestSecurityContext()), Is.True);
         }
 
         [Test]
@@ -258,16 +253,14 @@ namespace CometServer.Tests.Authorization
                         x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
                 .Returns(PersonAccessRightKind.MODIFY);
 
-            Assert.IsTrue(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
                     partition,
                     ServiceBase.UpdateOperation,
-                    securityRequestContext
-                )
-            );
+                    securityRequestContext), Is.True);
 
             //-------------------------------------------------------------
 
@@ -284,16 +277,14 @@ namespace CometServer.Tests.Authorization
                         x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
                 .Returns(PersonAccessRightKind.READ);
 
-            Assert.IsFalse(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
                     partition,
                     ServiceBase.UpdateOperation,
-                    securityRequestContext
-                )
-            );
+                    securityRequestContext), Is.False);
 
             //-------------------------------------------------------------
 
@@ -301,16 +292,14 @@ namespace CometServer.Tests.Authorization
             // Create operation does not check container, but returns
             // RequestSecurityContext setting
             //-------------------------------------------------------------
-            Assert.IsTrue(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
                     partition,
                     ServiceBase.CreateOperation,
-                    securityRequestContext
-                )
-            );
+                    securityRequestContext), Is.True);
 
             //-------------------------------------------------------------
 
@@ -324,16 +313,14 @@ namespace CometServer.Tests.Authorization
                         x.QueryParticipantAccessRightKind(It.IsAny<Credentials>(), containerThing.ClassKind.ToString()))
                 .Returns(ParticipantAccessRightKind.MODIFY);
 
-            Assert.IsFalse(
+            Assert.That(
                 this.permissionService.CanWrite(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
                     partition,
                     ServiceBase.UpdateOperation,
-                    securityRequestContext
-                )
-            );
+                    securityRequestContext), Is.False);
 
             //-------------------------------------------------------------
         }

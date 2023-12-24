@@ -93,6 +93,7 @@ namespace CometServer.Tests.SideEffects
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
             var mrdl = new ModelReferenceDataLibrary(Guid.NewGuid(), 0);
             var cat = new Category(Guid.NewGuid(), 0);
+
             var participant = new Participant(Guid.NewGuid(), 0)
             {
               Person = Guid.NewGuid(),
@@ -114,9 +115,9 @@ namespace CometServer.Tests.SideEffects
             var copy = new EngineeringModelSetup(Guid.NewGuid(), 0);
             this.modelCreatorManager.CreateEngineeringModelSetupFromSource(modelSetup.Iid, copy, null, null);
 
-            Assert.IsNotEmpty(copy.RequiredRdl);
-            Assert.IsNotEmpty(copy.IterationSetup);
-            Assert.IsNotEmpty(copy.Participant);
+            Assert.That(copy.RequiredRdl, Is.Not.Empty);
+            Assert.That(copy.IterationSetup, Is.Not.Empty);
+            Assert.That(copy.Participant, Is.Not.Empty);
         }
     }
 }

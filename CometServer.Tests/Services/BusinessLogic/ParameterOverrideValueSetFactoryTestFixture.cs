@@ -67,14 +67,13 @@ namespace CometServer.Tests.Services.BusinessLogic
 
             var parameterOverrideValueSet = this.parameterOverrideValueSetFactory.CreateWithDefaultValueArray(parameterValueSetIid, this.defaultValueArray);
             
-            Assert.AreEqual(parameterValueSetIid, parameterOverrideValueSet.ParameterValueSet);
-
-            Assert.AreEqual(this.defaultValueArray, parameterOverrideValueSet.Manual);
-            Assert.AreEqual(this.defaultValueArray, parameterOverrideValueSet.Computed);
-            Assert.AreEqual(this.defaultValueArray, parameterOverrideValueSet.Reference);
-            Assert.AreEqual(this.defaultValueArray, parameterOverrideValueSet.Formula);
-            Assert.AreEqual(this.defaultValueArray, parameterOverrideValueSet.Published);
-            Assert.AreEqual(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL, parameterOverrideValueSet.ValueSwitch);
+            Assert.That(parameterOverrideValueSet.ParameterValueSet, Is.EqualTo(parameterValueSetIid));
+            Assert.That(parameterOverrideValueSet.Manual, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterOverrideValueSet.Computed, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterOverrideValueSet.Reference, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterOverrideValueSet.Formula, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterOverrideValueSet.Published, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterOverrideValueSet.ValueSwitch, Is.EqualTo(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL));
         }
 
         private static IEnumerable<string> CreateValues(string value)

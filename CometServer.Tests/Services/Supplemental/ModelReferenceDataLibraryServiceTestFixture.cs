@@ -140,8 +140,8 @@ namespace CometServer.Tests.Services.Supplemental
                 .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary});
 
             var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
-
-            CollectionAssert.AreEqual(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary }, result);
+            
+            Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary }));
         }
 
         [Test]
@@ -177,7 +177,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
 
-            CollectionAssert.AreEqual(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1 }, result);
+            Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1 }));
         }
 
         [Test]
@@ -222,7 +222,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
 
-            CollectionAssert.AreEqual(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1, this.siteReferenceDataLibrary2 }, result);
+            Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1, this.siteReferenceDataLibrary2 }));
         }
     }
 }

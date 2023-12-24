@@ -68,15 +68,15 @@ namespace CometServer.Tests.Services.BusinessLogic
 
             var parameterValueSet =  this.parameterValueSetFactory.CreateNewParameterValueSetFromSource(optionIid, actualStateIid, null, this.defaultValueArray);
 
-            Assert.AreEqual(optionIid, parameterValueSet.ActualOption);
-            Assert.AreEqual(actualStateIid, parameterValueSet.ActualState);
-
-            Assert.AreEqual(this.defaultValueArray, parameterValueSet.Manual);
-            Assert.AreEqual(this.defaultValueArray, parameterValueSet.Computed);
-            Assert.AreEqual(this.defaultValueArray, parameterValueSet.Reference);
-            Assert.AreEqual(this.defaultValueArray, parameterValueSet.Formula);
-            Assert.AreEqual(this.defaultValueArray, parameterValueSet.Published);
-            Assert.AreEqual(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL, parameterValueSet.ValueSwitch);
+            Assert.That(parameterValueSet.ActualOption, Is.EqualTo(optionIid));
+            Assert.That(parameterValueSet.ActualState, Is.EqualTo(actualStateIid));
+            
+            Assert.That(parameterValueSet.Manual, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterValueSet.Computed, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterValueSet.Reference, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterValueSet.Formula, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterValueSet.Published, Is.EqualTo(this.defaultValueArray));
+            Assert.That(parameterValueSet.ValueSwitch, Is.EqualTo(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL));
         }
 
         private static IEnumerable<string> CreateValues(string value)

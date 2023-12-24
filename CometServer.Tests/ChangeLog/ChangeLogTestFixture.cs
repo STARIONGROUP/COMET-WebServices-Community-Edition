@@ -746,11 +746,11 @@ namespace CometServer.Tests.Services
                 this.parameter.Iid
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterAffectedReferenceItems, parameterCreatedLogEntries.AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedElementDefinitionAffectedReferenceItems, elementDefinitionCreatedLogEntries.AffectedReferenceIid);
+            Assert.That(expectedParameterAffectedReferenceItems, Is.EquivalentTo(parameterCreatedLogEntries.AffectedReferenceIid));
+            Assert.That(expectedElementDefinitionAffectedReferenceItems, Is.EquivalentTo(elementDefinitionCreatedLogEntries.AffectedReferenceIid));
 
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(expectedAffectedDomains, Is.EquivalentTo(this.existingModelLogEntry.AffectedDomainIid));
+            Assert.That(expectedAffectedItemIds, Is.EquivalentTo(this.existingModelLogEntry.AffectedItemIid));
         }
 
         [Test]
@@ -833,10 +833,9 @@ namespace CometServer.Tests.Services
                 this.parameter.Iid
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterAffectedReferenceItems, parameterCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(parameterCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -917,9 +916,9 @@ namespace CometServer.Tests.Services
                 this.parameterSubscription.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -967,7 +966,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -998,9 +997,9 @@ namespace CometServer.Tests.Services
                 this.parameterSubscription.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1048,8 +1047,8 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
-
-            Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
             var expectedUsageAffectedReferenceItems = new[]
             {
@@ -1086,11 +1085,10 @@ namespace CometServer.Tests.Services
                 this.elementUsage_1.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedUsageAffectedReferenceItems, usageCreatedLogEntries.AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedElementDefinitionAffectedReferenceItems, elementDefinitionCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(usageCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedUsageAffectedReferenceItems));
+            Assert.That(elementDefinitionCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedElementDefinitionAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1143,7 +1141,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Once);
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedUsageAffectedReferenceItems = new[]
             {
@@ -1170,10 +1168,9 @@ namespace CometServer.Tests.Services
                 this.elementUsage_1.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedUsageAffectedReferenceItems, usageCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(usageCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedUsageAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1221,7 +1218,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -1246,9 +1243,9 @@ namespace CometServer.Tests.Services
                 this.elementUsage_1.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1297,7 +1294,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count,Is.EqualTo(2));
 
             var expectedParameterOverrideAffectedReferenceItems = new[]
             {
@@ -1347,14 +1344,13 @@ namespace CometServer.Tests.Services
                 this.parameterOverride.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterOverrideAffectedReferenceItems, parameterOverrideCreatedLogEntries.AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedElementUsageAffectedReferenceItems, elementDefinitionCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(parameterOverrideCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterOverrideAffectedReferenceItems));
+            Assert.That(elementDefinitionCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedElementUsageAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
-                [Test]
+        [Test]
         public void VerifyThatResultsAreAsExpectedForDeletedParameterOverride()
         {
             var postOperation = new CdpPostOperation();
@@ -1405,7 +1401,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedParameterOverrideAffectedReferenceItems = new[]
             {
@@ -1446,10 +1442,9 @@ namespace CometServer.Tests.Services
                 this.category_ParameterType.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterOverrideAffectedReferenceItems, parameterOverrideCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(parameterOverrideCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterOverrideAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1497,7 +1492,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -1536,9 +1531,9 @@ namespace CometServer.Tests.Services
                 this.category_ParameterType.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1585,7 +1580,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -1626,9 +1621,9 @@ namespace CometServer.Tests.Services
                 this.parameterOverrideValueSet_1.Iid
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1679,7 +1674,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
             var expectedParameterSubscriptionAffectedReferenceItems = new[]
             {
@@ -1724,11 +1719,10 @@ namespace CometServer.Tests.Services
                 this.elementDefinition_1.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterSubscriptionAffectedReferenceItems, parameterSubscriptionCreatedLogEntries.AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedParameterAffectedReferenceItems, parameterCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(parameterSubscriptionCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterSubscriptionAffectedReferenceItems));
+            Assert.That(parameterCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1783,7 +1777,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedParameterSubscriptionAffectedReferenceItems = new[]
             {
@@ -1816,10 +1810,9 @@ namespace CometServer.Tests.Services
                 this.elementDefinition_1.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterSubscriptionAffectedReferenceItems, parameterSubscriptionCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(parameterSubscriptionCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterSubscriptionAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -1869,7 +1862,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -1902,9 +1895,9 @@ namespace CometServer.Tests.Services
                 this.parameterSubscriptionValueSet_1.Iid
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
         }
 
         [Test]
@@ -1955,7 +1948,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(2, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(2));
 
             var expectedParameterOverrideSubscriptionAffectedReferenceItems = new[]
             {
@@ -2015,11 +2008,10 @@ namespace CometServer.Tests.Services
                 this.parameterOverrideSubscription.Iid,
             };
 
-            CollectionAssert.AreEquivalent(expectedParameterOverrideSubscriptionAffectedReferenceItems, parameterOverrideSubscriptionCreatedLogEntries.AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedParameterOverrideAffectedReferenceItems, parameterOverrideCreatedLogEntries.AffectedReferenceIid);
-
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(parameterOverrideSubscriptionCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterOverrideSubscriptionAffectedReferenceItems));
+            Assert.That(parameterOverrideCreatedLogEntries.AffectedReferenceIid, Is.EquivalentTo(expectedParameterOverrideAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
 
         [Test]
@@ -2069,7 +2061,7 @@ namespace CometServer.Tests.Services
             this.operationProcessor.Verify(
                 x => x.Process(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(1));
 
-            Assert.AreEqual(1, this.existingModelLogEntry.LogEntryChangelogItem.Count);
+            Assert.That(this.existingModelLogEntry.LogEntryChangelogItem.Count, Is.EqualTo(1));
 
             var expectedAffectedReferenceItems = new[]
             {
@@ -2112,9 +2104,9 @@ namespace CometServer.Tests.Services
                 this.parameterOverrideSubscriptionValueSet_1.Iid
             };
 
-            CollectionAssert.AreEquivalent(expectedAffectedReferenceItems, createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid);
-            CollectionAssert.AreEquivalent(expectedAffectedDomains, this.existingModelLogEntry.AffectedDomainIid);
-            CollectionAssert.AreEquivalent(expectedAffectedItemIds, this.existingModelLogEntry.AffectedItemIid);
+            Assert.That(createdLogEntries.Single(x => x.Iid == this.existingModelLogEntry.LogEntryChangelogItem.First()).AffectedReferenceIid, Is.EquivalentTo(expectedAffectedReferenceItems));
+            Assert.That(this.existingModelLogEntry.AffectedDomainIid, Is.EquivalentTo(expectedAffectedDomains));
+            Assert.That(this.existingModelLogEntry.AffectedItemIid, Is.EquivalentTo(expectedAffectedItemIds));
         }
     }
 }

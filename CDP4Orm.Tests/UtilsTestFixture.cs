@@ -134,7 +134,7 @@ namespace CDP4Orm.Tests
             var result = hstore.FromHstoreToValueArray<string>();
 
             Assert.AreEqual(valueArray, result, "ValueArray creation failed for string \"{0}\"", input);
-
+            
             var resultjson = result.ToHstoreString();
 
             Assert.AreEqual(hstore, resultjson, "Hstore creation failed for string \"{0}\"", input);

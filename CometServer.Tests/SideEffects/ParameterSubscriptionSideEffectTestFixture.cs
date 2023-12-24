@@ -120,7 +120,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterSubscriptionService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(existingSub.Iid)), this.securityContext.Object)).Returns(new List<Thing> { existingSub });
 
-            Assert.IsFalse(this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.That(this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Is.False);
         }
 
         [Test]

@@ -26,7 +26,9 @@
 namespace CometServer.Tests.Configuration
 {
     using System.IO;
+
     using CometServer.Configuration;
+
     using Microsoft.Extensions.Configuration;
 
     using NUnit.Framework;

@@ -82,8 +82,7 @@ namespace CometServer.Tests.Services
 
             var things = this.jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, this.testFilePath, null);
 
-            CollectionAssert.IsNotEmpty(things);
+            Assert.That(things, Is.Not.Empty);
         }
-
     }
 }

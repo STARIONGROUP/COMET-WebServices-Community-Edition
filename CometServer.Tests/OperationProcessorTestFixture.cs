@@ -754,9 +754,9 @@ namespace CometServer.Tests
             // targetIteration
             this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
 
-            Assert.AreEqual(2, edDao.WrittenThingCount);
-            Assert.AreEqual(2, paramDao.WrittenThingCount);
-            Assert.AreEqual(1, paramOverrideDao.WrittenThingCount);
+            Assert.That(edDao.WrittenThingCount, Is.EqualTo(2));
+            Assert.That(paramDao.WrittenThingCount, Is.EqualTo(2));
+            Assert.That(paramOverrideDao.WrittenThingCount, Is.EqualTo(1));
             usageDao.Verify(x => x.Write(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ElementUsage>(), It.IsAny<Thing>()), Times.Once);
         }
     }

@@ -182,10 +182,11 @@ namespace CometServer.Tests.Services.BusinessLogic
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.massIid);
 
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
 
             valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.massIid);
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+            
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
         }
 
         [Test]
@@ -203,10 +204,11 @@ namespace CometServer.Tests.Services.BusinessLogic
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.vectorIid);
 
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
 
             valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.vectorIid);
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
         }
 
         [Test]
@@ -224,10 +226,11 @@ namespace CometServer.Tests.Services.BusinessLogic
             
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.jaggedArrayIid);
 
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
 
             valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.jaggedArrayIid);
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
         }
 
         [Test]
@@ -244,7 +247,8 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.incompleteCoundParameterTypeIid);
-            CollectionAssert.AreEquivalent(expectedValueArray, valueArray);
+
+            Assert.That(valueArray, Is.EquivalentTo(expectedValueArray));
         }
 
         [Test]

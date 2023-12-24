@@ -72,8 +72,8 @@ namespace CometServer.Tests.Services
                         AccessRight = PersonAccessRightKind.MODIFY_IF_PARTICIPANT
                     };
 
-            Assert.False(this.service.IsPersonPermissionValid(personPermission1));
-            Assert.True(this.service.IsPersonPermissionValid(personPermission2));
+            Assert.That(this.service.IsPersonPermissionValid(personPermission1), Is.False);
+            Assert.That(this.service.IsPersonPermissionValid(personPermission2), Is.True);
         }
 
         [Test]
@@ -93,8 +93,8 @@ namespace CometServer.Tests.Services
                         AccessRight = PersonAccessRightKind.READ_IF_PARTICIPANT
                     };
 
-            Assert.False(this.service.IsPersonPermissionValid(personPermission1));
-            Assert.True(this.service.IsPersonPermissionValid(personPermission2));
+            Assert.That(this.service.IsPersonPermissionValid(personPermission1), Is.False);
+            Assert.That(this.service.IsPersonPermissionValid(personPermission2), Is.True);
         }
 
         [Test]
@@ -106,7 +106,7 @@ namespace CometServer.Tests.Services
                         ObjectClass = ClassKind.IterationSetup,
                         AccessRight = PersonAccessRightKind.MODIFY_OWN_PERSON
                     };
-            Assert.False(this.service.IsPersonPermissionValid(personPermission1));
+            Assert.That(this.service.IsPersonPermissionValid(personPermission1), Is.False);
 
             var personPermission2 =
                 new PersonPermission(Guid.NewGuid(), 1)
@@ -114,7 +114,7 @@ namespace CometServer.Tests.Services
                         ObjectClass = ClassKind.Person,
                         AccessRight = PersonAccessRightKind.MODIFY_OWN_PERSON
                     };
-            Assert.True(this.service.IsPersonPermissionValid(personPermission2));
+            Assert.That(this.service.IsPersonPermissionValid(personPermission2), Is.True);
         }
 
         [Test]
@@ -136,8 +136,8 @@ namespace CometServer.Tests.Services
                             .MODIFY_IF_OWNER
                     };
 
-            Assert.False(this.service.IsParticipantPermissionValid(participantPermission1));
-            Assert.True(this.service.IsParticipantPermissionValid(participantPermission2));
+            Assert.That(this.service.IsParticipantPermissionValid(participantPermission1), Is.False);
+            Assert.That(this.service.IsParticipantPermissionValid(participantPermission2), Is.True);
         }
 
         [Test]

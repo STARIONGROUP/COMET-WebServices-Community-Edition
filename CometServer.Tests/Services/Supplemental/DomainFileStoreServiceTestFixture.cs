@@ -38,7 +38,6 @@ namespace CometServer.Tests.Services.Supplemental
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
-
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -141,16 +140,16 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyIsAllowedAccordingToIsHidden()
         {
-            Assert.IsTrue(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Is.True);
 
             domainFileStore.IsHidden = true;
-            Assert.IsTrue(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Is.True);
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(false);
-            Assert.IsFalse(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Is.False);
 
             domainFileStore.IsHidden = false;
-            Assert.IsTrue(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Is.True);
         }
 
         [Test]

@@ -48,7 +48,6 @@ namespace CometServer.Modules
                 {
                     res.UpdateWithNotAuthenticatedSettings();
 
-                    // TODO: check whether this text should be added
                     await res.WriteAsync("not authenticated");
                 }
                 else
@@ -56,7 +55,7 @@ namespace CometServer.Modules
                     if (res.HttpContext.User == null)
                     {
                         res.UpdateWithNotAutherizedSettings();
-                        // TODO: check whether this text should be added
+                        
                         await res.WriteAsync("not authorized");
                     }
 

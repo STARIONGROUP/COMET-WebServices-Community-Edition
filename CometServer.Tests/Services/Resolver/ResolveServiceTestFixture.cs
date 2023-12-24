@@ -59,7 +59,7 @@ namespace CometServer.Tests
 
         private ResolveService resolveService;
         private IDataModelUtils dataModelUtils;
-        private IRequestUtils requestUtils;
+        private RequestUtils requestUtils;
 
         // SiteDirectory concepts
         private DtoInfo siteDirectoryInfo;
@@ -194,7 +194,7 @@ namespace CometServer.Tests
                 new[] { item1ResolveHelper },
                 resolvableInfo);
 
-            Assert.AreEqual(item1ResolveHelper.Partition, item2ResolveHelper.Partition);
+            Assert.That(item2ResolveHelper.Partition, Is.EqualTo(item1ResolveHelper.Partition));
         }
 
         [Test]
@@ -220,8 +220,8 @@ namespace CometServer.Tests
                 new[] { item1ResolveHelper, item2ResolveHelper },
                 resolvableInfo);
 
-            Assert.AreEqual(item1ResolveHelper.Partition, item2ResolveHelper.Partition);
-            Assert.AreEqual(item2ResolveHelper.Partition, item3ResolveHelper.Partition);
+            Assert.That(item2ResolveHelper.Partition, Is.EqualTo(item1ResolveHelper.Partition));
+            Assert.That(item3ResolveHelper.Partition, Is.EqualTo(item2ResolveHelper.Partition));
         }
     }
 }
