@@ -516,13 +516,13 @@ namespace CometServer.Modules
                     // Add missing Person permissions
                     this.CreateMissingPersonPermissions(transaction, personRoleService, personPermissionService, defaultPermissionProvider);
 
-                    this.logger.LogInformation($"{seededSiteRdlCount}/{siteRdlCount} Site Reference Data Libraries and {seededEngineeringModelCount}/{engineeringModelCount} Engineering Models seeded");
+                    this.logger.LogInformation("{seededSiteRdlCount}/{siteRdlCount} Site Reference Data Libraries and {seededEngineeringModelCount}/{engineeringModelCount} Engineering Models seeded", seededSiteRdlCount, siteRdlCount, seededEngineeringModelCount, engineeringModelCount);
 
                     var engineeringModelSetups =
                         items.OfType<EngineeringModelSetup>()
                             .ToList();
-                    var engineeringModelService =
-                        serviceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+                    var engineeringModelService = serviceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
+
                     var iterationService = serviceProvider.MapToPersitableService<IterationService>("Iteration");
 
                     foreach (var engineeringModelSetup in engineeringModelSetups)
@@ -538,6 +538,7 @@ namespace CometServer.Modules
 
                         // should return one engineeringmodel topcontainer
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
+
                         if (engineeringModel == null)
                         {
                             this.logger.LogWarning("The EngineeringModel Thing for {shortname} could not be found, seeding will abort", engineeringModelSetup.ShortName);
@@ -609,8 +610,7 @@ namespace CometServer.Modules
 
                         seededEngineeringModelCount++;
 
-                        this.logger.LogInformation($"{seededSiteRdlCount}/{siteRdlCount} Site Reference Data Libraries and {seededEngineeringModelCount}/{engineeringModelCount} Engineering Models seeded");
-
+                        this.logger.LogInformation("{seededSiteRdlCount}/{siteRdlCount} Site Reference Data Libraries and {seededEngineeringModelCount}/{engineeringModelCount} Engineering Models seeded", seededSiteRdlCount, siteRdlCount, seededEngineeringModelCount, engineeringModelCount);
                     }
                 }
 

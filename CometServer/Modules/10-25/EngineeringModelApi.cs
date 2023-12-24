@@ -882,7 +882,7 @@ namespace CometServer.Modules
         /// <exception cref="Exception">
         /// If engineering model could not be resolved
         /// </exception>
-        private static EngineeringModelSetup DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string[] routeSegments)
+        private static EngineeringModelSetup DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ResourceProcessor processor, string[] routeSegments)
         {
             // override query parameters to return only extent shallow
             requestUtils.OverrideQueryParameters = new QueryParameters();
@@ -922,7 +922,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The resolved <see cref="Iteration"/>.
         /// </returns>
-        private static Iteration DetermineIteration(IProcessor processor, string partition, string[] routeSegments)
+        private static Iteration DetermineIteration(ResourceProcessor processor, string partition, string[] routeSegments)
         {
             if (routeSegments.Length >= 4 && routeSegments[2] == "iteration")
             {
