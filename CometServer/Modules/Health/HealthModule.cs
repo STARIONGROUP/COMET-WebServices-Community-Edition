@@ -34,6 +34,7 @@ namespace CometServer.Modules.Health
 
     using CometServer.Configuration;
     using CometServer.Extensions;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
 
@@ -65,6 +66,12 @@ namespace CometServer.Modules.Health
         private readonly ITokenGeneratorService tokenGeneratorService;
 
         /// <summary>
+        /// The (injected) <see cref="cometHasStartedService"/> that is used to determine whether the
+        /// COMET API is ready to accept traffic
+        /// </summary>
+        private readonly ICometHasStartedService cometHasStartedService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="HealthModule"/>
         /// </summary>
         /// <param name="logger">
@@ -76,11 +83,12 @@ namespace CometServer.Modules.Health
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
-        public HealthModule(ILogger<HealthModule> logger, IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService)
+        public HealthModule(ILogger<HealthModule> logger, IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ICometHasStartedService cometHasStartedService)
         {
             this.logger = logger;
             this.appConfigService = appConfigService;
             this.tokenGeneratorService = tokenGeneratorService;
+            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -98,9 +106,15 @@ namespace CometServer.Modules.Health
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
 
             // map the Liveness endpoint to support Liveness probes
-            app.MapGet("/healthz", 
-                 async (HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao) 
-                    => await this.QueryHealth(req, res, transactionManager, siteDirectoryDao))
+            app.MapGet("/healthz",
+                 (HttpResponse res)
+                    => this.QueryHealth(res))
+                .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
+
+            // map the Liveness endpoint to support readyness probes
+            app.MapGet("/ready",
+                    async (HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
+                        => await this.QueryReadiness(req, res, transactionManager, siteDirectoryDao))
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
         }
 
@@ -122,12 +136,20 @@ namespace CometServer.Modules.Health
 
             this.logger.LogDebug("{request}:{requestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
 
-            res.StatusCode = (int)HttpStatusCode.OK;
-            return Results.Text("Started");
+            var serverStatus = this.cometHasStartedService.GetHasStartedAndIsReady();
+
+            if (this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+            {
+                res.StatusCode = (int)HttpStatusCode.OK;
+                return Results.Text($"Started since {serverStatus.DateTime}");
+            }
+            
+            res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            return Results.Text("Startup in Progress");
         }
 
         /// <summary>
-        /// Queries whether the server is healthy, a healthy server is able to query the database and retrieve the
+        /// Queries whether the server is ready to process requests, a ready server is able to query the database and retrieve the
         /// <see cref="CDP4Common.DTO.SiteDirectory"/> DTO from the database
         /// </summary>
         /// <param name="req">
@@ -146,7 +168,7 @@ namespace CometServer.Modules.Health
         /// <returns>
         /// an instance of <see cref="IResult"/>
         /// </returns>
-        public async Task<IResult> QueryHealth(HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
+        public async Task<IResult> QueryReadiness(HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
         {
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
@@ -169,6 +191,9 @@ namespace CometServer.Modules.Health
             catch (NpgsqlException ex)
             {
                 this.logger.LogWarning("{request}:{requestToken} - The CDP4-COMET Server is not healthy: {excption}", req.QueryNameMethodPath(), requestToken, ex.Message);
+
+                res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                return Results.Text("Unhealthy");
             }
             finally
             {
@@ -182,9 +207,21 @@ namespace CometServer.Modules.Health
                     await connection.DisposeAsync();
                 }
             }
+        }
 
-            res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-            return Results.Text("Unhealthy");
+        /// <summary>
+        /// Queries whether the server is alive
+        /// </summary>
+        /// <param name="res">
+        /// The outgoing <see cref="HttpResponse"/> 
+        /// </param>
+        /// <returns>
+        /// an instance of <see cref="IResult"/>
+        /// </returns>
+        public IResult QueryHealth(HttpResponse res)
+        {
+            res.StatusCode = (int)HttpStatusCode.OK;
+            return Results.Text("Healthy");
         }
     }
 }

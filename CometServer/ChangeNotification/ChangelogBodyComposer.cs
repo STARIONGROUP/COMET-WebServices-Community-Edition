@@ -29,8 +29,6 @@ namespace CometServer.ChangeNotification
     using System.Linq;
     using System.Text;
 
-    using Autofac;
-
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
@@ -45,6 +43,26 @@ namespace CometServer.ChangeNotification
     /// </summary>
     public class ChangelogBodyComposer : IChangelogBodyComposer
     {
+        /// <summary>
+        /// The (injected) <see cref="IEngineeringModelSetupDao"/>
+        /// </summary>
+        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
+
+        /// <summary>
+        /// The (injected) <see cref="IParticipantDao"/>
+        /// </summary>
+        public IParticipantDao ParticipantDao { get; set; }
+
+        /// <summary>
+        /// The (injected) <see cref="IModelLogEntryDao"/>
+        /// </summary>
+        public IModelLogEntryDao ModelLogEntryDao { get; set; }
+
+        /// <summary>
+        /// The (injected) <see cref="IModelLogEntryDataCreator"/>
+        /// </summary>
+        public IModelLogEntryDataCreator ModelLogEntryDataCreator { get; set; }
+
         /// <summary>
         /// Creates the body of the email in text form
         /// </summary>
@@ -99,9 +117,6 @@ namespace CometServer.ChangeNotification
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
-        /// <param name="container">
-        /// The <see cref="IContainer"/> used to resolve injectable objects
-        /// </param>
         /// <param name="engineeringModelIid">
         /// The <see cref="EngineeringModel.Iid"/> property of the related <see cref="EngineeringModel"/>
         /// </param>
@@ -121,8 +136,7 @@ namespace CometServer.ChangeNotification
         /// An <see cref="IEnumerable{T}"/> of type <see cref="ChangelogSection"/>s
         /// </returns>
         public IEnumerable<ChangelogSection> CreateChangelogSections(
-            NpgsqlTransaction transaction , 
-            IContainer container, 
+            NpgsqlTransaction transaction, 
             Guid engineeringModelIid, 
             Person person, 
             ChangeNotificationSubscriptionUserPreference changeNotificationSubscriptionUserPreference,
@@ -132,10 +146,8 @@ namespace CometServer.ChangeNotification
             var partition = $"EngineeringModel_{engineeringModelIid.ToString().Replace("-", "_")}";
 
             // if a model does not exist anymore, do not send report
-            var engineeringModelSetupDao = container.Resolve<IEngineeringModelSetupDao>();
-
             var engineeringModelSetup = 
-                engineeringModelSetupDao.Read(transaction, "SiteDirectory")
+                this.EngineeringModelSetupDao.Read(transaction, "SiteDirectory")
                     .FirstOrDefault(x => x.EngineeringModelIid == engineeringModelIid);
 
             if (engineeringModelSetup == null)
@@ -146,10 +158,8 @@ namespace CometServer.ChangeNotification
             }
 
             // if a user is no longer a participant in a model, or if the participant is not active, then do not send report
-            var participantDao = container.Resolve<IParticipantDao>();
-
-            var participants = 
-                participantDao
+            var participants =
+                this.ParticipantDao
                     .Read(transaction, "SiteDirectory")
                     .Where(x => x.Person == person.Iid && x.IsActive)
                     .ToList();
@@ -186,10 +196,8 @@ namespace CometServer.ChangeNotification
                 yield break;
             }
 
-            var modelLogEntryDao = container.Resolve<IModelLogEntryDao>();
-
             var modelLogEntries = 
-                modelLogEntryDao
+                this.ModelLogEntryDao
                     .Read(transaction, partition)
                     .Where(x => 
                         x.ModifiedOn >= startDateTime
@@ -212,9 +220,7 @@ namespace CometServer.ChangeNotification
 
             var filteredModelLogEntries = FilterDomains(modelLogEntries, domains);
 
-            var modelLogEntryDataCreator = container.Resolve<IModelLogEntryDataCreator>();
-
-            var modelLogEntryData = modelLogEntryDataCreator.Create(transaction, partition, container, filteredModelLogEntries, domains, changeNotificationSubscriptionUserPreference);
+            var modelLogEntryData = this.ModelLogEntryDataCreator.Create(transaction, partition, filteredModelLogEntries, domains, changeNotificationSubscriptionUserPreference);
 
             var changeNotificationSubscriptionDataGroups =
                 modelLogEntryData

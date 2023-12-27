@@ -32,19 +32,12 @@ namespace CometServer.ChangeNotification
     using System.Text;
     using System.Threading.Tasks;
 
-    using Autofac;
-
     using CDP4Common.DTO;
 
-    using CDP4JsonSerializer;
-
     using CDP4Orm.Dao;
-    using CDP4Orm.Dao.Resolve;
-
-    using CometServer.ChangeNotification.Data;
+    
     using CometServer.ChangeNotification.UserPreference;
     using CometServer.Configuration;
-    using CometServer.Services;
     using CometServer.Services.Email;
 
     using Newtonsoft.Json;
@@ -59,12 +52,7 @@ namespace CometServer.ChangeNotification
     public class ChangeNoticationService
     {
         /// <summary>
-        /// The DI container used to resolve the services required to interact with the database
-        /// </summary>
-        private readonly IContainer container;
-
-        /// <summary>
-        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// Gets or sets the (injected) <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
 
@@ -74,46 +62,29 @@ namespace CometServer.ChangeNotification
         public ILogger<ChangeNoticationService> Logger { get; set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ChangeNoticationService"/>
+        /// Gets or sets the (injected) <see cref="IChangelogBodyComposer"/>
         /// </summary>
-        public ChangeNoticationService()
-        {
-            this.container = this.RegisterServices();
-        }
+        public IChangelogBodyComposer ChangelogBodyComposer { get; set; }
 
         /// <summary>
-        /// Register the required services to interact with the database
+        /// Gets or sets the (injected) <see cref="IPersonDao"/>
         /// </summary>
-        public IContainer RegisterServices()
-        {
-            var builder = new ContainerBuilder();
+        public IPersonDao PersonDao { get; set; }
 
-            //wireup data model utils
-            builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IEmailService"/>
+        /// </summary>
+        public IEmailService EmailService { get; set; }
 
-            // wireup class meta info provider
-            builder.RegisterType<MetaInfoProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IEmailAddressDao"/>
+        /// </summary>
+        public IEmailAddressDao EmailAddressDao { get; set; }
 
-            // wireup class cdp4JsonSerializer
-            builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            // the ResolveDao is used to get type info on any Thing instance based on it's unique identifier
-            builder.RegisterType<ResolveDao>().As<IResolveDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            // The ChanglogRetriever retrieves changelog data from the database
-            builder.RegisterType<ModelLogEntryDataCreator>().As<IModelLogEntryDataCreator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            // The ChanglogRetriever retrieves changelog data from the database
-            builder.RegisterType<ChangelogBodyComposer>().As<IChangelogBodyComposer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            // wireup DAO classes
-            builder.RegisterAssemblyTypes(typeof(BaseDao).Assembly).Where(x => typeof(BaseDao).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            
-            // Used to send emails
-            builder.RegisterType<EmailService>().As<IEmailService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            return builder.Build();
-        }
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IUserPreferenceDao"/>
+        /// </summary>
+        public IUserPreferenceDao UserPreferenceDao { get; set; }
 
         /// <summary>
         /// Executes the <see cref="ChangeNoticationService"/>, processes all 
@@ -135,14 +106,10 @@ namespace CometServer.ChangeNotification
                     connection.Open();
                     var transaction = connection.BeginTransaction();
 
-                    var personDao = this.container.Resolve<IPersonDao>();
-
-                    var persons = personDao.Read(transaction, "SiteDirectory", null, true).ToList();
+                    var persons = this.PersonDao.Read(transaction, "SiteDirectory", null, true).ToList();
 
                     foreach (var person in persons)
                     {
-                        var changelogBodyComposer = this.container.Resolve<IChangelogBodyComposer>();
-
                         if (!person.IsActive)
                         {
                             continue;
@@ -170,9 +137,8 @@ namespace CometServer.ChangeNotification
                             if (changeNotificationSubscriptionUserPreference.Value.ChangeNotificationSubscriptions.Count != 0
                                 && changeNotificationSubscriptionUserPreference.Value.ChangeNotificationReportType != ChangeNotificationReportType.None)
                             {
-                                var changelogSections = changelogBodyComposer.CreateChangelogSections(
+                                var changelogSections = this.ChangelogBodyComposer.CreateChangelogSections(
                                     transaction,
-                                    this.container,
                                     Guid.Parse(changeNotificationSubscriptionUserPreference.Key),
                                     person,
                                     changeNotificationSubscriptionUserPreference.Value,
@@ -180,13 +146,12 @@ namespace CometServer.ChangeNotification
                                     endDateTime
                                 ).ToList();
 
-                                htmlStringBuilder.Append(changelogBodyComposer.CreateHtmlBody(changelogSections));
-                                textStringBuilder.Append(changelogBodyComposer.CreateTextBody(changelogSections));
+                                htmlStringBuilder.Append(this.ChangelogBodyComposer.CreateHtmlBody(changelogSections));
+                                textStringBuilder.Append(this.ChangelogBodyComposer.CreateTextBody(changelogSections));
                             }
                         }
 
-                        var emailService = this.container.Resolve<IEmailService>();
-                        await emailService.Send(emailAddresses, subject, textStringBuilder.ToString(), htmlStringBuilder.ToString());
+                        await this.EmailService.Send(emailAddresses, subject, textStringBuilder.ToString(), htmlStringBuilder.ToString());
                     }
                 }
                 catch (PostgresException postgresException)
@@ -228,8 +193,7 @@ namespace CometServer.ChangeNotification
                 yield break;
             }
 
-            var emailAddressDao = this.container.Resolve<IEmailAddressDao>();
-            var emailAddresses = emailAddressDao.Read(transaction, "SiteDirectory", person.EmailAddress).ToList();
+            var emailAddresses = this.EmailAddressDao.Read(transaction, "SiteDirectory", person.EmailAddress).ToList();
 
             if (emailAddresses.Count == 0)
             {
@@ -276,12 +240,10 @@ namespace CometServer.ChangeNotification
         /// </returns>
         private Dictionary<string, ChangeNotificationSubscriptionUserPreference> GetChangeLogSubscriptionUserPreferences(NpgsqlTransaction transaction, Person person)
         {
-            var userPreferenceDao = this.container.Resolve<IUserPreferenceDao>();
-
             var changeLogSubscriptions = new Dictionary<string, ChangeNotificationSubscriptionUserPreference>();
 
             var userPreferences =
-                userPreferenceDao
+                this.UserPreferenceDao
                     .Read(transaction, "SiteDirectory", person.UserPreference, true)
                     .Where(x => x.ShortName.StartsWith("ChangeLogSubscriptions_"))
                     .ToList();

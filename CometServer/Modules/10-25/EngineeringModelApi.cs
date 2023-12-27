@@ -45,6 +45,7 @@ namespace CometServer.Modules
     using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Extensions;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.ChangeLog;
@@ -62,7 +63,7 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging.Abstractions;
 
     using Npgsql;
-    
+
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
     /// </summary>
@@ -74,9 +75,14 @@ namespace CometServer.Modules
         private const string TopContainer = "EngineeringModel";
 
         /// <summary>
-        /// A <see cref="ILogger{EngineeringModelApi}"/> instance
+        /// The (injected) <see cref="ILogger{EngineeringModelApi}"/> instance
         /// </summary>
         private readonly ILogger<EngineeringModelApi> logger;
+
+        /// <summary>
+        /// The (injected) <see cref="ICometHasStartedService"/>
+        /// </summary>
+        private readonly ICometHasStartedService cometHasStartedService;
 
         /// <summary>
         /// The supported get query parameters.
@@ -109,16 +115,21 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/> used to read application configuration
         /// </param>
+        /// <param name="cometHasStartedService">
+        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
+        /// acceptng requests
+        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public EngineeringModelApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) 
+        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) 
             : base(appConfigService, tokenGeneratorService, loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<EngineeringModelApi>.Instance : loggerFactory.CreateLogger<EngineeringModelApi>();
+            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -127,12 +138,19 @@ namespace CometServer.Modules
         /// <param name="app">
         /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
         /// </param>
-       
-        public override void AddRoutes(IEndpointRouteBuilder app)
+       public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
             {
+                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                {
+                    res.ContentType = "application/json";
+                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    await res.AsJson("not yet started and ready to accept requests");
+                    return;
+                }
+
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
@@ -160,6 +178,14 @@ namespace CometServer.Modules
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
             {
+                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                {
+                    res.ContentType = "application/json";
+                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    await res.AsJson("not yet started and ready to accept requests");
+                    return;
+                }
+
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {
                     res.UpdateWithNotAuthenticatedSettings();

@@ -33,6 +33,6 @@ namespace CometServer
         /// <summary>
         /// Apply migration scripts at start-up
         /// </summary>
-        public void MigrateAllAtStartUp();
+        public bool MigrateAllAtStartUp();
     }
 }

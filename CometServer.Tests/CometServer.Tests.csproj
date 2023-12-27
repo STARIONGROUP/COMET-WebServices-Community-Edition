@@ -48,6 +48,7 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Folder Include="Health\" />
     <Folder Include="Services\CherryPick\" />
   </ItemGroup>
  

@@ -43,6 +43,7 @@ namespace CometServer.Modules
     using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Extensions;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Protocol;
@@ -72,6 +73,11 @@ namespace CometServer.Modules
         private readonly ILogger<ExchangeFileExportApi> logger;
 
         /// <summary>
+        /// The (injected) <see cref="ICometHasStartedService"/>
+        /// </summary>
+        private readonly ICometHasStartedService cometHasStartedService;
+
+        /// <summary>
         /// The supported post query parameter.
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
@@ -85,15 +91,20 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/> used to read application configuration
         /// </param>
+        /// <param name="cometHasStartedService">
+        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
+        /// acceptng requests
+        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public ExchangeFileExportApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
+        public ExchangeFileExportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<ExchangeFileExportApi>.Instance : loggerFactory.CreateLogger<ExchangeFileExportApi>();
+            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -105,7 +116,15 @@ namespace CometServer.Modules
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/export",
-            async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter) => {
+            async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter) =>
+            {
+                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                {
+                    res.ContentType = "application/json";
+                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    await res.AsJson("not yet started and ready to accept requests");
+                    return;
+                }
 
                 if (!req.HttpContext.User.Identity.IsAuthenticated)
                 {

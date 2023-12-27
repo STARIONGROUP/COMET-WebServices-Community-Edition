@@ -28,8 +28,6 @@ namespace CometServer.ChangeNotification.Data
     using System.Collections.Generic;
     using System.Linq;
 
-    using Autofac;
-
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
@@ -47,6 +45,16 @@ namespace CometServer.ChangeNotification.Data
     public class ModelLogEntryDataCreator : IModelLogEntryDataCreator
     {
         /// <summary>
+        /// The (injected) <see cref="IDomainOfExpertiseDao"/>
+        /// </summary>
+        public IDomainOfExpertiseDao DomainOfExpertiseDao { get; set; }
+
+        /// <summary>
+        /// The (injected) <see cref="ILogEntryChangelogItemDao"/>
+        /// </summary>
+        public ILogEntryChangelogItemDao LogEntryChangelogItemDao { get; set; }
+
+        /// <summary>
         /// Create an <see cref="IEnumerable{T}"/> of type <see cref="ModelLogEntryData"/> for a specific <see cref="EngineeringModel"/>
         /// base on a list of filtered <see cref="ModelLogEntry"/>s
         /// </summary>
@@ -55,9 +63,6 @@ namespace CometServer.ChangeNotification.Data
         /// </param>
         /// <param name="engineeringModelPartition">
         /// The partition in the database
-        /// </param>
-        /// <param name="container">
-        /// The <see cref="IContainer"/> used to resolve injectable objects
         /// </param>
         /// <param name="modelLogEntries">
         /// The <see cref="ModelLogEntry"/>s
@@ -74,17 +79,13 @@ namespace CometServer.ChangeNotification.Data
         public IEnumerable<ModelLogEntryData> Create(
             NpgsqlTransaction transaction, 
             string engineeringModelPartition, 
-            IContainer container, 
             IEnumerable<ModelLogEntry> modelLogEntries, 
             IEnumerable<Guid> domains, 
             ChangeNotificationSubscriptionUserPreference changeNotificationSubscriptionUserPreference)
         {
             var modelLogEntryDataList = new List<ModelLogEntryData>();
 
-            var domainOfExpertiseDao = container.Resolve<IDomainOfExpertiseDao>();
-            var logEntryChangeLogItemDao = container.Resolve<ILogEntryChangelogItemDao>();
-
-            var domainOfExpertises = domainOfExpertiseDao.Read(transaction, "SiteDirectory", domains).ToList();
+            var domainOfExpertises = this.DomainOfExpertiseDao.Read(transaction, "SiteDirectory", domains).ToList();
 
             foreach (var changeNotificationSubscription in changeNotificationSubscriptionUserPreference.ChangeNotificationSubscriptions)
             {
@@ -98,7 +99,7 @@ namespace CometServer.ChangeNotification.Data
                         var addModelLogEntryData = false;
 
                         var logEntryChangeLogItems = 
-                            logEntryChangeLogItemDao.Read(transaction, engineeringModelPartition, modelLogEntry.LogEntryChangelogItem).ToList();
+                            this.LogEntryChangelogItemDao.Read(transaction, engineeringModelPartition, modelLogEntry.LogEntryChangelogItem).ToList();
 
                         foreach (var logEntryChangelogItem in logEntryChangeLogItems)
                         {

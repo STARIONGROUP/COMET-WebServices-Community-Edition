@@ -74,7 +74,7 @@ namespace CometServer
         /// <summary>
         /// Apply migration scripts at start-up
         /// </summary>
-        public void MigrateAllAtStartUp()
+        public bool MigrateAllAtStartUp()
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -95,8 +95,8 @@ namespace CometServer
                     }
                     catch (PostgresException e)
                     {
-                        this.logger.LogWarning("Could not connect to the database for migration, the database might not exist yet. Skipping migration. Error message: {message}", e.Message);
-                        return;
+                        this.logger.LogWarning("Could not connect to the database for migration, the database might not exist yet. Error message: {message}", e.Message);
+                        return false;
                     }
                 }
 
@@ -105,6 +105,7 @@ namespace CometServer
 
                 // list all schema where the migration script shall be applied on
                 var existingSchemas = new List<string>();
+
                 using (var schemaListCmd = new NpgsqlCommand("select nspname from pg_catalog.pg_namespace", transaction.Connection, transaction))
                 {
                     using (var reader = schemaListCmd.ExecuteReader())
@@ -172,6 +173,10 @@ namespace CometServer
                 }
 
                 transaction.Commit();
+
+                this.logger.LogInformation("Migration done in {sw} ms.", sw.ElapsedMilliseconds);
+
+                return true;
             }
             catch (Exception exception)
             {
@@ -194,8 +199,6 @@ namespace CometServer
                 {
                     connection.Dispose();
                 }
-
-                this.logger.LogInformation("Migration done in {sw} ms.", sw.ElapsedMilliseconds);
             }
         }
     }

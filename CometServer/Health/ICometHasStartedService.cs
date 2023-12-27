@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDataStoreConnectionChecker.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+// <copyright file="$FILENAME$" company="RHEA System S.A.">
+//    Copyright (c) 2015-$CURRENT_YEAR$ RHEA System S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -23,27 +23,31 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.DataStore
+namespace CometServer.Health
 {
-    using System.Threading;
+    using System;
 
-    using CometServer.Configuration;
-    
     /// <summary>
-    /// The purpose of the <see cref="IDataStoreConnectionChecker"/> is to check whether a connection can be made to the databse
-    /// and wait for it before returning
+    /// The purpose of the <see cref="ICometHasStartedService"/> is to provide a shared resource
+    /// that can be used to check whether the CDP4-COMET has succcesfuly started and is ready
+    /// to accept traffic
     /// </summary>
-    public interface IDataStoreConnectionChecker
+    public interface ICometHasStartedService
     {
         /// <summary>
-        /// Checks whether a connection to the Data store can be made
+        /// Gets the <see cref="DateTime"/> at which the CDP4-COMET finished the
+        /// startup process and when it was ready to start accepting requests
         /// </summary>
-        /// <param name="cancellationToken">
-        /// The <see cref="cancellationToken"/> that can be used to cancel the operation
-        /// </param>
         /// <returns>
-        /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
+        /// A <see cref="ServerStatus"/> that has no value when not yet started and ready
+        /// or a UTC datetime when started and ready
         /// </returns>
-        public bool CheckConnection(CancellationToken cancellationToken);
+        public ServerStatus GetHasStartedAndIsReady();
+
+        /// <summary>
+        /// Sets the <see cref="ICometHasStartedService"/> to indicate that the
+        /// CDP4-COMET server has started and is ready to accept requests
+        /// </summary>
+        public void SetHasStartedAndIsReady(bool isHealthy);
     }
 }

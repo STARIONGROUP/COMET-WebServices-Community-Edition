@@ -25,20 +25,13 @@
 namespace CometServer
 {
     using System;
-    using System.Diagnostics;
-    using System.Reflection;
     using System.Threading.Tasks;
 
-    using Autofac;
     using Autofac.Extensions.DependencyInjection;
 
-    using CometServer.ChangeNotification;
     using CometServer.Configuration;
     using CometServer.Resources;
-    using CometServer.Services.DataStore;
 
-    using Hangfire;
-    
     using Microsoft.Extensions.Hosting;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -46,6 +39,10 @@ namespace CometServer
     using Microsoft.Extensions.Logging;
 
     using Serilog;
+    using Autofac;
+    using CometServer.ChangeNotification;
+    using Hangfire;
+    using System.Diagnostics;
 
     /// <summary>
     /// The <see cref="Program"/> is the entry point for the console application
@@ -78,7 +75,7 @@ namespace CometServer
                         .ReadFrom.Configuration(hostingContext.Configuration) // Read configuration from appsettings.json
                         .WriteTo.Console(); // Add the console sink for logging to the console
                 });
-
+            
             var host = builder.Build();
 
             var logger = host.Services.GetService<ILogger<Program>>();
@@ -120,22 +117,6 @@ namespace CometServer
 
                 logger.LogInformation("################################################################");
 
-                var dataStoreConnectionChecker = host.Services.GetService<IDataStoreConnectionChecker>();
-                var dataStoreAvailable = dataStoreConnectionChecker.CheckConnection();
-
-                if (!dataStoreAvailable)
-                {
-                    logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {BacktierWaitTime}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
-                    return 0;
-                }
-                
-                logger.LogInformation("The data-store has become available for connections within the configured BacktierWaitTime: {BacktierWaitTime}", appConfigService.AppConfig.Midtier.BacktierWaitTime);
-                
-                var migrationEngine = host.Services.GetService<IMigrationEngine>();
-                migrationEngine.MigrateAllAtStartUp();
-
-                ConfigureRecurringJobs(appConfigService, logger);
-
                 var configuration = host.Services.GetService<IConfiguration>();
                 var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
 
@@ -151,31 +132,6 @@ namespace CometServer
                 logger.LogCritical(e,"An unhandled exception occurred during startup-bootstrapping");
                 return -1;
             }
-        }
-
-        /// <summary>
-        /// Configure the recurring jobs
-        /// </summary>
-        /// <param name="appConfigService">
-        /// The <see cref="IAppConfigService"/> that provides the configuration used to configure the recurring jobs
-        /// </param>
-        /// <param name="logger">
-        /// The <see cref="ILogger{Program}"/> used to log
-        /// </param>
-        public static void ConfigureRecurringJobs(IAppConfigService appConfigService, ILogger<Program> logger)
-        {
-            var sw = Stopwatch.StartNew();
-
-            var builder = new ContainerBuilder();
-            builder.RegisterType<ChangeNoticationService>().InstancePerBackgroundJob();
-            GlobalConfiguration.Configuration.UseAutofacActivator(builder.Build());
-
-            if (appConfigService.AppConfig.Changelog.AllowEmailNotification)
-            {
-                RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
-            }
-
-            logger.LogInformation("Cron jobs configured in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
         }
     }
 }

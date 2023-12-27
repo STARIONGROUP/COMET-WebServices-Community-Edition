@@ -24,10 +24,11 @@
 
 namespace CometServer
 {
+    using System;
     using System.Linq;
 
     using Autofac;
-
+    
     using Carter;
 
     using CDP4Authentication;
@@ -48,7 +49,10 @@ namespace CometServer
 
     using CometServer.Authentication;
     using CometServer.Authorization;
+    using CometServer.ChangeNotification;
+    using CometServer.ChangeNotification.Data;
     using CometServer.Configuration;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Resources;
     using CometServer.Services;
@@ -67,7 +71,7 @@ namespace CometServer
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-
+    
     using Prometheus;
 
     using Serilog;
@@ -107,7 +111,12 @@ namespace CometServer
         /// </param>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHangfire(globalConfiguration => globalConfiguration.UseMemoryStorage());
+            services.AddMemoryCache();
+
+            services.AddHangfire(config =>
+                config.UseMemoryStorage());
+
+            services.AddHangfireServer();
 
             services.AddCors(options =>
             {
@@ -132,6 +141,8 @@ namespace CometServer
         // Don't build the container; that gets done for you.
         public void ConfigureContainer(ContainerBuilder builder)
         {
+            builder.RegisterType<CometStartUpService>().As<IHostedService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<CometHasStartedService>().As<ICometHasStartedService>().SingleInstance();
             builder.RegisterType<AppConfigService>().As<IAppConfigService>().SingleInstance();
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
             builder.RegisterType<ResourceLoader>().As<IResourceLoader>().SingleInstance();
@@ -164,7 +175,7 @@ namespace CometServer
             builder.RegisterType<HeaderInfoProvider>().As<IHeaderInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             var carterModulessInAssembly = typeof(Startup).Assembly.GetExportedTypes().Where(type => typeof(CarterModule).IsAssignableFrom(type)).ToArray();
             builder.RegisterTypes(carterModulessInAssembly).PropertiesAutowired().InstancePerLifetimeScope();
-            builder.RegisterType<Services.ServiceProvider>().As<IServiceProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<Services.ServiceProvider>().As<CometServer.Services.IServiceProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<RequestUtils>().As<IRequestUtils>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<OperationSideEffectProcessor>().As<IOperationSideEffectProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<OperationProcessor>().As<IOperationProcessor>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
@@ -201,14 +212,19 @@ namespace CometServer
             // CherryPick support
             builder.RegisterType<CherryPickService>().As<ICherryPickService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
             builder.RegisterType<ContainmentService>().As<IContainmentService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+
+            // change notification
+            builder.RegisterType<ChangeNoticationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<ModelLogEntryDataCreator>().As<IModelLogEntryDataCreator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
+            builder.RegisterType<ChangelogBodyComposer>().As<IChangelogBodyComposer>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
         }
 
         /// <summary>
         /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         /// </summary>
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IHostApplicationLifetime appLifetime)
         {
-            if (environment.IsDevelopment())
+            if (this.environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
@@ -221,9 +237,7 @@ namespace CometServer
 
             app.UseStaticFiles();
 
-            GlobalConfiguration.Configuration.UseMemoryStorage();
             app.UseHangfireDashboard("/hangfire");
-            app.UseHangfireServer();
 
             app.UseRouting();
             app.UseCors();
@@ -235,7 +249,13 @@ namespace CometServer
 
             app.UseEndpoints(builder =>
             {
+                // map carter routes
                 builder.MapCarter();
+            });
+
+            appLifetime.ApplicationStarted.Register(() =>
+            {
+                RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
             });
         }
     }

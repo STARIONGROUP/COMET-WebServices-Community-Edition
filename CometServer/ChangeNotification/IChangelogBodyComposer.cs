@@ -27,8 +27,6 @@ namespace CometServer.ChangeNotification
     using System;
     using System.Collections.Generic;
 
-    using Autofac;
-
     using CDP4Common.DTO;
 
     using CometServer.ChangeNotification.UserPreference;
@@ -68,9 +66,6 @@ namespace CometServer.ChangeNotification
         /// <param name="transaction">
         /// The current <see cref="NpgsqlTransaction"/> to the database.
         /// </param>
-        /// <param name="container">
-        /// The <see cref="IContainer"/> used to resolve injectable objects
-        /// </param>
         /// <param name="engineeringModelIid">
         /// The <see cref="EngineeringModel.Iid"/> property of the related <see cref="EngineeringModel"/>
         /// </param>
@@ -90,8 +85,7 @@ namespace CometServer.ChangeNotification
         /// An <see cref="IEnumerable{T}"/> of type <see cref="ChangelogSection"/>s
         /// </returns>
         IEnumerable<ChangelogSection> CreateChangelogSections(
-            NpgsqlTransaction transaction , 
-            IContainer container, 
+            NpgsqlTransaction transaction, 
             Guid engineeringModelIid, 
             Person person, 
             ChangeNotificationSubscriptionUserPreference changeNotificationSubscriptionUserPreference,

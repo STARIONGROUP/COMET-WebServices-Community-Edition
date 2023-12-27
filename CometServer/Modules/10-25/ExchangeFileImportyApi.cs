@@ -46,6 +46,7 @@ namespace CometServer.Modules
 
     using CometServer.Configuration;
     using CometServer.Extensions;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -82,6 +83,11 @@ namespace CometServer.Modules
         private readonly ILogger<ExchangeFileImportyApi> logger;
 
         /// <summary>
+        /// The (injected) <see cref="ICometHasStartedService"/>
+        /// </summary>
+        private readonly ICometHasStartedService cometHasStartedService;
+
+        /// <summary>
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </summary>
         private readonly ITokenGeneratorService tokenGeneratorService;
@@ -98,9 +104,10 @@ namespace CometServer.Modules
         /// <param name="logger">
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </param>
-        public ExchangeFileImportyApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportyApi> logger)
+        public ExchangeFileImportyApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportyApi> logger)
         {
             this.AppConfigService = appConfigService;
+            this.cometHasStartedService = cometHasStartedService;
             this.tokenGeneratorService = tokenGeneratorService;
             this.logger = logger;
         }
@@ -119,16 +126,19 @@ namespace CometServer.Modules
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/Data/Exchange", async (HttpRequest req, HttpResponse res,
-                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) => {
+                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) =>
+            {
                 await this.SeedDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
             });
 
             app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res,
-                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) => {
+                IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) =>
+            {
                 await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
             });
 
-            app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res, IDataStoreController dataStoreController) => {
+            app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res, IDataStoreController dataStoreController) =>
+            {
                 await this.RestoreDatastore(req, res, dataStoreController);
             });
         }
@@ -171,6 +181,8 @@ namespace CometServer.Modules
                 dataStoreController.RestoreDataStore();
 
                 this.logger.LogDebug("{request}:{requestToken} - Finished data store rollback", httpRequest.QueryNameMethodPath(), requestToken);
+
+                this.cometHasStartedService.SetHasStartedAndIsReady(true);
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("DataStore restored");
@@ -271,6 +283,8 @@ namespace CometServer.Modules
                 }
 
                 this.logger.LogInformation("{request}:{requestToken} - Finished the data store import in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+
+                this.cometHasStartedService.SetHasStartedAndIsReady(true);
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson("Datastore imported");
@@ -376,6 +390,8 @@ namespace CometServer.Modules
                 reqsw.Stop();
 
                 this.logger.LogInformation("{request}:{requestToken} - Finished the data store SEED in {ElapsedMilliseconds}", request.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+
+                this.cometHasStartedService.SetHasStartedAndIsReady(true);
 
                 response.StatusCode = (int)HttpStatusCode.OK;
                 await response.AsJson($"Datastore seeded in {reqsw.ElapsedMilliseconds} [ms]");
@@ -1038,8 +1054,7 @@ namespace CometServer.Modules
             var backtierConfig = this.AppConfigService.AppConfig.Backtier;
 
             // Drop the existing databases
-            using (var connection = new NpgsqlConnection(
-                Services.Utils.GetConnectionString(backtierConfig, backtierConfig.DatabaseManage)))
+            using (var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(backtierConfig, backtierConfig.DatabaseManage)))
             {
                 connection.Open();
 

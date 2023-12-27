@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IDataStoreConnectionChecker.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+// <copyright file="$FILENAME$" company="RHEA System S.A.">
+//    Copyright (c) 2015-$CURRENT_YEAR$ RHEA System S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -23,27 +23,39 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Services.DataStore
+namespace CometServer.Health
 {
-    using System.Threading;
+    using System;
 
-    using CometServer.Configuration;
-    
     /// <summary>
-    /// The purpose of the <see cref="IDataStoreConnectionChecker"/> is to check whether a connection can be made to the databse
-    /// and wait for it before returning
+    /// A struct that indicates the status of the service
     /// </summary>
-    public interface IDataStoreConnectionChecker
+    public struct ServerStatus
     {
         /// <summary>
-        /// Checks whether a connection to the Data store can be made
+        /// Initializes a new instance of the <see cref="ServerStatus"/> structy
         /// </summary>
-        /// <param name="cancellationToken">
-        /// The <see cref="cancellationToken"/> that can be used to cancel the operation
+        /// <param name="isHealthy">
+        /// a value indicating whether the status is healthy or not
         /// </param>
-        /// <returns>
-        /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
-        /// </returns>
-        public bool CheckConnection(CancellationToken cancellationToken);
+        /// <param name="dateTime">
+        /// a <see cref="DateTime"/> value typically used to set the <see cref="DateTime"/>
+        /// when the <see cref="ServerStatus"/> was created
+        /// </param>
+        public ServerStatus(bool isHealthy, DateTime dateTime)
+        {
+            this.IsHealthy = isHealthy;
+            this.DateTime = dateTime;
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether the status is healthy or not
+        /// </summary>
+        public bool IsHealthy { get; private set; }
+
+        /// <summary>
+        /// Gets the asscoicated status <see cref="DateTime"/>
+        /// </summary>
+        public DateTime DateTime { get; private set; }
     }
 }

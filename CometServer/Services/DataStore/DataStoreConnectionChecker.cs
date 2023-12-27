@@ -56,14 +56,16 @@ namespace CometServer.Services.DataStore
         /// <returns>
         /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
         /// </returns>
-        public bool CheckConnection()
+        public bool CheckConnection(CancellationToken cancellationToken)
         {
             var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.DatabaseManage));
 
             var startTime = DateTime.UtcNow;
-            var remainingSeconds = this.AppConfigService.AppConfig.Midtier.BacktierWaitTime;
 
-            while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(this.AppConfigService.AppConfig.Midtier.BacktierWaitTime))
+            var backtierWaitTime = this.AppConfigService.AppConfig.Midtier.BacktierWaitTime;
+            var remainingSeconds = backtierWaitTime;
+
+            while (DateTime.UtcNow - startTime < TimeSpan.FromSeconds(backtierWaitTime) && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {

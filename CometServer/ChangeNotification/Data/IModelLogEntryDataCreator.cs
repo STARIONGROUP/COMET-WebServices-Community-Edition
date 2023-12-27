@@ -27,8 +27,6 @@ namespace CometServer.ChangeNotification.Data
     using System;
     using System.Collections.Generic;
 
-    using Autofac;
-
     using CDP4Common.DTO;
 
     using CometServer.ChangeNotification.UserPreference;
@@ -50,9 +48,6 @@ namespace CometServer.ChangeNotification.Data
         /// <param name="engineeringModelPartition">
         /// The partition in the database
         /// </param>
-        /// <param name="container">
-        /// The <see cref="IContainer"/> used to resolve injectable objects
-        /// </param>
         /// <param name="modelLogEntries">
         /// The <see cref="ModelLogEntry"/>s
         /// </param>
@@ -68,7 +63,6 @@ namespace CometServer.ChangeNotification.Data
         IEnumerable<ModelLogEntryData> Create(
             NpgsqlTransaction transaction, 
             string engineeringModelPartition, 
-            IContainer container, 
             IEnumerable<ModelLogEntry> modelLogEntries, 
             IEnumerable<Guid> domains, 
             ChangeNotificationSubscriptionUserPreference changeNotificationSubscriptionUserPreference);
