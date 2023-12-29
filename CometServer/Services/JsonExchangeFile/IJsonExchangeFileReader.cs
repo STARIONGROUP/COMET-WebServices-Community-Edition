@@ -41,52 +41,68 @@ namespace CometServer.Services
     public interface IJsonExchangeFileReader
     {
         /// <summary>
-        /// Get the site directory from file.
+        /// Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="SiteDirectory"/>
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
         /// <returns>
-        /// The site directory contained <see cref="Thing"/> collection.
+        /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="SiteDirectory"/>
         /// </returns>
         IEnumerable<Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password);
 
         /// <summary>
-        /// Get the engineering model from file.
+        /// Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
+        /// referenced by the provided <see cref="EngineeringModelSetup"/>
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
+        /// </param>
+        /// <param name="password">
+        /// The zip archive password
+        /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that holds a reference to the <see cref="EngineeringModel"/> from which
+        /// the <see cref="CDP4Common.DTO.Thing"/>s are to be read
+        /// </param>
+        /// <returns>
+        /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
+        /// </returns>
+        IEnumerable<Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup);
+
+        /// <summary>
+        ///  Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/> referenced by the
+        /// <see cref="EngineeringModelSetup"/> and contained <see cref="IterationSetup"/>
+        /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
+        /// <param name="filePath">
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
         /// The password.
         /// </param>
         /// <param name="engineeringModelSetup">
-        /// The engineering model setup.
-        /// </param>
-        /// <returns>
-        /// The deserialized engineering model contained <see cref="Thing"/> collection.
-        /// </returns>
-        IEnumerable<Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup);
-
-        /// <summary>
-        /// Get the model iteration from file.
-        /// </summary>
-        /// <param name="filePath">
-        /// The file path.
-        /// </param>
-        /// <param name="password">
-        /// The password.
-        /// </param>
+        /// The <see cref="EngineeringModelSetup"/> that contains the <see cref="IterationSetup"/> that holds a reference to the
+        /// <see cref="Iteration"/> from which the contained data needs to be read
+        ///  </param>
         /// <param name="iterationSetup">
-        /// The iteration setup.
+        /// The <see cref="IterationSetup"/> that holds a reference to the <see cref="Iteration"/> from which the contained data is to be read
         /// </param>
         /// <returns>
-        /// The deserialized iteration contained <see cref="Thing"/> collection.
+        /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/>
         /// </returns>
-        IEnumerable<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup);
+        IEnumerable<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup);
 
         /// <summary>
         /// Get user credentials from migration.json if exists
@@ -97,12 +113,7 @@ namespace CometServer.Services
         IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password);
 
         /// <summary>
-        /// Gets or sets the <see cref="ICdp4JsonSerializer"/>
-        /// </summary>
-        ICdp4JsonSerializer JsonSerializer { get; set; }
-
-        /// <summary>
-        /// Stores the referenced (by hash) file file binary contained in the archive.
+        /// Reads and Stores the referenced (by hash) file-binary contained in the archive.
         /// </summary>
         /// <param name="filePath">
         /// The file path of the zip archive being processed.
@@ -110,9 +121,13 @@ namespace CometServer.Services
         /// <param name="password">
         /// The archive password.
         /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that holds a reference to the <see cref="EngineeringModel"/> from which
+        /// the files are to be read and stored
+        /// </param>
         /// <param name="fileHash">
         /// The file hash of the file binary that will be stored on disk.
         /// </param>
-        void StoreFileBinary(string filePath, string password, string fileHash);
+        void ReadAndStoreFileBinary(string filePath, string password, EngineeringModelSetup engineeringModelSetup, string fileHash);
     }
 }

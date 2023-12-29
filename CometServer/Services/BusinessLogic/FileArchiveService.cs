@@ -39,7 +39,7 @@ namespace CometServer.Services
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
 
-    using Ionic.Zip;
+    using ICSharpCode.SharpZipLib.Zip;
 
     using Microsoft.Extensions.Logging;
 
@@ -60,37 +60,37 @@ namespace CometServer.Services
         public ILogger<FileArchiveService> Logger { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// Gets or sets the (injected) <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="ICredentialsService"/> for the current request
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
         /// </summary>
         public ICredentialsService CredentialsService { get; set; }
 
         /// <summary>
-        /// Gets or sets the commonFileStore service.
+        /// Gets or sets the (injected) <see cref="ICommonFileStoreService"/>
         /// </summary>
         public ICommonFileStoreService CommonFileStoreService { get; set; }
 
         /// <summary>
-        /// Gets or sets the domainFileStore service.
+        /// Gets or sets the (injected) <see cref="IDomainFileStoreService"/>
         /// </summary>
         public IDomainFileStoreService DomainFileStoreService { get; set; }
 
         /// <summary>
-        /// Gets or sets the file type service.
+        /// Gets or sets the (injected) <see cref="IFileTypeService"/>
         /// </summary>
         public IFileTypeService FileTypeService { get; set; }
 
         /// <summary>
-        /// Gets or sets the transaction manager for this request.
+        /// Gets or sets the (injected) <see cref="ICdp4TransactionManager"/>
         /// </summary>
         public ICdp4TransactionManager TransactionManager { get; set; }
 
         /// <summary>
-        /// Gets or sets the file binary service.
+        /// Gets or sets the (injected) <see cref="IFileBinaryService"/>
         /// </summary>
         public IFileBinaryService FileBinaryService { get; set; }
 
@@ -112,24 +112,24 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> folder path where the file structure is created.
         /// </returns>
-        public string CreateFileStructure(List<Thing> resourceResponse, string partition, string[] routeSegments)
+        public DirectoryInfo CreateFolderAndFileStructureOnDisk(List<Thing> resourceResponse, string partition, string[] routeSegments)
         {
             if (resourceResponse[0].ClassKind == ClassKind.CommonFileStore
                 || resourceResponse[0].ClassKind == ClassKind.DomainFileStore
                 || resourceResponse[0].ClassKind == ClassKind.Folder)
             {
-                var folderPath = this.CreateTemporaryFolderOnDisk();
+                var temporaryFolderOnDiskDirectoryInfo = this.CreateTemporaryFolderOnDisk();
 
                 try
                 {
-                    this.CreateFileStructureOnDisk(resourceResponse[0], partition, folderPath, routeSegments);
-                    return folderPath;
+                    this.CreateFolderAndFileStructureOnDisk(resourceResponse[0], partition, temporaryFolderOnDiskDirectoryInfo.FullName, routeSegments);
+                    return temporaryFolderOnDiskDirectoryInfo;
                 }
                 catch (Exception exception)
                 {
                     this.Logger.LogError("An attempt to create a file structure was unsuccsessful. Exited with the error: {exceptionMessage}.", exception.Message);
 
-                    this.DeleteFileStructure(folderPath);
+                    temporaryFolderOnDiskDirectoryInfo.Delete(true);
                 }
             }
 
@@ -137,46 +137,43 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Create zip archive.
+        /// Create zip archive from the provided <see cref="DirectoryInfo"/>
         /// </summary>
-        /// <param name="folderPath">
-        /// The folder path where the file structure for archiving is created..
+        /// <param name="directoryInfo">
+        /// The location of the top folder that is to be archived into a ZIP file
         /// </param>
-        public void CreateZipArchive(string folderPath)
+        /// <remarks>
+        /// Empty folders and folders are ignored as entries
+        /// </remarks>
+        public void CreateZipArchive(DirectoryInfo directoryInfo)
         {
-            // Create a zip archive from the created file structure
-            using var zip = new ZipFile();
+            var fastZip = new FastZip();
 
-            zip.AddDirectory(folderPath);
-            zip.Save(folderPath + ".zip");
+            var zipArchive = Path.Combine(directoryInfo.Parent.FullName, $"{directoryInfo.Name}.zip");
+
+            string fileFilter = null;
+            string directoryFilter = null;
+
+            fastZip.CreateZip(zipArchive, directoryInfo.FullName, true, fileFilter, directoryFilter);
         }
 
         /// <summary>
-        /// Delete file structure with archive.
+        /// Delete file structure and temporary ZIP archive.
         /// </summary>
-        /// <param name="folderPath">
-        /// The folder path where the file structure is created.
+        /// <param name="directoryInfo">
+        /// The <see cref="DirectoryInfo"/> that is to be deleted. The name of the <see cref="DirectoryInfo"/>
+        /// is equal to the name of the temporary ZIP archive that is deleted as well.
         /// </param>
-        public void DeleteFileStructureWithArchive(string folderPath)
+        public void DeleteFolderAndFileStructureAndArchive(DirectoryInfo directoryInfo)
         {
             // Delete created file structure and archive from the disk
-            Directory.Delete(folderPath, true);
-            System.IO.File.Delete(folderPath + ".zip");
+            directoryInfo.Delete(true);
 
-            this.Logger.LogInformation("File structure {folderPath} and archive {folderPath}.zip are deleted.", folderPath, folderPath);
-        }
+            var zipArchive = Path.Combine(directoryInfo.Parent.FullName, $"{directoryInfo.Name}.zip");
 
-        /// <summary>
-        /// Delete file structure.
-        /// </summary>
-        /// <param name="folderPath">
-        /// The folder path where the file structure is created.
-        /// </param>
-        private void DeleteFileStructure(string folderPath)
-        {
-            Directory.Delete(folderPath, true);
+            System.IO.File.Delete(zipArchive);
 
-            this.Logger.LogInformation("File structure {folderPath} is deleted.", folderPath);
+            this.Logger.LogInformation("File structure {folderPath} and archive {zipArchive}.zip are deleted.", directoryInfo.FullName, zipArchive);
         }
 
         /// <summary>
@@ -185,7 +182,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> name of the created folder.
         /// </returns>
-        private string CreateTemporaryFolderOnDisk()
+        private DirectoryInfo CreateTemporaryFolderOnDisk()
         {
             // Specify a name for a random folder.
             var folderPath = Guid.NewGuid().ToString();
@@ -194,11 +191,11 @@ namespace CometServer.Services
 
             this.Logger.LogDebug("Creating temporary folder {folderPath}.", folderPath);
 
-            Directory.CreateDirectory(folderPath);
+            var directoryInfo = Directory.CreateDirectory(folderPath);
 
             this.Logger.LogInformation("Temporary folder {folderPath} is created.", folderPath);
 
-            return folderPath;
+            return directoryInfo;
         }
 
         /// <summary>
@@ -216,7 +213,7 @@ namespace CometServer.Services
         /// <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void CreateFileStructureOnDisk(Thing thing, string partition, string folderPath, string[] routeSegments)
+        private void CreateFolderAndFileStructureOnDisk(Thing thing, string partition, string folderPath, string[] routeSegments)
         {
             this.Logger.LogInformation("File structure creation is started into the temporary folder {folderPath}.", folderPath);
 
@@ -225,16 +222,11 @@ namespace CometServer.Services
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             NpgsqlConnection connection = null;
-            NpgsqlTransaction transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+            var transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
 
             try
             {
-                List<Thing> things = this.GetFileStoreThings(
-                    thing,
-                    routeSegments,
-                    partition,
-                    transaction,
-                    authorizedContext);
+                var things = this.GetFileStoreThings(thing, routeSegments, partition, transaction, authorizedContext);
 
                 if (things.Count != 0)
                 {
@@ -242,12 +234,10 @@ namespace CometServer.Services
                     var folders = things.Where(i => i.GetType() == typeof(Folder)).Cast<Folder>().ToList();
 
                     // Get all files 
-                    var files = things.Where(i => i.GetType() == typeof(File))
-                        .Cast<File>().ToList();
+                    var files = things.Where(i => i.GetType() == typeof(File)).Cast<File>().ToList();
 
                     // Get all files 
-                    var fileRevisions = things.Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>()
-                        .ToList();
+                    var fileRevisions = things.Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>().ToList();
 
                     // Get all fileType iids
                     var fileTypeOrderedItems = new List<OrderedItem>();
@@ -276,16 +266,16 @@ namespace CometServer.Services
                         // Iterate all root folders and find child folders and files for the file store
                         foreach (var rootFolder in rootFolders)
                         {
-                            this.GetFoldersAndFiles(rootFolder, folders, files, fileRevisions, folderPath, fileTypes);
+                            this.GetFoldersAndFilesAndCopy(rootFolder, folders, files, fileRevisions, folderPath, fileTypes);
                         }
 
                         // Get root files
-                        this.GetFiles(null, files, fileRevisions, folderPath, fileTypes);
+                        this.GetAndCopyFiles(null, files, fileRevisions, folderPath, fileTypes);
                     }
                     else
                     {
                         // Find child folders and files for the folder
-                        this.GetFoldersAndFiles(thing as Folder, folders, files, fileRevisions, folderPath, fileTypes);
+                        this.GetFoldersAndFilesAndCopy(thing as Folder, folders, files, fileRevisions, folderPath, fileTypes);
                     }
                 }
 
@@ -367,7 +357,8 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Get folders and files for the given root folder.
+        /// Get folders and files for the given <paramref name="rootFolder"/> and copy the complete
+        /// structure (including fiels) to the target <paramref name="folderPath"/>
         /// </summary>
         /// <param name="rootFolder">
         /// The root folder name where the structure will be created.
@@ -387,13 +378,7 @@ namespace CometServer.Services
         /// <param name="fileTypes">
         /// The file types of files from the fileStore.
         /// </param>
-        private void GetFoldersAndFiles(
-            Folder rootFolder,
-            List<Folder> folders,
-            List<File> files,
-            List<FileRevision> fileRevisions,
-            string folderPath,
-            List<FileType> fileTypes)
+        private void GetFoldersAndFilesAndCopy(Folder rootFolder, List<Folder> folders, List<File> files, List<FileRevision> fileRevisions, string folderPath, List<FileType> fileTypes)
         {
             var path = Path.Combine(folderPath, rootFolder.Name);
 
@@ -411,15 +396,15 @@ namespace CometServer.Services
             {
                 foreach (var subFolder in subFolders)
                 {
-                    this.GetFoldersAndFiles(subFolder, folders, files, fileRevisions, path, fileTypes);
+                    this.GetFoldersAndFilesAndCopy(subFolder, folders, files, fileRevisions, path, fileTypes);
                 }
             }
 
-            this.GetFiles(rootFolder, files, fileRevisions, path, fileTypes);
+            this.GetAndCopyFiles(rootFolder, files, fileRevisions, path, fileTypes);
         }
 
         /// <summary>
-        /// Get files for the given root folder.
+        /// Get and Copy the files from the <see cref="IFileBinaryService"/> to the target <paramref name="folderPath"/>
         /// </summary>
         /// <param name="rootFolder">
         /// The root folder name to get files for.
@@ -436,12 +421,7 @@ namespace CometServer.Services
         /// <param name="fileTypes">
         /// The file types.
         /// </param>
-        private void GetFiles(
-            Folder rootFolder,
-            List<File> files,
-            List<FileRevision> fileRevisions,
-            string folderPath,
-            List<FileType> fileTypes)
+        private void GetAndCopyFiles(Folder rootFolder, List<File> files, List<FileRevision> fileRevisions, string folderPath, List<FileType> fileTypes)
         {
             var subFileRevisions = new List<FileRevision>();
 
@@ -462,8 +442,8 @@ namespace CometServer.Services
 
                 if (tempSubFileRevisions.Count != 0)
                 {
-                    var subFileRevision =
-                        tempSubFileRevisions.Aggregate((i1, i2) => i1.RevisionNumber > i2.RevisionNumber ? i1 : i2);
+                    var subFileRevision = tempSubFileRevisions.Aggregate((i1, i2) => i1.RevisionNumber > i2.RevisionNumber ? i1 : i2);
+
                     subFileRevisions.Add(subFileRevision);
                 }
             }

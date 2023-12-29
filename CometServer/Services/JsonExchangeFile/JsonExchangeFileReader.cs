@@ -37,7 +37,8 @@ namespace CometServer.Services
 
     using CDP4Orm.Dao;
 
-    using Ionic.Zip;
+    using ICSharpCode.SharpZipLib.Core;
+    using ICSharpCode.SharpZipLib.Zip;
 
     using Microsoft.Extensions.Logging;
 
@@ -49,11 +50,6 @@ namespace CometServer.Services
     /// </summary>
     public class JsonExchangeFileReader : IJsonExchangeFileReader
     {
-        /// <summary>
-        /// The exchange file name format.
-        /// </summary>
-        private const string ExchangeFileNameFormat = "{0}.json";
-
         /// <summary>
         /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
@@ -75,19 +71,19 @@ namespace CometServer.Services
         public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
-        /// Get the site directory from file.
+        /// Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="SiteDirectory"/>
         /// </summary>
         /// <param name="version">
         /// The <see cref="Version"/> of the COMET master madel
         /// </param>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
         /// <returns>
-        /// The site directory contained <see cref="Thing"/> collection.
+        /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="SiteDirectory"/>
         /// </returns>
         public IEnumerable<CDP4Common.DTO.Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
         {
@@ -96,79 +92,90 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Get the engineering model from file.
+        /// Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
+        /// referenced by the provided <see cref="EngineeringModelSetup"/>
         /// </summary>
         /// <param name="version">
         /// The <see cref="Version"/> of the COMET master madel
         /// </param>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
         /// <param name="engineeringModelSetup">
-        /// The engineering model setup.
+        /// The <see cref="EngineeringModelSetup"/> that holds a reference to the <see cref="EngineeringModel"/> from which
+        /// the <see cref="CDP4Common.DTO.Thing"/>s are to be read
         /// </param>
         /// <returns>
-        /// The deserialized engineering model contained <see cref="Thing"/> collection.
+        /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
         /// </returns>
-        public IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelFromfile(Version version,  string filePath,  string password, EngineeringModelSetup engineeringModelSetup)
+        public IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup)
         {
             var memoryStream = ReadFileToMemory(filePath);
             return this.ReadEngineeringModelDataFromStream(version, memoryStream, password, engineeringModelSetup);
         }
 
         /// <summary>
-        /// Get the model iteration from file.
+        ///  Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/> referenced by the
+        /// <see cref="EngineeringModelSetup"/> and contained <see cref="IterationSetup"/>
         /// </summary>
         /// <param name="version">
         /// The <see cref="Version"/> of the COMET master madel
         /// </param>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that contains the <see cref="IterationSetup"/> that holds a reference to the
+        /// <see cref="Iteration"/> from which the contained data needs to be read
+        ///  </param>
         /// <param name="iterationSetup">
-        /// The iteration setup.
+        /// The <see cref="IterationSetup"/> that holds a reference to the <see cref="Iteration"/> from which the contained data is to be read
         /// </param>
         /// <returns>
-        /// The deserialized iteration contained <see cref="Thing"/> collection.
+        /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/>
         /// </returns>
-        public IEnumerable<CDP4Common.DTO.Thing> ReadModelIterationFromFile(Version version, string filePath, string password, IterationSetup iterationSetup)
+        public IEnumerable<CDP4Common.DTO.Thing> ReadModelIterationFromFile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup)
         {
             var memoryStream = ReadFileToMemory(filePath);
-            return this.ReadIterationModelDataFromStream(version, memoryStream, password, iterationSetup);
+            return this.ReadIterationModelDataFromStream(version, memoryStream, password, engineeringModelSetup, iterationSetup);
         }
-        
+
         /// <summary>
-        /// Stores the referenced (by hash) file-binary contained in the archive.
+        /// Reads and Stores the referenced (by hash) file-binary contained in the archive.
         /// </summary>
         /// <param name="filePath">
-        /// The file path of the zip archive being processed.
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
-        /// The archive password.
+        /// The zip archive password
+        /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that holds a reference to the <see cref="EngineeringModel"/> from which
+        /// the files are to be read and stored
         /// </param>
         /// <param name="fileHash">
         /// The file hash of the file binary that will be stored on disk.
         /// </param>
-        public void StoreFileBinary(string filePath, string password, string fileHash)
+        public void ReadAndStoreFileBinary(string filePath, string password, EngineeringModelSetup engineeringModelSetup, string fileHash)
         {
             var memoryStream = ReadFileToMemory(filePath);
-            this.ExtractFileBinaryByHash(memoryStream, password, fileHash);
+            this.ExtractFileBinaryByHash(memoryStream, password, engineeringModelSetup, fileHash);
         }
 
         /// <summary>
         /// Read file to memory stream.
         /// </summary>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
         /// </param>
         /// <returns>
-        /// The <see cref="MemoryStream"/>.
+        /// The <see cref="MemoryStream"/> that contaisn the data of the file
         /// </returns>
         private static MemoryStream ReadFileToMemory(string filePath)
         {
@@ -186,14 +193,17 @@ namespace CometServer.Services
         /// <summary>
         /// Read site directory data from stream.
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="stream">
-        /// The stream.
+        /// /// The <see cref="MemoryStream"/> to read the data from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
         /// <returns>
-        /// The site directory contained <see cref="Thing"/> collection.
+        /// The site directory contained <see cref="CDP4Common.DTO.Thing"/> collection.
         /// </returns>
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
@@ -202,74 +212,72 @@ namespace CometServer.Services
         {
             try
             {
-                // read file, SiteDirectory first.
-                using (var zip = ZipFile.Read(stream))
+                using var zipFile = new ZipFile(stream);
+
+                zipFile.Password = password;
+
+                // read site directory info from file
+                var siteDirectoryZipEntry = zipFile.GetEntry("SiteDirectory.json");
+
+                var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, zipFile, siteDirectoryZipEntry);
+                this.Logger.LogInformation("{count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+
+                var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
+                var processedRdls = new List<string>();
+
+                foreach (var engineeringModelSetup in
+                         returnedSiteDirectory.Where(x => x.ClassKind == ClassKind.EngineeringModelSetup)
+                             .Where(i => i.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>())
                 {
-                    // read site directory info from file
-                    var siteDirectoryZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("SiteDirectory.json"));
+                    // based on engineering model setup load rdl chain
+                    var modelRdlDto =
+                        (ModelReferenceDataLibrary)
+                        returnedSiteDirectory.Single(
+                            x =>
+                                x.ClassKind == ClassKind.ModelReferenceDataLibrary
+                                && x.Iid == engineeringModelSetup.RequiredRdl.Single());
 
-                    var returnedSiteDirectory = this.ReadInfoFromArchiveEntry(version, siteDirectoryZipEntry, password);
-                    this.Logger.LogInformation("{count} Site Directory item(s) encountered", returnedSiteDirectory.Count);
+                    var modelRdlZipEntry = zipFile.GetEntry($"ModelReferenceDataLibraries/{modelRdlDto.Iid}.json");
 
-                    var returned = new List<CDP4Common.DTO.Thing>(returnedSiteDirectory);
-                    var processedRdls = new List<string>();
+                    var modelRdlItems = this.ReadInfoFromArchiveEntry(version, zipFile, modelRdlZipEntry);
 
-                    foreach (
-                        var engineeringModelSetup in
-                        returnedSiteDirectory.Where(x => x.ClassKind == ClassKind.EngineeringModelSetup)
-                            .Where(i => i.GetType() == typeof(EngineeringModelSetup)).Cast<EngineeringModelSetup>())
+                    this.Logger.LogInformation("{Count} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
+                    returned.AddRange(modelRdlItems);
+
+                    // load the reference data libraries as per the containment chain
+                    var requiredRdl = modelRdlDto.RequiredRdl;
+
+                    while (requiredRdl != null)
                     {
-                        // based on engineering model setup load rdl chain
-                        var modelRdlDto =
-                            (ModelReferenceDataLibrary)
+                        this.Logger.LogInformation("Required Reference Data Library encountered: {requiredRdl}", requiredRdl);
+
+                        var siteRdlDto =
+                            (SiteReferenceDataLibrary)
                             returnedSiteDirectory.Single(
-                                x =>
-                                    x.ClassKind == ClassKind.ModelReferenceDataLibrary
-                                    && x.Iid == engineeringModelSetup.RequiredRdl.Single());
+                                x => x.ClassKind == ClassKind.SiteReferenceDataLibrary && x.Iid == requiredRdl);
 
-                        var modelRdlFilePath = string.Format(ExchangeFileNameFormat, modelRdlDto.Iid);
-                        var modelRdlZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(modelRdlFilePath));
-                        var modelRdlItems = this.ReadInfoFromArchiveEntry(version, modelRdlZipEntry, password);
+                        var siteRdlFilePath = $"SiteReferenceDataLibraries/{siteRdlDto.Iid}.json";
 
-                        this.Logger.LogInformation("{Count} Model Reference Data Library item(s) encountered", returnedSiteDirectory.Count);
-                        returned.AddRange(modelRdlItems);
-
-                        // load the reference data libraries as per the containment chain
-                        var requiredRdl = modelRdlDto.RequiredRdl;
-
-                        while (requiredRdl != null)
+                        if (!processedRdls.Contains(siteRdlFilePath))
                         {
-                            this.Logger.LogInformation("Required Reference Data Library encountered: {requiredRdl}", requiredRdl);
+                            var siteRdlZipEntry = zipFile.GetEntry(siteRdlFilePath);
 
-                            var siteRdlDto =
-                                (SiteReferenceDataLibrary)
-                                returnedSiteDirectory.Single(
-                                    x => x.ClassKind == ClassKind.SiteReferenceDataLibrary && x.Iid == requiredRdl);
+                            var siteRdlItems = this.ReadInfoFromArchiveEntry(version, zipFile, siteRdlZipEntry);
 
-                            var siteRdlFilePath = string.Format(ExchangeFileNameFormat, siteRdlDto.Iid);
+                            this.Logger.LogInformation("{Count} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
+                            returned.AddRange(siteRdlItems);
 
-                            if (!processedRdls.Contains(siteRdlFilePath))
-                            {
-                                var siteRdlZipEntry =
-                                    zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(siteRdlFilePath));
-
-                                var siteRdlItems = this.ReadInfoFromArchiveEntry(version, siteRdlZipEntry, password);
-
-                                this.Logger.LogInformation("{Count} Site Reference Data Library item(s) encountered", siteRdlItems.Count);
-                                returned.AddRange(siteRdlItems);
-
-                                // register this processedRdl
-                                processedRdls.Add(siteRdlFilePath);
-                            }
-
-                            // set the requiredRdl for the next iteration
-                            requiredRdl = siteRdlDto.RequiredRdl;
+                            // register this processedRdl
+                            processedRdls.Add(siteRdlFilePath);
                         }
-                    }
 
-                    this.Logger.LogInformation("{Count} Site Directory items encountered", returned.Count);
-                    return returned;
+                        // set the requiredRdl for the next iteration
+                        requiredRdl = siteRdlDto.RequiredRdl;
+                    }
                 }
+
+                this.Logger.LogInformation("{Count} Site Directory items encountered", returned.Count);
+                return returned;
             }
             catch (Exception ex)
             {
@@ -282,39 +290,37 @@ namespace CometServer.Services
         /// <summary>
         /// Read engineering model data from stream.
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="stream">
-        /// The stream.
+        /// The <see cref="MemoryStream"/> to read the data from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
         /// <param name="engineeringModelSetup">
         /// The engineering model setup.
         /// </param>
         /// <returns>
-        /// The engineering model contained <see cref="Thing"/> collection.
+        /// The engineering model contained <see cref="CDP4Common.DTO.Thing"/> collection.
         /// </returns>
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelDataFromStream(Version version,
-            MemoryStream stream,
-            string password,
-            EngineeringModelSetup engineeringModelSetup)
+        private IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelDataFromStream(Version version, MemoryStream stream, string password, EngineeringModelSetup engineeringModelSetup)
         {
             try
             {
-                // read file, SiteDirectory first.
-                using (var zip = ZipFile.Read(stream))
-                {
-                    // read engineeringmodel data
-                    var engineeringModelFilePath = string.Format(ExchangeFileNameFormat, engineeringModelSetup.EngineeringModelIid);
-                    var engineeringModelZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(engineeringModelFilePath));
-                    var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, engineeringModelZipEntry, password);
+                using var zipFile = new ZipFile(stream);
 
-                    this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
-                    return engineeringModelItems;
-                }
+                zipFile.Password = password;
+
+                var engineeringModelZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json");
+                var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile,engineeringModelZipEntry);
+
+                this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
+                return engineeringModelItems;
             }
             catch (Exception ex)
             {
@@ -327,44 +333,48 @@ namespace CometServer.Services
         /// <summary>
         /// The read iteration model data from stream.
         /// </summary>
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
+        /// </param>
         /// <param name="stream">
-        /// The stream.
+        /// The <see cref="MemoryStream"/> to read the data from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
+        /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that contains the <see cref="IterationSetup"/> that holds a reference to the
+        /// <see cref="Iteration"/> from which the contained data needs to be read
         /// </param>
         /// <param name="iterationSetup">
-        /// The iteration setup.
+        /// The <see cref="IterationSetup"/> that holds a reference to the <see cref="Iteration"/> from which the contained data is to be read
         /// </param>
         /// <returns>
-        /// The model iteration contained <see cref="Thing"/> collection.
+        /// The model iteration contained <see cref="CDP4Common.DTO.Thing"/> collection.
         /// </returns>
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<CDP4Common.DTO.Thing> ReadIterationModelDataFromStream(Version version,
-            MemoryStream stream,
-            string password,
-            IterationSetup iterationSetup)
+        private IEnumerable<CDP4Common.DTO.Thing> ReadIterationModelDataFromStream(Version version, MemoryStream stream, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup)
         {
             try
             {
                 // read file, SiteDirectory first.
-                using (var zip = ZipFile.Read(stream))
-                {
-                    // read iteration data
-                    var iterationFilePath = string.Format(ExchangeFileNameFormat, iterationSetup.IterationIid);
-                    var iterationZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(iterationFilePath));
-                    var iterationItems = this.ReadInfoFromArchiveEntry(version, iterationZipEntry, password);
+                using var zipFile = new ZipFile(stream);
 
-                    this.Logger.LogInformation("{Count} Iteration item(s) encountered", iterationItems.Count);
-                    return iterationItems;
-                }
+                zipFile.Password = password;
+
+                // read iteration data
+                var iterationZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/Iterations/{iterationSetup.IterationIid}.json"); 
+                var iterationItems = this.ReadInfoFromArchiveEntry(version, zipFile, iterationZipEntry);
+
+                this.Logger.LogInformation("{Count} Iteration item(s) encountered", iterationItems.Count);
+                return iterationItems;
             }
             catch (Exception ex)
             {
                 this.Logger.LogError(ex, "Failed to load file");
-
+                
                 throw new FileLoadException($"Failed to load file. Error: {ex.Message}");
             }
         }
@@ -373,15 +383,19 @@ namespace CometServer.Services
         /// Extract and persist the file binary (by hash).
         /// </summary>
         /// <param name="archiveStream">
-        /// The archive Stream.
+        /// The <see cref="MemoryStream"/> to read the data from
         /// </param>
-        /// <param name="archivePassword">
-        /// The archive Password.
+        /// <param name="password">
+        /// The zip archive password
+        /// </param>
+        /// <param name="engineeringModelSetup">
+        /// The <see cref="EngineeringModelSetup"/> that holds a reference to the <see cref="EngineeringModel"/> from which
+        /// the files are to be read and stored
         /// </param>
         /// <param name="hash">
         /// The file hash to extract.
         /// </param>
-        private void ExtractFileBinaryByHash(MemoryStream archiveStream, string archivePassword, string hash)
+        private void ExtractFileBinaryByHash(MemoryStream archiveStream, string password, EngineeringModelSetup engineeringModelSetup, string hash)
         {
             if (this.FileBinaryService.IsFilePersisted(hash))
             {
@@ -389,108 +403,98 @@ namespace CometServer.Services
                 return;
             }
 
-            using (var zip = ZipFile.Read(archiveStream))
-            {
-                // select file binary from the archive archive
-                var fileZipEntry = zip.Entries.SingleOrDefault(x => x.FileName.EndsWith(hash));
+            using var zipFile = new ZipFile(archiveStream);
 
-                using (var stream = this.ReadStreamFromArchive(fileZipEntry, archivePassword))
-                {
-                    this.Logger.LogInformation("Store file binary with hash {hash}", hash);
-                    this.FileBinaryService.StoreBinaryData(hash, stream);
-                }
-            }
+            zipFile.Password = password;
+
+            // select file binary from the archive archive
+            var fileZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/FileRevisions/{hash}");
+
+            using var stream = ReadStreamFromArchive(zipFile, fileZipEntry);
+
+            this.Logger.LogInformation("Store file binary with hash {hash}", hash);
+
+            this.FileBinaryService.StoreBinaryData(hash, stream);
         }
 
         /// <summary>
         /// Read info from a specified archive entry.
         /// </summary>
-        /// <param name="zipEntry">
-        /// The zip entry.
+        /// <param name="version">
+        /// The <see cref="Version"/> of the COMET master madel
         /// </param>
-        /// <param name="archivePassword">
-        /// The password of the archive.
+        /// <param name="zipFile">
+        /// The <see cref="ZipFile"/> from which the data is to be read
+        /// </param>
+        /// <param name="zipEntry">
+        /// The <see cref="ZipEntry"/> from which the data is to be read
         /// </param>
         /// <returns>
-        /// The model iteration contained <see cref="Thing"/> collection.
+        /// The model iteration contained <see cref="CDP4Common.DTO.Thing"/> collection.
         /// </returns>
-        /// <exception cref="Exception">
-        /// throws exception if the file failed to open
-        /// </exception>
-        private List<CDP4Common.DTO.Thing> ReadInfoFromArchiveEntry(Version version, ZipEntry zipEntry, string archivePassword)
+        private List<CDP4Common.DTO.Thing> ReadInfoFromArchiveEntry(Version version, ZipFile zipFile, ZipEntry zipEntry)
         {
-            var watch = Stopwatch.StartNew();
+            var sw = Stopwatch.StartNew();
 
             // the extracted stream is closed thus needs to be reinitialized from the buffer of the old one
             IEnumerable<CDP4Common.DTO.Thing> returned;
 
-            using (var stream = this.ReadStreamFromArchive(zipEntry, archivePassword))
+            using (var stream = ReadStreamFromArchive(zipFile, zipEntry))
             {
+                stream.Position = 0;
+
                 this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
                 returned = this.JsonSerializer.Deserialize(stream);
             }
 
-            watch.Stop();
-            this.Logger.LogInformation("JSON Deserializer completed in {ElapsedMilliseconds} [ms]", watch.ElapsedMilliseconds);
+            sw.Stop();
+            this.Logger.LogInformation("JSON Deserializer completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             return returned.ToList();
         }
 
         /// <summary>
-        /// Read info from a specified archive entry.
+        /// Reads a stream of uncompressed data from the provided <see cref="ZipFile"/>
         /// </summary>
-        /// <param name="zipEntry">
-        /// The zip entry.
+        /// <param name="zipFile">
+        /// The <see cref="ZipFile"/> that contains the subject <see cref="ZipEntry"/>
         /// </param>
-        /// <param name="archivePassword">
-        /// The password of the archive.
+        /// <param name="zipEntry">
+        /// The <see cref="ZipEntry"/> that provides access to the <see cref="Stream"/>
         /// </param>
         /// <returns>
-        /// The zip entry stream.
+        /// a <see cref="MemoryStream"/> that contains the uncompressed data from the <see cref="ZipEntry"/>
         /// </returns>
         /// <exception cref="Exception">
         /// throws exception if the file failed to open
         /// </exception>
-        private Stream ReadStreamFromArchive(ZipEntry zipEntry, string archivePassword)
+        private static MemoryStream ReadStreamFromArchive(ZipFile zipFile, ZipEntry zipEntry)
         {
             if (zipEntry == null)
             {
                 throw new ArgumentNullException(nameof(zipEntry), "Supplied archive entry is invalid");
             }
 
-            var watch = Stopwatch.StartNew();
+            var buffer = new byte[4096];
+            var targetStream = new MemoryStream();
 
-            var extractStream = new MemoryStream();
+            using var zipStream = zipFile.GetInputStream(zipEntry);
 
-            try
-            {
-                zipEntry.Password = archivePassword;
-                zipEntry.Extract(extractStream);
-            }
-            catch (Exception ex)
-            {
-                var msg = $"Failed to open file. Error: {ex.Message}";
-                this.Logger.LogError(msg);
+            StreamUtils.Copy(zipStream, targetStream, buffer);
 
-                throw new FileLoadException(msg);
-            }
-
-            watch.Stop();
-            this.Logger.LogInformation("JSONFile GET completed in {ElapsedMilliseconds} [ms]", watch.ElapsedMilliseconds);
-
-            return new MemoryStream(extractStream.ToArray());
+            return targetStream;
         }
 
         /// <summary>
         /// Get the migration.json file from archive.
         /// </summary>
         /// <param name="filePath">
-        /// The file path.
+        /// The path of the zip archive to read from
         /// </param>
         /// <param name="password">
-        /// The password.
+        /// The zip archive password
         /// </param>
         /// <returns>
-        /// The site directory contained <see cref="Thing"/> collection.
+        /// The site directory contained <see cref="CDP4Common.DTO.Thing"/> collection.
         /// </returns>
         public IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password)
         {
@@ -499,34 +503,37 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Read migration.json file from stream
+        /// Reads the migration.json file from the <paramref name="memoryStream"/>
         /// </summary>
-        /// <param name="memoryStream">The zip archive stream <see cref="MemoryStream" /></param>
-        /// <param name="password">The password</param>
+        /// <param name="memoryStream">
+        /// The zip archive stream <see cref="MemoryStream" />
+        /// </param>
+        /// <param name="password">
+        /// The zip archive password
+        /// </param>
         /// <returns></returns>
-        private IList<MigrationPasswordCredentials> ReadMigrationJsonFromStream(MemoryStream memoryStream, string password)
+        private List<MigrationPasswordCredentials> ReadMigrationJsonFromStream(MemoryStream memoryStream, string password)
         {
             var credentials = new List<MigrationPasswordCredentials>();
 
             try
             {
-                using (var zip = ZipFile.Read(memoryStream))
-                {
-                    var migrationJsonZipEntry =
-                        zip.Entries.SingleOrDefault(x => x.FileName.EndsWith("migration.json"));
+                using var zipFile = new ZipFile(memoryStream);
 
-                    if (migrationJsonZipEntry != null)
-                    {
-                        using (var stream = this.ReadStreamFromArchive(migrationJsonZipEntry, password))
-                        {
-                            credentials = CreateCredentialsList(stream);
-                        }
-                    }
+                zipFile.Password = password;
+
+                var migrationJsonZipEntry = zipFile.GetEntry("migration.json");
+
+                if (migrationJsonZipEntry != null)
+                {
+                    using var stream = ReadStreamFromArchive(zipFile, migrationJsonZipEntry);
+
+                    credentials = this.CreateCredentialsList(stream);
                 }
             }
             catch (Exception ex)
             {
-                this.Logger.LogError($"Failed to load file. Error: {ex.Message}");
+                this.Logger.LogError(ex, "Failed to load file");
             }
 
             return credentials;
@@ -535,42 +542,45 @@ namespace CometServer.Services
         /// <summary>
         /// Create credentials list with the data extracted from migration.json
         /// </summary>
-        /// <param name="stream">Input stream <see cref="Stream"/></param>
-        /// <returns>List of <see cref="MigrationPasswordCredentials"/></returns>
+        /// <param name="stream">
+        /// Input stream <see cref="Stream"/>
+        /// </param>
+        /// <returns>
+        /// List of <see cref="MigrationPasswordCredentials"/>
+        /// </returns>
         private List<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
         {
             var credentialsList = new List<MigrationPasswordCredentials>();
 
-            using (var reader = new StreamReader(stream))
+            using var reader = new StreamReader(stream);
+
+            try
             {
-                try
+                var content = reader.ReadToEnd();
+                var parsedContent = JObject.Parse(content);
+
+                if (parsedContent?["credentials"] != null)
                 {
-                    var content = reader.ReadToEnd();
-                    var parsedContent = JObject.Parse(content);
-
-                    if (parsedContent?["credentials"] != null)
+                    foreach (var children in parsedContent["credentials"].Children())
                     {
-                        foreach (var children in parsedContent["credentials"].Children())
+                        if (!(children is JProperty property))
                         {
-                            if (!(children is JProperty property))
-                            {
-                                continue;
-                            }
-
-                            var password = (property.First["password"] as JValue)?.Value.ToString();
-                            var salt = (property.First["salt"] as JValue)?.Value.ToString();
-                            credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt));
+                            continue;
                         }
+
+                        var password = (property.First["password"] as JValue)?.Value.ToString();
+                        var salt = (property.First["salt"] as JValue)?.Value.ToString();
+                        credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt));
                     }
                 }
-                catch (Exception ex)
-                {
-                    this.Logger.LogError($"Failed to load file. Error: {ex.Message}");
-                }
-                finally
-                {
-                    reader.Close();
-                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, "Failed to load file");
+            }
+            finally
+            {
+                reader.Close();
             }
 
             return credentialsList;

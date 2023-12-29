@@ -26,6 +26,7 @@ namespace CometServer.Services.CherryPick
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
 
     using CDP4Common.CommonData;
@@ -119,7 +120,7 @@ namespace CometServer.Services.CherryPick
         /// <param name="things">The source collection of <see cref="Thing" /></param>
         /// <param name="categoriesId">The a collection of <see cref="Category" />s id</param>
         /// <returns>A collection of retrieved <see cref="ParameterOverride" /></returns>
-        private static IEnumerable<Thing> CherryPickParameterOverrides(IReadOnlyList<Thing> things, IReadOnlyList<Guid> categoriesId)
+        private static ReadOnlyCollection<Thing> CherryPickParameterOverrides(IReadOnlyList<Thing> things, IReadOnlyList<Guid> categoriesId)
         {
             var categorizedParameterTypes = things.OfType<ParameterType>().Where(x => x.Category.Any(categoriesId.Contains))
                 .Select(x => x.Iid)
@@ -137,7 +138,7 @@ namespace CometServer.Services.CherryPick
                 }
             }
 
-            return parameterOverrides;
+            return parameterOverrides.AsReadOnly();
         }
 
         /// <summary>
@@ -147,7 +148,7 @@ namespace CometServer.Services.CherryPick
         /// <param name="things">The source collection of <see cref="Thing" /></param>
         /// <param name="categoriesId">The a collection of <see cref="Category" />s id</param>
         /// <returns>A collection of retrieved <see cref="ElementBase" /></returns>
-        private static IEnumerable<Thing> CherryPickElementUsages(IReadOnlyList<Thing> things, IReadOnlyList<Guid> categoriesId)
+        private static ReadOnlyCollection<Thing> CherryPickElementUsages(IReadOnlyList<Thing> things, IReadOnlyList<Guid> categoriesId)
         {
             var elementUsages = new List<Thing>();
             elementUsages.AddRange(things.OfType<ElementUsage>().Where(x => x.Category.Any(categoriesId.Contains)));
@@ -162,7 +163,7 @@ namespace CometServer.Services.CherryPick
                 }
             }
 
-            return elementUsages;
+            return elementUsages.AsReadOnly();
         }
 
         /// <summary>

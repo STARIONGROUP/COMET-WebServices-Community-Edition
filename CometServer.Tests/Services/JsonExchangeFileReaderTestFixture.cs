@@ -26,9 +26,13 @@ namespace CometServer.Tests.Services
 {
     using System;
     using System.IO;
+    using System.Linq;
+
+    using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
 
+    using CometServer.Configuration;
     using CometServer.Services;
 
     using Microsoft.Extensions.Logging;
@@ -49,7 +53,7 @@ namespace CometServer.Tests.Services
 
         private JsonExchangeFileReader jsonExchangeFileReader;
 
-        private FileBinaryService fileBinaryService;
+        private Mock<IFileBinaryService> fileBinaryService;
 
         private ICdp4JsonSerializer jsonSerializer;
 
@@ -60,6 +64,8 @@ namespace CometServer.Tests.Services
         {
             this.logger = new Mock<ILogger<JsonExchangeFileReader>>();
 
+            this.fileBinaryService = new Mock<IFileBinaryService>();
+
             this.metaInfoProvider = new MetaInfoProvider();
 
             this.jsonSerializer = new Cdp4JsonSerializer();
@@ -67,7 +73,7 @@ namespace CometServer.Tests.Services
             this.jsonExchangeFileReader = new JsonExchangeFileReader
             {
                 MetaInfoProvider = this.metaInfoProvider,
-                FileBinaryService =  this.fileBinaryService,
+                FileBinaryService =  this.fileBinaryService.Object,
                 JsonSerializer = this.jsonSerializer,
                 Logger = this.logger.Object
             };
@@ -82,7 +88,56 @@ namespace CometServer.Tests.Services
 
             var things = this.jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, this.testFilePath, null);
 
-            Assert.That(things, Is.Not.Empty);
+            Assert.That(things.Count(), Is.EqualTo(110));
+        }
+
+        [Test]
+        public void Verify_that_engineeringModelData_can_be_read_from_archive()
+        {
+            var version = new Version(1, 0, 0);
+
+            var engineeringModelSetup = new EngineeringModelSetup(Guid.Parse("116f6253-89bb-47d4-aa24-d11d197e43c9"), 1)
+            {
+                EngineeringModelIid = Guid.Parse("9ec982e4-ef72-4953-aa85-b158a95d8d56")
+            };
+
+            var things = this.jsonExchangeFileReader.ReadEngineeringModelFromfile(version, this.testFilePath, null, engineeringModelSetup);
+
+            Assert.That(things.Count(), Is.EqualTo(3));
+        }
+
+        [Test]
+        public void Verify_that_IterationData_can_be_read_from_archive()
+        {
+            var version = new Version(1, 0, 0);
+
+            var engineeringModelSetup = new EngineeringModelSetup(Guid.Parse("116f6253-89bb-47d4-aa24-d11d197e43c9"), 1)
+            {
+                EngineeringModelIid = Guid.Parse("9ec982e4-ef72-4953-aa85-b158a95d8d56")
+            };
+
+            var iterationSetup = new IterationSetup(Guid.Parse("86163b0e-8341-4316-94fc-93ed60ad0dcf"), 1)
+            {
+                IterationIid = Guid.Parse("e163c5ad-f32b-4387-b805-f4b34600bc2c")
+            };
+
+            var things = this.jsonExchangeFileReader.ReadModelIterationFromFile(version, this.testFilePath,  null,engineeringModelSetup, iterationSetup);
+
+            Assert.That(things.Count(), Is.EqualTo(45));
+        }
+
+        [Test]
+        public void Verify_that_StoreFileBinary_executes_without_failure()
+        {
+            var engineeringModelSetup = new EngineeringModelSetup(Guid.Parse("116f6253-89bb-47d4-aa24-d11d197e43c9"), 1)
+            {
+                EngineeringModelIid = Guid.Parse("9ec982e4-ef72-4953-aa85-b158a95d8d56")
+            };
+
+            Assert.That(() => this.jsonExchangeFileReader .ReadAndStoreFileBinary(this.testFilePath, null, engineeringModelSetup, "B95EC201AE3EE89D407449D692E69BB97C228A7E"),
+                Throws.Nothing);
+
+            this.fileBinaryService.Verify(x => x.StoreBinaryData("B95EC201AE3EE89D407449D692E69BB97C228A7E", It.IsAny<Stream>()),Times.Once);
         }
     }
 }

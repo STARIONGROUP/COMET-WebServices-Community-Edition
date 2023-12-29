@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
 
     using CDP4Common.Dto;
     using CDP4Common.DTO;
@@ -44,7 +45,7 @@ namespace CometServer.Services
         /// <param name="copyinfo">The <see cref="CopyInfo"/></param>
         /// <param name="requestPartition">The contextual partition</param>
         /// <returns>The source data</returns>
-        IReadOnlyList<Thing> GetCopySourceData(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition);
+        ReadOnlyCollection<Thing> GetCopySourceData(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition);
 
         /// <summary>
         /// Generates the copy references

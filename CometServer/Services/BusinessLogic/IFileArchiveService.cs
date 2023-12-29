@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System.Collections.Generic;
+    using System.IO;
 
     using CDP4Common.DTO;
 
@@ -35,7 +36,8 @@ namespace CometServer.Services
     public interface IFileArchiveService : IBusinessLogicService
     {
         /// <summary>
-        /// Create file structure.
+        /// Create Folders and Files on Disk and return the <see cref="DirectoryInfo"/> of the
+        /// created top Folder
         /// </summary>
         /// <param name="resourceResponse">
         /// The resource response.
@@ -47,24 +49,25 @@ namespace CometServer.Services
         /// The route segments.
         /// </param>
         /// <returns>
-        /// The <see cref="string"/> folder path where the file structure is created.
+        /// The <see cref="DirectoryInfo"/> that holds a reference to the top folder that is created
         /// </returns>
-        string CreateFileStructure(List<Thing> resourceResponse, string partition, string[] routeSegments);
+        DirectoryInfo CreateFolderAndFileStructureOnDisk(List<Thing> resourceResponse, string partition, string[] routeSegments);
 
         /// <summary>
-        /// Delete file structure with archive.
+        /// Delete file structure and temporary ZIP archive.
         /// </summary>
-        /// <param name="folderPath">
-        /// The folder path where the file structure is created.
+        /// <param name="directoryInfo">
+        /// The <see cref="DirectoryInfo"/> that is to be deleted. The name of the <see cref="DirectoryInfo"/>
+        /// is equal to the name of the temporary ZIP archive that is deleted as well.
         /// </param>
-        void DeleteFileStructureWithArchive(string folderPath);
+        void DeleteFolderAndFileStructureAndArchive(DirectoryInfo directoryInfo);
 
         /// <summary>
-        /// Create zip archive.
+        /// Create zip archive from the provided <see cref="DirectoryInfo"/>
         /// </summary>
-        /// <param name="folderPath">
-        /// The folder path where the file structure for archiving is created..
+        /// <param name="directoryInfo">
+        /// The location of the top folder that is to be archived into a ZIP file
         /// </param>
-        void CreateZipArchive(string folderPath);
+        void CreateZipArchive(DirectoryInfo directoryInfo);
     }
 }

@@ -24,7 +24,6 @@ RUN mkdir /app/Authentication/CDP4WspDatabase
 COPY --from=build-env /app/CometServer/bin/Release/publish .
 RUN rm /app/appsettings.Development.json
 RUN mv /app/appsettings.Production.json /app/appsettings.json
-RUN rm /app/System.Drawing.Common.dll
 
 # COPY CDP4DatabaseAuthentication plugin
 COPY --from=build-env /app/CDP4DatabaseAuthentication/bin/Release/CDP4DatabaseAuthentication.dll /app/Authentication/CDP4Database/CDP4DatabaseAuthentication.dll

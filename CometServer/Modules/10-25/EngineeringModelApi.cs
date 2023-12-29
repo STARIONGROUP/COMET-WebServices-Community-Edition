@@ -775,9 +775,9 @@ namespace CometServer.Modules
         /// Extracts the JSON part from the multi-part message
         /// </summary>
         /// <returns>
-        /// A <see cref="Stream"/> that contains the posted JSON
+        /// A <see cref="MemoryStream"/> that contains the posted JSON
         /// </returns>
-        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessage(Stream stream, string boundary)
+        private async Task<Stream> ExtractJsonBodyStreamFromMultiPartMessage(MemoryStream stream, string boundary)
         {
             stream.Seek(0, SeekOrigin.Begin);
             var multipartReader = new MultipartReader(boundary, stream);
@@ -813,15 +813,15 @@ namespace CometServer.Modules
         /// The (injected) 
         /// </param>
         /// <param name="stream">
-        /// The <see cref="Stream"/> that contains the multi-part messsage
+        /// The <see cref="MemoryStream"/> that contains the multi-part messsage
         /// </param>
         /// <param name="boundary">
         /// The multipart boundary string.
         /// </param>
         /// <returns>
-        /// A <see cref="Stream"/> that contains the posted multipart message
+        /// A <see cref="MemoryStream"/> that contains the posted multipart message
         /// </returns>
-        private static async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(IFileBinaryService fileBinaryService, Stream stream, string boundary)
+        private static async Task<Dictionary<string, Stream>> ExtractFilesFromMultipartMessage(IFileBinaryService fileBinaryService, MemoryStream stream, string boundary)
         {
             var fileDictionary = new Dictionary<string, Stream>();
 

@@ -731,7 +731,7 @@ namespace CometServer.Modules
         /// </param>
         private void PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
-            var folderPath = fileArchiveService.CreateFileStructure(resourceResponse, partition, routeSegments);
+            var temporaryTopFolder = fileArchiveService.CreateFolderAndFileStructureOnDisk(resourceResponse, partition, routeSegments);
 
             try
             {
@@ -753,11 +753,11 @@ namespace CometServer.Modules
                     stream.Flush();
                 }
 
-                fileArchiveService.CreateZipArchive(folderPath);
+                fileArchiveService.CreateZipArchive(temporaryTopFolder);
 
                 byte[] buffer;
                 long fileSize;
-                using (var fileStream = new FileStream(folderPath + ".zip", FileMode.Open))
+                using (var fileStream = new FileStream(temporaryTopFolder + ".zip", FileMode.Open))
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
@@ -769,7 +769,7 @@ namespace CometServer.Modules
 
                 // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
 
-                var fileInfo = new FileInfo($"{folderPath}.zip");
+                var fileInfo = new FileInfo($"{temporaryTopFolder}.zip");
                 
                 binaryContent.Headers.Add(HttpConstants.ContentDispositionHeader, $"attachment; filename={fileInfo.Name}");
 
@@ -783,7 +783,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                fileArchiveService.DeleteFileStructureWithArchive(folderPath);
+                fileArchiveService.DeleteFolderAndFileStructureAndArchive(temporaryTopFolder);
             }
         }
 

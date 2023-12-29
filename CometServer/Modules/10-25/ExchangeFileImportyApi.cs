@@ -83,6 +83,11 @@ namespace CometServer.Modules
         private readonly ILogger<ExchangeFileImportyApi> logger;
 
         /// <summary>
+        /// The (injected) <see cref="IAppConfigService"/>
+        /// </summary>
+        private readonly IAppConfigService appConfigService;
+
+        /// <summary>
         /// The (injected) <see cref="ICometHasStartedService"/>
         /// </summary>
         private readonly ICometHasStartedService cometHasStartedService;
@@ -98,6 +103,9 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
+        /// <param name="cometHasStartedService">
+        /// The (injected) <see cref="ICometHasStartedService"/>
+        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
@@ -106,16 +114,11 @@ namespace CometServer.Modules
         /// </param>
         public ExchangeFileImportyApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportyApi> logger)
         {
-            this.AppConfigService = appConfigService;
+            this.appConfigService = appConfigService;
             this.cometHasStartedService = cometHasStartedService;
             this.tokenGeneratorService = tokenGeneratorService;
             this.logger = logger;
         }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IAppConfigService"/>
-        /// </summary>
-        public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
         /// Add the routes to the <see cref="IEndpointRouteBuilder"/>
@@ -165,7 +168,7 @@ namespace CometServer.Modules
 
             this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
 
-            if (!this.AppConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
+            if (!this.appConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
                 this.logger.LogInformation("Data restore API invoked but it was disabled from configuration, cancel further processing...");
 
@@ -211,7 +214,7 @@ namespace CometServer.Modules
         /// </returns>
         private async Task<string> SaveTemporarySeedFile(HttpRequest request)
         {
-            var uploadDirectory = this.AppConfigService.AppConfig.Midtier.UploadDirectory;
+            var uploadDirectory = this.appConfigService.AppConfig.Midtier.UploadDirectory;
 
             if (!Directory.Exists(uploadDirectory))
             {
@@ -253,7 +256,7 @@ namespace CometServer.Modules
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            if (!this.AppConfigService.AppConfig.Backtier.IsDbImportEnabled)
+            if (!this.appConfigService.AppConfig.Backtier.IsDbImportEnabled)
             {
                 this.logger.LogInformation("{request}:{requestToken} - Data store IMPORT API invoked but it was disabled from configuration, cancel further processing...", httpRequest.QueryNameMethodPath(), requestToken);
 
@@ -339,7 +342,7 @@ namespace CometServer.Modules
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            if (!this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled)
+            if (!this.appConfigService.AppConfig.Backtier.IsDbSeedEnabled)
             {
                 this.logger.LogInformation("{request}:{requestToken} - Data store SEED API invoked but it was disabled from configuration, cancel further processing...", request.QueryNameMethodPath(), requestToken);
 
@@ -360,7 +363,7 @@ namespace CometServer.Modules
             this.logger.LogInformation("{request}:{requestToken} - Seeding version {version}", request.QueryNameMethodPath(), requestToken, version.ToString());
 
             // handle exchange processing
-            if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.AppConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.appConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -474,7 +477,7 @@ namespace CometServer.Modules
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
                 {
-                    person.Password = this.AppConfigService.AppConfig.Defaults.PersonPassword;
+                    person.Password = this.appConfigService.AppConfig.Defaults.PersonPassword;
                 }
 
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
@@ -575,7 +578,7 @@ namespace CometServer.Modules
                         this.CreateMissingParticipantPermissions(transaction, participantRoleService, participantPermissionService, defaultPermissionProvider);
 
                         // extract any referenced file data to disk if not already present
-                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, engineeringModelSetup, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
@@ -596,7 +599,7 @@ namespace CometServer.Modules
                         {
                             requestUtils.Cache.Clear();
                             var iterationItems = jsonExchangeFileReader
-                                .ReadModelIterationFromFile(version, fileName, password, iterationSetup).ToList();
+                                .ReadModelIterationFromFile(version, fileName, password, engineeringModelSetup, iterationSetup).ToList();
 
                             // FixRevisionNumber(iterationItems);
                             requestUtils.Cache = new List<Thing>(iterationItems);
@@ -622,7 +625,7 @@ namespace CometServer.Modules
                         }
 
                         // extract any referenced file data to disk if not already present
-                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, engineeringModelSetup, password);
 
                         seededEngineeringModelCount++;
 
@@ -716,7 +719,7 @@ namespace CometServer.Modules
                 // assign default password to all imported persons.
                 foreach (var person in items.OfType<Person>())
                 {
-                    person.Password = this.AppConfigService.AppConfig.Defaults.PersonPassword;
+                    person.Password = this.appConfigService.AppConfig.Defaults.PersonPassword;
                 }
 
                 var topContainer = items.SingleOrDefault(x => x.IsSameOrDerivedClass<TopContainer>()) as TopContainer;
@@ -800,12 +803,6 @@ namespace CometServer.Modules
                         // should return one engineeringmodel topcontainer
                         var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
 
-                        if (engineeringModel == null)
-                        {
-                            result = false;
-                            break;
-                        }
-
                         var dataPartition = CDP4Orm.Dao.Utils.GetEngineeringModelSchemaName(engineeringModel.Iid);
 
                         var iterationPartition = CDP4Orm.Dao.Utils.GetEngineeringModelIterationSchemaName(engineeringModel.Iid);
@@ -822,7 +819,7 @@ namespace CometServer.Modules
                         this.CreateMissingParticipantPermissions(transaction, participantRoleService, participantPermissionService, defaultPermissionProvider);
 
                         // extract any referenced file data to disk if not already present
-                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, engineeringModelSetup, password);
 
                         var iterationSetups = items.OfType<IterationSetup>()
                             .Where(
@@ -845,7 +842,7 @@ namespace CometServer.Modules
                             requestUtils.Cache.Clear();
 
                             var iterationItems = jsonExchangeFileReader
-                                .ReadModelIterationFromFile(version, fileName, password, iterationSetup).ToList();
+                                .ReadModelIterationFromFile(version, fileName, password, engineeringModelSetup, iterationSetup).ToList();
 
                             requestUtils.Cache = new List<Thing>(iterationItems);
 
@@ -920,7 +917,7 @@ namespace CometServer.Modules
                         }
 
                         // extract any referenced file data to disk if not already present
-                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, password);
+                        PersistFileBinaryData(requestUtils, jsonExchangeFileReader, fileName, engineeringModelSetup, password);
                     }
                 }
 
@@ -966,7 +963,7 @@ namespace CometServer.Modules
         /// <param name="password">
         /// The archive password.
         /// </param>
-        private static void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, string password = null)
+        private static void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, EngineeringModelSetup engineeringModelSetup, string password = null)
         {
             var fileRevisions = requestUtils.Cache.OfType<FileRevision>().ToList();
             if (fileRevisions.Count == 0)
@@ -977,7 +974,7 @@ namespace CometServer.Modules
 
             foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
             {
-                jsonExchangeFileReader.StoreFileBinary(fileName, password, hash);
+                jsonExchangeFileReader.ReadAndStoreFileBinary(fileName, password, engineeringModelSetup, hash);
             }
         }
 
@@ -1051,7 +1048,7 @@ namespace CometServer.Modules
 
             this.logger.LogInformation("dropping existing data stores");
 
-            var backtierConfig = this.AppConfigService.AppConfig.Backtier;
+            var backtierConfig = this.appConfigService.AppConfig.Backtier;
 
             // Drop the existing databases
             using (var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(backtierConfig, backtierConfig.DatabaseManage)))

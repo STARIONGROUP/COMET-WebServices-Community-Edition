@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
 
     using Authorization;
@@ -59,7 +60,7 @@ namespace CometServer.Services
         /// <param name="copyinfo">The <see cref="CopyInfo"/></param>
         /// <param name="requestPartition">The contextual partition</param>
         /// <returns>The source data</returns>
-        public IReadOnlyList<Thing> GetCopySourceData(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition)
+        public ReadOnlyCollection<Thing> GetCopySourceData(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition)
         {
             if (copyinfo.Source.IterationId.HasValue && copyinfo.Source.IterationId.Value != Guid.Empty)
             {
@@ -91,7 +92,7 @@ namespace CometServer.Services
             // revert context to current
             this.TransactionManager.SetIterationContext(transaction, requestPartition, copyinfo.Target.IterationId.Value);
 
-            return source;
+            return source.AsReadOnly();
         }
 
         /// <summary>
@@ -102,6 +103,7 @@ namespace CometServer.Services
         public Dictionary<Guid, Guid> GenerateCopyReference(IReadOnlyList<Thing> allSourceThings)
         {
             var map = new Dictionary<Guid, Guid>();
+
             foreach (var thing in allSourceThings)
             {
                 map.Add(thing.Iid, Guid.NewGuid());
@@ -120,10 +122,11 @@ namespace CometServer.Services
         /// <param name="readservice">The element-definition read service</param>
         /// <param name="allSourcesId">A list containing the identifier of all things to copy</param>
         /// <returns>A list containing additional <see cref="Thing"/> to copy</returns>guid
-        private static IReadOnlyList<Thing> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
+        private static ReadOnlyCollection<Thing> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
         {
             var additionalSources = new List<Thing>();
             var usages = source.OfType<ElementUsage>().ToArray();
+
             if (usages.Length > 0)
             {
                 var getResults = readservice.GetDeep(transaction, partition, usages.Select(x => x.ElementDefinition).Distinct().Where(x => !allSourcesId.Contains(x)).ToArray(), securityContext).ToList();
@@ -131,7 +134,7 @@ namespace CometServer.Services
                 additionalSources.AddRange(GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, getResults, readservice, allSourcesId.Union(getResults.Select(x => x.Iid)).ToList()));
             }
 
-            return additionalSources;
+            return additionalSources.AsReadOnly();
         }
     }
 }
