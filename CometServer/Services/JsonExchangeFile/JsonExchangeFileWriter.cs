@@ -31,6 +31,7 @@ namespace CometServer.Services
 
     using CDP4Common.Comparers;
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
 
     using CometServer.Authorization;
     using CometServer.Exceptions;

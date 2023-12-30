@@ -36,6 +36,7 @@ namespace CometServer.Modules
     using Carter.Response;
 
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
 
     using CDP4JsonSerializer;
 
@@ -486,7 +487,7 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Cherry Picks <see cref="Thing" />s inside read <see cref="Thing"/>s based on provided <see cref="ClassKind"/> and <see cref="Category"/> filters
+        /// Cherry Picks <see cref="Thing" />s inside read <see cref="Thing"/>s based on provided <see cref="CDP4Common.CommonData.ClassKind"/> and <see cref="Category"/> filters
         /// </summary>
         /// <param name="resourceResponse">A collection of read <see cref="Thing"/>s</param>
         /// <param name="requestUtils">

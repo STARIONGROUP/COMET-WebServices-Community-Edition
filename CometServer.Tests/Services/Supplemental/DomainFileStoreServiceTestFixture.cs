@@ -161,10 +161,10 @@ namespace CometServer.Tests.Services.Supplemental
             Assert.DoesNotThrow(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(false);
-            Assert.Throws<CometServer.Exceptions.ThingNotFoundException >(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.That(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Throws.TypeOf<ThingNotFoundException>());
 
             domainFileStore.IsHidden = false;
-            Assert.DoesNotThrow(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.That(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Throws.Nothing);
         }
 
         [Test]
@@ -173,10 +173,10 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.HasReadAccess(
+                Assert.That(() => this.domainFileStoreService.HasReadAccess(
                     thing,
                     this.transaction.Object,
-                    this.iterationPartitionName));
+                    this.iterationPartitionName), Throws.TypeOf<Cdp4ModelValidationException>());
             }
             else
             {
@@ -214,38 +214,38 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<SecurityException>(() => this.domainFileStoreService.HasWriteAccess(
+                Assert.That(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
-                    this.iterationPartitionName));
+                    this.iterationPartitionName), Throws.TypeOf<SecurityException>());
 
                 this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
 
-                Assert.Throws<Cdp4ModelValidationException>(() => this.domainFileStoreService.HasWriteAccess(
+                Assert.That(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
-                    this.iterationPartitionName));
+                    this.iterationPartitionName), Throws.TypeOf<Cdp4ModelValidationException>());
             }
             else
             {
-                Assert.DoesNotThrow(() => this.domainFileStoreService.HasWriteAccess(
+                Assert.That(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
-                    this.iterationPartitionName));
+                    this.iterationPartitionName), Throws.Nothing);
 
                 domainFileStore.IsHidden = true;
 
-                Assert.DoesNotThrow(() => this.domainFileStoreService.HasWriteAccess(
+                Assert.That(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
-                    this.iterationPartitionName));
+                    this.iterationPartitionName), Throws.Nothing);
 
                 this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
 
-                Assert.Throws<SecurityException>(() => this.domainFileStoreService.HasWriteAccess(
+                Assert.That(() => this.domainFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
-                    this.iterationPartitionName));
+                    this.iterationPartitionName), Throws.TypeOf<SecurityException>());
             }
         }
 

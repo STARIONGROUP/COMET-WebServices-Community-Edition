@@ -35,6 +35,7 @@ namespace CometServer.Modules
     using Carter.Response;
 
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
 
     using CDP4JsonSerializer;
 
