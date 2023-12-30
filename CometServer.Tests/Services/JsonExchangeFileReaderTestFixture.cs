@@ -32,7 +32,6 @@ namespace CometServer.Tests.Services
 
     using CDP4JsonSerializer;
 
-    using CometServer.Configuration;
     using CometServer.Services;
 
     using Microsoft.Extensions.Logging;
@@ -88,7 +87,7 @@ namespace CometServer.Tests.Services
 
             var things = this.jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, this.testFilePath, null);
 
-            Assert.That(things.Count(), Is.EqualTo(110));
+            Assert.That(things.Count, Is.EqualTo(110));
         }
 
         [Test]
@@ -103,7 +102,7 @@ namespace CometServer.Tests.Services
 
             var things = this.jsonExchangeFileReader.ReadEngineeringModelFromfile(version, this.testFilePath, null, engineeringModelSetup);
 
-            Assert.That(things.Count(), Is.EqualTo(3));
+            Assert.That(things.Count, Is.EqualTo(3));
         }
 
         [Test]
@@ -123,7 +122,7 @@ namespace CometServer.Tests.Services
 
             var things = this.jsonExchangeFileReader.ReadModelIterationFromFile(version, this.testFilePath,  null,engineeringModelSetup, iterationSetup);
 
-            Assert.That(things.Count(), Is.EqualTo(45));
+            Assert.That(things.Count, Is.EqualTo(45));
         }
 
         [Test]

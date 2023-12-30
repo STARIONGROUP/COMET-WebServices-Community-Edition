@@ -33,6 +33,7 @@ namespace CometServer.Services
     using CDP4Orm.Dao;
 
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
 
     /// <summary>
     /// The <see cref="IJsonExchangeFileReader"/> interface that defines methods to read data from
@@ -55,7 +56,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="SiteDirectory"/>
         /// </returns>
-        IEnumerable<Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password);
+        ReadOnlyCollection<Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password);
 
         /// <summary>
         /// Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
@@ -77,7 +78,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
         /// </returns>
-        IEnumerable<Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup);
+        ReadOnlyCollection<Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup);
 
         /// <summary>
         ///  Reads the <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/> referenced by the
@@ -102,7 +103,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/>
         /// </returns>
-        IEnumerable<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup);
+        ReadOnlyCollection<Thing> ReadModelIterationFromFile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup);
 
         /// <summary>
         /// Get user credentials from migration.json if exists
@@ -110,7 +111,7 @@ namespace CometServer.Services
         /// <param name="filePath">The file path</param>
         /// <param name="password">The password</param>
         /// <returns>The deserialized collection that contains hashed password and salt</returns>
-        IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password);
+        ReadOnlyCollection<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password);
 
         /// <summary>
         /// Reads and Stores the referenced (by hash) file-binary contained in the archive.

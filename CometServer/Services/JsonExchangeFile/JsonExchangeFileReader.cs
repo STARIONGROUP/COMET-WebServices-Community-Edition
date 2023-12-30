@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -85,7 +86,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="SiteDirectory"/>
         /// </returns>
-        public IEnumerable<CDP4Common.DTO.Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
+        public ReadOnlyCollection<CDP4Common.DTO.Thing> ReadSiteDirectoryFromfile(Version version, string filePath, string password)
         {
             var memoryStream = ReadFileToMemory(filePath);
             return this.ReadSiteDirectoryDataFromStream(version, memoryStream, password);
@@ -111,7 +112,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="EngineeringModel"/>
         /// </returns>
-        public IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup)
+        public ReadOnlyCollection<CDP4Common.DTO.Thing> ReadEngineeringModelFromfile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup)
         {
             var memoryStream = ReadFileToMemory(filePath);
             return this.ReadEngineeringModelDataFromStream(version, memoryStream, password, engineeringModelSetup);
@@ -140,7 +141,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="CDP4Common.DTO.Thing"/>s contained by the <see cref="Iteration"/>
         /// </returns>
-        public IEnumerable<CDP4Common.DTO.Thing> ReadModelIterationFromFile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup)
+        public ReadOnlyCollection<CDP4Common.DTO.Thing> ReadModelIterationFromFile(Version version, string filePath, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup)
         {
             var memoryStream = ReadFileToMemory(filePath);
             return this.ReadIterationModelDataFromStream(version, memoryStream, password, engineeringModelSetup, iterationSetup);
@@ -166,6 +167,24 @@ namespace CometServer.Services
         {
             var memoryStream = ReadFileToMemory(filePath);
             this.ExtractFileBinaryByHash(memoryStream, password, engineeringModelSetup, fileHash);
+        }
+
+        /// <summary>
+        /// Get the migration.json file from archive.
+        /// </summary>
+        /// <param name="filePath">
+        /// The path of the zip archive to read from
+        /// </param>
+        /// <param name="password">
+        /// The zip archive password
+        /// </param>
+        /// <returns>
+        /// The site directory contained <see cref="CDP4Common.DTO.Thing"/> collection.
+        /// </returns>
+        public ReadOnlyCollection<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password)
+        {
+            var memoryStream = ReadFileToMemory(filePath);
+            return this.ReadMigrationJsonFromStream(memoryStream, password);
         }
 
         /// <summary>
@@ -208,13 +227,15 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<CDP4Common.DTO.Thing> ReadSiteDirectoryDataFromStream(Version version, MemoryStream stream, string password)
+        private ReadOnlyCollection<CDP4Common.DTO.Thing> ReadSiteDirectoryDataFromStream(Version version, MemoryStream stream, string password)
         {
             try
             {
                 using var zipFile = new ZipFile(stream);
 
                 zipFile.Password = password;
+
+                this.Logger.LogDebug("extracting Things from: SiteDirectory.json");
 
                 // read site directory info from file
                 var siteDirectoryZipEntry = zipFile.GetEntry("SiteDirectory.json");
@@ -237,6 +258,8 @@ namespace CometServer.Services
                                 x.ClassKind == ClassKind.ModelReferenceDataLibrary
                                 && x.Iid == engineeringModelSetup.RequiredRdl.Single());
 
+                    this.Logger.LogDebug("extracting Things from: ModelReferenceDataLibraries/{modelRdlDto}.json", modelRdlDto.Iid);
+
                     var modelRdlZipEntry = zipFile.GetEntry($"ModelReferenceDataLibraries/{modelRdlDto.Iid}.json");
 
                     var modelRdlItems = this.ReadInfoFromArchiveEntry(version, zipFile, modelRdlZipEntry);
@@ -255,6 +278,8 @@ namespace CometServer.Services
                             (SiteReferenceDataLibrary)
                             returnedSiteDirectory.Single(
                                 x => x.ClassKind == ClassKind.SiteReferenceDataLibrary && x.Iid == requiredRdl);
+
+                        this.Logger.LogDebug("extracting Things from: SiteReferenceDataLibraries/{siteRdlDto}.json", siteRdlDto.Iid);
 
                         var siteRdlFilePath = $"SiteReferenceDataLibraries/{siteRdlDto.Iid}.json";
 
@@ -277,7 +302,8 @@ namespace CometServer.Services
                 }
 
                 this.Logger.LogInformation("{Count} Site Directory items encountered", returned.Count);
-                return returned;
+
+                return returned.AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -308,7 +334,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<CDP4Common.DTO.Thing> ReadEngineeringModelDataFromStream(Version version, MemoryStream stream, string password, EngineeringModelSetup engineeringModelSetup)
+        private ReadOnlyCollection<CDP4Common.DTO.Thing> ReadEngineeringModelDataFromStream(Version version, MemoryStream stream, string password, EngineeringModelSetup engineeringModelSetup)
         {
             try
             {
@@ -316,11 +342,13 @@ namespace CometServer.Services
 
                 zipFile.Password = password;
 
+                this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid, engineeringModelSetup.EngineeringModelIid);
+
                 var engineeringModelZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json");
                 var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile,engineeringModelZipEntry);
 
                 this.Logger.LogInformation("{Count} Engineering Model item(s) encountered", engineeringModelItems.Count);
-                return engineeringModelItems;
+                return engineeringModelItems.AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -355,7 +383,7 @@ namespace CometServer.Services
         /// <exception cref="FileLoadException">
         /// If file was not loaded properly
         /// </exception>
-        private IEnumerable<CDP4Common.DTO.Thing> ReadIterationModelDataFromStream(Version version, MemoryStream stream, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup)
+        private ReadOnlyCollection<CDP4Common.DTO.Thing> ReadIterationModelDataFromStream(Version version, MemoryStream stream, string password, EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup)
         {
             try
             {
@@ -365,6 +393,8 @@ namespace CometServer.Services
                 zipFile.Password = password;
 
                 // read iteration data
+                this.Logger.LogDebug("Extractring things from: EngineeringModels/{EngineeringModelIid}/Iterations/{IterationIid}.json", engineeringModelSetup.EngineeringModelIid, iterationSetup.IterationIid);
+
                 var iterationZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/Iterations/{iterationSetup.IterationIid}.json"); 
                 var iterationItems = this.ReadInfoFromArchiveEntry(version, zipFile, iterationZipEntry);
 
@@ -408,6 +438,8 @@ namespace CometServer.Services
             zipFile.Password = password;
 
             // select file binary from the archive archive
+            this.Logger.LogDebug("Extracting data from EngineeringModels/{EngineeringModelIid}/FileRevisions/{hash}", engineeringModelSetup.EngineeringModelIid, hash);
+
             var fileZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/FileRevisions/{hash}");
 
             using var stream = ReadStreamFromArchive(zipFile, fileZipEntry);
@@ -432,24 +464,24 @@ namespace CometServer.Services
         /// <returns>
         /// The model iteration contained <see cref="CDP4Common.DTO.Thing"/> collection.
         /// </returns>
-        private List<CDP4Common.DTO.Thing> ReadInfoFromArchiveEntry(Version version, ZipFile zipFile, ZipEntry zipEntry)
+        private ReadOnlyCollection<CDP4Common.DTO.Thing> ReadInfoFromArchiveEntry(Version version, ZipFile zipFile, ZipEntry zipEntry)
         {
             var sw = Stopwatch.StartNew();
 
             // the extracted stream is closed thus needs to be reinitialized from the buffer of the old one
-            IEnumerable<CDP4Common.DTO.Thing> returned;
+            var returned = new List<CDP4Common.DTO.Thing>();
 
             using (var stream = ReadStreamFromArchive(zipFile, zipEntry))
             {
                 stream.Position = 0;
 
                 this.JsonSerializer.Initialize(this.MetaInfoProvider, version);
-                returned = this.JsonSerializer.Deserialize(stream);
+                returned.AddRange(this.JsonSerializer.Deserialize(stream));
             }
 
-            sw.Stop();
             this.Logger.LogInformation("JSON Deserializer completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
-            return returned.ToList();
+
+            return returned.AsReadOnly();
         }
 
         /// <summary>
@@ -485,24 +517,6 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Get the migration.json file from archive.
-        /// </summary>
-        /// <param name="filePath">
-        /// The path of the zip archive to read from
-        /// </param>
-        /// <param name="password">
-        /// The zip archive password
-        /// </param>
-        /// <returns>
-        /// The site directory contained <see cref="CDP4Common.DTO.Thing"/> collection.
-        /// </returns>
-        public IList<MigrationPasswordCredentials> ReadMigrationJsonFromFile(string filePath, string password)
-        {
-            var memoryStream = ReadFileToMemory(filePath);
-            return this.ReadMigrationJsonFromStream(memoryStream, password);
-        }
-
-        /// <summary>
         /// Reads the migration.json file from the <paramref name="memoryStream"/>
         /// </summary>
         /// <param name="memoryStream">
@@ -512,10 +526,8 @@ namespace CometServer.Services
         /// The zip archive password
         /// </param>
         /// <returns></returns>
-        private List<MigrationPasswordCredentials> ReadMigrationJsonFromStream(MemoryStream memoryStream, string password)
+        private ReadOnlyCollection<MigrationPasswordCredentials> ReadMigrationJsonFromStream(MemoryStream memoryStream, string password)
         {
-            var credentials = new List<MigrationPasswordCredentials>();
-
             try
             {
                 using var zipFile = new ZipFile(memoryStream);
@@ -528,7 +540,7 @@ namespace CometServer.Services
                 {
                     using var stream = ReadStreamFromArchive(zipFile, migrationJsonZipEntry);
 
-                    credentials = this.CreateCredentialsList(stream);
+                    return this.CreateCredentialsList(stream);
                 }
             }
             catch (Exception ex)
@@ -536,7 +548,7 @@ namespace CometServer.Services
                 this.Logger.LogError(ex, "Failed to load file");
             }
 
-            return credentials;
+            return new List<MigrationPasswordCredentials>().AsReadOnly();
         }
 
         /// <summary>
@@ -548,7 +560,7 @@ namespace CometServer.Services
         /// <returns>
         /// List of <see cref="MigrationPasswordCredentials"/>
         /// </returns>
-        private List<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
+        private ReadOnlyCollection<MigrationPasswordCredentials> CreateCredentialsList(Stream stream)
         {
             var credentialsList = new List<MigrationPasswordCredentials>();
 
@@ -583,7 +595,7 @@ namespace CometServer.Services
                 reader.Close();
             }
 
-            return credentialsList;
+            return credentialsList.AsReadOnly();
         }
     }
 }
