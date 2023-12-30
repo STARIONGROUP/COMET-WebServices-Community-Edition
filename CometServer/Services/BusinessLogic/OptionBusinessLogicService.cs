@@ -56,7 +56,7 @@ namespace CometServer.Services
 
             ArgumentNullException.ThrowIfNull(options);
 
-            if (iteration.Option.Count != options.Count())
+            if (iteration.Option.Count != options.Count)
             {
                 throw new InvalidOperationException("The number of options does not correspond to the number of options in the iteration.");
             }

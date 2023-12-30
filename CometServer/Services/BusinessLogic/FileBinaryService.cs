@@ -193,7 +193,6 @@ namespace CometServer.Services
         /// </returns>
         private string GetBinaryStoragePath(string hash, bool create = false)
         {
-            // using first numberOfFileStorageDistributionLevels hash characters; 
             // create a distributed folder structure numberOfFileStorageDistributionLevels levels deep in the application root of this Webserver
 
             var path = this.AppConfigService.AppConfig.Midtier.FileStorageDirectory;

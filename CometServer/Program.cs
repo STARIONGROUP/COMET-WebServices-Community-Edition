@@ -39,11 +39,7 @@ namespace CometServer
     using Microsoft.Extensions.Logging;
 
     using Serilog;
-    using Autofac;
-    using CometServer.ChangeNotification;
-    using Hangfire;
-    using System.Diagnostics;
-
+    
     /// <summary>
     /// The <see cref="Program"/> is the entry point for the console application
     /// </summary>
@@ -83,9 +79,8 @@ namespace CometServer
             try
             {
                 var resourceLoader = host.Services.GetService<IResourceLoader>();
-                var logo = resourceLoader.QueryLogo();
-
-                logger.LogInformation(logo);
+                
+                logger.LogInformation(resourceLoader.QueryLogo());
 
                 logger.LogInformation("################################################################");
 

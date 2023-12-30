@@ -53,7 +53,7 @@ namespace CometServer.Modules.Health
         /// <summary>
         /// The (injected) <see cref="IAppConfigService"/>
         /// </summary>
-        private IAppConfigService appConfigService;
+        private readonly IAppConfigService appConfigService;
 
         /// <summary>
         /// The (injected) <see cref="ILogger{HealthModule}"/>;

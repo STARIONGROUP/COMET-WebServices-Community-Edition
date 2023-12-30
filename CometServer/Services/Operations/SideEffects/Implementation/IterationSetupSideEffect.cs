@@ -363,22 +363,5 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new InvalidOperationException("IterationSetup is null.");
             }
         }
-
-        /// <summary>
-        /// Read the current state of the top container.
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource is stored.
-        /// </param>
-        /// <returns>
-        /// A top container instance.
-        /// </returns>
-        private Thing GetTopContainer(NpgsqlTransaction transaction, string partition)
-        {
-            return this.EngineeringModelService.GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
-        }
     }
 }
