@@ -691,6 +691,18 @@ namespace CometServer.Modules
                         break;
                 }
             }
+            catch (Cdp4ModelValidationException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
             catch (InvalidOperationException ex)
             {
                 if (transaction != null)

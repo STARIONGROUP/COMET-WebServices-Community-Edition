@@ -449,7 +449,7 @@ namespace CometServer.Modules
                 var version = httpRequest.QueryDataModelVersion();
 
                 var isMultiPart = httpRequest.GetMultipartBoundary() != string.Empty;
-                
+
                 if (isMultiPart)
                 {
                     // multipart message received
@@ -491,7 +491,7 @@ namespace CometServer.Modules
                 }
 
                 this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
-                
+
                 if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
                     switch (contentTypeKind)
@@ -503,6 +503,7 @@ namespace CometServer.Modules
                             await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, version, httpResponse);
                             break;
                     }
+
                     return;
                 }
 
@@ -525,6 +526,18 @@ namespace CometServer.Modules
                         await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, version, httpResponse);
                         break;
                 }
+            }
+            catch (Cdp4ModelValidationException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (InvalidOperationException ex)
             {
@@ -575,6 +588,7 @@ namespace CometServer.Modules
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
+
             catch (Exception ex)
             {
                 if (transaction != null)
@@ -582,7 +596,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex,"{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogError(ex, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
                 await httpResponse.AsJson($"exception:{ex.Message}");
