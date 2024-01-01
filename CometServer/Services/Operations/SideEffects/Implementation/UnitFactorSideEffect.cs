@@ -92,9 +92,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("Unit"))
+            if (rawUpdateInfo.TryGetValue("Unit", out var value))
             {
-                var unitId = (Guid)rawUpdateInfo["Unit"];
+                var unitId = (Guid)value;
 
                 // Get RDL chain and collect units' ids
                 var unitIdsFromChain = this.GetUnitIdsFromRdlChain(
@@ -110,10 +110,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (!this.IsUnitFactorAcyclic(transaction, partition, securityContext, units, container.Iid, unitId))
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "UnitFactor {0} cannot have a UnitFactor {1} that leads to cyclic dependency",
-                            thing.Iid,
-                            unitId));
+                        $"UnitFactor {thing.Iid} cannot have a UnitFactor {unitId} that leads to cyclic dependency");
                 }
             }
         }
@@ -142,8 +139,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             Guid derivedUnitId)
         {
-            List<ReferenceDataLibrary> availableRdls = this.ModelReferenceDataLibraryService
+            var availableRdls = this.ModelReferenceDataLibraryService
                 .Get(transaction, partition, null, securityContext).Cast<ReferenceDataLibrary>().ToList();
+
             availableRdls.AddRange(
                 this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                     .Cast<ReferenceDataLibrary>().ToList());
@@ -194,6 +192,7 @@ namespace CometServer.Services.Operations.SideEffects
             Guid firstUnitId)
         {
             var cyclicDerivedUnitList = new List<Guid>();
+
             this.SetSetCyclicDerivedUnitIdToList(
                 transaction,
                 partition,
@@ -250,6 +249,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var measurementUnitId = firstUnitId;
+
             if (measurementUnitId == Guid.Empty)
             {
                 measurementUnitId = this.UnitFactorService.Get(
@@ -266,6 +266,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var unit = units.Find(x => x.Iid == measurementUnitId);
+
             if (unit != null)
             {
                 foreach (var orderedItem in unit.UnitFactor)

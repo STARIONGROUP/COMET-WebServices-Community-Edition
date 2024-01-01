@@ -243,9 +243,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("ContainedElement"))
+            if (rawUpdateInfo.TryGetValue("ContainedElement", out var value))
             {
-                var containedElementsId = (IEnumerable<Guid>) rawUpdateInfo["ContainedElement"];
+                var containedElementsId = (IEnumerable<Guid>) value;
 
                 var elementDefinitions = this.ElementDefinitionService
                     .Get(transaction, partition, null, securityContext).Cast<ElementDefinition>().ToList();

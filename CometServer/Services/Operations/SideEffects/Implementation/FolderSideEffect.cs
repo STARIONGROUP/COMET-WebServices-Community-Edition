@@ -126,9 +126,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("ContainingFolder"))
+            if (rawUpdateInfo.TryGetValue("ContainingFolder", out var value))
             {
-                var containingFolderId = (Guid)rawUpdateInfo["ContainingFolder"];
+                var containingFolderId = (Guid)value;
 
                 this.ValidateContainingFolder(
                     thing,

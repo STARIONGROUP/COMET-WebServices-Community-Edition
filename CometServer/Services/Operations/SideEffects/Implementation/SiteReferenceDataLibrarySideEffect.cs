@@ -116,9 +116,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("RequiredRdl"))
+            if (rawUpdateInfo.TryGetValue("RequiredRdl", out var value))
             {
-                var requiredRdlId = (Guid)rawUpdateInfo["RequiredRdl"];
+                var requiredRdlId = (Guid)value;
 
                 this.ValidateRequiredRdl(thing, container, transaction, partition, securityContext, requiredRdlId);
             }

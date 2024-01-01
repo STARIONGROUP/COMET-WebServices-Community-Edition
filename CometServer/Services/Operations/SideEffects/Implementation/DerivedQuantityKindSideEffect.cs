@@ -89,41 +89,40 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (!rawUpdateInfo.ContainsKey("QuantityKindFactor"))
+            if (rawUpdateInfo.TryGetValue("QuantityKindFactor", out var value))
             {
-                return;
+                var quantityKindFactorIids = (List<OrderedItem>)value;
+
+                var referenceDataLibrary = (ReferenceDataLibrary)container;
+
+                // Check that all referenced QuantityKinds are from the same RDL chain
+                var availableQuantityKindIids = this.GetQuantityKindIidsFromRdlChain(
+                    transaction,
+                    partition,
+                    securityContext,
+                    referenceDataLibrary.RequiredRdl);
+
+                availableQuantityKindIids.AddRange(this.QuantityKindService
+                    .Get(transaction, partition, referenceDataLibrary.ParameterType, securityContext)
+                    .Select(x => x.Iid));
+
+                var quantityKindFactors = this.QuantityKindFactorService
+                    .Get(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext)
+                    .Cast<QuantityKindFactor>();
+
+                var quantityKinds = this.QuantityKindService
+                    .Get(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
+                    .Cast<QuantityKind>()
+                    .ToList();
+
+                if (quantityKinds.Any(x => !availableQuantityKindIids.Contains(x.Iid)))
+                {
+                    throw new AcyclicValidationException($"DerivedQuantityKind {thing.Name} {thing.Iid} cannot have " +
+                                                         $"a QuantityKind factor from outside the current RDL chain.");
+                }
+
+                this.CheckCycleDeep(transaction, partition, securityContext, thing, quantityKinds);
             }
-
-            var quantityKindFactorIids = (List<OrderedItem>)rawUpdateInfo["QuantityKindFactor"];
-            var referenceDataLibrary = (ReferenceDataLibrary)container;
-
-            // Check that all referenced QuantityKinds are from the same RDL chain
-            var availableQuantityKindIids = this.GetQuantityKindIidsFromRdlChain(
-                transaction,
-                partition,
-                securityContext,
-                referenceDataLibrary.RequiredRdl);
-
-            availableQuantityKindIids.AddRange(this.QuantityKindService
-                .Get(transaction, partition, referenceDataLibrary.ParameterType, securityContext)
-                .Select(x => x.Iid));
-
-            var quantityKindFactors = this.QuantityKindFactorService
-                .Get(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext)
-                .Cast<QuantityKindFactor>();
-
-            var quantityKinds = this.QuantityKindService
-                .Get(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
-                .Cast<QuantityKind>()
-                .ToList();
-
-            if (quantityKinds.Any(x => !availableQuantityKindIids.Contains(x.Iid)))
-            {
-                throw new AcyclicValidationException($"DerivedQuantityKind {thing.Name} {thing.Iid} cannot have " +
-                                                     $"a QuantityKind factor from outside the current RDL chain.");
-            }
-
-            this.CheckCycleDeep(transaction, partition, securityContext, thing, quantityKinds);
         }
 
         /// <summary>

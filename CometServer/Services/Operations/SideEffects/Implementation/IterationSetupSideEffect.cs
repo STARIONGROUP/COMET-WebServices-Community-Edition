@@ -230,38 +230,36 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (!rawUpdateInfo.ContainsKey("SourceIterationSetup"))
+            if (rawUpdateInfo.TryGetValue("SourceIterationSetup", out var value))
             {
-                return;
-            }
+                var sourceIterationSetupIid = (Guid)value;
 
-            var sourceIterationSetupIid = (Guid)rawUpdateInfo["SourceIterationSetup"];
-            var engineeringModelSetup = (EngineeringModelSetup)container;
+                var engineeringModelSetup = (EngineeringModelSetup)container;
 
-            // Check that sourceIterationSetup is from the same EngineeringModelSetup
-            if (!engineeringModelSetup.IterationSetup.Contains(sourceIterationSetupIid))
-            {
-                throw new AcyclicValidationException($"IterationSetup {thing.Iid} cannot have " +
-                                                     $"a source IterationSetup from outside the current EngineeringModelSetup.");
-            }
-
-            var iterationSetups = this.IterationSetupService
-                .Get(transaction, partition, engineeringModelSetup.IterationSetup, securityContext)
-                .Cast<IterationSetup>()
-                .ToList();
-
-            Guid? next = sourceIterationSetupIid;
-
-            do
-            {
-                if (next == thing.Iid)
+                // Check that sourceIterationSetup is from the same EngineeringModelSetup
+                if (!engineeringModelSetup.IterationSetup.Contains(sourceIterationSetupIid))
                 {
                     throw new AcyclicValidationException($"IterationSetup {thing.Iid} cannot have " +
-                                                         $"a source IterationSetup that leads to cyclic dependency.");
+                                                         $"a source IterationSetup from outside the current EngineeringModelSetup.");
                 }
 
-                next = iterationSetups.FirstOrDefault(x => x.Iid == next)?.SourceIterationSetup;
-            } while(next != null);
+                var iterationSetups = this.IterationSetupService
+                    .Get(transaction, partition, engineeringModelSetup.IterationSetup, securityContext)
+                    .Cast<IterationSetup>()
+                    .ToList();
+
+                Guid? next = sourceIterationSetupIid;
+
+                do
+                {
+                    if (next == thing.Iid)
+                    {
+                        throw new AcyclicValidationException($"IterationSetup {thing.Iid} cannot have a source IterationSetup that leads to cyclic dependency.");
+                    }
+
+                    next = iterationSetups.FirstOrDefault(x => x.Iid == next)?.SourceIterationSetup;
+                } while (next != null);
+            }
         }
 
         /// <summary>

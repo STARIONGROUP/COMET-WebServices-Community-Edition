@@ -273,9 +273,11 @@ namespace CometServer.Services.Operations.SideEffects
 
             var newValueSet = this.ComputeValueSets(thing, originalThing, transaction, partition, securityContext, defaultValueArray)
                 .ToList();
+
             this.WriteValueSet(transaction, partition, thing, newValueSet);
 
             var newOldValueSetMap = new Dictionary<ParameterValueSet, ParameterValueSet>();
+
             foreach (var parameterValueSet in newValueSet)
             {
                 var oldValueSet = this.OldParameterContextProvider.GetsourceValueSet(parameterValueSet.ActualOption, parameterValueSet.ActualState);
@@ -303,8 +305,8 @@ namespace CometServer.Services.Operations.SideEffects
                 {
                     // Set the owner of the ParameterOverride to the new owner of the Parameter
                     parameterOverride.Owner = thing.Owner;
-                    var elementUsage =
-                        elementUsages.SingleOrDefault(x => x.ParameterOverride.Contains(parameterOverride.Iid));
+                    var elementUsage = elementUsages.SingleOrDefault(x => x.ParameterOverride.Contains(parameterOverride.Iid));
+
                     if (elementUsage == null)
                     {
                         throw new InvalidOperationException("The ElementUsage could not be retrieved.");
@@ -330,8 +332,8 @@ namespace CometServer.Services.Operations.SideEffects
             // Remove the subscriptions owned by the new owner of the Parameter
             if (isOwnerChanged && parameterSubscriptions.Any(s => s.Owner == thing.Owner))
             {
-                var parameterSubscriptionToRemove = parameterSubscriptions.SingleOrDefault(
-                    s => s.Owner == thing.Owner && thing.ParameterSubscription.Contains(s.Iid));
+                var parameterSubscriptionToRemove = parameterSubscriptions.SingleOrDefault(s => s.Owner == thing.Owner && thing.ParameterSubscription.Contains(s.Iid));
+
                 if (parameterSubscriptionToRemove != null)
                 {
                     if (this.ParameterSubscriptionService.DeleteConcept(
@@ -350,6 +352,7 @@ namespace CometServer.Services.Operations.SideEffects
                     var subscriptionToRemove = parameterSubscriptions.SingleOrDefault(
                         s => parameterOverride.ParameterSubscription.Contains(s.Iid)
                              && s.Owner == parameterOverride.Owner);
+
                     if (subscriptionToRemove != null)
                     {
                         if (this.ParameterSubscriptionService.DeleteConcept(
@@ -405,9 +408,11 @@ namespace CometServer.Services.Operations.SideEffects
                     .ToList();
 
             var oldOverrideSets = this.ParameterOverrideValueSetService.GetShallow(transaction, partition, parameterOverride.ValueSet, securityContext).Cast<ParameterOverrideValueSet>().ToList();
+            
             foreach (var parameterValueSet in newOldValueSet)
             {
                 var oldOverrideValueSet = parameterValueSet.Value != null ? oldOverrideSets.FirstOrDefault(x => x.ParameterValueSet == parameterValueSet.Value.Iid) : null;
+            
                 var newValueSetOverride =
                     this.ParameterOverrideValueSetFactory.CreateWithOldValues(
                         oldOverrideValueSet,
@@ -422,6 +427,7 @@ namespace CometServer.Services.Operations.SideEffects
                 foreach (var parameterSubscription in overrideSubscription)
                 {
                     var oldSubscriptionValueSet = oldOverrideValueSet != null ? overrideSubscriptionValueSets.FirstOrDefault(x => x.SubscribedValueSet == oldOverrideValueSet.Iid) : null;
+                   
                     var newSubscriptionValueSet =
                         this.ParameterSubscriptionValueSetFactory.CreateWithOldValues(
                             oldSubscriptionValueSet,
@@ -458,13 +464,16 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var subscriptions = parameterSubscriptions.Where(x => parameter.ParameterSubscription.Contains(x.Iid))
                 .ToList();
+
             var subscriptionValueSets = this.ParameterSubscriptionValueSetService.GetShallow(transaction, partition, subscriptions.SelectMany(x => x.ValueSet), securityContext).
                 Cast<ParameterSubscriptionValueSet>().ToList();
+
             foreach (var parameterValueSet in newOldValueSet)
             {
                 foreach (var parameterSubscription in subscriptions)
                 {
                     var oldSubscriptionValueSet = parameterValueSet.Value != null ? subscriptionValueSets.FirstOrDefault(x => x.SubscribedValueSet == parameterValueSet.Value.Iid) : null;
+
                     var newSubscriptionValueSet =
                         this.ParameterSubscriptionValueSetFactory.CreateWithOldValues(
                             oldSubscriptionValueSet,
@@ -484,22 +493,22 @@ namespace CometServer.Services.Operations.SideEffects
         /// Compute the <see cref="ParameterValueSet"/> for a <see cref="Parameter"/>
         /// </summary>
         /// <param name="parameter">
-        ///     The <see cref="Parameter"/>
+        /// The <see cref="Parameter"/>
         /// </param>
         /// <param name="oldParameter">
-        ///     The old parameter
+        /// The old parameter
         /// </param>
         /// <param name="transaction">
-        ///     The current transaction
+        /// The current transaction
         /// </param>
         /// <param name="partition">
-        ///     The current partition
+        /// The current partition
         /// </param>
         /// <param name="securityContext">
-        ///     The security context
+        /// The security context
         /// </param>
         /// <param name="defaultValueArray">
-        ///     The default value-array
+        /// The default value-array
         /// </param>
         /// <returns>
         /// The new <see cref="ParameterValueSet"/>s
@@ -516,6 +525,7 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = partition.Replace(
                 Utils.IterationSubPartition,
                 Utils.EngineeringModelPartition);
+
             var iteration = this.IterationService.GetActiveIteration(transaction, engineeringModelPartition, securityContext);
 
             if (oldParameter != null)
@@ -524,6 +534,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var newValueSet = new List<ParameterValueSet>();
+            
             if (parameter.IsOptionDependent)
             {
                 newValueSet.AddRange(
@@ -660,12 +671,6 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="originalThing">
         /// The original Thing.
         /// </param>
-        /// <param name="parameterOverrides">
-        /// The <see cref="ParameterOverride"/> which value-sets to reset
-        /// </param>
-        /// <param name="parameterSubscriptions">
-        /// The <see cref="ParameterSubscription"/> which value-sets to reset
-        /// </param>
         private void DeleteOldValueSet(NpgsqlTransaction transaction, string partition, Parameter originalThing)
         {
             foreach (var valueset in originalThing.ValueSet)
@@ -730,9 +735,9 @@ namespace CometServer.Services.Operations.SideEffects
                 // Check that a parameter contains scale and it is not changed to null
                 if (thing.Scale != null)
                 {
-                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    if (rawUpdateInfo.TryGetValue("Scale", out var value))
                     {
-                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        var scaleId = (Guid?)value;
                         if (scaleId == null || scaleId == Guid.Empty)
                         {
                             throw new ArgumentNullException(nameof(thing),
@@ -743,9 +748,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 if (thing.Scale == null)
                 {
-                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    if (rawUpdateInfo.TryGetValue("Scale", out var value))
                     {
-                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        var scaleId = (Guid?)value;
                         if (scaleId == null || scaleId == Guid.Empty)
                         {
                             throw new ArgumentNullException(nameof(rawUpdateInfo),
@@ -764,9 +769,9 @@ namespace CometServer.Services.Operations.SideEffects
                 // Check that a parameter does not contain scale
                 if (thing.Scale != null)
                 {
-                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    if (rawUpdateInfo.TryGetValue("Scale", out var value))
                     {
-                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        var scaleId = (Guid?)value;
                         if (scaleId != null)
                         {
                             throw new ArgumentException(
@@ -782,9 +787,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 if (thing.Scale == null)
                 {
-                    if (rawUpdateInfo.ContainsKey("Scale"))
+                    if (rawUpdateInfo.TryGetValue("Scale", out var value))
                     {
-                        var scaleId = (Guid?)rawUpdateInfo["Scale"];
+                        var scaleId = (Guid?)value;
                         if (scaleId != null)
                         {
                             throw new ArgumentException(

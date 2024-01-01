@@ -600,17 +600,14 @@ namespace CometServer.Services.Operations
                                               ContainerInfo = containerMetaInfo.IsTopContainer ? null : new ContainerInfo()
                                           };
 
-            if (this.operationThingCache.ContainsKey(thingInfo))
+            if (this.operationThingCache.TryGetValue(thingInfo, out var value))
             {
                 // register the container reference
-                this.operationThingCache[thingInfo].ContainerInfo = containerInfo;
+                value.ContainerInfo = containerInfo;
             }
 
             // add the container as resolvable
-            if (!this.operationThingCache.ContainsKey(containerInfo))
-            {
-                this.operationThingCache.Add(containerInfo, containerResolvable);
-            }
+            this.operationThingCache.TryAdd(containerInfo, containerResolvable);
 
             return true;
         }
@@ -663,10 +660,10 @@ namespace CometServer.Services.Operations
                                             createInfo.Iid,
                                             orderedItem.K);
 
-                        if (this.operationThingCache.ContainsKey(thingInfo))
+                        if (this.operationThingCache.TryGetValue(thingInfo, out var orderedItemDtoResolveHelper))
                         {
                             // register the container reference
-                            this.operationThingCache[thingInfo].ContainerInfo = containerInfo;
+                            orderedItemDtoResolveHelper.ContainerInfo = containerInfo;
                         }
 
                         // add the container as resolvable
@@ -683,6 +680,7 @@ namespace CometServer.Services.Operations
 
                 // Check if the found container property includes the supplied id.
                 var containermetaInfo = this.MetaInfoProvider.GetMetaInfo(typeInfo);
+
                 if (!containermetaInfo.GetContainmentIds(createInfo, containerPropertyInfo.Name).Contains(thing.Iid))
                 {
                     continue;
@@ -691,10 +689,10 @@ namespace CometServer.Services.Operations
                 // container found
                 containerInfo = new ContainerInfo(createInfo.ClassKind.ToString(), createInfo.Iid);
 
-                if (this.operationThingCache.ContainsKey(thingInfo))
+                if (this.operationThingCache.TryGetValue(thingInfo, out var containerDtoResolveHelper))
                 {
                     // register the container reference
-                    this.operationThingCache[thingInfo].ContainerInfo = containerInfo;
+                    containerDtoResolveHelper.ContainerInfo = containerInfo;
                 }
 
                 // add the container as resolvable

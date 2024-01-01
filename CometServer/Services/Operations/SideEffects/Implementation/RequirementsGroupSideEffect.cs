@@ -85,9 +85,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("Group"))
+            if (rawUpdateInfo.TryGetValue("Group", out var value))
             {
-                var requirementsGroupIds = (List<Guid>)rawUpdateInfo["Group"];
+                var requirementsGroupIds = (List<Guid>)value;
 
                 // Check for itself in the list
                 if (requirementsGroupIds.Contains(thing.Iid))

@@ -88,9 +88,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("UnitFactor"))
+            if (rawUpdateInfo.TryGetValue("UnitFactor", out var value))
             {
-                var unitFactorsId = (List<OrderedItem>)rawUpdateInfo["UnitFactor"];
+                var unitFactorsId = (List<OrderedItem>)value;
 
                 // Get RDL chain and collect units' ids
                 var unitIdsFromChain = this.GetUnitIdsFromRdlChain(
@@ -116,11 +116,7 @@ namespace CometServer.Services.Operations.SideEffects
                             thing.Iid))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "DerivedUnit {0} {1} cannot have a UnitFactor {2} that leads to cyclic dependency",
-                                thing.Name,
-                                thing.Iid,
-                                Guid.Parse(orderedItem.V.ToString())));
+                            $"DerivedUnit {thing.Name} {thing.Iid} cannot have a UnitFactor {Guid.Parse(orderedItem.V.ToString())} that leads to cyclic dependency");
                     }
                 }
             }
@@ -152,6 +148,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
+
             var unitIds = new List<Guid>();
             var requiredRdl = rdlId;
 
@@ -198,6 +195,7 @@ namespace CometServer.Services.Operations.SideEffects
             Guid unitId)
         {
             var cyclicDerivedUnitList = new List<Guid>();
+
             this.SetSetCyclicDerivedUnitIdToList(
                 transaction,
                 partition,
@@ -259,6 +257,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var unit = units.Find(x => x.Iid == unitFactor.Unit);
+
             if (unit != null)
             {
                 foreach (var orderedItem in unit.UnitFactor)

@@ -93,46 +93,45 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (!rawUpdateInfo.ContainsKey("MappingToReferenceScale"))
+            if (rawUpdateInfo.TryGetValue("MappingToReferenceScale", out var value))
             {
-                return;
+                var mappingToReferenceScaleIids = (List<Guid>)value;
+
+                var referenceDataLibrary = (ReferenceDataLibrary)container;
+
+                // Check that all referenced MeasurementScales are from the same RDL chain
+                var availableMeasurementScaleIids = this.GetMeasurementScaleIidsFromRdlChain(
+                    transaction,
+                    partition,
+                    securityContext,
+                    referenceDataLibrary.RequiredRdl);
+
+                availableMeasurementScaleIids.AddRange(referenceDataLibrary.Scale);
+
+                var allMeasurementScales = this.MeasurementScaleService
+                    .Get(transaction, partition, null, securityContext)
+                    .Cast<MeasurementScale>()
+                    .ToList();
+
+                var scaleValueDefinitionContainerMeasurementScales = this.GetScaleValueDefinitionContainerMeasurementScales(
+                    transaction, partition, securityContext, allMeasurementScales, mappingToReferenceScaleIids);
+
+                if (scaleValueDefinitionContainerMeasurementScales.Any(x => !availableMeasurementScaleIids.Contains(x.Iid)))
+                {
+                    throw new AcyclicValidationException($"MeasurementScale {thing.Name} {thing.Iid} cannot have " +
+                                                         $"a MappingToReferenceScale referencing or depending upon " +
+                                                         $"a ScaleValueDefinition contained by a MeasurementScale " +
+                                                         $"from outside the current RDL chain.");
+                }
+
+                this.CheckCycleDeep(
+                    transaction,
+                    partition,
+                    securityContext,
+                    allMeasurementScales,
+                    thing,
+                    scaleValueDefinitionContainerMeasurementScales);
             }
-
-            var mappingToReferenceScaleIids = (List<Guid>)rawUpdateInfo["MappingToReferenceScale"];
-            var referenceDataLibrary = (ReferenceDataLibrary)container;
-
-            // Check that all referenced MeasurementScales are from the same RDL chain
-            var availableMeasurementScaleIids = this.GetMeasurementScaleIidsFromRdlChain(
-                transaction,
-                partition,
-                securityContext,
-                referenceDataLibrary.RequiredRdl);
-
-            availableMeasurementScaleIids.AddRange(referenceDataLibrary.Scale);
-
-            var allMeasurementScales = this.MeasurementScaleService
-                .Get(transaction, partition, null, securityContext)
-                .Cast<MeasurementScale>()
-                .ToList();
-
-            var scaleValueDefinitionContainerMeasurementScales = this.GetScaleValueDefinitionContainerMeasurementScales(
-                transaction, partition, securityContext, allMeasurementScales, mappingToReferenceScaleIids);
-
-            if (scaleValueDefinitionContainerMeasurementScales.Any(x => !availableMeasurementScaleIids.Contains(x.Iid)))
-            {
-                throw new AcyclicValidationException($"MeasurementScale {thing.Name} {thing.Iid} cannot have " +
-                                                     $"a MappingToReferenceScale referencing or depending upon " +
-                                                     $"a ScaleValueDefinition contained by a MeasurementScale " +
-                                                     $"from outside the current RDL chain.");
-            }
-            
-            this.CheckCycleDeep(
-                transaction,
-                partition,
-                securityContext,
-                allMeasurementScales,
-                thing,
-                scaleValueDefinitionContainerMeasurementScales);
         }
 
         /// <summary>

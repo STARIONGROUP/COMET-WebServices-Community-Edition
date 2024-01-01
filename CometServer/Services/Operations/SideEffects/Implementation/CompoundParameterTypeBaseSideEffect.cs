@@ -97,9 +97,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("Component"))
+            if (rawUpdateInfo.TryGetValue("Component", out var value))
             {
-                var componentsId = (IEnumerable<OrderedItem>)rawUpdateInfo["Component"];
+                var componentsId = (IEnumerable<OrderedItem>)value;
 
                 // Get RDL chain and collect types' ids
                 var parameterTypeIdsFromChain = this.GetParameterTypeIdsFromRdlChain(
@@ -107,6 +107,7 @@ namespace CometServer.Services.Operations.SideEffects
                     partition,
                     securityContext,
                     ((ReferenceDataLibrary)container).RequiredRdl);
+
                 parameterTypeIdsFromChain.AddRange(((ReferenceDataLibrary)container).ParameterType);
 
                 // Get all CompoundParameterTypes
@@ -132,12 +133,7 @@ namespace CometServer.Services.Operations.SideEffects
                             thing.Iid))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "{0} {1} {2} cannot have a ParameterTypeComponent {3} that leads to cyclic dependency",
-                                thing.ClassKind.ToString(),
-                                thing.Name,
-                                thing.Iid,
-                                Guid.Parse(orderedItem.V.ToString())));
+                            $"{thing.ClassKind} {thing.Name} {thing.Iid} cannot have a ParameterTypeComponent {Guid.Parse(orderedItem.V.ToString())} that leads to cyclic dependency");
                     }
                 }
             }
@@ -169,7 +165,9 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
+
             var parameterTypeIds = new List<Guid>();
+
             var requiredRdl = rdlId;
 
             while (requiredRdl != null)
@@ -215,6 +213,7 @@ namespace CometServer.Services.Operations.SideEffects
             Guid compoundParameterTypeId)
         {
             var cyclicParameterTypeList = new List<Guid>();
+
             this.SetCyclicParameterTypeIdToList(
                 transaction,
                 partition,
@@ -278,6 +277,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var parameterType = parameterTypes.Find(x => x.Iid == parameterTypeComponent.ParameterType);
+
             if (parameterType != null)
             {
                 foreach (var orderedItem in parameterType.Component)

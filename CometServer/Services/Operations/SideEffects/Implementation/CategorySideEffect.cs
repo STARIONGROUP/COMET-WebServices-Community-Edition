@@ -82,9 +82,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("SuperCategory"))
+            if (rawUpdateInfo.TryGetValue("SuperCategory", out var value))
             {
-                var superCategoriesId = (IEnumerable<Guid>)rawUpdateInfo["SuperCategory"];
+                var superCategoriesId = (IEnumerable<Guid>)value;
 
                 // Check for itself in super categories list
                 if (superCategoriesId.Contains(thing.Iid))
@@ -99,6 +99,7 @@ namespace CometServer.Services.Operations.SideEffects
                     partition,
                     securityContext,
                     ((ReferenceDataLibrary)container).RequiredRdl);
+
                 categoryIdsFromChain.AddRange(((ReferenceDataLibrary)container).DefinedCategory);
 
                 // Check that super categories are present in the chain
@@ -152,7 +153,9 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
+
             var categoryIds = new List<Guid>();
+
             var requiredRdl = rdlId;
 
             while (requiredRdl != null)

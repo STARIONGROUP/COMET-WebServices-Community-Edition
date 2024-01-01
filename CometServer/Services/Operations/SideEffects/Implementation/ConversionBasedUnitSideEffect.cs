@@ -85,9 +85,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("ReferenceUnit"))
+            if (rawUpdateInfo.TryGetValue("ReferenceUnit", out var value))
             {
-                var referenceUnitId = (Guid)rawUpdateInfo["ReferenceUnit"];
+                var referenceUnitId = (Guid)value;
 
                 // Check for itself
                 if (referenceUnitId == thing.Iid)
@@ -102,6 +102,7 @@ namespace CometServer.Services.Operations.SideEffects
                     partition,
                     securityContext,
                     ((ReferenceDataLibrary)container).RequiredRdl);
+
                 unitIdsFromChain.AddRange(((ReferenceDataLibrary)container).Unit);
 
                 // Check that reference unit is present in the chain
@@ -151,7 +152,9 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
+
             var unitIds = new List<Guid>();
+
             var requiredRdl = rdlId;
 
             while (requiredRdl != null)

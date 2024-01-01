@@ -81,18 +81,15 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("General"))
+            if (rawUpdateInfo.TryGetValue("General", out var value))
             {
-                var kindId = (Guid)rawUpdateInfo["General"];
+                var kindId = (Guid)value;
 
                 // Check for itself
                 if (kindId == thing.Iid)
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "SpecializedQuantityKind {0} {1} cannot have itself as a general quantity kind.",
-                            thing.Name,
-                            thing.Iid));
+                        $"SpecializedQuantityKind {thing.Name} {thing.Iid} cannot have itself as a general quantity kind.");
                 }
 
                 // Get RDL chain and collect types' ids
@@ -101,16 +98,14 @@ namespace CometServer.Services.Operations.SideEffects
                     partition,
                     securityContext,
                     ((ReferenceDataLibrary)container).RequiredRdl);
+
                 parameterTypeIdsFromChain.AddRange(((ReferenceDataLibrary)container).ParameterType);
 
                 // Check that qantity kind is from the same RDL chain
                 if (!parameterTypeIdsFromChain.Contains(kindId))
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "SpecializedQuantityKind {0} {1} cannot have a general quantity kind from outside the RDL chain.",
-                            thing.Name,
-                            thing.Iid));
+                        $"SpecializedQuantityKind {thing.Name} {thing.Iid} cannot have a general quantity kind from outside the RDL chain.");
                 }
 
                 // Get all SpecializedQuantityKinds
@@ -122,11 +117,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (!IsSpecializedQuantityKindAcyclic(parameterTypes, kindId, thing.Iid))
                 {
                     throw new AcyclicValidationException(
-                        string.Format(
-                            "Folder {0} {1} cannot have a containing Folder {2} that leads to cyclic dependency",
-                            thing.Name,
-                            thing.Iid,
-                            kindId));
+                        $"Folder {thing.Name} {thing.Iid} cannot have a containing Folder {kindId} that leads to cyclic dependency");
                 }
             }
         }
@@ -153,6 +144,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
+
             var parameterTypeIds = new List<Guid>();
             var requiredRdl = rdlId;
 

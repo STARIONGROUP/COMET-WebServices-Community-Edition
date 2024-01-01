@@ -153,24 +153,25 @@ namespace CometServer.Services.Operations.SideEffects
         /// </returns>
         private static bool TryExtractPasswordUpdate(ClasslessDTO rawUpdateInfo, out string passwordValue)
         {
-            if (!rawUpdateInfo.ContainsKey(PasswordKey))
+            if (rawUpdateInfo.TryGetValue(PasswordKey, out var value))
             {
-                passwordValue = null;
-                return false;
+                var password = value.ToString();
+
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    // this is an invalid password value request, remove this from further processing
+                    rawUpdateInfo.Remove(PasswordKey);
+
+                    passwordValue = null;
+                    return false;
+                }
+
+                passwordValue = password;
+                return true;
             }
             
-            var password = rawUpdateInfo[PasswordKey].ToString();
-            if (string.IsNullOrWhiteSpace(password))
-            {
-                // this is an invalid password value request, remove this from further processing
-                rawUpdateInfo.Remove(PasswordKey);
-
-                passwordValue = null;
-                return false;
-            }
-
-            passwordValue = password;
-            return true;
+            passwordValue = null;
+            return false;
         }
 
         /// <summary>

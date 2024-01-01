@@ -206,12 +206,12 @@ namespace CometServer.Services
             {
                 var thingType = thing.GetType();
                 
-                if (!this.domainFileStoreSelectors.ContainsKey(thingType))
+                if (!this.domainFileStoreSelectors.TryGetValue(thingType, out var value))
                 {
                     throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {thingType.Name}");
                 }
 
-                var domainFileStoreSelector = this.domainFileStoreSelectors[thingType].Invoke(thing.Iid);
+                var domainFileStoreSelector = value.Invoke(thing.Iid);
 
                 //is DomainFileStore hidden
                 var engineeringModelPartition = partition.Replace(
@@ -253,12 +253,12 @@ namespace CometServer.Services
 
             var thingType = thing.GetType();
             
-            if (!this.domainFileStoreSelectors.ContainsKey(thingType))
+            if (!this.domainFileStoreSelectors.TryGetValue(thingType, out var value))
             {
                 throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking DomainFileStore security: {thingType.Name}");
             }
 
-            var domainFileStoreSelector = this.domainFileStoreSelectors[thingType].Invoke(thing.Iid);
+            var domainFileStoreSelector = value.Invoke(thing.Iid);
 
             //is DomainFileStore hidden
             var engineeringModelPartition = partition.Replace(

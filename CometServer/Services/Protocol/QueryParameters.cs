@@ -343,31 +343,31 @@ namespace CometServer.Services.Protocol
         /// <exception cref="ArgumentOutOfRangeException">If one of the provided values inside the array is not a <see cref="ClassKind"/></exception>
         protected IEnumerable<ClassKind> ProcessClassKindsQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
-            if (!queryParameters.ContainsKey(key))
+            if (queryParameters.TryGetValue(key, out var parameter))
             {
-                return Enumerable.Empty<ClassKind>();
-            }
+                var collectionOfClassKinds = parameter.ToString();
 
-            var collectionOfClassKinds = queryParameters[key].ToString();
-
-            if (!collectionOfClassKinds.TryParseCollectionOfValues(out var retrievedValues))
-            {
-                throw new ArgumentException($"The {ClassKindQuery} parameter should match the array pattern");
-            }
-
-            var classKinds = new List<ClassKind>();
-
-            foreach (var retrievedValue in retrievedValues)
-            {
-                if (!Enum.TryParse<ClassKind>(retrievedValue, true, out var classKind))
+                if (!collectionOfClassKinds.TryParseCollectionOfValues(out var retrievedValues))
                 {
-                    throw new ArgumentOutOfRangeException($"Unrecognized ClassKind value: {retrievedValue}");
+                    throw new ArgumentException($"The {ClassKindQuery} parameter should match the array pattern");
                 }
 
-                classKinds.Add(classKind);
+                var classKinds = new List<ClassKind>();
+
+                foreach (var retrievedValue in retrievedValues)
+                {
+                    if (!Enum.TryParse<ClassKind>(retrievedValue, true, out var classKind))
+                    {
+                        throw new ArgumentOutOfRangeException($"Unrecognized ClassKind value: {retrievedValue}");
+                    }
+
+                    classKinds.Add(classKind);
+                }
+
+                return classKinds;
             }
 
-            return classKinds;
+            return Enumerable.Empty<ClassKind>();
         }
 
         /// <summary>

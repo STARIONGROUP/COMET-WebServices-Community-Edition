@@ -84,7 +84,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("Term"))
+            if (rawUpdateInfo.TryGetValue("Term", out var value))
             {
                 List<Guid> termsId;
 
@@ -92,25 +92,25 @@ namespace CometServer.Services.Operations.SideEffects
                 {
                     case ClassKind.AndExpression:
                         {
-                            termsId = (List<Guid>)rawUpdateInfo["Term"];
+                            termsId = (List<Guid>)value;
                             break;
                         }
 
                     case ClassKind.OrExpression:
                         {
-                            termsId = (List<Guid>)rawUpdateInfo["Term"];
+                            termsId = (List<Guid>)value;
                             break;
                         }
 
                     case ClassKind.ExclusiveOrExpression:
                         {
-                            termsId = (List<Guid>)rawUpdateInfo["Term"];
+                            termsId = (List<Guid>)value;
                             break;
                         }
 
                     case ClassKind.NotExpression:
                         {
-                            termsId = new List<Guid> { (Guid)rawUpdateInfo["Term"] };
+                            termsId = new List<Guid> { (Guid)value };
                             break;
                         }
 
@@ -124,8 +124,7 @@ namespace CometServer.Services.Operations.SideEffects
                 // Check for itself
                 if (termsId.Contains(thing.Iid))
                 {
-                    throw new AcyclicValidationException(
-                        string.Format("BooleanExpression {0} cannot have itself as a term.", thing.Iid));
+                    throw new AcyclicValidationException($"BooleanExpression {thing.Iid} cannot have itself as a term.");
                 }
 
                 // Check that every term is present in the parametric constraint
@@ -134,9 +133,7 @@ namespace CometServer.Services.Operations.SideEffects
                     if (!((ParametricConstraint)container).Expression.Contains(id))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "BooleanExpression {0} cannot have a term from outside the parametric constraint.",
-                                thing.Iid));
+                            $"BooleanExpression {thing.Iid} cannot have a term from outside the parametric constraint.");
                     }
                 }
 
@@ -151,10 +148,7 @@ namespace CometServer.Services.Operations.SideEffects
                     if (!this.IsTermAcyclic(expressions, termId, thing.Iid))
                     {
                         throw new AcyclicValidationException(
-                            string.Format(
-                                "BooleanExpression {0} cannot have a BooleanExpression {1} that leads to cyclic dependency",
-                                thing.Iid,
-                                termId));
+                            $"BooleanExpression {thing.Iid} cannot have a BooleanExpression {termId} that leads to cyclic dependency");
                     }
                 }
             }

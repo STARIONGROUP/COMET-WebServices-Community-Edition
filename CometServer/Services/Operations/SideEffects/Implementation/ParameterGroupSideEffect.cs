@@ -79,6 +79,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Get all Parameters that reference the given ParameterGroup and set references to null
             var parameters = this.ParameterService.Get(transaction, partition, null, securityContext)
                 .OfType<Parameter>().Where(x => x.Group == thing.Iid).ToList();
+
             foreach (var parameter in parameters)
             {
                 parameter.Group = null;
@@ -158,9 +159,8 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.ContainsKey("ContainingGroup"))
+            if (rawUpdateInfo.TryGetValue("ContainingGroup", out var containingGroupId))
             {
-                var containingGroupId = rawUpdateInfo["ContainingGroup"];
                 if (containingGroupId != null && Guid.TryParse(containingGroupId.ToString(), out var containingGroupIdGuid))
                 {
                     this.ValidateContainingGroup(
