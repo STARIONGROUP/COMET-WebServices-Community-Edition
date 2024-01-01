@@ -26,6 +26,7 @@ namespace CometServer.Services.Supplemental
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Data;
     using System.Diagnostics;
     using System.Linq;
@@ -143,7 +144,7 @@ namespace CometServer.Services.Supplemental
         /// <param name="inPersonPermissions">The source <see cref="PersonPermission"/></param>
         /// <param name="inPersonRoles">The source <see cref="PersonRole"/></param>
         /// <returns>The ignored identifier</returns>
-        private IReadOnlyList<Guid> GetIgnoredPersonPermissionIds(Version requestDataModelVersion, IReadOnlyList<PersonPermission> inPersonPermissions, IReadOnlyList<PersonRole> inPersonRoles)
+        private ReadOnlyCollection<Guid> GetIgnoredPersonPermissionIds(Version requestDataModelVersion, IReadOnlyList<PersonPermission> inPersonPermissions, IReadOnlyList<PersonRole> inPersonRoles)
         {
             var excludedPersonPermission = new List<Guid>();
 
@@ -173,7 +174,7 @@ namespace CometServer.Services.Supplemental
                     excludedPersonPermission.Add(personPermission.Iid);
                 }
 
-                return excludedPersonPermission;
+                return excludedPersonPermission.AsReadOnly();
             }
             catch (Exception e)
             {
@@ -202,7 +203,7 @@ namespace CometServer.Services.Supplemental
         /// <param name="inParticipantPermissions">The source <see cref="PersonPermission"/></param>
         /// <param name="inParticipantRoles">The source <see cref="PersonRole"/></param>
         /// <returns>The ignored identifier</returns>
-        private IReadOnlyList<Guid> GetIgnoredParticipantPermissionIds(Version requestDataModelVersion, IReadOnlyList<ParticipantPermission> inParticipantPermissions, IReadOnlyList<ParticipantRole> inParticipantRoles)
+        private ReadOnlyCollection<Guid> GetIgnoredParticipantPermissionIds(Version requestDataModelVersion, IReadOnlyList<ParticipantPermission> inParticipantPermissions, IReadOnlyList<ParticipantRole> inParticipantRoles)
         {
             var excludedParticipantPermission = new List<Guid>();
             NpgsqlConnection connection = null;
@@ -229,7 +230,7 @@ namespace CometServer.Services.Supplemental
                     excludedParticipantPermission.Add(participantPermission.Iid);
                 }
 
-                return excludedParticipantPermission;
+                return excludedParticipantPermission.AsReadOnly();
             }
             catch (Exception e)
             {

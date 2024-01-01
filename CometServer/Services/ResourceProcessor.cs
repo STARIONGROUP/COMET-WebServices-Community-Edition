@@ -32,7 +32,6 @@ namespace CometServer.Services
     using CDP4Common.Exceptions;
     using CDP4Common.Types;
 
-    using CometServer.Exceptions;
     using CometServer.Extensions;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;

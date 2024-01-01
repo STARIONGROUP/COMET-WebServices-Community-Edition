@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
 
     using CDP4Common.DTO;
@@ -83,13 +84,13 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="rdl">The <see cref="ReferenceDataLibrary"/></param>
         /// <returns>The required <see cref="ReferenceDataLibrary"/></returns>
-        private IReadOnlyList<ReferenceDataLibrary> GetRequiredRdl(NpgsqlTransaction transaction, ReferenceDataLibrary rdl)
+        private ReadOnlyCollection<ReferenceDataLibrary> GetRequiredRdl(NpgsqlTransaction transaction, ReferenceDataLibrary rdl)
         {
             var requiredRdls = new List<ReferenceDataLibrary>();
 
             if (!rdl.RequiredRdl.HasValue)
             {
-                return requiredRdls;
+                return requiredRdls.AsReadOnly();
             }
 
             var requiredRdl =
@@ -102,15 +103,15 @@ namespace CometServer.Services
                 TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, requiredRdl), requiredRdls);
             }
 
-            return requiredRdls;
+            return requiredRdls.AsReadOnly();
         }
 
         /// <summary>
         /// Tries to copy inidividual <see cref="ReferenceDataLibrary"/>s from an <see cref="IEnumerable{ReferenceDataLibrary}"/> to an <see cref="ICollection{ReferenceDataLibrary}"/>
         /// </summary>
         /// <param name="source">The source <see cref="IEnumerable{ReferenceDataLibrary}"/></param>
-        /// <param name="target">The target <see cref="ICollection{ReferenceDataLibrary}"/></param>
-        private static void TryCopyToRequiredRdls(IEnumerable<ReferenceDataLibrary> source, ICollection<ReferenceDataLibrary> target)
+        /// <param name="target">The target <see cref="List{ReferenceDataLibrary}"/></param>
+        private static void TryCopyToRequiredRdls(IEnumerable<ReferenceDataLibrary> source, List<ReferenceDataLibrary> target)
         {
             foreach (var possibleAdditionalRdl in source)
             {

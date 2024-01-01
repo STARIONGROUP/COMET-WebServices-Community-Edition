@@ -105,7 +105,7 @@ namespace CometServer.Services
             this.ResolveContainersFromDataStore(transaction, resolvableInfo, partionedResolveInfoGroup);
 
             // 2.1 resolve any remaining unresolved partition info (e.g. for newly created items) by using the partition from the instance's nearest (partition-resolved) container
-            this.ResolvePartitionFromContainmentTree(partition, resolvableInfo.Values.Where(x => !x.IsPartitionResolved), resolvableInfo);
+            ResolvePartitionFromContainmentTree(partition, resolvableInfo.Values.Where(x => !x.IsPartitionResolved), resolvableInfo);
 
             // At this point the partition info should be fully resolved, break if not
             if (resolvableInfo.Values.Any(x => !x.IsPartitionResolved))
@@ -214,7 +214,7 @@ namespace CometServer.Services
         /// <param name="resolvableInfo">
         /// The resolvable info.
         /// </param>
-        internal void ResolvePartitionFromContainmentTree(string partition, IEnumerable<DtoResolveHelper> unresolvedItems, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
+        internal static void ResolvePartitionFromContainmentTree(string partition, IEnumerable<DtoResolveHelper> unresolvedItems, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
         {
             foreach (var unresolvedItem in unresolvedItems)
             {
@@ -379,7 +379,7 @@ namespace CometServer.Services
         /// </param>
         private void ResolveContainersFromDataStore(
             NpgsqlTransaction transaction,
-            IDictionary<DtoInfo, DtoResolveHelper> resolvableInfo,
+            Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo,
             IEnumerable<IGrouping<string, DtoResolveHelper>> partionedResolveInfoGroup)
         {
             foreach (var partionedResolveInfo in partionedResolveInfoGroup)

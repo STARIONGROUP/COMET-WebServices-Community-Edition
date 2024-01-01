@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.IO;
     using System.Linq;
 
@@ -228,12 +229,12 @@ namespace CometServer.Services
 
             return path;
         }
-        
+
         /// <summary>
-        /// Factory method that creates a <see cref="ExchangeFileHeader"/> based on the provided <see cref="person"/>
+        /// Factory method that creates a <see cref="ExchangeFileHeader"/> based on the provided <see cref="siteDirectoryCache"/>
         /// </summary>
-        /// <param name="person">
-        /// The <see cref="Person"/> that is used to create the <see cref="ExchangeFileHeader"/>
+        /// <param name="siteDirectoryCache">
+        /// The dictionary that is used to create the <see cref="ExchangeFileHeader"/>
         /// </param>
         /// <returns>
         /// An instance of <see cref="ExchangeFileHeader"/>
@@ -296,7 +297,7 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Populates the <see cref="siteDirectoryDataCache"/> with the contents of the SiteDirectory, with the exception of the <see cref="SiteReferenceDataLibrary"/>s
+        /// Populates a dictionary with the contents of the SiteDirectory, with the exception of the <see cref="SiteReferenceDataLibrary"/>s
         /// nor the <see cref="ModelReferenceDataLibrary"/> instances
         /// </summary>
         /// <param name="transaction">
@@ -338,7 +339,7 @@ namespace CometServer.Services
         private void PruneSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             PruneEngineeringModelSetupsFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
-            this.PruneSiteReferenceDataLibrariesFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
+            PruneSiteReferenceDataLibrariesFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
             PrunePersonsFromSiteDiretoryCache(ref siteDirectoryCache);
             PrunePersonRolesFromSiteDirectoryCache(ref siteDirectoryCache);
             PruneParticipantRolesFromSiteDirectoryCache(ref siteDirectoryCache);
@@ -492,7 +493,7 @@ namespace CometServer.Services
             }
         }
 
-        private void PruneSiteReferenceDataLibrariesFromSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PruneSiteReferenceDataLibrariesFromSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var referenceDataLibraries = new HashSet<ReferenceDataLibrary>();
 
@@ -514,7 +515,7 @@ namespace CometServer.Services
             }
         }
 
-        private static IEnumerable<ReferenceDataLibrary> QueryChainOfRdl(EngineeringModelSetup engineeringModelSetup, Dictionary<Guid, Thing> siteDirectoryCache)
+        private static ReadOnlyCollection<ReferenceDataLibrary> QueryChainOfRdl(EngineeringModelSetup engineeringModelSetup, Dictionary<Guid, Thing> siteDirectoryCache)
         {
             var result = new List<ReferenceDataLibrary>();
 
@@ -533,7 +534,7 @@ namespace CometServer.Services
                 }
             }
 
-            return result;
+            return result.AsReadOnly();
         }
 
         private static IEnumerable<ReferenceDataLibrary> QueryRequiredRdl(ReferenceDataLibrary referenceDataLibrary, Dictionary<Guid, Thing> siteDirectoryCache)
@@ -555,10 +556,6 @@ namespace CometServer.Services
             }
         }
 
-        /// <summary>
-        /// Prunes
-        /// </summary>
-        /// <param name="thing"></param>
         private static void PruneThingAndContainedThingsFromThingCache(ref Dictionary<Guid, Thing> dictionary, Thing thing)
         {
             foreach (var thingContainerList in thing.ContainerLists)

@@ -598,10 +598,10 @@ namespace CometServer.Modules
                         foreach (var iterationSetup in iterationSetups)
                         {
                             requestUtils.Cache.Clear();
+
                             var iterationItems = jsonExchangeFileReader
                                 .ReadModelIterationFromFile(version, fileName, password, engineeringModelSetup, iterationSetup).ToList();
 
-                            // FixRevisionNumber(iterationItems);
                             requestUtils.Cache = new List<Thing>(iterationItems);
 
                             // should return one iteration

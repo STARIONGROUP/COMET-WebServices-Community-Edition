@@ -189,7 +189,7 @@ namespace CometServer.Tests
                                          { item2, item2ResolveHelper }
                                      };
 
-            this.resolveService.ResolvePartitionFromContainmentTree(
+            ResolveService.ResolvePartitionFromContainmentTree(
                 "BasePartition",
                 new[] { item1ResolveHelper },
                 resolvableInfo);
@@ -215,7 +215,7 @@ namespace CometServer.Tests
                                          { item3, item3ResolveHelper }
                                      };
 
-            this.resolveService.ResolvePartitionFromContainmentTree(
+            ResolveService.ResolvePartitionFromContainmentTree(
                 basePartition,
                 new[] { item1ResolveHelper, item2ResolveHelper },
                 resolvableInfo);

@@ -163,7 +163,7 @@ namespace CometServer.Modules
                     {
                         await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
-                    catch (AuthorizationException e)
+                    catch (AuthorizationException)
                     {
                         this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
 

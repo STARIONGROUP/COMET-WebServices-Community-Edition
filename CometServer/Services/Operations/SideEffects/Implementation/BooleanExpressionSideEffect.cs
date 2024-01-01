@@ -145,7 +145,7 @@ namespace CometServer.Services.Operations.SideEffects
                 // Check every term that it is acyclic
                 foreach (var termId in termsId)
                 {
-                    if (!this.IsTermAcyclic(expressions, termId, thing.Iid))
+                    if (!IsTermAcyclic(expressions, termId, thing.Iid))
                     {
                         throw new AcyclicValidationException(
                             $"BooleanExpression {thing.Iid} cannot have a BooleanExpression {termId} that leads to cyclic dependency");
@@ -169,7 +169,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether applied term will not lead to cyclic dependency.
         /// </returns>
-        private bool IsTermAcyclic(List<BooleanExpression> expressions, Guid termId, Guid parentTermId)
+        private static bool IsTermAcyclic(List<BooleanExpression> expressions, Guid termId, Guid parentTermId)
         {
             var termTreeList = new List<Guid>();
             SetTermTreeList(expressions, termTreeList, termId);

@@ -26,7 +26,6 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -143,11 +142,11 @@ namespace CometServer.Services.Operations.SideEffects
 
             // validate that the SiteDirectory container has the Default Participant Role set
             var siteDir = (SiteDirectory)container;
+
             if (!siteDir.DefaultParticipantRole.HasValue)
             {
-                var errorMessage = "The Default Participant Role must be set on the Site Directory";
-                this.Logger.LogError(errorMessage);
-                throw new InvalidOperationException(errorMessage);
+                this.Logger.LogError("The Default Participant Role must be set on the Site Directory");
+                throw new InvalidOperationException("The Default Participant Role must be set on the Site Directory");
             }
 
             if (!thing.SourceEngineeringModelSetupIid.HasValue && thing.ActiveDomain.Count == 0)
@@ -293,6 +292,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             // Create the engineering model in the newEngineeringModelPartition
             var engineeringModel = new EngineeringModel(thing.EngineeringModelIid, 1) { EngineeringModelSetup = thing.Iid };
+
             if (!this.EngineeringModelService.CreateConcept(transaction, newEngineeringModelPartition, engineeringModel, container))
             {
                 var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
@@ -302,6 +302,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             // Create the first iteration in the newEngineeringModelPartition
             var firstIteration = new Iteration(firstIterationSetup.IterationIid, 1) { IterationSetup = firstIterationSetup.Iid };
+
             if (!this.IterationService.CreateConcept(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
             {
                 var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";

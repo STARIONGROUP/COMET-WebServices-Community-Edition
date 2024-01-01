@@ -43,7 +43,7 @@ namespace CometServer.Extensions
         /// <returns>Assert if the parsing of the <paramref name="inputValues"/> could be done</returns>
         public static bool TryParseCollectionOfValues(this string inputValues, out IEnumerable<string> retrievedValues, char separator = ';')
         {
-            if (inputValues.StartsWith("[") && inputValues.EndsWith("]"))
+            if (inputValues.StartsWith('[') && inputValues.EndsWith(']'))
             {
                 retrievedValues = inputValues.Substring(1, inputValues.Length - 2).Split(separator);
                 return true;
@@ -72,12 +72,12 @@ namespace CometServer.Extensions
         /// </exception>
         public static IEnumerable<Guid> FromShortGuidArray(this string shortGuids)
         {
-            if (!shortGuids.StartsWith("["))
+            if (!shortGuids.StartsWith('['))
             {
                 throw new ArgumentException("Invalid ShortGuid Array, must start with [", nameof(shortGuids));
             }
 
-            if (!shortGuids.EndsWith("]"))
+            if (!shortGuids.EndsWith(']'))
             {
                 throw new ArgumentException("Invalid ShortGuid Array, must end with ]", nameof(shortGuids));
             }

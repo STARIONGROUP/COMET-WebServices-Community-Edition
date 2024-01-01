@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Linq;
 
     using Authorization;
@@ -513,7 +514,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The new <see cref="ParameterValueSet"/>s
         /// </returns>
-        private IEnumerable<ParameterValueSet> ComputeValueSets(
+        private ReadOnlyCollection<ParameterValueSet> ComputeValueSets(
             Parameter parameter,
             Parameter oldParameter,
             NpgsqlTransaction transaction,
@@ -562,7 +563,7 @@ namespace CometServer.Services.Operations.SideEffects
                 newValueSet.Add(this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(null, null, sourceValueSet, defaultValueArray));
             }
 
-            return newValueSet;
+            return newValueSet.AsReadOnly();
         }
 
         /// <summary>
@@ -589,7 +590,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The new <see cref="ParameterValueSet"/>
         /// </returns>
-        private IEnumerable<ParameterValueSet> CreateDefaultOptionDependentValueSetCollection(
+        private ReadOnlyCollection<ParameterValueSet> CreateDefaultOptionDependentValueSetCollection(
             Parameter parameter,
             Iteration iteration,
             NpgsqlTransaction transaction,
@@ -628,7 +629,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
             }
 
-            return newValueSet;
+            return newValueSet.AsReadOnly();
         }
 
         /// <summary>

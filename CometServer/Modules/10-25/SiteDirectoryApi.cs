@@ -651,7 +651,7 @@ namespace CometServer.Modules
                     yield return thing;
                 }
 
-                if (resolvedResourcePath.Count() > 1 && requestUtils.QueryParameters.IncludeReferenceData)
+                if (resolvedResourcePath.Count > 1 && requestUtils.QueryParameters.IncludeReferenceData)
                 {
                     // add reference data information if the resource is a model reference data library
                     if (resolvedResourcePath.Last().GetType() == typeof(ModelReferenceDataLibrary))

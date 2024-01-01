@@ -45,11 +45,6 @@ namespace CometServer.Services.Operations.SideEffects
     public sealed class RequirementsGroupSideEffect : OperationSideEffect<RequirementsGroup>
     {
         /// <summary>
-        /// Gets or sets the <see cref="ISiteReferenceDataLibraryService"/>
-        /// </summary>
-        public ISiteReferenceDataLibraryService SiteReferenceDataLibraryService { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IRequirementsSpecificationService"/>
         /// </summary>
         public IRequirementsSpecificationService RequirementsSpecificationService { get; set; }
@@ -108,7 +103,7 @@ namespace CometServer.Services.Operations.SideEffects
                     var groupIdsToCheck = requirementsGroupIds.Where(x => x != requirementsGroupId).ToList();
                     groupIdsToCheck.Add(thing.Iid);
 
-                    if (!this.IsRequirementsGroupAcyclic(requirementsGroups, groupIdsToCheck, requirementsGroupId))
+                    if (!IsRequirementsGroupAcyclic(requirementsGroups, groupIdsToCheck, requirementsGroupId))
                     {
                         throw new AcyclicValidationException(
                             $"RequirementsGroup {thing.Name} {thing.Iid} cannot contain RequirementsGroup {requirementsGroupId} that leads to cyclic dependency");
@@ -132,13 +127,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether applied RequirementsGroup will not lead to cyclic dependency.
         /// </returns>
-        private bool IsRequirementsGroupAcyclic(
+        private static bool IsRequirementsGroupAcyclic(
             List<RequirementsGroup> requirementsGroups,
             List<Guid> groupIdsToCheck,
             Guid requirementsGroupId)
         {
             var containedGroupsList = new List<Guid>();
             SetContainedGroupsList(requirementsGroups, containedGroupsList, requirementsGroupId);
+
             foreach (var id in groupIdsToCheck)
             {
                 if (containedGroupsList.Contains(id))

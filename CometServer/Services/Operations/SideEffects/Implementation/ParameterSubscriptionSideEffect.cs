@@ -310,7 +310,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (existingSubscription != null)
             {
-                this.Logger.LogWarning("A subscription already exist on parameter {0}.", container.Iid);
+                this.Logger.LogWarning("A subscription already exist on parameter {container}.", container.Iid);
                 return false;
             }
 

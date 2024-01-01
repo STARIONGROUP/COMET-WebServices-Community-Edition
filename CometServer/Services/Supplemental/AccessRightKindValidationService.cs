@@ -38,16 +38,6 @@ namespace CometServer.Services
     public class AccessRightKindValidationService : IAccessRightKindValidationService
     {
         /// <summary>
-        /// The owned thing.
-        /// </summary>
-        private const string OwnedThing = "OwnedThing";
-
-        /// <summary>
-        /// The thing.
-        /// </summary>
-        private const string Thing = "Thing";
-
-        /// <summary>
         /// Gets or sets the request utils for this request.
         /// </summary>
         public IRequestUtils RequestUtils { get; set; }

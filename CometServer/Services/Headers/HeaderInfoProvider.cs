@@ -41,17 +41,17 @@ namespace CometServer.Services
         private readonly Dictionary<string, string> responseHeaders = new Dictionary<string, string>();
 
         /// <summary>
-        /// The version of the <see cref="Cdp4ServerHeader"/>
+        /// The version of the <see cref="HttpConstants.Cdp4ServerHeader"/>
         /// </summary>
         private static readonly Lazy<string> Cdp4ServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(Startup)));
 
         /// <summary>
-        /// The version of the <see cref="Cdp4ServerHeader"/>
+        /// The version of the <see cref="HttpConstants.Cdp4ServerHeader"/>
         /// </summary>
         private static readonly Lazy<string> CometServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(Startup)));
 
         /// <summary>
-        /// The version of the <see cref="Cdp4CommonHeader"/>
+        /// The version of the <see cref="HttpConstants.Cdp4CommonHeader"/>
         /// </summary>
         private static readonly Lazy<string> Cdp4CommonHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(CDP4Common.DTO.Thing)));
 
@@ -122,20 +122,20 @@ namespace CometServer.Services
         /// </param>
         public void RegisterResponseHeaders(HttpResponse response, ContentTypeKind contentTypeKind, string boundary)
         {
-            response.Headers.Add(HttpConstants.Cdp4ServerHeader, this.Cdp4ServerVersion);
-            response.Headers.Add(HttpConstants.CometServerHeader, this.CometServerVersion);
-            response.Headers.Add(HttpConstants.Cdp4CommonHeader, this.Cdp4CommonVersion);
+            response.Headers.TryAdd(HttpConstants.Cdp4ServerHeader, this.Cdp4ServerVersion);
+            response.Headers.TryAdd(HttpConstants.CometServerHeader, this.CometServerVersion);
+            response.Headers.TryAdd(HttpConstants.Cdp4CommonHeader, this.Cdp4CommonVersion);
 
             switch (contentTypeKind)
             {
                 case ContentTypeKind.JSON:
-                    response.Headers.Add(HttpConstants.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
+                    response.Headers.TryAdd(HttpConstants.ContentTypeHeader, "application/json; ecss-e-tm-10-25; version=1.0.0");
                     break;
                 case ContentTypeKind.MESSAGEPACK:
-                    response.Headers.Add(HttpConstants.ContentTypeHeader, "application/msgpack; ecss-e-tm-10-25; version=1.0.0");
+                    response.Headers.TryAdd(HttpConstants.ContentTypeHeader, "application/msgpack; ecss-e-tm-10-25; version=1.0.0");
                     break;
                 case ContentTypeKind.MULTIPARTMIXED:
-                    response.Headers.Add(HttpConstants.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundary}");
+                    response.Headers.TryAdd(HttpConstants.ContentTypeHeader, $"multipart/mixed; ecss-e-tm-10-25; version=1.0.0; boundary={boundary}");
                     break;
                 case ContentTypeKind.IGNORE:
                     // The Content-Type header does not need to be set as it is already present

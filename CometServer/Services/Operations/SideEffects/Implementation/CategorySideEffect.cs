@@ -118,7 +118,7 @@ namespace CometServer.Services.Operations.SideEffects
                 // Check every super category that it is acyclic
                 foreach (var superCategoryId in superCategoriesId)
                 {
-                    if (!this.IsSuperCategoryAcyclic(categories, superCategoryId, thing.Iid))
+                    if (!IsSuperCategoryAcyclic(categories, superCategoryId, thing.Iid))
                     {
                         throw new AcyclicValidationException(
                             $"Category {thing.Name} {thing.Iid} cannot have a SuperCategory {superCategoryId} that leads to cyclic dependency");
@@ -183,7 +183,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether applied super category will not lead to cyclic dependency.
         /// </returns>
-        private bool IsSuperCategoryAcyclic(List<Category> categories, Guid superCategoryId, Guid categoryId)
+        private static bool IsSuperCategoryAcyclic(List<Category> categories, Guid superCategoryId, Guid categoryId)
         {
             var superCategoryTreeList = new List<Guid>();
             SetSuperCategoryTree(categories, superCategoryTreeList, superCategoryId);

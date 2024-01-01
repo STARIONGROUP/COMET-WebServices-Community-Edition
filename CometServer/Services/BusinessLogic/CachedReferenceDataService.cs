@@ -167,7 +167,7 @@ namespace CometServer.Services
                     this.parameterTypeComponentCache.Add(parameterTypeComponent.Iid, parameterTypeComponent);
                 }
 
-                this.Logger.LogDebug($"ParameterTypeComponents Queried in {sw.ElapsedMilliseconds} [ms]");
+                this.Logger.LogDebug("ParameterTypeComponents Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
 
             return this.parameterTypeComponentCache;

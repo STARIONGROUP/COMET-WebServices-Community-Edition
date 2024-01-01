@@ -256,7 +256,7 @@ namespace CometServer.Services.Operations.SideEffects
                 // Check every contained element that it is acyclic
                 foreach (var containedElementId in containedElementsId)
                 {
-                    if (!this.IsElementDefinitionAcyclic(
+                    if (!IsElementDefinitionAcyclic(
                         elementDefinitions,
                         elementUsages,
                         containedElementId,
@@ -287,7 +287,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool" /> whether applied element usage will not lead to cyclic dependency.
         /// </returns>
-        private bool IsElementDefinitionAcyclic(
+        private static bool IsElementDefinitionAcyclic(
             List<ElementDefinition> elementDefinitions,
             List<ElementUsage> elementUsages,
             Guid containedElementId,

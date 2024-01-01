@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BasicAuthenticatonMiddleware.cs" company="RHEA System S.A.">
+// <copyright file="BasicAuthMiddleware.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -87,7 +87,7 @@ namespace CometServer.Authentication
 
             this.logger.LogTrace("starting basic auithentication");
 
-            var authorizationHeader = context.Request.Headers["Authorization"];
+            var authorizationHeader = context.Request.Headers.Authorization;
 
             if (string.IsNullOrEmpty(authorizationHeader))
             {
