@@ -30,7 +30,8 @@ namespace CometServer.Services
     using CDP4Common.DTO;
 
     /// <summary>
-    /// The permission instance filter service.
+    /// The purpose of the <see cref="IPermissionInstanceFilterService"/> is to filter out any <see cref="PersonPermission"/>
+    /// and <see cref="ParticipantPermission"/> that is not supported by the requested data-model version
     /// </summary>
     public interface IPermissionInstanceFilterService
     {

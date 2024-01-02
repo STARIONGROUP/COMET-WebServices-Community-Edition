@@ -87,6 +87,7 @@ namespace CometServer.Services.Operations.SideEffects
             // gets all parameter/override which value-set to update
             var parameterToUpdate = this.ParameterService.GetShallow(transaction, partition, thing.PublishedParameter, securityContext).OfType<Parameter>().ToArray();
             var overridesToUpdate = this.ParameterOverrideService.GetShallow(transaction, partition, thing.PublishedParameter, securityContext).OfType<ParameterOverride>().ToArray();
+           
             if (parameterToUpdate.Length + overridesToUpdate.Length != thing.PublishedParameter.Count)
             {
                 throw new InvalidOperationException("All the parameter/override could not be retrieved for update on a publication.");

@@ -45,7 +45,8 @@ namespace CometServer.Services.Supplemental
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
-    /// The permission instance filter service.
+    /// The purpose of the <see cref="PermissionInstanceFilterService"/> is to filter out any <see cref="PersonPermission"/>
+    /// and <see cref="ParticipantPermission"/> that is not supported by the requested data-model version
     /// </summary>
     public class PermissionInstanceFilterService : IPermissionInstanceFilterService
     {
@@ -105,6 +106,7 @@ namespace CometServer.Services.Supplemental
 
             IReadOnlyList<Guid> excludedPersonPermission = new List<Guid>();
             IReadOnlyList<Guid> excludedParticipantPermission = new List<Guid>();
+
             if (personRoles.Length != 0 || personPermissions.Length != 0)
             {
                 excludedPersonPermission = this.GetIgnoredPersonPermissionIds(requestDataModelVersion, personPermissions, personRoles);
@@ -166,6 +168,7 @@ namespace CometServer.Services.Supplemental
                 foreach (var personPermission in personPermissions)
                 {
                     var metainfo = this.MetadataProvider.GetMetaInfo(personPermission.ObjectClass.ToString());
+
                     if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestDataModelVersion >= new Version(metainfo.ClassVersion))
                     {
                         continue;
@@ -215,6 +218,7 @@ namespace CometServer.Services.Supplemental
                 transaction = this.TransactionManager.SetupTransaction(ref connection, null);
 
                 var queryPersonPermissions = inParticipantRoles.SelectMany(x => x.ParticipantPermission).Except(inParticipantPermissions.Select(x => x.Iid)).ToArray();
+
                 var participantPermissions = queryPersonPermissions.Length > 0
                     ? this.ParticipantPermissionDao.Read(transaction, SiteDirectoryData, null, true).Union(inParticipantPermissions)
                     : inParticipantPermissions;
@@ -222,6 +226,7 @@ namespace CometServer.Services.Supplemental
                 foreach (var participantPermission in participantPermissions)
                 {
                     var metainfo = this.MetadataProvider.GetMetaInfo(participantPermission.ObjectClass.ToString());
+
                     if (string.IsNullOrEmpty(metainfo.ClassVersion) || requestDataModelVersion >= new Version(metainfo.ClassVersion))
                     {
                         continue;

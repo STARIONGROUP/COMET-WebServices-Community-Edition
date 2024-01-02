@@ -28,14 +28,14 @@ namespace CometServer.Helpers
 
     using CDP4Common.DTO;
     
-    using CDP4Orm.Dao;
-
     using CometServer.Authorization;
 
     using Npgsql;
 
     /// <summary>
-    /// A wrapper interface for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
+    /// The purpose of the <see cref="ICdp4TransactionManager"/> is provide a <see cref="NpgsqlTransaction"/> for
+    /// read and write operations to the database while configuring the database to properly process
+    /// any temporal database interactions
     /// </summary>
     public interface ICdp4TransactionManager
     {
@@ -68,7 +68,8 @@ namespace CometServer.Helpers
         /// The user credential information for this request
         /// </param>
         /// <param name="iterationIid">
-        /// An optional iteration id that can be supplied to set the transaction context to the iteration
+        /// the unique identifier of the <see cref="Iteration"/> which is used to retrieve and set the
+        /// corresponding <see cref="IterationSetup"/>
         /// </param>
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
@@ -76,46 +77,44 @@ namespace CometServer.Helpers
         NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials, Guid iterationIid);
 
         /// <summary>
-        /// Get the current transaction time.
+        /// Get the timestamp in the form of a <see cref="DateTime"/> that the <see cref="NpgsqlTransaction"/> was
+        /// created using the <see cref="SetupTransaction"/> method.
         /// </summary>
         /// <param name="transaction">
-        /// The transaction.
+        /// The active <see cref="NpgsqlTransaction"/>
         /// </param>
         /// <returns>
         /// The <see cref="DateTime"/>.
         /// </returns>
         DateTime GetTransactionTime(NpgsqlTransaction transaction);
-        
-        /// <summary>
-        /// Get the session timeframe start time.
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction.
-        /// </param>
-        /// <returns>
-        /// The <see cref="DateTime"/>.
-        /// </returns>
-        DateTime GetSessionTimeFrameStart(NpgsqlTransaction transaction);
 
         /// <summary>
-        /// Get the current session time instant.
+        /// Get the current session time instant value from the database. In case the most current data is to be
+        /// retrieved this value returns (+infinity) which translates to <see cref="DateTime.MaxValue"/>. In case
+        /// a request is made related to time-travel the <see cref="DateTime"/> corresponding to the period_end
+        /// is returned
         /// </summary>
         /// <param name="transaction">
-        /// The transaction.
+        /// The current transaction to the database.
         /// </param>
         /// <returns>
-        /// The <see cref="DateTime"/>.
+        /// A <see cref="DateTime"/> that represents the session Instant (either <see cref="DateTime.MaxValue"/> or
+        /// the <see cref="DateTime"/> corresponding to the period_end
         /// </returns>
         DateTime GetSessionInstant(NpgsqlTransaction transaction);
 
         /// <summary>
-        /// Get the raw current session time instant value from the database.
+        /// Get the raw current session time instant value from the database. In case the most current data is to be
+        /// retrieved this value returns (+infinity) which translates to <see cref="DateTime.MaxValue"/>. In case
+        /// a request is made related to time-travel the <see cref="DateTime"/> corresponding to the period_end
+        /// is returned
         /// </summary>
         /// <param name="transaction">
-        /// The transaction.
+        /// The current transaction to the database.
         /// </param>
         /// <returns>
-        /// The current session instant as an <see cref="object"/>.
+        /// A <see cref="object"/> that represents the session Instant (either <see cref="DateTime.MaxValue"/> or
+        /// the <see cref="DateTime"/> corresponding to the period_end
         /// </returns>
         object GetRawSessionInstant(NpgsqlTransaction transaction);
 
@@ -150,10 +149,10 @@ namespace CometServer.Helpers
         void SetAuditLoggingState(NpgsqlTransaction transaction, bool enabled);
 
         /// <summary>
-        /// The set default context.
+        /// Sets the default temporal context (-infinity, +infinity)
         /// </summary>
         /// <param name="transaction">
-        /// The transaction.
+        /// The active <see cref="NpgsqlTransaction"/>
         /// </param>
         void SetDefaultContext(NpgsqlTransaction transaction);
 

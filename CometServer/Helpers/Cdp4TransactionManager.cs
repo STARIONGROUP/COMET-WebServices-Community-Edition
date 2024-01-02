@@ -44,7 +44,9 @@ namespace CometServer.Helpers
     using ServiceUtils = Services.Utils;
 
     /// <summary>
-    /// A wrapper class for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
+    /// The purpose of the <see cref="Cdp4TransactionManager"/> is provide a <see cref="NpgsqlTransaction"/> for
+    /// read and write operations to the database while configuring the database to properly process
+    /// any temporal database interactions
     /// </summary>
     public class Cdp4TransactionManager : ICdp4TransactionManager
     {
@@ -109,6 +111,11 @@ namespace CometServer.Helpers
         private bool isFullAccessGranted;
 
         /// <summary>
+        /// Backing field for the cached rawSessionInstant value
+        /// </summary>
+        private object rawSessionInstant;
+
+        /// <summary>
         /// Gets or sets the iteration setup dao.
         /// </summary>
         public IIterationSetupDao IterationSetupDao { get; set; }
@@ -122,6 +129,14 @@ namespace CometServer.Helpers
         /// Gets or sets the iteration setup.
         /// </summary>
         public IterationSetup IterationSetup { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Cdp4TransactionManager"/>
+        /// </summary>
+        public Cdp4TransactionManager()
+        {
+            this.rawSessionInstant = null;
+        }
 
         /// <summary>
         /// The setup transaction.
@@ -168,13 +183,17 @@ namespace CometServer.Helpers
         }
 
         /// <summary>
-        /// Get the current session time instant.
+        /// Get the current session time instant value from the database. In case the most current data is to be
+        /// retrieved this value returns (+infinity) which translates to <see cref="DateTime.MaxValue"/>. In case
+        /// a request is made related to time-travel the <see cref="DateTime"/> corresponding to the period_end
+        /// is returned
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
         /// <returns>
-        /// The <see cref="DateTime"/>.
+        /// A <see cref="DateTime"/> that represents the session Instant (either <see cref="DateTime.MaxValue"/> or
+        /// the <see cref="DateTime"/> corresponding to the period_end
         /// </returns>
         public DateTime GetSessionInstant(NpgsqlTransaction transaction)
         {
@@ -182,23 +201,31 @@ namespace CometServer.Helpers
         }
 
         /// <summary>
-        /// Get the raw current session time instant value from the database.
+        /// Get the raw current session time instant value from the database. In case the most current data is to be
+        /// retrieved this value returns (+infinity) which translates to <see cref="DateTime.MaxValue"/>. In case
+        /// a request is made related to time-travel the <see cref="DateTime"/> corresponding to the period_end
+        /// is returned
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
         /// <returns>
-        /// The <see cref="object"/>.
+        /// A <see cref="object"/> that represents the session Instant (either <see cref="DateTime.MaxValue"/> or
+        /// the <see cref="DateTime"/> corresponding to the period_end
         /// </returns>
         public object GetRawSessionInstant(NpgsqlTransaction transaction)
         {
-            using (var command = new NpgsqlCommand(
-                       "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
-                       transaction.Connection,
-                       transaction))
-            { 
-                return command.ExecuteScalar();
+            if (this.rawSessionInstant == null)
+            {
+                using var command = new NpgsqlCommand(
+                    "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
+                    transaction.Connection,
+                    transaction);
+
+                this.rawSessionInstant = command.ExecuteScalar();
             }
+
+            return this.rawSessionInstant;
         }
 
         /// <summary>
@@ -256,61 +283,41 @@ namespace CometServer.Helpers
         }
 
         /// <summary>
-        /// Get the session timeframe start time.
+        /// Get the timestamp in the form of a <see cref="DateTime"/> that the <see cref="NpgsqlTransaction"/> was
+        /// created using the <see cref="SetupTransaction"/> method.
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <returns>
-        /// The <see cref="DateTime"/>.
-        /// </returns>
-        public DateTime GetSessionTimeFrameStart(NpgsqlTransaction transaction)
-        {
-            using (var command = new NpgsqlCommand(
-                string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_timeframe_start"),
-                transaction.Connection,
-                transaction))
-            { 
-                return (DateTime)command.ExecuteScalar();
-            }
-        }
-
-        /// <summary>
-        /// Get the current transaction time.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The active <see cref="NpgsqlTransaction"/>
         /// </param>
         /// <returns>
         /// The <see cref="DateTime"/>.
         /// </returns>
         public DateTime GetTransactionTime(NpgsqlTransaction transaction)
         {
-            using (var command = new NpgsqlCommand(
-                        string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_transaction_time"),
-                        transaction.Connection,
-                        transaction))
-            {
-                return (DateTime)command.ExecuteScalar();
-            }
+            using var command = new NpgsqlCommand(
+                $"SELECT * FROM \"SiteDirectory\".\"{"get_transaction_time"}\"();",
+                transaction.Connection,
+                transaction);
+
+            return (DateTime)command.ExecuteScalar();
         }
 
         /// <summary>
-        /// The set default context.
+        /// Sets the default temporal context (-infinity, +infinity)
         /// </summary>
         /// <param name="transaction">
-        /// The current transaction to the database.
+        /// The active <see cref="NpgsqlTransaction"/>
         /// </param>
         public void SetDefaultContext(NpgsqlTransaction transaction)
         {
             var sqlBuilder = new StringBuilder();
+
             sqlBuilder.AppendFormat(
                 "UPDATE {0} SET ({1}, {2}) = ('-infinity', 'infinity');", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn);
-            
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                command.ExecuteNonQuery();
-            }
+
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -326,12 +333,11 @@ namespace CometServer.Helpers
         {
             var sql = $"UPDATE {TransactionInfoTable} SET {TransactionAuditEnabled} = :{TransactionAuditEnabled};";
 
-            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
-            {
-                command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-                command.ExecuteNonQuery();
-            }
+            command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -382,6 +388,8 @@ namespace CometServer.Helpers
         /// </returns>
         private NpgsqlTransaction GetTransaction(ref NpgsqlConnection connection, Credentials credentials)
         {
+            this.rawSessionInstant = null;
+
             var transaction = this.SetupNewTransaction(ref connection);
             CreateTransactionInfoTable(transaction);
             CreateDefaultTransactionInfoEntry(transaction, credentials);
@@ -416,12 +424,11 @@ namespace CometServer.Helpers
                 "  FROM \"{0}\".\"IterationRevisionLog_View\"", partition).Append(
                 "  WHERE \"IterationIid\" = :iterationIid);");
 
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
-                command.ExecuteNonQuery();
-            }
+            command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -471,35 +478,6 @@ namespace CometServer.Helpers
         }
 
         /// <summary>
-        /// The create default transaction info entry.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="credentials">
-        /// The credentials.
-        /// </param>
-        private static void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
-        {
-            // insert actor from the request credentials otherwise use default (null) user
-            var sqlBuilder = new StringBuilder();
-            var isCredentialSet = credentials != null;
-
-            sqlBuilder.AppendFormat("INSERT INTO {0} ({1}, {2})", TransactionInfoTable, UserIdColumn, TransactionTimeColumn);
-            sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? $":{UserIdColumn}" : "null");
-
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                if (isCredentialSet)
-                {
-                    command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
-                }
-
-                command.ExecuteNonQuery();
-            }
-        }
-
-        /// <summary>
         /// Create a transaction info table with transaction scope lifetime.
         /// </summary>
         /// <param name="transaction">
@@ -519,10 +497,37 @@ namespace CometServer.Helpers
             sqlBuilder.AppendFormat("{0} boolean NOT NULL DEFAULT 'true'", TransactionAuditEnabled);
             sqlBuilder.Append(") ON COMMIT DROP;");
 
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+
+            command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// The create default transaction info entry.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="credentials">
+        /// The credentials.
+        /// </param>
+        private static void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
+        {
+            // insert actor from the request credentials otherwise use default (null) user
+            var sqlBuilder = new StringBuilder();
+            var isCredentialSet = credentials != null;
+
+            sqlBuilder.AppendFormat("INSERT INTO {0} ({1}, {2})", TransactionInfoTable, UserIdColumn, TransactionTimeColumn);
+            sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? $":{UserIdColumn}" : "null");
+
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+
+            if (isCredentialSet)
             {
-                command.ExecuteNonQuery();
+                command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
             }
+
+            command.ExecuteNonQuery();
         }
     }
 }
