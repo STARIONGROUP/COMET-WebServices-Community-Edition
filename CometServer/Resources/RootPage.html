@@ -3,64 +3,68 @@
 <head>
     <meta charset="utf-8" />
     <title>Welcome to the CDP4-COMET WebService</title>
-<style>
-body { 
-  background-color: #F9F9F9;
-}
-.main {
-  max-width: 800px; 
-  margin-top: 20px; 
-  margin-left: auto; 
-  margin-right: auto; 
-  border: 1px solid #CCCCCC; 
-  text-align: left; 
-  background-color: #FFFFFF; 
-  color: #01628F; 
-  font-family: Helvetica, sans-serif; 
-  font-size:12px;
-  box-shadow: 3px 3px 6px grey;
-  border-radius:5px;
-}
-.header {
-  padding-top: 5px;
-  padding-bottom: 5px;
-  padding-left: 20px; 
-  text-align: left; 
-  background-size: cover; 
-  background-image: url('background.png'); 
-  color: #FFFFFF;
-}
-.row {
-  vertical-align: top; 
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
-}
-.column {
-  margin: 5px;
-  padding: 5px;
-  border: 1px solid #CCCCCC;
-  box-shadow: 1px 1px 4px grey;
-  border-radius: 4px;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  background: linear-gradient(#F4FDFF, #FFFFFF);
-}
-</style>
+    <style>
+        body {
+            background-color: #F9F9F9;
+        }
+
+        .main {
+            max-width: 800px;
+            margin-top: 20px;
+            margin-left: auto;
+            margin-right: auto;
+            border: 1px solid #CCCCCC;
+            text-align: left;
+            background-color: #FFFFFF;
+            color: #01628F;
+            font-family: Helvetica, sans-serif;
+            font-size: 12px;
+            box-shadow: 3px 3px 6px grey;
+            border-radius: 5px;
+        }
+
+        .header {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-left: 20px;
+            text-align: left;
+            background-size: cover;
+            background-image: url('background.png');
+            color: #FFFFFF;
+        }
+
+        .row {
+            vertical-align: top;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .column {
+            margin: 5px;
+            padding: 5px;
+            border: 1px solid #CCCCCC;
+            box-shadow: 1px 1px 4px grey;
+            border-radius: 4px;
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            background: linear-gradient(#F4FDFF, #FFFFFF);
+        }
+    </style>
 </head>
 
 <body>
     <div class="main">
         <div class="header">
-	      <img src="comet_logo.png" alt="RHEA Logo" height="70px" />
-          <div style="float:right;">
-            <a href="https://www.rheagroup.com"><img src="rhea_logo.png" alt="RHEA Logo" height="70px" /></a>
-          </div>
+            <img src="comet_logo.png" alt="RHEA Logo" height="70px" />
+            <div style="float:right;">
+                <a href="https://www.rheagroup.com"><img src="rhea_logo.png" alt="RHEA Logo" height="70px" /></a>
+            </div>
         </div>
         <div style="text-align:center;width:100%;">
-          <h2>Welcome to the CDP4-COMET WebService.</h2>
+            <h2>Welcome to the CDP4-COMET WebService.</h2>
         </div>
         <div style="width:100%;text-align:center;">
             <span>WebService Version: </span><span style="font-weight: bold;">{{apiVersion}} </span> <br />
@@ -80,11 +84,14 @@ body {
         <div class="row">
             <div class="column">
                 <h4>CDP4-COMET SDK Github page: <a href="https://github.com/RHEAGROUP/COMET-SDK-Community-Edition">CDP4-COMET SDK</a></h4>
-                <p>The The CDP4-COMET Software Development Kit is an C# SDK that that is compliant with ECSS-E-TM-10-25A Annex A and Annex C.<br />The SDK contains multiple libraries that are each packaged as a nuget and available from nuget.org.<br />The SDK is used in CDP4-COMET to create an ECSS-E-TM-10-25A compliant implementation, both for the <a href="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition">Web Services</a> and the <a href="https://github.com/RHEAGROUP/COMET-IME-Community-Edition">Desktop Application</a></p></div>
+                <p>The The CDP4-COMET Software Development Kit is an C# SDK that that is compliant with ECSS-E-TM-10-25A Annex A and Annex C.<br />The SDK contains multiple libraries that are each packaged as a nuget and available from nuget.org.<br />The SDK is used in CDP4-COMET to create an ECSS-E-TM-10-25A compliant implementation, both for the <a href="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition">Web Services</a> and the <a href="https://github.com/RHEAGROUP/COMET-IME-Community-Edition">Desktop Application</a></p>
+            </div>
             <div class="column">
                 <h4>CDP4-COMET WEB Github page: <a href="https://github.com/RHEAGROUP/COMET-WEB-Community-Edition">CDP4-COMET WEB</a></h4>
-               <p>The CDP4-COMET-WEB Community Editition (CE) is the RHEA Group open source Concurrent Design web based application compliant with ECSS-E-TM-10-25 Annex A and Annex C.<br />
-               A demo version of the web application is available at:<br/><a href="https://comet-web.cdp4.org">https://comet-web.cdp4.org</a></p>
+                <p>
+                    The CDP4-COMET-WEB Community Editition (CE) is the RHEA Group open source Concurrent Design web based application compliant with ECSS-E-TM-10-25 Annex A and Annex C.<br />
+                    A demo version of the web application is available at:<br /><a href="https://comet-web.cdp4.org">https://comet-web.cdp4.org</a>
+                </p>
             </div>
         </div>
     </div>
