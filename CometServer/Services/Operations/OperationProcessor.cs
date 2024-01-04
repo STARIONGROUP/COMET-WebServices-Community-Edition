@@ -1340,9 +1340,21 @@ namespace CometServer.Services.Operations
                                     var containedThingService = this.ServiceProvider.MapToPersitableService(propInfo.TypeName);
                                     var containedItemIid = Guid.Parse(orderUpdateItemInfo.V.ToString());
 
+                                    //create ClasslessDto for contained object and get DtoInfo from that
+                                    var dtoInfo = new ClasslessDTO
+                                        {
+                                            {nameof(Thing.Iid), containedItemIid},
+                                            {nameof(Thing.ClassKind), propInfo.TypeName},
+                                        }.GetInfoPlaceholder();
+
+                                    var dtoResolverHelper = new DtoResolveHelper(dtoInfo);
+                                    
+                                    //Resolve the correct partition for the specific object
+                                    this.ResolveService.ResolveItems(transaction, resolvedInfo.Partition, new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } });
+
                                     var containedThing = containedThingService.GetShallow(
                                             transaction,
-                                            resolvedInfo.Partition,
+                                            dtoResolverHelper.Partition,
                                             new[] { containedItemIid },
                                             new RequestSecurityContext { ContainerReadAllowed = true })
                                             .SingleOrDefault();
@@ -1364,7 +1376,7 @@ namespace CometServer.Services.Operations
                                     };
                                     orderedItemUpdate.MoveItem(orderUpdateItemInfo.K, orderUpdateItemInfo.M.Value);
 
-                                    isUpdated = containedThingService.ReorderContainment(transaction, resolvedInfo.Partition, orderedItemUpdate);
+                                    isUpdated = containedThingService.ReorderContainment(transaction, dtoResolverHelper.Partition, orderedItemUpdate);
 
                                     if (!orderedListToBeChecked.Contains(propertyName))
                                     {
