@@ -39,8 +39,8 @@ jobs:
       with:
         languages: ${{ matrix.language }}
 
-    - name: add GitHub pre-release nuget feed
-      run: dotnet nuget add source https://nuget.pkg.github.com/RHEAGROUP/index.json -n Github -u gh -p ${{ secrets.GH_PR_TOKEN }} --store-password-in-clear-text
+    - name: add RHEA GitHub nuget feed
+      run: dotnet nuget add source https://nuget.pkg.github.com/RHEAGROUP/index.json -n GHRHEA -u gh -p ${{ secrets.GH_PR_TOKEN }} --store-password-in-clear-text
 
     - name: Install dependencies
       run: dotnet restore COMET-WebServices.sln
