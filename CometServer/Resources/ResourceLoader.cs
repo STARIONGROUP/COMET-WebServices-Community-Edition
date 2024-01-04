@@ -24,12 +24,16 @@
 
 namespace CometServer.Resources
 {
+    using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
     using System.Resources;
 
     using CDP4Common.DTO;
+    using CDP4Common.MetaInfo;
 
     /// <summary>
     /// Class responsible for loading embedded resources.
@@ -82,6 +86,19 @@ namespace CometServer.Resources
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
             var fileVersion = fileVersionInfo.FileVersion;
             return fileVersion;
+        }
+
+        /// <summary>
+        /// queries the supported model versions from the executing assembly
+        /// </summary>
+        /// <returns>
+        /// a collection of string representations of the supported model versions of the application
+        /// </returns>
+        public IEnumerable<Version> QueryModelVersions()
+        {
+            var versions = new MetaDataProvider().QuerySupportedModelVersions();
+
+            return versions;
         }
 
         /// <summary>

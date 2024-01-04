@@ -24,6 +24,9 @@
 
 namespace CometServer.Resources
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Defnition of the interface used to load (embedded) resources
     /// </summary>
@@ -47,6 +50,14 @@ namespace CometServer.Resources
         /// a string representation of the version of the application
         /// </returns>
         string QueryVersion();
+
+        /// <summary>
+        /// queries the supported model versions from the executing assembly
+        /// </summary>
+        /// <returns>
+        /// a collection of string representations of the supported model versions of the application
+        /// </returns>
+        IEnumerable<Version> QueryModelVersions();
 
         /// <summary>
         /// queries the version number from the CDP4Common library

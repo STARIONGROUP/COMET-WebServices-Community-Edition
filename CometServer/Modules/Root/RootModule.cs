@@ -24,6 +24,8 @@
 
 namespace CometServer.Modules
 {
+    using System.Linq;
+
     using Carter;
 
     using CometServer.Resources;
@@ -47,10 +49,16 @@ namespace CometServer.Modules
         {
             app.MapGet("/", async (HttpRequest req, HttpResponse res, IResourceLoader resourceLoader) =>
             {
-                var rootPageTemplate = resourceLoader.QueryRootPage()
-                    .Replace("{{basePath}}", req.PathBase)
-                    .Replace("{{sdkVersion}}", resourceLoader.QuerySDKVersion())
-                    .Replace("{{apiVersion}}", resourceLoader.QueryVersion());
+                var modelVersionHtml =
+                    string.Join(", ", 
+                    resourceLoader.QueryModelVersions());
+
+                var rootPageTemplate = 
+                    resourceLoader.QueryRootPage()
+                        .Replace("{{basePath}}", req.PathBase)
+                        .Replace("{{sdkVersion}}", resourceLoader.QuerySDKVersion())
+                        .Replace("{{apiVersion}}", resourceLoader.QueryVersion())
+                        .Replace("{{modelVersions}}", modelVersionHtml);
 
                 res.ContentType = "text/html";
                 await res.WriteAsync(rootPageTemplate);
