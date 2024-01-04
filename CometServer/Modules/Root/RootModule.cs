@@ -52,7 +52,6 @@ namespace CometServer.Modules
                 var modelVersionHtml =
                     string.Join(", ", 
                     resourceLoader.QueryModelVersions());
-                    //    .Select(x => $"<div>{x}</div>"));
 
                 var rootPageTemplate = 
                     resourceLoader.QueryRootPage()
