@@ -25,11 +25,13 @@
 namespace CometServer.Services.Operations.SideEffects
 {
     using System;
+    using System.Linq;
 
     using Authorization;
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
 
     using Npgsql;
 
@@ -42,6 +44,21 @@ namespace CometServer.Services.Operations.SideEffects
         /// The selected domain key.
         /// </summary>
         private const string SelectedDomainKey = "SelectedDomain";
+
+        /// <summary>
+        /// Gets or sets the <see cref="IEngineeringModelSetupService"/>
+        /// </summary>
+        public IEngineeringModelSetupService EngineeringModelSetupService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParticipantService"/>
+        /// </summary>
+        public IParticipantService ParticipantService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IPersonService"/>
+        /// </summary>
+        public IPersonService PersonService { get; set; }
 
         /// <summary>
         /// Allows derived classes to override and execute additional logic before an update operation.
@@ -69,6 +86,79 @@ namespace CometServer.Services.Operations.SideEffects
         public override void BeforeUpdate(Participant thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
             ValidateSelectedDomain(thing, rawUpdateInfo);
+        }
+
+        /// <summary>
+        /// Allows derived classes to override and execute additional logic after a successful create operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original Thing.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void AfterCreate(Participant thing, Thing container, Participant originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+
+            if (container is not EngineeringModelSetup originalEngineeringModelSetup)
+            {
+                throw new Cdp4ModelValidationException($"{nameof(EngineeringModelSetup)} was not found.");
+            }
+
+            if (this.EngineeringModelSetupService
+                    .GetShallow(transaction, partition, new[] { originalEngineeringModelSetup.Iid }, securityContext).FirstOrDefault() is not EngineeringModelSetup engineeringModelSetup)
+            {
+                throw new Cdp4ModelValidationException($"{nameof(EngineeringModelSetup)} was not found.");
+            }
+
+            var participants = this.ParticipantService.GetShallow(transaction, partition, engineeringModelSetup.Participant, securityContext).OfType<Participant>().ToList();
+
+            var newParticipantGuids = participants.Select(x => x.Iid).Except(originalEngineeringModelSetup.Participant).ToList();
+
+            if (newParticipantGuids.Count != 0)
+            {
+                var duplicatePersons =
+                    participants
+                        .Select(x => new { Participant = x, x.Person })
+                        .Where(x => x.Person != Guid.Empty)
+                        .GroupBy(x => x.Person)
+                        .Where(g => g.Count() > 1)
+                        .ToList();
+
+                if (duplicatePersons.Count != 0)
+                {
+                    foreach (var duplicatePerson in duplicatePersons)
+                    {
+                        var duplicateParticipantGuids = duplicatePerson.Select(x => x.Participant.Iid).ToList();
+
+                        if (newParticipantGuids.Intersect(duplicateParticipantGuids).Any())
+                        {
+                            var person = this.PersonService
+                                .GetShallow(transaction, partition, new[] { duplicatePerson.Key }, securityContext).OfType<Person>().FirstOrDefault();
+
+                            if (person == null)
+                            {
+                                throw new Cdp4ModelValidationException($"Duplicate {nameof(Person)} in {nameof(Participant)} list detected, but the {nameof(Person)} itself was not found.");
+                            }
+
+                            throw new Cdp4ModelValidationException($"{person.ShortName} is already a {nameof(Participant)} in {nameof(EngineeringModel)} {engineeringModelSetup.Name}");
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
