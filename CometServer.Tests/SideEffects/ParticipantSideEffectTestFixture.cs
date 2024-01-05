@@ -26,7 +26,6 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -120,7 +119,7 @@ namespace CometServer.Tests.SideEffects
                 { SelectedDomainKey, null }
             };
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.That(
                 () =>
                     this.participantSideEffect.BeforeUpdate(
                         this.participant,
@@ -128,7 +127,7 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         "partition",
                         this.securityContext.Object,
-                        this.rawUpdateInfo));
+                        this.rawUpdateInfo), Throws.Exception.TypeOf<InvalidOperationException>());
 
             //invalid selected domain verification
             this.rawUpdateInfo = new ClasslessDTO()
@@ -136,7 +135,7 @@ namespace CometServer.Tests.SideEffects
                 { SelectedDomainKey, default }
             };
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.That(
                 () =>
                     this.participantSideEffect.BeforeUpdate(
                         this.participant,
@@ -144,24 +143,26 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         "partition",
                         this.securityContext.Object,
-                        this.rawUpdateInfo));
+                        this.rawUpdateInfo), Throws.Exception.TypeOf<InvalidOperationException>());
         }
 
         [Test]
         public void VerifyThatAfterCreateThrowsExceptionWhenContainerIsNull()
         {
-            Assert.Throws<Cdp4ModelValidationException>(
+            Assert.That(
                 () =>
                 this.participantSideEffect.AfterCreate(this.participant, null, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
 
         [Test]
         public void VerifyThatAfterCreateThrowsExceptionWhenContainerIsNotAnEngineeringModelSetup()
         {
-            Assert.Throws<Cdp4ModelValidationException>(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.participant, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
 
@@ -170,9 +171,10 @@ namespace CometServer.Tests.SideEffects
         {
             this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(Array.Empty<Thing>());
 
-            Assert.Throws<Cdp4ModelValidationException>(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
 
@@ -183,9 +185,10 @@ namespace CometServer.Tests.SideEffects
 
             this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).Returns(Array.Empty<Thing>());
 
-            Assert.DoesNotThrow(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Nothing
             );
         }
 
@@ -196,9 +199,10 @@ namespace CometServer.Tests.SideEffects
 
             this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).Returns(new List<Thing> { this.participant });
 
-            Assert.DoesNotThrow(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Nothing
             );
         }
 
@@ -211,9 +215,10 @@ namespace CometServer.Tests.SideEffects
 
             this.personService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new [] {this.participant.Person}, this.securityContext.Object)).Returns(Array.Empty<Thing>());
 
-            Assert.DoesNotThrow(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Nothing
             );
         }
 
@@ -231,12 +236,12 @@ namespace CometServer.Tests.SideEffects
 
             this.personService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.participant.Person }, this.securityContext.Object)).Returns(Array.Empty<Thing>());
 
-            var ex = Assert.Throws<Cdp4ModelValidationException>(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
+                    .With.Message.Contains($"{nameof(Person)} itself was not found.")
             );
-
-            Assert.That(ex.Message.Contains($"{nameof(Person)} itself was not found."), Is.True);
         }
 
         [Test]
@@ -253,12 +258,12 @@ namespace CometServer.Tests.SideEffects
 
             this.personService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.participant.Person }, this.securityContext.Object)).Returns(new List<Thing> {this.person});
 
-            var ex = Assert.Throws<Cdp4ModelValidationException>(
+            Assert.That(
                 () =>
                     this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
+                    .With.Message.Contains($"is already a {nameof(Participant)}")
             );
-
-            Assert.That(ex.Message.Contains($"is already a {nameof(Participant)}"), Is.True);
         }
     }
 }
