@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -713,7 +713,7 @@ namespace CometServer.Modules
                 this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 // error handling
-                httpResponse.StatusCode = (int) HttpStatusCode.Forbidden;
+                httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (BadRequestException ex)
@@ -753,6 +753,19 @@ namespace CometServer.Modules
 
                 // error handling: Use Unauthorized as a user is not allowed to see if the thing is not there or a user is not allowed to see it
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
+            catch (ResolveException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+
+                // error handling: Use BadRequest as the user is probably creating conflicting changes, or the data has changed server side resulting in a change that is not allowed
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
             catch (Exception ex)
