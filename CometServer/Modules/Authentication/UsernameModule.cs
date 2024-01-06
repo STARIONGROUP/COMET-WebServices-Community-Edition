@@ -26,6 +26,8 @@ namespace CometServer.Modules
 {
     using Carter;
 
+    using CometServer.Authentication.Basic;
+
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
@@ -43,25 +45,10 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/username", async (HttpRequest req, HttpResponse res) => {
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-
-                    await res.WriteAsync("not authenticated");
-                }
-                else
-                {
-                    if (res.HttpContext.User == null)
-                    {
-                        res.UpdateWithNotAutherizedSettings();
-                        
-                        await res.WriteAsync("not authorized");
-                    }
-
-                    await res.WriteAsync(res.HttpContext.User.Identity.Name);
-                }
-            });
+            app.MapGet("/username", async (HttpRequest req, HttpResponse res) =>
+            {
+                await res.WriteAsync(res.HttpContext.User.Identity.Name);
+            }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
         }
     }
 }

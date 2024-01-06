@@ -49,7 +49,6 @@ namespace CometServer.Modules
     using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Extensions;
-    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.ChangeLog;
@@ -116,10 +115,6 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/> used to read application configuration
         /// </param>
-        /// <param name="cometHasStartedService">
-        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
-        /// acceptng requests
-        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
@@ -157,30 +152,17 @@ namespace CometServer.Modules
                 {
                     return;
                 }
-
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                catch (AuthorizationException)
                 {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
-                }
-                else
-                {
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                    this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
 
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
+                    return;
                 }
-            });
+
+                await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
+            }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
 
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
@@ -189,8 +171,7 @@ namespace CometServer.Modules
                 {
                     return;
                 }
-
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                catch (AuthorizationException)
                 {
                     res.UpdateWithNotAuthenticatedSettings();
                     await res.AsJson("not authenticated");
@@ -261,7 +242,9 @@ namespace CometServer.Modules
                         await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                     }
                 }
-            });
+
+                await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, fileBinaryService, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+            }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
         }
 
         /// <summary>

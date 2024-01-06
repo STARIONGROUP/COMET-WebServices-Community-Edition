@@ -44,6 +44,7 @@ namespace CometServer.Modules
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
 
+    using CometServer.Authentication.Anonymous;
     using CometServer.Configuration;
     using CometServer.Extensions;
     using CometServer.Health;
@@ -132,18 +133,18 @@ namespace CometServer.Modules
                 IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) =>
             {
                 await this.SeedDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
-            });
+            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
 
             app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res,
                 IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) =>
             {
                 await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
-            });
+            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
 
             app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res, IDataStoreController dataStoreController) =>
             {
                 await this.RestoreDatastore(req, res, dataStoreController);
-            });
+            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
         }
 
         /// <summary>

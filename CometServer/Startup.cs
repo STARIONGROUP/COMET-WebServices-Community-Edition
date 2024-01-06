@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Startup.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -28,7 +28,7 @@ namespace CometServer
     using System.Linq;
 
     using Autofac;
-    
+
     using Carter;
 
     using CDP4Authentication;
@@ -51,6 +51,8 @@ namespace CometServer
     using CDP4ServicesMessaging;
 
     using CometServer.Authentication;
+    using CometServer.Authentication.Anonymous;
+    using CometServer.Authentication.Basic;
     using CometServer.Authorization;
     using CometServer.ChangeNotification;
     using CometServer.ChangeNotification.Data;
@@ -72,11 +74,12 @@ namespace CometServer
     using Hangfire;
     using Hangfire.MemoryStorage;
 
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    
+
     using Prometheus;
 
     using Serilog;
@@ -86,11 +89,6 @@ namespace CometServer
     /// </summary>
     public class Startup
     {
-        /// <summary>
-        /// The Cookie Scheme used by the COMET API
-        /// </summary>
-        public const string CookieScheme = "CDP4";
-
         /// <summary>
         /// The (injected) <see cref="IWebHostEnvironment"/> that provides access to environment variables
         /// </summary>
@@ -112,7 +110,7 @@ namespace CometServer
         /// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         /// </summary>
         /// <param name="services">
-        /// 
+        /// The <see cref="IServiceCollection"/>
         /// </param>
         public void ConfigureServices(IServiceCollection services)
         {
@@ -135,11 +133,36 @@ namespace CometServer
                     });
             });
 
-            services.AddAuthentication("CDP4").AddCookie(CookieScheme);
             services.AddRouting(options => options.ConstraintMap.Add("EnumerableOfGuid", typeof(EnumerableOfGuidRouteConstraint)));
             
             services.ConfigureServicesMessaging();
+            services
+                .AddAuthentication()
+                .AddAnonymousAuthentication()
+                .AddBasicAuthentication(configure: options =>
+                {
+                    options.IsWWWAuthenticateHeaderSuppressed = false;
+                    options.Realm = "CDP4-COMET";
+                })
+                .AddCookie();
 
+            services.AddAuthorization(options =>
+                {
+                    var anonymousAuthenticationPolicy = new AuthorizationPolicyBuilder()
+                        .AddAuthenticationSchemes(AnonymousAuthenticationDefaults.AuthenticationScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
+
+                    options.AddPolicy(AnonymousAuthenticationDefaults.AuthenticationScheme, anonymousAuthenticationPolicy);
+
+                    var basicAuthenticationPolicy = new AuthorizationPolicyBuilder()
+                        .AddAuthenticationSchemes(BasicAuthenticationDefaults.AuthenticationScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
+
+                    options.AddPolicy(BasicAuthenticationDefaults.AuthenticationScheme, basicAuthenticationPolicy);
+                });
+            
             services.AddCarter();
         }
 
@@ -168,9 +191,8 @@ namespace CometServer
             // authentication services
             builder.RegisterType<AuthenticationPersonDao>().As<IAuthenticationPersonDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<AuthenticationPersonAuthenticator>().As<IAuthenticationPersonAuthenticator>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-
-            // authentication services
             builder.RegisterType<CredentialsService>().As<ICredentialsService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<JwtTokenService>().As<IJwtTokenService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // authorization services
             builder.RegisterType<PermissionService>().As<IPermissionService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
@@ -252,7 +274,7 @@ namespace CometServer
             app.UseRouting();
             app.UseCors();
             app.UseAuthentication();
-            app.UseBasicAuthenticatonMiddleware();
+            app.UseAuthorization();
 
             app.UseMetricServer();
             app.UseHttpMetrics();

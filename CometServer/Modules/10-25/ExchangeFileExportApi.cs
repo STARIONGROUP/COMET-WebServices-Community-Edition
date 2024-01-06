@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileExportApi.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -39,6 +39,7 @@ namespace CometServer.Modules
 
     using CDP4JsonSerializer;
 
+    using CometServer.Authentication.Basic;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -116,30 +117,17 @@ namespace CometServer.Modules
                 {
                     return;
                 }
-
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                catch (AuthorizationException)
                 {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
-                }
-                else
-                {
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+                    this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
 
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
+                    return;
                 }
-            });
+
+                await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+            }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
         }
 
         /// <summary>

@@ -33,6 +33,7 @@ namespace CometServer.Authentication
     using CDP4Orm.Dao.Authentication;
 
     using CometServer.Configuration;
+    using CometServer.Exceptions;
     using CometServer.Services;
 
     using Microsoft.Extensions.Logging;
@@ -88,7 +89,7 @@ namespace CometServer.Authentication
                 transaction = await connection.BeginTransactionAsync();
 
                 var authenticationPerson = (await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null)).SingleOrDefault();
-                
+
                 await transaction.CommitAsync();
 
                 if (authenticationPerson == null)
@@ -108,12 +109,21 @@ namespace CometServer.Authentication
 
                 return null;
             }
+            catch (NpgsqlException ex)
+            {
+                transaction?.RollbackAsync();
+
+                this.Logger.LogCritical( "The AuthenticationPersonAuthenticator could not interact with the CDP4-COMET database");
+
+                throw new AuthenticatorException("The authenticator could not connect to the CDP4-COMET database", innerException: ex);
+            }
             catch (Exception ex)
             {
                 transaction?.RollbackAsync();
 
-                this.Logger.LogError(ex, "There was an error while authenticating the user credentials");
-                return null;
+                this.Logger.LogCritical(ex, "There was an error while authenticating the user credentials");
+
+                throw new AuthenticatorException("There was an error while authenticating the user credentials", innerException: ex);
             }
             finally
             {
