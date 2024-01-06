@@ -39,6 +39,7 @@ namespace CometServer.Modules
 
     using CDP4JsonSerializer;
 
+    using CometServer.Authentication.Basic;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -73,11 +74,6 @@ namespace CometServer.Modules
         private readonly ILogger<ExchangeFileExportApi> logger;
 
         /// <summary>
-        /// The (injected) <see cref="ICometHasStartedService"/>
-        /// </summary>
-        private readonly ICometHasStartedService cometHasStartedService;
-
-        /// <summary>
         /// The supported post query parameter.
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
@@ -101,10 +97,9 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public ExchangeFileExportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
+        public ExchangeFileExportApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<ExchangeFileExportApi>.Instance : loggerFactory.CreateLogger<ExchangeFileExportApi>();
-            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -118,37 +113,21 @@ namespace CometServer.Modules
             app.MapPost("/export",
             async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter) =>
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                try
                 {
-                    res.ContentType = "application/json";
-                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                    await res.AsJson("not yet started and ready to accept requests");
+                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                }
+                catch (AuthorizationException)
+                {
+                    this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
                     return;
                 }
 
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
-                {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
-                }
-                else
-                {
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
-
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
-                }
-            });
+                await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+            }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
         }
 
         /// <summary>

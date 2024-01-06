@@ -41,11 +41,11 @@ namespace CometServer.Modules
 
     using CDP4MessagePackSerializer;
 
+    using CometServer.Authentication.Basic;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Extensions;
-    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -77,11 +77,6 @@ namespace CometServer.Modules
         private readonly ILogger<SiteDirectoryApi> logger;
 
         /// <summary>
-        /// The (injected) <see cref="ICometHasStartedService"/>
-        /// </summary>
-        private readonly ICometHasStartedService cometHasStartedService;
-
-        /// <summary>
         /// The supported get query parameters.
         /// </summary>
         private static readonly string[] SupportedGetQueryParameters =
@@ -110,20 +105,15 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
-        /// <param name="cometHasStartedService">
-        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
-        /// acceptng requests
-        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public SiteDirectoryApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
+        public SiteDirectoryApi(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<SiteDirectoryApi>.Instance : loggerFactory.CreateLogger<SiteDirectoryApi>();
-            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -137,107 +127,59 @@ namespace CometServer.Modules
             app.MapGet("SiteDirectory",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
-                    if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                    try
                     {
-                        res.ContentType = "application/json";
-                        res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                        await res.AsJson("not yet started and ready to accept requests");
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException)
+                    {
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
                         return;
                     }
 
-                    if (!req.HttpContext.User.Identity.IsAuthenticated)
-                    {
-                        res.UpdateWithNotAuthenticatedSettings();
-                        await res.AsJson("not authenticated");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                        }
-                        catch (AuthorizationException)
-                        {
-                            this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
-
-                            res.UpdateWithNotAutherizedSettings();
-                            await res.AsJson("not authorized");
-                            return;
-                        }
-
-                        await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                    }
-                });
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
+                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
 
             app.MapGet("SiteDirectory/{*path}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
-                    if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                    try
                     {
-                        res.ContentType = "application/json";
-                        res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                        await res.AsJson("not yet started and ready to accept requests");
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException)
+                    {
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
                         return;
                     }
 
-                    if (!req.HttpContext.User.Identity.IsAuthenticated)
-                    {
-                        res.UpdateWithNotAuthenticatedSettings();
-                        await res.AsJson("not authenticated");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                        }
-                        catch (AuthorizationException)
-                        {
-                            this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
-
-                            res.UpdateWithNotAutherizedSettings();
-                            await res.AsJson("not authorized");
-                            return;
-                        }
-
-                        await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                    }
-                });
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
+                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
 
             app.MapPost("SiteDirectory/{iid:guid}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
                 {
-                    if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                    try
                     {
-                        res.ContentType = "application/json";
-                        res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                        await res.AsJson("not yet started and ready to accept requests");
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException)
+                    {
+                        this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
                         return;
                     }
 
-                    if (!req.HttpContext.User.Identity.IsAuthenticated)
-                    {
-                        res.UpdateWithNotAuthenticatedSettings();
-                        await res.AsJson("not authenticated");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                        }
-                        catch (AuthorizationException)
-                        {
-                            this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
-
-                            res.UpdateWithNotAutherizedSettings();
-                            await res.AsJson("not authorized");
-                            return;
-                        }
-
-                        await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
-                    }
-                });
+                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
+                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
         }
 
         /// <summary>
