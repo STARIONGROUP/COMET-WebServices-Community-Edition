@@ -193,10 +193,10 @@ namespace CometServer.Services.Operations
                          .Where(x => x.FrozenOn != null)
                          .ToArray())
             {
-                this.originalToCopyMap.Remove(activeIterationSetupToRemove);
-
                 //Remove non-active Iterations from to be created list
-                setupToCreate.IterationSetup.Remove(activeIterationSetupToRemove.Iid);
+                setupToCreate.IterationSetup.Remove(this.originalToCopyMap[activeIterationSetupToRemove].Iid);
+
+                this.originalToCopyMap.Remove(activeIterationSetupToRemove);
             }
 
             // populate the RequestUtils cache so that contained things are created when the engineering-model setup is created
