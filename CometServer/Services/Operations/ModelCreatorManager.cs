@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelCreatorManager.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -177,12 +177,26 @@ namespace CometServer.Services.Operations
                 modelRdlToCreate.ShortName = $"{setupToCreate.ShortName}MRDL";
             }
 
-            foreach (var iterationSetup in this.originalToCopyMap.Keys.OfType<IterationSetup>().OrderBy(x => x.IterationNumber))
+            var activeIterationSetup =
+                this.originalToCopyMap.Keys
+                    .OfType<IterationSetup>()
+                    .Single(x => x.FrozenOn == null);
+
+            var copyOfActiveIterationSetup = (IterationSetup)this.originalToCopyMap[activeIterationSetup];
+            copyOfActiveIterationSetup.IterationNumber = 1;
+            copyOfActiveIterationSetup.IterationIid = Guid.NewGuid();
+            copyOfActiveIterationSetup.SourceIterationSetup = null;
+            copyOfActiveIterationSetup.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
+
+            foreach (var activeIterationSetupToRemove in this.originalToCopyMap.Keys
+                         .OfType<IterationSetup>()
+                         .Where(x => x.FrozenOn != null)
+                         .ToArray())
             {
-                var copy = (IterationSetup)this.originalToCopyMap[iterationSetup];
-                copy.IterationIid = Guid.NewGuid();
-                copy.SourceIterationSetup = iterationSetup.Iid;
-                copy.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
+                //Remove non-active Iterations from to be created list
+                setupToCreate.IterationSetup.Remove(this.originalToCopyMap[activeIterationSetupToRemove].Iid);
+
+                this.originalToCopyMap.Remove(activeIterationSetupToRemove);
             }
 
             // populate the RequestUtils cache so that contained things are created when the engineering-model setup is created
@@ -255,21 +269,21 @@ namespace CometServer.Services.Operations
 
             var sw = Stopwatch.StartNew();
             this.Logger.LogDebug("start modify {Count} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
+
             foreach (var modelThing in modelThings)
             {
-                var model = modelThing as EngineeringModel;
-                if (model != null)
+                if (modelThing is EngineeringModel model)
                 {
                     continue;
                 }
 
-                var iteration = modelThing as Iteration;
-                if (iteration != null)
+                if (modelThing is Iteration iteration)
                 {
                     var iterationSetupKvp = this.originalToCopyMap.SingleOrDefault(kvp => kvp.Key.Iid == iteration.IterationSetup);
+                    
                     if (iterationSetupKvp.Key == null)
                     {
-                        throw new InvalidOperationException("The original/copy iteration-setup pair could not be found in the cache");
+                        continue;
                     }
 
                     var oldIterationIid = iteration.Iid;
@@ -278,6 +292,7 @@ namespace CometServer.Services.Operations
                     iteration.DefaultOption = modelThings.OfType<Option>().First().Iid;
 
                     this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, iteration, oldIterationIid);
+
                     if (!this.IterationService.UpdateConcept(transaction, targetPartition, iteration, newEngineeringModel))
                     {
                         throw new InvalidOperationException("Updating the copied Iteration failed.");
@@ -298,8 +313,7 @@ namespace CometServer.Services.Operations
                 {
                     var container = modelThings.SingleOrDefault(x => x.Contains(modelThing));
                     var metadata = this.MetainfoProvider.GetMetaInfo(modelThing.ClassKind.ToString());
-                    PropertyMetaInfo propertyMetainfo;
-                    var partition = metadata.TryGetContainerProperty("EngineeringModel", out propertyMetainfo) ? targetPartition : targetIterationPartition;
+                    var partition = metadata.TryGetContainerProperty("EngineeringModel", out _) ? targetPartition : targetIterationPartition;
 
                     var service = this.ServiceProvider.MapToPersitableService(modelThing.ClassKind.ToString());
                     

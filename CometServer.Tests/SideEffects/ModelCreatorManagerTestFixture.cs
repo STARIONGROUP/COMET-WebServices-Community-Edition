@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelCreatorManagerTestFixture.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -59,6 +59,8 @@ namespace CometServer.Tests.SideEffects
 
         private Mock<ICdp4TransactionManager> transactionManager;
 
+        private List<Thing> requestUtilCache;
+
         [SetUp]
         public void Setup()
         {
@@ -77,8 +79,10 @@ namespace CometServer.Tests.SideEffects
 
             this.transactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.Now);
 
+            this.requestUtilCache = new List<Thing>();
+
             this.RequestUtils.Setup(x => x.QueryParameters).Returns(new QueryParameters());
-            this.RequestUtils.Setup(x => x.Cache).Returns(new List<Thing>());
+            this.RequestUtils.Setup(x => x.Cache).Returns(this.requestUtilCache);
 
             this.MetainfoProvider.Setup(x => x.GetMetaInfo(ClassKind.EngineeringModelSetup.ToString())).Returns(new EngineeringModelSetupMetaInfo());
             this.MetainfoProvider.Setup(x => x.GetMetaInfo(ClassKind.ModelReferenceDataLibrary.ToString())).Returns(new ModelReferenceDataLibraryMetaInfo());
@@ -100,24 +104,40 @@ namespace CometServer.Tests.SideEffects
               Role = Guid.NewGuid()
             };
 
-            var iterationSetup = new IterationSetup(Guid.NewGuid(), 0);
+            var iterationSetup1 = new IterationSetup(Guid.NewGuid(), 0)
+            {
+                FrozenOn = DateTime.Now,
+                IterationNumber = 1
+            };
+
+            var iterationSetup2 = new IterationSetup(Guid.NewGuid(), 0)
+            {
+                SourceIterationSetup = iterationSetup1.Iid,
+                IterationNumber = 2
+            };
 
             participant.Domain.Add(Guid.NewGuid());
             mrdl.DefinedCategory.Add(cat.Iid);
             mrdl.RequiredRdl = Guid.NewGuid();
             modelSetup.RequiredRdl.Add(mrdl.Iid);
-            modelSetup.IterationSetup.Add(iterationSetup.Iid);
+            modelSetup.IterationSetup.Add(iterationSetup1.Iid);
+            modelSetup.IterationSetup.Add(iterationSetup2.Iid);
             modelSetup.Participant.Add(participant.Iid);
 
-            this.modelSetupService.Setup(x => x.GetDeep(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(modelSetup.Iid)), It.IsAny<ISecurityContext>())).
-                Returns(new Thing[] { modelSetup, mrdl, cat, participant, iterationSetup });
+            this.modelSetupService.Setup(x => x.GetDeep(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(modelSetup.Iid)), It.IsAny<ISecurityContext>()))
+                .Returns(new Thing[] { modelSetup, mrdl, cat, participant, iterationSetup1, iterationSetup2 });
 
             var copy = new EngineeringModelSetup(Guid.NewGuid(), 0);
+
             this.modelCreatorManager.CreateEngineeringModelSetupFromSource(modelSetup.Iid, copy, null, null);
 
             Assert.That(copy.RequiredRdl, Is.Not.Empty);
             Assert.That(copy.IterationSetup, Is.Not.Empty);
             Assert.That(copy.Participant, Is.Not.Empty);
+            Assert.That(copy.IterationSetup.Count, Is.EqualTo(1));
+            Assert.That(this.requestUtilCache.Count, Is.EqualTo(5));
+            Assert.That(this.requestUtilCache.OfType<IterationSetup>().Count, Is.EqualTo(1));
+            Assert.That(this.requestUtilCache.OfType<IterationSetup>().Single().IterationNumber, Is.EqualTo(1));
         }
     }
 }
