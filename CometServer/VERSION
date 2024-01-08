@@ -1,0 +1,5 @@
+﻿CDP4Common.dll
+CDP4Orm.dll
+CDP4Authentication.dll
+Authentication/CDP4Database/CDP4DatabaseAuthentication.dll
+CometServer.exe

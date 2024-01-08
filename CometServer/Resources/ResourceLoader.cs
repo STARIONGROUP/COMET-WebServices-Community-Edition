@@ -34,6 +34,7 @@ namespace CometServer.Resources
 
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
+    using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
     /// <summary>
     /// Class responsible for loading embedded resources.
@@ -70,7 +71,18 @@ namespace CometServer.Resources
         {
             var assembly = Assembly.GetExecutingAssembly();
 
+            return this.GetAssemblyVersion(assembly);
+        }
+
+        /// <summary>
+        /// Gets the version number of an <see cref="Assembly"/>
+        /// </summary>
+        /// <param name="assembly">The <see cref="Assembly"/></param>
+        /// <returns>The version number of the <see cref="Assembly"/></returns>
+        private string GetAssemblyVersion(Assembly assembly)
+        {
             var infoVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+
             if (infoVersion != null)
             {
                 var plusIndex = infoVersion.InformationalVersion.IndexOf('+');
@@ -79,13 +91,22 @@ namespace CometServer.Resources
                 {
                     return infoVersion.InformationalVersion.Substring(0, plusIndex);
                 }
-
-                return infoVersion.InformationalVersion;
             }
 
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(assembly.Location);
-            var fileVersion = fileVersionInfo.FileVersion;
-            return fileVersion;
+            var productVersion = fileVersionInfo.ProductVersion;
+
+            if (productVersion != null)
+            {
+                var plusIndex = productVersion.IndexOf('+');
+
+                if (plusIndex != -1)
+                {
+                    return productVersion.Substring(0, plusIndex);
+                }
+            }
+
+            return productVersion ?? "unknown";
         }
 
         /// <summary>
@@ -110,7 +131,7 @@ namespace CometServer.Resources
         public string QuerySDKVersion()
         {
             var assembly = typeof(Thing).Assembly;
-            return assembly.GetName().Version?.ToString();
+            return this.GetAssemblyVersion(assembly);
         }
 
         /// <summary>
