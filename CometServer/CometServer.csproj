@@ -82,10 +82,9 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <VersionFileCreatorDllDir>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.dll</VersionFileCreatorDllDir>
-    <VersionFileCreatorDir>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe</VersionFileCreatorDir>
+    <VersionFileCreatorDll>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.dll</VersionFileCreatorDll>
     <IsVersionFileCreatorCompiled>False</IsVersionFileCreatorCompiled>
-    <IsVersionFileCreatorCompiled Condition="Exists('$(VersionFileCreatorDir)')">True</IsVersionFileCreatorCompiled>
+    <IsVersionFileCreatorCompiled Condition="Exists('$(VersionFileCreatorDll)')">True</IsVersionFileCreatorCompiled>
   </PropertyGroup>
 
   <Target Name="CustomAfterBuild" AfterTargets="Build">
@@ -96,23 +95,13 @@
     <!-- Compile tool if not already -->
     <Exec Condition="!$(IsVersionFileCreatorCompiled)" Command="dotnet build ../VersionFileCreator/VersionFileCreator.csproj" YieldDuringToolExecution="True" ConsoleToMSBuild="False" EchoOff="True" />
 
-    <ConvertToAbsolutePath Paths="$(VersionFileCreatorDir)">
-      <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorPath"/>
-    </ConvertToAbsolutePath>
-
-    <ConvertToAbsolutePath Paths="$(VersionFileCreatorDllDir)">
+    <ConvertToAbsolutePath Paths="$(VersionFileCreatorDll)">
       <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorDllPath"/>
     </ConvertToAbsolutePath>
 
-    <Message Importance="High" Condition="Exists('$(VersionFileCreatorPath)')" Text=".Exe exists" />
-    <Message Importance="High" Condition="!Exists('$(VersionFileCreatorPath)')" Text=".Exe does not exists" />
-
-    <Message Importance="High" Condition="Exists('$(VersionFileCreatorDllPath)')" Text=".dll exists" />
-    <Message Importance="High" Condition="!Exists('$(VersionFileCreatorDllPath)')" Text=".dll does not exists" />
-
     <!-- at last running the tool -->
     <Message Importance="High" Text="------ VersionFileCreator tool Started ------ " />
-    <Exec Command="$(VersionFileCreatorPath) path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
+    <Exec Command="dotnet $(VersionFileCreatorDllPath) path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
     <Message Importance="High" Text="------ VersionFileCreator tool Finished ------ " />
   </Target>
 
