@@ -82,6 +82,7 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <VersionFileCreatorDllDir>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.dll</VersionFileCreatorDllDir>
     <VersionFileCreatorDir>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe</VersionFileCreatorDir>
     <IsVersionFileCreatorCompiled>False</IsVersionFileCreatorCompiled>
     <IsVersionFileCreatorCompiled Condition="Exists('$(VersionFileCreatorDir)')">True</IsVersionFileCreatorCompiled>
@@ -99,8 +100,15 @@
       <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorPath"/>
     </ConvertToAbsolutePath>
 
+    <ConvertToAbsolutePath Paths="$(VersionFileCreatorDllDir)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorDllPath"/>
+    </ConvertToAbsolutePath>
+
     <Message Importance="High" Condition="Exists('$(VersionFileCreatorPath)')" Text=".Exe exists" />
     <Message Importance="High" Condition="!Exists('$(VersionFileCreatorPath)')" Text=".Exe does not exists" />
+
+    <Message Importance="High" Condition="Exists('$(VersionFileCreatorDllPath)')" Text=".dll exists" />
+    <Message Importance="High" Condition="!Exists('$(VersionFileCreatorDllPath)')" Text=".dll does not exists" />
 
     <!-- at last running the tool -->
     <Message Importance="High" Text="------ VersionFileCreator tool Started ------ " />
