@@ -82,6 +82,7 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <VersionFileCreatorDir>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe</VersionFileCreatorDir>
     <IsVersionFileCreatorCompiled>False</IsVersionFileCreatorCompiled>
     <IsVersionFileCreatorCompiled Condition="Exists('../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe')">True</IsVersionFileCreatorCompiled>
   </PropertyGroup>
@@ -94,9 +95,13 @@
     <!-- Compile tool if not already -->
     <Exec Condition="!$(IsVersionFileCreatorCompiled)" Command="dotnet build ../VersionFileCreator/VersionFileCreator.csproj" YieldDuringToolExecution="True" ConsoleToMSBuild="False" EchoOff="True" />
 
+    <ConvertToAbsolutePath Paths="$(VersionFileCreatorDir)">
+      <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorPath"/>
+    </ConvertToAbsolutePath>
+
     <!-- at last running the tool -->
     <Message Importance="High" Text="------ VersionFileCreator tool Started ------ " />
-    <Exec Command="&quot;../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe &quot; path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
+    <Exec Command="&quot;$(VersionFileCreatorPath) &quot; path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
     <Message Importance="High" Text="------ VersionFileCreator tool Finished ------ " />
   </Target>
 
