@@ -84,7 +84,7 @@
   <PropertyGroup>
     <VersionFileCreatorDir>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe</VersionFileCreatorDir>
     <IsVersionFileCreatorCompiled>False</IsVersionFileCreatorCompiled>
-    <IsVersionFileCreatorCompiled Condition="Exists('../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe')">True</IsVersionFileCreatorCompiled>
+    <IsVersionFileCreatorCompiled Condition="Exists('$(VersionFileCreatorDir)')">True</IsVersionFileCreatorCompiled>
   </PropertyGroup>
 
   <Target Name="CustomAfterBuild" AfterTargets="Build">
@@ -98,6 +98,9 @@
     <ConvertToAbsolutePath Paths="$(VersionFileCreatorDir)">
       <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorPath"/>
     </ConvertToAbsolutePath>
+
+    <Message Importance="High" Condition="Exists('$(VersionFileCreatorPath)')" Text=".Exe exists" />
+    <Message Importance="High" Condition="!Exists('$(VersionFileCreatorPath)')" Text=".Exe does not exists" />
 
     <!-- at last running the tool -->
     <Message Importance="High" Text="------ VersionFileCreator tool Started ------ " />
