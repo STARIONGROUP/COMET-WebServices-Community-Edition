@@ -45,6 +45,8 @@ namespace VersionFileCreator
                 string path = null;
                 var consolePrefix = "VersionFileCreator =>";
 
+                Console.WriteLine($"{consolePrefix} Checking path variable.");
+
                 if (args == null || !args.Any(Directory.Exists))
                 {
                     path = Directory.GetCurrentDirectory();
