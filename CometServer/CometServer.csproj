@@ -101,7 +101,7 @@
 
     <!-- at last running the tool -->
     <Message Importance="High" Text="------ VersionFileCreator tool Started ------ " />
-    <Exec Command="&quot;$(VersionFileCreatorPath) &quot; path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
+    <Exec Command="$(VersionFileCreatorPath) path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
     <Message Importance="High" Text="------ VersionFileCreator tool Finished ------ " />
   </Target>
 
