@@ -15,6 +15,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>latest</LangVersion>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
@@ -64,6 +65,24 @@
     </ItemGroup>
     <Copy SourceFiles="@(CDP4DatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4Database" />
     <Copy SourceFiles="@(CDP4WspDatabaseAuthentication)" DestinationFolder="$(TargetDir)\Authentication\CDP4WspDatabase" />
+  </Target>
+
+  <ItemGroup>
+    <_StaticWebAssetEmbeddedProjectConfigurationCanonicalMetadata Remove="VERSION" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_StaticWebAssetProjectConfigurationCanonicalMetadata Remove="VERSION" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="VERSION">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CustomAfterBuild" AfterTargets="Build">
+    <Exec Command="&quot;..\VersionFileCreator\bin\$(Configuration)\$(TargetFramework)\VersionFileCreator.exe &quot; path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
   </Target>
 
 </Project>
