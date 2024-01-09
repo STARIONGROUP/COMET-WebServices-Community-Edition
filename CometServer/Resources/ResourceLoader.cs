@@ -28,13 +28,11 @@ namespace CometServer.Resources
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
     using System.Reflection;
     using System.Resources;
 
     using CDP4Common.DTO;
     using CDP4Common.MetaInfo;
-    using Microsoft.AspNetCore.Mvc.ApplicationParts;
 
     /// <summary>
     /// Class responsible for loading embedded resources.

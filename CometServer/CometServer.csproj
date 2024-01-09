@@ -82,7 +82,7 @@
   </ItemGroup>
 
   <Target Name="CustomAfterBuild" AfterTargets="Build">
-    <Exec Command="&quot;..\VersionFileCreator\bin\$(Configuration)\$(TargetFramework)\VersionFileCreator.exe &quot; path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
+    <Exec Command="&quot;../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.exe &quot; path:$(OutDir) " YieldDuringToolExecution="True" ConsoleToMSBuild="True" />
   </Target>
 
 </Project>
