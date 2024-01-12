@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
     <Title>CometServer-CE</Title>
-    <Version>8.0.0-RC19</Version>
+    <Version>8.0.0-RC20</Version>
     <Description>CDP4-COMET Services API</Description>
     <Copyright>Copyright © RHEA System S.A.</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
@@ -96,7 +96,7 @@
     <Exec Condition="!$(IsVersionFileCreatorCompiled)" Command="dotnet build ../VersionFileCreator/VersionFileCreator.csproj" YieldDuringToolExecution="True" ConsoleToMSBuild="False" EchoOff="True" />
 
     <ConvertToAbsolutePath Paths="$(VersionFileCreatorDll)">
-      <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorDllPath"/>
+      <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorDllPath" />
     </ConvertToAbsolutePath>
 
     <!-- at last running the tool -->
