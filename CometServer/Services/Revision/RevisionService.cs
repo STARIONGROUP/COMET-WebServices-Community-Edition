@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Diagnostics;
     using System.Linq;
 
     using CDP4Common.DTO;
@@ -35,6 +36,8 @@ namespace CometServer.Services
 
     using CometServer.Helpers;
     using CometServer.Services.Authorization;
+
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -65,6 +68,11 @@ namespace CometServer.Services
         /// Gets or sets the transaction manager.
         /// </summary>
         public ICdp4TransactionManager TransactionManager { get; set; }
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="ILogger{T}"/>
+        /// </summary>
+        public ILogger<RevisionService> Logger { get; set; }
 
         /// <summary>
         /// Get the requested revision data from the ORM layer.
@@ -175,12 +183,19 @@ namespace CometServer.Services
         {
             var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false, true);
 
-            foreach (var thingRevInfo in thingRevisionInfos)
+            var revisionsGroupedByPartitions = thingRevisionInfos.GroupBy(x => x.RevisionInfo.Partition)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Thing).ToList());
+
+            var stopwatch = Stopwatch.StartNew();
+
+            foreach (var revisionsGroupdByPartition in revisionsGroupedByPartitions)
             {
-                this.RevisionDao.WriteRevision(transaction, thingRevInfo.RevisionInfo.Partition, thingRevInfo.Thing, actor);
-                this.CacheService.WriteToCache(transaction, thingRevInfo.RevisionInfo.Partition, thingRevInfo.Thing);
+                this.RevisionDao.BulkWriteRevision(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value, actor);
+                this.CacheService.BulkWriteToCache(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
             }
 
+            this.Logger.LogDebug("Write to Cache and Revisions table done in {time}[ms]", stopwatch.ElapsedMilliseconds);
+            stopwatch.Stop();
             return thingRevisionInfos.Select(x => x.Thing);
         }
 

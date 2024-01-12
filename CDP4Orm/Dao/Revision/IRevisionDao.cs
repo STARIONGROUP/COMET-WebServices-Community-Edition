@@ -25,6 +25,7 @@
 namespace CDP4Orm.Dao.Revision
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.ObjectModel;
 
     using CDP4Common.DTO;
@@ -127,5 +128,14 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="fromRevision">The starting revision number for the iteration. If null the current revision is used.</param>
         /// <param name="toRevision">The ending revision number for the iteration. If null it means the iteration is the current one.</param>
         void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision);
+
+        /// <summary>
+        /// Save revisions for a collection of <see cref="Thing"/>s
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
+        /// <param name="things">The revised <see cref="Thing"/></param>
+        /// <param name="actor">The identifier of the person who made this revision</param>
+        void BulkWriteRevision(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things, Guid actor);
     }
 }
