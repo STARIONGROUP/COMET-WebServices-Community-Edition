@@ -154,7 +154,7 @@ namespace CometServer.Modules
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
+                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme });
 
             app.MapGet("SiteDirectory/{*path}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>

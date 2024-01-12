@@ -25,9 +25,11 @@
 namespace CometServer.Modules
 {
     using System;
-    using System.Net;
 
     using Carter;
+    using Carter.Response;
+
+    using CometServer.Authentication;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
@@ -46,20 +48,34 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/login", async (HttpRequest req, HttpResponse res) => {
-                if (req.HttpContext.User.Identity == null)
+            app.MapPost("/login", async (LoginUser loginUser, HttpResponse res, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, IJwtTokenService jwtTokenService) => 
+            {
+                var authenticationPerson = await authenticationPersonAuthenticator.Authenticate(loginUser.UserName, loginUser.Password);
+
+                if (authenticationPerson != null)
                 {
-                    res.UpdateWithNotAutherizedSettings();
-                    await res.WriteAsync("not authorized");
+                    var token = jwtTokenService.CreateToken(authenticationPerson);
+                    res.StatusCode = 200;
+                    await res.WriteAsync(token);
+                    return;
                 }
 
-                res.StatusCode = (int)HttpStatusCode.Accepted;
+                res.UpdateWithNotBearerAuthenticatedSettings();
+                await res.AsJson("not authenticated");
             });
 
-            app.MapGet("/logout", async (HttpRequest req, HttpResponse res) => {
+            app.MapPost("/logout", async (HttpRequest req, HttpResponse res) => 
+            {
                 //return webServiceAuthentication.LogOutResponse(req.HttpContext);
                 throw new NotImplementedException();
             });
+        }
+
+        private class LoginUser
+        {
+            public string UserName { get; set;}
+
+            public string Password { get; set;}
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AppConfig.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -45,6 +45,7 @@ namespace CometServer.Configuration
             this.HealthConfig = new HealthConfig();
             this.ServiceMessagingConfig = new ServiceMessagingConfig();
             this.LongRunningTasksConfig = new LongRunningTasksConfig();
+            this.AuthenticatonConfig = new AuthenticatonConfig();
         }
 
         /// <summary>
@@ -61,6 +62,7 @@ namespace CometServer.Configuration
             this.HealthConfig = new HealthConfig(configuration);
             this.ServiceMessagingConfig = new ServiceMessagingConfig(configuration);
             this.LongRunningTasksConfig = new LongRunningTasksConfig(configuration);
+            this.AuthenticatonConfig = new AuthenticatonConfig(configuration);
         }
 
         /// <summary>
@@ -102,5 +104,10 @@ namespace CometServer.Configuration
         /// Gets or sets the configuration for managing long running task
         /// </summary>
         public LongRunningTasksConfig LongRunningTasksConfig { get; set; }
+
+        /// <summary>
+        /// Gets or sets the AuthenticatonConfig configuration
+        /// </summary>
+        public AuthenticatonConfig AuthenticatonConfig { get; set; }
     }
 }
