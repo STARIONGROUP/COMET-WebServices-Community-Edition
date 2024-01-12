@@ -25,7 +25,9 @@
 namespace CometServer
 {
     using System;
+    using System.Configuration;
     using System.Linq;
+    using System.Text;
 
     using Autofac;
 
@@ -70,11 +72,14 @@ namespace CometServer
     using Hangfire;
     using Hangfire.MemoryStorage;
 
+    using Microsoft.AspNetCore.Authentication.Cookies;
     using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.IdentityModel.Tokens;
 
     using Prometheus;
 
@@ -91,14 +96,23 @@ namespace CometServer
         private readonly IWebHostEnvironment environment;
 
         /// <summary>
+        /// The (injected) <see cref="IConfiguration"/> used to read from the appsettings.json file
+        /// </summary>
+        private readonly IConfiguration configuration;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Startup"/> class.
         /// </summary>
         /// <param name="environment">
         /// The <see cref="IWebHostEnvironment"/> of the application
         /// </param>
-        public Startup(IWebHostEnvironment environment)
+        /// <param name="configuration">
+        /// The (injected) <see cref="IConfiguration"/> used to read from the appsettings.json file
+        /// </param>
+        public Startup(IWebHostEnvironment environment, IConfiguration configuration)
         {
             this.environment = environment;
+            this.configuration = configuration;
         }
 
         /// <summary>
@@ -129,34 +143,152 @@ namespace CometServer
                     });
             });
 
-            services
+            SetUpAuthentication(services, this.configuration);
+            
+            services.AddCarter();
+        }
+
+        /// <summary>
+        /// setup the authentication schemes as per configuration
+        /// </summary>
+        /// <param name="services">
+        /// The <see cref="IServiceCollection"/>
+        /// </param>
+        /// <param name="configuration">
+        /// The <see cref="IConfiguration"/> used to read the appsettings.json file
+        /// </param>
+        /// <exception cref="ConfigurationException"></exception>
+        private static void SetUpAuthentication(IServiceCollection services, IConfiguration configuration)
+        {
+            var isBasicAuthEnabledString = configuration["Authentication:Basic:IsEnabled"];
+
+            if (string.IsNullOrEmpty(isBasicAuthEnabledString))
+            {
+                throw new ConfigurationErrorsException("The Authentication:Basic:IsEnabled setting must be available");
+            }
+
+            var isBasicAuthEnabled = bool.Parse(isBasicAuthEnabledString);
+
+            var isLocalJwtBearerEnabledString = configuration["Authentication:LocalJwtBearer:IsEnabled"];
+
+            if (string.IsNullOrEmpty(isLocalJwtBearerEnabledString))
+            {
+                throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:IsEnabled setting must be available");
+            }
+
+            var isLocalJwtBearerEnabled = bool.Parse(isLocalJwtBearerEnabledString);
+
+            var isExteranlJwtBearerEnabledString = configuration["Authentication:ExternalJwtBearer:IsEnabled"];
+
+            if (string.IsNullOrEmpty(isExteranlJwtBearerEnabledString))
+            {
+                throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:IsEnabled setting must be available");
+            }
+
+            var isExteranlJwtBearerEnabled = bool.Parse(isExteranlJwtBearerEnabledString);
+
+            if (!isBasicAuthEnabled && !isLocalJwtBearerEnabled && !isExteranlJwtBearerEnabled)
+            {
+                throw new ConfigurationErrorsException("At least one authentucation must be enabled");
+            }
+
+            if (isLocalJwtBearerEnabled && isExteranlJwtBearerEnabled)
+            {
+                throw new ConfigurationErrorsException("Both local and external JWT Bearer authentication is enavbled, only one may be enabled");
+            }
+
+            var authenticationBuilder = services
                 .AddAuthentication()
                 .AddAnonymousAuthentication()
-                .AddBasicAuthentication(configure: options =>
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
+
+            if (isBasicAuthEnabled)
+            {
+                authenticationBuilder.AddBasicAuthentication(configure: options =>
                 {
                     options.IsWWWAuthenticateHeaderSuppressed = false;
                     options.Realm = "CDP4-COMET";
-                })
-                .AddCookie();
+                });
+            }
+
+            if (isLocalJwtBearerEnabled)
+            {
+                var validIssuer = configuration["Authentication:LocalJwtBearer:Issuer"];
+
+                if (string.IsNullOrEmpty(validIssuer))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:Issuer setting must be available");
+                }
+
+                var validAudience = configuration["Authentication:LocalJwtBearer:Audience"];
+
+                if (string.IsNullOrEmpty(validAudience))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:Audience setting must be available");
+                }
+
+                var issuerSigningKey = configuration["Authentication:LocalJwtBearer:Key"];
+
+                if (string.IsNullOrEmpty(issuerSigningKey))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:Key setting must be available");
+                }
+
+                authenticationBuilder.AddJwtBearer(authenticationScheme: Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme,
+                    configureOptions: options =>
+                    {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
+                            ValidateIssuer = true,
+                            ValidateAudience = true,
+                            ValidateLifetime = true,
+                            ValidateIssuerSigningKey = true,
+                            ValidIssuer = validIssuer,
+                            ValidAudience = validAudience,
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey))
+                        };
+                    });
+            }
+
+            if (isExteranlJwtBearerEnabled)
+            {
+                authenticationBuilder.AddJwtBearer(authenticationScheme: Authentication.Bearer.JwtBearerDefaults.ExternalAuthenticationScheme,
+                    configureOptions: options =>
+                    {
+
+                    });
+            }
 
             services.AddAuthorization(options =>
-                {
-                    var anonymousAuthenticationPolicy = new AuthorizationPolicyBuilder()
-                        .AddAuthenticationSchemes(AnonymousAuthenticationDefaults.AuthenticationScheme)
-                        .RequireAuthenticatedUser()
-                        .Build();
+            {
+                var anonymousAuthenticationPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(AnonymousAuthenticationDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
 
-                    options.AddPolicy(AnonymousAuthenticationDefaults.AuthenticationScheme, anonymousAuthenticationPolicy);
+                options.AddPolicy(AnonymousAuthenticationDefaults.AuthenticationScheme, anonymousAuthenticationPolicy);
 
-                    var basicAuthenticationPolicy = new AuthorizationPolicyBuilder()
-                        .AddAuthenticationSchemes(BasicAuthenticationDefaults.AuthenticationScheme)
-                        .RequireAuthenticatedUser()
-                        .Build();
+                var basicAuthenticationPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(BasicAuthenticationDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
 
-                    options.AddPolicy(BasicAuthenticationDefaults.AuthenticationScheme, basicAuthenticationPolicy);
-                });
-            
-            services.AddCarter();
+                options.AddPolicy(BasicAuthenticationDefaults.AuthenticationScheme, basicAuthenticationPolicy);
+
+                var localJwtBearerAuthenticationPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+
+                options.AddPolicy(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme, localJwtBearerAuthenticationPolicy);
+
+                var externalJwtBearerAuthenticationPolicy = new AuthorizationPolicyBuilder()
+                    .AddAuthenticationSchemes(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build();
+
+                options.AddPolicy(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme, externalJwtBearerAuthenticationPolicy);
+            });
         }
 
         // ConfigureContainer is where you can register things directly

@@ -43,6 +43,7 @@ namespace CometServer.Configuration
             this.Changelog = new ChangelogConfig();
             this.EmailService = new EmailConfig();
             this.HealthConfig = new HealthConfig();
+            this.AuthenticatonConfig = new AuthenticatonConfig();
         }
 
         /// <summary>
@@ -57,6 +58,7 @@ namespace CometServer.Configuration
             this.Changelog = new ChangelogConfig(configuration);
             this.EmailService = new EmailConfig(configuration);
             this.HealthConfig = new HealthConfig(configuration);
+            this.AuthenticatonConfig = new AuthenticatonConfig(configuration);
         }
 
         /// <summary>
@@ -88,5 +90,10 @@ namespace CometServer.Configuration
         /// Gets the current changelog configuration.
         /// </summary>
         public ChangelogConfig Changelog { get; set; }
+
+        /// <summary>
+        /// Gets or sets the AuthenticatonConfig configuration
+        /// </summary>
+        public AuthenticatonConfig AuthenticatonConfig { get; set; }
     }
 }

@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="HttpResponseExtensions.cs" company="RHEA System S.A.">
+// <copyright file="AuthenticatonConfig.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,46 +22,45 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Modules
+namespace CometServer.Configuration
 {
-    using Microsoft.AspNetCore.Http;
+    using Microsoft.Extensions.Configuration;
 
     /// <summary>
-    /// Static extention mehtods for the <see cref="HttpResponse"/> class
+    /// The purpose of the <see cref="AuthenticatonConfig"/> is to provide an object-oriented
+    /// and type-safe access to the Authentication settings.
     /// </summary>
-    public static class HttpResponseExtensions
+    public class AuthenticatonConfig
     {
         /// <summary>
-        /// Updates the <see cref="HttpResponse"/> properties to reflect that the
-        /// corresponding request required authentication and that it was not authenticated
+        /// Initializes a new instance of the <see cref="AuthenticatonConfig"/> class
         /// </summary>
-        /// <param name="httpResponse">
-        /// The <see cref="HttpResponse"/> that is updated
-        /// </param>
-        public static void UpdateWithNotAuthenticatedSettings(this HttpResponse httpResponse)
+        public AuthenticatonConfig()
         {
-            httpResponse.ContentType = "application/json";
-            httpResponse.StatusCode = 401;
-            httpResponse.Headers.Append("WWW-Authenticate", "Basic");
-        }
-
-        public static void UpdateWithNotBearerAuthenticatedSettings(this HttpResponse httpResponse)
-        {
-            httpResponse.ContentType = "application/json";
-            httpResponse.StatusCode = 401;
-            httpResponse.Headers.Append("WWW-Authenticate", "Bearer");
+            this.BasicAhtenticationConfig = new BasicAhtenticationConfig();
+            this.LocalJwtAuthenticationConfig = new LocalJwtAuthenticationConfig();
         }
 
         /// <summary>
-        /// Updates the <see cref="HttpResponse"/> properties to reflect that the
-        /// corresponding request required authentication and that it was not authenticated
+        /// Initializes a new instance of the <see cref="AuthenticatonConfig"/> class
         /// </summary>
-        /// <param name="httpResponse">
-        /// The <see cref="HttpResponse"/> that is updated
+        /// <param name="configuration">
+        /// The injected <see cref="IConfiguration"/> used to access the application configuration
         /// </param>
-        public static void UpdateWithNotAutherizedSettings(this HttpResponse httpResponse)
+        public AuthenticatonConfig(IConfiguration configuration)
         {
-            httpResponse.StatusCode = 403;
+            this.BasicAhtenticationConfig = new BasicAhtenticationConfig(configuration);
+            this.LocalJwtAuthenticationConfig = new LocalJwtAuthenticationConfig(configuration);
         }
+
+        /// <summary>
+        /// Gets or sets the <see cref="BasicAhtenticationConfig"/>
+        /// </summary>
+        public BasicAhtenticationConfig BasicAhtenticationConfig { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="BasicAhtenticationConfig"/>
+        /// </summary>
+        public LocalJwtAuthenticationConfig LocalJwtAuthenticationConfig { get; set; }
     }
 }
