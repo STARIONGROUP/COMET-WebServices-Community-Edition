@@ -29,8 +29,9 @@ namespace CDP4Orm.Dao.Revision
     using System.Collections.ObjectModel;
     using System.Data;
     using System.Linq;
+    using System.Text;
 
-    using CDP4Common.DTO;
+    using CDP4Common.CommonData;
 
     using CDP4JsonSerializer;
 
@@ -44,6 +45,8 @@ namespace CDP4Orm.Dao.Revision
     using NpgsqlTypes;
 
     using Resolve;
+
+    using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
     /// A data access class that allows revision based retrieval of concepts from the data store.
@@ -168,11 +171,11 @@ namespace CDP4Orm.Dao.Revision
         }
 
         /// <summary>
-        /// Save The revision of a <see cref="Thing"/>
+        /// Save The revision of a <see cref="CDP4Common.DTO.Thing"/>
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
-        /// <param name="thing">The revised <see cref="Thing"/></param>
+        /// <param name="thing">The revised <see cref="CDP4Common.DTO.Thing"/></param>
         /// <param name="actor">The identifier of the person who made this revision</param>
         public void WriteRevision(NpgsqlTransaction transaction, string partition, Thing thing, Guid actor)
         {
@@ -192,6 +195,57 @@ namespace CDP4Orm.Dao.Revision
             command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
 
             command.ExecuteNonQuery();
+        }
+
+        /// <summary>
+        /// Save revisions for a collection of <see cref="Thing"/>s
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
+        /// <param name="things">The revised <see cref="Thing"/></param>
+        /// <param name="actor">The identifier of the person who made this revision</param>
+        public void BulkWriteRevision(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things, Guid actor)
+        {
+            this.Logger.LogDebug("WriteRevision for {thing} Thing(s) to {partition} by {actor}", things.Count, partition, actor);
+
+             var thingsGroupedByClasskind = things.GroupBy(x => x.ClassKind).ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var groupedThings in thingsGroupedByClasskind)
+            {
+                var table = GetThingRevisionTableName(groupedThings.Key);
+                var sqlQueryBuilder = new StringBuilder();
+
+                sqlQueryBuilder.Append($"INSERT INTO \"{partition}\".\"{table}\" (\"{IidKey}\", \"{RevisionColumnName}\", \"{InstantColumn}\", \"{ActorColumn}\", \"{JsonColumnName}\") VALUES ");
+
+                var parameters = new List<NpgsqlParameter>();
+
+                var index = 0;
+
+                foreach (var thing in groupedThings.Value)
+                {
+                    var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
+                    var revisionParam = new NpgsqlParameter($"revisionnumber_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
+                    var actorParam = new NpgsqlParameter($"actor_{index}", NpgsqlDbType.Uuid) { Value = actor };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonObject().ToString(Formatting.None) };
+
+                    parameters.Add(iidParam);
+                    parameters.Add(revisionParam);
+                    parameters.Add(actorParam);
+                    parameters.Add(jsonbParam);
+
+                    sqlQueryBuilder.Append($"(@iid_{index}, @revisionnumber_{index}, \"SiteDirectory\".get_transaction_time(), @actor_{index}, @jsonb_{index})");
+                    sqlQueryBuilder.Append(thing != groupedThings.Value[^1] ? ',' : ';');
+                    index++;
+                }
+
+                var sqlQuery = sqlQueryBuilder.ToString();
+                this.Logger.LogDebug("Running insert command for Revision : {sqlQuery}", sqlQuery);
+
+                using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+
+                command.Parameters.AddRange(parameters.ToArray());
+                command.ExecuteNonQuery();
+            }
         }
 
         /// <summary>
@@ -589,7 +643,17 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>The name of the revision table</returns>
         private static string GetThingRevisionTableName(Thing thing)
         {
-            return thing.ClassKind + RevisionTableSuffix;
+            return GetThingRevisionTableName(thing.ClassKind);
+        }
+
+        /// <summary>
+        /// Gets the revision table name for a <see cref="ClassKind"/>
+        /// </summary>
+        /// <param name="classKind">The <see cref="ClassKind"/></param>
+        /// <returns>The name of the revision table</returns>
+        private static string GetThingRevisionTableName(ClassKind classKind)
+        {
+            return $"{classKind}{RevisionTableSuffix}";
         }
 
         /// <summary>

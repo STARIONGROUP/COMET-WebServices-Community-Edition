@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Collections.Generic;
+
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao.Revision;
@@ -49,6 +51,17 @@ namespace CometServer.Services
         public void WriteToCache(NpgsqlTransaction transaction, string partition, Thing thing)
         {
             this.CacheDao.Write(transaction, partition, thing);
+        }
+
+        /// <summary>
+        /// Save a collection of <see cref="Thing"/>s to cache tables
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
+        /// <param name="things">The collection of revised <see cref="Thing"/>s</param>
+        public void BulkWriteToCache(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
+        {
+            this.CacheDao.BulkWrite(transaction, partition, things);
         }
     }
 }

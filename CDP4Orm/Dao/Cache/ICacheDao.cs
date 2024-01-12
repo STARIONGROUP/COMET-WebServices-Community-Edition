@@ -24,6 +24,8 @@
 
 namespace CDP4Orm.Dao.Revision
 {
+    using System.Collections.Generic;
+
     using CDP4Common.DTO;
 
     using Npgsql;
@@ -40,5 +42,13 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="thing">The revised <see cref="Thing"/></param>
         void Write(NpgsqlTransaction transaction, string partition, Thing thing);
+
+        /// <summary>
+        /// Save a collection of <see cref="Thing"/> to cache tables
+        /// </summary>
+        /// <param name="transaction">The current transaction</param>
+        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
+        /// <param name="things">The collection of revised <see cref="Thing"/>s</param>
+        void BulkWrite(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things);
     }
 }
