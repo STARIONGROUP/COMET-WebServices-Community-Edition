@@ -116,7 +116,7 @@ namespace CDP4Orm.Dao
             var sqlBuilder = new StringBuilder();
 
             sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition, instant)}");
-            sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) WHERE \"Iid\"::text = :engineeringModelSetupId)");
+            sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) EngineeringModelSetup WHERE \"Iid\"::text = :engineeringModelSetupId)");
 
             command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();
 

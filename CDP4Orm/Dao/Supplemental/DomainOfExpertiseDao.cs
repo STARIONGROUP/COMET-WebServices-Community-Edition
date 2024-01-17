@@ -79,7 +79,7 @@ namespace CDP4Orm.Dao
 
             if (!personId.Equals(Guid.Empty) && !engineeringModelSetupId.Equals(Guid.Empty))
             {
-                sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM ({this.ParticipantDao.BuildReadQuery(partition, instant)}) WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) WHERE \"Iid\" = :engineeringModelSetupId ))");
+                sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM ({this.ParticipantDao.BuildReadQuery(partition, instant)}) Participant WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) EngineeringModelSetup WHERE \"Iid\" = :engineeringModelSetupId ))");
                 command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
                 command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Uuid).Value = engineeringModelSetupId;
             }

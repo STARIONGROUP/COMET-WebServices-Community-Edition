@@ -422,7 +422,7 @@ namespace CometServer.Helpers
             sqlBuilder.Append(" (SELECT \"ValidFrom\", \"ValidTo\"");
             sqlBuilder.Append($"  FROM (SELECT iteration_log.\"IterationIid\", revision_from.\"Revision\" AS \"FromRevision\", revision_from.\"Instant\" AS \"ValidFrom\", revision_to.\"Revision\" AS \"ToRevision\",");
             sqlBuilder.Append(" CASE WHEN iteration_log.\"ToRevision\" IS NULL THEN 'infinity' ELSE revision_to.\"Instant\" END AS \"ValidTo\" ");
-            sqlBuilder.AppendFormat("FROM \"{0}\".\"IterationRevisionLog\" iteration_log LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_from ON iteration_log.\"FromRevision\" = revision_from.\"Revision\" LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_to ON iteration_log.\"ToRevision\" = revision_to.\"Revision\")", partition);
+            sqlBuilder.AppendFormat("FROM \"{0}\".\"IterationRevisionLog\" iteration_log LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_from ON iteration_log.\"FromRevision\" = revision_from.\"Revision\" LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_to ON iteration_log.\"ToRevision\" = revision_to.\"Revision\") IterationLogRevision", partition);
             sqlBuilder.Append("  WHERE \"IterationIid\" = :iterationIid);");
 
             using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);

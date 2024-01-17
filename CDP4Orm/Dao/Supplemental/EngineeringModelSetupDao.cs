@@ -86,7 +86,7 @@ namespace CDP4Orm.Dao
 
             if (!personId.Equals(Guid.Empty))
             {
-                sqlBuilder.Append($" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM ({this.ParticipantDao.BuildReadQuery(partition, instant)}) WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')");
+                sqlBuilder.Append($" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM ({this.ParticipantDao.BuildReadQuery(partition, instant)}) Participant WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')");
                 command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
             }
 
