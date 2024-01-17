@@ -19,7 +19,7 @@ ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_vacuum_threshold 
 ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_analyze_scale_factor = 0.0);
 
 ALTER TABLE "SiteDirectory"."RevisionRegistry" SET (autovacuum_analyze_threshold = 2500);  
-
+    
 CREATE OR REPLACE FUNCTION "SiteDirectory".get_current_revision() RETURNS INTEGER 
   LANGUAGE plpgsql
   AS $$

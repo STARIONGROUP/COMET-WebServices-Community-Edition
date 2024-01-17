@@ -332,6 +332,8 @@ namespace CometServer.Services.Operations
         /// <param name="transaction">The transaction</param>
         private void DisableUserTrigger(NpgsqlTransaction transaction)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
@@ -342,6 +344,8 @@ namespace CometServer.Services.Operations
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, false);
 
             this.IsUserTriggerDisable = true;
+            stopwatch.Stop();
+            this.Logger.LogDebug("Triggers disabling took {time}[ms]", stopwatch.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -355,6 +359,7 @@ namespace CometServer.Services.Operations
                 return;
             }
 
+            var stopwatch = Stopwatch.StartNew();
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
@@ -363,6 +368,8 @@ namespace CometServer.Services.Operations
 
             this.Logger.LogDebug("enable triggers for Iteration {iterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, true);
+            stopwatch.Stop();
+            this.Logger.LogDebug("Triggers enabling took {time}[ms]", stopwatch.ElapsedMilliseconds);
         }
     }
 }

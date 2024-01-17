@@ -28,6 +28,8 @@ namespace CDP4Orm.Dao.Resolve
     using System.Collections.Generic;
     using System.Linq;
 
+    using CDP4Orm.Helper;
+
     using Npgsql;
 
     using NpgsqlTypes;
@@ -63,6 +65,11 @@ namespace CDP4Orm.Dao.Resolve
         private const string SameAsConnectedPartitionKey = "SameAsConnectedPartition";
 
         /// <summary>
+        /// Gets or sets the injected <see cref="IDaoResolver" />
+        /// </summary>
+        public IDaoResolver DaoResolver { get; set; }
+
+        /// <summary>
         /// Read the data from the database.
         /// </summary>
         /// <param name="transaction">
@@ -85,10 +92,10 @@ namespace CDP4Orm.Dao.Resolve
             if (partition == Utils.SiteDirectoryPartition)
             {
                 // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-                return ReadInternalFromSiteDirectory(transaction, partition, typeName, ids).ToList();
+                return this.ReadInternalFromSiteDirectory(transaction, partition, typeName, ids).ToList();
             }
 
-            return ReadInternalFromEngineeringModel(transaction, partition, typeName, ids).ToList();
+            return this.ReadInternalFromEngineeringModel(transaction, partition, typeName, ids).ToList();
         }
 
         /// <summary>
@@ -109,19 +116,20 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private static IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
             var connectedPartition = partition;
+            var dao = this.DaoResolver.QueryDaoByTypeName(typeName);
 
             sqlBuilder.Append(
                 "SELECT \"{1}\".\"{2}\" AS \"{3}\",").Append(
-                " \"AllThings\".\"ValueTypeSet\"->'ClassKind' AS \"{4}\",").Append(
+                " \"AllThings\".\"ValueTypeDictionary\"->'ClassKind' AS \"{4}\",").Append(
                 " \"AllThings\".\"{2}\",").Append(
                 " \"{1}\".\"{5}\"").Append(
-                " FROM \"{0}\".\"{1}_View\" \"{1}\"").Append(
-                " JOIN \"{0}\".\"Thing_View\" AS \"AllThings\"").Append(
+                " FROM ({6}) \"{1}\"").Append(
+                " JOIN \"{0}\".\"Thing\" AS \"AllThings\"").Append(
                 " ON(\"{1}\".\"{2}\" = ANY(:ids) AND \"{1}\".\"Container\" = \"AllThings\".\"{2}\");");
 
             var sql = string.Format(
@@ -131,7 +139,8 @@ namespace CDP4Orm.Dao.Resolve
                 /*{2}*/ IidKey,
                 /*{3}*/ ContainedIidKey,
                 /*{4}*/ TypeInfoKey,
-                /*{5}*/ SequenceKey);
+                /*{5}*/ SequenceKey,
+                /*{6}*/ dao.BuildReadQuery(partition, null));
 
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
@@ -194,7 +203,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private static IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -207,18 +216,20 @@ namespace CDP4Orm.Dao.Resolve
                 otherPartition = partition.Replace(Utils.IterationSubPartition, Utils.EngineeringModelPartition);
             }
 
+            var dao = this.DaoResolver.QueryDaoByTypeName(typeName);
+            
             sqlBuilder.Append(
                 "SELECT \"{2}\".\"{3}\" AS \"{4}\",").Append(
                 " \"AllThings\".\"{5}\",").Append(
                 " \"AllThings\".\"{3}\",").Append(
                 "  \"{2}\".\"{6}\",").Append(
                 " \"AllThings\".\"{7}\"").Append(
-                " FROM \"{0}\".\"{2}_View\" \"{2}\"").Append(
-                " JOIN (SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{5}\", 'true'::boolean AS \"{7}\"").Append(
-                "       FROM \"{0}\".\"Thing_View\"").Append(
+                " FROM ({8}) \"{2}\"").Append(
+                " JOIN (SELECT \"{3}\", \"ValueTypeDictionary\"->'ClassKind' AS \"{5}\", 'true'::boolean AS \"{7}\"").Append(
+                "       FROM \"{0}\".\"Thing\"").Append(
                 "       UNION ALL").Append(
-                "       SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{5}\", 'false'::boolean AS \"{7}\"").Append(
-                "       FROM \"{1}\".\"Thing_View\") AS \"AllThings\"").Append(
+                "       SELECT \"{3}\", \"ValueTypeDictionary\"->'ClassKind' AS \"{5}\", 'false'::boolean AS \"{7}\"").Append(
+                "       FROM \"{1}\".\"Thing\") AS \"AllThings\"").Append(
                 " ON(\"{2}\".\"{3}\" = ANY(:ids) AND \"{2}\".\"Container\" = \"AllThings\".\"{3}\");");
 
             var sql = string.Format(
@@ -230,7 +241,8 @@ namespace CDP4Orm.Dao.Resolve
                 /*{4}*/ ContainedIidKey,
                 /*{5}*/ TypeInfoKey,
                 /*{6}*/ SequenceKey,
-                /*{7}*/ SameAsConnectedPartitionKey);
+                /*{7}*/ SameAsConnectedPartitionKey,
+                /*{8}*/ dao.BuildReadQuery(partition, null));
 
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {

@@ -494,11 +494,10 @@ namespace CometServer.Modules
                 using (var siteDirCommand = new NpgsqlCommand())
                 {
                     this.logger.LogInformation("Start Site Directory structure");
-                    siteDirCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.SiteDirectoryDefinition.sql");
-
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
-                    siteDirCommand.ExecuteNonQuery();
+
+                    ExecuteSiteDirectorySchemaScripts(siteDirCommand);
                 }
 
                 // apply migration on new SiteDirectory partition
@@ -736,11 +735,10 @@ namespace CometServer.Modules
                 using (var siteDirCommand = new NpgsqlCommand())
                 {
                     this.logger.LogInformation("Start Site Directory structure");
-                    siteDirCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.SiteDirectoryDefinition.sql");
-
                     siteDirCommand.Connection = transaction.Connection;
                     siteDirCommand.Transaction = transaction;
-                    siteDirCommand.ExecuteNonQuery();
+
+                    ExecuteSiteDirectorySchemaScripts(siteDirCommand);
                 }
 
                 // apply migration on new SiteDirectory partition
@@ -949,6 +947,22 @@ namespace CometServer.Modules
                     connection.Dispose();
                 }
             }
+        }
+
+        /// <summary>
+        /// Executes all SQL scripts to create SiteDirectory schema
+        /// </summary>
+        /// <param name="sqlCommand">The <see cref="NpgsqlCommand"/></param>
+        private static void ExecuteSiteDirectorySchemaScripts(NpgsqlCommand sqlCommand)
+        {
+            sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.01_SiteDirectory_setup.sql");
+            sqlCommand.ExecuteNonQuery();
+
+            sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.02_SiteDirectory_structure.sql");
+            sqlCommand.ExecuteNonQuery();
+
+            sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.03_SiteDirectory_triggers.sql");
+            sqlCommand.ExecuteNonQuery();
         }
 
         /// <summary>

@@ -444,6 +444,10 @@ namespace CDP4Orm.Dao
             sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
             sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
 
+            sqlBuilder.Append(" \"ParameterType\".\"Container\",");
+
+            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
+
             sqlBuilder.Append(" \"Actor\",");
             sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
             sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");

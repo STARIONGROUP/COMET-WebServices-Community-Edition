@@ -418,11 +418,12 @@ namespace CometServer.Helpers
             }
             
             var sqlBuilder = new StringBuilder();
-            sqlBuilder.AppendFormat(
-                "UPDATE {0} SET ({1}, {2}) =", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn).Append(
-                " (SELECT \"ValidFrom\", \"ValidTo\"").AppendFormat(
-                "  FROM \"{0}\".\"IterationRevisionLog_View\"", partition).Append(
-                "  WHERE \"IterationIid\" = :iterationIid);");
+            sqlBuilder.AppendFormat("UPDATE {0} SET ({1}, {2}) =", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn);
+            sqlBuilder.Append(" (SELECT \"ValidFrom\", \"ValidTo\"");
+            sqlBuilder.Append($"  FROM (SELECT iteration_log.\"IterationIid\", revision_from.\"Revision\" AS \"FromRevision\", revision_from.\"Instant\" AS \"ValidFrom\", revision_to.\"Revision\" AS \"ToRevision\",");
+            sqlBuilder.Append(" CASE WHEN iteration_log.\"ToRevision\" IS NULL THEN 'infinity' ELSE revision_to.\"Instant\" END AS \"ValidTo\" ");
+            sqlBuilder.AppendFormat("FROM \"{0}\".\"IterationRevisionLog\" iteration_log LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_from ON iteration_log.\"FromRevision\" = revision_from.\"Revision\" LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_to ON iteration_log.\"ToRevision\" = revision_to.\"Revision\")", partition);
+            sqlBuilder.Append("  WHERE \"IterationIid\" = :iterationIid);");
 
             using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
