@@ -2,15 +2,10 @@
 CREATE TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" (
   "ElementDefinition" uuid NOT NULL,
   "OrganizationalParticipant" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "ElementDefinition_OrganizationalParticipant_PK" PRIMARY KEY("ElementDefinition", "OrganizationalParticipant"),
   CONSTRAINT "ElementDefinition_OrganizationalParticipant_FK_Source" FOREIGN KEY ("ElementDefinition") REFERENCES "SchemaName_Replace"."ElementDefinition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
   CONSTRAINT "ElementDefinition_OrganizationalParticipant_FK_Target" FOREIGN KEY ("OrganizationalParticipant") REFERENCES "SiteDirectory"."OrganizationalParticipant" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
 );
-
-CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipant_ValidFrom" ON "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" ("ValidFrom");
-CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipant_ValidTo" ON "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" ("ValidTo");
 
 ALTER TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -19,6 +14,12 @@ ALTER TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" S
 ALTER TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_analyze_scale_factor = 0.0);
 
 ALTER TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_analyze_threshold = 2500);  
+
+ALTER TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipant_ValidFrom" ON "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" ("ValidFrom");
+CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipant_ValidTo" ON "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant" ("ValidTo");
 
 CREATE TABLE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant_Audit" (LIKE "SchemaName_Replace"."ElementDefinition_OrganizationalParticipant");
 

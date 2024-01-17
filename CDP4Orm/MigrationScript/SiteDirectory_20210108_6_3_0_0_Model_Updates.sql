@@ -2,12 +2,8 @@
 CREATE TABLE "SiteDirectory"."SampledFunctionParameterType" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "SampledFunctionParameterType_PK" PRIMARY KEY ("Iid")
 );
-CREATE INDEX "Idx_SampledFunctionParameterType_ValidFrom" ON "SiteDirectory"."SampledFunctionParameterType" ("ValidFrom");
-CREATE INDEX "Idx_SampledFunctionParameterType_ValidTo" ON "SiteDirectory"."SampledFunctionParameterType" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."SampledFunctionParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -53,12 +49,8 @@ ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Cache" SET (autovacuum
 CREATE TABLE "SiteDirectory"."IndependentParameterTypeAssignment" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "IndependentParameterTypeAssignment_PK" PRIMARY KEY ("Iid")
 );
-CREATE INDEX "Idx_IndependentParameterTypeAssignment_ValidFrom" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("ValidFrom");
-CREATE INDEX "Idx_IndependentParameterTypeAssignment_ValidTo" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -104,12 +96,8 @@ ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Cache" SET (auto
 CREATE TABLE "SiteDirectory"."DependentParameterTypeAssignment" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "DependentParameterTypeAssignment_PK" PRIMARY KEY ("Iid")
 );
-CREATE INDEX "Idx_DependentParameterTypeAssignment_ValidFrom" ON "SiteDirectory"."DependentParameterTypeAssignment" ("ValidFrom");
-CREATE INDEX "Idx_DependentParameterTypeAssignment_ValidTo" ON "SiteDirectory"."DependentParameterTypeAssignment" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -156,12 +144,8 @@ ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Cache" SET (autova
 CREATE TABLE "SiteDirectory"."OrganizationalParticipant" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "OrganizationalParticipant_PK" PRIMARY KEY ("Iid")
 );
-CREATE INDEX "Idx_OrganizationalParticipant_ValidFrom" ON "SiteDirectory"."OrganizationalParticipant" ("ValidFrom");
-CREATE INDEX "Idx_OrganizationalParticipant_ValidTo" ON "SiteDirectory"."OrganizationalParticipant" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."OrganizationalParticipant" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -208,12 +192,8 @@ ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Cache" SET (autovacuum_an
 CREATE TABLE "SiteDirectory"."LogEntryChangelogItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "LogEntryChangelogItem_PK" PRIMARY KEY ("Iid")
 );
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -337,13 +317,9 @@ ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD CONSTRAINT "Organiza
 CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" (
   "SiteLogEntry" uuid NOT NULL,
   "AffectedDomainIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "SiteLogEntry_AffectedDomainIid_PK" PRIMARY KEY("SiteLogEntry","AffectedDomainIid"),
   CONSTRAINT "SiteLogEntry_AffectedDomainIid_FK_Source" FOREIGN KEY ("SiteLogEntry") REFERENCES "SiteDirectory"."SiteLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
-CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIid_ValidFrom" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid" ("ValidFrom");
-CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIid_ValidTo" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -352,6 +328,11 @@ ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_vac
 ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_analyze_scale_factor = 0.0);
 
 ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_analyze_threshold = 2500);  
+ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIid_ValidFrom" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid" ("ValidFrom");
+CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIid_ValidTo" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" (LIKE "SiteDirectory"."SiteLogEntry_AffectedDomainIid");
 
@@ -399,13 +380,9 @@ ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" ADD CONSTRAINT "LogEntryChan
 CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" (
   "LogEntryChangelogItem" uuid NOT NULL,
   "AffectedReferenceIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_PK" PRIMARY KEY("LogEntryChangelogItem","AffectedReferenceIid"),
   CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_FK_Source" FOREIGN KEY ("LogEntryChangelogItem") REFERENCES "SiteDirectory"."LogEntryChangelogItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidTo");
 
 ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -414,6 +391,11 @@ ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (au
 ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_scale_factor = 0.0);
 
 ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_threshold = 2500);  
+ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidFrom");
+CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" (LIKE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid");
 
@@ -446,6 +428,12 @@ CREATE TRIGGER logentrychangelogitem_affectedreferenceiid_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('LogEntryChangelogItem', 'SiteDirectory');
 
+ALTER TABLE "SiteDirectory"."SampledFunctionParameterType"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_SampledFunctionParameterType_ValidFrom" ON "SiteDirectory"."SampledFunctionParameterType" ("ValidFrom");
+CREATE INDEX "Idx_SampledFunctionParameterType_ValidTo" ON "SiteDirectory"."SampledFunctionParameterType" ("ValidTo");
+
 CREATE TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" (LIKE "SiteDirectory"."SampledFunctionParameterType");
 
 ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
@@ -471,8 +459,11 @@ CREATE TRIGGER SampledFunctionParameterType_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."SampledFunctionParameterType"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
-
+ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_IndependentParameterTypeAssignment_ValidFrom" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("ValidFrom");
+CREATE INDEX "Idx_IndependentParameterTypeAssignment_ValidTo" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" (LIKE "SiteDirectory"."IndependentParameterTypeAssignment");
 
@@ -499,6 +490,11 @@ CREATE TRIGGER IndependentParameterTypeAssignment_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."IndependentParameterTypeAssignment"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_DependentParameterTypeAssignment_ValidFrom" ON "SiteDirectory"."DependentParameterTypeAssignment" ("ValidFrom");
+CREATE INDEX "Idx_DependentParameterTypeAssignment_ValidTo" ON "SiteDirectory"."DependentParameterTypeAssignment" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" (LIKE "SiteDirectory"."DependentParameterTypeAssignment");
 
@@ -526,6 +522,12 @@ CREATE TRIGGER DependentParameterTypeAssignment_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
+ALTER TABLE "SiteDirectory"."OrganizationalParticipant"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_OrganizationalParticipant_ValidFrom" ON "SiteDirectory"."OrganizationalParticipant" ("ValidFrom");
+CREATE INDEX "Idx_OrganizationalParticipant_ValidTo" ON "SiteDirectory"."OrganizationalParticipant" ("ValidTo");
+
 CREATE TABLE "SiteDirectory"."OrganizationalParticipant_Audit" (LIKE "SiteDirectory"."OrganizationalParticipant");
 
 ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
@@ -551,6 +553,12 @@ CREATE TRIGGER OrganizationalParticipant_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."OrganizationalParticipant"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
+ALTER TABLE "SiteDirectory"."LogEntryChangelogItem"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_LogEntryChangelogItem_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem" ("ValidFrom");
+CREATE INDEX "Idx_LogEntryChangelogItem_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem" ("ValidTo");
 
 CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" (LIKE "SiteDirectory"."LogEntryChangelogItem");
 

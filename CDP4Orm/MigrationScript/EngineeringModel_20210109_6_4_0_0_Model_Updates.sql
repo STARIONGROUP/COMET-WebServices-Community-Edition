@@ -2,13 +2,8 @@
 CREATE TABLE "SchemaName_Replace"."LogEntryChangelogItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "LogEntryChangelogItem_PK" PRIMARY KEY ("Iid")
 );
-
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidFrom" ON "SchemaName_Replace"."LogEntryChangelogItem" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidTo" ON "SchemaName_Replace"."LogEntryChangelogItem" ("ValidTo");
 
 ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -55,14 +50,9 @@ ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem_Cache" SET (autovacuum_a
 CREATE TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" (
   "ModelLogEntry" uuid NOT NULL,
   "AffectedDomainIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "ModelLogEntry_AffectedDomainIid_PK" PRIMARY KEY("ModelLogEntry","AffectedDomainIid"),
   CONSTRAINT "ModelLogEntry_AffectedDomainIid_FK_Source" FOREIGN KEY ("ModelLogEntry") REFERENCES "SchemaName_Replace"."ModelLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
-
-CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIid_ValidFrom" ON "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" ("ValidFrom");
-CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIid_ValidTo" ON "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" ("ValidTo");
 
 ALTER TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -71,6 +61,11 @@ ALTER TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" SET (autovacu
 ALTER TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_analyze_scale_factor = 0.0);
 
 ALTER TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_analyze_threshold = 2500);  
+ALTER TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIid_ValidFrom" ON "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" ("ValidFrom");
+CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIid_ValidTo" ON "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" ("ValidTo");
 
 CREATE TABLE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid_Audit" (LIKE "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid");
 
@@ -118,13 +113,9 @@ ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem" ADD CONSTRAINT "LogEntr
 CREATE TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" (
   "LogEntryChangelogItem" uuid NOT NULL,
   "AffectedReferenceIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
   CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_PK" PRIMARY KEY("LogEntryChangelogItem","AffectedReferenceIid"),
   CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_FK_Source" FOREIGN KEY ("LogEntryChangelogItem") REFERENCES "SchemaName_Replace"."LogEntryChangelogItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
 );
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidFrom" ON "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidTo" ON "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidTo");
 
 ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_vacuum_scale_factor = 0.0);
 
@@ -133,6 +124,11 @@ ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" SE
 ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_scale_factor = 0.0);
 
 ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_threshold = 2500);  
+ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidFrom" ON "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidFrom");
+CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidTo" ON "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidTo");
 
 CREATE TABLE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid_Audit" (LIKE "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid");
 
@@ -164,6 +160,12 @@ CREATE TRIGGER logentrychangelogitem_affectedreferenceiid_apply_revision
   ON "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid"
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('LogEntryChangelogItem', 'SchemaName_Replace');
+
+ALTER TABLE "SchemaName_Replace"."LogEntryChangelogItem"
+  ADD COLUMN "ValidFrom" timestamp DEFAULT "SiteDirectory".get_transaction_time() NOT NULL,
+  ADD COLUMN "ValidTo" timestamp DEFAULT 'infinity' NOT NULL;
+CREATE INDEX "Idx_LogEntryChangelogItem_ValidFrom" ON "SchemaName_Replace"."LogEntryChangelogItem" ("ValidFrom");
+CREATE INDEX "Idx_LogEntryChangelogItem_ValidTo" ON "SchemaName_Replace"."LogEntryChangelogItem" ("ValidTo");
 
 CREATE TABLE "SchemaName_Replace"."LogEntryChangelogItem_Audit" (LIKE "SchemaName_Replace"."LogEntryChangelogItem");
 
