@@ -85,12 +85,11 @@ namespace CDP4Orm.Dao.Resolve
             var sqlBuilder = new System.Text.StringBuilder();
 
             // get all Thing 'concepts' that are newer then passed in revision
-            sqlBuilder.Append(
-                "SELECT \"ValueTypeDictionary\"-> 'ClassKind' as \"TypeInfo\", \"Iid\"").Append(
-                " FROM \"{0}\".\"Thing\"").Append(
-                " WHERE \"Iid\" = ANY(:ids);");
+            sqlBuilder.Append("SELECT \"ValueTypeDictionary\"-> 'ClassKind' as \"TypeInfo\", \"Iid\"");
+            sqlBuilder.Append($" FROM \"{partition}\".\"Thing\"");
+            sqlBuilder.Append("  WHERE \"Iid\" = ANY(:ids);");
 
-            var sql = string.Format(sqlBuilder.ToString(), partition);
+            var sql = sqlBuilder.ToString();
 
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
