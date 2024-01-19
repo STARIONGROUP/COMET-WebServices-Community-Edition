@@ -93,8 +93,7 @@
     <Message Importance="High" Condition="$(IsVersionFileCreatorCompiled)" Text="------ VersionFileCreator tool is present ------ " />
 
     <!-- Compile tool if not already -->
-    <Exec Condition="!$(IsVersionFileCreatorCompiled)" Command="dotnet build ../VersionFileCreator/VersionFileCreator.csproj" YieldDuringToolExecution="True" ConsoleToMSBuild="False" EchoOff="True" />
-
+    <Exec Condition="!$(IsVersionFileCreatorCompiled)" Command="dotnet build ../VersionFileCreator/VersionFileCreator.csproj -c $(Configuration)" YieldDuringToolExecution="True" ConsoleToMSBuild="False" EchoOff="True" />
     <ConvertToAbsolutePath Paths="$(VersionFileCreatorDll)">
       <Output TaskParameter="AbsolutePaths" PropertyName="VersionFileCreatorDllPath" />
     </ConvertToAbsolutePath>
