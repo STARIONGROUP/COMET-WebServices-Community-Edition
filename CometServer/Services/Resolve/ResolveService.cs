@@ -349,6 +349,7 @@ namespace CometServer.Services
                     if (staticTypeInfo == "SiteDirectory")
                     {
                         result.Add(staticTypeInfo);
+                        continue;
                     }
 
                     if (staticTypeInfo != null)
