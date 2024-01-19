@@ -71,9 +71,34 @@ namespace CDP4Orm.Helper
         public IApprovalDao Approval { get; set; } 
 
         /// <summary>
+        /// Gets or sets the injected <see cref="IArchitectureDiagramDao" />
+        /// </summary>
+        public IArchitectureDiagramDao ArchitectureDiagram { get; set; } 
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IArchitectureElementDao" />
+        /// </summary>
+        public IArchitectureElementDao ArchitectureElement { get; set; } 
+
+        /// <summary>
         /// Gets or sets the injected <see cref="IArrayParameterTypeDao" />
         /// </summary>
         public IArrayParameterTypeDao ArrayParameterType { get; set; } 
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IAttachmentDao" />
+        /// </summary>
+        public IAttachmentDao Attachment { get; set; } 
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IBehaviorDao" />
+        /// </summary>
+        public IBehaviorDao Behavior { get; set; } 
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IBehavioralParameterDao" />
+        /// </summary>
+        public IBehavioralParameterDao BehavioralParameter { get; set; } 
 
         /// <summary>
         /// Gets or sets the injected <see cref="IBinaryNoteDao" />
@@ -206,9 +231,19 @@ namespace CDP4Orm.Helper
         public IDiagramEdgeDao DiagramEdge { get; set; } 
 
         /// <summary>
+        /// Gets or sets the injected <see cref="IDiagramFrameDao" />
+        /// </summary>
+        public IDiagramFrameDao DiagramFrame { get; set; } 
+
+        /// <summary>
         /// Gets or sets the injected <see cref="IDiagramObjectDao" />
         /// </summary>
         public IDiagramObjectDao DiagramObject { get; set; } 
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IDiagramPortDao" />
+        /// </summary>
+        public IDiagramPortDao DiagramPort { get; set; } 
 
         /// <summary>
         /// Gets or sets the injected <see cref="IDomainFileStoreDao" />
@@ -785,7 +820,12 @@ namespace CDP4Orm.Helper
                 "Alias" => this.Alias,
                 "AndExpression" => this.AndExpression,
                 "Approval" => this.Approval,
+                "ArchitectureDiagram" => this.ArchitectureDiagram,
+                "ArchitectureElement" => this.ArchitectureElement,
                 "ArrayParameterType" => this.ArrayParameterType,
+                "Attachment" => this.Attachment,
+                "Behavior" => this.Behavior,
+                "BehavioralParameter" => this.BehavioralParameter,
                 "BinaryNote" => this.BinaryNote,
                 "BinaryRelationship" => this.BinaryRelationship,
                 "BinaryRelationshipRule" => this.BinaryRelationshipRule,
@@ -812,7 +852,9 @@ namespace CDP4Orm.Helper
                 "DerivedUnit" => this.DerivedUnit,
                 "DiagramCanvas" => this.DiagramCanvas,
                 "DiagramEdge" => this.DiagramEdge,
+                "DiagramFrame" => this.DiagramFrame,
                 "DiagramObject" => this.DiagramObject,
+                "DiagramPort" => this.DiagramPort,
                 "DomainFileStore" => this.DomainFileStore,
                 "DomainOfExpertise" => this.DomainOfExpertise,
                 "DomainOfExpertiseGroup" => this.DomainOfExpertiseGroup,

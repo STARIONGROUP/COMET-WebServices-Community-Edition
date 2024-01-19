@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -401,6 +406,7 @@ namespace CometServer.Services
             var stakeHolderValueMapColl = results.Where(i => i.GetType() == typeof(StakeHolderValueMap)).Cast<StakeHolderValueMap>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, stakeHolderValueMapColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, stakeHolderValueMapColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, stakeHolderValueMapColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, stakeHolderValueMapColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.SettingsService.GetDeep(transaction, partition, stakeHolderValueMapColl.SelectMany(x => x.Settings), containerSecurityContext));
@@ -471,6 +477,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, stakeHolderValueMap));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(stakeHolderValueMap.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, stakeHolderValueMap));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(stakeHolderValueMap.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, stakeHolderValueMap));
@@ -512,6 +523,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(stakeHolderValueMap.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, stakeHolderValueMap));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(stakeHolderValueMap.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, stakeHolderValueMap));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(stakeHolderValueMap.Definition))

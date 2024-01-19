@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -396,6 +401,7 @@ namespace CometServer.Services
             var booleanParameterTypeColl = results.Where(i => i.GetType() == typeof(BooleanParameterType)).Cast<BooleanParameterType>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, booleanParameterTypeColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, booleanParameterTypeColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, booleanParameterTypeColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, booleanParameterTypeColl.SelectMany(x => x.HyperLink), containerSecurityContext));
 
@@ -465,6 +471,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, booleanParameterType));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(booleanParameterType.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, booleanParameterType));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(booleanParameterType.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, booleanParameterType));
@@ -501,6 +512,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(booleanParameterType.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, booleanParameterType));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(booleanParameterType.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, booleanParameterType));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(booleanParameterType.Definition))

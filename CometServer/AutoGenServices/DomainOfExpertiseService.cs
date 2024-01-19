@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -396,6 +401,7 @@ namespace CometServer.Services
             var domainOfExpertiseColl = results.Where(i => i.GetType() == typeof(DomainOfExpertise)).Cast<DomainOfExpertise>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, domainOfExpertiseColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, domainOfExpertiseColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, domainOfExpertiseColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, domainOfExpertiseColl.SelectMany(x => x.HyperLink), containerSecurityContext));
 
@@ -465,6 +471,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, domainOfExpertise));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(domainOfExpertise.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, domainOfExpertise));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(domainOfExpertise.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, domainOfExpertise));
@@ -501,6 +512,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(domainOfExpertise.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, domainOfExpertise));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(domainOfExpertise.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, domainOfExpertise));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(domainOfExpertise.Definition))

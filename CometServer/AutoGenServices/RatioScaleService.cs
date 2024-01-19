@@ -56,6 +56,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -430,6 +435,7 @@ namespace CometServer.Services
             var ratioScaleColl = results.Where(i => i.GetType() == typeof(RatioScale)).Cast<RatioScale>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, ratioScaleColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, ratioScaleColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, ratioScaleColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, ratioScaleColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.MappingToReferenceScaleService.GetDeep(transaction, partition, ratioScaleColl.SelectMany(x => x.MappingToReferenceScale), containerSecurityContext));
@@ -501,6 +507,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, ratioScale));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(ratioScale.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, ratioScale));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(ratioScale.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, ratioScale));
@@ -547,6 +558,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(ratioScale.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, ratioScale));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(ratioScale.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, ratioScale));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(ratioScale.Definition))

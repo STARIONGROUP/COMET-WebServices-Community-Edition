@@ -46,6 +46,11 @@ namespace CometServer.Services
     public sealed partial class DiagramCanvasService : ServiceBase, IDiagramCanvasService
     {
         /// <summary>
+        /// Gets or sets the <see cref="IArchitectureDiagramService"/>.
+        /// </summary>
+        public IArchitectureDiagramService ArchitectureDiagramService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IBoundsService"/>.
         /// </summary>
         public IBoundsService BoundsService { get; set; }
@@ -263,6 +268,10 @@ namespace CometServer.Services
             }
 
             var diagramCanvas = thing as DiagramCanvas;
+            if (diagramCanvas.IsSameOrDerivedClass<ArchitectureDiagram>())
+            {
+                return this.ArchitectureDiagramService.UpdateConcept(transaction, partition, diagramCanvas, container);
+            }
             return this.DiagramCanvasDao.Update(transaction, partition, diagramCanvas, container);
         }
 
@@ -295,6 +304,11 @@ namespace CometServer.Services
             }
 
             var diagramCanvas = thing as DiagramCanvas;
+            if (diagramCanvas.IsSameOrDerivedClass<ArchitectureDiagram>())
+            {
+                return this.ArchitectureDiagramService.CreateConcept(transaction, partition, diagramCanvas, container);
+            }
+
             var createSuccesful = this.DiagramCanvasDao.Write(transaction, partition, diagramCanvas, container);
             return createSuccesful && this.CreateContainment(transaction, partition, diagramCanvas);
         }
@@ -324,6 +338,11 @@ namespace CometServer.Services
         public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var diagramCanvas = thing as DiagramCanvas;
+            if (diagramCanvas.IsSameOrDerivedClass<ArchitectureDiagram>())
+            {
+                return this.ArchitectureDiagramService.UpsertConcept(transaction, partition, diagramCanvas, container);
+            }
+
             var createSuccesful = this.DiagramCanvasDao.Upsert(transaction, partition, diagramCanvas, container);
             return createSuccesful && this.UpsertContainment(transaction, partition, diagramCanvas);
         }
@@ -357,6 +376,11 @@ namespace CometServer.Services
             }
 
             var diagramCanvasColl = new List<Thing>(this.DiagramCanvasDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
+
+            diagramCanvasColl.AddRange(
+                this.RequestUtils.QueryParameters.ExtentDeep
+                    ? this.ArchitectureDiagramService.GetDeep(transaction, partition, idFilter, authorizedContext)
+                    : this.ArchitectureDiagramService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(diagramCanvasColl, transaction, partition, idFilter);
         }

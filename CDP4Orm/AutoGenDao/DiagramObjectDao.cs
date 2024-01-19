@@ -105,10 +105,11 @@ namespace CDP4Orm.Dao
                 else
                 {
                     sqlBuilder.Append(this.BuildReadQuery(partition, instant));
+                    sqlBuilder.AppendFormat(" WHERE {0} -> 'ClassKind' = 'DiagramObject'", this.GetValueTypeSet());
 
                     if (ids != null && ids.Any())
                     {
-                        sqlBuilder.Append(" WHERE \"Iid\" = ANY(:ids)");
+                        sqlBuilder.Append(" AND \"Iid\" = ANY(:ids)");
                         command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids;
                     }
 

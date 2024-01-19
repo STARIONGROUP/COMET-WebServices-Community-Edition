@@ -81,9 +81,34 @@ namespace CometServer.Services
         public IApprovalService ApprovalService { get; set; }
 
         /// <summary>
+        /// Gets or sets the architectureDiagram service.
+        /// </summary>
+        public IArchitectureDiagramService ArchitectureDiagramService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the architectureElement service.
+        /// </summary>
+        public IArchitectureElementService ArchitectureElementService { get; set; }
+
+        /// <summary>
         /// Gets or sets the arrayParameterType service.
         /// </summary>
         public IArrayParameterTypeService ArrayParameterTypeService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the attachment service.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavior service.
+        /// </summary>
+        public IBehaviorService BehaviorService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the behavioralParameter service.
+        /// </summary>
+        public IBehavioralParameterService BehavioralParameterService { get; set; }
 
         /// <summary>
         /// Gets or sets the binaryNote service.
@@ -246,6 +271,11 @@ namespace CometServer.Services
         public IDiagramElementThingService DiagramElementThingService { get; set; }
 
         /// <summary>
+        /// Gets or sets the diagramFrame service.
+        /// </summary>
+        public IDiagramFrameService DiagramFrameService { get; set; }
+
+        /// <summary>
         /// Gets or sets the diagrammingStyle service.
         /// </summary>
         public IDiagrammingStyleService DiagrammingStyleService { get; set; }
@@ -254,6 +284,11 @@ namespace CometServer.Services
         /// Gets or sets the diagramObject service.
         /// </summary>
         public IDiagramObjectService DiagramObjectService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the diagramPort service.
+        /// </summary>
+        public IDiagramPortService DiagramPortService { get; set; }
 
         /// <summary>
         /// Gets or sets the diagramShape service.
@@ -967,7 +1002,12 @@ namespace CometServer.Services
                             { "Alias", this.AliasService },
                             { "AndExpression", this.AndExpressionService },
                             { "Approval", this.ApprovalService },
+                            { "ArchitectureDiagram", this.ArchitectureDiagramService },
+                            { "ArchitectureElement", this.ArchitectureElementService },
                             { "ArrayParameterType", this.ArrayParameterTypeService },
+                            { "Attachment", this.AttachmentService },
+                            { "Behavior", this.BehaviorService },
+                            { "BehavioralParameter", this.BehavioralParameterService },
                             { "BinaryNote", this.BinaryNoteService },
                             { "BinaryRelationship", this.BinaryRelationshipService },
                             { "BinaryRelationshipRule", this.BinaryRelationshipRuleService },
@@ -1000,8 +1040,10 @@ namespace CometServer.Services
                             { "DiagramEdge", this.DiagramEdgeService },
                             { "DiagramElementContainer", this.DiagramElementContainerService },
                             { "DiagramElementThing", this.DiagramElementThingService },
+                            { "DiagramFrame", this.DiagramFrameService },
                             { "DiagrammingStyle", this.DiagrammingStyleService },
                             { "DiagramObject", this.DiagramObjectService },
+                            { "DiagramPort", this.DiagramPortService },
                             { "DiagramShape", this.DiagramShapeService },
                             { "DiagramThingBase", this.DiagramThingBaseService },
                             { "DiscussionItem", this.DiscussionItemService },
@@ -1165,7 +1207,12 @@ namespace CometServer.Services
                             { "Alias", this.AliasService },
                             { "AndExpression", this.AndExpressionService },
                             { "Approval", this.ApprovalService },
+                            { "ArchitectureDiagram", this.ArchitectureDiagramService },
+                            { "ArchitectureElement", this.ArchitectureElementService },
                             { "ArrayParameterType", this.ArrayParameterTypeService },
+                            { "Attachment", this.AttachmentService },
+                            { "Behavior", this.BehaviorService },
+                            { "BehavioralParameter", this.BehavioralParameterService },
                             { "BinaryNote", this.BinaryNoteService },
                             { "BinaryRelationship", this.BinaryRelationshipService },
                             { "BinaryRelationshipRule", this.BinaryRelationshipRuleService },
@@ -1198,8 +1245,10 @@ namespace CometServer.Services
                             { "DiagramEdge", this.DiagramEdgeService },
                             { "DiagramElementContainer", this.DiagramElementContainerService },
                             { "DiagramElementThing", this.DiagramElementThingService },
+                            { "DiagramFrame", this.DiagramFrameService },
                             { "DiagrammingStyle", this.DiagrammingStyleService },
                             { "DiagramObject", this.DiagramObjectService },
+                            { "DiagramPort", this.DiagramPortService },
                             { "DiagramShape", this.DiagramShapeService },
                             { "DiagramThingBase", this.DiagramThingBaseService },
                             { "DiscussionItem", this.DiscussionItemService },

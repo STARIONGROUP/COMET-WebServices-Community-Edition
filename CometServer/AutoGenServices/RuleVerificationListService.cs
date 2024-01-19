@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -401,6 +406,7 @@ namespace CometServer.Services
             var ruleVerificationListColl = results.Where(i => i.GetType() == typeof(RuleVerificationList)).Cast<RuleVerificationList>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, ruleVerificationListColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, ruleVerificationListColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, ruleVerificationListColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, ruleVerificationListColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.RuleVerificationService.GetDeep(transaction, partition, ruleVerificationListColl.SelectMany(x => x.RuleVerification).ToIdList(), containerSecurityContext));
@@ -471,6 +477,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, ruleVerificationList));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(ruleVerificationList.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, ruleVerificationList));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(ruleVerificationList.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, ruleVerificationList));
@@ -512,6 +523,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(ruleVerificationList.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, ruleVerificationList));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(ruleVerificationList.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, ruleVerificationList));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(ruleVerificationList.Definition))

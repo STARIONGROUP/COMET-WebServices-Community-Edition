@@ -33,6 +33,13 @@ CREATE TRIGGER alias_apply_revision
 
 -- ArrayParameterType - Class Revision Trigger
 
+-- Attachment - Class Revision Trigger
+CREATE TRIGGER attachment_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."Attachment"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
+
 -- BinaryRelationshipRule - Class Revision Trigger
 
 -- BooleanParameterType - Class Revision Trigger
@@ -76,6 +83,13 @@ CREATE TRIGGER constant_apply_revision
 CREATE TRIGGER definition_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
   ON "SiteDirectory"."Definition"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
+
+-- DependentParameterTypeAssignment - Class Revision Trigger
+CREATE TRIGGER dependentparametertypeassignment_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."DependentParameterTypeAssignment"
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
 
@@ -145,6 +159,13 @@ CREATE TRIGGER hyperlink_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
 
+-- IndependentParameterTypeAssignment - Class Revision Trigger
+CREATE TRIGGER independentparametertypeassignment_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."IndependentParameterTypeAssignment"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
+
 -- IntervalScale - Class Revision Trigger
 
 -- IterationSetup - Class Revision Trigger
@@ -157,6 +178,13 @@ CREATE TRIGGER iterationsetup_apply_revision
 -- LinearConversionUnit - Class Revision Trigger
 
 -- LogarithmicScale - Class Revision Trigger
+
+-- LogEntryChangelogItem - Class Revision Trigger
+CREATE TRIGGER logentrychangelogitem_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."LogEntryChangelogItem"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
 
 -- MappingToReferenceScale - Class Revision Trigger
 CREATE TRIGGER mappingtoreferencescale_apply_revision
@@ -201,6 +229,13 @@ CREATE TRIGGER naturallanguage_apply_revision
 CREATE TRIGGER organization_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
   ON "SiteDirectory"."Organization"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
+
+-- OrganizationalParticipant - Class Revision Trigger
+CREATE TRIGGER organizationalparticipant_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."OrganizationalParticipant"
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
 
@@ -292,6 +327,8 @@ CREATE TRIGGER rule_apply_revision
   ON "SiteDirectory"."Rule"
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'SiteDirectory', 'SiteDirectory');
+
+-- SampledFunctionParameterType - Class Revision Trigger
 
 -- ScalarParameterType - Class Revision Trigger
 
@@ -416,6 +453,14 @@ CREATE TRIGGER arrayparametertype_dimension_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('ArrayParameterType', 'SiteDirectory');
 
+-- Attachment - Reference Property Revision Trigger
+-- Attachment.FileType
+CREATE TRIGGER attachment_filetype_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."Attachment_FileType"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('Attachment', 'SiteDirectory');
+
 -- BinaryRelationshipRule - Reference Property Revision Trigger
 
 -- BooleanParameterType - Reference Property Revision Trigger
@@ -480,6 +525,8 @@ CREATE TRIGGER definition_note_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Definition', 'SiteDirectory');
 
+-- DependentParameterTypeAssignment - Reference Property Revision Trigger
+
 -- DerivedQuantityKind - Reference Property Revision Trigger
 
 -- DerivedUnit - Reference Property Revision Trigger
@@ -536,6 +583,8 @@ CREATE TRIGGER glossary_category_apply_revision
 
 -- HyperLink - Reference Property Revision Trigger
 
+-- IndependentParameterTypeAssignment - Reference Property Revision Trigger
+
 -- IntervalScale - Reference Property Revision Trigger
 
 -- IterationSetup - Reference Property Revision Trigger
@@ -543,6 +592,14 @@ CREATE TRIGGER glossary_category_apply_revision
 -- LinearConversionUnit - Reference Property Revision Trigger
 
 -- LogarithmicScale - Reference Property Revision Trigger
+
+-- LogEntryChangelogItem - Reference Property Revision Trigger
+-- LogEntryChangelogItem.AffectedReferenceIid
+CREATE TRIGGER logentrychangelogitem_affectedreferenceiid_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('LogEntryChangelogItem', 'SiteDirectory');
 
 -- MappingToReferenceScale - Reference Property Revision Trigger
 
@@ -565,6 +622,8 @@ CREATE TRIGGER multirelationshiprule_relatedcategory_apply_revision
 -- OrdinalScale - Reference Property Revision Trigger
 
 -- Organization - Reference Property Revision Trigger
+
+-- OrganizationalParticipant - Reference Property Revision Trigger
 
 -- ParameterizedCategoryRule - Reference Property Revision Trigger
 -- ParameterizedCategoryRule.ParameterType
@@ -649,6 +708,8 @@ CREATE TRIGGER referencesource_category_apply_revision
 
 -- Rule - Reference Property Revision Trigger
 
+-- SampledFunctionParameterType - Reference Property Revision Trigger
+
 -- ScalarParameterType - Reference Property Revision Trigger
 
 -- ScaleReferenceQuantityValue - Reference Property Revision Trigger
@@ -668,6 +729,13 @@ CREATE TRIGGER referencesource_category_apply_revision
 -- SiteDirectoryThingReference - Reference Property Revision Trigger
 
 -- SiteLogEntry - Reference Property Revision Trigger
+-- SiteLogEntry.AffectedDomainIid
+CREATE TRIGGER sitelogentry_affecteddomainiid_apply_revision
+  BEFORE INSERT OR UPDATE OR DELETE 
+  ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid"
+  FOR EACH ROW
+  EXECUTE PROCEDURE "SiteDirectory".revision_management('SiteLogEntry', 'SiteDirectory');
+
 -- SiteLogEntry.AffectedItemIid
 CREATE TRIGGER sitelogentry_affecteditemiid_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
@@ -748,6 +816,17 @@ CREATE TRIGGER ArrayParameterType_audit_prepare
 
 CREATE TRIGGER ArrayParameterType_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."ArrayParameterType"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
+-- Attachment - Class Audit Triggers
+CREATE TRIGGER Attachment_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."Attachment"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER Attachment_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."Attachment"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
@@ -894,6 +973,17 @@ CREATE TRIGGER Definition_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
+-- DependentParameterTypeAssignment - Class Audit Triggers
+CREATE TRIGGER DependentParameterTypeAssignment_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."DependentParameterTypeAssignment"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER DependentParameterTypeAssignment_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."DependentParameterTypeAssignment"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
 -- DerivedQuantityKind - Class Audit Triggers
 CREATE TRIGGER DerivedQuantityKind_audit_prepare
   BEFORE UPDATE ON "SiteDirectory"."DerivedQuantityKind"
@@ -1037,6 +1127,17 @@ CREATE TRIGGER HyperLink_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
+-- IndependentParameterTypeAssignment - Class Audit Triggers
+CREATE TRIGGER IndependentParameterTypeAssignment_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."IndependentParameterTypeAssignment"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER IndependentParameterTypeAssignment_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."IndependentParameterTypeAssignment"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
 -- IntervalScale - Class Audit Triggers
 CREATE TRIGGER IntervalScale_audit_prepare
   BEFORE UPDATE ON "SiteDirectory"."IntervalScale"
@@ -1078,6 +1179,17 @@ CREATE TRIGGER LogarithmicScale_audit_prepare
 
 CREATE TRIGGER LogarithmicScale_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."LogarithmicScale"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
+-- LogEntryChangelogItem - Class Audit Triggers
+CREATE TRIGGER LogEntryChangelogItem_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."LogEntryChangelogItem"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER LogEntryChangelogItem_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."LogEntryChangelogItem"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
@@ -1166,6 +1278,17 @@ CREATE TRIGGER Organization_audit_prepare
 
 CREATE TRIGGER Organization_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."Organization"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
+-- OrganizationalParticipant - Class Audit Triggers
+CREATE TRIGGER OrganizationalParticipant_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."OrganizationalParticipant"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER OrganizationalParticipant_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."OrganizationalParticipant"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
@@ -1353,6 +1476,17 @@ CREATE TRIGGER Rule_audit_prepare
 
 CREATE TRIGGER Rule_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."Rule"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
+-- SampledFunctionParameterType - Class Audit Triggers
+CREATE TRIGGER SampledFunctionParameterType_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."SampledFunctionParameterType"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER SampledFunctionParameterType_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."SampledFunctionParameterType"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
@@ -1616,6 +1750,18 @@ CREATE TRIGGER ArrayParameterType_Dimension_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
+-- Attachment - Reference Property Audit Triggers
+-- Attachment.FileType
+CREATE TRIGGER Attachment_FileType_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."Attachment_FileType"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER Attachment_FileType_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."Attachment_FileType"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
 -- BinaryRelationshipRule - Reference Property Audit Triggers
 
 -- BooleanParameterType - Reference Property Audit Triggers
@@ -1704,6 +1850,8 @@ CREATE TRIGGER Definition_Note_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
+-- DependentParameterTypeAssignment - Reference Property Audit Triggers
+
 -- DerivedQuantityKind - Reference Property Audit Triggers
 
 -- DerivedUnit - Reference Property Audit Triggers
@@ -1780,6 +1928,8 @@ CREATE TRIGGER Glossary_Category_audit_log
 
 -- HyperLink - Reference Property Audit Triggers
 
+-- IndependentParameterTypeAssignment - Reference Property Audit Triggers
+
 -- IntervalScale - Reference Property Audit Triggers
 
 -- IterationSetup - Reference Property Audit Triggers
@@ -1787,6 +1937,18 @@ CREATE TRIGGER Glossary_Category_audit_log
 -- LinearConversionUnit - Reference Property Audit Triggers
 
 -- LogarithmicScale - Reference Property Audit Triggers
+
+-- LogEntryChangelogItem - Reference Property Audit Triggers
+-- LogEntryChangelogItem.AffectedReferenceIid
+CREATE TRIGGER LogEntryChangelogItem_AffectedReferenceIid_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER LogEntryChangelogItem_AffectedReferenceIid_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
 -- MappingToReferenceScale - Reference Property Audit Triggers
 
@@ -1813,6 +1975,8 @@ CREATE TRIGGER MultiRelationshipRule_RelatedCategory_audit_log
 -- OrdinalScale - Reference Property Audit Triggers
 
 -- Organization - Reference Property Audit Triggers
+
+-- OrganizationalParticipant - Reference Property Audit Triggers
 
 -- ParameterizedCategoryRule - Reference Property Audit Triggers
 -- ParameterizedCategoryRule.ParameterType
@@ -1929,6 +2093,8 @@ CREATE TRIGGER ReferenceSource_Category_audit_log
 
 -- Rule - Reference Property Audit Triggers
 
+-- SampledFunctionParameterType - Reference Property Audit Triggers
+
 -- ScalarParameterType - Reference Property Audit Triggers
 
 -- ScaleReferenceQuantityValue - Reference Property Audit Triggers
@@ -1948,6 +2114,17 @@ CREATE TRIGGER ReferenceSource_Category_audit_log
 -- SiteDirectoryThingReference - Reference Property Audit Triggers
 
 -- SiteLogEntry - Reference Property Audit Triggers
+-- SiteLogEntry.AffectedDomainIid
+CREATE TRIGGER SiteLogEntry_AffectedDomainIid_audit_prepare
+  BEFORE UPDATE ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
+
+CREATE TRIGGER SiteLogEntry_AffectedDomainIid_audit_log
+  AFTER INSERT OR UPDATE OR DELETE ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid"
+  FOR EACH ROW 
+  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
 -- SiteLogEntry.AffectedItemIid
 CREATE TRIGGER SiteLogEntry_AffectedItemIid_audit_prepare
   BEFORE UPDATE ON "SiteDirectory"."SiteLogEntry_AffectedItemIid"

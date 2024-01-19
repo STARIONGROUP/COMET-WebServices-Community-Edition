@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -396,6 +401,7 @@ namespace CometServer.Services
             var multiRelationshipRuleColl = results.Where(i => i.GetType() == typeof(MultiRelationshipRule)).Cast<MultiRelationshipRule>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, multiRelationshipRuleColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, multiRelationshipRuleColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, multiRelationshipRuleColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, multiRelationshipRuleColl.SelectMany(x => x.HyperLink), containerSecurityContext));
 
@@ -465,6 +471,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, multiRelationshipRule));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(multiRelationshipRule.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, multiRelationshipRule));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(multiRelationshipRule.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, multiRelationshipRule));
@@ -501,6 +512,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(multiRelationshipRule.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, multiRelationshipRule));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(multiRelationshipRule.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, multiRelationshipRule));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(multiRelationshipRule.Definition))

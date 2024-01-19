@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -401,6 +406,7 @@ namespace CometServer.Services
             var derivedQuantityKindColl = results.Where(i => i.GetType() == typeof(DerivedQuantityKind)).Cast<DerivedQuantityKind>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, derivedQuantityKindColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, derivedQuantityKindColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, derivedQuantityKindColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, derivedQuantityKindColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.QuantityKindFactorService.GetDeep(transaction, partition, derivedQuantityKindColl.SelectMany(x => x.QuantityKindFactor).ToIdList(), containerSecurityContext));
@@ -471,6 +477,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, derivedQuantityKind));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(derivedQuantityKind.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, derivedQuantityKind));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(derivedQuantityKind.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, derivedQuantityKind));
@@ -512,6 +523,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(derivedQuantityKind.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, derivedQuantityKind));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(derivedQuantityKind.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, derivedQuantityKind));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(derivedQuantityKind.Definition))

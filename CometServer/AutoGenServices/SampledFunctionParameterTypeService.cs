@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -406,6 +411,7 @@ namespace CometServer.Services
             var sampledFunctionParameterTypeColl = results.Where(i => i.GetType() == typeof(SampledFunctionParameterType)).Cast<SampledFunctionParameterType>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, sampledFunctionParameterTypeColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, sampledFunctionParameterTypeColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, sampledFunctionParameterTypeColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.DependentParameterTypeService.GetDeep(transaction, partition, sampledFunctionParameterTypeColl.SelectMany(x => x.DependentParameterType).ToIdList(), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, sampledFunctionParameterTypeColl.SelectMany(x => x.HyperLink), containerSecurityContext));
@@ -477,6 +483,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, sampledFunctionParameterType));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(sampledFunctionParameterType.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, sampledFunctionParameterType));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(sampledFunctionParameterType.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, sampledFunctionParameterType));
@@ -523,6 +534,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(sampledFunctionParameterType.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, sampledFunctionParameterType));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(sampledFunctionParameterType.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, sampledFunctionParameterType));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(sampledFunctionParameterType.Definition))

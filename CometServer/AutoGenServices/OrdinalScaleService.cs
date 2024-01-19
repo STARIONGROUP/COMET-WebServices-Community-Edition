@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -406,6 +411,7 @@ namespace CometServer.Services
             var ordinalScaleColl = results.Where(i => i.GetType() == typeof(OrdinalScale)).Cast<OrdinalScale>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, ordinalScaleColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, ordinalScaleColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, ordinalScaleColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, ordinalScaleColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.MappingToReferenceScaleService.GetDeep(transaction, partition, ordinalScaleColl.SelectMany(x => x.MappingToReferenceScale), containerSecurityContext));
@@ -477,6 +483,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, ordinalScale));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(ordinalScale.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, ordinalScale));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(ordinalScale.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, ordinalScale));
@@ -523,6 +534,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(ordinalScale.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, ordinalScale));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(ordinalScale.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, ordinalScale));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(ordinalScale.Definition))

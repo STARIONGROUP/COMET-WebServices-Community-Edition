@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -406,6 +411,7 @@ namespace CometServer.Services
             var cyclicRatioScaleColl = results.Where(i => i.GetType() == typeof(CyclicRatioScale)).Cast<CyclicRatioScale>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, cyclicRatioScaleColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, cyclicRatioScaleColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, cyclicRatioScaleColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, cyclicRatioScaleColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.MappingToReferenceScaleService.GetDeep(transaction, partition, cyclicRatioScaleColl.SelectMany(x => x.MappingToReferenceScale), containerSecurityContext));
@@ -477,6 +483,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, cyclicRatioScale));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(cyclicRatioScale.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, cyclicRatioScale));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(cyclicRatioScale.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, cyclicRatioScale));
@@ -523,6 +534,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(cyclicRatioScale.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, cyclicRatioScale));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(cyclicRatioScale.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, cyclicRatioScale));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(cyclicRatioScale.Definition))

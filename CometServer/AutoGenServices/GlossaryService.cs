@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -401,6 +406,7 @@ namespace CometServer.Services
             var glossaryColl = results.Where(i => i.GetType() == typeof(Glossary)).Cast<Glossary>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, glossaryColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, glossaryColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, glossaryColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, glossaryColl.SelectMany(x => x.HyperLink), containerSecurityContext));
             results.AddRange(this.TermService.GetDeep(transaction, partition, glossaryColl.SelectMany(x => x.Term), containerSecurityContext));
@@ -471,6 +477,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, glossary));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(glossary.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, glossary));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(glossary.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, glossary));
@@ -512,6 +523,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(glossary.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, glossary));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(glossary.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, glossary));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(glossary.Definition))

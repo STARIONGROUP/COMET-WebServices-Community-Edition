@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -406,6 +411,7 @@ namespace CometServer.Services
             var requirementsGroupColl = results.Where(i => i.GetType() == typeof(RequirementsGroup)).Cast<RequirementsGroup>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.GroupService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Group), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.HyperLink), containerSecurityContext));
@@ -477,6 +483,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, requirementsGroup));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(requirementsGroup.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, requirementsGroup));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(requirementsGroup.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, requirementsGroup));
@@ -523,6 +534,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(requirementsGroup.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, requirementsGroup));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(requirementsGroup.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, requirementsGroup));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(requirementsGroup.Definition))

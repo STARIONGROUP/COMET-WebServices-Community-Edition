@@ -51,6 +51,11 @@ namespace CometServer.Services
         public IAliasService AliasService { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="IAttachmentService"/>.
+        /// </summary>
+        public IAttachmentService AttachmentService { get; set; }
+
+        /// <summary>
         /// Gets or sets the <see cref="IDefinitionService"/>.
         /// </summary>
         public IDefinitionService DefinitionService { get; set; }
@@ -396,6 +401,7 @@ namespace CometServer.Services
             var referenceSourceColl = results.Where(i => i.GetType() == typeof(ReferenceSource)).Cast<ReferenceSource>().ToList();
 
             results.AddRange(this.AliasService.GetDeep(transaction, partition, referenceSourceColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(this.AttachmentService.GetDeep(transaction, partition, referenceSourceColl.SelectMany(x => x.Attachment), containerSecurityContext));
             results.AddRange(this.DefinitionService.GetDeep(transaction, partition, referenceSourceColl.SelectMany(x => x.Definition), containerSecurityContext));
             results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, referenceSourceColl.SelectMany(x => x.HyperLink), containerSecurityContext));
 
@@ -465,6 +471,11 @@ namespace CometServer.Services
                 results.Add(this.AliasService.CreateConcept(transaction, partition, alias, referenceSource));
             }
 
+            foreach (var attachment in this.ResolveFromRequestCache(referenceSource.Attachment))
+            {
+                results.Add(this.AttachmentService.CreateConcept(transaction, partition, attachment, referenceSource));
+            }
+
             foreach (var definition in this.ResolveFromRequestCache(referenceSource.Definition))
             {
                 results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, referenceSource));
@@ -501,6 +512,11 @@ namespace CometServer.Services
             foreach (var alias in this.ResolveFromRequestCache(referenceSource.Alias))
             {
                 results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, referenceSource));
+            }
+
+            foreach (var attachment in this.ResolveFromRequestCache(referenceSource.Attachment))
+            {
+                results.Add(this.AttachmentService.UpsertConcept(transaction, partition, attachment, referenceSource));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(referenceSource.Definition))
