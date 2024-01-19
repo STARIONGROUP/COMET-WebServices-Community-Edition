@@ -31,6 +31,7 @@ namespace CDP4Orm.Helper
 
     /// <summary>
     /// The <see cref="IDaoResolver" /> provides resolve capabilites to retrieve <see cref="IDao" /> based on the type name
+    /// <remarks>This interface is registered as InstancePerLifetimeScope</remarks>
     /// </summary>
     public interface IDaoResolver
     {
