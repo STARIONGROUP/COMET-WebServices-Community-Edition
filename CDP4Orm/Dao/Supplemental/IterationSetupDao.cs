@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupDao.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
@@ -39,6 +39,11 @@ namespace CDP4Orm.Dao
     /// </summary>
     public partial class IterationSetupDao
     {
+        /// <summary>
+        /// Gets or sets the injected <see cref="IEngineeringModelSetupDao"/>
+        /// </summary>
+        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
+
         /// <summary>
         /// Read the data from the database.
         /// </summary>
@@ -111,7 +116,7 @@ namespace CDP4Orm.Dao
             var sqlBuilder = new StringBuilder();
 
             sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition, instant)}");
-            sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\"::text = :engineeringModelSetupId)", partition);
+            sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) EngineeringModelSetup WHERE \"Iid\"::text = :engineeringModelSetupId)");
 
             command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();
 

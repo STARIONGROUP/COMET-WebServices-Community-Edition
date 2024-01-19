@@ -39,6 +39,16 @@ namespace CDP4Orm.Dao
     public partial class DomainOfExpertiseDao
     {
         /// <summary>
+        /// Gets or sets the injected <see cref="IParticipantDao"/>
+        /// </summary>
+        public IParticipantDao ParticipantDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IEngineeringModelSetupDao"/>
+        /// </summary>
+        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
+
+        /// <summary>
         /// Read the data from the database based on <see cref="Person"/> id and an <see cref="EngineeringModelSetup"/> id.
         /// </summary>
         /// <param name="transaction">
@@ -69,7 +79,7 @@ namespace CDP4Orm.Dao
 
             if (!personId.Equals(Guid.Empty) && !engineeringModelSetupId.Equals(Guid.Empty))
             {
-                sqlBuilder.AppendFormat(" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM \"{0}\".\"EngineeringModelSetup_View\" WHERE \"Iid\" = :engineeringModelSetupId ))", partition);
+                sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"Domain\") FROM ({this.ParticipantDao.BuildReadQuery(partition, instant)}) Participant WHERE \"Person\" = :personId AND \"Iid\"::text = ANY(SELECT unnest(\"Participant\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) EngineeringModelSetup WHERE \"Iid\" = :engineeringModelSetupId ))");
                 command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
                 command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Uuid).Value = engineeringModelSetupId;
             }

@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupDao.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2023 RHEA System S.A.
 //
@@ -26,8 +26,11 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     using CDP4Common.DTO;
+
+    using Microsoft.Extensions.Logging;
 
     using MigrationEngine;
 
@@ -44,6 +47,16 @@ namespace CDP4Orm.Dao
         /// Gets or sets the <see cref="IMigrationService"/> (injected)
         /// </summary>
         public IMigrationService MigrationService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="ILogger{T}"/>
+        /// </summary>
+        public ILogger<EngineeringModelSetupDao> Logger { get; set; }
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IParticipantDao"/>
+        /// </summary>
+        public IParticipantDao ParticipantDao { get; set; }
 
         /// <summary>
         /// Read the data from the database based on <see cref="Person"/> id.
@@ -73,7 +86,7 @@ namespace CDP4Orm.Dao
 
             if (!personId.Equals(Guid.Empty))
             {
-                sqlBuilder.AppendFormat(" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM \"{0}\".\"Participant_View\" WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')", partition);
+                sqlBuilder.Append($" WHERE \"Participant\" && (SELECT array_agg(\"Iid\"::text) FROM ({this.ParticipantDao.BuildReadQuery(partition, instant)}) Participant WHERE \"Person\" = :personId AND \"ValueTypeSet\"->'IsActive' = 'True')");
                 command.Parameters.Add("personId", NpgsqlDbType.Uuid).Value = personId;
             }
 
@@ -122,8 +135,10 @@ namespace CDP4Orm.Dao
         /// </remarks>
         public new bool AfterWrite(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            var result = base.AfterWrite(writeResult, transaction, partition, thing, container);
+            var stopwatch = Stopwatch.StartNew();
 
+            var result = base.AfterWrite(writeResult, transaction, partition, thing, container);
+            
             var engineeringModelSetup = (EngineeringModelSetup)thing;
             
             // insert the engineeringmodel schema
@@ -142,20 +157,37 @@ namespace CDP4Orm.Dao
 
             using (var command = new NpgsqlCommand())
             {
-                command.ReadSqlFromResource(
-                    "CDP4Orm.AutoGenStructure.EngineeringModelDefinition.sql",
-                    replace: replacementInfo);
-
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
-
-                command.ExecuteNonQuery();
+                ExecuteEngineeringModelSchemaScripts(command, replacementInfo);
             }
 
+            stopwatch.Stop();
+            this.Logger.LogDebug("EngineeringModelDefinition.sql scripts took {time}[ms]", stopwatch.ElapsedMilliseconds);
+
+            stopwatch.Reset();
+            stopwatch.Start();
             this.MigrationService.ApplyMigrations(transaction, engineeringModelPartition, false);
             this.MigrationService.ApplyMigrations(transaction, iterationPartition, false);
 
+            stopwatch.Stop();
+            this.Logger.LogDebug("Migration applied in {time}[ms]", stopwatch.ElapsedMilliseconds);
             return result;
+        }
+
+        /// <summary>
+        /// Executes all SQL scripts to create EngineeringModel and Iteration schema
+        /// </summary>
+        /// <param name="sqlCommand">The <see cref="NpgsqlCommand"/></param>
+        /// <param name="replacementInfo">The collection of replacement information</param>
+        private static void ExecuteEngineeringModelSchemaScripts(NpgsqlCommand sqlCommand, IReadOnlyCollection<Tuple<string, string>> replacementInfo)
+        {
+            sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.04_EngineeringModel_setup.sql", replace: replacementInfo);
+            sqlCommand.ExecuteNonQuery();
+            sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.05_EngineeringModel_structure.sql", replace: replacementInfo);
+            sqlCommand.ExecuteNonQuery();
+            sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.06_EngineeringModel_triggers.sql", replace: replacementInfo);
+            sqlCommand.ExecuteNonQuery();
         }
     }
 }

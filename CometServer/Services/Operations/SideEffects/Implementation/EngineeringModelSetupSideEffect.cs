@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -172,7 +173,11 @@ namespace CometServer.Services.Operations.SideEffects
                     throw new InvalidOperationException("The RequiredRdl cannot be specified if the EngineeringModel is created based on an existing EngineeringModel.");
                 }
 
+                var stopwatch = Stopwatch.StartNew();
+
                 this.ModelCreatorManager.CreateEngineeringModelSetupFromSource(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
+                stopwatch.Stop();
+                this.Logger.LogDebug("Creation of EngineeringSetup from source took {time}[ms]", stopwatch.ElapsedMilliseconds);
             }
 
             if (thing.EngineeringModelIid == Guid.Empty)
@@ -217,12 +222,16 @@ namespace CometServer.Services.Operations.SideEffects
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
+
                 this.Logger.LogInformation("Create a Copy of an EngineeringModel");
                 this.CreateCopyEngineeringModel(thing, transaction, securityContext);
 
+                var stopwatch = Stopwatch.StartNew();
                 this.Logger.LogInformation("Create revisions for created EngineeringModel");
                 this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
+                stopwatch.Stop();
+                this.Logger.LogDebug("Revisions written in {time}[ms]", stopwatch.ElapsedMilliseconds);
                 return;
             }
 
@@ -268,8 +277,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">The security context</param>
         private void CreateCopyEngineeringModel(EngineeringModelSetup thing, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
+            var stopWatch = Stopwatch.StartNew();
             // copy data from the source engineering-model
             this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
+            stopWatch.Stop();
+            
+            this.Logger.LogDebug("Copied of the EngineeringModel took {time}[ms]", stopWatch.ElapsedMilliseconds);
         }
 
         /// <summary>

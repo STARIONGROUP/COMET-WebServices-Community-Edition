@@ -85,12 +85,11 @@ namespace CDP4Orm.Dao.Resolve
             var sqlBuilder = new System.Text.StringBuilder();
 
             // get all Thing 'concepts' that are newer then passed in revision
-            sqlBuilder.Append(
-                "SELECT \"ValueTypeSet\"-> 'ClassKind' as \"TypeInfo\", \"Iid\"").Append(
-                " FROM \"{0}\".\"Thing_View\"").Append(
-                " WHERE \"Iid\" = ANY(:ids);");
+            sqlBuilder.Append("SELECT \"ValueTypeDictionary\"-> 'ClassKind' as \"TypeInfo\", \"Iid\"");
+            sqlBuilder.Append($" FROM \"{partition}\".\"Thing\"");
+            sqlBuilder.Append("  WHERE \"Iid\" = ANY(:ids);");
 
-            var sql = string.Format(sqlBuilder.ToString(), partition);
+            var sql = sqlBuilder.ToString();
 
             using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
             {
@@ -131,11 +130,11 @@ namespace CDP4Orm.Dao.Resolve
             // union the EngineeringModel and subpartition (Iteration) to help resolve the requested Iids
             sqlBuilder.Append(
                 "SELECT \"AllThings\".\"TypeInfo\", \"AllThings\".\"Iid\", \"AllThings\".\"SameAsConnectedPartition\"").Append(
-                " FROM (SELECT \"Iid\", \"ValueTypeSet\"->'ClassKind' AS \"TypeInfo\", 'true'::boolean AS \"SameAsConnectedPartition\"").Append(
-                "       FROM \"{0}\".\"Thing_View\"").Append(
+                " FROM (SELECT \"Iid\", \"ValueTypeDictionary\"->'ClassKind' AS \"TypeInfo\", 'true'::boolean AS \"SameAsConnectedPartition\"").Append(
+                "       FROM \"{0}\".\"Thing\"").Append(
                 "       UNION ALL").Append(
-                "       SELECT \"Iid\", \"ValueTypeSet\"->'ClassKind' AS \"TypeInfo\", 'false'::boolean AS \"SameAsConnectedPartition\"").Append(
-                "       FROM \"{1}\".\"Thing_View\") AS \"AllThings\"").Append(
+                "       SELECT \"Iid\", \"ValueTypeDictionary\"->'ClassKind' AS \"TypeInfo\", 'false'::boolean AS \"SameAsConnectedPartition\"").Append(
+                "       FROM \"{1}\".\"Thing\") AS \"AllThings\"").Append(
                 " WHERE \"AllThings\".\"Iid\" = ANY(:ids);");
 
             var connectedPartition = partition;

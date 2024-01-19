@@ -1,4 +1,4 @@
--- Create table for class LogEntryChangelogItem (which derives from: Thing)
+﻿-- Create table for class LogEntryChangelogItem (which derives from: Thing)
 CREATE TABLE "SchemaName_Replace"."LogEntryChangelogItem" (
   "Iid" uuid NOT NULL,
   "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
@@ -192,3 +192,167 @@ CREATE TRIGGER LogEntryChangelogItem_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "SchemaName_Replace"."LogEntryChangelogItem"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
+
+CREATE OR REPLACE FUNCTION "SchemaName_Replace"."LogEntryChangelogItem_Data" ()
+    RETURNS SETOF "SchemaName_Replace"."LogEntryChangelogItem" AS
+$BODY$
+DECLARE
+   instant timestamp;
+BEGIN
+   instant := "SiteDirectory".get_session_instant();
+
+IF instant = 'infinity' THEN
+   RETURN QUERY
+   SELECT *
+   FROM "SchemaName_Replace"."LogEntryChangelogItem";
+ELSE
+   RETURN QUERY
+   SELECT *
+   FROM (SELECT "Iid","ValueTypeDictionary","Container","ValidFrom","ValidTo" 
+      FROM "SchemaName_Replace"."LogEntryChangelogItem"
+      -- prefilter union candidates
+      WHERE "ValidFrom" < instant
+      AND "ValidTo" >= instant
+       UNION ALL
+      SELECT "Iid","ValueTypeDictionary","Container","ValidFrom","ValidTo"
+      FROM "SchemaName_Replace"."LogEntryChangelogItem_Audit"
+      -- prefilter union candidates
+      WHERE "Action" <> 'I'
+      AND "ValidFrom" < instant
+      AND "ValidTo" >= instant) "VersionedData"
+   ORDER BY "VersionedData"."ValidTo" DESC;
+END IF;
+
+END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+CREATE OR REPLACE FUNCTION "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid_Data" ()
+    RETURNS SETOF "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid" AS
+$BODY$
+DECLARE
+   instant timestamp;
+BEGIN
+   instant := "SiteDirectory".get_session_instant();
+
+IF instant = 'infinity' THEN
+   RETURN QUERY
+   SELECT *
+   FROM "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid";
+ELSE
+   RETURN QUERY
+   SELECT *
+   FROM (SELECT "ModelLogEntry","AffectedDomainIid","ValidFrom","ValidTo" 
+      FROM "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid"
+      -- prefilter union candidates
+      WHERE "ValidFrom" < instant
+      AND "ValidTo" >= instant
+       UNION ALL
+      SELECT "ModelLogEntry","AffectedDomainIid","ValidFrom","ValidTo"
+      FROM "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid_Audit"
+      -- prefilter union candidates
+      WHERE "Action" <> 'I'
+      AND "ValidFrom" < instant
+      AND "ValidTo" >= instant) "VersionedData"
+   ORDER BY "VersionedData"."ValidTo" DESC;
+END IF;
+
+END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+CREATE OR REPLACE FUNCTION "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid_Data" ()
+    RETURNS SETOF "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid" AS
+$BODY$
+DECLARE
+   instant timestamp;
+BEGIN
+   instant := "SiteDirectory".get_session_instant();
+
+IF instant = 'infinity' THEN
+   RETURN QUERY
+   SELECT *
+   FROM "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid";
+ELSE
+   RETURN QUERY
+   SELECT *
+   FROM (SELECT "LogEntryChangelogItem","AffectedReferenceIid","ValidFrom","ValidTo" 
+      FROM "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid"
+      -- prefilter union candidates
+      WHERE "ValidFrom" < instant
+      AND "ValidTo" >= instant
+       UNION ALL
+      SELECT "LogEntryChangelogItem","AffectedReferenceIid","ValidFrom","ValidTo"
+      FROM "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid_Audit"
+      -- prefilter union candidates
+      WHERE "Action" <> 'I'
+      AND "ValidFrom" < instant
+      AND "ValidTo" >= instant) "VersionedData"
+   ORDER BY "VersionedData"."ValidTo" DESC;
+END IF;
+
+END
+$BODY$
+  LANGUAGE plpgsql VOLATILE;
+
+DROP VIEW "SchemaName_Replace"."ModelLogEntry_View";
+
+CREATE OR REPLACE VIEW "SchemaName_Replace"."ModelLogEntry_View" AS
+ SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "ModelLogEntry"."ValueTypeDictionary" AS "ValueTypeSet",
+	"ModelLogEntry"."Container",
+	NULL::bigint AS "Sequence",
+	"ModelLogEntry"."Author",
+	COALESCE("ModelLogEntry_LogEntryChangelogItem"."LogEntryChangelogItem",'{}'::text[]) AS "LogEntryChangelogItem",
+	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
+	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
+	COALESCE("ModelLogEntry_Category"."Category",'{}'::text[]) AS "Category",
+	COALESCE("ModelLogEntry_AffectedItemIid"."AffectedItemIid",'{}'::text[]) AS "AffectedItemIid",
+	COALESCE("ModelLogEntry_AffectedDomainIid"."AffectedDomainIid",'{}'::text[]) AS "AffectedDomainIid"
+  FROM "SchemaName_Replace"."Thing_Data"() AS "Thing"
+  JOIN "SchemaName_Replace"."ModelLogEntry_Data"() AS "ModelLogEntry" USING ("Iid")
+  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
+   FROM "SchemaName_Replace"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
+   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
+   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
+ LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
+   FROM "SchemaName_Replace"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
+   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
+   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
+ LEFT JOIN (SELECT "ModelLogEntry" AS "Iid", array_agg("Category"::text) AS "Category"
+   FROM "SchemaName_Replace"."ModelLogEntry_Category_Data"() AS "ModelLogEntry_Category"
+   JOIN "SchemaName_Replace"."ModelLogEntry_Data"() AS "ModelLogEntry" ON "ModelLogEntry" = "Iid"
+   GROUP BY "ModelLogEntry") AS "ModelLogEntry_Category" USING ("Iid")
+ LEFT JOIN (SELECT "ModelLogEntry" AS "Iid", array_agg("AffectedItemIid"::text) AS "AffectedItemIid"
+   FROM "SchemaName_Replace"."ModelLogEntry_AffectedItemIid_Data"() AS "ModelLogEntry_AffectedItemIid"
+   JOIN "SchemaName_Replace"."ModelLogEntry_Data"() AS "ModelLogEntry" ON "ModelLogEntry" = "Iid"
+   GROUP BY "ModelLogEntry") AS "ModelLogEntry_AffectedItemIid" USING ("Iid")
+ LEFT JOIN (SELECT "ModelLogEntry" AS "Iid", array_agg("AffectedDomainIid"::text) AS "AffectedDomainIid"
+   FROM "SchemaName_Replace"."ModelLogEntry_AffectedDomainIid_Data"() AS "ModelLogEntry_AffectedDomainIid"
+   JOIN "SchemaName_Replace"."ModelLogEntry_Data"() AS "ModelLogEntry" ON "ModelLogEntry" = "Iid"
+   GROUP BY "ModelLogEntry") AS "ModelLogEntry_AffectedDomainIid" USING ("Iid")
+  LEFT JOIN (SELECT "LogEntryChangelogItem"."Container" AS "Iid", array_agg("LogEntryChangelogItem"."Iid"::text) AS "LogEntryChangelogItem"
+   FROM "SchemaName_Replace"."LogEntryChangelogItem_Data"() AS "LogEntryChangelogItem"
+   JOIN "SchemaName_Replace"."ModelLogEntry_Data"() AS "ModelLogEntry" ON "LogEntryChangelogItem"."Container" = "ModelLogEntry"."Iid"
+   GROUP BY "LogEntryChangelogItem"."Container") AS "ModelLogEntry_LogEntryChangelogItem" USING ("Iid");
+
+CREATE VIEW "SchemaName_Replace"."LogEntryChangelogItem_View" AS
+ SELECT "Thing"."Iid", "Thing"."ValueTypeDictionary" || "LogEntryChangelogItem"."ValueTypeDictionary" AS "ValueTypeSet",
+	"LogEntryChangelogItem"."Container",
+	NULL::bigint AS "Sequence",
+	COALESCE("Thing_ExcludedPerson"."ExcludedPerson",'{}'::text[]) AS "ExcludedPerson",
+	COALESCE("Thing_ExcludedDomain"."ExcludedDomain",'{}'::text[]) AS "ExcludedDomain",
+	COALESCE("LogEntryChangelogItem_AffectedReferenceIid"."AffectedReferenceIid",'{}'::text[]) AS "AffectedReferenceIid"
+  FROM "SchemaName_Replace"."Thing_Data"() AS "Thing"
+  JOIN "SchemaName_Replace"."LogEntryChangelogItem_Data"() AS "LogEntryChangelogItem" USING ("Iid")
+  LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedPerson"::text) AS "ExcludedPerson"
+   FROM "SchemaName_Replace"."Thing_ExcludedPerson_Data"() AS "Thing_ExcludedPerson"
+   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
+   GROUP BY "Thing") AS "Thing_ExcludedPerson" USING ("Iid")
+ LEFT JOIN (SELECT "Thing" AS "Iid", array_agg("ExcludedDomain"::text) AS "ExcludedDomain"
+   FROM "SchemaName_Replace"."Thing_ExcludedDomain_Data"() AS "Thing_ExcludedDomain"
+   JOIN "SchemaName_Replace"."Thing_Data"() AS "Thing" ON "Thing" = "Iid"
+   GROUP BY "Thing") AS "Thing_ExcludedDomain" USING ("Iid")
+ LEFT JOIN (SELECT "LogEntryChangelogItem" AS "Iid", array_agg("AffectedReferenceIid"::text) AS "AffectedReferenceIid"
+   FROM "SchemaName_Replace"."LogEntryChangelogItem_AffectedReferenceIid_Data"() AS "LogEntryChangelogItem_AffectedReferenceIid"
+   JOIN "SchemaName_Replace"."LogEntryChangelogItem_Data"() AS "LogEntryChangelogItem" ON "LogEntryChangelogItem" = "Iid"
+   GROUP BY "LogEntryChangelogItem") AS "LogEntryChangelogItem_AffectedReferenceIid" USING ("Iid");

@@ -488,9 +488,9 @@ namespace CDP4Orm.Dao.Revision
 
             // get all Thing 'concepts' whose revisions are as per the supplied revision comparator
             sqlBuilder.Append(
-                "SELECT \"ValueTypeSet\"-> 'ClassKind' as \"{1}\", \"{2}\"").Append(
-                " FROM \"{0}\".\"Thing_View\"").Append(
-                " WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer {3} :revision;");
+                "SELECT \"ValueTypeDictionary\"-> 'ClassKind' as \"{1}\", \"{2}\"").Append(
+                " FROM \"{0}\".\"Thing\"").Append(
+                " WHERE (\"ValueTypeDictionary\" -> 'RevisionNumber')::integer {3} :revision;");
 
             var sql = string.Format(
                 sqlBuilder.ToString(),
@@ -564,13 +564,13 @@ namespace CDP4Orm.Dao.Revision
 
             // get all Thing 'concepts' whose revisions are as per the supplied revision comparator
             sqlBuilder.Append("SELECT \"AllThings\".\"{2}\", \"AllThings\".\"{3}\", \"AllThings\".\"{4}\"").Append(
-                " FROM (SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'true'::boolean AS \"{4}\"").Append(
-                "       FROM \"{0}\".\"Thing_View\"").Append(
-                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer {5} :revision").Append(
+                " FROM (SELECT \"{3}\", \"ValueTypeDictionary\"->'ClassKind' AS \"{2}\", 'true'::boolean AS \"{4}\"").Append(
+                "       FROM \"{0}\".\"Thing\"").Append(
+                "       WHERE (\"ValueTypeDictionary\" -> 'RevisionNumber')::integer {5} :revision").Append(
                 "       UNION ALL").Append(
-                "       SELECT \"{3}\", \"ValueTypeSet\"->'ClassKind' AS \"{2}\", 'false'::boolean AS \"{4}\"").Append(
-                "       FROM \"{1}\".\"Thing_View\"").Append(
-                "       WHERE (\"ValueTypeSet\" -> 'RevisionNumber')::integer {5} :revision) AS \"AllThings\";");
+                "       SELECT \"{3}\", \"ValueTypeDictionary\"->'ClassKind' AS \"{2}\", 'false'::boolean AS \"{4}\"").Append(
+                "       FROM \"{1}\".\"Thing\"").Append(
+                "       WHERE (\"ValueTypeDictionary\" -> 'RevisionNumber')::integer {5} :revision) AS \"AllThings\";");
 
             var sql = string.Format(
                 sqlBuilder.ToString(),
