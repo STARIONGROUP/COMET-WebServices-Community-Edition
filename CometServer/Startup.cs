@@ -55,6 +55,7 @@ namespace CometServer
     using CometServer.Configuration;
     using CometServer.Health;
     using CometServer.Helpers;
+    using CometServer.Modules.Constraints;
     using CometServer.Resources;
     using CometServer.Services;
     using CometServer.Services.ChangeLog;
@@ -132,6 +133,7 @@ namespace CometServer
             });
 
             services.AddAuthentication("CDP4").AddCookie(CookieScheme);
+            services.AddRouting(options => options.ConstraintMap.Add("EnumerableOfGuid", typeof(EnumerableOfGuidRouteConstraint)));
 
             services.AddCarter();
         }
