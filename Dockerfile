@@ -4,6 +4,7 @@ COPY CDP4Authentication CDP4Authentication
 COPY CDP4DatabaseAuthentication CDP4DatabaseAuthentication
 COPY CDP4WspDatabaseAuthentication CDP4WspDatabaseAuthentication
 COPY CDP4Orm CDP4Orm
+COPY VersionFileCreator VersionFileCreator
 COPY CometServer CometServer
 
 RUN dotnet build CDP4DatabaseAuthentication -c Release
