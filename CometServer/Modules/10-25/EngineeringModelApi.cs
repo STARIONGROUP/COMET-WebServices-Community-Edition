@@ -149,44 +149,41 @@ namespace CometServer.Modules
 
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
+            {
+                if (!(await this.IsServerReady(res)))
                 {
-                    if (!(await this.IsServerReady(res)))
+                    return;
+                }
+
+                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                {
+                    res.UpdateWithNotAuthenticatedSettings();
+                    await res.AsJson("not authenticated");
+                }
+                else
+                {
+                    try
                     {
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    }
+                    catch (AuthorizationException)
+                    {
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
                         return;
                     }
 
-                    if (!req.HttpContext.User.Identity.IsAuthenticated)
-                    {
-                        res.UpdateWithNotAuthenticatedSettings();
-                        await res.AsJson("not authenticated");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                        }
-                        catch (AuthorizationException)
-                        {
-                            this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
-
-                            res.UpdateWithNotAutherizedSettings();
-                            await res.AsJson("not authorized");
-                            return;
-                        }
-
-                        await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
-                    }
-                });
+                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
+                }
+            });
 
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                if (!(await this.IsServerReady(res)))
                 {
-                    res.ContentType = "application/json";
-                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                    await res.AsJson("not yet started and ready to accept requests");
                     return;
                 }
 
@@ -383,6 +380,7 @@ namespace CometServer.Modules
                     {
                         await transaction.DisposeAsync();
                     }
+
                     if (connection != null)
                     {
                         await connection.DisposeAsync();

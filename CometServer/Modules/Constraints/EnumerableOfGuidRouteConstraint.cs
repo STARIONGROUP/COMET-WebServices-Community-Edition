@@ -1,5 +1,5 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="EnumerableOfGuidRouteConstraint.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -32,7 +32,7 @@ namespace CometServer.Modules.Constraints
     using Microsoft.AspNetCore.Routing;
 
     /// <summary>
-    /// The purpose of the <see cref="EnumerableOfGuidRouteConstraint" /> is to enable url routing for GUID
+    /// The purpose of the <see cref="EnumerableOfGuidRouteConstraint" /> is to enable url routing for collection of url safe unique identifiers
     /// </summary>
     public class EnumerableOfGuidRouteConstraint : IRouteConstraint
     {
