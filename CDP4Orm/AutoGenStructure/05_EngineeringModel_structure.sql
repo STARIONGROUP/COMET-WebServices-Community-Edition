@@ -324,21 +324,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_vacuum_thresh
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration" SET (autovacuum_analyze_threshold = 2500);
 
--- LogEntryChangelogItem class - table definition [version 1.2.0]
-CREATE TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "LogEntryChangelogItem_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidFrom" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidTo" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem" ("ValidTo");
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" SET (autovacuum_analyze_threshold = 2500);
-
 -- ModellingAnnotationItem class - table definition [version 1.1.0]
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" (
   "Iid" uuid NOT NULL,
@@ -613,9 +598,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."GenericAnnotation" ADD CONSTRAINT "Gener
 -- Class Iteration derives from class Thing
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration" ADD CONSTRAINT "IterationDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
--- Class LogEntryChangelogItem derives from class Thing
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" ADD CONSTRAINT "LogEntryChangelogItemDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
 -- Class ModellingAnnotationItem derives from class EngineeringModelDataAnnotation
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem" ADD CONSTRAINT "ModellingAnnotationItemDerivesFromEngineeringModelDataAnnotation" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."EngineeringModelDataAnnotation" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
@@ -748,12 +730,6 @@ CREATE INDEX "Idx_Folder_Container" ON "EngineeringModel_REPLACE"."Folder" ("Con
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration" ADD COLUMN "Container" uuid NOT NULL;
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration" ADD CONSTRAINT "Iteration_FK_Container" FOREIGN KEY ("Container") REFERENCES "EngineeringModel_REPLACE"."EngineeringModel" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 CREATE INDEX "Idx_Iteration_Container" ON "EngineeringModel_REPLACE"."Iteration" ("Container");
-
--- LogEntryChangelogItem containment
--- The LogEntryChangelogItem class is contained (composite) by the LogEntry class: [0..*]-[1..1]
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem" ADD CONSTRAINT "LogEntryChangelogItem_FK_Container" FOREIGN KEY ("Container") REFERENCES "EngineeringModel_REPLACE"."ModelLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_LogEntryChangelogItem_Container" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem" ("Container");
 
 -- ModellingAnnotationItem containment
 -- The ModellingAnnotationItem class is contained (composite) by the EngineeringModel class: [0..*]-[1..1]
@@ -1001,23 +977,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."Iteration" ADD COLUMN "IterationSetup" u
 -- Iteration.TopElement is an optional association to ElementDefinition: [0..1]-[1..1]
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration" ADD COLUMN "TopElement" uuid;
 
--- LogEntryChangelogItem - Reference properties
--- LogEntryChangelogItem.AffectedReferenceIid is a collection property of type Guid: [0..*]
-CREATE TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" (
-  "LogEntryChangelogItem" uuid NOT NULL,
-  "AffectedReferenceIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_PK" PRIMARY KEY("LogEntryChangelogItem", "AffectedReferenceIid"),
-  CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_FK_Source" FOREIGN KEY ("LogEntryChangelogItem") REFERENCES "EngineeringModel_REPLACE"."LogEntryChangelogItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidFrom" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidTo" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidTo");
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_threshold = 2500);
-
 -- ModellingAnnotationItem - Reference properties
 -- ModellingAnnotationItem.Category is a collection property (many to many) of class Category: [0..*]-[0..*]
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category" (
@@ -1062,23 +1021,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation
 -- ModellingThingReference - Reference properties
 
 -- ModelLogEntry - Reference properties
--- ModelLogEntry.AffectedDomainIid is a collection property of type Guid: [0..*]
-CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" (
-  "ModelLogEntry" uuid NOT NULL,
-  "AffectedDomainIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "ModelLogEntry_AffectedDomainIid_PK" PRIMARY KEY("ModelLogEntry", "AffectedDomainIid"),
-  CONSTRAINT "ModelLogEntry_AffectedDomainIid_FK_Source" FOREIGN KEY ("ModelLogEntry") REFERENCES "EngineeringModel_REPLACE"."ModelLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIid_ValidFrom" ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" ("ValidFrom");
-CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIid_ValidTo" ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" ("ValidTo");
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid" SET (autovacuum_analyze_threshold = 2500);
-
--- ModelLogEntry
 -- ModelLogEntry.AffectedItemIid is a collection property of type Guid: [0..*]
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid" (
   "ModelLogEntry" uuid NOT NULL,
@@ -1485,20 +1427,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_vacu
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Revision" SET (autovacuum_analyze_threshold = 2500);
 
--- LogEntryChangelogItem - revision history table
-CREATE TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "LogEntryChangelogItem_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Revision" SET (autovacuum_analyze_threshold = 2500);
-
 -- ModellingAnnotationItem - revision history table
 -- The ModellingAnnotationItem class is abstract and therefore does not have a Revision table
 
@@ -1853,19 +1781,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_vacuum_
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- LogEntryChangelogItem - Cache table
-CREATE TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "LogEntryChangelogItem_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "LogEntryChangelogItemCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "EngineeringModel_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Cache" SET (autovacuum_analyze_threshold = 2500);
 
 -- ModellingAnnotationItem - Cache table
 -- The ModellingAnnotationItem class is abstract and therefore does not have a Cache table
@@ -2243,18 +2158,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_vacuum_
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "EngineeringModel_REPLACE"."Iteration_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- LogEntryChangelogItem - Audit table
-CREATE TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" (LIKE "EngineeringModel_REPLACE"."LogEntryChangelogItem");
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_LogEntryChangelogItemAudit_ValidFrom" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItemAudit_ValidTo" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" ("ValidTo");
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- ModellingAnnotationItem - Audit table
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" (LIKE "EngineeringModel_REPLACE"."ModellingAnnotationItem");
 ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Audit" 
@@ -2500,19 +2403,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."FileRevision_FileType_Audit" SET (autova
 
 -- Iteration - Audit table Reference properties
 
--- LogEntryChangelogItem - Audit table Reference properties
--- LogEntryChangelogItem.AffectedReferenceIid is a collection property of type Guid: [0..*]
-CREATE TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" (LIKE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid");
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIidAudit_ValidFrom" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIidAudit_ValidTo" ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" ("ValidTo");
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- ModellingAnnotationItem - Audit table Reference properties
 -- ModellingAnnotationItem.Category is a collection property (many to many) of class Category: [0..*]-[0..*]
 CREATE TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category_Audit" (LIKE "EngineeringModel_REPLACE"."ModellingAnnotationItem_Category");
@@ -2542,19 +2432,6 @@ ALTER TABLE "EngineeringModel_REPLACE"."ModellingAnnotationItem_SourceAnnotation
 -- ModellingThingReference - Audit table Reference properties
 
 -- ModelLogEntry - Audit table Reference properties
--- ModelLogEntry.AffectedDomainIid is a collection property of type Guid: [0..*]
-CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" (LIKE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid");
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIidAudit_ValidFrom" ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" ("ValidFrom");
-CREATE INDEX "Idx_ModelLogEntry_AffectedDomainIidAudit_ValidTo" ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" ("ValidTo");
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- ModelLogEntry
 -- ModelLogEntry.AffectedItemIid is a collection property of type Guid: [0..*]
 CREATE TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" (LIKE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid");
 ALTER TABLE "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid_Audit" 
@@ -2722,81 +2599,6 @@ ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_vacuum_scale_fac
 ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."AndExpression" SET (autovacuum_analyze_threshold = 2500);
-
--- ArchitectureDiagram class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."ArchitectureDiagram" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "ArchitectureDiagram_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_ArchitectureDiagram_ValidFrom" ON "Iteration_REPLACE"."ArchitectureDiagram" ("ValidFrom");
-CREATE INDEX "Idx_ArchitectureDiagram_ValidTo" ON "Iteration_REPLACE"."ArchitectureDiagram" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" SET (autovacuum_analyze_threshold = 2500);
-
--- ArchitectureElement class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."ArchitectureElement" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "ArchitectureElement_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_ArchitectureElement_ValidFrom" ON "Iteration_REPLACE"."ArchitectureElement" ("ValidFrom");
-CREATE INDEX "Idx_ArchitectureElement_ValidTo" ON "Iteration_REPLACE"."ArchitectureElement" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement" SET (autovacuum_analyze_threshold = 2500);
-
--- Attachment class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."Attachment" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "Attachment_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_Attachment_ValidFrom" ON "Iteration_REPLACE"."Attachment" ("ValidFrom");
-CREATE INDEX "Idx_Attachment_ValidTo" ON "Iteration_REPLACE"."Attachment" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."Attachment" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Attachment" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment" SET (autovacuum_analyze_threshold = 2500);
-
--- Behavior class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."Behavior" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "Behavior_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_Behavior_ValidFrom" ON "Iteration_REPLACE"."Behavior" ("ValidFrom");
-CREATE INDEX "Idx_Behavior_ValidTo" ON "Iteration_REPLACE"."Behavior" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."Behavior" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Behavior" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior" SET (autovacuum_analyze_threshold = 2500);
-
--- BehavioralParameter class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."BehavioralParameter" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "BehavioralParameter_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_BehavioralParameter_ValidFrom" ON "Iteration_REPLACE"."BehavioralParameter" ("ValidFrom");
-CREATE INDEX "Idx_BehavioralParameter_ValidTo" ON "Iteration_REPLACE"."BehavioralParameter" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" SET (autovacuum_analyze_threshold = 2500);
 
 -- BinaryRelationship class - table definition [version 1.0.0]
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship" (
@@ -2978,21 +2780,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_vacuum_thr
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" SET (autovacuum_analyze_threshold = 2500);
 
--- DiagramFrame class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."DiagramFrame" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "DiagramFrame_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_DiagramFrame_ValidFrom" ON "Iteration_REPLACE"."DiagramFrame" ("ValidFrom");
-CREATE INDEX "Idx_DiagramFrame_ValidTo" ON "Iteration_REPLACE"."DiagramFrame" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame" SET (autovacuum_analyze_threshold = 2500);
-
 -- DiagrammingStyle class - table definition [version 1.1.0]
 CREATE TABLE "Iteration_REPLACE"."DiagrammingStyle" (
   "Iid" uuid NOT NULL,
@@ -3022,21 +2809,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_vacuum_scale_fac
 ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject" SET (autovacuum_analyze_threshold = 2500);
-
--- DiagramPort class - table definition [version 1.4.0]
-CREATE TABLE "Iteration_REPLACE"."DiagramPort" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "DiagramPort_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_DiagramPort_ValidFrom" ON "Iteration_REPLACE"."DiagramPort" ("ValidFrom");
-CREATE INDEX "Idx_DiagramPort_ValidTo" ON "Iteration_REPLACE"."DiagramPort" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."DiagramPort" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort" SET (autovacuum_analyze_threshold = 2500);
 
 -- DiagramShape class - table definition [version 1.1.0]
 CREATE TABLE "Iteration_REPLACE"."DiagramShape" (
@@ -3939,21 +3711,6 @@ ALTER TABLE "Iteration_REPLACE"."Alias" ADD CONSTRAINT "AliasDerivesFromThing" F
 -- Class AndExpression derives from class BooleanExpression
 ALTER TABLE "Iteration_REPLACE"."AndExpression" ADD CONSTRAINT "AndExpressionDerivesFromBooleanExpression" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."BooleanExpression" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
--- Class ArchitectureDiagram derives from class DiagramCanvas
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" ADD CONSTRAINT "ArchitectureDiagramDerivesFromDiagramCanvas" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramCanvas" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class ArchitectureElement derives from class DiagramObject
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement" ADD CONSTRAINT "ArchitectureElementDerivesFromDiagramObject" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramObject" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class Attachment derives from class Thing
-ALTER TABLE "Iteration_REPLACE"."Attachment" ADD CONSTRAINT "AttachmentDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class Behavior derives from class DefinedThing
-ALTER TABLE "Iteration_REPLACE"."Behavior" ADD CONSTRAINT "BehaviorDerivesFromDefinedThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class BehavioralParameter derives from class Thing
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" ADD CONSTRAINT "BehavioralParameterDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
 -- Class BinaryRelationship derives from class Relationship
 ALTER TABLE "Iteration_REPLACE"."BinaryRelationship" ADD CONSTRAINT "BinaryRelationshipDerivesFromRelationship" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Relationship" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
@@ -3990,17 +3747,11 @@ ALTER TABLE "Iteration_REPLACE"."DiagramElementContainer" ADD CONSTRAINT "Diagra
 -- Class DiagramElementThing derives from class DiagramElementContainer
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" ADD CONSTRAINT "DiagramElementThingDerivesFromDiagramElementContainer" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramElementContainer" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
--- Class DiagramFrame derives from class DiagramShape
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame" ADD CONSTRAINT "DiagramFrameDerivesFromDiagramShape" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramShape" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
 -- Class DiagrammingStyle derives from class DiagramThingBase
 ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" ADD CONSTRAINT "DiagrammingStyleDerivesFromDiagramThingBase" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramThingBase" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- Class DiagramObject derives from class DiagramShape
 ALTER TABLE "Iteration_REPLACE"."DiagramObject" ADD CONSTRAINT "DiagramObjectDerivesFromDiagramShape" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramShape" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class DiagramPort derives from class DiagramShape
-ALTER TABLE "Iteration_REPLACE"."DiagramPort" ADD CONSTRAINT "DiagramPortDerivesFromDiagramShape" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramShape" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- Class DiagramShape derives from class DiagramElementThing
 ALTER TABLE "Iteration_REPLACE"."DiagramShape" ADD CONSTRAINT "DiagramShapeDerivesFromDiagramElementThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."DiagramElementThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
@@ -4204,30 +3955,6 @@ CREATE INDEX "Idx_Alias_Container" ON "Iteration_REPLACE"."Alias" ("Container");
 -- AndExpression containment
 -- The AndExpression class is not directly contained
 
--- ArchitectureDiagram containment
--- The ArchitectureDiagram class is not directly contained
-
--- ArchitectureElement containment
--- The ArchitectureElement class is not directly contained
-
--- Attachment containment
--- The Attachment class is contained (composite) by the DefinedThing class: [0..*]-[1..1]
-ALTER TABLE "Iteration_REPLACE"."Attachment" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "Iteration_REPLACE"."Attachment" ADD CONSTRAINT "Attachment_FK_Container" FOREIGN KEY ("Container") REFERENCES "Iteration_REPLACE"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_Attachment_Container" ON "Iteration_REPLACE"."Attachment" ("Container");
-
--- Behavior containment
--- The Behavior class is contained (composite) by the ElementDefinition class: [0..*]-[1..1]
-ALTER TABLE "Iteration_REPLACE"."Behavior" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "Iteration_REPLACE"."Behavior" ADD CONSTRAINT "Behavior_FK_Container" FOREIGN KEY ("Container") REFERENCES "Iteration_REPLACE"."ElementDefinition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_Behavior_Container" ON "Iteration_REPLACE"."Behavior" ("Container");
-
--- BehavioralParameter containment
--- The BehavioralParameter class is contained (composite) by the Behavior class: [0..*]-[1..1]
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" ADD CONSTRAINT "BehavioralParameter_FK_Container" FOREIGN KEY ("Container") REFERENCES "Iteration_REPLACE"."Behavior" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_BehavioralParameter_Container" ON "Iteration_REPLACE"."BehavioralParameter" ("Container");
-
 -- BinaryRelationship containment
 -- The BinaryRelationship class is not directly contained
 
@@ -4285,17 +4012,11 @@ ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" ADD COLUMN "Container" uui
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" ADD CONSTRAINT "DiagramElementThing_FK_Container" FOREIGN KEY ("Container") REFERENCES "Iteration_REPLACE"."DiagramElementContainer" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 CREATE INDEX "Idx_DiagramElementThing_Container" ON "Iteration_REPLACE"."DiagramElementThing" ("Container");
 
--- DiagramFrame containment
--- The DiagramFrame class is not directly contained
-
 -- DiagrammingStyle containment
 -- The DiagrammingStyle class is not directly contained
 
 -- DiagramObject containment
 -- The DiagramObject class is not directly contained
-
--- DiagramPort containment
--- The DiagramPort class is not directly contained
 
 -- DiagramShape containment
 -- The DiagramShape class is not directly contained
@@ -4684,43 +4405,6 @@ ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_vacuum_thre
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Term" SET (autovacuum_analyze_threshold = 2500);
 
--- ArchitectureDiagram - Reference properties
--- ArchitectureDiagram.Owner is an association to DomainOfExpertise: [1..1]-[0..*]
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" ADD COLUMN "Owner" uuid NOT NULL;
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" ADD CONSTRAINT "ArchitectureDiagram_FK_Owner" FOREIGN KEY ("Owner") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- ArchitectureDiagram
--- ArchitectureDiagram.TopArchitectureElement is an optional association to ArchitectureElement: [0..1]-[1..1]
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" ADD COLUMN "TopArchitectureElement" uuid;
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram" ADD CONSTRAINT "ArchitectureDiagram_FK_TopArchitectureElement" FOREIGN KEY ("TopArchitectureElement") REFERENCES "Iteration_REPLACE"."ArchitectureElement" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
-
--- ArchitectureElement - Reference properties
-
--- Attachment - Reference properties
--- Attachment.FileType is a collection property (many to many) of class FileType: [1..*]-[1..1]
-CREATE TABLE "Iteration_REPLACE"."Attachment_FileType" (
-  "Attachment" uuid NOT NULL,
-  "FileType" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "Attachment_FileType_PK" PRIMARY KEY("Attachment", "FileType"),
-  CONSTRAINT "Attachment_FileType_FK_Source" FOREIGN KEY ("Attachment") REFERENCES "Iteration_REPLACE"."Attachment" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
-  CONSTRAINT "Attachment_FileType_FK_Target" FOREIGN KEY ("FileType") REFERENCES "SiteDirectory"."FileType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
-);
-CREATE INDEX "Idx_Attachment_FileType_ValidFrom" ON "Iteration_REPLACE"."Attachment_FileType" ("ValidFrom");
-CREATE INDEX "Idx_Attachment_FileType_ValidTo" ON "Iteration_REPLACE"."Attachment_FileType" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType" SET (autovacuum_analyze_threshold = 2500);
-
--- Behavior - Reference properties
-
--- BehavioralParameter - Reference properties
--- BehavioralParameter.Parameter is an association to Parameter: [1..1]-[1..1]
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" ADD COLUMN "Parameter" uuid NOT NULL;
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter" ADD CONSTRAINT "BehavioralParameter_FK_Parameter" FOREIGN KEY ("Parameter") REFERENCES "Iteration_REPLACE"."Parameter" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
 -- BinaryRelationship - Reference properties
 -- BinaryRelationship.Source is an association to Thing: [1..1]-[0..*]
 ALTER TABLE "Iteration_REPLACE"."BinaryRelationship" ADD COLUMN "Source" uuid NOT NULL;
@@ -4806,8 +4490,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" ADD CONSTRAINT "DiagramEle
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" ADD COLUMN "SharedStyle" uuid;
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing" ADD CONSTRAINT "DiagramElementThing_FK_SharedStyle" FOREIGN KEY ("SharedStyle") REFERENCES "Iteration_REPLACE"."SharedStyle" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
 
--- DiagramFrame - Reference properties
-
 -- DiagrammingStyle - Reference properties
 -- DiagrammingStyle.FillColor is an optional association to Color: [0..1]
 ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" ADD COLUMN "FillColor" uuid;
@@ -4824,8 +4506,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" ADD COLUMN "StrokeColor" uuid
 ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle" ADD CONSTRAINT "DiagrammingStyle_FK_StrokeColor" FOREIGN KEY ("StrokeColor") REFERENCES "Iteration_REPLACE"."Color" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
 
 -- DiagramObject - Reference properties
-
--- DiagramPort - Reference properties
 
 -- DiagramShape - Reference properties
 
@@ -4857,24 +4537,6 @@ ALTER TABLE "Iteration_REPLACE"."ElementBase" ADD COLUMN "Owner" uuid NOT NULL;
 ALTER TABLE "Iteration_REPLACE"."ElementBase" ADD CONSTRAINT "ElementBase_FK_Owner" FOREIGN KEY ("Owner") REFERENCES "SiteDirectory"."DomainOfExpertise" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- ElementDefinition - Reference properties
--- ElementDefinition.OrganizationalParticipant is a collection property (many to many) of class OrganizationalParticipant: [0..*]-[1..1]
-CREATE TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" (
-  "ElementDefinition" uuid NOT NULL,
-  "OrganizationalParticipant" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "ElementDefinition_OrganizationalParticipant_PK" PRIMARY KEY("ElementDefinition", "OrganizationalParticipant"),
-  CONSTRAINT "ElementDefinition_OrganizationalParticipant_FK_Source" FOREIGN KEY ("ElementDefinition") REFERENCES "Iteration_REPLACE"."ElementDefinition" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
-  CONSTRAINT "ElementDefinition_OrganizationalParticipant_FK_Target" FOREIGN KEY ("OrganizationalParticipant") REFERENCES "SiteDirectory"."OrganizationalParticipant" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
-);
-CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipant_ValidFrom" ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" ("ValidFrom");
-CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipant_ValidTo" ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant" SET (autovacuum_analyze_threshold = 2500);
-
--- ElementDefinition
 -- ElementDefinition.ReferencedElement is a collection property (many to many) of class NestedElement: [0..*]-[0..*]
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement" (
   "ElementDefinition" uuid NOT NULL,
@@ -5709,76 +5371,6 @@ ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_vacuum_
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Revision" SET (autovacuum_analyze_threshold = 2500);
 
--- ArchitectureDiagram - revision history table
-CREATE TABLE "Iteration_REPLACE"."ArchitectureDiagram_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "ArchitectureDiagram_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- ArchitectureElement - revision history table
-CREATE TABLE "Iteration_REPLACE"."ArchitectureElement_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "ArchitectureElement_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- Attachment - revision history table
-CREATE TABLE "Iteration_REPLACE"."Attachment_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "Attachment_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- Behavior - revision history table
-CREATE TABLE "Iteration_REPLACE"."Behavior_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "Behavior_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- BehavioralParameter - revision history table
-CREATE TABLE "Iteration_REPLACE"."BehavioralParameter_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "BehavioralParameter_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Revision" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationship - revision history table
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Revision" (
   "Iid" uuid NOT NULL,
@@ -5903,20 +5495,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Revision" SET (autovacuum_analyze_t
 -- DiagramElementThing - revision history table
 -- The DiagramElementThing class is abstract and therefore does not have a Revision table
 
--- DiagramFrame - revision history table
-CREATE TABLE "Iteration_REPLACE"."DiagramFrame_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "DiagramFrame_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Revision" SET (autovacuum_analyze_threshold = 2500);
-
 -- DiagrammingStyle - revision history table
 -- The DiagrammingStyle class is abstract and therefore does not have a Revision table
 
@@ -5933,20 +5511,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_vacuum_
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- DiagramPort - revision history table
-CREATE TABLE "Iteration_REPLACE"."DiagramPort_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "DiagramPort_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Revision" SET (autovacuum_analyze_threshold = 2500);
 
 -- DiagramShape - revision history table
 -- The DiagramShape class is abstract and therefore does not have a Revision table
@@ -6687,71 +6251,6 @@ ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_vacuum_thr
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Cache" SET (autovacuum_analyze_threshold = 2500);
 
--- ArchitectureDiagram - Cache table
-CREATE TABLE "Iteration_REPLACE"."ArchitectureDiagram_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "ArchitectureDiagram_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "ArchitectureDiagramCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- ArchitectureElement - Cache table
-CREATE TABLE "Iteration_REPLACE"."ArchitectureElement_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "ArchitectureElement_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "ArchitectureElementCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- Attachment - Cache table
-CREATE TABLE "Iteration_REPLACE"."Attachment_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "Attachment_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "AttachmentCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- Behavior - Cache table
-CREATE TABLE "Iteration_REPLACE"."Behavior_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "Behavior_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "BehaviorCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- BehavioralParameter - Cache table
-CREATE TABLE "Iteration_REPLACE"."BehavioralParameter_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "BehavioralParameter_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "BehavioralParameterCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Cache" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationship - Cache table
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Cache" (
   "Iid" uuid NOT NULL,
@@ -6868,19 +6367,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramEdge_Cache" SET (autovacuum_analyze_thre
 -- DiagramElementThing - Cache table
 -- The DiagramElementThing class is abstract and therefore does not have a Cache table
 
--- DiagramFrame - Cache table
-CREATE TABLE "Iteration_REPLACE"."DiagramFrame_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "DiagramFrame_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "DiagramFrameCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Cache" SET (autovacuum_analyze_threshold = 2500);
-
 -- DiagrammingStyle - Cache table
 -- The DiagrammingStyle class is abstract and therefore does not have a Cache table
 
@@ -6896,19 +6382,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_vacuum_sca
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- DiagramPort - Cache table
-CREATE TABLE "Iteration_REPLACE"."DiagramPort_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "DiagramPort_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "DiagramPortCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "Iteration_REPLACE"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Cache" SET (autovacuum_analyze_threshold = 2500);
 
 -- DiagramShape - Cache table
 -- The DiagramShape class is abstract and therefore does not have a Cache table
@@ -7599,66 +7072,6 @@ ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_vacuum_thr
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- ArchitectureDiagram - Audit table
-CREATE TABLE "Iteration_REPLACE"."ArchitectureDiagram_Audit" (LIKE "Iteration_REPLACE"."ArchitectureDiagram");
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_ArchitectureDiagramAudit_ValidFrom" ON "Iteration_REPLACE"."ArchitectureDiagram_Audit" ("ValidFrom");
-CREATE INDEX "Idx_ArchitectureDiagramAudit_ValidTo" ON "Iteration_REPLACE"."ArchitectureDiagram_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureDiagram_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- ArchitectureElement - Audit table
-CREATE TABLE "Iteration_REPLACE"."ArchitectureElement_Audit" (LIKE "Iteration_REPLACE"."ArchitectureElement");
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_ArchitectureElementAudit_ValidFrom" ON "Iteration_REPLACE"."ArchitectureElement_Audit" ("ValidFrom");
-CREATE INDEX "Idx_ArchitectureElementAudit_ValidTo" ON "Iteration_REPLACE"."ArchitectureElement_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ArchitectureElement_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- Attachment - Audit table
-CREATE TABLE "Iteration_REPLACE"."Attachment_Audit" (LIKE "Iteration_REPLACE"."Attachment");
-ALTER TABLE "Iteration_REPLACE"."Attachment_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_AttachmentAudit_ValidFrom" ON "Iteration_REPLACE"."Attachment_Audit" ("ValidFrom");
-CREATE INDEX "Idx_AttachmentAudit_ValidTo" ON "Iteration_REPLACE"."Attachment_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."Attachment_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- Behavior - Audit table
-CREATE TABLE "Iteration_REPLACE"."Behavior_Audit" (LIKE "Iteration_REPLACE"."Behavior");
-ALTER TABLE "Iteration_REPLACE"."Behavior_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_BehaviorAudit_ValidFrom" ON "Iteration_REPLACE"."Behavior_Audit" ("ValidFrom");
-CREATE INDEX "Idx_BehaviorAudit_ValidTo" ON "Iteration_REPLACE"."Behavior_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."Behavior_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Behavior_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- BehavioralParameter - Audit table
-CREATE TABLE "Iteration_REPLACE"."BehavioralParameter_Audit" (LIKE "Iteration_REPLACE"."BehavioralParameter");
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_BehavioralParameterAudit_ValidFrom" ON "Iteration_REPLACE"."BehavioralParameter_Audit" ("ValidFrom");
-CREATE INDEX "Idx_BehavioralParameterAudit_ValidTo" ON "Iteration_REPLACE"."BehavioralParameter_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."BehavioralParameter_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationship - Audit table
 CREATE TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" (LIKE "Iteration_REPLACE"."BinaryRelationship");
 ALTER TABLE "Iteration_REPLACE"."BinaryRelationship_Audit" 
@@ -7803,18 +7216,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_vacu
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."DiagramElementThing_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- DiagramFrame - Audit table
-CREATE TABLE "Iteration_REPLACE"."DiagramFrame_Audit" (LIKE "Iteration_REPLACE"."DiagramFrame");
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_DiagramFrameAudit_ValidFrom" ON "Iteration_REPLACE"."DiagramFrame_Audit" ("ValidFrom");
-CREATE INDEX "Idx_DiagramFrameAudit_ValidTo" ON "Iteration_REPLACE"."DiagramFrame_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramFrame_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- DiagrammingStyle - Audit table
 CREATE TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" (LIKE "Iteration_REPLACE"."DiagrammingStyle");
 ALTER TABLE "Iteration_REPLACE"."DiagrammingStyle_Audit" 
@@ -7838,18 +7239,6 @@ ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_vacuum_sca
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."DiagramObject_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- DiagramPort - Audit table
-CREATE TABLE "Iteration_REPLACE"."DiagramPort_Audit" (LIKE "Iteration_REPLACE"."DiagramPort");
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_DiagramPortAudit_ValidFrom" ON "Iteration_REPLACE"."DiagramPort_Audit" ("ValidFrom");
-CREATE INDEX "Idx_DiagramPortAudit_ValidTo" ON "Iteration_REPLACE"."DiagramPort_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."DiagramPort_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- DiagramShape - Audit table
 CREATE TABLE "Iteration_REPLACE"."DiagramShape_Audit" (LIKE "Iteration_REPLACE"."DiagramShape");
@@ -8617,27 +8006,6 @@ ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_vacuu
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "Iteration_REPLACE"."AndExpression_Term_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- ArchitectureDiagram - Audit table Reference properties
-
--- ArchitectureElement - Audit table Reference properties
-
--- Attachment - Audit table Reference properties
--- Attachment.FileType is a collection property (many to many) of class FileType: [1..*]-[1..1]
-CREATE TABLE "Iteration_REPLACE"."Attachment_FileType_Audit" (LIKE "Iteration_REPLACE"."Attachment_FileType");
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_Attachment_FileTypeAudit_ValidFrom" ON "Iteration_REPLACE"."Attachment_FileType_Audit" ("ValidFrom");
-CREATE INDEX "Idx_Attachment_FileTypeAudit_ValidTo" ON "Iteration_REPLACE"."Attachment_FileType_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."Attachment_FileType_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- Behavior - Audit table Reference properties
-
--- BehavioralParameter - Audit table Reference properties
-
 -- BinaryRelationship - Audit table Reference properties
 
 -- BooleanExpression - Audit table Reference properties
@@ -8686,13 +8054,9 @@ ALTER TABLE "Iteration_REPLACE"."Definition_Note_Audit" SET (autovacuum_analyze_
 
 -- DiagramElementThing - Audit table Reference properties
 
--- DiagramFrame - Audit table Reference properties
-
 -- DiagrammingStyle - Audit table Reference properties
 
 -- DiagramObject - Audit table Reference properties
-
--- DiagramPort - Audit table Reference properties
 
 -- DiagramShape - Audit table Reference properties
 
@@ -8714,19 +8078,6 @@ ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" SET (autovacuum_ana
 ALTER TABLE "Iteration_REPLACE"."ElementBase_Category_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- ElementDefinition - Audit table Reference properties
--- ElementDefinition.OrganizationalParticipant is a collection property (many to many) of class OrganizationalParticipant: [0..*]-[1..1]
-CREATE TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" (LIKE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant");
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipantAudit_ValidFrom" ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" ("ValidFrom");
-CREATE INDEX "Idx_ElementDefinition_OrganizationalParticipantAudit_ValidTo" ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" ("ValidTo");
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- ElementDefinition
 -- ElementDefinition.ReferencedElement is a collection property (many to many) of class NestedElement: [0..*]-[0..*]
 CREATE TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" (LIKE "Iteration_REPLACE"."ElementDefinition_ReferencedElement");
 ALTER TABLE "Iteration_REPLACE"."ElementDefinition_ReferencedElement_Audit" 

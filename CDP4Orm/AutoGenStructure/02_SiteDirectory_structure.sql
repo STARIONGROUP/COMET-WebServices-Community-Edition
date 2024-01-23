@@ -54,21 +54,6 @@ ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_vacuum_threshol
 ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."ArrayParameterType" SET (autovacuum_analyze_threshold = 2500);
 
--- Attachment class - table definition [version 1.4.0]
-CREATE TABLE "SiteDirectory"."Attachment" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "Attachment_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_Attachment_ValidFrom" ON "SiteDirectory"."Attachment" ("ValidFrom");
-CREATE INDEX "Idx_Attachment_ValidTo" ON "SiteDirectory"."Attachment" ("ValidTo");
-ALTER TABLE "SiteDirectory"."Attachment" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."Attachment" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationshipRule class - table definition [version 1.0.0]
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule" (
   "Iid" uuid NOT NULL,
@@ -263,21 +248,6 @@ ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_vacuum_scale_factor = 0
 ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Definition" SET (autovacuum_analyze_threshold = 2500);
-
--- DependentParameterTypeAssignment class - table definition [version 1.2.0]
-CREATE TABLE "SiteDirectory"."DependentParameterTypeAssignment" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "DependentParameterTypeAssignment_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_DependentParameterTypeAssignment_ValidFrom" ON "SiteDirectory"."DependentParameterTypeAssignment" ("ValidFrom");
-CREATE INDEX "Idx_DependentParameterTypeAssignment_ValidTo" ON "SiteDirectory"."DependentParameterTypeAssignment" ("ValidTo");
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" SET (autovacuum_analyze_threshold = 2500);
 
 -- DerivedQuantityKind class - table definition [version 1.0.0]
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind" (
@@ -474,21 +444,6 @@ ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_vacuum_threshold = 2500)
 ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."HyperLink" SET (autovacuum_analyze_threshold = 2500);
 
--- IndependentParameterTypeAssignment class - table definition [version 1.2.0]
-CREATE TABLE "SiteDirectory"."IndependentParameterTypeAssignment" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "IndependentParameterTypeAssignment_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_IndependentParameterTypeAssignment_ValidFrom" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("ValidFrom");
-CREATE INDEX "Idx_IndependentParameterTypeAssignment_ValidTo" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("ValidTo");
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" SET (autovacuum_analyze_threshold = 2500);
-
 -- IntervalScale class - table definition [version 1.0.0]
 CREATE TABLE "SiteDirectory"."IntervalScale" (
   "Iid" uuid NOT NULL,
@@ -548,21 +503,6 @@ ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_vacuum_scale_fact
 ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."LogarithmicScale" SET (autovacuum_analyze_threshold = 2500);
-
--- LogEntryChangelogItem class - table definition [version 1.2.0]
-CREATE TABLE "SiteDirectory"."LogEntryChangelogItem" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "LogEntryChangelogItem_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem" ("ValidTo");
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" SET (autovacuum_analyze_threshold = 2500);
 
 -- MappingToReferenceScale class - table definition [version 1.0.0]
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale" (
@@ -683,21 +623,6 @@ ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_vacuum_scale_factor =
 ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Organization" SET (autovacuum_analyze_threshold = 2500);
-
--- OrganizationalParticipant class - table definition [version 1.2.0]
-CREATE TABLE "SiteDirectory"."OrganizationalParticipant" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "OrganizationalParticipant_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_OrganizationalParticipant_ValidFrom" ON "SiteDirectory"."OrganizationalParticipant" ("ValidFrom");
-CREATE INDEX "Idx_OrganizationalParticipant_ValidTo" ON "SiteDirectory"."OrganizationalParticipant" ("ValidTo");
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" SET (autovacuum_analyze_threshold = 2500);
 
 -- ParameterizedCategoryRule class - table definition [version 1.0.0]
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule" (
@@ -953,21 +878,6 @@ ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_vacuum_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Rule" SET (autovacuum_analyze_threshold = 2500);
-
--- SampledFunctionParameterType class - table definition [version 1.2.0]
-CREATE TABLE "SiteDirectory"."SampledFunctionParameterType" (
-  "Iid" uuid NOT NULL,
-  "ValueTypeDictionary" hstore NOT NULL DEFAULT ''::hstore,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "SampledFunctionParameterType_PK" PRIMARY KEY ("Iid")
-);
-CREATE INDEX "Idx_SampledFunctionParameterType_ValidFrom" ON "SiteDirectory"."SampledFunctionParameterType" ("ValidFrom");
-CREATE INDEX "Idx_SampledFunctionParameterType_ValidTo" ON "SiteDirectory"."SampledFunctionParameterType" ("ValidTo");
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType" SET (autovacuum_analyze_threshold = 2500);
 
 -- ScalarParameterType class - table definition [version 1.0.0]
 CREATE TABLE "SiteDirectory"."ScalarParameterType" (
@@ -1309,9 +1219,6 @@ ALTER TABLE "SiteDirectory"."Alias" ADD CONSTRAINT "AliasDerivesFromThing" FOREI
 -- Class ArrayParameterType derives from class CompoundParameterType
 ALTER TABLE "SiteDirectory"."ArrayParameterType" ADD CONSTRAINT "ArrayParameterTypeDerivesFromCompoundParameterType" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."CompoundParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
--- Class Attachment derives from class Thing
-ALTER TABLE "SiteDirectory"."Attachment" ADD CONSTRAINT "AttachmentDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
 -- Class BinaryRelationshipRule derives from class Rule
 ALTER TABLE "SiteDirectory"."BinaryRelationshipRule" ADD CONSTRAINT "BinaryRelationshipRuleDerivesFromRule" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Rule" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
@@ -1350,9 +1257,6 @@ ALTER TABLE "SiteDirectory"."DefinedThing" ADD CONSTRAINT "DefinedThingDerivesFr
 
 -- Class Definition derives from class Thing
 ALTER TABLE "SiteDirectory"."Definition" ADD CONSTRAINT "DefinitionDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class DependentParameterTypeAssignment derives from class Thing
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD CONSTRAINT "DependentParameterTypeAssignmentDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- Class DerivedQuantityKind derives from class QuantityKind
 ALTER TABLE "SiteDirectory"."DerivedQuantityKind" ADD CONSTRAINT "DerivedQuantityKindDerivesFromQuantityKind" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."QuantityKind" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
@@ -1393,9 +1297,6 @@ ALTER TABLE "SiteDirectory"."Glossary" ADD CONSTRAINT "GlossaryDerivesFromDefine
 -- Class HyperLink derives from class Thing
 ALTER TABLE "SiteDirectory"."HyperLink" ADD CONSTRAINT "HyperLinkDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
--- Class IndependentParameterTypeAssignment derives from class Thing
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD CONSTRAINT "IndependentParameterTypeAssignmentDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
 -- Class IntervalScale derives from class MeasurementScale
 ALTER TABLE "SiteDirectory"."IntervalScale" ADD CONSTRAINT "IntervalScaleDerivesFromMeasurementScale" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."MeasurementScale" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
@@ -1407,9 +1308,6 @@ ALTER TABLE "SiteDirectory"."LinearConversionUnit" ADD CONSTRAINT "LinearConvers
 
 -- Class LogarithmicScale derives from class MeasurementScale
 ALTER TABLE "SiteDirectory"."LogarithmicScale" ADD CONSTRAINT "LogarithmicScaleDerivesFromMeasurementScale" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."MeasurementScale" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class LogEntryChangelogItem derives from class Thing
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" ADD CONSTRAINT "LogEntryChangelogItemDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- Class MappingToReferenceScale derives from class Thing
 ALTER TABLE "SiteDirectory"."MappingToReferenceScale" ADD CONSTRAINT "MappingToReferenceScaleDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
@@ -1434,9 +1332,6 @@ ALTER TABLE "SiteDirectory"."OrdinalScale" ADD CONSTRAINT "OrdinalScaleDerivesFr
 
 -- Class Organization derives from class Thing
 ALTER TABLE "SiteDirectory"."Organization" ADD CONSTRAINT "OrganizationDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class OrganizationalParticipant derives from class Thing
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD CONSTRAINT "OrganizationalParticipantDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- Class ParameterizedCategoryRule derives from class Rule
 ALTER TABLE "SiteDirectory"."ParameterizedCategoryRule" ADD CONSTRAINT "ParameterizedCategoryRuleDerivesFromRule" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Rule" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
@@ -1488,9 +1383,6 @@ ALTER TABLE "SiteDirectory"."ReferenceSource" ADD CONSTRAINT "ReferenceSourceDer
 
 -- Class Rule derives from class DefinedThing
 ALTER TABLE "SiteDirectory"."Rule" ADD CONSTRAINT "RuleDerivesFromDefinedThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- Class SampledFunctionParameterType derives from class ParameterType
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType" ADD CONSTRAINT "SampledFunctionParameterTypeDerivesFromParameterType" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."ParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- Class ScalarParameterType derives from class ParameterType
 ALTER TABLE "SiteDirectory"."ScalarParameterType" ADD CONSTRAINT "ScalarParameterTypeDerivesFromParameterType" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."ParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
@@ -1571,12 +1463,6 @@ CREATE INDEX "Idx_Alias_Container" ON "SiteDirectory"."Alias" ("Container");
 -- ArrayParameterType containment
 -- The ArrayParameterType class is not directly contained
 
--- Attachment containment
--- The Attachment class is contained (composite) by the DefinedThing class: [0..*]-[1..1]
-ALTER TABLE "SiteDirectory"."Attachment" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."Attachment" ADD CONSTRAINT "Attachment_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_Attachment_Container" ON "SiteDirectory"."Attachment" ("Container");
-
 -- BinaryRelationshipRule containment
 -- The BinaryRelationshipRule class is not directly contained
 
@@ -1627,12 +1513,6 @@ CREATE INDEX "Idx_Constant_Container" ON "SiteDirectory"."Constant" ("Container"
 ALTER TABLE "SiteDirectory"."Definition" ADD COLUMN "Container" uuid NOT NULL;
 ALTER TABLE "SiteDirectory"."Definition" ADD CONSTRAINT "Definition_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 CREATE INDEX "Idx_Definition_Container" ON "SiteDirectory"."Definition" ("Container");
-
--- DependentParameterTypeAssignment containment
--- The DependentParameterTypeAssignment class is contained (composite) by the SampledFunctionParameterType class: [1..*]-[1..1]
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD CONSTRAINT "DependentParameterTypeAssignment_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."SampledFunctionParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_DependentParameterTypeAssignment_Container" ON "SiteDirectory"."DependentParameterTypeAssignment" ("Container");
 
 -- DerivedQuantityKind containment
 -- The DerivedQuantityKind class is not directly contained
@@ -1697,12 +1577,6 @@ ALTER TABLE "SiteDirectory"."HyperLink" ADD COLUMN "Container" uuid NOT NULL;
 ALTER TABLE "SiteDirectory"."HyperLink" ADD CONSTRAINT "HyperLink_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."DefinedThing" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 CREATE INDEX "Idx_HyperLink_Container" ON "SiteDirectory"."HyperLink" ("Container");
 
--- IndependentParameterTypeAssignment containment
--- The IndependentParameterTypeAssignment class is contained (composite) by the SampledFunctionParameterType class: [1..*]-[1..1]
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD CONSTRAINT "IndependentParameterTypeAssignment_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."SampledFunctionParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_IndependentParameterTypeAssignment_Container" ON "SiteDirectory"."IndependentParameterTypeAssignment" ("Container");
-
 -- IntervalScale containment
 -- The IntervalScale class is not directly contained
 
@@ -1717,12 +1591,6 @@ CREATE INDEX "Idx_IterationSetup_Container" ON "SiteDirectory"."IterationSetup" 
 
 -- LogarithmicScale containment
 -- The LogarithmicScale class is not directly contained
-
--- LogEntryChangelogItem containment
--- The LogEntryChangelogItem class is contained (composite) by the LogEntry class: [0..*]-[1..1]
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem" ADD CONSTRAINT "LogEntryChangelogItem_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."SiteLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_LogEntryChangelogItem_Container" ON "SiteDirectory"."LogEntryChangelogItem" ("Container");
 
 -- MappingToReferenceScale containment
 -- The MappingToReferenceScale class is contained (composite) by the MeasurementScale class: [0..*]-[1..1]
@@ -1765,12 +1633,6 @@ CREATE INDEX "Idx_NaturalLanguage_Container" ON "SiteDirectory"."NaturalLanguage
 ALTER TABLE "SiteDirectory"."Organization" ADD COLUMN "Container" uuid NOT NULL;
 ALTER TABLE "SiteDirectory"."Organization" ADD CONSTRAINT "Organization_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."SiteDirectory" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 CREATE INDEX "Idx_Organization_Container" ON "SiteDirectory"."Organization" ("Container");
-
--- OrganizationalParticipant containment
--- The OrganizationalParticipant class is contained (composite) by the EngineeringModelSetup class: [0..*]-[1..1]
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD COLUMN "Container" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD CONSTRAINT "OrganizationalParticipant_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."EngineeringModelSetup" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-CREATE INDEX "Idx_OrganizationalParticipant_Container" ON "SiteDirectory"."OrganizationalParticipant" ("Container");
 
 -- ParameterizedCategoryRule containment
 -- The ParameterizedCategoryRule class is not directly contained
@@ -1855,9 +1717,6 @@ CREATE INDEX "Idx_ReferenceSource_Container" ON "SiteDirectory"."ReferenceSource
 ALTER TABLE "SiteDirectory"."Rule" ADD COLUMN "Container" uuid NOT NULL;
 ALTER TABLE "SiteDirectory"."Rule" ADD CONSTRAINT "Rule_FK_Container" FOREIGN KEY ("Container") REFERENCES "SiteDirectory"."ReferenceDataLibrary" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 CREATE INDEX "Idx_Rule_Container" ON "SiteDirectory"."Rule" ("Container");
-
--- SampledFunctionParameterType containment
--- The SampledFunctionParameterType class is not directly contained
 
 -- ScalarParameterType containment
 -- The ScalarParameterType class is not directly contained
@@ -1983,24 +1842,6 @@ ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_vacuu
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension" SET (autovacuum_analyze_threshold = 2500);
-
--- Attachment - Reference properties
--- Attachment.FileType is a collection property (many to many) of class FileType: [1..*]-[1..1]
-CREATE TABLE "SiteDirectory"."Attachment_FileType" (
-  "Attachment" uuid NOT NULL,
-  "FileType" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "Attachment_FileType_PK" PRIMARY KEY("Attachment", "FileType"),
-  CONSTRAINT "Attachment_FileType_FK_Source" FOREIGN KEY ("Attachment") REFERENCES "SiteDirectory"."Attachment" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE,
-  CONSTRAINT "Attachment_FileType_FK_Target" FOREIGN KEY ("FileType") REFERENCES "SiteDirectory"."FileType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE
-);
-CREATE INDEX "Idx_Attachment_FileType_ValidFrom" ON "SiteDirectory"."Attachment_FileType" ("ValidFrom");
-CREATE INDEX "Idx_Attachment_FileType_ValidTo" ON "SiteDirectory"."Attachment_FileType" ("ValidTo");
-ALTER TABLE "SiteDirectory"."Attachment_FileType" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_FileType" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."Attachment_FileType" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_FileType" SET (autovacuum_analyze_threshold = 2500);
 
 -- BinaryRelationshipRule - Reference properties
 -- BinaryRelationshipRule.RelationshipCategory is an association to Category: [1..1]-[0..1]
@@ -2161,19 +2002,6 @@ ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_vacuum_threshold =
 ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Definition_Note" SET (autovacuum_analyze_threshold = 2500);
 
--- DependentParameterTypeAssignment - Reference properties
--- DependentParameterTypeAssignment.MeasurementScale is an optional association to MeasurementScale: [0..1]-[1..1]
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD COLUMN "MeasurementScale" uuid;
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD CONSTRAINT "DependentParameterTypeAssignment_FK_MeasurementScale" FOREIGN KEY ("MeasurementScale") REFERENCES "SiteDirectory"."MeasurementScale" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
-
--- DependentParameterTypeAssignment
--- DependentParameterTypeAssignment.ParameterType is an association to ParameterType: [1..1]-[1..1]
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD COLUMN "ParameterType" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD CONSTRAINT "DependentParameterTypeAssignment_FK_ParameterType" FOREIGN KEY ("ParameterType") REFERENCES "SiteDirectory"."ParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- DependentParameterTypeAssignment is an ordered collection
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment" ADD COLUMN "Sequence" bigint NOT NULL;
-
 -- DerivedQuantityKind - Reference properties
 
 -- DerivedUnit - Reference properties
@@ -2239,11 +2067,6 @@ ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."EngineeringModelSetup_ActiveDomain" SET (autovacuum_analyze_threshold = 2500);
 
--- EngineeringModelSetup
--- EngineeringModelSetup.DefaultOrganizationalParticipant is an optional association to OrganizationalParticipant: [0..1]-[1..1]
-ALTER TABLE "SiteDirectory"."EngineeringModelSetup" ADD COLUMN "DefaultOrganizationalParticipant" uuid;
-ALTER TABLE "SiteDirectory"."EngineeringModelSetup" ADD CONSTRAINT "EngineeringModelSetup_FK_DefaultOrganizationalParticipant" FOREIGN KEY ("DefaultOrganizationalParticipant") REFERENCES "SiteDirectory"."OrganizationalParticipant" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
-
 -- EnumerationParameterType - Reference properties
 
 -- EnumerationValueDefinition - Reference properties
@@ -2290,19 +2113,6 @@ ALTER TABLE "SiteDirectory"."Glossary_Category" SET (autovacuum_analyze_threshol
 
 -- HyperLink - Reference properties
 
--- IndependentParameterTypeAssignment - Reference properties
--- IndependentParameterTypeAssignment.MeasurementScale is an optional association to MeasurementScale: [0..1]-[1..1]
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD COLUMN "MeasurementScale" uuid;
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD CONSTRAINT "IndependentParameterTypeAssignment_FK_MeasurementScale" FOREIGN KEY ("MeasurementScale") REFERENCES "SiteDirectory"."MeasurementScale" ("Iid") ON UPDATE CASCADE ON DELETE SET NULL DEFERRABLE;
-
--- IndependentParameterTypeAssignment
--- IndependentParameterTypeAssignment.ParameterType is an association to ParameterType: [1..1]-[1..1]
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD COLUMN "ParameterType" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD CONSTRAINT "IndependentParameterTypeAssignment_FK_ParameterType" FOREIGN KEY ("ParameterType") REFERENCES "SiteDirectory"."ParameterType" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- IndependentParameterTypeAssignment is an ordered collection
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment" ADD COLUMN "Sequence" bigint NOT NULL;
-
 -- IntervalScale - Reference properties
 
 -- IterationSetup - Reference properties
@@ -2316,23 +2126,6 @@ ALTER TABLE "SiteDirectory"."IterationSetup" ADD CONSTRAINT "IterationSetup_FK_S
 -- LogarithmicScale.ReferenceQuantityKind is an association to QuantityKind: [1..1]-[0..*]
 ALTER TABLE "SiteDirectory"."LogarithmicScale" ADD COLUMN "ReferenceQuantityKind" uuid NOT NULL;
 ALTER TABLE "SiteDirectory"."LogarithmicScale" ADD CONSTRAINT "LogarithmicScale_FK_ReferenceQuantityKind" FOREIGN KEY ("ReferenceQuantityKind") REFERENCES "SiteDirectory"."QuantityKind" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
-
--- LogEntryChangelogItem - Reference properties
--- LogEntryChangelogItem.AffectedReferenceIid is a collection property of type Guid: [0..*]
-CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" (
-  "LogEntryChangelogItem" uuid NOT NULL,
-  "AffectedReferenceIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_PK" PRIMARY KEY("LogEntryChangelogItem", "AffectedReferenceIid"),
-  CONSTRAINT "LogEntryChangelogItem_AffectedReferenceIid_FK_Source" FOREIGN KEY ("LogEntryChangelogItem") REFERENCES "SiteDirectory"."LogEntryChangelogItem" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIid_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" ("ValidTo");
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid" SET (autovacuum_analyze_threshold = 2500);
 
 -- MappingToReferenceScale - Reference properties
 -- MappingToReferenceScale.DependentScaleValue is an association to ScaleValueDefinition: [1..1]-[0..*]
@@ -2381,11 +2174,6 @@ ALTER TABLE "SiteDirectory"."MultiRelationshipRule" ADD CONSTRAINT "MultiRelatio
 -- OrdinalScale - Reference properties
 
 -- Organization - Reference properties
-
--- OrganizationalParticipant - Reference properties
--- OrganizationalParticipant.Organization is an association to Organization: [1..1]-[1..1]
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD COLUMN "Organization" uuid NOT NULL;
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant" ADD CONSTRAINT "OrganizationalParticipant_FK_Organization" FOREIGN KEY ("Organization") REFERENCES "SiteDirectory"."Organization" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE;
 
 -- ParameterizedCategoryRule - Reference properties
 -- ParameterizedCategoryRule.Category is an association to Category: [1..1]-[0..*]
@@ -2640,8 +2428,6 @@ ALTER TABLE "SiteDirectory"."ReferenceSource" ADD CONSTRAINT "ReferenceSource_FK
 
 -- Rule - Reference properties
 
--- SampledFunctionParameterType - Reference properties
-
 -- ScalarParameterType - Reference properties
 
 -- ScaleReferenceQuantityValue - Reference properties
@@ -2683,23 +2469,6 @@ ALTER TABLE "SiteDirectory"."SiteDirectoryDataDiscussionItem" ADD CONSTRAINT "Si
 -- SiteDirectoryThingReference - Reference properties
 
 -- SiteLogEntry - Reference properties
--- SiteLogEntry.AffectedDomainIid is a collection property of type Guid: [0..*]
-CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" (
-  "SiteLogEntry" uuid NOT NULL,
-  "AffectedDomainIid" uuid NOT NULL,
-  "ValidFrom" timestamp NOT NULL DEFAULT "SiteDirectory".get_transaction_time(),
-  "ValidTo" timestamp NOT NULL DEFAULT 'infinity',
-  CONSTRAINT "SiteLogEntry_AffectedDomainIid_PK" PRIMARY KEY("SiteLogEntry", "AffectedDomainIid"),
-  CONSTRAINT "SiteLogEntry_AffectedDomainIid_FK_Source" FOREIGN KEY ("SiteLogEntry") REFERENCES "SiteDirectory"."SiteLogEntry" ("Iid") ON UPDATE CASCADE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIid_ValidFrom" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid" ("ValidFrom");
-CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIid_ValidTo" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid" ("ValidTo");
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid" SET (autovacuum_analyze_threshold = 2500);
-
--- SiteLogEntry
 -- SiteLogEntry.AffectedItemIid is a collection property of type Guid: [0..*]
 CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid" (
   "SiteLogEntry" uuid NOT NULL,
@@ -2854,20 +2623,6 @@ ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_vacuum
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- Attachment - revision history table
-CREATE TABLE "SiteDirectory"."Attachment_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "Attachment_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "SiteDirectory"."Attachment_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."Attachment_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_Revision" SET (autovacuum_analyze_threshold = 2500);
 
 -- BinaryRelationshipRule - revision history table
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Revision" (
@@ -3029,20 +2784,6 @@ ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_vacuum_thresho
 ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Definition_Revision" SET (autovacuum_analyze_threshold = 2500);
 
--- DependentParameterTypeAssignment - revision history table
-CREATE TABLE "SiteDirectory"."DependentParameterTypeAssignment_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "DependentParameterTypeAssignment_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Revision" SET (autovacuum_analyze_threshold = 2500);
-
 -- DerivedQuantityKind - revision history table
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Revision" (
   "Iid" uuid NOT NULL,
@@ -3203,20 +2944,6 @@ ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_vacuum_threshol
 ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."HyperLink_Revision" SET (autovacuum_analyze_threshold = 2500);
 
--- IndependentParameterTypeAssignment - revision history table
-CREATE TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "IndependentParameterTypeAssignment_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Revision" SET (autovacuum_analyze_threshold = 2500);
-
 -- IntervalScale - revision history table
 CREATE TABLE "SiteDirectory"."IntervalScale_Revision" (
   "Iid" uuid NOT NULL,
@@ -3272,20 +2999,6 @@ ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_vacuum_s
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- LogEntryChangelogItem - revision history table
-CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "LogEntryChangelogItem_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Revision" SET (autovacuum_analyze_threshold = 2500);
 
 -- MappingToReferenceScale - revision history table
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Revision" (
@@ -3376,20 +3089,6 @@ ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_vacuum_scale
 ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Organization_Revision" SET (autovacuum_analyze_threshold = 2500);
-
--- OrganizationalParticipant - revision history table
-CREATE TABLE "SiteDirectory"."OrganizationalParticipant_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "OrganizationalParticipant_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Revision" SET (autovacuum_analyze_threshold = 2500);
 
 -- ParameterizedCategoryRule - revision history table
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Revision" (
@@ -3584,20 +3283,6 @@ ALTER TABLE "SiteDirectory"."ReferenceSource_Revision" SET (autovacuum_analyze_t
 
 -- Rule - revision history table
 -- the Rule class is abstract and therefore does not have a Revision table
-
--- SampledFunctionParameterType - revision history table
-CREATE TABLE "SiteDirectory"."SampledFunctionParameterType_Revision" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Instant" timestamp without time zone NOT NULL,
-  "Actor" uuid,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "SampledFunctionParameterType_REV_PK" PRIMARY KEY ("Iid", "RevisionNumber")
-);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Revision" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Revision" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Revision" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Revision" SET (autovacuum_analyze_threshold = 2500);
 
 -- ScalarParameterType - revision history table
 -- the ScalarParameterType class is abstract and therefore does not have a Revision table
@@ -3893,19 +3578,6 @@ ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_vacuum_th
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 
--- Attachment - Cache table
-CREATE TABLE "SiteDirectory"."Attachment_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "Attachment_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "AttachmentCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "SiteDirectory"."Attachment_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."Attachment_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_Cache" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationshipRule - Cache table
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Cache" (
   "Iid" uuid NOT NULL,
@@ -4054,19 +3726,6 @@ ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_vacuum_scale_fact
 ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Definition_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- DependentParameterTypeAssignment - Cache table
-CREATE TABLE "SiteDirectory"."DependentParameterTypeAssignment_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "DependentParameterTypeAssignment_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "DependentParameterTypeAssignmentCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Cache" SET (autovacuum_analyze_threshold = 2500);
 
 -- DerivedQuantityKind - Cache table
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Cache" (
@@ -4217,19 +3876,6 @@ ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_vacuum_threshold =
 ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."HyperLink_Cache" SET (autovacuum_analyze_threshold = 2500);
 
--- IndependentParameterTypeAssignment - Cache table
-CREATE TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "IndependentParameterTypeAssignment_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "IndependentParameterTypeAssignmentCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Cache" SET (autovacuum_analyze_threshold = 2500);
-
 -- IntervalScale - Cache table
 CREATE TABLE "SiteDirectory"."IntervalScale_Cache" (
   "Iid" uuid NOT NULL,
@@ -4281,19 +3927,6 @@ ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_vacuum_scal
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- LogEntryChangelogItem - Cache table
-CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "LogEntryChangelogItem_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "LogEntryChangelogItemCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Cache" SET (autovacuum_analyze_threshold = 2500);
 
 -- MappingToReferenceScale - Cache table
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Cache" (
@@ -4378,19 +4011,6 @@ ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_vacuum_scale_fa
 ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Organization_Cache" SET (autovacuum_analyze_threshold = 2500);
-
--- OrganizationalParticipant - Cache table
-CREATE TABLE "SiteDirectory"."OrganizationalParticipant_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "OrganizationalParticipant_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "OrganizationalParticipantCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Cache" SET (autovacuum_analyze_threshold = 2500);
 
 -- ParameterizedCategoryRule - Cache table
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Cache" (
@@ -4572,19 +4192,6 @@ ALTER TABLE "SiteDirectory"."ReferenceSource_Cache" SET (autovacuum_analyze_thre
 
 -- Rule - Cache table
 -- the Rule class is abstract and therefore does not have a Cache table
-
--- SampledFunctionParameterType - Cache table
-CREATE TABLE "SiteDirectory"."SampledFunctionParameterType_Cache" (
-  "Iid" uuid NOT NULL,
-  "RevisionNumber" integer NOT NULL,
-  "Jsonb" jsonb NOT NULL,
-  CONSTRAINT "SampledFunctionParameterType_CACHE_PK" PRIMARY KEY ("Iid"),
-  CONSTRAINT "SampledFunctionParameterTypeCacheDerivesFromThing" FOREIGN KEY ("Iid") REFERENCES "SiteDirectory"."Thing" ("Iid") MATCH SIMPLE ON DELETE CASCADE DEFERRABLE INITIALLY IMMEDIATE
-);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Cache" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Cache" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Cache" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Cache" SET (autovacuum_analyze_threshold = 2500);
 
 -- ScalarParameterType - Cache table
 -- the ScalarParameterType class is abstract and therefore does not have a Cache table
@@ -4860,18 +4467,6 @@ ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_vacuum_th
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- Attachment - Audit table
-CREATE TABLE "SiteDirectory"."Attachment_Audit" (LIKE "SiteDirectory"."Attachment");
-ALTER TABLE "SiteDirectory"."Attachment_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_AttachmentAudit_ValidFrom" ON "SiteDirectory"."Attachment_Audit" ("ValidFrom");
-CREATE INDEX "Idx_AttachmentAudit_ValidTo" ON "SiteDirectory"."Attachment_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."Attachment_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."Attachment_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationshipRule - Audit table
 CREATE TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" (LIKE "SiteDirectory"."BinaryRelationshipRule");
 ALTER TABLE "SiteDirectory"."BinaryRelationshipRule_Audit" 
@@ -5027,18 +4622,6 @@ ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_vacuum_scale_fact
 ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Definition_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- DependentParameterTypeAssignment - Audit table
-CREATE TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" (LIKE "SiteDirectory"."DependentParameterTypeAssignment");
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_DependentParameterTypeAssignmentAudit_ValidFrom" ON "SiteDirectory"."DependentParameterTypeAssignment_Audit" ("ValidFrom");
-CREATE INDEX "Idx_DependentParameterTypeAssignmentAudit_ValidTo" ON "SiteDirectory"."DependentParameterTypeAssignment_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."DependentParameterTypeAssignment_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- DerivedQuantityKind - Audit table
 CREATE TABLE "SiteDirectory"."DerivedQuantityKind_Audit" (LIKE "SiteDirectory"."DerivedQuantityKind");
@@ -5196,18 +4779,6 @@ ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_vacuum_threshold =
 ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."HyperLink_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- IndependentParameterTypeAssignment - Audit table
-CREATE TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" (LIKE "SiteDirectory"."IndependentParameterTypeAssignment");
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_IndependentParameterTypeAssignmentAudit_ValidFrom" ON "SiteDirectory"."IndependentParameterTypeAssignment_Audit" ("ValidFrom");
-CREATE INDEX "Idx_IndependentParameterTypeAssignmentAudit_ValidTo" ON "SiteDirectory"."IndependentParameterTypeAssignment_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."IndependentParameterTypeAssignment_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- IntervalScale - Audit table
 CREATE TABLE "SiteDirectory"."IntervalScale_Audit" (LIKE "SiteDirectory"."IntervalScale");
 ALTER TABLE "SiteDirectory"."IntervalScale_Audit" 
@@ -5255,18 +4826,6 @@ ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_vacuum_scal
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."LogarithmicScale_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- LogEntryChangelogItem - Audit table
-CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" (LIKE "SiteDirectory"."LogEntryChangelogItem");
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_LogEntryChangelogItemAudit_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem_Audit" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItemAudit_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- MappingToReferenceScale - Audit table
 CREATE TABLE "SiteDirectory"."MappingToReferenceScale_Audit" (LIKE "SiteDirectory"."MappingToReferenceScale");
@@ -5363,18 +4922,6 @@ ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_vacuum_scale_fa
 ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Organization_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- OrganizationalParticipant - Audit table
-CREATE TABLE "SiteDirectory"."OrganizationalParticipant_Audit" (LIKE "SiteDirectory"."OrganizationalParticipant");
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_OrganizationalParticipantAudit_ValidFrom" ON "SiteDirectory"."OrganizationalParticipant_Audit" ("ValidFrom");
-CREATE INDEX "Idx_OrganizationalParticipantAudit_ValidTo" ON "SiteDirectory"."OrganizationalParticipant_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."OrganizationalParticipant_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- ParameterizedCategoryRule - Audit table
 CREATE TABLE "SiteDirectory"."ParameterizedCategoryRule_Audit" (LIKE "SiteDirectory"."ParameterizedCategoryRule");
@@ -5579,18 +5126,6 @@ ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_vacuum_scale_factor = 0
 ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_vacuum_threshold = 2500);
 ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Rule_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- SampledFunctionParameterType - Audit table
-CREATE TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" (LIKE "SiteDirectory"."SampledFunctionParameterType");
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_SampledFunctionParameterTypeAudit_ValidFrom" ON "SiteDirectory"."SampledFunctionParameterType_Audit" ("ValidFrom");
-CREATE INDEX "Idx_SampledFunctionParameterTypeAudit_ValidTo" ON "SiteDirectory"."SampledFunctionParameterType_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SampledFunctionParameterType_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- ScalarParameterType - Audit table
 CREATE TABLE "SiteDirectory"."ScalarParameterType_Audit" (LIKE "SiteDirectory"."ScalarParameterType");
@@ -5875,19 +5410,6 @@ ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."ArrayParameterType_Dimension_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- Attachment - Audit table Reference properties
--- Attachment.FileType is a collection property (many to many) of class FileType: [1..*]-[1..1]
-CREATE TABLE "SiteDirectory"."Attachment_FileType_Audit" (LIKE "SiteDirectory"."Attachment_FileType");
-ALTER TABLE "SiteDirectory"."Attachment_FileType_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_Attachment_FileTypeAudit_ValidFrom" ON "SiteDirectory"."Attachment_FileType_Audit" ("ValidFrom");
-CREATE INDEX "Idx_Attachment_FileTypeAudit_ValidTo" ON "SiteDirectory"."Attachment_FileType_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."Attachment_FileType_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_FileType_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."Attachment_FileType_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."Attachment_FileType_Audit" SET (autovacuum_analyze_threshold = 2500);
-
 -- BinaryRelationshipRule - Audit table Reference properties
 
 -- BooleanParameterType - Audit table Reference properties
@@ -5984,8 +5506,6 @@ ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_vacuum_thres
 ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
 ALTER TABLE "SiteDirectory"."Definition_Note_Audit" SET (autovacuum_analyze_threshold = 2500);
 
--- DependentParameterTypeAssignment - Audit table Reference properties
-
 -- DerivedQuantityKind - Audit table Reference properties
 
 -- DerivedUnit - Audit table Reference properties
@@ -6067,8 +5587,6 @@ ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" SET (autovacuum_analyze_th
 
 -- HyperLink - Audit table Reference properties
 
--- IndependentParameterTypeAssignment - Audit table Reference properties
-
 -- IntervalScale - Audit table Reference properties
 
 -- IterationSetup - Audit table Reference properties
@@ -6076,19 +5594,6 @@ ALTER TABLE "SiteDirectory"."Glossary_Category_Audit" SET (autovacuum_analyze_th
 -- LinearConversionUnit - Audit table Reference properties
 
 -- LogarithmicScale - Audit table Reference properties
-
--- LogEntryChangelogItem - Audit table Reference properties
--- LogEntryChangelogItem.AffectedReferenceIid is a collection property of type Guid: [0..*]
-CREATE TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" (LIKE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid");
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIidAudit_ValidFrom" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" ("ValidFrom");
-CREATE INDEX "Idx_LogEntryChangelogItem_AffectedReferenceIidAudit_ValidTo" ON "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."LogEntryChangelogItem_AffectedReferenceIid_Audit" SET (autovacuum_analyze_threshold = 2500);
 
 -- MappingToReferenceScale - Audit table Reference properties
 
@@ -6116,8 +5621,6 @@ ALTER TABLE "SiteDirectory"."MultiRelationshipRule_RelatedCategory_Audit" SET (a
 -- OrdinalScale - Audit table Reference properties
 
 -- Organization - Audit table Reference properties
-
--- OrganizationalParticipant - Audit table Reference properties
 
 -- ParameterizedCategoryRule - Audit table Reference properties
 -- ParameterizedCategoryRule.ParameterType is a collection property (many to many) of class ParameterType: [1..*]-[0..*]
@@ -6243,8 +5746,6 @@ ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" SET (autovacuum_ana
 
 -- Rule - Audit table Reference properties
 
--- SampledFunctionParameterType - Audit table Reference properties
-
 -- ScalarParameterType - Audit table Reference properties
 
 -- ScaleReferenceQuantityValue - Audit table Reference properties
@@ -6264,19 +5765,6 @@ ALTER TABLE "SiteDirectory"."ReferenceSource_Category_Audit" SET (autovacuum_ana
 -- SiteDirectoryThingReference - Audit table Reference properties
 
 -- SiteLogEntry - Audit table Reference properties
--- SiteLogEntry.AffectedDomainIid is a collection property of type Guid: [0..*]
-CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" (LIKE "SiteDirectory"."SiteLogEntry_AffectedDomainIid");
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" 
-  ADD COLUMN "Action" character(1) NOT NULL,
-  ADD COLUMN "Actor" uuid;
-CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIidAudit_ValidFrom" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" ("ValidFrom");
-CREATE INDEX "Idx_SiteLogEntry_AffectedDomainIidAudit_ValidTo" ON "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" ("ValidTo");
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" SET (autovacuum_vacuum_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" SET (autovacuum_vacuum_threshold = 2500);
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" SET (autovacuum_analyze_scale_factor = 0.0);
-ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedDomainIid_Audit" SET (autovacuum_analyze_threshold = 2500);
-
--- SiteLogEntry
 -- SiteLogEntry.AffectedItemIid is a collection property of type Guid: [0..*]
 CREATE TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" (LIKE "SiteDirectory"."SiteLogEntry_AffectedItemIid");
 ALTER TABLE "SiteDirectory"."SiteLogEntry_AffectedItemIid_Audit" 

@@ -109,13 +109,6 @@ CREATE TRIGGER iteration_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'EngineeringModel_REPLACE', 'EngineeringModel_REPLACE');
 
--- LogEntryChangelogItem - Class Revision Trigger
-CREATE TRIGGER logentrychangelogitem_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "EngineeringModel_REPLACE"."LogEntryChangelogItem"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'EngineeringModel_REPLACE', 'EngineeringModel_REPLACE');
-
 -- ModellingAnnotationItem - Class Revision Trigger
 CREATE TRIGGER modellingannotationitem_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
@@ -246,14 +239,6 @@ CREATE TRIGGER filerevision_filetype_apply_revision
 
 -- Iteration - Reference Property Revision Trigger
 
--- LogEntryChangelogItem - Reference Property Revision Trigger
--- LogEntryChangelogItem.AffectedReferenceIid
-CREATE TRIGGER logentrychangelogitem_affectedreferenceiid_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('LogEntryChangelogItem', 'EngineeringModel_REPLACE');
-
 -- ModellingAnnotationItem - Reference Property Revision Trigger
 -- ModellingAnnotationItem.Category
 CREATE TRIGGER modellingannotationitem_category_apply_revision
@@ -272,13 +257,6 @@ CREATE TRIGGER modellingannotationitem_sourceannotation_apply_revision
 -- ModellingThingReference - Reference Property Revision Trigger
 
 -- ModelLogEntry - Reference Property Revision Trigger
--- ModelLogEntry.AffectedDomainIid
-CREATE TRIGGER modellogentry_affecteddomainiid_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('ModelLogEntry', 'EngineeringModel_REPLACE');
-
 -- ModelLogEntry.AffectedItemIid
 CREATE TRIGGER modellogentry_affecteditemiid_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
@@ -570,17 +548,6 @@ CREATE TRIGGER Iteration_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
--- LogEntryChangelogItem - Class Audit Triggers
-CREATE TRIGGER LogEntryChangelogItem_audit_prepare
-  BEFORE UPDATE ON "EngineeringModel_REPLACE"."LogEntryChangelogItem"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER LogEntryChangelogItem_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "EngineeringModel_REPLACE"."LogEntryChangelogItem"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
 -- ModellingAnnotationItem - Class Audit Triggers
 CREATE TRIGGER ModellingAnnotationItem_audit_prepare
   BEFORE UPDATE ON "EngineeringModel_REPLACE"."ModellingAnnotationItem"
@@ -809,18 +776,6 @@ CREATE TRIGGER FileRevision_FileType_audit_log
 
 -- Iteration - Reference Property Audit Triggers
 
--- LogEntryChangelogItem - Reference Property Audit Triggers
--- LogEntryChangelogItem.AffectedReferenceIid
-CREATE TRIGGER LogEntryChangelogItem_AffectedReferenceIid_audit_prepare
-  BEFORE UPDATE ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER LogEntryChangelogItem_AffectedReferenceIid_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "EngineeringModel_REPLACE"."LogEntryChangelogItem_AffectedReferenceIid"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
 -- ModellingAnnotationItem - Reference Property Audit Triggers
 -- ModellingAnnotationItem.Category
 CREATE TRIGGER ModellingAnnotationItem_Category_audit_prepare
@@ -847,17 +802,6 @@ CREATE TRIGGER ModellingAnnotationItem_SourceAnnotation_audit_log
 -- ModellingThingReference - Reference Property Audit Triggers
 
 -- ModelLogEntry - Reference Property Audit Triggers
--- ModelLogEntry.AffectedDomainIid
-CREATE TRIGGER ModelLogEntry_AffectedDomainIid_audit_prepare
-  BEFORE UPDATE ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER ModelLogEntry_AffectedDomainIid_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedDomainIid"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
 -- ModelLogEntry.AffectedItemIid
 CREATE TRIGGER ModelLogEntry_AffectedItemIid_audit_prepare
   BEFORE UPDATE ON "EngineeringModel_REPLACE"."ModelLogEntry_AffectedItemIid"
@@ -980,31 +924,6 @@ CREATE TRIGGER alias_apply_revision
 
 -- AndExpression - Class Revision Trigger
 
--- ArchitectureDiagram - Class Revision Trigger
-
--- ArchitectureElement - Class Revision Trigger
-
--- Attachment - Class Revision Trigger
-CREATE TRIGGER attachment_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "Iteration_REPLACE"."Attachment"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'EngineeringModel_REPLACE', 'Iteration_REPLACE');
-
--- Behavior - Class Revision Trigger
-CREATE TRIGGER behavior_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "Iteration_REPLACE"."Behavior"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'EngineeringModel_REPLACE', 'Iteration_REPLACE');
-
--- BehavioralParameter - Class Revision Trigger
-CREATE TRIGGER behavioralparameter_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "Iteration_REPLACE"."BehavioralParameter"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'EngineeringModel_REPLACE', 'Iteration_REPLACE');
-
 -- BinaryRelationship - Class Revision Trigger
 
 -- BooleanExpression - Class Revision Trigger
@@ -1064,13 +983,9 @@ CREATE TRIGGER diagramelementthing_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('Container', 'EngineeringModel_REPLACE', 'Iteration_REPLACE');
 
--- DiagramFrame - Class Revision Trigger
-
 -- DiagrammingStyle - Class Revision Trigger
 
 -- DiagramObject - Class Revision Trigger
-
--- DiagramPort - Class Revision Trigger
 
 -- DiagramShape - Class Revision Trigger
 
@@ -1442,22 +1357,6 @@ CREATE TRIGGER andexpression_term_apply_revision
   FOR EACH ROW
   EXECUTE PROCEDURE "SiteDirectory".revision_management('AndExpression', 'EngineeringModel_REPLACE');
 
--- ArchitectureDiagram - Reference Property Revision Trigger
-
--- ArchitectureElement - Reference Property Revision Trigger
-
--- Attachment - Reference Property Revision Trigger
--- Attachment.FileType
-CREATE TRIGGER attachment_filetype_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "Iteration_REPLACE"."Attachment_FileType"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('Attachment', 'EngineeringModel_REPLACE');
-
--- Behavior - Reference Property Revision Trigger
-
--- BehavioralParameter - Reference Property Revision Trigger
-
 -- BinaryRelationship - Reference Property Revision Trigger
 
 -- BooleanExpression - Reference Property Revision Trigger
@@ -1495,13 +1394,9 @@ CREATE TRIGGER definition_note_apply_revision
 
 -- DiagramElementThing - Reference Property Revision Trigger
 
--- DiagramFrame - Reference Property Revision Trigger
-
 -- DiagrammingStyle - Reference Property Revision Trigger
 
 -- DiagramObject - Reference Property Revision Trigger
-
--- DiagramPort - Reference Property Revision Trigger
 
 -- DiagramShape - Reference Property Revision Trigger
 
@@ -1518,13 +1413,6 @@ CREATE TRIGGER elementbase_category_apply_revision
   EXECUTE PROCEDURE "SiteDirectory".revision_management('ElementBase', 'EngineeringModel_REPLACE');
 
 -- ElementDefinition - Reference Property Revision Trigger
--- ElementDefinition.OrganizationalParticipant
-CREATE TRIGGER elementdefinition_organizationalparticipant_apply_revision
-  BEFORE INSERT OR UPDATE OR DELETE 
-  ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant"
-  FOR EACH ROW
-  EXECUTE PROCEDURE "SiteDirectory".revision_management('ElementDefinition', 'EngineeringModel_REPLACE');
-
 -- ElementDefinition.ReferencedElement
 CREATE TRIGGER elementdefinition_referencedelement_apply_revision
   BEFORE INSERT OR UPDATE OR DELETE 
@@ -1857,61 +1745,6 @@ CREATE TRIGGER AndExpression_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
--- ArchitectureDiagram - Class Audit Triggers
-CREATE TRIGGER ArchitectureDiagram_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."ArchitectureDiagram"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER ArchitectureDiagram_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."ArchitectureDiagram"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
--- ArchitectureElement - Class Audit Triggers
-CREATE TRIGGER ArchitectureElement_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."ArchitectureElement"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER ArchitectureElement_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."ArchitectureElement"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
--- Attachment - Class Audit Triggers
-CREATE TRIGGER Attachment_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."Attachment"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER Attachment_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."Attachment"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
--- Behavior - Class Audit Triggers
-CREATE TRIGGER Behavior_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."Behavior"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER Behavior_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."Behavior"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
--- BehavioralParameter - Class Audit Triggers
-CREATE TRIGGER BehavioralParameter_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."BehavioralParameter"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER BehavioralParameter_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."BehavioralParameter"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
 -- BinaryRelationship - Class Audit Triggers
 CREATE TRIGGER BinaryRelationship_audit_prepare
   BEFORE UPDATE ON "Iteration_REPLACE"."BinaryRelationship"
@@ -2044,17 +1877,6 @@ CREATE TRIGGER DiagramElementThing_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
--- DiagramFrame - Class Audit Triggers
-CREATE TRIGGER DiagramFrame_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."DiagramFrame"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER DiagramFrame_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."DiagramFrame"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
 -- DiagrammingStyle - Class Audit Triggers
 CREATE TRIGGER DiagrammingStyle_audit_prepare
   BEFORE UPDATE ON "Iteration_REPLACE"."DiagrammingStyle"
@@ -2074,17 +1896,6 @@ CREATE TRIGGER DiagramObject_audit_prepare
 
 CREATE TRIGGER DiagramObject_audit_log
   AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."DiagramObject"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
--- DiagramPort - Class Audit Triggers
-CREATE TRIGGER DiagramPort_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."DiagramPort"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER DiagramPort_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."DiagramPort"
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
@@ -2790,26 +2601,6 @@ CREATE TRIGGER AndExpression_Term_audit_log
   FOR EACH ROW 
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
--- ArchitectureDiagram - Reference Property Audit Triggers
-
--- ArchitectureElement - Reference Property Audit Triggers
-
--- Attachment - Reference Property Audit Triggers
--- Attachment.FileType
-CREATE TRIGGER Attachment_FileType_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."Attachment_FileType"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER Attachment_FileType_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."Attachment_FileType"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
--- Behavior - Reference Property Audit Triggers
-
--- BehavioralParameter - Reference Property Audit Triggers
-
 -- BinaryRelationship - Reference Property Audit Triggers
 
 -- BooleanExpression - Reference Property Audit Triggers
@@ -2855,13 +2646,9 @@ CREATE TRIGGER Definition_Note_audit_log
 
 -- DiagramElementThing - Reference Property Audit Triggers
 
--- DiagramFrame - Reference Property Audit Triggers
-
 -- DiagrammingStyle - Reference Property Audit Triggers
 
 -- DiagramObject - Reference Property Audit Triggers
-
--- DiagramPort - Reference Property Audit Triggers
 
 -- DiagramShape - Reference Property Audit Triggers
 
@@ -2882,17 +2669,6 @@ CREATE TRIGGER ElementBase_Category_audit_log
   EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
 
 -- ElementDefinition - Reference Property Audit Triggers
--- ElementDefinition.OrganizationalParticipant
-CREATE TRIGGER ElementDefinition_OrganizationalParticipant_audit_prepare
-  BEFORE UPDATE ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_before();
-
-CREATE TRIGGER ElementDefinition_OrganizationalParticipant_audit_log
-  AFTER INSERT OR UPDATE OR DELETE ON "Iteration_REPLACE"."ElementDefinition_OrganizationalParticipant"
-  FOR EACH ROW 
-  EXECUTE PROCEDURE "SiteDirectory".process_timetravel_after();
-
 -- ElementDefinition.ReferencedElement
 CREATE TRIGGER ElementDefinition_ReferencedElement_audit_prepare
   BEFORE UPDATE ON "Iteration_REPLACE"."ElementDefinition_ReferencedElement"
