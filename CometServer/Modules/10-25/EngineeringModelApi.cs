@@ -65,8 +65,6 @@ namespace CometServer.Modules
 
     using Npgsql;
 
-    using Microsoft.AspNetCore.Mvc;
-
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
     /// </summary>
@@ -143,14 +141,14 @@ namespace CometServer.Modules
         /// </param>
        public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetAll);
+            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow);
 
-            app.MapGet("EngineeringModel/*", this.GetAll);
+            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow);
 
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
             {
-                if (!(await this.IsServerReady(res)))
+                if (!await this.IsServerReady(res))
                 {
                     return;
                 }
@@ -182,7 +180,7 @@ namespace CometServer.Modules
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
             {
-                if (!(await this.IsServerReady(res)))
+                if (!await this.IsServerReady(res))
                 {
                     return;
                 }
@@ -231,7 +229,7 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Handles the GET request to retrieve all data.
+        /// Handles the GET request to retrieve all shallow engineering models or the specified by <paramref name="ids"/>
         /// </summary>
         /// <param name="request">The HTTP request object.</param>
         /// <param name="response">The HTTP response object.</param>
@@ -246,12 +244,12 @@ namespace CometServer.Modules
         /// <param name="messagePackSerializer">The MessagePack serializer.</param>
         /// <param name="permissionInstanceFilterService">The service for filtering permission instances.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
-        private async Task GetAll(HttpRequest request, HttpResponse response, string ids, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, 
+        private async Task GetEngineeringModelsShallow(HttpRequest request, HttpResponse response, string ids, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, 
             ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, 
             IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, 
             IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
         {
-            if (!(await this.IsServerReady(response)))
+            if (!await this.IsServerReady(response))
             {
                 return;
             }
@@ -290,26 +288,26 @@ namespace CometServer.Modules
                 try
                 {
                     var engineeringModels = new List<Thing>();
-
-                    var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
-
                     var allEngineeringModelIds = new List<Guid>();
 
+                    var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
+                    requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
+                    
                     if (ids is null)
                     {
-                        requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = true };
-
-                        allEngineeringModelIds.AddRange(this.ProcessRequestPath(requestUtils, transactionManager, processor, nameof(SiteDirectory), nameof(SiteDirectory),
-                            new[] { nameof(SiteDirectory) }, out _)
+                        var securityContext = new RequestSecurityContext() { ContainerReadAllowed = true };
+                        var siteDirectory = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
+                        
+                        var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, siteDirectory.Model, securityContext);
+                        
+                        allEngineeringModelIds.AddRange(engineeringModelSetups
                             .OfType<EngineeringModelSetup>()
                             .Select(x => x.EngineeringModelIid));
                     }
                     else if (ids.TryParseEnumerableOfGuid(out var identifiers))
                     {
-                        allEngineeringModelIds.AddRange(identifiers);
+                        allEngineeringModelIds.AddRange(identifiers.Distinct());
                     }
-
-                    requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
 
                     foreach (var engineeringModelIid in allEngineeringModelIds)
                     {
