@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2024 RHEA System S.A.
 //
@@ -141,14 +141,15 @@ namespace CometServer.Modules
         /// </param>
        public override void AddRoutes(IEndpointRouteBuilder app)
         {
+            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow);
+
+            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow);
+
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                if (!await this.IsServerReady(res))
                 {
-                    res.ContentType = "application/json";
-                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                    await res.AsJson("not yet started and ready to accept requests");
                     return;
                 }
 
@@ -179,11 +180,8 @@ namespace CometServer.Modules
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                if (!await this.IsServerReady(res))
                 {
-                    res.ContentType = "application/json";
-                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                    await res.AsJson("not yet started and ready to accept requests");
                     return;
                 }
 
@@ -210,6 +208,185 @@ namespace CometServer.Modules
                     await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, fileBinaryService, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 }
             });
+        }
+
+        /// <summary>
+        /// Checks if the server is ready to accept requests.
+        /// </summary>
+        /// <param name="response">The HTTP response object.</param>
+        /// <returns>True if the server is ready; otherwise, false.</returns>
+        private async Task<bool> IsServerReady(HttpResponse response)
+        {
+            if (this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+            {
+                return true;
+            }
+
+            response.ContentType = "application/json";
+            response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            await response.AsJson("not yet started and ready to accept requests");
+            return false;
+        }
+
+        /// <summary>
+        /// Handles the GET request to retrieve all shallow engineering models or the specified by <paramref name="ids"/>
+        /// </summary>
+        /// <param name="request">The HTTP request object.</param>
+        /// <param name="response">The HTTP response object.</param>
+        /// <param name="ids">The collection of EngineeringModel Ids</param>
+        /// <param name="requestUtils">The utility for handling requests.</param>
+        /// <param name="transactionManager">The transaction manager.</param>
+        /// <param name="credentialsService">The service for handling credentials.</param>
+        /// <param name="headerInfoProvider">The provider for header information.</param>
+        /// <param name="serviceProvider">The service provider.</param>
+        /// <param name="metaInfoProvider">The provider for meta-information.</param>
+        /// <param name="jsonSerializer">The JSON serializer.</param>
+        /// <param name="messagePackSerializer">The MessagePack serializer.</param>
+        /// <param name="permissionInstanceFilterService">The service for filtering permission instances.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        private async Task GetEngineeringModelsShallow(HttpRequest request, HttpResponse response, string ids, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, 
+            ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, 
+            IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, 
+            IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
+        {
+            if (!await this.IsServerReady(response))
+            {
+                return;
+            }
+
+            if (!(request.HttpContext.User.Identity?.IsAuthenticated ?? false))
+            {
+                response.UpdateWithNotAuthenticatedSettings();
+                await response.AsJson("not authenticated");
+            }
+            else
+            {
+                try
+                {
+                    await this.Authorize(this.AppConfigService, credentialsService, request.HttpContext.User.Identity.Name);
+                }
+                catch (AuthorizationException)
+                {
+                    this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", request.HttpContext.User.Identity.Name);
+                    response.UpdateWithNotAutherizedSettings();
+                    await response.AsJson("not authorized");
+                    return;
+                }
+                
+                NpgsqlConnection connection = null;
+                var credentials = credentialsService.Credentials;
+                var transaction = transactionManager.SetupTransaction(ref connection, credentials);
+
+                transactionManager.SetCachedDtoReadEnabled(true);
+                transactionManager.SetFullAccessState(true);
+
+                var stopwatch = Stopwatch.StartNew();
+                var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+
+                this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
+                
+                try
+                {
+                    var engineeringModels = new List<Thing>();
+                    var allEngineeringModelIds = new List<Guid>();
+
+                    var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
+                    requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
+                    
+                    if (ids is null)
+                    {
+                        var securityContext = new RequestSecurityContext() { ContainerReadAllowed = true };
+                        var siteDirectory = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
+                        
+                        var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, siteDirectory.Model, securityContext);
+                        
+                        allEngineeringModelIds.AddRange(engineeringModelSetups
+                            .OfType<EngineeringModelSetup>()
+                            .Select(x => x.EngineeringModelIid));
+                    }
+                    else if (ids.TryParseEnumerableOfGuid(out var identifiers))
+                    {
+                        allEngineeringModelIds.AddRange(identifiers.Distinct());
+                    }
+
+                    foreach (var engineeringModelIid in allEngineeringModelIds)
+                    {
+                        var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
+
+                        var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
+                            new[] { nameof(EngineeringModel), engineeringModelIid.ToString() }, out _);
+
+                        engineeringModels.AddRange(things);
+                    }
+
+                    var contentTypeKind = request.QueryContentTypeKind();
+                    var version = request.QueryDataModelVersion();
+
+                    if (contentTypeKind == ContentTypeKind.JSON)
+                    {
+                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
+                    }
+                    else if (contentTypeKind == ContentTypeKind.MESSAGEPACK)
+                    {
+                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
+                    }
+                    else
+                    {
+                        throw new NotSupportedException($"ContentType {contentTypeKind} is not supported for this request");
+                    }
+                }
+                catch (SecurityException exception)
+                {
+                    if (transaction != null)
+                    {
+                        await transaction.RollbackAsync();
+                    }
+
+                    this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                    response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    await response.AsJson($"exception:{exception.Message}");
+                }
+                catch (ThingNotFoundException exception)
+                {
+                    if (transaction != null)
+                    {
+                        await transaction.RollbackAsync();
+                    }
+
+                    this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
+                    await response.AsJson($"exception:{exception.Message}");
+                }
+                catch (Exception exception)
+                {
+                    if (transaction != null)
+                    {
+                        await transaction.RollbackAsync();
+                    }
+
+                    this.logger.LogError(exception, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                    // error handling
+                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    await response.AsJson($"exception:{exception.Message}");
+                }
+                finally
+                {
+                    if (transaction != null)
+                    {
+                        await transaction.DisposeAsync();
+                    }
+
+                    if (connection != null)
+                    {
+                        await connection.DisposeAsync();
+                    }
+
+                    this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                }
+            }
         }
 
         /// <summary>

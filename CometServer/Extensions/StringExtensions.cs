@@ -132,6 +132,31 @@ namespace CometServer.Extensions
         }
 
         /// <summary>
+        /// Attempts to parse a string containing comma-separated short GUIDs into a list of Guid.
+        /// </summary>
+        /// <param name="values">The string containing comma-separated short GUIDs.</param>
+        /// <param name="identifiers">When this method returns, contains the list of parsed Guids, or an empty list if parsing fails.</param>
+        /// <returns>
+        /// True if the parsing is successful and the list of Guids is not empty; otherwise, false.
+        /// </returns>
+        public static bool TryParseEnumerableOfGuid(this string values, out List<Guid> identifiers)
+        {
+            ArgumentNullException.ThrowIfNull(values, nameof(values));
+
+            identifiers = new List<Guid>();
+
+            try
+            {
+                identifiers = values.FromShortGuidArray()?.ToList() ?? new List<Guid>();
+                return identifiers.Any();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Coverts the first characther of a string to lowercase
         /// </summary>
         /// <param name="input">
