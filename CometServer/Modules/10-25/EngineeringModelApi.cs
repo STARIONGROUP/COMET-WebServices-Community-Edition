@@ -30,6 +30,7 @@ namespace CometServer.Modules
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.Runtime.InteropServices.Marshalling;
     using System.Security;
     using System.Threading.Tasks;
 
@@ -292,24 +293,45 @@ namespace CometServer.Modules
 
                     var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
                     requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
-                    
+
+                    var securityContext = new RequestSecurityContext();
+
+                    // get all the Participants and filter out only those Participants that are active and for the current Person
+                    var activeAndAssignedParticipantsForCurrentPerson = processor.GetResource("Participant", SiteDirectoryData, null, securityContext)
+                        .OfType<Participant>().Where(x => x.IsActive && x.Person == credentials.Person.Iid);
+
+                    // get all EngineeringModelSetup
+                    var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, null, securityContext)
+                        .OfType<EngineeringModelSetup>();
+
                     if (ids is null)
                     {
-                        var securityContext = new RequestSecurityContext() { ContainerReadAllowed = true };
-                        var siteDirectory = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
-                        
-                        var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, siteDirectory.Model, securityContext);
-                        
-                        allEngineeringModelIds.AddRange(engineeringModelSetups
-                            .OfType<EngineeringModelSetup>()
-                            .Select(x => x.EngineeringModelIid));
+                        foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
+                        {
+                            foreach (var engineeringModelSetup in engineeringModelSetups)
+                            {
+                                if (engineeringModelSetup.Participant.Contains(participant.Iid))
+                                {
+                                    allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
+                                }
+                            }
+                        }
                     }
                     else if (ids.TryParseEnumerableOfGuid(out var identifiers))
                     {
-                        allEngineeringModelIds.AddRange(identifiers.Distinct());
+                        foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
+                        {
+                            foreach (var engineeringModelSetup in engineeringModelSetups)
+                            {
+                                if (engineeringModelSetup.Participant.Contains(participant.Iid) && identifiers.Contains(engineeringModelSetup.EngineeringModelIid))
+                                {
+                                    allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
+                                }
+                            }
+                        }
                     }
 
-                    foreach (var engineeringModelIid in allEngineeringModelIds)
+                    foreach (var engineeringModelIid in allEngineeringModelIds.Distinct())
                     {
                         var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
 
