@@ -80,7 +80,6 @@ namespace CometServer.Tests.SideEffects
         private Mock<ICachedReferenceDataService> cachedReferenceDataService;
         private Mock<IElementDefinitionService> elementDefinitionService;
         private Mock<IParameterService> parameterService;
-        private Mock<IParameterTypeService> parameterTypeService;
 
         private Mock<IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
 
@@ -129,7 +128,6 @@ namespace CometServer.Tests.SideEffects
             this.elementUsageService = new Mock<IElementUsageService>();
             this.elementDefinitionService = new Mock<IElementDefinitionService>();
             this.parameterService = new Mock<IParameterService>();
-            this.parameterTypeService = new Mock<IParameterTypeService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.OldParameterContextProvider = new Mock<IOldParameterContextProvider>();
             this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
@@ -182,8 +180,7 @@ namespace CometServer.Tests.SideEffects
                 OrganizationalParticipationResolverService = this.organizationalParticipationResolverService.Object,
                 CachedReferenceDataService = this.cachedReferenceDataService.Object,
                 ElementDefinitionService = this.elementDefinitionService.Object,
-                ParameterService = this.parameterService.Object,
-                ParameterTypeService = this.parameterTypeService.Object
+                ParameterService = this.parameterService.Object
             };
 
             // prepare mock data
@@ -572,9 +569,6 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the existing parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Count() == 2), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.parameter, newParameter });
 
-            //Setup ParameterTypeService to return the ParameterType
-            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.cptParameterType });
-
             Assert.That(() => this.sideEffect.AfterUpdate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
         }
 
@@ -598,9 +592,6 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the existing parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.parameter.Iid)), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.parameter });
 
-            //Setup ParameterTypeService to return the ParameterType
-            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.cptParameterType });
-
             Assert.That(() => this.sideEffect.AfterCreate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
         }
 
@@ -623,9 +614,6 @@ namespace CometServer.Tests.SideEffects
 
             //Setup ParameterService to return the newly created parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { newParameter, this.parameter });
-
-            //Setup ParameterTypeService to return the ParameterType
-            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.cptParameterType });
 
             Assert.That(() => this.sideEffect.AfterCreate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("multiple times"));
         }

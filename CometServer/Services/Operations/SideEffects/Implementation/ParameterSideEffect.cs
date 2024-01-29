@@ -83,11 +83,6 @@ namespace CometServer.Services.Operations.SideEffects
         public IParameterService ParameterService { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IParameterTypeService"/>
-        /// </summary>
-        public IParameterTypeService ParameterTypeService { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IParameterValueSetFactory"/>
         /// </summary>
         public IParameterValueSetFactory ParameterValueSetFactory { get; set; }
@@ -471,7 +466,10 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (duplicateUpdatedParameterTypes.Length != 0)
             {
-                var duplicateParameterTypes = this.ParameterTypeService.GetShallow(transaction, Utils.SiteDirectoryPartition, duplicateUpdatedParameterTypes, securityContext).OfType<ParameterType>().ToArray();
+                var duplicateParameterTypes = 
+                    this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext)
+                        .Where(x => duplicateUpdatedParameterTypes.Contains(x.Key))
+                        .Select(x => x.Value);
 
                 throw new BadRequestException(
                     $"Cannot add the same {nameof(ParameterType)} to an {nameof(ElementDefinition)} multiple times: '{string.Join("', and '", duplicateParameterTypes.Select(x => x.Name))}'.");
@@ -490,7 +488,10 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (duplicateParameterTypeGuids.Length != 0)
             {
-                var duplicateParameterTypes = this.ParameterTypeService.GetShallow(transaction, Utils.SiteDirectoryPartition, duplicateParameterTypeGuids, securityContext).OfType<ParameterType>().ToArray();
+                var duplicateParameterTypes =
+                    this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext)
+                        .Where(x => duplicateParameterTypeGuids.Contains(x.Key))
+                        .Select(x => x.Value);
 
                 throw new BadRequestException(
                     $"{nameof(ElementDefinition)} '{elementDefinition.Name}' already contains {nameof(Parameter)}(s) of type(s) '{string.Join("', and '", duplicateParameterTypes.Select(x => x.Name))}'.");
