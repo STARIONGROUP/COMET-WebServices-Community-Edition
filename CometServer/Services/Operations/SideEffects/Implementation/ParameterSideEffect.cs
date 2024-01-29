@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSideEffect.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -33,9 +33,12 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.Exceptions;
     using CDP4Common.Types;
 
     using CDP4Orm.Dao;
+
+    using CometServer.Exceptions;
 
     using Npgsql;
 
@@ -73,6 +76,16 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/>
         /// </summary>
         public ICachedReferenceDataService CachedReferenceDataService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterService"/>
+        /// </summary>
+        public IParameterService ParameterService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IParameterTypeService"/>
+        /// </summary>
+        public IParameterTypeService ParameterTypeService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IParameterValueSetFactory"/>
@@ -113,6 +126,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the <see cref="IElementUsageService"/>
         /// </summary>
         public IElementUsageService ElementUsageService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IElementDefinitionService"/>
+        /// </summary>
+        public IElementDefinitionService ElementDefinitionService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IOldParameterContextProvider"/>
@@ -221,6 +239,8 @@ namespace CometServer.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
+            this.CheckDuplicateParameterTypes(container, thing, transaction, partition, securityContext);
+
             // creates default value-arrays for the parameter
             this.DefaultValueArrayFactory.Load(transaction, securityContext);
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(thing.ParameterType);
@@ -258,6 +278,13 @@ namespace CometServer.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
+            var isParameterTypeChanged = thing.ParameterType != originalThing.ParameterType;
+
+            if (isParameterTypeChanged)
+            {
+                this.CheckDuplicateParameterTypes(container, thing, transaction, partition, securityContext, true);
+            }
+
             var isOptionDependencyChanged = thing.IsOptionDependent != originalThing.IsOptionDependent;
             var isStateDependencyChanged = thing.StateDependence != originalThing.StateDependence;
             var isOwnerChanged = thing.Owner != originalThing.Owner;
@@ -379,6 +406,95 @@ namespace CometServer.Services.Operations.SideEffects
 
             // clean up old values
             this.DeleteOldValueSet(transaction, partition, originalThing);
+        }
+
+        /// <summary>
+        /// Checks if a <see cref="Parameter"/> having a <see cref="ParameterType"/> that was already present in the <see cref="ElementDefinition"/>.
+        /// If so, throws a <see cref="BadRequestException"/>
+        /// </summary>
+        /// <param name="container">
+        /// The container <see cref="Thing"/>
+        /// </param>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        /// <param name="IsUpdateExisting">
+        /// Are we performing an update , or an insert?
+        /// </param>
+        /// <exception cref="BadRequestException">
+        /// Throws a <see cref="BadRequestException"/> adding a <see cref="Parameter"/> results in a duplicate <see cref="ParameterType"/>
+        /// for the <see cref="ElementDefinition"/>
+        /// </exception>
+        /// <remarks>
+        /// Already existing duplicate ParameterTypes in the database are left untouched in this method and therefore will not throw an error.
+        /// </remarks>
+        private void CheckDuplicateParameterTypes(Thing container, Parameter thing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, bool IsUpdateExisting = false)
+        {
+            var elementDefinition = container as ElementDefinition;
+
+            if (elementDefinition == null)
+            {
+                throw new Cdp4ModelValidationException($"{nameof(ElementDefinition)} not found for {nameof(Parameter)} having id {thing.Iid}");
+            }
+
+            var updatedElementDefinition = this.ElementDefinitionService.GetShallow(transaction, partition, new[] { elementDefinition.Iid }, securityContext).SingleOrDefault() as ElementDefinition;
+
+            if (updatedElementDefinition == null)
+            {
+                throw new Cdp4ModelValidationException($"{nameof(ElementDefinition)} not found for {nameof(Parameter)} having id {thing.Iid}");
+            }
+
+            var originalParameterGuids = elementDefinition.Parameter;
+            var updatedParameterGuids = updatedElementDefinition.Parameter.Except(elementDefinition.Parameter).ToList();
+            var existingNonRemovedParameterGuids = originalParameterGuids.Intersect(updatedElementDefinition.Parameter).ToArray();
+
+            if (IsUpdateExisting && !updatedParameterGuids.Contains(thing.Iid))
+            {
+                updatedParameterGuids.Add(thing.Iid);
+            }
+
+            // Get all updated Parameters from the database
+            var updatedParameters = this.ParameterService.GetShallow(transaction, partition, updatedParameterGuids, securityContext);
+            var updatedParameterTypes = updatedParameters.OfType<Parameter>().Select(x => x.ParameterType).ToArray();
+
+            // Find new/updated parameters that cause a duplication in the current Transaction/Operation Container
+            var duplicateUpdatedParameterTypes = updatedParameterTypes.GroupBy(x => x).Where(x => x.Count() > 1).Select(x => x.Key).ToArray();
+
+            if (duplicateUpdatedParameterTypes.Length != 0)
+            {
+                var duplicateParameterTypes = this.ParameterTypeService.GetShallow(transaction, Utils.SiteDirectoryPartition, duplicateUpdatedParameterTypes, securityContext).OfType<ParameterType>().ToArray();
+
+                throw new BadRequestException(
+                    $"Cannot add the same {nameof(ParameterType)} to an {nameof(ElementDefinition)} multiple times: '{string.Join("', and '", duplicateParameterTypes.Select(x => x.Name))}'.");
+            }
+
+            // Get all non-removed existing Parameters from the database
+            var existingNonRemovedParameters =
+                existingNonRemovedParameterGuids.Length != 0
+                    ? this.ParameterService.GetShallow(transaction, partition, existingNonRemovedParameterGuids, securityContext)
+                    : Array.Empty<Thing>();
+
+            var existingParameterTypes = existingNonRemovedParameters.OfType<Parameter>().Select(x => x.ParameterType).Distinct().ToArray();
+
+            //find all updated ParameterTypes that cause a duplication based on existing ParameterTypes
+            var duplicateParameterTypeGuids = existingParameterTypes.Intersect(updatedParameterTypes).ToArray();
+
+            if (duplicateParameterTypeGuids.Length != 0)
+            {
+                var duplicateParameterTypes = this.ParameterTypeService.GetShallow(transaction, Utils.SiteDirectoryPartition, duplicateParameterTypeGuids, securityContext).OfType<ParameterType>().ToArray();
+
+                throw new BadRequestException(
+                    $"{nameof(ElementDefinition)} '{elementDefinition.Name}' already contains {nameof(Parameter)}(s) of type(s) '{string.Join("', and '", duplicateParameterTypes.Select(x => x.Name))}'.");
+            }
         }
 
         /// <summary>

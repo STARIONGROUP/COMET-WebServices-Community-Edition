@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSideEffectTestFixture.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -34,6 +34,7 @@ namespace CometServer.Tests.SideEffects
     using CDP4Common.Types;
 
     using CometServer.Authorization;
+    using CometServer.Exceptions;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -77,8 +78,11 @@ namespace CometServer.Tests.SideEffects
         private Mock<IDefaultValueArrayFactory> defaultValueArrayFactory;
         private Mock<IOldParameterContextProvider> OldParameterContextProvider;
         private Mock<ICachedReferenceDataService> cachedReferenceDataService;
+        private Mock<IElementDefinitionService> elementDefinitionService;
+        private Mock<IParameterService> parameterService;
+        private Mock<IParameterTypeService> parameterTypeService;
 
-        private Mock<CometServer.Authorization.IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
+        private Mock<IOrganizationalParticipationResolverService> organizationalParticipationResolverService;
 
         private Parameter parameter;
         private ParameterOverride parameterOverride;
@@ -123,6 +127,9 @@ namespace CometServer.Tests.SideEffects
             this.parameterSubscriptionService = new Mock<IParameterSubscriptionService>();
             this.parameterOverrideService = new Mock<IParameterOverrideService>();
             this.elementUsageService = new Mock<IElementUsageService>();
+            this.elementDefinitionService = new Mock<IElementDefinitionService>();
+            this.parameterService = new Mock<IParameterService>();
+            this.parameterTypeService = new Mock<IParameterTypeService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
             this.OldParameterContextProvider = new Mock<IOldParameterContextProvider>();
             this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
@@ -173,7 +180,10 @@ namespace CometServer.Tests.SideEffects
                 ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
                 OldParameterContextProvider = this.OldParameterContextProvider.Object,
                 OrganizationalParticipationResolverService = this.organizationalParticipationResolverService.Object,
-                CachedReferenceDataService = this.cachedReferenceDataService.Object
+                CachedReferenceDataService = this.cachedReferenceDataService.Object,
+                ElementDefinitionService = this.elementDefinitionService.Object,
+                ParameterService = this.parameterService.Object,
+                ParameterTypeService = this.parameterTypeService.Object
             };
 
             // prepare mock data
@@ -232,7 +242,6 @@ namespace CometServer.Tests.SideEffects
 
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
-
         }
 
         [Test]
@@ -243,8 +252,6 @@ namespace CometServer.Tests.SideEffects
 
             Assert.Throws<ArgumentException>(
                 () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
-
-
         }
 
         [Test]
@@ -325,8 +332,6 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatAfterUpdateStateChangesWorks()
         {
-            var originalThing = this.parameter.DeepClone<Thing>();
-
             this.valueSetService.Setup(
                 x => x.DeleteConcept(null, "partition", It.IsAny<ParameterValueSet>(), this.parameter)).Returns(true);
 
@@ -335,6 +340,8 @@ namespace CometServer.Tests.SideEffects
             this.parameter.StateDependence = null;
             var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
             this.parameter.ValueSet.Add(valueset.Iid);
+
+            var originalThing = this.parameter.DeepClone<Thing>();
 
             var updatedParameter = new Parameter(this.parameter.Iid, 0) { StateDependence = this.actualList.Iid };
             updatedParameter.ValueSet.Add(valueset.Iid);
@@ -350,7 +357,7 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatAfterUpdateUpdateTheOVerrideAndSubscription()
         {
             var valueset = new ParameterValueSet(Guid.NewGuid(), 0);
-            valueset.Manual = new ValueArray<string>( SetValueArrayValues);
+            valueset.Manual = new ValueArray<string>(SetValueArrayValues);
             valueset.Published = new ValueArray<string>(SetValueArrayValues);
             valueset.Computed = new ValueArray<string>(SetValueArrayValues);
             valueset.ValueSwitch = ParameterSwitchKind.REFERENCE;
@@ -380,8 +387,6 @@ namespace CometServer.Tests.SideEffects
 
             subscription1.ValueSet.Add(subscription1ValueSet.Iid);
             subscription2.ValueSet.Add(subscription2ValueSet.Iid);
-
-            var originalThing = this.parameter.DeepClone<Thing>();
 
             this.parameterOverride.ParameterSubscription.Add(subscription2.Iid);
             this.parameter.ParameterSubscription.Add(subscription1.Iid);
@@ -414,6 +419,8 @@ namespace CometServer.Tests.SideEffects
             this.parameter.ParameterType = this.cptParameterType.Iid;
             this.parameter.StateDependence = null;
 
+            var originalThing = this.parameter.DeepClone<Thing>();
+
             var updatedParameter = new Parameter(this.parameter.Iid, 0) { StateDependence = this.actualList.Iid };
             updatedParameter.ValueSet.Add(valueset.Iid);
             updatedParameter.ParameterType = this.cptParameterType.Iid;
@@ -438,7 +445,22 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatValueSetAreCreatedCompoundNoOptionNoState()
         {
             this.parameter.ParameterType = this.cptParameterType.Iid;
+
+            //Updated version contains parameter
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+
+            //original should not contains the parameter
+            this.elementDefinition.Parameter.Clear();
+
+            //Create a clone from this.parameter
             var originalThing = this.parameter.DeepClone<Thing>();
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> {originalThing});
+
             this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.Manual.Count() == this.cptParameterType.Component.Count), this.parameter, -1), Times.Exactly(1));
@@ -447,10 +469,24 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatValueSetAreCreatedNoOptionWithState()
         {
-            var originalThing = this.parameter.DeepClone<Thing>();
             this.parameter.ParameterType = this.cptParameterType.Iid;
 
+            //Updated version contains parameter
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+
+            //original should not contains the parameter
+            this.elementDefinition.Parameter.Clear();
+
+            //Create a clone from this.parameter
+            var originalThing = this.parameter.DeepClone<Thing>();
+
             this.parameter.StateDependence = this.actualList.Iid;
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { originalThing });
 
             this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
@@ -461,10 +497,24 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatValueSetAreCreatedOptionNoState()
         {
-            var originalThing = this.parameter.DeepClone<Thing>();
             this.parameter.ParameterType = this.cptParameterType.Iid;
 
+            //Updated version contains parameter
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+
+            //original should not contains the parameter
+            this.elementDefinition.Parameter.Clear();
+
+            //Create a clone from this.parameter
+            var originalThing = this.parameter.DeepClone<Thing>();
+
             this.parameter.IsOptionDependent = true;
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { originalThing });
 
             this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
@@ -475,11 +525,25 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatValueSetAreCreatedOptionState()
         {
-            var originalThing = this.parameter.DeepClone<Thing>();
             this.parameter.ParameterType = this.cptParameterType.Iid;
+
+            //Updated version contains parameter
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+
+            //original should not contains the parameter
+            this.elementDefinition.Parameter.Clear();
+
+            //Create a clone from this.parameter
+            var originalThing = this.parameter.DeepClone<Thing>();
 
             this.parameter.IsOptionDependent = true;
             this.parameter.StateDependence = this.actualList.Iid;
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { originalThing });
 
             this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
@@ -487,6 +551,83 @@ namespace CometServer.Tests.SideEffects
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option1.Iid && vs.ActualState == this.actualState2.Iid), this.parameter, -1), Times.Exactly(1));
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option2.Iid && vs.ActualState == this.actualState1.Iid), this.parameter, -1), Times.Exactly(1));
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option2.Iid && vs.ActualState == this.actualState2.Iid), this.parameter, -1), Times.Exactly(1));
+        }
+
+        [Test]
+        public void UpdatingParameterTypeToExistingParameterTypeFails()
+        {
+            var newParameter = this.parameter.DeepClone<Parameter>();
+            newParameter.Iid = Guid.NewGuid();
+            newParameter.ParameterType = this.cptParameterType.Iid;
+
+            this.elementDefinition.Parameter.Add(newParameter.Iid);
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Count() == 1 && y.Contains(newParameter.Iid)), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { newParameter });
+
+            //Setup ParameterService to return the existing parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Count() == 2), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.parameter, newParameter });
+
+            //Setup ParameterTypeService to return the ParameterType
+            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.cptParameterType });
+
+            Assert.That(() => this.sideEffect.AfterUpdate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
+        }
+
+        [Test]
+        public void AddingParameterTypeHavingExistingParameterTypeFails()
+        {
+            this.parameter.ParameterType = this.cptParameterType.Iid;
+
+            var newParameter = this.parameter.DeepClone<Parameter>();
+            newParameter.Iid = Guid.NewGuid();
+
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+            updatedElementDefinition.Parameter.Add(newParameter.Iid);
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(newParameter.Iid)), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { newParameter });
+
+            //Setup ParameterService to return the existing parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.parameter.Iid)), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.parameter });
+
+            //Setup ParameterTypeService to return the ParameterType
+            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.cptParameterType });
+
+            Assert.That(() => this.sideEffect.AfterCreate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
+        }
+
+        [Test]
+        public void AddingMultipleParameterTypeHavingSameParameterTypeFails()
+        {
+            this.elementDefinition.Parameter.Clear();
+
+            this.parameter.ParameterType = this.cptParameterType.Iid;
+
+            var newParameter = this.parameter.DeepClone<Parameter>();
+            newParameter.Iid = Guid.NewGuid();
+
+            var updatedElementDefinition = this.elementDefinition.DeepClone<ElementDefinition>();
+            updatedElementDefinition.Parameter.Add(this.parameter.Iid);
+            updatedElementDefinition.Parameter.Add(newParameter.Iid);
+
+            //Setup ElementDefinitionService to retrieve updated ED having the parameter
+            this.elementDefinitionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { updatedElementDefinition });
+
+            //Setup ParameterService to return the newly created parameter
+            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { newParameter, this.parameter });
+
+            //Setup ParameterTypeService to return the ParameterType
+            this.parameterTypeService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.cptParameterType });
+
+            Assert.That(() => this.sideEffect.AfterCreate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("multiple times"));
         }
     }
 }
