@@ -30,7 +30,6 @@ namespace CometServer.Modules
     using System.IO;
     using System.Linq;
     using System.Net;
-    using System.Runtime.InteropServices.Marshalling;
     using System.Security;
     using System.Threading.Tasks;
 
@@ -42,6 +41,8 @@ namespace CometServer.Modules
     using CDP4JsonSerializer;
 
     using CDP4MessagePackSerializer;
+
+    using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
     using CometServer.Authorization;
     using CometServer.Configuration;
@@ -110,7 +111,7 @@ namespace CometServer.Modules
         {
             QueryParameters.RevisionNumberQuery
         };
-
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class
         /// </summary>
@@ -127,8 +128,11 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) 
-            : base(appConfigService, tokenGeneratorService, loggerFactory)
+        /// <param name="thingsMessageProducer">
+        /// The (injected) <see cref="IBackgroundThingsMessageProducer"/> used to schedule things messages to be sent
+        /// </param>
+        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer)
+            : base(appConfigService, tokenGeneratorService, loggerFactory, thingsMessageProducer)
         {
             this.logger = loggerFactory == null ? NullLogger<EngineeringModelApi>.Instance : loggerFactory.CreateLogger<EngineeringModelApi>();
             this.cometHasStartedService = cometHasStartedService;
@@ -140,7 +144,7 @@ namespace CometServer.Modules
         /// <param name="app">
         /// The <see cref="IEndpointRouteBuilder"/> to which the routes are added
         /// </param>
-       public override void AddRoutes(IEndpointRouteBuilder app)
+        public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow);
 
@@ -850,8 +854,11 @@ namespace CometServer.Modules
 
                 // save revision-history
                 var changedThings = revisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();
-
+                
                 await transaction.CommitAsync();
+
+                // Sends changed things to the AMQP message bus
+                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer, httpRequest.QueryDataModelVersion());
 
                 this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
 

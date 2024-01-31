@@ -43,6 +43,7 @@ namespace CometServer.Configuration
             this.Changelog = new ChangelogConfig();
             this.EmailService = new EmailConfig();
             this.HealthConfig = new HealthConfig();
+            this.ServiceMessagingConfig = new ServiceMessagingConfig();
         }
 
         /// <summary>
@@ -57,6 +58,7 @@ namespace CometServer.Configuration
             this.Changelog = new ChangelogConfig(configuration);
             this.EmailService = new EmailConfig(configuration);
             this.HealthConfig = new HealthConfig(configuration);
+            this.ServiceMessagingConfig = new ServiceMessagingConfig(configuration);
         }
 
         /// <summary>
@@ -88,5 +90,10 @@ namespace CometServer.Configuration
         /// Gets the current changelog configuration.
         /// </summary>
         public ChangelogConfig Changelog { get; set; }
+
+        /// <summary>
+        /// Gets or sets the service messaging configuration.
+        /// </summary>
+        public ServiceMessagingConfig ServiceMessagingConfig { get; set; }
     }
 }

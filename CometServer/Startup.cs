@@ -48,6 +48,8 @@ namespace CometServer
     using CDP4Orm.Helper;
     using CDP4Orm.MigrationEngine;
 
+    using CDP4ServicesMessaging;
+
     using CometServer.Authentication;
     using CometServer.Authorization;
     using CometServer.ChangeNotification;
@@ -134,6 +136,8 @@ namespace CometServer
 
             services.AddAuthentication("CDP4").AddCookie(CookieScheme);
             services.AddRouting(options => options.ConstraintMap.Add("EnumerableOfGuid", typeof(EnumerableOfGuidRouteConstraint)));
+            
+            services.ConfigureServicesMessaging();
 
             services.AddCarter();
         }
@@ -155,7 +159,7 @@ namespace CometServer
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().SingleInstance();
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().SingleInstance();
             builder.RegisterAssemblyTypes(typeof(IMetaInfo).Assembly).Where(x => typeof(IMetaInfo).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<MetaInfoProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<MetaInfoProvider>().As<IMetaDataProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
             builder.RegisterType<MessagePackSerializer>().As<IMessagePackSerializer>().InstancePerLifetimeScope();
 

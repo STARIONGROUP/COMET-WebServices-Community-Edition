@@ -43,11 +43,15 @@ namespace CometServer.Modules
 
     using CDP4MessagePackSerializer;
 
+    using CDP4ServicesMessaging.Messages;
+    using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
+
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Extensions;
     using CometServer.Helpers;
-    
+    using CometServer.Services.Operations;
+
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -84,9 +88,37 @@ namespace CometServer.Modules
         private readonly ILogger<ApiBase> logger;
 
         /// <summary>
+        /// Gets or sets the <see cref="IBackgroundThingsMessageProducer"/>
+        /// </summary>
+        private readonly IBackgroundThingsMessageProducer thingsMessageProducer;
+
+        /// <summary>
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </summary>
         protected readonly ITokenGeneratorService TokenGeneratorService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApiBase"/> class
+        /// </summary>
+        /// <param name="appConfigService">
+        /// The (injected) <see cref="IAppConfigService"/>
+        /// </param>
+        /// <param name="tokenGeneratorService">
+        /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
+        /// </param>
+        /// <param name="loggerFactory">
+        /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
+        /// </param>
+        /// <param name="thingsMessageProducer">
+        /// The (injected) <see cref="IBackgroundThingsMessageProducer"/> used to schedule things messages to be sent
+        /// </param>
+        protected ApiBase(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer)
+        {
+            this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
+            this.TokenGeneratorService = tokenGeneratorService;
+            this.AppConfigService = appConfigService;
+            this.thingsMessageProducer = thingsMessageProducer;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
@@ -111,7 +143,7 @@ namespace CometServer.Modules
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
-
+        
         /// <summary>
         /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
         /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
@@ -860,6 +892,40 @@ namespace CometServer.Modules
             requestUtils.OverrideQueryParameters = null;
 
             return chainedReferenceDataColl.AsReadOnly();
+        }
+
+        /// <summary>
+        /// Prepares and sends a message about the changed <see cref="Thing"/> instances based on the provided operation data.
+        /// </summary>
+        /// <param name="originalPostOperation">The operation data containing information about create, update, and delete operations.</param>
+        /// <param name="changedThings">The collection of changed <see cref="Thing"/> instances.</param>
+        /// <param name="actorId">The actor id.</param>
+        /// <param name="serializer">The <see cref="ICdp4JsonSerializer"/></param>
+        /// <param name="modelVersion">The model version.</param>
+        /// <returns>An asynchronous task representing the operation.</returns>
+        protected async Task PrepareAndQueueThingsMessage(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, 
+            Guid actorId, ICdp4JsonSerializer serializer, Version modelVersion)
+        {
+            if (!this.AppConfigService.AppConfig.ServiceMessagingConfig.IsEnabled || this.thingsMessageProducer is null)
+            {
+                return;
+            }
+
+            await using var serializedPostOperation = new MemoryStream();
+            serializer.SerializeToStream(originalPostOperation, serializedPostOperation);
+            serializedPostOperation.Position = 0;
+            using var reader = new StreamReader(serializedPostOperation, Encoding.UTF8);
+            
+            var message = new ThingsChangedMessage()
+            {
+                ChangedThings = changedThings.ToList(),
+                PostOperation = await reader.ReadToEndAsync(),
+                ActorId = actorId,
+                TimeStamp = DateTime.Now,
+                ModelVersion = modelVersion
+            };
+
+            await this.thingsMessageProducer.EnqueueAsync(message);
         }
     }
 }

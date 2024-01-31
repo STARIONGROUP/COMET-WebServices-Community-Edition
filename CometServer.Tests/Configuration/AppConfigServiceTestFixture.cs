@@ -69,6 +69,11 @@ namespace CometServer.Tests.Configuration
             Assert.That(appConfigService.AppConfig.HealthConfig.RequireHost, Is.Empty);
 
             Assert.That(appConfigService.AppConfig.Midtier.BacktierWaitTime, Is.EqualTo(333));
+
+            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.IsEnabled, Is.False);
+            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.Port, Is.EqualTo(1234));
+            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.HostName, Is.EqualTo("message-broker"));
+            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.TimeSpanBetweenAttempts, Is.EqualTo(5));
         }
     }
 }

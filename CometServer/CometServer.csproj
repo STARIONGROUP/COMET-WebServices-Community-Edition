@@ -49,6 +49,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\COMET-SDK-Community-Edition\CDP4ServicesMessaging\CDP4ServicesMessaging.csproj" />
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
   </ItemGroup>

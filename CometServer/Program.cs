@@ -29,6 +29,8 @@ namespace CometServer
 
     using Autofac.Extensions.DependencyInjection;
 
+    using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
+
     using CometServer.Configuration;
     using CometServer.Resources;
 
@@ -75,11 +77,12 @@ namespace CometServer
             var host = builder.Build();
 
             var logger = host.Services.GetService<ILogger<Program>>();
+            var backgroundMessageProducer = host.Services.GetService<IBackgroundThingsMessageProducer>();
 
             try
             {
                 var resourceLoader = host.Services.GetService<IResourceLoader>();
-                
+
                 logger.LogInformation(resourceLoader.QueryLogo());
 
                 logger.LogInformation("################################################################");
@@ -110,22 +113,32 @@ namespace CometServer
                 logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", appConfigService.AppConfig.Backtier.IsDbImportEnabled);
                 logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", appConfigService.AppConfig.Backtier.IsDbRestoreEnabled);
 
+                logger.LogInformation("ThingsMessageProducer-IsEnabled: {IsEnabled}", appConfigService.AppConfig.ServiceMessagingConfig.IsEnabled);
+
                 logger.LogInformation("################################################################");
 
                 var configuration = host.Services.GetService<IConfiguration>();
+
                 var uri = configuration.GetSection("Kestrel:Endpoints:Http:Url").Value;
 
                 logger.LogInformation("CDP4-COMET REST API Ready to accept connections at {uri}", uri);
 
                 await host.RunAsync();
-
+                
                 logger.LogInformation("Terminated CDP4-COMET WebServices cleanly");
                 return 0;
             }
             catch (Exception e)
             {
-                logger.LogCritical(e,"An unhandled exception occurred during startup-bootstrapping");
+                logger.LogCritical(e, "An unhandled exception occurred during startup-bootstrapping");
                 return -1;
+            }
+            finally
+            {
+                if (backgroundMessageProducer is not null)
+                {
+                    await backgroundMessageProducer.DequeueAsync();
+                }
             }
         }
     }
