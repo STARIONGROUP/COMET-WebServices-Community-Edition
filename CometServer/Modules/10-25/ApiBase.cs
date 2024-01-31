@@ -901,10 +901,8 @@ namespace CometServer.Modules
         /// <param name="changedThings">The collection of changed <see cref="Thing"/> instances.</param>
         /// <param name="actorId">The actor id.</param>
         /// <param name="serializer">The <see cref="ICdp4JsonSerializer"/></param>
-        /// <param name="modelVersion">The model version.</param>
         /// <returns>An asynchronous task representing the operation.</returns>
-        protected async Task PrepareAndQueueThingsMessage(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, 
-            Guid actorId, ICdp4JsonSerializer serializer, Version modelVersion)
+        protected async Task PrepareAndQueueThingsMessage(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
         {
             if (!this.AppConfigService.AppConfig.ServiceMessagingConfig.IsEnabled || this.thingsMessageProducer is null)
             {
@@ -921,8 +919,7 @@ namespace CometServer.Modules
                 ChangedThings = changedThings.ToList(),
                 PostOperation = await reader.ReadToEndAsync(),
                 ActorId = actorId,
-                TimeStamp = DateTime.Now,
-                ModelVersion = modelVersion
+                TimeStamp = DateTime.Now
             };
 
             await this.thingsMessageProducer.EnqueueAsync(message);

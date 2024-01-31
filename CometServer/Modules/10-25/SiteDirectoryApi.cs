@@ -490,7 +490,7 @@ namespace CometServer.Modules
                 await transaction.CommitAsync();
 
                 // Sends changed things to the AMQP message bus
-                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer, version);
+                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer);
 
                 if (modelCreatorManager.IsUserTriggerDisable)
                 {

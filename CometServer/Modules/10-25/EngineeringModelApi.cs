@@ -858,7 +858,7 @@ namespace CometServer.Modules
                 await transaction.CommitAsync();
 
                 // Sends changed things to the AMQP message bus
-                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer, httpRequest.QueryDataModelVersion());
+                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer);
 
                 this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
 
