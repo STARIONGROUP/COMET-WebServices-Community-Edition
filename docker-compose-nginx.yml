@@ -54,6 +54,17 @@ services:
       cdp4:
         aliases:
           - cdp4-nginx
+  
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 15672:15672
+    networks:
+      - cdp4
+    volumes:
+      - 'rabbitmq_data:/data'
 
 networks:
   cdp4:
@@ -64,3 +75,4 @@ volumes:
   cdpwslogs:
   cdpwsstorage:
   cdpwsupload:
+  rabbitmq_data:

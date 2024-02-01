@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryApi.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2024 RHEA System S.A.
 //
@@ -27,6 +27,7 @@ namespace CometServer.Modules
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.IO;
     using System.Linq;
     using System.Net;
     using System.Security;
@@ -40,6 +41,8 @@ namespace CometServer.Modules
     using CDP4JsonSerializer;
 
     using CDP4MessagePackSerializer;
+
+    using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
     using CometServer.Authorization;
     using CometServer.Configuration;
@@ -120,7 +123,11 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public SiteDirectoryApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
+        /// <param name="thingsMessageProducer">
+        /// The (injected) <see cref="IBackgroundThingsMessageProducer"/> used to schedule things messages to be sent
+        /// </param>
+        public SiteDirectoryApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer) 
+            : base(appConfigService, tokenGeneratorService, loggerFactory, thingsMessageProducer)
         {
             this.logger = loggerFactory == null ? NullLogger<SiteDirectoryApi>.Instance : loggerFactory.CreateLogger<SiteDirectoryApi>();
             this.cometHasStartedService = cometHasStartedService;
@@ -482,6 +489,9 @@ namespace CometServer.Modules
                 // commit the operation + revision-history
                 await transaction.CommitAsync();
 
+                // Sends changed things to the AMQP message bus
+                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer);
+
                 if (modelCreatorManager.IsUserTriggerDisable)
                 {
                     // re-enable user triggers
@@ -503,7 +513,7 @@ namespace CometServer.Modules
                             await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, version, httpResponse);
                             break;
                     }
-
+                    
                     return;
                 }
 

@@ -21,6 +21,18 @@ services:
     volumes:
       - cdpdbvolume:/var/lib/postgresql/data
       - cdpdblogs:/logs
+  
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 15672:15672
+      - 5672:5672
+    networks:
+      - cdp4
+    volumes:
+      - 'rabbitmq_data:/data'
 
 networks:
   cdp4:
@@ -28,3 +40,4 @@ networks:
 volumes:
   cdpdbvolume:
   cdpdblogs:
+  rabbitmq_data:
