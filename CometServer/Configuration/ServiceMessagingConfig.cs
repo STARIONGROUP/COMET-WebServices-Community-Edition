@@ -36,15 +36,6 @@ namespace CometServer.Configuration
         /// </summary>
         public ServiceMessagingConfig()
         {
-            // set defaults
-            this.IsEnabled = true;
-            this.HostName = "127.0.0.1";
-            this.Port = 5672;
-            this.AdminPort = 15672;
-            this.UserName = "guest";
-            this.Password = "guest";
-            this.MaxConnectionRetryAttempts = 4;
-            this.TimeSpanBetweenAttempts = 1;
         }
 
         /// <summary>
@@ -55,61 +46,54 @@ namespace CometServer.Configuration
         /// </param>
         public ServiceMessagingConfig(IConfiguration configuration)
         {
-            this.IsEnabled = !bool.TryParse(configuration["MessageBroker:IsEnabled"], out var isEnabled) || isEnabled;
-            this.Port = int.TryParse(configuration["MessageBroker:Port"], out var port) ? port : 5672;
-            this.AdminPort = int.TryParse(configuration["MessageBroker:AdminPort"], out var adminPort) ? adminPort : 15672;
-
-            this.MaxConnectionRetryAttempts = int.TryParse(configuration["MessageBroker:MaxConnectionRetryAttempts"], out var maxConnectionRetryAttempts) 
-                ? maxConnectionRetryAttempts 
-                : 4;
-
-            this.TimeSpanBetweenAttempts = int.TryParse(configuration["MessageBroker:TimeSpanBetweenAttempts"], out var timeSpanBetweenAttempts) 
-                ? timeSpanBetweenAttempts
-                : 1;
-
-            this.UserName = configuration["MessageBroker:UserName"];
-            this.Password = configuration["MessageBroker:Password"];
-            this.HostName = configuration["MessageBroker:HostName"];
+            this.IsEnabled = configuration.GetValue("MessageBroker:IsEnabled", false);
+            this.Port = configuration.GetValue("MessageBroker:Port", 5672);
+            this.AdminPort = configuration.GetValue("MessageBroker:AdminPort", 15672);
+            this.MaxConnectionRetryAttempts = configuration.GetValue("MessageBroker:MaxConnectionRetryAttempts", 5);
+            this.TimeSpanBetweenAttempts = configuration.GetValue("MessageBroker:TimeSpanBetweenAttempts", 1);
+            this.UserName = configuration.GetValue("MessageBroker:UserName", string.Empty);
+            this.Password = configuration.GetValue("MessageBroker:Password", string.Empty);
+            this.HostName = configuration.GetValue("MessageBroker:HostName", string.Empty);
         }
 
         /// <summary>
         /// Gets or sets the host name of the back tier.
         /// </summary>
-        public string HostName { get; set; }
+        public string HostName { get; private set; }
 
         /// <summary>
         /// Gets or sets the listen port of the service messaging.
         /// </summary>
-        public int Port { get; set; }
+        public int Port { get; private set; }
 
         /// <summary>
         /// Gets or sets the admin port of the back tier.
         /// </summary>
-        public int AdminPort { get; set; }
+        public int AdminPort { get; private set; }
 
         /// <summary>
         /// Gets or sets the maximum number of attempts to connect to the message broker
         /// </summary>
-        public int MaxConnectionRetryAttempts { get; set; }
+        public int MaxConnectionRetryAttempts { get; private set; }
         
         /// <summary>
         /// Gets or sets the timespan between attemps to connect to the message broker in second
         /// </summary>
-        public int TimeSpanBetweenAttempts { get; set; }
+        public int TimeSpanBetweenAttempts { get; private set; }
 
         /// <summary>
         /// Gets or sets the user name.
         /// </summary>
-        public string UserName { get; set; }
+        public string UserName { get; private set; }
 
         /// <summary>
         /// Gets or sets the user password of the back tier.
         /// </summary>
-        public string Password { get; set; }
+        public string Password { get; private set; }
         
         /// <summary>
         /// Gets or sets a value indicating whether the service messaging should be enabled
         /// </summary>
-        public bool IsEnabled { get; set; }
+        public bool IsEnabled { get; private set; }
     }
 }

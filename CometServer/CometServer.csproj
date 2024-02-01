@@ -45,11 +45,11 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="MailKit" Version="4.3.0" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="24.6.0" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="26.1.0" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" Version="26.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\COMET-SDK-Community-Edition\CDP4ServicesMessaging\CDP4ServicesMessaging.csproj" />
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
     <ProjectReference Include="..\CDP4Orm\CDP4Orm.csproj" />
   </ItemGroup>

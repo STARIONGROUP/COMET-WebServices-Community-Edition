@@ -59,21 +59,24 @@ namespace CometServer.Tests.Configuration
         public void Verify_that_configuration_is_loaded_from_appsettings()
         {
             var appConfigService = new AppConfigService(this.configuration);
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(appConfigService.AppConfig.Backtier.Database, Is.EqualTo("cdp4server"));
 
-            Assert.That(appConfigService.AppConfig.Backtier.Database, Is.EqualTo("cdp4server"));
+                Assert.That(appConfigService.AppConfig.Changelog.CollectChanges, Is.True);
 
-            Assert.That(appConfigService.AppConfig.Changelog.CollectChanges, Is.True);
+                Assert.That(appConfigService.AppConfig.EmailService.SMTP, Is.EqualTo("smtp.cdp4.org"));
 
-            Assert.That(appConfigService.AppConfig.EmailService.SMTP, Is.EqualTo("smtp.cdp4.org"));
+                Assert.That(appConfigService.AppConfig.HealthConfig.RequireHost, Is.Empty);
 
-            Assert.That(appConfigService.AppConfig.HealthConfig.RequireHost, Is.Empty);
+                Assert.That(appConfigService.AppConfig.Midtier.BacktierWaitTime, Is.EqualTo(333));
 
-            Assert.That(appConfigService.AppConfig.Midtier.BacktierWaitTime, Is.EqualTo(333));
-
-            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.IsEnabled, Is.False);
-            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.Port, Is.EqualTo(1234));
-            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.HostName, Is.EqualTo("message-broker"));
-            Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.TimeSpanBetweenAttempts, Is.EqualTo(5));
+                Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.IsEnabled, Is.False);
+                Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.Port, Is.EqualTo(1234));
+                Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.HostName, Is.EqualTo("message-broker"));
+                Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.TimeSpanBetweenAttempts, Is.EqualTo(5));
+            });
         }
     }
 }
