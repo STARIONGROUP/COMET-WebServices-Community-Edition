@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -438,8 +438,8 @@ namespace CometServer.Modules
         /// <param name="permissionInstanceFilterService">
         /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
         /// </param>
-        /// <param name="fileRevisions">
-        /// The file revisions.
+        /// <param name="contentHashes">
+        /// The content hashes.
         /// </param>
         /// <param name="resourceResponse">
         /// The resource response.
@@ -453,13 +453,13 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected void WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected void WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<string> contentHashes, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
 
             httpResponse.StatusCode = (int)statusCode;
 
-            this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
+            this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, contentHashes, resourceResponse, version);
         }
 
         /// <summary>
@@ -657,7 +657,7 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Prepare a multi part response based on all included fileRevisions in the response.
+        /// Prepare a multi part response based on all included files in the response.
         /// </summary>
         /// <param name="metaInfoProvider">
         /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
@@ -671,8 +671,8 @@ namespace CometServer.Modules
         /// <param name="targetStream">
         /// The target Stream.
         /// </param>
-        /// <param name="fileRevisions">
-        /// The file Revisions.
+        /// <param name="contentHashes">
+        /// The content hashes.
         /// </param>
         /// <param name="resourceResponse">
         /// The resource response.
@@ -683,9 +683,9 @@ namespace CometServer.Modules
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
         /// </param>
-        private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
+        private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<string> contentHashes, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
-            if (fileRevisions.Count == 0)
+            if (contentHashes.Count == 0)
             {
                 // do nothing if no file revisions are present
                 return;
@@ -708,7 +708,7 @@ namespace CometServer.Modules
                 stream.Flush();
             }
 
-            foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
+            foreach (var hash in contentHashes.Distinct())
             {
                 byte[] buffer;
                 long fileSize;
@@ -723,7 +723,7 @@ namespace CometServer.Modules
                 var binaryContent = new ByteArrayContent(buffer);
                 binaryContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeOctetStream);
 
-                // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
+                // use the file hash value to easily identify the multipart content for each respective file hash entry
                 binaryContent.Headers.Add(HttpConstants.ContentDispositionHeader, $"attachment; filename={hash}");
                 binaryContent.Headers.Add(HttpConstants.ContentLengthHeader, fileSize.ToString());
                 content.Add(binaryContent);
@@ -799,7 +799,7 @@ namespace CometServer.Modules
                 var binaryContent = new ByteArrayContent(buffer);
                 binaryContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeOctetStream);
 
-                // use the file hash value to easily identify the multipart content for each respective filerevision hash entry
+                // use the file hash value to easily identify the multipart content for each respective file hash entry
 
                 var fileInfo = new FileInfo($"{temporaryTopFolder}.zip");
                 
@@ -892,6 +892,23 @@ namespace CometServer.Modules
             requestUtils.OverrideQueryParameters = null;
 
             return chainedReferenceDataColl.AsReadOnly();
+        }
+
+        /// <summary>
+        /// Gets all content hashes from <see cref="Thing"/>s that represent files and therefore have ContentHash properties
+        /// </summary>
+        /// <param name="things">
+        /// The <see cref="List{T}"/> of type <see cref="Thing"/> that could contain <see cref="Thing"/>
+        /// that represents a file and therefore has ContentHash properties
+        /// </param>
+        /// <returns>
+        /// A <see cref="List{T}"/> of type <see cref="string"/> containing all (file) content hashes.
+        /// </returns>
+        protected List<string> GetContentHashes(IReadOnlyList<Thing> things)
+        {
+            return things.OfType<FileRevision>().Select(x => x.ContentHash)
+                .Union(things.OfType<Attachment>().Select(x => x.ContentHash))
+                .ToList();
         }
 
         /// <summary>

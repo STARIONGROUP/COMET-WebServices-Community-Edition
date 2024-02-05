@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessor.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -331,11 +331,18 @@ namespace CometServer.Services.Operations
             }
 
             var newFileRevisions = operation.Create.OfType<FileRevision>().ToList();
+            var newAttachments = operation.Create.OfType<Attachment>().ToList();
+
+            var newContentHashes =
+                newFileRevisions.Select(x => x.ContentHash)
+                    .Union(
+                        newAttachments.Select(x => x.ContentHash)
+                    );
 
             // validate that each uploaded file has a resepective fileRevision part
-            if (fileStore.Keys.Any(hashKey => newFileRevisions.All(x => x.ContentHash != hashKey)))
+            if (fileStore.Keys.Any(hashKey => newContentHashes.All(x => x != hashKey)))
             {
-                throw new InvalidOperationException("All uploaded files must be referenced by their respective (SHA1) content hash in a new 'FileRevision' object.");
+                throw new InvalidOperationException("All uploaded files must be referenced by their respective (SHA1) content hash in a new 'FileRevision' or 'Attachment' object.");
             }
 
             // validate the FileRevision items in operation
@@ -355,6 +362,26 @@ namespace CometServer.Services.Operations
                     {
                         throw new InvalidOperationException(
                             $"Physical file that belongs to FileRevision with iid:'{fileRevision.Iid}' with content Hash [{fileRevision.ContentHash}] does not exist");
+                    }
+                }
+            }
+
+            foreach (var attachment in newAttachments)
+            {
+                // validate that ContentHash is supplied
+                if (string.IsNullOrWhiteSpace(attachment.ContentHash))
+                {
+                    throw new Cdp4ModelValidationException(
+                        $"The 'ContentHash' property of 'Attachment' with iid '{attachment.Iid}' is mandatory and cannot be an empty string or null.");
+                }
+
+                if (!fileStore.ContainsKey(attachment.ContentHash))
+                {
+                    // try if file content is already on disk
+                    if (!this.FileBinaryService.IsFilePersisted(attachment.ContentHash))
+                    {
+                        throw new InvalidOperationException(
+                            $"Physical file that belongs to Attachment with iid:'{attachment.Iid}' with content Hash [{attachment.ContentHash}] does not exist");
                     }
                 }
             }

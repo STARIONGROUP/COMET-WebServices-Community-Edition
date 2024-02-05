@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ZipArchiveWriter.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -188,38 +188,37 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Writes the binary data of <see cref="FileRevision"/> objects to the <see cref="ZipOutputStream"/>
+        /// Writes the binary data of objects to the <see cref="ZipOutputStream"/>
         /// </summary>
         /// <param name="engineeringModelSetup">
         /// The <see cref="EngineeringModelSetup"/> that corresponds to the <see cref="EngineeringModel"/> data
         /// </param>
-        /// <param name="fileRevisions">
-        /// The <see cref="IEnumerable{FileRevision}"/> of which the binary data is to be written to the <see cref="ZipOutputStream"/>
+        /// <param name="things">
+        /// The <see cref="IEnumerable{Thing}"/> of which the binary data is to be written to the <see cref="ZipOutputStream"/>
         /// </param>
         /// <param name="zipOutputStream">
         /// The target <see cref="ZipOutputStream"/>
         /// </param>
-        public void WriteFileRevisionsToZipFile(EngineeringModelSetup engineeringModelSetup, IEnumerable<FileRevision> fileRevisions, ZipOutputStream zipOutputStream)
+        public void WriteBinaryDataToZipFile(EngineeringModelSetup engineeringModelSetup, IEnumerable<Thing> things, ZipOutputStream zipOutputStream)
         {
-            var uniqueContent = 
-                fileRevisions
-                    .Select(x => x.ContentHash)
-                    .Distinct()
-                    .Select(x => new { ContentHash = x });
+            var contentHashes =
+                things.OfType<FileRevision>().Select(x => x.ContentHash)
+                    .Union(things.OfType<Attachment>().Select(x => x.ContentHash))
+                    .Distinct();
 
-            foreach (var fileRevision in uniqueContent)
+            foreach (var contentHash in contentHashes)
             {
-                if (this.FileBinaryService.IsFilePersisted(fileRevision.ContentHash))
+                if (this.FileBinaryService.IsFilePersisted(contentHash))
                 {
-                    var fileRevisionZipEntry = new ZipEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/FileRevisions/{fileRevision.ContentHash}")
+                    var fileRevisionZipEntry = new ZipEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/FileRevisions/{contentHash}")
                     {
-                        Comment = $"FileRevision: {fileRevision.ContentHash}",
+                        Comment = $"FileRevision: {contentHash}",
                         DateTime = DateTime.UtcNow
                     };
 
                     zipOutputStream.PutNextEntry(fileRevisionZipEntry);
 
-                    using var fileStream = this.FileBinaryService.RetrieveBinaryData(fileRevision.ContentHash);
+                    using var fileStream = this.FileBinaryService.RetrieveBinaryData(contentHash);
                     fileStream.Position = 0;
                     fileStream.CopyTo(zipOutputStream);
 

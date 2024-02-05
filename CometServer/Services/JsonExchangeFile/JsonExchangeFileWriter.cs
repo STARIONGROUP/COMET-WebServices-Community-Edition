@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="JsonExchangeFileWriter.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -176,7 +176,7 @@ namespace CometServer.Services
             
             foreach (var engineeringModelSetup in engineeringModelSetups)
             {
-                var fileRevisionsHashSet = new HashSet<FileRevision>();
+                var things = new HashSet<Thing>();
 
                 this.CredentialsService.Credentials.EngineeringModelSetup = engineeringModelSetup;
                 this.CredentialsService.ResolveParticipantCredentials(transaction);
@@ -189,10 +189,9 @@ namespace CometServer.Services
                     this.ObfuscationService.ObfuscateResponse(engineeringModelThings, this.CredentialsService.Credentials);
                 }
 
-                var engineeringModelFileRevisions = engineeringModelThings.OfType<FileRevision>().ToList();
-                foreach (var fileRevision in engineeringModelFileRevisions)
+                foreach (var thing in engineeringModelThings)
                 {
-                    fileRevisionsHashSet.Add(fileRevision);
+                    things.Add(thing);
                 }
 
                 this.ZipArchiveWriter.WriteEngineeringModelToZipFile(engineeringModelSetup, engineeringModelThings, zipOutputStream);
@@ -208,10 +207,9 @@ namespace CometServer.Services
                          this.ObfuscationService.ObfuscateResponse(iterationThings, this.CredentialsService.Credentials);
                      }
 
-                     var iterationFileRevisions = iterationThings.OfType<FileRevision>().ToList();
-                     foreach (var fileRevision in iterationFileRevisions)
+                     foreach (var thing in iterationThings)
                      {
-                         fileRevisionsHashSet.Add(fileRevision);
+                         things.Add(thing);
                      }
                      
                      this.ZipArchiveWriter.WriteIterationToZipFile(engineeringModelSetup, iterationSetup, iterationThings, zipOutputStream);
@@ -219,7 +217,7 @@ namespace CometServer.Services
 
                 if (this.RequestUtils.QueryParameters.IncludeFileData)
                 {
-                    this.ZipArchiveWriter.WriteFileRevisionsToZipFile(engineeringModelSetup, fileRevisionsHashSet, zipOutputStream);
+                    this.ZipArchiveWriter.WriteBinaryDataToZipFile(engineeringModelSetup, things, zipOutputStream);
                 }
             }
 

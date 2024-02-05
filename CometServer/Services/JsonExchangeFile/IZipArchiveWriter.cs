@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IZipArchiveWriter.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -86,18 +86,18 @@ namespace CometServer.Services
         void WriteIterationToZipFile(EngineeringModelSetup engineeringModelSetup, IterationSetup iterationSetup, IEnumerable<Thing> iterationContents, ZipOutputStream zipOutputStream);
 
         /// <summary>
-        /// Writes the binary data of <see cref="FileRevision"/> objects to the <see cref="ZipOutputStream"/>
+        /// Writes the binary data of <see cref="Thing"/> objects to the <see cref="ZipOutputStream"/>
         /// </summary>
         /// <param name="engineeringModelSetup">
         /// The <see cref="EngineeringModelSetup"/> that corresponds to the <see cref="EngineeringModel"/> data
         /// </param>
-        /// <param name="fileRevisions">
-        /// The <see cref="IEnumerable{FileRevision}"/> of which the binary data is to be written to the <see cref="ZipOutputStream"/>
+        /// <param name="things">
+        /// The <see cref="IEnumerable{Thing}"/> of which the binary data is to be written to the <see cref="ZipOutputStream"/>
         /// </param>
         /// <param name="zipOutputStream">
         /// The target <see cref="ZipOutputStream"/>
         /// </param>
-        void WriteFileRevisionsToZipFile(EngineeringModelSetup engineeringModelSetup, IEnumerable<FileRevision> fileRevisions, ZipOutputStream zipOutputStream);
+        void WriteBinaryDataToZipFile(EngineeringModelSetup engineeringModelSetup, IEnumerable<Thing> things, ZipOutputStream zipOutputStream);
 
         /// <summary>
         /// Writes <see cref="ModelReferenceDataLibrary"/> contents to the <see cref="ZipFile"/>

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileArchiveService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -231,13 +231,13 @@ namespace CometServer.Services
                 if (things.Count != 0)
                 {
                     // Get all folders
-                    var folders = things.Where(i => i.GetType() == typeof(Folder)).Cast<Folder>().ToList();
+                    var folders = things.OfType<Folder>().ToList();
 
                     // Get all files 
-                    var files = things.Where(i => i.GetType() == typeof(File)).Cast<File>().ToList();
+                    var files = things.OfType<File>().ToList();
 
                     // Get all files 
-                    var fileRevisions = things.Where(i => i.GetType() == typeof(FileRevision)).Cast<FileRevision>().ToList();
+                    var fileRevisions = things.OfType<FileRevision>().ToList();
 
                     // Get all fileType iids
                     var fileTypeOrderedItems = new List<OrderedItem>();

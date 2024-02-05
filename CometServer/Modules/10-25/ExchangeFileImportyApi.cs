@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileImportyApi.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -979,14 +979,19 @@ namespace CometServer.Modules
         /// </param>
         private static void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, EngineeringModelSetup engineeringModelSetup, string password = null)
         {
-            var fileRevisions = requestUtils.Cache.OfType<FileRevision>().ToList();
-            if (fileRevisions.Count == 0)
+
+            var fileHashes =
+                requestUtils.Cache.OfType<FileRevision>().Select(x => x.ContentHash)
+                    .Union(requestUtils.Cache.OfType<Attachment>().Select(x => x.ContentHash))
+                    .ToList();
+
+            if (fileHashes.Count == 0)
             {
                 // nothing to do
                 return;
             }
 
-            foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
+            foreach (var hash in fileHashes.Distinct())
             {
                 jsonExchangeFileReader.ReadAndStoreFileBinary(fileName, password, engineeringModelSetup, hash);
             }

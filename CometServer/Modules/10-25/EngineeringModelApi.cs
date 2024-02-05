@@ -598,12 +598,12 @@ namespace CometServer.Modules
                     this.logger.LogInformation("{request}:{requestToken} - Obfuscation completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, obfsw.ElapsedMilliseconds);
                 }
 
-                var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
+                var contentHashes = this.GetContentHashes(resourceResponse);
 
-                if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
+                if (requestUtils.QueryParameters.IncludeFileData && contentHashes.Any())
                 {
                     // return multipart response including file binaries
-                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
+                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, contentHashes, resourceResponse, version, httpResponse);
                     return;
                 }
 
