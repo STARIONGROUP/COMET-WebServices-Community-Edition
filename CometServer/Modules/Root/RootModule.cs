@@ -24,8 +24,6 @@
 
 namespace CometServer.Modules
 {
-    using System.Linq;
-
     using Carter;
 
     using CometServer.Resources;

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -36,8 +36,11 @@ namespace CometServer.Modules
     using System.Threading.Tasks;
 
     using Carter;
+    using Carter.Response;
 
     using CDP4Common.DTO;
+
+    using CDP4DalCommon.Tasks;
 
     using CDP4JsonSerializer;
 
@@ -49,8 +52,10 @@ namespace CometServer.Modules
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Extensions;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services.Operations;
+    using CometServer.Tasks;
 
     using Microsoft.AspNetCore.Http;
     using Microsoft.Extensions.Logging;
@@ -98,10 +103,24 @@ namespace CometServer.Modules
         protected readonly ITokenGeneratorService TokenGeneratorService;
 
         /// <summary>
+        /// The (injected) <see cref="ICometTaskService"/> used to register and access running <see cref="CometTask"/>s
+        /// </summary>
+        protected readonly ICometTaskService CometTaskService;
+
+        /// <summary>
+        /// The (injected) <see cref="ICometHasStartedService"/>
+        /// </summary>
+        protected readonly ICometHasStartedService CometHasStartedService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
         /// </summary>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
+        /// </param>
+        /// <param name="cometHasStartedService">
+        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
+        /// acceptng requests
         /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
@@ -112,12 +131,17 @@ namespace CometServer.Modules
         /// <param name="thingsMessageProducer">
         /// The (injected) <see cref="IBackgroundThingsMessageProducer"/> used to schedule things messages to be sent
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer)
+        /// <param name="cometTaskService">
+        /// The (injected) <see cref="ICometTaskService"/> used to register and access running <see cref="CometTask"/>s
+        /// </param>
+        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService)
         {
             this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
+            this.CometHasStartedService = cometHasStartedService;
             this.TokenGeneratorService = tokenGeneratorService;
             this.AppConfigService = appConfigService;
             this.thingsMessageProducer = thingsMessageProducer;
+            this.CometTaskService = cometTaskService;
         }
 
         /// <summary>
@@ -126,15 +150,20 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
+        /// <param name="cometHasStartedService">
+        /// The (injected) <see cref="ICometHasStartedService"/> that is used to determine whether the servre
+        /// is ready to accept incoming requests
+        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory)
+        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
+            this.CometHasStartedService = cometHasStartedService;
             this.TokenGeneratorService = tokenGeneratorService;
             this.AppConfigService = appConfigService;
         }
@@ -180,6 +209,24 @@ namespace CometServer.Modules
 
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Checks if the server is ready to accept requests.
+        /// </summary>
+        /// <param name="response">The HTTP response object.</param>
+        /// <returns>True if the server is ready; otherwise, false.</returns>
+        protected async Task<bool> IsServerReady(HttpResponse response)
+        {
+            if (this.CometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+            {
+                return true;
+            }
+
+            response.ContentType = "application/json";
+            response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+            await response.AsJson("not yet started and not yet ready to accept requests");
+            return false;
         }
 
         /// <summary>
@@ -374,14 +421,27 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteJsonResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
-            headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.JSON, "");
+            try
+            {
+                var sw = Stopwatch.StartNew();
 
-            httpResponse.StatusCode = (int)statusCode;
+                this.logger.LogInformation("JSON serialization to response started for {token}", requestToken);
 
-            var resultStream = new MemoryStream();
-            this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
-            resultStream.Seek(0, SeekOrigin.Begin);
-            await resultStream.CopyToAsync(httpResponse.Body);
+                headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.JSON, "");
+
+                httpResponse.StatusCode = (int)statusCode;
+
+                var resultStream = new MemoryStream();
+                this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
+                resultStream.Seek(0, SeekOrigin.Begin);
+                await resultStream.CopyToAsync(httpResponse.Body);
+
+                this.logger.LogInformation("JSON serialization to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.logger.LogTrace("The HttpResponse has been disposed of for {requestToken}", requestToken);
+            }
         }
 
         /// <summary>
@@ -389,6 +449,9 @@ namespace CometServer.Modules
         /// </summary>
         /// <param name="headerInfoProvider">
         /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="messagePackSerializer">
+        /// The <see cref="IMessagePackSerializer"/> used to serialize data to MessagePack
         /// </param>
         /// <param name="permissionInstanceFilterService">
         /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
@@ -413,14 +476,27 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task WriteMessagePackResponse(IHeaderInfoProvider headerInfoProvider, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
-            headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MESSAGEPACK, "");
+            try
+            {
+                var sw = Stopwatch.StartNew();
 
-            httpResponse.StatusCode = (int)statusCode;
+                this.logger.LogInformation("MessagePack serialization to response started for {token}", requestToken);
 
-            var resultStream = new MemoryStream();
-            this.CreateFilteredMessagePackResponseStream(messagePackSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
-            resultStream.Seek(0, SeekOrigin.Begin);
-            await resultStream.CopyToAsync(httpResponse.Body);
+                headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MESSAGEPACK, "");
+
+                httpResponse.StatusCode = (int)statusCode;
+
+                var resultStream = new MemoryStream();
+                this.CreateFilteredMessagePackResponseStream(messagePackSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
+                resultStream.Seek(0, SeekOrigin.Begin);
+                await resultStream.CopyToAsync(httpResponse.Body);
+
+                this.logger.LogInformation("MessagePack serialization to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+            }
+            catch (ObjectDisposedException)
+            {
+                this.logger.LogTrace("The HttpResponse has been disposed of for {requestToken}", requestToken);
+            }
         }
 
         /// <summary>
@@ -434,6 +510,9 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="fileBinaryService">
+        /// The (injected)  <see cref="IFileBinaryService"/> used to operate on files
         /// </param>
         /// <param name="permissionInstanceFilterService">
         /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
@@ -474,6 +553,9 @@ namespace CometServer.Modules
         /// <param name="routeSegments">
         /// The route segments of the HTTP request.
         /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
         /// <param name="statusCode">
         /// The optional HTTP status Code.
         /// </param>
@@ -491,6 +573,9 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="permissionInstanceFilterService">
         /// The (injected) <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
+        /// <param name="version">
+        /// The CDP4-COMET Data model version to be used for serialization
         /// </param>
         /// <returns>
         /// The <see cref="HttpResponse"/>.
@@ -624,6 +709,9 @@ namespace CometServer.Modules
         /// <summary>
         /// Filters supplied DTO's and creates a JSON response stream based on an <see cref="IEnumerable{T}"/>
         /// </summary>
+        /// <param name="messagePackSerializer">
+        /// The <see cref="IMessagePackSerializer"/> used to serialize data to MessagePack
+        /// </param>
         /// <param name="permissionInstanceFilterService">
         /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
         /// </param>
@@ -742,6 +830,9 @@ namespace CometServer.Modules
         /// </param>
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="fileArchiveService">
+        /// The (injected) <see cref="IFileArchiveService"/> to store and retrieve files to and from the filesystem
         /// </param>
         /// <param name="permissionInstanceFilterService">
         /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
@@ -923,6 +1014,38 @@ namespace CometServer.Modules
             };
 
             await this.thingsMessageProducer.EnqueueAsync(message);
+        }
+
+        /// <summary>
+        /// Creates and registers a <see cref="CometTask"/> with the <see cref="ICometTaskService"/>
+        /// </summary>
+        /// <param name="actor">
+        /// The unique identifier of the <see cref="Person"/> that mae the POST request
+        /// </param>
+        /// <param name="topContainerName">
+        /// The name of the <see cref="TopContainer"/> for which the POST requst was made (either SiteDirectory or EngineeringModel)
+        /// </param>
+        /// <param name="requestToken">
+        /// the token used for log correlation
+        /// </param>
+        /// <returns>
+        /// The registered and enqueued <see cref="CometTask"/>
+        /// </returns>
+        protected CometTask CreateAndRegisterCometTask(Guid actor, string topContainerName, string requestToken)
+        {
+            var cometTask = new CometTask()
+            {
+                Id = Guid.NewGuid(),
+                Actor = actor,
+                StatusKind = StatusKind.PROCESSING,
+                StartedAt = DateTime.Now,
+                TopContainer = topContainerName,
+                RequestToken = requestToken
+            };
+
+            this.CometTaskService.AddOrUpdateTask(cometTask);
+
+            return cometTask;
         }
     }
 }

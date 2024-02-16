@@ -25,7 +25,6 @@
 namespace CometServer.Exceptions
 {
     using System;
-    using System.Runtime.Serialization;
 
     /// <summary>
     /// The BAdRequestException error exception is an exception that indicates that a bas request was send.
