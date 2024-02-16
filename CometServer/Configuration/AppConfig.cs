@@ -44,6 +44,7 @@ namespace CometServer.Configuration
             this.EmailService = new EmailConfig();
             this.HealthConfig = new HealthConfig();
             this.ServiceMessagingConfig = new ServiceMessagingConfig();
+            this.LongRunningTasksConfig = new LongRunningTasksConfig();
         }
 
         /// <summary>
@@ -59,6 +60,7 @@ namespace CometServer.Configuration
             this.EmailService = new EmailConfig(configuration);
             this.HealthConfig = new HealthConfig(configuration);
             this.ServiceMessagingConfig = new ServiceMessagingConfig(configuration);
+            this.LongRunningTasksConfig = new LongRunningTasksConfig(configuration);
         }
 
         /// <summary>
@@ -95,5 +97,10 @@ namespace CometServer.Configuration
         /// Gets or sets the service messaging configuration.
         /// </summary>
         public ServiceMessagingConfig ServiceMessagingConfig { get; set; }
+
+        /// <summary>
+        /// Gets or sets the configuration for managing long running <see cref="Task"/>s
+        /// </summary>
+        public LongRunningTasksConfig LongRunningTasksConfig { get; set; }
     }
 }

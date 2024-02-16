@@ -91,6 +91,11 @@ namespace CometServer.Services.Protocol
         bool CherryPick { get; set; }
 
         /// <summary>
+        /// Gets or sets the amount of time a user waits before a CometTask is returned instead of the 10-25 Thing response 
+        /// </summary>
+        public int WaitTime { get; set; }
+
+        /// <summary>
         /// The validate query parameter.
         /// </summary>
         /// <param name="queryParameter">

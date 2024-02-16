@@ -73,11 +73,6 @@ namespace CometServer.Modules
         private readonly ILogger<ExchangeFileExportApi> logger;
 
         /// <summary>
-        /// The (injected) <see cref="ICometHasStartedService"/>
-        /// </summary>
-        private readonly ICometHasStartedService cometHasStartedService;
-
-        /// <summary>
         /// The supported post query parameter.
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
@@ -101,10 +96,9 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public ExchangeFileExportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, tokenGeneratorService, loggerFactory)
+        public ExchangeFileExportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory)
         {
             this.logger = loggerFactory == null ? NullLogger<ExchangeFileExportApi>.Instance : loggerFactory.CreateLogger<ExchangeFileExportApi>();
-            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -118,11 +112,8 @@ namespace CometServer.Modules
             app.MapPost("/export",
             async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter) =>
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                if (!await this.IsServerReady(res))
                 {
-                    res.ContentType = "application/json";
-                    res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-                    await res.AsJson("not yet started and ready to accept requests");
                     return;
                 }
 

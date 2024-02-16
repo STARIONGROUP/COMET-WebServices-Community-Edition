@@ -27,6 +27,8 @@ namespace CometServer.Helpers
     using System;
     using System.Linq;
 
+    using CometServer.Exceptions;
+
     using Microsoft.AspNetCore.Http;
 
     using Services.Protocol;
@@ -54,7 +56,7 @@ namespace CometServer.Helpers
             {
                 if (!supportedQueryParameters.Contains(kvp.Key))
                 {
-                    throw new InvalidOperationException($"Query parameter '{kvp.Key}' is not supported");
+                    throw new BadRequestException($"Query parameter '{kvp.Key}' is not supported");
                 }
             }
 
@@ -63,14 +65,14 @@ namespace CometServer.Helpers
             {
                 if (queryCollection.Keys.Count > 1 && !queryCollection.Keys.Contains(QueryParameters.RevisionToQuery))
                 {
-                    throw new InvalidOperationException("revisionFrom may only be associated with revisionTo.");
+                    throw new BadRequestException("revisionFrom may only be associated with revisionTo.");
                 }
             }
             else if (queryCollection.Keys.Contains(QueryParameters.RevisionToQuery))
             {
                 if (queryCollection.Keys.Count > 1 && !queryCollection.Keys.Contains(QueryParameters.RevisionFromQuery))
                 {
-                    throw new InvalidOperationException("revisionTo may only be associated with revisionFrom.");
+                    throw new BadRequestException("revisionTo may only be associated with revisionFrom.");
                 }
             }
         }

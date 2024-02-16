@@ -58,7 +58,7 @@ namespace CometServer.Extensions
         }
 
         /// <summary>
-        /// Queries the requested CDP-Model <see cref="Version"/>
+        /// Queries the requested CDP4-COMET Model <see cref="Version"/>
         /// </summary>
         /// <returns>
         /// a <see cref="Version"/> value based on the <see cref="HttpRequest.ContentType"/>

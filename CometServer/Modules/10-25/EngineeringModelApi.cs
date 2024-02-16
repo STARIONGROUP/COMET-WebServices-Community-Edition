@@ -56,6 +56,7 @@ namespace CometServer.Modules
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
+    using CometServer.Tasks;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
@@ -66,7 +67,7 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging.Abstractions;
 
     using Npgsql;
-
+    
     /// <summary>
     /// This is an API endpoint class to support interaction with the engineering model contained model data
     /// </summary>
@@ -81,11 +82,6 @@ namespace CometServer.Modules
         /// The (injected) <see cref="ILogger{EngineeringModelApi}"/> instance
         /// </summary>
         private readonly ILogger<EngineeringModelApi> logger;
-
-        /// <summary>
-        /// The (injected) <see cref="ICometHasStartedService"/>
-        /// </summary>
-        private readonly ICometHasStartedService cometHasStartedService;
 
         /// <summary>
         /// The supported get query parameters.
@@ -109,9 +105,10 @@ namespace CometServer.Modules
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
         {
-            QueryParameters.RevisionNumberQuery
+            QueryParameters.RevisionNumberQuery,
+            QueryParameters.WaitTimeQuery
         };
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class
         /// </summary>
@@ -131,11 +128,13 @@ namespace CometServer.Modules
         /// <param name="thingsMessageProducer">
         /// The (injected) <see cref="IBackgroundThingsMessageProducer"/> used to schedule things messages to be sent
         /// </param>
-        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer)
-            : base(appConfigService, tokenGeneratorService, loggerFactory, thingsMessageProducer)
+        /// <param name="cometTaskService">
+        /// The (injected) <see cref="ICometTaskService"/> used to register and access running <see cref="CometTask"/>s
+        /// </param>
+        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService)
+            : base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService)
         {
             this.logger = loggerFactory == null ? NullLogger<EngineeringModelApi>.Instance : loggerFactory.CreateLogger<EngineeringModelApi>();
-            this.cometHasStartedService = cometHasStartedService;
         }
 
         /// <summary>
@@ -197,40 +196,71 @@ namespace CometServer.Modules
                 }
                 else
                 {
+                    var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+
                     try
                     {
                         await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                     }
                     catch (AuthorizationException)
                     {
-                        this.logger.LogWarning("The POST REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The {requestToken} POST REQUEST was not authorized for {Identity}", requestToken, req.HttpContext.User.Identity.Name);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
                         return;
                     }
 
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, fileBinaryService, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                    var cometTask = this.CreateAndRegisterCometTask(credentialsService.Credentials.Person.Iid, TopContainer, requestToken);
+                    
+                    PostRequestData postRequestData = null;
+
+                    try
+                    {
+                        postRequestData = await this.ProcessPostRequest(req, requestUtils, metaInfoProvider, jsonSerializer, fileBinaryService);
+                    }
+                    catch (BadRequestException ex)
+                    {
+                        this.logger.LogWarning("Request {requestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
+
+                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
+
+                        res.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await res.AsJson($"exception:{ex.Message}");
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.LogError("Request {requestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
+
+                        cometTask.FinishedAt = DateTime.Now;
+                        cometTask.StatusKind = StatusKind.FAILED;
+                        cometTask.Error = $"INTERNAL SERVER ERROR - {ex.Message}";
+                        this.CometTaskService.AddOrUpdateTask(cometTask);
+
+                        res.StatusCode = (int)HttpStatusCode.InternalServerError;
+                        await res.AsJson($"exception:{ex.Message}");
+                    }
+
+                    if (postRequestData.IsMultiPart && requestUtils.QueryParameters.WaitTime > 0)
+                    {
+                        this.logger.LogWarning("Request {requestToken} failed as BadRequest: a POST request may not have a wait time when it is multipart", requestToken);
+
+                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - a POST request may not have a wait time when it is multipart");
+
+                        res.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await res.AsJson("a POST request may not have a wait time when it is multipart");
+                    }
+
+                    if (requestUtils.QueryParameters.WaitTime > 0)
+                    {
+                        await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                    }
+                    else
+                    {
+                        await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                    }
                 }
             });
-        }
-
-        /// <summary>
-        /// Checks if the server is ready to accept requests.
-        /// </summary>
-        /// <param name="response">The HTTP response object.</param>
-        /// <returns>True if the server is ready; otherwise, false.</returns>
-        private async Task<bool> IsServerReady(HttpResponse response)
-        {
-            if (this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
-            {
-                return true;
-            }
-
-            response.ContentType = "application/json";
-            response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-            await response.AsJson("not yet started and ready to accept requests");
-            return false;
         }
 
         /// <summary>
@@ -243,8 +273,12 @@ namespace CometServer.Modules
         /// <param name="transactionManager">The transaction manager.</param>
         /// <param name="credentialsService">The service for handling credentials.</param>
         /// <param name="headerInfoProvider">The provider for header information.</param>
-        /// <param name="serviceProvider">The service provider.</param>
-        /// <param name="metaInfoProvider">The provider for meta-information.</param>
+        /// <param name="serviceProvider">
+        /// The <see cref="Services.IServiceProvider"/> that can be used to resolve other services
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
         /// <param name="jsonSerializer">The JSON serializer.</param>
         /// <param name="messagePackSerializer">The MessagePack serializer.</param>
         /// <param name="permissionInstanceFilterService">The service for filtering permission instances.</param>
@@ -437,11 +471,40 @@ namespace CometServer.Modules
         /// <param name="headerInfoProvider">
         /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
         /// </param>
+        /// <param name="revisionService">
+        /// The <see cref="IRevisionService"/> that supports revision based retrievel of data
+        /// </param>
+        /// <param name="revisionResolver">
+        /// The <see cref="IRevisionResolver"/> used to resolve the revision numbers that belong to the revisionFrom and revisionTo parameters.
+        /// </param>
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
         /// </param>
+        /// <param name="messagePackSerializer"></param>
         /// <param name="permissionInstanceFilterService">
         /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
+        /// <param name="serviceProvider">
+        /// The <see cref="Services.IServiceProvider"/> that can be used to resolve other services
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="fileBinaryService">
+        /// The (injected)  <see cref="IFileBinaryService"/> used to operate on files
+        /// </param>
+        /// <param name="fileArchiveService">
+        /// The (injected) <see cref="IFileArchiveService"/> to store and retrieve files to and from the filesystem
+        /// </param>
+        /// <param name="obfuscationService">
+        /// The obfuscation service that obscures properties and children of Element Definitions based on OrganizationalParticipation of
+        /// an EngineeringModelSetup
+        /// </param>
+        /// <param name="cherryPickService">
+        /// The <see cref="ICherryPickService"/> provides capabilities on cherry picking <see cref="CDP4Common.DTO.Thing"/> inside an <see cref="Iteration"/>
+        /// </param>
+        /// <param name="containmentService">
+        /// The <see cref="IContainmentService"/> provides capabilities to retrieve containment on <see cref="CDP4Common.DTO.Thing"/>
         /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
@@ -692,7 +755,15 @@ namespace CometServer.Modules
         /// <summary>
         /// Cherry Picks <see cref="Thing" />s inside read <see cref="Thing"/>s based on provided <see cref="CDP4Common.CommonData.ClassKind"/> and <see cref="Category"/> filters
         /// </summary>
-        /// <param name="resourceResponse">A collection of read <see cref="Thing"/>s</param>
+        /// <param name="cherryPickService">
+        /// The <see cref="ICherryPickService"/> provides capabilities on cherry picking <see cref="CDP4Common.DTO.Thing"/> inside an <see cref="Iteration"/>
+        /// </param>
+        /// <param name="containmentService">
+        /// The <see cref="IContainmentService"/> provides capabilities to retrieve containment on <see cref="CDP4Common.DTO.Thing"/>
+        /// </param>
+        /// <param name="resourceResponse">
+        /// A collection of read <see cref="Thing"/>s
+        /// </param>
         /// <param name="requestUtils">
         /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
         /// </param>
@@ -713,13 +784,94 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Handles the POST requset
+        /// Process the <see cref="HttpRequest"/> and extracts the relevant information into an instance of <see cref="PostRequestData"/>
         /// </summary>
         /// <param name="httpRequest">
-        /// The <see cref="HttpRequest"/> that is being handled
+        /// The <see cref="HttpRequest"/> that is to be processed
+        /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="fileBinaryService">
+        /// The (injected)  <see cref="IFileBinaryService"/> used to operate on files
+        /// </param>
+        /// <returns>
+        /// An instance of <see cref="PostRequestData"/>
+        /// </returns>
+        protected async Task< PostRequestData> ProcessPostRequest(HttpRequest httpRequest, IRequestUtils requestUtils, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService)
+        {
+            HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
+            var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
+            requestUtils.QueryParameters = new QueryParameters(queryParameters);
+
+            var postRequestData = new PostRequestData
+            {
+                ContentType = httpRequest.QueryContentTypeKind(),
+                MethodPathName = httpRequest.QueryNameMethodPath(),
+                Version = httpRequest.QueryDataModelVersion(),
+                IsMultiPart = httpRequest.GetMultipartBoundary() != string.Empty,
+                MultiPartBoundary = httpRequest.GetMultipartBoundary(),
+                Path = httpRequest.Path
+            };
+
+            Stream bodyStream;
+            if (postRequestData.IsMultiPart)
+            {
+                var requestStream = new MemoryStream();
+                await httpRequest.Body.CopyToAsync(requestStream);
+
+                bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, postRequestData.MultiPartBoundary);
+                postRequestData.Files = await ExtractFilesFromMultipartMessage(fileBinaryService, requestStream, postRequestData.MultiPartBoundary);
+
+                // - New File: 
+                //      create -> File, FileRevision
+                //      update -> FileStore
+
+                // - New FileRevision:
+                //      create -> FileRevision
+                //      update -> File
+
+                // - Update File:
+                //      update -> File
+
+                // - ANY Filerevision metadata object in operation without contentHash -> ERROR.
+                // - NO matching file hash found in request body and NO matching file hash found on server -> ERROR
+                // - Matching file hash found in request body ??? is allready checked to find binary in request...
+                // - ANY file binary in request without corresponding metadata -> ERROR
+            }
+            else
+            {
+                // use the single request (JSON) stream
+                bodyStream = httpRequest.Body;
+            }
+
+            jsonSerializer.Initialize(metaInfoProvider, postRequestData.Version);
+            postRequestData.OperationData = jsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
+
+            return postRequestData;
+        }
+
+        /// <summary>
+        /// Enques the handling of hte POST request on a background task. In case it takes longer to complete than the specified wait time a <see cref="CometTask"/>
+        /// is returned. Otherwise a 10-25 response is retunred.
+        /// </summary>
+        /// <param name="postRequestData">
+        /// The <see cref="PostRequestData"/> that is to be enqueued
+        /// </param>
+        /// <param name="requestToken">
+        /// The request token used to track HttpRequest tracking
         /// </param>
         /// <param name="httpResponse">
         /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <param name="cometTask">
+        /// The <see cref="CometTask"/> that is linked to the current POST request
         /// </param>
         /// <param name="requestUtils">
         /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
@@ -734,88 +886,129 @@ namespace CometServer.Modules
         /// <param name="headerInfoProvider">
         /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
         /// </param>
-        /// <param name="jsonSerializer">
-        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
-        /// </param>
-        /// <param name="permissionInstanceFilterService">
-        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// <param name="serviceProvider">
+        /// The <see cref="Services.IServiceProvider"/> that can be used to resolve other services
         /// </param>
         /// <param name="metaInfoProvider">
         /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
         /// </param>
+        /// <param name="operationProcessor">
+        /// The <see cref="IOperationProcessor"/> used to process the POST operation
+        /// </param>
+        /// <param name="revisionService">
+        /// The <see cref="IRevisionService"/> that supports revision based retrievel of data
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="messagePackSerializer">
+        /// The <see cref="IMessagePackSerializer"/> used to serialize data to MessagePack
+        /// </param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> that is used to filter out any <see cref="PersonPermission"/>
+        /// and <see cref="ParticipantPermission"/> that is not supported by the requested data-model version
+        /// </param>
+        /// <param name="changeLogService">
+        /// Creates changelog data based on the changes made to certain <see cref="Thing"/>s.
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        protected async Task EnqueCometTaskForPostRequest(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
+        {
+            var longRunningCometTask = Task.Run(() =>
+            {
+                var task = this.PostResponseData(postRequestData, requestToken, httpResponse, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
+                this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
+            });
+
+            var completed = longRunningCometTask.Wait(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime));
+
+            if (completed)
+            {
+                this.logger.LogInformation("The task {id} for actor {actor} completed within the requsted wait time {waittime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+            }
+            else
+            {
+                this.logger.LogInformation("The task {id} for actor {actor} did not complete within the requsted wait time {waittime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+
+                await httpResponse.AsJson(cometTask);
+            }
+        }
+
+        /// <summary>
+        /// Handles the POST requset
+        /// </summary>
+        /// <param name="postRequestData">
+        /// The <see cref="PostRequestData"/> that is to be enqueued
+        /// </param>
+        /// <param name="requestToken">
+        /// The request token used to track <see cref="HttpRequest"/> tracking
+        /// </param>
+        /// <param name="httpResponse">
+        /// The <see cref="HttpResponse"/> to which the results will be written
+        /// </param>
+        /// <param name="cometTask">
+        /// The <see cref="CometTask"/> that is linked to the current POST request
+        /// </param>
+        /// <param name="requestUtils">
+        /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
+        /// </param>
+        /// <param name="transactionManager">
+        /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
+        /// </param>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="headerInfoProvider">
+        /// The injected <see cref="IHeaderInfoProvider"/> instance used to process HTTP headers
+        /// </param>
+        /// <param name="operationProcessor">
+        /// The <see cref="IOperationProcessor"/> used to process the POST operation
+        /// </param>
+        /// <param name="revisionService">
+        /// The <see cref="IRevisionService"/> that supports revision based retrievel of data
+        /// </param>
+        /// <param name="jsonSerializer">
+        /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
+        /// </param>
+        /// <param name="messagePackSerializer"></param>
+        /// <param name="permissionInstanceFilterService">
+        /// The <see cref="IPermissionInstanceFilterService"/> used to filter instances from the queried data
+        /// </param>
+        /// <param name="serviceProvider">
+        /// The <see cref="Services.IServiceProvider"/> that can be used to resolve other services
+        /// </param>
+        /// <param name="metaInfoProvider">
+        /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
+        /// </param>
+        /// <param name="changeLogService"></param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task PostResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
+        protected async Task PostResponseData(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             var reqsw = Stopwatch.StartNew();
 
-            var requestToken = this.TokenGeneratorService.GenerateRandomToken();
-
-            var contentTypeKind = httpRequest.QueryContentTypeKind();
-
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName, requestToken);
 
             try
             {
-                HttpRequestHelper.ValidateSupportedQueryParameter(httpRequest.Query, SupportedPostQueryParameter);
-                var queryParameters = httpRequest.Query.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.FirstOrDefault());
-                requestUtils.QueryParameters = new QueryParameters(queryParameters);
-
-                var multiPartBoundary = httpRequest.GetMultipartBoundary();
-
-                var isMultiPart = multiPartBoundary != string.Empty;
-
-                this.logger.LogDebug("{request} - Request {requestToken} is mutlipart: {isMultiPart}", httpRequest.QueryNameMethodPath(), requestToken, isMultiPart);
-
-                Stream bodyStream;
-                Dictionary<string, Stream> fileDictionary = null;
-
-                if (isMultiPart)
-                {
-                    var requestStream = new MemoryStream();
-                    await httpRequest.Body.CopyToAsync(requestStream);
-
-                    bodyStream = await this.ExtractJsonBodyStreamFromMultiPartMessage(requestStream, multiPartBoundary);
-                    fileDictionary = await ExtractFilesFromMultipartMessage(fileBinaryService, requestStream, multiPartBoundary);
-
-                    // - New File: 
-                    //      create -> File, FileRevision
-                    //      update -> FileStore
-
-                    // - New FileRevision:
-                    //      create -> FileRevision
-                    //      update -> File
-
-                    // - Update File:
-                    //      update -> File
-
-                    // - ANY Filerevision metadata object in operation without contentHash -> ERROR.
-                    // - NO matching file hash found in request body and NO matching file hash found on server -> ERROR
-                    // - Matching file hash found in request body ??? is allready checked to find binary in request...
-                    // - ANY file binary in request without corresponding metadata -> ERROR
-                }
-                else
-                {
-                    // use the single request (JSON) stream
-                    bodyStream = httpRequest.Body;
-                }
-
-                jsonSerializer.Initialize(metaInfoProvider, httpRequest.QueryDataModelVersion());
-                var operationData = jsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
+                this.logger.LogDebug("{request} - Request {requestToken} is mutlipart: {isMultiPart}", postRequestData.MethodPathName, requestToken, postRequestData.IsMultiPart);
 
                 var dbsw = Stopwatch.StartNew();
-                this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+                this.logger.LogDebug("{request}:{requestToken} - Database operations started", postRequestData.MethodPathName, requestToken);
 
                 // get prepared data source transaction
                 var credentials = credentialsService.Credentials;
                 transaction = transactionManager.SetupTransaction(ref connection, credentials);
 
                 // the route pattern enforces that there is atleast one route segment
-                var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
+                var routeSegments = HttpRequestHelper.ParseRouteSegments(postRequestData.Path);
 
                 var resourceProcessor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
@@ -842,14 +1035,14 @@ namespace CometServer.Modules
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
                 var transactionRevision = revisionService.GetRevisionForTransaction(transaction, partition);
 
-                operationProcessor.Process(operationData, transaction, partition, fileDictionary);
+                operationProcessor.Process(postRequestData.OperationData, transaction, partition, postRequestData.Files);
 
                 var actor = credentialsService.Credentials.Person.Iid;
 
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
                     var initiallyChangedThings = revisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
-                    changeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, operationData, initiallyChangedThings);
+                    changeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
                 }
 
                 // save revision-history
@@ -858,19 +1051,21 @@ namespace CometServer.Modules
                 await transaction.CommitAsync();
 
                 // Sends changed things to the AMQP message bus
-                await this.PrepareAndQueueThingsMessage(operationData, changedThings, actor, jsonSerializer);
+                await this.PrepareAndQueueThingsMessage(postRequestData.OperationData, changedThings, actor, jsonSerializer);
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
+                this.CometTaskService.AddOrUpdateSuccessfulTask(cometTask, transactionRevision);
+
+                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName, requestToken, dbsw.ElapsedMilliseconds);
 
                 if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
-                    switch (contentTypeKind)
+                    switch (postRequestData.ContentType)
                     {
                         case ContentTypeKind.JSON:
-                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, httpRequest.QueryDataModelVersion(), httpResponse);
+                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
                             break;
                         case ContentTypeKind.MESSAGEPACK:
-                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, httpRequest.QueryDataModelVersion(), httpResponse);
+                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
                             break;
                     }
 
@@ -885,15 +1080,15 @@ namespace CometServer.Modules
 
                 await transaction.CommitAsync();
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
+                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName, requestToken, dbsw.ElapsedMilliseconds);
 
-                switch (contentTypeKind)
+                switch (postRequestData.ContentType)
                 {
                     case ContentTypeKind.JSON:
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, httpRequest.QueryDataModelVersion(), httpResponse);
+                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
                         break;
                     case ContentTypeKind.MESSAGEPACK:
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, httpRequest.QueryDataModelVersion(), httpResponse);
+                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
                         break;
                 }
             }
@@ -904,7 +1099,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -916,7 +1113,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"FORBIDDEN - {ex.Message}");
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Forbidden;
@@ -929,7 +1128,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -942,7 +1143,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"UNAUTHORIZED - {ex.Message}");
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -955,7 +1158,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"UNAUTHORIZED - {ex.Message}");
 
                 // error handling: Use Unauthorized as a user is not allowed to see if the thing is not there or a user is not allowed to see it
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
@@ -968,7 +1173,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{request}:{requestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
                 // error handling: Use BadRequest as the user is probably creating conflicting changes, or the data has changed server side resulting in a change that is not allowed
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -981,7 +1188,9 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogError(ex, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+
+                this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"INTERNAL SERVER ERROR - {ex.Message}");
 
                 // error handling
                 httpResponse.StatusCode = (int) HttpStatusCode.InternalServerError;
@@ -999,7 +1208,7 @@ namespace CometServer.Modules
                     await connection.DisposeAsync();
                 }
 
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
@@ -1041,8 +1250,8 @@ namespace CometServer.Modules
         /// <summary>
         /// Extracts the files from the multi-part message
         /// </summary>
-        /// <param name="fileBinaryService"> <see cref="IFileBinaryService"/> used to operate on files
-        /// The (injected) 
+        /// <param name="fileBinaryService">
+        /// The (injected)  <see cref="IFileBinaryService"/> used to operate on files
         /// </param>
         /// <param name="stream">
         /// The <see cref="MemoryStream"/> that contains the multi-part messsage

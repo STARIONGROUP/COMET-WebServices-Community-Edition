@@ -67,6 +67,7 @@ namespace CometServer
     using CometServer.Services.Operations;
     using CometServer.Services.Operations.SideEffects;
     using CometServer.Services.Supplemental;
+    using CometServer.Tasks;
 
     using Hangfire;
     using Hangfire.MemoryStorage;
@@ -154,6 +155,7 @@ namespace CometServer
             builder.RegisterType<AuthenticationPluginInjector>().As<IAuthenticationPluginInjector>().SingleInstance();
             builder.RegisterType<ResourceLoader>().As<IResourceLoader>().SingleInstance();
             builder.RegisterType<TokenGeneratorService>().As<ITokenGeneratorService>().SingleInstance();
+            builder.RegisterType<CometTaskService>().As<ICometTaskService>().SingleInstance();
 
             // 10-25 helpers
             builder.RegisterType<DataModelUtils>().As<IDataModelUtils>().SingleInstance();

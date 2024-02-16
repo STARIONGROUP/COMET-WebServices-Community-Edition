@@ -42,6 +42,7 @@ namespace CometServer.Tests
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
+    using CometServer.Tasks;
 
     using Microsoft.Extensions.Logging;
 
@@ -103,6 +104,8 @@ namespace CometServer.Tests
 
         private Mock<IBackgroundThingsMessageProducer> thingsMessageProducer;
 
+        private Mock<ICometTaskService> cometTaskService;
+
         private Mock<IProcessor> SetupMockProcessor()
         {
             var mockedProcessor = new Mock<IProcessor>();
@@ -147,6 +150,7 @@ namespace CometServer.Tests
             this.tokenGeneratorService = new Mock<ITokenGeneratorService>();
             this.cometHasStartedService = new Mock<ICometHasStartedService>();
             this.thingsMessageProducer = new Mock<IBackgroundThingsMessageProducer>();
+            this.cometTaskService = new Mock<ICometTaskService>();
         }
 
         [Test]
@@ -154,7 +158,7 @@ namespace CometServer.Tests
         {
             var mockedProcessor = this.SetupMockProcessor();
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object);
 
             var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
 
@@ -169,7 +173,7 @@ namespace CometServer.Tests
             // set query parameter override
             this.requestUtils.OverrideQueryParameters = new QueryParameters { IncludeAllContainers = true };
 
-            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object);
+            var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object);
 
             var result = siteDirectoryApi.ProcessRequestPath(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
             

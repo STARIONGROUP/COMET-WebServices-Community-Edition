@@ -96,6 +96,11 @@ namespace CometServer.Services.Protocol
         public const string CherryPickQuery = "cherryPick";
 
         /// <summary>
+        /// The amount of time a user waits before a CometTask is returned instead of the 10-25 Thing response
+        /// </summary>
+        public const string WaitTimeQuery = "waitTime";
+
+        /// <summary>
         /// The query parameter definitions.
         /// </summary>
         private readonly Dictionary<string, string[]> queryParameterDefinitions = new Dictionary<string, string[]>
@@ -105,7 +110,7 @@ namespace CometServer.Services.Protocol
             { IncludeAllContainersQuery, new[] { "true", "false" } },
             { IncludeFileDataQuery, new[] { "true", "false" } },
             { ExportQuery, new[] { "true", "false" } },
-            { CherryPickQuery, new [] {"true", "false"} }
+            { CherryPickQuery, new [] {"true", "false"} },
         };
 
         /// <summary>
@@ -138,6 +143,7 @@ namespace CometServer.Services.Protocol
             this.ClassKinds = this.ProcessClassKindsQueryParameter(queryParameters, ClassKindQuery);
             this.CategoriesId = this.ProcessCategoryQueryParameter(queryParameters, CategoryQuery);
             this.CherryPick = this.ProcessQueryParameter(queryParameters, CherryPickQuery, "true");
+            this.WaitTime = this.ProcessWaitTimeQueryParameter(queryParameters, WaitTimeQuery);
         }
 
         /// <summary>
@@ -194,6 +200,11 @@ namespace CometServer.Services.Protocol
         /// Gets or sets the flag to enable the Cherry Pick feature
         /// </summary>
         public bool CherryPick { get; set; }
+
+        /// <summary>
+        /// Gets or sets the amount of time a user waits before a CometTask is returned instead of the 10-25 Thing response 
+        /// </summary>
+        public int WaitTime { get; set; }
 
         /// <summary>
         /// The validate query parameter.
@@ -310,6 +321,35 @@ namespace CometServer.Services.Protocol
         }
 
         /// <summary>
+        /// Process the <see cref="WaitTimeQuery"/> parameter
+        /// </summary>
+        /// <param name="queryParameters">
+        /// The query Parameters.
+        /// </param>
+        /// <param name="key">
+        /// The key.
+        /// </param>
+        /// <returns>
+        /// The collection of <see cref="string"/>
+        /// </returns>
+        protected int ProcessWaitTimeQueryParameter(Dictionary<string, object> queryParameters, string key)
+        {
+            if (!queryParameters.ContainsKey(key))
+            {
+                return 0;
+            }
+
+            int waitTime;
+
+            if (!int.TryParse(queryParameters[WaitTimeQuery].ToString(), out waitTime))
+            {
+                return 0;
+            }
+
+            return waitTime;
+        }
+
+        /// <summary>
         /// Process the <see cref="CategoryQuery"/> parameter
         /// </summary>
         /// <param name="queryParameters">
@@ -381,6 +421,7 @@ namespace CometServer.Services.Protocol
             this.IncludeFileData = false;
             this.Export = false;
             this.CherryPick = false;
+            this.WaitTime = 0;
         }
     }
 }
