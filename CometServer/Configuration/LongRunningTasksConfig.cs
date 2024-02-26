@@ -59,8 +59,6 @@ namespace CometServer.Configuration
         /// </summary>
         public LongRunningTasksConfig()
         {
-            this.retentionTime = 3600;
-            this.waitTime = 600;
         }
 
         /// <summary>

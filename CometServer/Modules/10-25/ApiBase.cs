@@ -149,7 +149,8 @@ namespace CometServer.Modules
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
         /// <param name="cometHasStartedService">
-        /// 
+        /// The (injected) <see cref="ICometHasStartedService"/> that is used to determine whether the servre
+        /// is ready to accept incoming requests
         /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
@@ -222,7 +223,7 @@ namespace CometServer.Modules
 
             response.ContentType = "application/json";
             response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
-            await response.AsJson("not yet started and ready to accept requests");
+            await response.AsJson("not yet started and not yet ready to accept requests");
             return false;
         }
 
