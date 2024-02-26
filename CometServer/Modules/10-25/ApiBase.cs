@@ -422,7 +422,7 @@ namespace CometServer.Modules
             {
                 var sw = Stopwatch.StartNew();
 
-                this.logger.LogInformation("JSON serialozation to response started for {token}", requestToken);
+                this.logger.LogInformation("JSON serialization to response started for {token}", requestToken);
 
                 headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.JSON, "");
 
@@ -433,7 +433,7 @@ namespace CometServer.Modules
                 resultStream.Seek(0, SeekOrigin.Begin);
                 await resultStream.CopyToAsync(httpResponse.Body);
 
-                this.logger.LogInformation("JSON serialozation to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("JSON serialization to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
             catch (ObjectDisposedException)
             {
@@ -477,7 +477,7 @@ namespace CometServer.Modules
             {
                 var sw = Stopwatch.StartNew();
 
-                this.logger.LogInformation("MessagePack serialozation to response started for {token}", requestToken);
+                this.logger.LogInformation("MessagePack serialization to response started for {token}", requestToken);
 
                 headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MESSAGEPACK, "");
 
@@ -488,7 +488,7 @@ namespace CometServer.Modules
                 resultStream.Seek(0, SeekOrigin.Begin);
                 await resultStream.CopyToAsync(httpResponse.Body);
 
-                this.logger.LogInformation("MessagePack serialozation to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("MessagePack serialization to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
             catch (ObjectDisposedException)
             {
