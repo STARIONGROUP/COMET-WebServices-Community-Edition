@@ -147,9 +147,9 @@ namespace CDP4Orm.Dao
         {
             string tempCreatedOn;
             string tempDescription;
+            string tempIsHidden;
             string tempModifiedOn;
             string tempName;
-            string tempPublicationState;
             string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -162,6 +162,7 @@ namespace CDP4Orm.Dao
             dto.DiagramElement.AddRange(Array.ConvertAll((string[])reader["DiagramElement"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
+            dto.LockedBy = reader["LockedBy"] is DBNull ? (Guid?)null : Guid.Parse(reader["LockedBy"].ToString());
             dto.Owner = Guid.Parse(reader["Owner"].ToString());
             dto.TopArchitectureElement = reader["TopArchitectureElement"] is DBNull ? (Guid?)null : Guid.Parse(reader["TopArchitectureElement"].ToString());
 
@@ -175,6 +176,11 @@ namespace CDP4Orm.Dao
                 dto.Description = tempDescription.UnEscape();
             }
 
+            if (valueDict.TryGetValue("IsHidden", out tempIsHidden))
+            {
+                dto.IsHidden = bool.Parse(tempIsHidden);
+            }
+
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
@@ -183,11 +189,6 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Name", out tempName))
             {
                 dto.Name = tempName.UnEscape();
-            }
-
-            if (valueDict.TryGetValue("PublicationState", out tempPublicationState))
-            {
-                dto.PublicationState = Utils.ParseEnum<CDP4Common.DiagramData.PublicationState>(tempPublicationState);
             }
 
             if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
@@ -415,11 +416,9 @@ namespace CDP4Orm.Dao
             sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
             sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
 
-            sqlBuilder.Append(" \"DiagramCanvas\".\"Container\",");
-
-            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
-
             sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"DiagramCanvas\".\"LockedBy\",");
 
             sqlBuilder.Append(" \"ArchitectureDiagram\".\"Owner\",");
 
@@ -586,7 +585,7 @@ namespace CDP4Orm.Dao
         {
             var sqlBuilder = new StringBuilder();
 
-            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"LockedBy\",\"ValidFrom\",\"ValidTo\"";
             sqlBuilder.AppendFormat(" SELECT {0}", fields);
             sqlBuilder.AppendFormat(" FROM \"{0}\".\"DiagramCanvas\"", partition);
 

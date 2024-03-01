@@ -396,10 +396,6 @@ namespace CDP4Orm.Dao
             sqlBuilder.Append("SELECT \"Thing\".\"Iid\",");
             sqlBuilder.AppendFormat(" {0} AS \"ValueTypeSet\",", this.GetValueTypeSet());
 
-            sqlBuilder.Append(" \"MeasurementUnit\".\"Container\",");
-
-            sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
-
             sqlBuilder.Append(" \"Actor\",");
 
             sqlBuilder.Append(" \"ConversionBasedUnit\".\"ReferenceUnit\",");

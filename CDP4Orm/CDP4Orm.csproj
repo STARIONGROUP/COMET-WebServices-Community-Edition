@@ -44,6 +44,7 @@
     <None Remove="MigrationScript\Iteration_20000101_0_0_0_6_FiniteStateDeleteSupport.sql" />
     <None Remove="MigrationScript\Iteration_20210109_6_5_0_0_Model_Updates.sql" />
     <None Remove="MigrationScript\Iteration_20240119_8_1_0_0_Attachments_Behaviors_Diagrams.sql" />
+    <None Remove="MigrationScript\Iteration_20240213_8_1_0_1_DiagramCanvas_and_ArchitectureDiagram.sql" />
     <None Remove="MigrationScript\SiteDirectory_20180919_0_0_0_1_MigrationManagement.sql" />
     <None Remove="MigrationScript\SiteDirectory_20181016_1_0_11_1_UsernameConstraint.sql" />
     <None Remove="MigrationScript\SiteDirectory_20190117_3_3_0_1_Update_All_Table.sql" />
@@ -66,6 +67,7 @@
     <EmbeddedResource Include="MigrationScript\All_20240116_9_0_0_0_Cleanup_Views_Functions.sql" />
     <EmbeddedResource Include="MigrationScript\All_ThingAuditTableMigrationTemplate_20231030_8_0_0_0_Add_Audit_Iid_Index.sql" />
     <EmbeddedResource Include="MigrationScript\EngineeringModel_20210109_6_4_0_0_Model_Updates.sql" />
+    <EmbeddedResource Include="MigrationScript\Iteration_20240213_8_1_0_1_DiagramCanvas_and_ArchitectureDiagram.sql" />
     <EmbeddedResource Include="MigrationScript\Iteration_20240119_8_1_0_0_Attachments_Behaviors_Diagrams.sql" />
     <EmbeddedResource Include="MigrationScript\Iteration_20210109_6_5_0_0_Model_Updates.sql" />
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20200612_6_1_0_0_reset_statement_timeout.sql" />
@@ -84,7 +86,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="25.0.0-7584157373-319-1-PR-300" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="27.0.0-diagRC2" />
     <PackageReference Include="Npgsql" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>

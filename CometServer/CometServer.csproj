@@ -45,8 +45,8 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
     <PackageReference Include="MailKit" Version="4.3.0" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="26.2.0" />
-    <PackageReference Include="CDP4ServicesMessaging-CE" Version="26.2.0" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="27.0.0-diagRC2" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" Version="27.0.0-diagRC2" />
   </ItemGroup>
 
   <ItemGroup>

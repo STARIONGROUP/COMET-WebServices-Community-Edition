@@ -145,6 +145,7 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual CDP4Common.DTO.EngineeringModelSetup MapToDto(NpgsqlDataReader reader)
         {
+            string tempAutoPublish;
             string tempEngineeringModelIid;
             string tempKind;
             string tempModifiedOn;
@@ -172,6 +173,11 @@ namespace CDP4Orm.Dao
             dto.OrganizationalParticipant.AddRange(Array.ConvertAll((string[])reader["OrganizationalParticipant"], Guid.Parse));
             dto.Participant.AddRange(Array.ConvertAll((string[])reader["Participant"], Guid.Parse));
             dto.RequiredRdl.AddRange(Array.ConvertAll((string[])reader["RequiredRdl"], Guid.Parse));
+
+            if (valueDict.TryGetValue("AutoPublish", out tempAutoPublish))
+            {
+                dto.AutoPublish = bool.Parse(tempAutoPublish);
+            }
 
             if (valueDict.TryGetValue("EngineeringModelIid", out tempEngineeringModelIid))
             {
@@ -245,6 +251,7 @@ namespace CDP4Orm.Dao
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
+                    { "AutoPublish", !this.IsDerived(engineeringModelSetup, "AutoPublish") ? engineeringModelSetup.AutoPublish.ToString() : string.Empty },
                     { "EngineeringModelIid", !this.IsDerived(engineeringModelSetup, "EngineeringModelIid") ? engineeringModelSetup.EngineeringModelIid.ToString() : string.Empty },
                     { "Kind", !this.IsDerived(engineeringModelSetup, "Kind") ? engineeringModelSetup.Kind.ToString() : string.Empty },
                     { "SourceEngineeringModelSetupIid", !this.IsDerived(engineeringModelSetup, "SourceEngineeringModelSetupIid") && engineeringModelSetup.SourceEngineeringModelSetupIid.HasValue ? engineeringModelSetup.SourceEngineeringModelSetupIid.Value.ToString() : null },
@@ -302,6 +309,7 @@ namespace CDP4Orm.Dao
 
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
+                { "AutoPublish", !this.IsDerived(engineeringModelSetup, "AutoPublish") ? engineeringModelSetup.AutoPublish.ToString() : string.Empty },
                 { "EngineeringModelIid", !this.IsDerived(engineeringModelSetup, "EngineeringModelIid") ? engineeringModelSetup.EngineeringModelIid.ToString() : string.Empty },
                 { "Kind", !this.IsDerived(engineeringModelSetup, "Kind") ? engineeringModelSetup.Kind.ToString() : string.Empty },
                 { "SourceEngineeringModelSetupIid", !this.IsDerived(engineeringModelSetup, "SourceEngineeringModelSetupIid") && engineeringModelSetup.SourceEngineeringModelSetupIid.HasValue ? engineeringModelSetup.SourceEngineeringModelSetupIid.Value.ToString() : null },
@@ -488,6 +496,7 @@ namespace CDP4Orm.Dao
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
+                    { "AutoPublish", !this.IsDerived(engineeringModelSetup, "AutoPublish") ? engineeringModelSetup.AutoPublish.ToString() : string.Empty },
                     { "EngineeringModelIid", !this.IsDerived(engineeringModelSetup, "EngineeringModelIid") ? engineeringModelSetup.EngineeringModelIid.ToString() : string.Empty },
                     { "Kind", !this.IsDerived(engineeringModelSetup, "Kind") ? engineeringModelSetup.Kind.ToString() : string.Empty },
                     { "SourceEngineeringModelSetupIid", !this.IsDerived(engineeringModelSetup, "SourceEngineeringModelSetupIid") && engineeringModelSetup.SourceEngineeringModelSetupIid.HasValue ? engineeringModelSetup.SourceEngineeringModelSetupIid.Value.ToString() : null },

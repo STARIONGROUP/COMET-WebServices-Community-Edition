@@ -148,9 +148,9 @@ namespace CDP4Orm.Dao
         {
             string tempCreatedOn;
             string tempDescription;
+            string tempIsHidden;
             string tempModifiedOn;
             string tempName;
-            string tempPublicationState;
             string tempThingPreference;
 
             var valueDict = (Dictionary<string, string>)reader["ValueTypeSet"];
@@ -163,6 +163,7 @@ namespace CDP4Orm.Dao
             dto.DiagramElement.AddRange(Array.ConvertAll((string[])reader["DiagramElement"], Guid.Parse));
             dto.ExcludedDomain.AddRange(Array.ConvertAll((string[])reader["ExcludedDomain"], Guid.Parse));
             dto.ExcludedPerson.AddRange(Array.ConvertAll((string[])reader["ExcludedPerson"], Guid.Parse));
+            dto.LockedBy = reader["LockedBy"] is DBNull ? (Guid?)null : Guid.Parse(reader["LockedBy"].ToString());
 
             if (valueDict.TryGetValue("CreatedOn", out tempCreatedOn))
             {
@@ -174,6 +175,11 @@ namespace CDP4Orm.Dao
                 dto.Description = tempDescription.UnEscape();
             }
 
+            if (valueDict.TryGetValue("IsHidden", out tempIsHidden))
+            {
+                dto.IsHidden = bool.Parse(tempIsHidden);
+            }
+
             if (valueDict.TryGetValue("ModifiedOn", out tempModifiedOn))
             {
                 dto.ModifiedOn = Utils.ParseUtcDate(tempModifiedOn);
@@ -182,11 +188,6 @@ namespace CDP4Orm.Dao
             if (valueDict.TryGetValue("Name", out tempName))
             {
                 dto.Name = tempName.UnEscape();
-            }
-
-            if (valueDict.TryGetValue("PublicationState", out tempPublicationState))
-            {
-                dto.PublicationState = Utils.ParseEnum<CDP4Common.DiagramData.PublicationState>(tempPublicationState);
             }
 
             if (valueDict.TryGetValue("ThingPreference", out tempThingPreference) && tempThingPreference != null)
@@ -228,7 +229,7 @@ namespace CDP4Orm.Dao
                 {
                     { "CreatedOn", !this.IsDerived(diagramCanvas, "CreatedOn") ? diagramCanvas.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
                     { "Description", !this.IsDerived(diagramCanvas, "Description") ? diagramCanvas.Description.Escape() : string.Empty },
-                    { "PublicationState", !this.IsDerived(diagramCanvas, "PublicationState") ? diagramCanvas.PublicationState.ToString() : string.Empty },
+                    { "IsHidden", !this.IsDerived(diagramCanvas, "IsHidden") ? diagramCanvas.IsHidden.ToString() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
@@ -236,12 +237,13 @@ namespace CDP4Orm.Dao
                     var sqlBuilder = new System.Text.StringBuilder();
 
                     sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramCanvas\"", partition);
-                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container);");
+                    sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"LockedBy\")");
+                    sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :lockedBy);");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramCanvas.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                    command.Parameters.Add("lockedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramCanvas, "LockedBy") ? Utils.NullableValue(diagramCanvas.LockedBy) : Utils.NullableValue(null);
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
@@ -282,7 +284,7 @@ namespace CDP4Orm.Dao
             {
                 { "CreatedOn", !this.IsDerived(diagramCanvas, "CreatedOn") ? diagramCanvas.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
                 { "Description", !this.IsDerived(diagramCanvas, "Description") ? diagramCanvas.Description.Escape() : string.Empty },
-                { "PublicationState", !this.IsDerived(diagramCanvas, "PublicationState") ? diagramCanvas.PublicationState.ToString() : string.Empty },
+                { "IsHidden", !this.IsDerived(diagramCanvas, "IsHidden") ? diagramCanvas.IsHidden.ToString() : string.Empty },
             }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
             using (var command = new NpgsqlCommand())
@@ -290,16 +292,17 @@ namespace CDP4Orm.Dao
                 var sqlBuilder = new System.Text.StringBuilder();
 
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"DiagramCanvas\"", partition);
-                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container)");
+                sqlBuilder.AppendFormat(" (\"Iid\", \"ValueTypeDictionary\", \"Container\", \"LockedBy\")");
+                sqlBuilder.AppendFormat(" VALUES (:iid, :valueTypeDictionary, :container, :lockedBy)");
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramCanvas.Iid;
                 command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                 command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                command.Parameters.Add("lockedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramCanvas, "LockedBy") ? Utils.NullableValue(diagramCanvas.LockedBy) : Utils.NullableValue(null);
                 sqlBuilder.Append(" ON CONFLICT (\"Iid\")");
                 sqlBuilder.Append(" DO UPDATE ");
-                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\")");
-                sqlBuilder.Append(" = (:valueTypeDictionary, :container);");
+                sqlBuilder.Append(" SET (\"ValueTypeDictionary\", \"Container\", \"LockedBy\")");
+                sqlBuilder.Append(" = (:valueTypeDictionary, :container, :lockedBy);");
 
                 command.CommandText = sqlBuilder.ToString();
                 command.Connection = transaction.Connection;
@@ -342,20 +345,21 @@ namespace CDP4Orm.Dao
                 {
                     { "CreatedOn", !this.IsDerived(diagramCanvas, "CreatedOn") ? diagramCanvas.CreatedOn.ToString(Utils.DateTimeUtcSerializationFormat) : string.Empty },
                     { "Description", !this.IsDerived(diagramCanvas, "Description") ? diagramCanvas.Description.Escape() : string.Empty },
-                    { "PublicationState", !this.IsDerived(diagramCanvas, "PublicationState") ? diagramCanvas.PublicationState.ToString() : string.Empty },
+                    { "IsHidden", !this.IsDerived(diagramCanvas, "IsHidden") ? diagramCanvas.IsHidden.ToString() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
                 using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"DiagramCanvas\"", partition);
-                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\")");
-                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container)");
+                    sqlBuilder.AppendFormat(" SET (\"ValueTypeDictionary\", \"Container\", \"LockedBy\")");
+                    sqlBuilder.AppendFormat(" = (:valueTypeDictionary, :container, :lockedBy)");
                     sqlBuilder.AppendFormat(" WHERE \"Iid\" = :iid;");
 
                     command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = diagramCanvas.Iid;
                     command.Parameters.Add("valueTypeDictionary", NpgsqlDbType.Hstore).Value = valueTypeDictionaryContents;
                     command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = container.Iid;
+                    command.Parameters.Add("lockedBy", NpgsqlDbType.Uuid).Value = !this.IsDerived(diagramCanvas, "LockedBy") ? Utils.NullableValue(diagramCanvas.LockedBy) : Utils.NullableValue(null);
 
                     command.CommandText = sqlBuilder.ToString();
                     command.Connection = transaction.Connection;
@@ -440,6 +444,8 @@ namespace CDP4Orm.Dao
             sqlBuilder.Append(" NULL::bigint AS \"Sequence\",");
 
             sqlBuilder.Append(" \"Actor\",");
+
+            sqlBuilder.Append(" \"DiagramCanvas\".\"LockedBy\",");
             sqlBuilder.Append(" COALESCE(\"Thing_ExcludedDomain\".\"ExcludedDomain\",'{}'::text[]) AS \"ExcludedDomain\",");
             sqlBuilder.Append(" COALESCE(\"Thing_ExcludedPerson\".\"ExcludedPerson\",'{}'::text[]) AS \"ExcludedPerson\",");
             sqlBuilder.Append(" COALESCE(\"DiagramElementContainer_Bounds\".\"Bounds\",'{}'::text[]) AS \"Bounds\",");
@@ -601,7 +607,7 @@ namespace CDP4Orm.Dao
         {
             var sqlBuilder = new StringBuilder();
 
-            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\",\"ValidFrom\",\"ValidTo\"";
+            var fields = " \"Iid\", \"ValueTypeDictionary\", \"Container\", \"LockedBy\",\"ValidFrom\",\"ValidTo\"";
             sqlBuilder.AppendFormat(" SELECT {0}", fields);
             sqlBuilder.AppendFormat(" FROM \"{0}\".\"DiagramCanvas\"", partition);
 
