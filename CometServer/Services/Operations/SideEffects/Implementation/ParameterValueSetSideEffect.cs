@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterValueSetSideEffect.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2023 RHEA System S.A.
+//    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -30,6 +30,9 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Common.DTO;
 
+    using CometServer.Authorization;
+    using CometServer.Extensions;
+
     using Npgsql;
 
     /// <summary>
@@ -37,6 +40,16 @@ namespace CometServer.Services.Operations.SideEffects
     /// </summary>
     public sealed class ParameterValueSetSideEffect : OperationSideEffect<ParameterValueSet>
     {
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="ICredentialsService"/>
+        /// </summary>
+        public ICredentialsService CredentialsService { get; set; }
+
+        /// <summary>
+        /// Gets ore sets the (injected) <see cref="IParameterValueSetService"/>
+        /// </summary>
+        public IParameterValueSetService ParameterValueSetService { get; set; }
+
         /// <summary>
         /// Execute additional logic  before a create operation.
         /// </summary>
@@ -65,6 +78,84 @@ namespace CometServer.Services.Operations.SideEffects
             return false;
         }
 
+        /// <summary>
+        /// Execute additional logic after a successful create operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original Thing.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void AfterCreate(ParameterValueSet thing, Thing container, ParameterValueSet originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            base.AfterCreate(thing, container, originalThing, transaction, partition, securityContext);
+
+            this.CheckAutoPublish(thing, container, transaction, partition);
+        }
+
+        /// <summary>
+        /// Execute additional logic after a successful update operation.
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="originalThing">
+        /// The original Thing.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        /// <param name="securityContext">
+        /// The security Context used for permission checking.
+        /// </param>
+        public override void AfterUpdate(ParameterValueSet thing, Thing container, ParameterValueSet originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+
+            this.CheckAutoPublish(thing, container, transaction, partition);
+        }
+
+        /// <summary>
+        /// Perform AutoPublish when that is required
+        /// </summary>
+        /// <param name="thing">
+        /// The <see cref="Thing"/> instance that will be inspected.
+        /// </param>
+        /// <param name="container">
+        /// The container instance of the <see cref="Thing"/> that is inspected.
+        /// </param>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource will be stored.
+        /// </param>
+        private void CheckAutoPublish(ParameterValueSet thing, Thing container, NpgsqlTransaction transaction, string partition)
+        {
+            if (thing.TryAutoPublish(this.CredentialsService.Credentials.EngineeringModelSetup))
+            {
+                this.ParameterValueSetService.UpdateConcept(transaction, partition, thing, container);
+            }
+        }
 
         /// <summary>
         /// Execute additional logic before a delete operation

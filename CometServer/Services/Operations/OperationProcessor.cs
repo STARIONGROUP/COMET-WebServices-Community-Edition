@@ -34,7 +34,6 @@ namespace CometServer.Services.Operations
     using CDP4Common;
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
-    using CDP4Common.EngineeringModelData;
     using CDP4Common.Exceptions;
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
@@ -61,7 +60,6 @@ namespace CometServer.Services.Operations
     using Iteration = CDP4Common.DTO.Iteration;
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterValueSet = CDP4Common.DTO.ParameterValueSet;
-    using ParameterValueSetBase = CDP4Common.DTO.ParameterValueSetBase;
     using Thing = CDP4Common.DTO.Thing;
 
     /// <summary>
@@ -1449,11 +1447,6 @@ namespace CometServer.Services.Operations
                         }
                     }
 
-                    if (updatableThing is ParameterValueSetBase parameterValueSetBase)
-                    {
-                        this.CheckAutoPublishForUpdate(parameterValueSetBase);
-                    }
-
                     // apply scalar updates to the thing
                     service.UpdateConcept(transaction, resolvedInfo.Partition, updatableThing, containerInfo);
                     
@@ -1494,43 +1487,6 @@ namespace CometServer.Services.Operations
                     {
                         throw new BadRequestException($"{updatedThing.ClassKind} (Iid:{updatedThing.Iid}) contains duplicate values after saving to database for property {propertyName}.\n Conflicting changes were made.\n Transaction was canceled.");
                     }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Checks the according <see cref="EngineeringModelSetup"/>'s AutoPublish settings and handles the update of <see cref="ParameterValueSetBase"/>s
-        /// </summary>
-        /// <param name="parameterValueSet">The <see cref="ParameterValueSetBase"/></param>
-        private void CheckAutoPublishForUpdate(ParameterValueSetBase parameterValueSet)
-        {
-            if (this.CredentialsService.Credentials.EngineeringModelSetup.AutoPublish)
-            {
-                var valueSwitch = parameterValueSet.ValueSwitch;
-                ValueArray<string> newValueArray = null;
-
-                switch (valueSwitch)
-                {
-                    case ParameterSwitchKind.COMPUTED:
-                    {
-                        newValueArray = parameterValueSet.Computed;
-                        break;
-                    }
-                    case ParameterSwitchKind.MANUAL:
-                    {
-                        newValueArray = parameterValueSet.Manual;
-                        break;
-                    }
-                    case ParameterSwitchKind.REFERENCE:
-                    {
-                        newValueArray = parameterValueSet.Reference;
-                        break;
-                    }
-                }
-
-                if (newValueArray != null)
-                {
-                    parameterValueSet.Published = newValueArray;
                 }
             }
         }
