@@ -30,6 +30,8 @@ namespace CometServer.Tasks
 
     using CDP4Common.DTO;
 
+    using CDP4DalCommon.Tasks;
+
     /// <summary>
     /// The purpose of the <see cref="ICometTaskService"/> is to provide access to running <see cref="CometTask"/>s which are created for each
     /// POST request. 

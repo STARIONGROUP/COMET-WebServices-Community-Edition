@@ -31,6 +31,8 @@ namespace CometServer.Tasks
     
     using CDP4Common.DTO;
 
+    using CDP4DalCommon.Tasks;
+
     using CometServer.Configuration;
 
     using Microsoft.Extensions.Caching.Memory;
