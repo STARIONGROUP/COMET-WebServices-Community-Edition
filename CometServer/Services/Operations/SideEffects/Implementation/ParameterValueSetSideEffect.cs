@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
 
     using Authorization;
 
@@ -127,7 +128,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             things.AddRange(this.ParameterService.QueryReferencedSiteDirectoryThings(parameter, transaction,securityContext));
 
-            var validationResult = parameter.ValidateAndCleanup(rawUpdateInfo, things);
+            var validationResult = parameter.ValidateAndCleanup(rawUpdateInfo, things, CultureInfo.InvariantCulture);
 
             if (validationResult.ResultKind != ValidationResultKind.Valid)
             {
