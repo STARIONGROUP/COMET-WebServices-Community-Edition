@@ -82,6 +82,11 @@ namespace CometServer.Services
         private Dictionary<Guid, MeasurementUnit> measurementUnitCache;
         
         /// <summary>
+        /// the (per request) cached <see cref="EnumerationValueDefinition"/>
+        /// </summary>
+        private Dictionary<Guid, EnumerationValueDefinition> enumerationValueDefinitionCache;
+
+        /// <summary>
         /// Gets or sets the (injected) <see cref="IParameterTypeService"/> used to query the <see cref="ParameterType"/>s from the data-store
         /// </summary>
         public IParameterTypeService ParameterTypeService { get; set; }
@@ -110,6 +115,11 @@ namespace CometServer.Services
         /// Gets or sets the (injected) <see cref="IMeasurementUnitService"/> used to query the <see cref="MeasurementUnit"/>s from the data-store
         /// </summary>
         public IMeasurementUnitService MeasurementUnitService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (injected) <see cref="IEnumerationValueDefinitionService"/> used to query the <see cref="EnumerationValueDefinition"/>s from the data-store
+        /// </summary>
+        public IEnumerationValueDefinitionService EnumerationValueDefinitionService { get; set; }
 
         /// <summary>
         /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
@@ -298,7 +308,40 @@ namespace CometServer.Services
         }
 
         /// <summary>
-        /// Resets (clears) the cached data from the <see cref="ICachedDataService" />.
+        /// Queries the <see cref="MeasurementUnit"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
+        /// </returns>
+        public Dictionary<Guid, EnumerationValueDefinition> QueryEnumerationValueDefinitions(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        {
+            if (this.enumerationValueDefinitionCache != null && this.enumerationValueDefinitionCache.Count != 0)
+            {
+                return this.enumerationValueDefinitionCache;
+            }
+
+            var sw = new Stopwatch();
+
+            this.Logger.LogDebug("Querying EnumerationValueDefinitions");
+
+            this.enumerationValueDefinitionCache = [];
+
+            var enumerationValueDefinitions = this.EnumerationValueDefinitionService
+                .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                .OfType<EnumerationValueDefinition>();
+
+            foreach (var enumerationValueDefinition in enumerationValueDefinitions)
+            {
+                this.enumerationValueDefinitionCache.Add(enumerationValueDefinition.Iid, enumerationValueDefinition);
+            }
+
+            this.Logger.LogDebug("EnumerationValueDefinitions Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+
+            return this.enumerationValueDefinitionCache;
+        }
+
+        /// <summary>
+        /// Resets (clears) the cached data from the <see cref="ICachedReferenceDataService" />.
         /// </summary>
         public void Reset()
         {
@@ -308,8 +351,9 @@ namespace CometServer.Services
             this.independentParameterTypeAssignment?.Clear();
             this.measurementScaleCache?.Clear();
             this.measurementUnitCache?.Clear();
+            this.enumerationValueDefinitionCache?.Clear();
 
-            this.Logger.LogDebug($"Cache Reset");
+            this.Logger.LogDebug("Cache Reset");
         }
     }
 }

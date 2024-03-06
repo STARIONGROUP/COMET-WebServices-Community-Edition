@@ -935,6 +935,19 @@ namespace CometServer.Modules
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
                 await httpResponse.AsJson($"exception:{ex.Message}");
             }
+            catch (InvalidDataException ex)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - InvalidData failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+
+                // error handling
+                httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
+                await httpResponse.AsJson($"exception:{ex.Message}");
+            }
             catch (SecurityException ex)
             {
                 if (transaction != null)
