@@ -73,6 +73,11 @@ namespace CometServer.Services
         public IMeasurementUnitService MeasurementUnitService { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) <see cref="IEnumerationValueDefinitionService"/> used to query the <see cref="EnumerationValueDefinition"/>s from the data-store
+        /// </summary>
+        IEnumerationValueDefinitionService EnumerationValueDefinitionService { get; set; }
+
+        /// <summary>
         /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
         /// </summary>
         /// <returns>
@@ -124,5 +129,13 @@ namespace CometServer.Services
         /// Resets (clears) the cached data from the <see cref="ICachedDataService" />.
         /// </summary>
         public void Reset();
+
+        /// <summary>
+        /// Queries the <see cref="MeasurementUnit"/>s from the data from the datasource or from the cached list
+        /// </summary>
+        /// <returns>
+        /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
+        /// </returns>
+        Dictionary<Guid, EnumerationValueDefinition> QueryEnumerationValueDefinitions(NpgsqlTransaction transaction, ISecurityContext securityContext);
     }
 }
