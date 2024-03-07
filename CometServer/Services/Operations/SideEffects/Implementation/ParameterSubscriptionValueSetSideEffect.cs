@@ -33,12 +33,14 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.EngineeringModelData;
     using CDP4Common.Validation;
 
     using CometServer.Exceptions;
 
     using Npgsql;
 
+    using Parameter = CDP4Common.DTO.Parameter;
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
 
@@ -107,9 +109,15 @@ namespace CometServer.Services.Operations.SideEffects
         {
             base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
+            if (rawUpdateInfo.Keys.All(key => !Array.Exists(Enum.GetNames(typeof(ParameterSwitchKind)), 
+                    x => key.Equals(x, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                return;
+            }
+
             if (container is not ParameterSubscription parameterSubscription)
             {
-                throw new InvalidOperationException("The container of the ParameterSubscriptionValueSet is not a ParameterSubscription");
+                throw new ArgumentException("The container of the ParameterSubscriptionValueSet is not a ParameterSubscription", nameof(container));
             }
 
             var parameter = this.ParameterService.Get(transaction, partition, null, securityContext)

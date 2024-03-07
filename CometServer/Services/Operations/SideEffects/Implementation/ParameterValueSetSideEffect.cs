@@ -27,11 +27,13 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
 
     using Authorization;
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.EngineeringModelData;
     using CDP4Common.Validation;
 
     using CometServer.Exceptions;
@@ -119,9 +121,15 @@ namespace CometServer.Services.Operations.SideEffects
         {
             base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
+            if (rawUpdateInfo.Keys.All(key => !Array.Exists(Enum.GetNames(typeof(ParameterSwitchKind)), 
+                        x => key.Equals(x, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                return;
+            }
+
             if (container is not Parameter parameter)
             {
-                throw new InvalidOperationException("The container of the ParameterValueSet is not a Parameter");
+                throw new ArgumentException("The container of the ParameterValueSet is not a Parameter", nameof(container));
             }
 
             var things = new List<Thing>();

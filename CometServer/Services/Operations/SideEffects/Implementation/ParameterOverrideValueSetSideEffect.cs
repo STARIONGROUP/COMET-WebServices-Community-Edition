@@ -33,11 +33,16 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.EngineeringModelData;
     using CDP4Common.Validation;
 
     using CometServer.Exceptions;
 
     using Npgsql;
+
+    using Parameter = CDP4Common.DTO.Parameter;
+    using ParameterOverride = CDP4Common.DTO.ParameterOverride;
+    using ParameterOverrideValueSet = CDP4Common.DTO.ParameterOverrideValueSet;
 
     /// <summary>
     /// The purpose of the <see cref="ParameterOverrideValueSetSideEffect"/> Side-Effect class is to execute additional logic before and after a specific operation is performed.
@@ -112,9 +117,15 @@ namespace CometServer.Services.Operations.SideEffects
         {
             base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
+            if (rawUpdateInfo.Keys.All(key => !Array.Exists(Enum.GetNames(typeof(ParameterSwitchKind)), 
+                    x => key.Equals(x, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                return;
+            }
+
             if (container is not ParameterOverride parameterOverride)
             {
-                throw new InvalidOperationException("The container of the ParameterOverrideValueSet is not a ParameterOverride");
+                throw new ArgumentException("The container of the ParameterOverrideValueSet is not a ParameterOverride", nameof(container));
             }
 
             var parameter = this.ParameterService.Get(transaction, partition, new List<Guid> { parameterOverride.Parameter }, securityContext)
