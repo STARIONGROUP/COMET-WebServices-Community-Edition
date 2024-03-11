@@ -104,6 +104,12 @@ namespace CometServer.Authorization
         private List<Participant> currentParticipantCache;
 
         /// <summary>
+        /// Gets the list of all <see cref="Participant" /> for any <see cref="Person"/> that are part of the same models than the current <see cref="Person"/> that is
+        /// reprsented by the current <see cref="Credentials" />
+        /// </summary>
+        private List<Participant> allAvailableParticipantCache;
+
+        /// <summary>
         /// Determines whether the typeName can be read.
         /// </summary>
         /// <param name="typeName">
@@ -645,14 +651,19 @@ namespace CometServer.Authorization
         private bool PersonIsParticipantWithinCurrentUserModel(NpgsqlTransaction transaction, Person person)
         {
             var participantsIds = this.CredentialsService.Credentials.EngineeringModelSetups.SelectMany(x => x.Participant).ToArray();
+
             if (participantsIds.Length == 0)
             {
                 return false;
             }
 
-            return this.ParticipantDao
-                            .Read(transaction, SiteDirectory, participantsIds, true)
-                            .Any(p => p.Person == person.Iid);
+            if (this.allAvailableParticipantCache == null || this.allAvailableParticipantCache.Count == 0)
+            {
+                this.allAvailableParticipantCache = this.ParticipantDao
+                    .Read(transaction, SiteDirectory, participantsIds, true).ToList();
+            }
+
+            return this.allAvailableParticipantCache.Exists(p => p.Person == person.Iid);
         }
     }
 }
