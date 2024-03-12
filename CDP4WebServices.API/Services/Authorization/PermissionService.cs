@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2021 RHEA System S.A.
 //
@@ -101,6 +101,12 @@ namespace CDP4WebServices.API.Services.Authorization
         /// Gets the list of <see cref="Participant"/> of the current <see cref="Person"/> that is represented by the current <see cref="Credentials"/> 
         /// </summary>
         private List<Participant> currentParticipantCache;
+
+        /// <summary>
+        /// Gets the list of all <see cref="Participant" /> for any <see cref="Person"/> that are part of the same models than the current <see cref="Person"/> that is
+        /// reprsented by the current <see cref="Credentials" />
+        /// </summary>
+        private List<Participant> allAvailableParticipantCache;
 
         /// <summary>
         /// Determines whether the typeName can be read.
@@ -632,14 +638,19 @@ namespace CDP4WebServices.API.Services.Authorization
         private bool PersonIsParticipantWithinCurrentUserModel(NpgsqlTransaction transaction, Person person)
         {
             var participantsIds = this.Credentials.EngineeringModelSetups.SelectMany(x => x.Participant).ToArray();
+
             if (participantsIds.Length == 0)
             {
                 return false;
             }
 
-            return this.ParticipantDao
-                            .Read(transaction, SiteDirectory, participantsIds, true)
-                            .Any(p => p.Person == person.Iid);
+            if (this.allAvailableParticipantCache == null || this.allAvailableParticipantCache.Count == 0)
+            {
+                this.allAvailableParticipantCache = this.ParticipantDao
+                    .Read(transaction, SiteDirectory, participantsIds, true).ToList();
+            }
+
+            return this.allAvailableParticipantCache.Exists(p => p.Person == person.Iid);
         }
     }
 }
