@@ -36,6 +36,14 @@ namespace CometServer.Configuration
         /// </summary>
         public ServiceMessagingConfig()
         {
+            this.IsEnabled =  false;
+            this.Port =  5672;
+            this.AdminPort =  15672;
+            this.MaxConnectionRetryAttempts = 5;
+            this.TimeSpanBetweenAttempts = 1;
+            this.UserName = string.Empty;
+            this.Password = string.Empty;
+            this.HostName = string.Empty;
         }
 
         /// <summary>
@@ -82,12 +90,12 @@ namespace CometServer.Configuration
         public int TimeSpanBetweenAttempts { get; private set; }
 
         /// <summary>
-        /// Gets or sets the user name.
+        /// Gets or sets the user name to connect to the message broker
         /// </summary>
         public string UserName { get; private set; }
 
         /// <summary>
-        /// Gets or sets the user password of the back tier.
+        /// Gets or sets the user password to connect to the message broker
         /// </summary>
         public string Password { get; private set; }
         
