@@ -12,7 +12,7 @@ The Concurrent Design method is an approach to design activities in which all de
 
 The Concurrent Design method brings many advantages to the early design phase by providing a structure for this otherwise chaotic phase. Many design concepts have been implemented in the Concurrent Design method to help a team of stakeholders perform their task. The design work is done in collocated sessions with all stakeholders involved and present, creating an integrated design and enabling good communication and exchange of information between team members.
 
-To read more about Concurrent Design and how to use the COMET IME Desktop application to perform concurrent design please read our documentation at http://cdp4docs.rheagroup.com/
+To read more about Concurrent Design and how to use the COMET IME Desktop application to perform concurrent design please read our documentation at https://www.rheagroup.com/document/cdp4-comet-manual/
 
 ## Build Status
 
