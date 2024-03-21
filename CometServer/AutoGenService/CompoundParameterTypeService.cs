@@ -392,10 +392,7 @@ namespace CometServer.Services
 
             var compoundParameterTypeColl = new List<Thing>(this.CompoundParameterTypeDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
 
-            compoundParameterTypeColl.AddRange(
-                this.RequestUtils.QueryParameters.ExtentDeep
-                    ? this.ArrayParameterTypeService.GetDeep(transaction, partition, idFilter, authorizedContext)
-                    : this.ArrayParameterTypeService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            compoundParameterTypeColl.AddRange(this.ArrayParameterTypeService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(compoundParameterTypeColl, transaction, partition, idFilter);
         }

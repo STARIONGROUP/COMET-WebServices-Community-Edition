@@ -382,10 +382,7 @@ namespace CometServer.Services
 
             var diagramObjectColl = new List<Thing>(this.DiagramObjectDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
 
-            diagramObjectColl.AddRange(
-                this.RequestUtils.QueryParameters.ExtentDeep
-                    ? this.ArchitectureElementService.GetDeep(transaction, partition, idFilter, authorizedContext)
-                    : this.ArchitectureElementService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            diagramObjectColl.AddRange(this.ArchitectureElementService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(diagramObjectColl, transaction, partition, idFilter);
         }

@@ -397,10 +397,7 @@ namespace CometServer.Services
 
             var ratioScaleColl = new List<Thing>(this.RatioScaleDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
 
-            ratioScaleColl.AddRange(
-                this.RequestUtils.QueryParameters.ExtentDeep
-                    ? this.CyclicRatioScaleService.GetDeep(transaction, partition, idFilter, authorizedContext)
-                    : this.CyclicRatioScaleService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            ratioScaleColl.AddRange(this.CyclicRatioScaleService.GetShallow(transaction, partition, idFilter, authorizedContext));
 
             return this.AfterGet(ratioScaleColl, transaction, partition, idFilter);
         }
