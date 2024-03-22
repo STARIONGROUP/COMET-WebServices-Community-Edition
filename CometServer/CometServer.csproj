@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Carter" Version="9.0.0" />
+    <PackageReference Include="CDP4DalJsonSerializer-CE" Version="27.4.2" />
     <PackageReference Include="CDP4MessagePackSerializer-CE" Version="27.4.2" />
     <PackageReference Include="CDP4ServicesMessaging-CE" Version="27.4.2" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />

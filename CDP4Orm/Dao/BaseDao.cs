@@ -26,12 +26,11 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Text.Json;
 
     using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
-
-    using Newtonsoft.Json.Linq;
 
     using Npgsql;
 
@@ -54,6 +53,11 @@ namespace CDP4Orm.Dao
         /// The <see cref="NpgsqlTransaction"/> for which <see cref="currentTransactionDatetime"/> was retrieved
         /// </summary>
         private NpgsqlTransaction currentTransactionDataTimeTransaction;
+        
+        /// <summary>
+        /// Gets or sets the injected <see cref="ICdp4JsonSerializer" />
+        /// </summary>
+        public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
         /// Execute additional logic before each update function call.
@@ -306,6 +310,7 @@ namespace CDP4Orm.Dao
                 using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
                     transaction.Connection,
                     transaction);
+
                 this.currentTransactionDatetime = (DateTime)command.ExecuteScalar();
             }
 
@@ -319,8 +324,7 @@ namespace CDP4Orm.Dao
         /// <returns>A <see cref="Thing"/></returns>
         protected Thing MapJsonbToDto(NpgsqlDataReader reader)
         {
-            var jsonObject = JObject.Parse(reader.GetValue(0).ToString());
-
+            var jsonObject = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(reader.GetValue(0).ToString());
             Thing thing;
 
             try

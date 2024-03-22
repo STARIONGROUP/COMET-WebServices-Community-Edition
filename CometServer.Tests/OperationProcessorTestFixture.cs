@@ -38,6 +38,8 @@ namespace CometServer.Tests
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
@@ -148,7 +150,7 @@ namespace CometServer.Tests
 
             var deleteObjectWithoutClassKind = new ClasslessDTO() { { IidKey, Guid.NewGuid() } };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Delete.Add(deleteObjectWithoutIid);
             
             Assert.Throws(
@@ -182,7 +184,7 @@ namespace CometServer.Tests
                                                         { "Name", TestName }
                                                     };
             
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Delete.Add(deleteObjectWithScalarPropertySet);
 
             Assert.Throws(
@@ -219,7 +221,7 @@ namespace CometServer.Tests
                                             Symbol = "testSymbol"
                                         };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
 
             Assert.Throws(
@@ -242,7 +244,7 @@ namespace CometServer.Tests
                 LogEntry = new List<Guid>()
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newEngineeringModel);
 
             Assert.Throws(
@@ -388,7 +390,7 @@ namespace CometServer.Tests
                 Symbol = "testSymbol"
             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
 
             Assert.Throws(
@@ -426,7 +428,7 @@ namespace CometServer.Tests
                                                 { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
                                             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
             postOperation.Update.Add(modelReferenceDataLibrary);
 
@@ -469,7 +471,7 @@ namespace CometServer.Tests
                                                 { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
                                             };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Create.Add(newAlias);
             postOperation.Create.Add(newSimpleQuantityKind);
             postOperation.Update.Add(modelReferenceDataLibrary);
@@ -484,7 +486,7 @@ namespace CometServer.Tests
 
             var updateObjectWithoutClassKind = new ClasslessDTO() { { IidKey, Guid.NewGuid() } };
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             postOperation.Update.Add(updateObjectWithoutIid);
 
             Assert.Throws(
@@ -715,7 +717,7 @@ namespace CometServer.Tests
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterSubscription.ToString())).Returns(paramSubscriptionService);
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterGroup.ToString())).Returns(paramGroupService);
 
-            var postOperation = new CdpPostOperation();
+            var postOperation = new PostOperation();
             var copyinfo = new CopyInfo
             {
                 ActiveOwner = Guid.NewGuid(),

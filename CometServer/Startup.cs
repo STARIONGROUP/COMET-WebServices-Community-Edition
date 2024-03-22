@@ -36,6 +36,8 @@ namespace CometServer
     using CDP4Common.Helpers;
     using CDP4Common.MetaInfo;
 
+    using CDP4DalJsonSerializer;
+
     using CDP4JsonSerializer;
 
     using CDP4MessagePackSerializer;
@@ -162,7 +164,7 @@ namespace CometServer
             builder.RegisterType<DefaultPermissionProvider>().As<IDefaultPermissionProvider>().SingleInstance();
             builder.RegisterAssemblyTypes(typeof(IMetaInfo).Assembly).Where(x => typeof(IMetaInfo).IsAssignableFrom(x)).AsImplementedInterfaces().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<MetaInfoProvider>().As<IMetaDataProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
-            builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
+            builder.Register(_ => new Cdp4DalJsonSerializer(false)).As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
             builder.RegisterType<MessagePackSerializer>().As<IMessagePackSerializer>().InstancePerLifetimeScope();
 
             // authentication services

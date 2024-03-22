@@ -30,6 +30,7 @@ namespace CDP4Orm.Dao.Revision
     using System.Data;
     using System.Linq;
     using System.Text;
+    using System.Text.Json;
 
     using CDP4Common.CommonData;
 
@@ -37,9 +38,6 @@ namespace CDP4Orm.Dao.Revision
 
     using Microsoft.Extensions.Logging;
     
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Linq;
-
     using Npgsql;
 
     using NpgsqlTypes;
@@ -112,6 +110,11 @@ namespace CDP4Orm.Dao.Revision
         /// Gets or sets the <see cref="IResolveDao"/> that retrieve metadata of an object
         /// </summary>
         public IResolveDao ResolveDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="ICdp4JsonSerializer" />
+        /// </summary>
+        public ICdp4JsonSerializer JsonSerializer { get; set; }
 
         /// <summary>
         /// Retrieves data from the RevisionRegistry table in the specific partition.
@@ -192,7 +195,7 @@ namespace CDP4Orm.Dao.Revision
             command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
             command.Parameters.Add("actor", NpgsqlDbType.Uuid).Value = actor;
-            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
+            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = this.JsonSerializer.SerializeToString(thing);
 
             command.ExecuteNonQuery();
         }
@@ -226,7 +229,7 @@ namespace CDP4Orm.Dao.Revision
                     var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
                     var revisionParam = new NpgsqlParameter($"revisionnumber_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
                     var actorParam = new NpgsqlParameter($"actor_{index}", NpgsqlDbType.Uuid) { Value = actor };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonObject().ToString(Formatting.None) };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = this.JsonSerializer.SerializeToString(thing) };
 
                     parameters.Add(iidParam);
                     parameters.Add(revisionParam);
@@ -663,7 +666,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>A <see cref="Thing"/></returns>
         private Thing MapToDto(NpgsqlDataReader reader)
         {
-            var jsonObject = JObject.Parse(reader.GetValue(0).ToString());
+            var jsonObject = this.JsonSerializer.Deserialize<JsonElement>(reader.GetValue(0).ToString());
 
             Thing thing;
 

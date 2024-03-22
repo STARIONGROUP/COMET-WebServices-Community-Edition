@@ -37,8 +37,6 @@ namespace CDP4Orm.Dao.Cache
 
     using Microsoft.Extensions.Logging;
 
-    using Newtonsoft.Json;
-
     using Npgsql;
 
     using NpgsqlTypes;
@@ -71,6 +69,11 @@ namespace CDP4Orm.Dao.Cache
         private const string IidKey = "Iid";
 
         /// <summary>
+        /// Gets or sets the injected <see cref="ICdp4JsonSerializer" />
+        /// </summary>
+        public ICdp4JsonSerializer JsonSerializer { get; set; }
+
+        /// <summary>
         /// Gets or sets the file dao.
         /// </summary>
         public IFileDao FileDao { get; set; }
@@ -94,11 +97,11 @@ namespace CDP4Orm.Dao.Cache
             var values = "(:iid, :revisionnumber, :jsonb)";
             var sqlQuery = $"INSERT INTO \"{partition}\".\"{table}\" {columns} VALUES {values} ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=:revisionnumber, \"{JsonColumnName}\"=:jsonb;";
 
-            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
-
-            command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
-            command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
-            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
+            using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
+            {
+                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
+                command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
+                command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = this.JsonSerializer.SerializeToString(thing);
 
             // log the sql command 
             command.ExecuteNonQuery();
@@ -129,7 +132,7 @@ namespace CDP4Orm.Dao.Cache
                 {
                     var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
                     var revisionParam = new NpgsqlParameter($"revision_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonObject().ToString(Formatting.None) };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = this.JsonSerializer.SerializeToString(thing) };
 
                     parameters.Add(iidParam);
                     parameters.Add(revisionParam);
