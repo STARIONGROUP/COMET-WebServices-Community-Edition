@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Company>RHEA System S.A.</Company>
@@ -12,7 +11,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="MigrationScript\WithoutViews\**" />
     <Compile Remove="MigrationScript\WithViews\**" />
@@ -21,7 +19,6 @@
     <None Remove="MigrationScript\WithoutViews\**" />
     <None Remove="MigrationScript\WithViews\**" />
   </ItemGroup>
-
   <ItemGroup>
     <None Remove="AutoGenStructure\01_SiteDirectory_setup.sql" />
     <None Remove="AutoGenStructure\02_SiteDirectory_structure.sql" />
@@ -50,7 +47,6 @@
     <None Remove="MigrationScript\SiteDirectory_20200612_6_1_0_0_reset_statement_timeout.sql" />
     <None Remove="MigrationScript\SiteDirectory_20210108_6_3_0_0_Model_Updates.sql" />
   </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="AutoGenStructure\01_SiteDirectory_setup.sql" />
     <EmbeddedResource Include="AutoGenStructure\02_SiteDirectory_structure.sql" />
@@ -78,15 +74,12 @@
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20181016_1_0_11_1_UsernameConstraint.sql" />
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20210108_6_3_0_0_Model_Updates.sql" />
   </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="24.6.0" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="26.6.5" />
     <PackageReference Include="Npgsql" Version="8.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
   </ItemGroup>
- 
 </Project>

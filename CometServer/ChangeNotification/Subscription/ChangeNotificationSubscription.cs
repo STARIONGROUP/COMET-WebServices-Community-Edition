@@ -25,13 +25,11 @@
 namespace CometServer.ChangeNotification.Subscription
 {
     using System;
+    using System.Text.Json.Serialization;
 
     using CDP4Common.CommonData;
 
     using CometServer.ChangeNotification.Notification;
-
-    using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
 
     /// <summary>
     /// Holds data about an individual change notification subscription
@@ -42,7 +40,6 @@ namespace CometServer.ChangeNotification.Subscription
         /// Gets the <see cref="Subscription.ChangeNotificationSubscriptionType"/> of the subscription.
         /// This <see cref="Subscription.ChangeNotificationSubscriptionType"/> will be used to create the correct <see cref="IChangeNotificationFilter"/> accordingly.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))] 
         public ChangeNotificationSubscriptionType ChangeNotificationSubscriptionType { get; }
         
         /// <summary>
@@ -58,7 +55,6 @@ namespace CometServer.ChangeNotification.Subscription
         /// <summary>
         /// Gets the <see cref="CDP4Common.CommonData.ClassKind"/> of the <see cref="Thing"/> the subscription references.
         /// </summary>
-        [JsonConverter(typeof(StringEnumConverter))] 
         public ClassKind ClassKind { get; }
 
         /// <summary>

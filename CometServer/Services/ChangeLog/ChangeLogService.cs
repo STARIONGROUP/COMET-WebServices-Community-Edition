@@ -37,6 +37,8 @@ namespace CometServer.Services.ChangeLog
     using CDP4Common.Helpers;
     using CDP4Common.Polyfills;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
@@ -184,7 +186,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// True if change log data was added, otherwise false
         /// </returns>
-        public bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things)
+        public bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, PostOperation operation, IReadOnlyList<Thing> things)
         {
             var sw = Stopwatch.StartNew();
             this.Logger.LogInformation("Starting to append changelog data");
@@ -293,7 +295,7 @@ namespace CometServer.Services.ChangeLog
                     {
                         modelLogEntry.LogEntryChangelogItem.AddRange(newLogEntryChangelogItems.Select(x => x.Iid));
 
-                        var operationData = new CdpPostOperation();
+                        var operationData = new PostOperation();
 
                         operationData.Create.AddRange(newLogEntryChangelogItems);
 
@@ -378,7 +380,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The created <see cref="CDP4Common.CommonData.LogEntryChangelogItem"/> if one was created, otherwise null.
         /// </returns>
-        private LogEntryChangelogItem CreateAddOrUpdateLogEntryChangelogItem(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, CdpPostOperation operation, IReadOnlyList<Thing> changedThings)
+        private LogEntryChangelogItem CreateAddOrUpdateLogEntryChangelogItem(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, PostOperation operation, IReadOnlyList<Thing> changedThings)
         {
             if (!IsAddLogEntryChangeLogItemAllowed(changedThing.ClassKind))
             {

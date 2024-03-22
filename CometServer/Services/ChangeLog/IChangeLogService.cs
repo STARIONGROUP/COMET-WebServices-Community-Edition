@@ -29,7 +29,7 @@ namespace CometServer.Services.ChangeLog
 
     using CDP4Common.DTO;
 
-    using CometServer.Services.Operations;
+    using CDP4DalCommon.Protocol.Operations;
 
     using Npgsql;
 
@@ -54,7 +54,7 @@ namespace CometServer.Services.ChangeLog
         /// The revisionNumber of the <see cref="transaction"/>
         /// </param>
         /// <param name="operation">
-        /// <see cref="CdpPostOperation"/> that resulted to all the changes.
+        /// <see cref="PostOperation"/> that resulted to all the changes.
         /// </param>
         /// <param name="things">
         /// The <see cref="IReadOnlyList{T}"/> of type <see cref="Thing"/> that contains changed <see cref="Thing"/>
@@ -62,6 +62,6 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// True if change log data was added, otherwise false
         /// </returns>
-        bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things);
+        bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, PostOperation operation, IReadOnlyList<Thing> things);
     }
 }

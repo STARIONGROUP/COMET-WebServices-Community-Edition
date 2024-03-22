@@ -24,9 +24,9 @@
 
 namespace CometServer.ChangeNotification.UserPreference
 {
-    using CDP4Common.SiteDirectoryData;
+    using System.Text.Json.Serialization;
 
-    using Newtonsoft.Json;
+    using CDP4Common.SiteDirectoryData;
 
     /// <summary>
     /// Holds data that can be used to store the <see cref="UserPreference.Value"/> property in a <see cref="UserPreference"/>.

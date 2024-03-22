@@ -40,7 +40,8 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Operations;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CDP4JsonSerializer;
 
@@ -54,7 +55,6 @@ namespace CometServer.Modules
     using CometServer.Extensions;
     using CometServer.Health;
     using CometServer.Helpers;
-    using CometServer.Services.Operations;
     using CometServer.Tasks;
 
     using Microsoft.AspNetCore.Http;
@@ -993,7 +993,7 @@ namespace CometServer.Modules
         /// <param name="actorId">The actor id.</param>
         /// <param name="serializer">The <see cref="ICdp4JsonSerializer"/></param>
         /// <returns>An asynchronous task representing the operation.</returns>
-        protected async Task PrepareAndQueueThingsMessage(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
+        protected async Task PrepareAndQueueThingsMessage(PostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
         {
             if (!this.AppConfigService.AppConfig.ServiceMessagingConfig.IsEnabled || this.thingsMessageProducer is null)
             {

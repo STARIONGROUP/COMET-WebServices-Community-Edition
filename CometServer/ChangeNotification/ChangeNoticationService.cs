@@ -34,13 +34,13 @@ namespace CometServer.ChangeNotification
 
     using CDP4Common.DTO;
 
+    using CDP4JsonSerializer;
+
     using CDP4Orm.Dao;
     
     using CometServer.ChangeNotification.UserPreference;
     using CometServer.Configuration;
     using CometServer.Services.Email;
-
-    using Newtonsoft.Json;
 
     using Microsoft.Extensions.Logging;
 
@@ -87,6 +87,11 @@ namespace CometServer.ChangeNotification
         public IUserPreferenceDao UserPreferenceDao { get; set; }
 
         /// <summary>
+        /// Gets or sets the INJECTED <see cref="ICdp4JsonSerializer"/>
+        /// </summary>
+        public ICdp4JsonSerializer JsonSerializer { get; set; }
+
+        /// <summary>
         /// Executes the <see cref="ChangeNoticationService"/>, processes all 
         /// </summary>
         /// <returns>
@@ -104,7 +109,7 @@ namespace CometServer.ChangeNotification
                 try
                 {
                     connection.Open();
-                    var transaction = connection.BeginTransaction();
+                    var transaction = await connection.BeginTransactionAsync();
 
                     var persons = this.PersonDao.Read(transaction, "SiteDirectory", null, true).ToList();
 
@@ -128,7 +133,7 @@ namespace CometServer.ChangeNotification
                         var startDateTime = endDateTime.AddDays(-7);
                         var htmlStringBuilder = new StringBuilder();
                         var textStringBuilder = new StringBuilder();
-                        var subject = $"Weekly Changelog from COMET server";
+                        const string subject = $"Weekly Changelog from COMET server";
                         htmlStringBuilder.AppendLine($"<h3>{subject}<br />{startDateTime:R} - {endDateTime:R}</h3>");
                         textStringBuilder.AppendLine($"{subject}\n{startDateTime:R} - {endDateTime:R}");
 
@@ -200,13 +205,13 @@ namespace CometServer.ChangeNotification
                 yield break;
             }
 
-            if (person.DefaultEmailAddress != null && emailAddresses.Any(x => x.Iid == person.DefaultEmailAddress.Value))
+            if (person.DefaultEmailAddress != null && emailAddresses.Exists(x => x.Iid == person.DefaultEmailAddress.Value))
             {
                 yield return emailAddresses.Single(x => x.Iid == person.DefaultEmailAddress.Value);
             }
             else
             {
-                yield return emailAddresses.First();
+                yield return emailAddresses[0];
             }
         }
 
@@ -251,7 +256,7 @@ namespace CometServer.ChangeNotification
             foreach (var userPreference in userPreferences)
             {
                 var engineeringModelSuffix = userPreference.ShortName.Replace("ChangeLogSubscriptions_", "");
-                var changeNotificationSubscriptionUserPreference = JsonConvert.DeserializeObject<ChangeNotificationSubscriptionUserPreference>(userPreference.Value);
+                var changeNotificationSubscriptionUserPreference = this.JsonSerializer.Deserialize<ChangeNotificationSubscriptionUserPreference>(userPreference.Value);
 
                 changeLogSubscriptions.Add(engineeringModelSuffix, changeNotificationSubscriptionUserPreference);
             }

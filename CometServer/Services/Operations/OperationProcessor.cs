@@ -38,6 +38,8 @@ namespace CometServer.Services.Operations
     using CDP4Common.MetaInfo;
     using CDP4Common.Types;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
 
@@ -154,7 +156,7 @@ namespace CometServer.Services.Operations
         /// Process the posted operation message.
         /// </summary>
         /// <param name="operation">
-        /// The <see cref="CdpPostOperation"/> that is to be processed
+        /// The <see cref="PostOperation"/> that is to be processed
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -166,7 +168,7 @@ namespace CometServer.Services.Operations
         /// The optional file binaries that were included in the request.
         /// </param>
         public void Process(
-            CdpPostOperation operation,
+            PostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
             Dictionary<string, Stream> fileStore = null)
@@ -190,7 +192,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateDeleteOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string partition)
+        internal void ValidateDeleteOperations(PostOperation operation, NpgsqlTransaction transaction, string partition)
         {
             // verify presence of classkind and iid
             if (operation.Delete.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -294,7 +296,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal void ValidateCreateOperations(CdpPostOperation operation, Dictionary<string, Stream> fileStore)
+        internal void ValidateCreateOperations(PostOperation operation, Dictionary<string, Stream> fileStore)
         {
             // verify all mandatory properties of the thing supplied (throw), 
             // defer property validation as per the operationsideeffect
@@ -369,7 +371,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal static void ValidateCopyOperations(CdpPostOperation operation)
+        internal static void ValidateCopyOperations(PostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Copy.Any(x => x.Source.Thing.Iid == Guid.Empty))
@@ -421,7 +423,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal static void ValidateUpdateOperations(CdpPostOperation operation)
+        internal static void ValidateUpdateOperations(PostOperation operation)
         {
             // verify presence of classkind and iid (throw)
             if (operation.Update.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -442,7 +444,7 @@ namespace CometServer.Services.Operations
         /// <param name="operation">
         /// The operation.
         /// </param>
-        private void RegisterUpdateContainersForResolvement(CdpPostOperation operation)
+        private void RegisterUpdateContainersForResolvement(PostOperation operation)
         {
             // register items for resolvement
             foreach (var thingInfo in operation.Update.Select(x => x.GetInfoPlaceholder()))
@@ -488,7 +490,7 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The file Store.
         /// </param>
-        private void ValidatePostMessage(CdpPostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
+        private void ValidatePostMessage(PostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
         {
             this.ValidateDeleteOperations(operation, transaction, partition);
             this.ValidateCreateOperations(operation, fileStore);
@@ -510,7 +512,7 @@ namespace CometServer.Services.Operations
         /// <returns>
         /// True if the thing type is contained.
         /// </returns>
-        private bool IsContainerUpdateIncluded(CdpPostOperation operation, Thing thing)
+        private bool IsContainerUpdateIncluded(PostOperation operation, Thing thing)
         {
             var thingType = thing.GetType().Name;
             var metaInfo = this.MetaInfoProvider.GetMetaInfo(thingType);
@@ -534,7 +536,7 @@ namespace CometServer.Services.Operations
         /// <returns>
         /// True if found, which also registers the container in the local operationContainmentCache
         /// </returns>
-        private bool TryFindContainerInUpdates(CdpPostOperation operation, Thing thing, IMetaInfo metaInfo)
+        private bool TryFindContainerInUpdates(PostOperation operation, Thing thing, IMetaInfo metaInfo)
         {
             // get the thing info as cachekey
             var thingInfo = thing.GetInfoPlaceholder();
@@ -627,7 +629,7 @@ namespace CometServer.Services.Operations
         /// <returns>
         /// True if found, which also registers the container in the local operationContainmentCache
         /// </returns>
-        private bool TryFindContainerInCreateSection(CdpPostOperation operation, Thing thing, IMetaInfo metaInfo)
+        private bool TryFindContainerInCreateSection(PostOperation operation, Thing thing, IMetaInfo metaInfo)
         {
             // get the thing info as cachekey
             var thingInfo = thing.GetInfoPlaceholder();
@@ -760,7 +762,7 @@ namespace CometServer.Services.Operations
         /// The file Store.
         /// </param>
         private void ApplyOperation(
-            CdpPostOperation operation,
+            PostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
             Dictionary<string, Stream> fileStore)
@@ -875,7 +877,7 @@ namespace CometServer.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void ApplyDeleteOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        private void ApplyDeleteOperations(PostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
             foreach (var deleteInfo in operation.Delete)
             {
@@ -976,7 +978,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If the item already exists
         /// </exception>
-        private void ApplyCreateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
+        private void ApplyCreateOperations(PostOperation operation, NpgsqlTransaction transaction)
         {
             // re-order create
             ReorderCreateOrder(operation);
@@ -1061,7 +1063,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If mandatory resources cannot be found to perform the operation
         /// </exception>
-        private void ApplyCopyOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        private void ApplyCopyOperations(PostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
             if (operation.Copy.Count == 0)
             {
@@ -1155,7 +1157,7 @@ namespace CometServer.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private void ApplyUpdateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
+        private void ApplyUpdateOperations(PostOperation operation, NpgsqlTransaction transaction)
         {
             foreach (var updateInfo in operation.Update)
             {
@@ -1506,13 +1508,13 @@ namespace CometServer.Services.Operations
         }
 
         /// <summary>
-        /// Reorder the create list of a <see cref="CdpPostOperation"/>
+        /// Reorder the create list of a <see cref="PostOperation"/>
         /// </summary>
-        /// <param name="postOperation">The <see cref="CdpPostOperation"/></param>
+        /// <param name="postOperation">The <see cref="PostOperation"/></param>
         /// <remarks>
         /// This is done to make sure that some things that depend on other are created last
         /// </remarks>
-        private static void ReorderCreateOrder(CdpPostOperation postOperation)
+        private static void ReorderCreateOrder(PostOperation postOperation)
         {
             var subscriptions = postOperation.Create.OfType<ParameterSubscription>().ToArray();
 

@@ -274,7 +274,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext)
         {
             var isParameterTypeChanged = thing.ParameterType != originalThing.ParameterType;
-
+            
             if (isParameterTypeChanged)
             {
                 this.CheckDuplicateParameterTypes(container, thing, transaction, partition, securityContext, true);

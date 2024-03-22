@@ -29,10 +29,12 @@ namespace CometServer.Services.Operations
 
     using CDP4Common.DTO;
 
+    using CDP4DalCommon.Protocol.Operations;
+
     using Npgsql;
 
     /// <summary>
-    /// The injectable OperationProcessor interface that allows processing of a <see cref="CdpPostOperation"/>.
+    /// The injectable OperationProcessor interface that allows processing of a <see cref="PostOperation"/>.
     /// </summary>
     public interface IOperationProcessor
     {
@@ -51,7 +53,7 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
-        void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
+        void Process(PostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.

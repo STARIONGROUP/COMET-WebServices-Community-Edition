@@ -37,7 +37,9 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
-    using CDP4DalCommon.Tasks;
+
+    using CDP4DalCommon.Protocol.Operations;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CDP4JsonSerializer;
 
@@ -853,7 +855,8 @@ namespace CometServer.Modules
             }
 
             jsonSerializer.Initialize(metaInfoProvider, postRequestData.Version);
-            postRequestData.OperationData = jsonSerializer.Deserialize<CdpPostOperation>(bodyStream);
+
+            postRequestData.OperationData = jsonSerializer.Deserialize<PostOperation>(bodyStream);
 
             return postRequestData;
         }

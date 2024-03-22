@@ -30,6 +30,7 @@ namespace CometServer.Services
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
+    using System.Text.Json;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -42,8 +43,6 @@ namespace CometServer.Services
     using ICSharpCode.SharpZipLib.Zip;
 
     using Microsoft.Extensions.Logging;
-
-    using Newtonsoft.Json.Linq;
 
     /// <summary>
     /// The purpose of the <see cref="JsonExchangeFileReader"/> is toread data from
@@ -569,20 +568,15 @@ namespace CometServer.Services
             try
             {
                 var content = reader.ReadToEnd();
-                var parsedContent = JObject.Parse(content);
+                var jsonElement = this.JsonSerializer.Deserialize<JsonElement>(content);
 
-                if (parsedContent?["credentials"] != null)
+                if (jsonElement.TryGetProperty("credentials"u8, out var credentialValue))
                 {
-                    foreach (var children in parsedContent["credentials"].Children())
+                    foreach (var children in credentialValue.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Object))
                     {
-                        if (!(children is JProperty property))
-                        {
-                            continue;
-                        }
-
-                        var password = (property.First["password"] as JValue)?.Value.ToString();
-                        var salt = (property.First["salt"] as JValue)?.Value.ToString();
-                        credentialsList.Add(new MigrationPasswordCredentials(new Guid(property.Name), password, salt));
+                        var password = children.GetProperty("password"u8).GetString();
+                        var salt = children.GetProperty("salt"u8).GetString();
+                        credentialsList.Add(new MigrationPasswordCredentials(new Guid(children.GetString()!), password, salt));
                     }
                 }
             }
