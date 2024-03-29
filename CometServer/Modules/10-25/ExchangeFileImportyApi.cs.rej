@@ -1,0 +1,18 @@
+diff a/CometServer/Modules/10-25/ExchangeFileImportyApi.cs b/CometServer/Modules/10-25/ExchangeFileImportyApi.cs	(rejected hunks)
+@@ -60,6 +60,7 @@
+     using Microsoft.Extensions.Logging;
+ 
+     using Npgsql;
++    using System.Text.RegularExpressions;
+     
+     /// <summary>
+     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
+@@ -166,7 +167,7 @@
+             var reqsw = Stopwatch.StartNew();
+             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
+ 
+-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
++            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", Regex.Replace((httpRequest.QueryNameMethodPath()).ToString(), "\n|\r", "-"), requestToken);
+ 
+             if (!this.appConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
+             {

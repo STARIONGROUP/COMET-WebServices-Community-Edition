@@ -200,7 +200,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", Regex.Replace((httpRequest.QueryNameMethodPath()).ToString(), "\n|\r", "-"), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
