@@ -2,7 +2,7 @@ version: '3.8'
 services:
   
   comet_db:
-    image: rheagroup/cdp4-database-community-edition:latest
+    image: rheagroup/cdp4-database-community-edition:3.0.0-rc2
     container_name: comet-db
     shm_size: 2gb
     restart: always
@@ -24,7 +24,7 @@ services:
       - comet-db-logs:/logs
   
   comet_webservices:
-    image: rheagroup/comet-webservices-community-edition:8.0.0-rc13
+    image: rheagroup/comet-webservices-community-edition:8.0.0-rc26
     container_name: comet-webservices
     shm_size: 512m
     restart: always
