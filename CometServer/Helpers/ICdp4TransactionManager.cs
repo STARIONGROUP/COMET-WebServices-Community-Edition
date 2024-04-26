@@ -196,5 +196,19 @@ namespace CometServer.Helpers
         /// The value indicating whether the current person has full access or not.
         /// </param>
         void SetFullAccessState(bool value);
+
+        /// <summary>
+        /// Sets a value indicating whether a Services' GetShallow call should perform a GetDeep call for it's subclasses
+        /// </summary>
+        /// The value indicating whether the GetDeep call should be done on a subclass in the superclass' GetShallow call.
+        void SetSubClassGetDeepOverride(bool value);
+
+        /// <summary>
+        /// Indicate whether a Services' GetShallow call should perform a GetDeep call for it's subclasses
+        /// </summary>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        bool IsSubClassGetDeepOverrideEnabled();
     }
 }

@@ -30,15 +30,16 @@ namespace CometServer.Services.Operations.SideEffects
     using CDP4Common.DTO;
 
     using CometServer.Services.Authorization;
+    using CometServer.Services.Supplemental;
 
     using Npgsql;
 
     public class ArchitectureDiagramSideEffect : OperationSideEffect<ArchitectureDiagram>
     {
         /// <summary>
-        /// Gets or sets the <see cref="IArchitectureDiagramService"/>.
+        /// Gets or sets the <see cref="IDiagramCanvasBusinessRuleService"/>.
         /// </summary>
-        public IArchitectureDiagramService ArchitectureDiagramService { get; set; }
+        public IDiagramCanvasBusinessRuleService DiagramCanvasBusinessRuleService { get; set; }
 
         /// <summary>
         /// Allows derived classes to override and execute additional logic before an update operation.
@@ -107,9 +108,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public void HasWriteAccess(ArchitectureDiagram thing, NpgsqlTransaction transaction, string partition)
         {
-            if (!this.ArchitectureDiagramService.HasWriteAccess(
-                    thing,
+            if (!this.DiagramCanvasBusinessRuleService.IsWriteAllowed(
                     transaction,
+                    thing,
                     partition))
             {
                 throw new SecurityException($"User is not allowed to write to {nameof(ArchitectureDiagram)} '{thing.Name}'");

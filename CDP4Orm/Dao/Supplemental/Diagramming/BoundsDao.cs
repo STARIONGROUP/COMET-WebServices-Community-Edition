@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DiagramCanvasDao.cs" company="RHEA System S.A.">
+// <copyright file="BoundsDao.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
@@ -27,7 +27,6 @@
 namespace CDP4Orm.Dao
 {
     using System;
-    using System.Collections;
     using System.Linq;
     using System.Text;
 
@@ -39,12 +38,17 @@ namespace CDP4Orm.Dao
     using NpgsqlTypes;
 
     /// <summary>
-    /// The ArchitectureDiagram Data Access Object which acts as an ORM layer to the SQL database.
+    /// The Bounds Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
-    public partial class DiagramCanvasDao
+    public partial class BoundsDao
     {
         /// <summary>
-        /// The (injected) <see cref="IArchitectureDiagramDao"/>
+        /// Gets or sets the (Injected) <see cref="IDiagramCanvasDao"/>
+        /// </summary>
+        public IDiagramCanvasDao DiagramCanvasDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the (Injected) <see cref="IArchitectureDiagramDao"/>
         /// </summary>
         public IArchitectureDiagramDao ArchitectureDiagramDao { get; set; }
 
@@ -57,42 +61,29 @@ namespace CDP4Orm.Dao
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        /// <param name="diagramElementThingId">
+        /// <param name="id">
         /// Id to retrieve from the database.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="CDP4Common.DTO.DiagramCanvas"/> including <see cref="ArchitectureDiagram"/>s.
+        /// List of instances of <see cref="CDP4Common.DTO.ValueGroup"/>.
         /// </returns>
-        public virtual DiagramCanvas GetTopDiagramCanvas(NpgsqlTransaction transaction, string partition, Guid diagramElementThingId)
+        public DiagramCanvas GetTopDiagramCanvas(NpgsqlTransaction transaction, string partition, Guid id)
         {
+            //get container DiagramElementContainer and use that for GetTopDiagramCanvas
             using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new StringBuilder();
 
                 sqlBuilder.Append($"""
-                                     WITH RECURSIVE diagram_hierarchy AS
-                                     (
-                                         SELECT "Iid", "Container"
-                                         FROM "{partition}"."DiagramElementThing"
-                                         WHERE "ValidTo" = 'infinity' AND "Iid" = :id
-                                   
-                                         UNION ALL
-                                   
-                                         SELECT "diagramElementContainer"."Iid", "diagramElementThing"."Container"
-                                         FROM "{partition}"."DiagramElementContainer" "diagramElementContainer"
-                                         LEFT JOIN "{partition}"."DiagramElementThing" "diagramElementThing" ON "diagramElementContainer"."Iid" = "diagramElementThing"."Iid"
-                                         JOIN diagram_hierarchy "diagramElementThingHierarchy" ON "diagramElementContainer"."Iid" = "diagramElementThingHierarchy"."Container"
-                                         WHERE "diagramElementContainer"."ValidTo" = 'infinity')
-                                     )
-                                     
-                                     SELECT thing."Iid", thing."ValueTypeDictionary" -> 'ClassKind' AS "ClassKind"
-                                     FROM diagram_hierarchy
-                                     INNER JOIN "{partition}"."Thing" thing ON diagram_hierarchy."Iid" = thing."Iid" 
-                                     WHERE "Container" IS NULL
-                                       AND thing."ValidTo" = 'infinity';
-                                   """);
+                                   SELECT thing."Iid", thing."ValueTypeDictionary" -> 'ClassKind' AS "ClassKind"
+                                   FROM "{partition}"."Bounds" bounds
+                                   INNER JOIN "{partition}"."Thing" thing ON bounds."Container" = thing."Iid"
+                                   WHERE bounds."Iid = :id"
+                                     AND thing."ValidTo" = 'infinity';
+                                   """
+                );
 
-                command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = diagramElementThingId;
+                command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = id;
 
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
@@ -108,13 +99,13 @@ namespace CDP4Orm.Dao
                         switch (classKind)
                         {
                             case ClassKind.DiagramCanvas:
-                                return this.Read(transaction, partition, new[] { topContainerIid }).FirstOrDefault();
+                                return this.DiagramCanvasDao.Read(transaction, partition, new[] { topContainerIid }).FirstOrDefault();
 
                             case ClassKind.ArchitectureDiagram:
                                 return this.ArchitectureDiagramDao.Read(transaction, partition, new[] { topContainerIid }).FirstOrDefault();
 
-                            default :
-                                return null;
+                            default:
+                                return this.DiagramCanvasDao.GetTopDiagramCanvas(transaction, partition, topContainerIid);
                         }
                     }
                 }

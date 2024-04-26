@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="DiagramCanvasSideEffect.cs" company="RHEA System S.A.">
+// <copyright file="DiagramObjectSideEffect.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -24,22 +24,17 @@
 
 namespace CometServer.Services.Operations.SideEffects
 {
-    using System;
     using System.Security;
 
     using CDP4Common;
-    using CDP4Common.CommonData;
     using CDP4Common.DTO;
-    using CDP4Common.Exceptions;
 
     using CometServer.Services.Authorization;
     using CometServer.Services.Supplemental;
 
     using Npgsql;
 
-    using Thing = CDP4Common.DTO.Thing;
-
-    public class DiagramCanvasSideEffect : OperationSideEffect<DiagramCanvas>
+    public class DiagramObjectSideEffect : OperationSideEffect<DiagramObject>
     {
         /// <summary>
         /// Gets or sets the <see cref="IDiagramCanvasBusinessRuleService"/>.
@@ -50,10 +45,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// Allows derived classes to override and execute additional logic before an update operation.
         /// </summary>
         /// <param name="thing">
-        /// The <see cref="DiagramCanvas"/> instance that will be inspected.
+        /// The <see cref="DiagramObject"/> instance that will be inspected.
         /// </param>
         /// <param name="container">
-        /// The container instance of the <see cref="CDP4Common.DTO.Thing"/> that is inspected.
+        /// The container instance of the <see cref="Thing"/> that is inspected.
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -69,64 +64,17 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(DiagramCanvas thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override void BeforeUpdate(DiagramObject thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
             base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
-
-            var isHidden = thing.IsHidden;
-            var lockedBy = thing.LockedBy;
-
-            // Pre check correctness of state after updates
-            if (rawUpdateInfo.TryGetValue(nameof(thing.IsHidden), out var updatedIsHidden))
-            {
-                isHidden = (bool)updatedIsHidden;
-            }
-
-            if (rawUpdateInfo.TryGetValue(nameof(thing.LockedBy), out var updatedLockedBy))
-            {
-                lockedBy = (Guid?)updatedLockedBy;
-            }
-
-            this.DiagramCanvasBusinessRuleService.CheckIsHiddenAndLockedBy(thing.ClassKind, isHidden, lockedBy);
-            
             this.HasWriteAccess(thing, transaction, partition);
-        }
-
-        /// <summary>
-        /// Allows derived classes to override and execute additional logic before a create operation.
-        /// </summary>
-        /// <param name="thing">
-        /// The <see cref="DiagramCanvas"/> instance that will be inspected.
-        /// </param>
-        /// <param name="container">
-        /// The container instance of the <see cref="Thing"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <param name="securityContext">
-        /// The security Context used for permission checking.
-        /// </param>
-        /// <returns>
-        /// Returns true if the create operation may continue, otherwise it shall be skipped.
-        /// </returns>
-        public override bool BeforeCreate(DiagramCanvas thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
-        {
-            var result = base.BeforeCreate(thing, container, transaction, partition, securityContext);
-
-            this.DiagramCanvasBusinessRuleService.CheckIsHiddenAndLockedBy(thing.ClassKind, thing.IsHidden, thing.LockedBy);
-
-            return result;
         }
 
         /// <summary>
         /// Allows derived classes to override and execute additional logic before a delete operation.
         /// </summary>
         /// <param name="thing">
-        /// The <see cref="DiagramCanvas"/> instance that will be inspected.
+        /// The <see cref="ArchitectureDiagram"/> instance that will be inspected.
         /// </param>
         /// <param name="container">
         /// The container instance of the <see cref="Thing"/> that is inspected.
@@ -140,14 +88,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(DiagramCanvas thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override void BeforeDelete(DiagramObject thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             base.BeforeDelete(thing, container, transaction, partition, securityContext);
             this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
-        /// Checks the <see cref="DiagramCanvas"/> security
+        /// Checks the <see cref="DiagramObject"/> security
         /// </summary>
         /// <param name="thing">
         /// The instance of the <see cref="Thing"/> that is inspected.
@@ -158,14 +106,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        public void HasWriteAccess(DiagramCanvas thing, NpgsqlTransaction transaction, string partition)
+        public void HasWriteAccess(DiagramObject thing, NpgsqlTransaction transaction, string partition)
         {
             if (!this.DiagramCanvasBusinessRuleService.IsWriteAllowed(
                     transaction,
                     thing,
                     partition))
             {
-                throw new SecurityException($"User is not allowed to write to {nameof(DiagramCanvas)} '{thing.Name}'");
+                throw new SecurityException($"User is not allowed to write to {nameof(DiagramObject)} '{thing.Name}', because the top Diagram does not allow it.");
             }
         }
     }

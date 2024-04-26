@@ -101,6 +101,11 @@ namespace CometServer.Helpers
         private const string TransactionAuditEnabled = "audit_enabled";
 
         /// <summary>
+        /// The value indicating whether a Services' GetShallow call should perform a GetDeep call for it's subclasses instead of a GetShallow call
+        /// </summary>
+        private bool isSubClassGetDeepOverrideEnabled;
+
+        /// <summary>
         /// The value indicating whether to use cache tables for retrieving the data.
         /// </summary>
         private bool isCachedDtoReadEnabled;
@@ -248,6 +253,26 @@ namespace CometServer.Helpers
         public void SetFullAccessState(bool value)
         {
             this.isFullAccessGranted = value;
+        }
+
+        /// <summary>
+        /// Sets a value indicating whether a Services' GetShallow call should perform a GetDeep call for it's subclasses instead of a GetShallow call
+        /// </summary>
+        /// The value indicating whether the GetDeep call should be done on a subclass in the superclass' GetShallow call.
+        public void SetSubClassGetDeepOverride(bool value)
+        {
+            this.isSubClassGetDeepOverrideEnabled = value;
+        }
+
+        /// <summary>
+        /// Indicate whether a Services' GetShallow call should perform a GetDeep call for it's subclasses instead of a GetShallow call
+        /// </summary>
+        /// <returns>
+        /// The <see cref="bool"/>.
+        /// </returns>
+        public bool IsSubClassGetDeepOverrideEnabled()
+        {
+            return this.isSubClassGetDeepOverrideEnabled;
         }
 
         /// <summary>

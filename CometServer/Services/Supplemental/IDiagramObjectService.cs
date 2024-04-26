@@ -1,5 +1,5 @@
 // --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IArchitectureDiagramService.cs" company="RHEA System S.A.">
+// <copyright file="IDiagramObjectService.cs" company="RHEA System S.A.">
 //    Copyright (c) 2015-2024 RHEA System S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
@@ -24,45 +24,18 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-using Npgsql;
-
 namespace CometServer.Services
 {
-    using CDP4Common.DTO;
+    using CometServer.Services.Supplemental;
 
     /// <summary>
-    /// The DiagramCanvas Service Interface which uses the ORM layer to interact with the data model.
+    /// The DiagramObject Service Interface which uses the ORM layer to interact with the data model.
     /// </summary>
-    public partial interface IArchitectureDiagramService
+    public partial interface IDiagramObjectService
     {
         /// <summary>
-        /// Checks the <see cref="ArchitectureDiagram"/> WRITE security
+        /// Gets or sets the (injected) <see cref="IDiagramCanvasService"/>
         /// </summary>
-        /// <param name="thing">
-        /// The instance of the <see cref="ArchitectureDiagram"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <returns>A boolean value indicating if read is allowed</returns>
-        bool HasReadAccess(ArchitectureDiagram thing, NpgsqlTransaction transaction, string partition);
-
-        /// <summary>
-        /// Checks the <see cref="ArchitectureDiagram"/> WRITE security
-        /// </summary>
-        /// <param name="thing">
-        /// The instance of the <see cref="ArchitectureDiagram"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <returns>A boolean value indicating if write is allowed</returns>
-        bool HasWriteAccess(ArchitectureDiagram thing, NpgsqlTransaction transaction, string partition);
+        public IDiagramCanvasBusinessRuleService DiagramCanvasBusinessRuleService { get; set; }
     }
 }

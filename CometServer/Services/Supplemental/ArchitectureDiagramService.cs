@@ -26,10 +26,9 @@
 
 namespace CometServer.Services
 {
-    using System.Linq;
-    using System.Security;
-
     using CDP4Common.DTO;
+
+    using CometServer.Services.Supplemental;
 
     using Npgsql;
 
@@ -38,11 +37,7 @@ namespace CometServer.Services
     /// </summary>
     public sealed partial class ArchitectureDiagramService
     {
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="IDiagramCanvasService"/>
-        /// </summary>
-
-        public IDiagramCanvasService DiagramCanvasService { get; set; }
+        public IDiagramCanvasBusinessRuleService DiagramCanvasBusinessRuleService { get; set; }
 
         /// <summary>
         /// Check whether a modify operation is allowed based on the object instance.
@@ -68,7 +63,7 @@ namespace CometServer.Services
 
             if (result)
             {
-                result = this.HasWriteAccess(thing as ArchitectureDiagram, transaction, partition);
+                result = this.DiagramCanvasBusinessRuleService.IsWriteAllowed(transaction, thing, partition);
             }
 
             return result;
@@ -95,68 +90,10 @@ namespace CometServer.Services
 
             if (result)
             {
-                result = this.HasReadAccess(thing as ArchitectureDiagram, transaction, partition);
+                result = this.DiagramCanvasBusinessRuleService.IsReadAllowed(transaction, thing, partition);
             }
 
             return result;
-        }
-
-        /// <summary>
-        /// Checks the <see cref="ArchitectureDiagram"/> security
-        /// </summary>
-        /// <param name="thing">
-        /// The instance of the <see cref="ArchitectureDiagram"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <returns>A boolean value indicating if read is allowed</returns>
-        public bool HasReadAccess(ArchitectureDiagram thing, NpgsqlTransaction transaction, string partition)
-        {
-            if (thing.IsHidden && !this.PermissionService.IsOwner(transaction, thing))
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks the <see cref="ArchitectureDiagram"/> security
-        /// </summary>
-        /// <param name="thing">
-        /// The instance of the <see cref="ArchitectureDiagram"/> that is inspected.
-        /// </param>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource will be stored.
-        /// </param>
-        /// <returns>A boolean value indicating if write is allowed</returns>
-        public bool HasWriteAccess(ArchitectureDiagram thing, NpgsqlTransaction transaction, string partition)
-        {
-            var originalThing = this.ArchitectureDiagramDao.Read(transaction, partition, new[] { thing.Iid }).FirstOrDefault();
-
-            if (originalThing == null)
-            {
-                return true;
-            }
-
-            if (this.DiagramCanvasService.IsLockedByAnotherUser(transaction, partition, originalThing, out _))
-            {
-                throw new SecurityException($"{nameof(ArchitectureDiagram)} '{thing.Name}' is locked by another user");
-            }
-
-            if (!this.PermissionService.IsOwner(transaction, thing))
-            {
-                throw new SecurityException($"User does not have correct ownership for {nameof(ArchitectureDiagram)} '{thing.Name}'");
-            }
-
-            return true;
         }
     }
 }

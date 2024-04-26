@@ -216,6 +216,7 @@ namespace CometServer
             builder.RegisterType<ZipArchiveWriter>().As<IZipArchiveWriter>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<ModelCreatorManager>().As<IModelCreatorManager>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<MigrationService>().As<IMigrationService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
+            builder.RegisterType<DiagramCanvasBusinessRuleService>().As<IDiagramCanvasBusinessRuleService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
 
             // CherryPick support
             builder.RegisterType<CherryPickService>().As<ICherryPickService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
