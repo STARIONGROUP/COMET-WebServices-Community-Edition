@@ -1,10 +1,10 @@
 --------------------------------------------------------------------------------------------------------
--- Copyright RHEA System S.A.                                                                         --
+-- Copyright Starion Group S.A.                                                                         --
 --                                                                                                    --
 -- Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Théate Antoine      --
 --                                                                                                    --
 -- This file is part of COMET Server Community Edition. The COMET Server Community Edition is the     --
--- RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.                                        --
+-- STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.                                        --
 --                                                                                                    --
 -- The COMET Server Community Edition is free software; you can redistribute it and/or modify it      --
 -- the terms of the GNU Affero General Public License as published by the Free Software Foundation;   --

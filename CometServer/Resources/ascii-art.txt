@@ -7,6 +7,6 @@
   ╚██████╗██████╔╝██║          ██║      ╚██████╗╚██████╔╝██║ ╚═╝ ██║███████╗   ██║   
    ╚═════╝╚═════╝ ╚═╝          ╚═╝       ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝   ╚═╝   
 
-         copyright 2015-2024 RHEA Group S.A. https://www.rheagroup.com
-		 email: info@rheagroup.com
+         copyright 2015-2024 STARION Group S.A. https://www.stariongroup.eu
+		 email: info@stariongroup.eu
 	     CDP4-COMET WebServices version: COMETWebServicesVersion

@@ -1,11 +1,11 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="JsonExchangeFileWriter.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2024 RHEA System S.A.
+// <copyright file="JsonExchangeFileWriter.cs" company="Starion Group S.A.">
+//    Copyright (c) 2015-2024 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Webservices Community Edition. 
-//    The CDP4-COMET Webservices Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    The CDP4-COMET Webservices Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //
 //    The CDP4-COMET Webservices Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
@@ -104,7 +104,7 @@ namespace CometServer.Services
         /// <summary>
         /// The copyright text to be included in the exchange header file.
         /// </summary>
-        private const string ExchangeHeaderCopyright = "Copyright 2015-2021 © RHEA System S.A.";
+        private const string ExchangeHeaderCopyright = "Copyright 2015-2021 © Starion Group S.A.";
 
         /// <summary>
         /// Creates an E-TM-10-25 Annex-C3 zip archive and stores this on disk. The path to this file is returned

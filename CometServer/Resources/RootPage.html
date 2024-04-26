@@ -4,8 +4,24 @@
     <meta charset="utf-8" />
     <title>Welcome to the CDP4-COMET WebService</title>
     <style>
-        body {
-            background-color: #F9F9F9;
+
+        h4 {
+            font-size: 15px;
+            color:#183e49;
+        }
+
+        body 
+        {
+            background-color: rgb(249, 248, 241);
+        }
+        a {
+            color:#651911;
+            font-weight:bold;
+        }
+
+        a:hover, a:focus, a:active 
+        {
+            color: rgb(101 25 17 / 80%);
         }
 
         .main {
@@ -16,82 +32,89 @@
             border: 1px solid #CCCCCC;
             text-align: left;
             background-color: #FFFFFF;
-            color: #01628F;
-            font-family: Helvetica, sans-serif;
+            color: #FF4100;
+            font-family: "Lato", sans-serif;
             font-size: 12px;
-            box-shadow: 3px 3px 6px grey;
-            border-radius: 5px;
         }
-
         .header {
             padding-top: 5px;
-            padding-bottom: 5px;
+            padding-bottom: 15px;
             padding-left: 20px;
             text-align: left;
             background-size: cover;
-            background-image: url('background.png');
-            color: #FFFFFF;
+            background-color: #000000;
+            color: #FF4100;
         }
 
         .row {
             vertical-align: top;
             display: flex;
             flex-direction: row;
+            color: #183e49;
             flex-wrap: wrap;
             width: 100%;
         }
 
         .column {
-            margin: 5px;
-            padding: 5px;
-            border: 1px solid #CCCCCC;
-            box-shadow: 1px 1px 4px grey;
-            border-radius: 4px;
+            margin: 15px;
+            padding: 10px;
+            color: #183e49;
             display: flex;
             flex: 1;
             flex-direction: column;
-            background: linear-gradient(#F4FDFF, #FFFFFF);
+            background: rgb(249, 248, 241);
+            background-image: url("corner-right.svg");
+            background-position-x: 100%;
+            background-position-y: 100%;
+            background-repeat: no-repeat;
+            background-size: 50px;
+            color: rgb(59, 59, 59);
         }
     </style>
 </head>
 
 <body>
     <div class="main">
+        <div style="position:absolute; float:left; margin-top: 5px; margin-left: 5px;">
+            <img src="comet_logo.png" alt="COMET Logo" height="40px" />
+        </div>
         <div class="header">
-            <img src="comet_logo.png" alt="RHEA Logo" height="70px" />
-            <div style="float:right;">
-                <a href="https://www.rheagroup.com"><img src="rhea_logo.png" alt="RHEA Logo" height="70px" /></a>
+            <div style="text-align:center;width:100%;">
+                <h2>Welcome to the CDP4-COMET WebService.</h2>
             </div>
-        </div>
-        <div style="text-align:center;width:100%;">
-            <h2>Welcome to the CDP4-COMET WebService.</h2>
-        </div>
-        <div style="width:100%;text-align:center;">
-            <span>WebService Version: </span><span style="font-weight: bold;">{{apiVersion}} </span> <br />
-            <span>SDK Version: </span><span style="font-weight: bold;">{{sdkVersion}}</span><br />
-            <span>Supported Model Versions: </span><span style="font-weight: bold;">{{modelVersions}}</span>
-        </div>
-        <div class="row">
-            <div class="column">
-                <h4>CDP4-COMET WebServices Github page: <a href="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition">CDP4-COMET Webservices</a></h4>
-                <p>The CDP4-COMET Webservices is the RHEA Group Concurrent Design REST API. COMET is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design.<br />CDP4-COMET is an implementation of ECSS-E-TM-10-25A Annex A and C.<br />ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML.<br />ECSS-E-TM-10-25A Annex C describes the REST API.</p>
-            </div>
-            <div class="column">
-                <h4>CDP4-COMET-IME Desktop App Github page: <a href="https://github.com/RHEAGROUP/COMET-IME-Community-Edition">CDP4-COMET IME</a></h4>
-                <p>The CDP4-COMET Integrated Modelling Environment (IME) Community Editition (CE) is the RHEA Group open source Concurrent Design desktop application and Microsoft Excel integration compliant with ECSS-E-TM-10-25 Annex A and Annex C.<br />CDP4-COMET IME makes use of a plugin framework, the end-user functionality is implemented in CDP4-COMET IME plugins that are loaded at run-time.<br />This makes it straightforward to package, distribute and update the environment.</p>
+            <div style="width:100%;text-align:center;">
+                <span>WebService Version: </span><span style="font-weight: bold;">{{apiVersion}} </span> <br />
+                <span>SDK Version: </span><span style="font-weight: bold;">{{sdkVersion}}</span><br />
+                <span>Supported Model Versions: </span><span style="font-weight: bold;">{{modelVersions}}</span>
             </div>
         </div>
         <div class="row">
             <div class="column">
-                <h4>CDP4-COMET SDK Github page: <a href="https://github.com/RHEAGROUP/COMET-SDK-Community-Edition">CDP4-COMET SDK</a></h4>
-                <p>The The CDP4-COMET Software Development Kit is an C# SDK that that is compliant with ECSS-E-TM-10-25A Annex A and Annex C.<br />The SDK contains multiple libraries that are each packaged as a nuget and available from nuget.org.<br />The SDK is used in CDP4-COMET to create an ECSS-E-TM-10-25A compliant implementation, both for the <a href="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition">Web Services</a> and the <a href="https://github.com/RHEAGROUP/COMET-IME-Community-Edition">Desktop Application</a></p>
+                <h4>CDP4-COMET WebServices <a href="https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition">(Github page)</a></h4>
+                <p>The CDP4-COMET Webservices is the STARION Group Concurrent Design REST API. COMET is the STARION Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design.</p><p>CDP4-COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML.</p><p>ECSS-E-TM-10-25A Annex C describes the REST API.</p>
             </div>
             <div class="column">
-                <h4>CDP4-COMET WEB Github page: <a href="https://github.com/RHEAGROUP/COMET-WEB-Community-Edition">CDP4-COMET WEB</a></h4>
+                <h4>CDP4-COMET-IME Desktop App <a href="https://github.com/STARIONGROUP/COMET-IME-Community-Edition">(Github page)</a></h4>
+                <p>The CDP4-COMET Integrated Modelling Environment (IME) Community Editition (CE) is the STARION Group open source Concurrent Design desktop application and Microsoft Excel integration compliant with ECSS-E-TM-10-25 Annex A and Annex C.</p><p>CDP4-COMET IME makes use of a plugin framework, the end-user functionality is implemented in CDP4-COMET IME plugins that are loaded at run-time.</p><p>This makes it straightforward to package, distribute and update the environment.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="column">
+                <h4>CDP4-COMET SDK <a href="https://github.com/STARIONGROUP/COMET-SDK-Community-Edition">(Github page)</a></h4>
+                <p>The The CDP4-COMET Software Development Kit is an C# SDK that that is compliant with ECSS-E-TM-10-25A Annex A and Annex C.</p><p>The SDK contains multiple libraries that are each packaged as a nuget and available from nuget.org.</p><p>The SDK is used in CDP4-COMET to create an ECSS-E-TM-10-25A compliant implementation, both for the <a href="https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition">Web Services</a> and the <a href="https://github.com/STARIONGROUP/COMET-IME-Community-Edition">Desktop Application</a></p>
+            </div>
+            <div class="column">
+                <h4>CDP4-COMET WEB <a href="https://github.com/STARIONGROUP/COMET-WEB-Community-Edition">(Github page)</a></h4>
                 <p>
-                    The CDP4-COMET-WEB Community Editition (CE) is the RHEA Group open source Concurrent Design web based application compliant with ECSS-E-TM-10-25 Annex A and Annex C.<br />
+                    The CDP4-COMET-WEB Community Editition (CE) is the RHEA Group open source Concurrent Design web based application compliant with ECSS-E-TM-10-25 Annex A and Annex C.
+                </p><p>
                     A demo version of the web application is available at:<br /><a href="https://comet-web.cdp4.org">https://comet-web.cdp4.org</a>
                 </p>
+            </div>
+        </div>
+        <div class="header">
+            <div style="text-align:center;width:100%;margin-top:13px;">
+                <a href="https://www.stariongroup.eu"><img src="starion-logo.svg" alt="STARION Logo" height="15px" /></a>
             </div>
         </div>
     </div>
