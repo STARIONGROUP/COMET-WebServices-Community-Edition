@@ -26,8 +26,8 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: add RHEA GitHub nuget feed
-        run: dotnet nuget add source https://nuget.pkg.github.com/RHEAGROUP/index.json -n GHRHEA -u gh -p ${{ secrets.GH_PR_TOKEN }} --store-password-in-clear-text
+      - name: add Starion GitHub nuget feed
+        run: dotnet nuget add source https://nuget.pkg.github.com/STARIONGROUP/index.json -n GHRHEA -u gh -p ${{ secrets.GH_PR_TOKEN }} --store-password-in-clear-text
 
       - name: Restore dependencies
         run: dotnet restore COMET-WebServices.sln
@@ -38,7 +38,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"RHEAGROUP_CDP4-COMET-WebServices-Community-Edition" /o:"rheagroup" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="./CoverageResults/coverage.opencover.xml"
+          dotnet sonarscanner begin /k:"STARIONGROUP_CDP4-COMET-WebServices-Community-Edition" /o:"stariongroup" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="./CoverageResults/coverage.opencover.xml"
 
       - name: Build
         run: dotnet build COMET-WebServices.sln --no-restore /p:ContinuousIntegrationBuild=true
