@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <Company>RHEA System S.A.</Company>
+    <Company>Starion Group S.A.</Company>
     <Title>CDP4WspDatabaseAuthentication.Tests</Title>
     <Description>CDP4-COMET WSP Database authentication Tests</Description>
-    <Copyright>Copyright © RHEA System S.A.</Copyright>
+    <Copyright>Copyright © Starion Group S.A.</Copyright>
     <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>
     <Configurations>Debug;Release</Configurations>
     <LangVersion>latest</LangVersion>

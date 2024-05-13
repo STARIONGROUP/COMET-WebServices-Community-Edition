@@ -1,10 +1,10 @@
-<img src="https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.jpg">
+<img src="https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.jpg">
 
 ## Introduction
 
 The CDP4-COMET Webservices is the RHEA Group **Concurrent Design** REST API based on ECSS-E-TM-10-25. COMET is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
 
-Read the [Wiki](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
+Read the [Wiki](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
 
 ## Concurrent Design
 
@@ -12,7 +12,7 @@ The Concurrent Design method is an approach to design activities in which all de
 
 The Concurrent Design method brings many advantages to the early design phase by providing a structure for this otherwise chaotic phase. Many design concepts have been implemented in the Concurrent Design method to help a team of stakeholders perform their task. The design work is done in collocated sessions with all stakeholders involved and present, creating an integrated design and enabling good communication and exchange of information between team members.
 
-To read more about Concurrent Design and how to use the COMET IME Desktop application to perform concurrent design please read our documentation at https://www.rheagroup.com/document/cdp4-comet-manual/
+To read more about Concurrent Design and how to use the COMET IME Desktop application to perform concurrent design please read our documentation at https://www.stariongroup.eu/document/cdp4-comet-manual/
 
 ## Build Status
 
@@ -20,13 +20,13 @@ GitHub actions are used to build and test the library
 
 Branch | Build Status
 ------- | :------------
-Master | ![Build Status](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=master)
-Development | ![Build Status](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=development)
+Master | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=master)
+Development | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=development)
 
 ## Statistics
 
-  - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/RHEAGROUP/COMET-WebServices-Community-Edition/total.svg)
-  - Issues: ![GitHub issues](https://img.shields.io/github/issues/RHEAGROUP/COMET-WebServices-Community-Edition.svg)
+  - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/STARIONGROUP/COMET-WebServices-Community-Edition/total.svg)
+  - Issues: ![GitHub issues](https://img.shields.io/github/issues/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 
 ## SonarQube Status:
 
@@ -46,7 +46,7 @@ Development | ![Build Status](https://github.com/RHEAGROUP/COMET-WebServices-Com
 
 ## COMET-SDK
 
-The COMET Webservices make use of the [COMET-SDK](https://github.com/RHEAGROUP/COMET-SDK-Community-Edition).
+The COMET Webservices make use of the [COMET-SDK](https://github.com/STARIONGROUP/COMET-SDK-Community-Edition).
 
 ## Web Framework
 
@@ -54,13 +54,13 @@ The COMET Webservices are built on top of the [Carter](https://github.com/Carter
 
 ## ecss-10-25-annexc-integration-tests
 
-The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctness of the implementation. These integration tests are available on [Github](https://github.com/RHEAGROUP/ecss-10-25-annexc-integration-tests)
+The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctness of the implementation. These integration tests are available on [Github](https://github.com/STARIONGROUP/ecss-10-25-annexc-integration-tests)
 
 ## License
 
 The COMET Webservices Community Edition are provided to the community under the GNU Affero General Public License. The COMET Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
 
-The [RHEA Group](https://www.rheagroup.com) also provides the [COMET Web Services Enterprise Edition](https://github.com/RHEAGROUP/COMET-WebServices-Community-Edition/wiki/COMET-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.rheagroup.com/contact) us for more details.
+The [RHEA Group](https://www.stariongroup.eu) also provides the [COMET Web Services Enterprise Edition](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/COMET-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.stariongroup.eu/contact) us for more details.
 
 ## Contributions
 
