@@ -473,7 +473,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new KeyNotFoundException($"The Parameter with iid {container.Parameter} could not be found");
             }
 
-            var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(container.Parameter);
+            var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(parameter.ParameterType);
 
             // get all the ParameterSubscriptions that are contained by the container ParameterOverride, for each of these subscriptions additional ParameterSubscriptionValueSets will be created as well
             var containerParameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, container.ParameterSubscription, securityContext).Cast<ParameterSubscription>().ToList();
