@@ -210,8 +210,17 @@ namespace CometServer.Services
                         : this.OldValueSet.FirstOrDefault(x => x.ActualOption == option.Value);
                 }
 
-                // old is only state dependent
-                return this.OldDefaultState != null ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid) : this.OldValueSet.FirstOrDefault();
+                if (!this.IsOldOptionDependent)
+                {
+                    // old is only state dependent
+                    return this.OldDefaultState != null ? this.OldValueSet.FirstOrDefault(x => x.ActualState == this.OldDefaultState.Iid) : this.OldValueSet.FirstOrDefault();
+                }
+
+                if (!this.IsOldStateDependent)
+                {
+                    // old is only option dependent
+                    return this.OldDefaultOption != null ? this.OldValueSet.FirstOrDefault(x => x.ActualOption == option.Value) : this.OldValueSet.FirstOrDefault();
+                }
             }
 
             // new is only state dependent
