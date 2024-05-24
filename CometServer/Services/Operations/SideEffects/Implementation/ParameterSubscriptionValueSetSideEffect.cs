@@ -34,6 +34,7 @@ namespace CometServer.Services.Operations.SideEffects
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.EngineeringModelData;
+    using CDP4Common.Exceptions;
     using CDP4Common.Validation;
 
     using CometServer.Exceptions;
@@ -41,6 +42,8 @@ namespace CometServer.Services.Operations.SideEffects
     using Npgsql;
 
     using Parameter = CDP4Common.DTO.Parameter;
+    using ParameterOrOverrideBase = CDP4Common.DTO.ParameterOrOverrideBase;
+    using ParameterOverride = CDP4Common.DTO.ParameterOverride;
     using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
     using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
 
@@ -53,6 +56,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the injected <see cref="IParameterService"/> used to retrieve linked <see cref="Thing"/>
         /// </summary>
         public IParameterService ParameterService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the injected <see cref="IParameterOverrideService"/> used to retrieve linked <see cref="Thing"/>
+        /// </summary>
+        public IParameterOverrideService ParameterOverrideService { get; set; }
 
         /// <summary>
         /// Execute additional logic  before a create operation.
@@ -120,15 +128,50 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new ArgumentException("The container of the ParameterSubscriptionValueSet is not a ParameterSubscription", nameof(container));
             }
 
-            var parameter = this.ParameterService.Get(transaction, partition, null, securityContext)
-                .OfType<Parameter>()
-                .Single(x => x.ParameterSubscription.Contains(parameterSubscription.Iid));
+            var parameters = this.ParameterService.Get(transaction, partition, null, securityContext).ToList();
+
+            var parameterOrOverrideBase =
+                parameters
+                    .OfType<ParameterOrOverrideBase>()
+                    .SingleOrDefault(
+                        x => x.ParameterSubscription.Contains(parameterSubscription.Iid)) 
+                ?? 
+                this.ParameterOverrideService.Get(transaction, partition, null, securityContext)
+                    .OfType<ParameterOrOverrideBase>()
+                    .SingleOrDefault(
+                        x => x.ParameterSubscription.Contains(parameterSubscription.Iid));
 
             var things = new List<Thing>();
 
-            things.AddRange(this.ParameterService.QueryReferencedSiteDirectoryThings(parameter, transaction,securityContext));
+            if (parameterOrOverrideBase == null)
+            {
+                throw new ThingNotFoundException("The ParameterSubscription's container Parameter, or ParameterOverride was not found");
+            }
 
-            var validationResult = parameter.ValidateAndCleanup(rawUpdateInfo, things, CultureInfo.InvariantCulture);
+            ValidationResult validationResult = default;
+            validationResult.Message = "Validation failed";
+
+            if (parameterOrOverrideBase is Parameter parameter)
+            {
+                things.AddRange(this.ParameterService.QueryReferencedSiteDirectoryThings(parameter, transaction, securityContext));
+
+                validationResult = parameter.ValidateAndCleanup(rawUpdateInfo, things, CultureInfo.InvariantCulture);
+            }
+
+            if (parameterOrOverrideBase is ParameterOverride parameterOverride)
+            {
+                var parameterOverrideParameter = parameters.SingleOrDefault(x => x.Iid == parameterOverride.Parameter) as Parameter;
+
+                if (parameterOrOverrideBase == null)
+                {
+                    throw new ThingNotFoundException("The ParameterOverride's container Parameter was not found");
+                }
+
+                things.Add(parameterOverrideParameter);
+                things.AddRange(this.ParameterService.QueryReferencedSiteDirectoryThings(parameterOverrideParameter, transaction, securityContext));
+
+                validationResult = parameterOverride.ValidateAndCleanup(rawUpdateInfo, things, CultureInfo.InvariantCulture);
+            }
 
             if (validationResult.ResultKind != ValidationResultKind.Valid)
             {
