@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Company>Starion Group S.A.</Company>
     <Title>CometServer-CE</Title>
-    <Version>8.0.0-RC29</Version>
+    <Version>8.0.0-RC30</Version>
     <Description>CDP4-COMET Services API</Description>
     <Copyright>Copyright © Starion Group S.A.</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
@@ -17,12 +17,12 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Carter" Version="8.1.0" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="27.0.1-9206969459-678-1-PR-342" />
-    <PackageReference Include="CDP4ServicesMessaging-CE" Version="27.0.1-9206969459-678-1-PR-342" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Carter" Version="8.2.0" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="27.0.1" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" Version="27.0.1" />
     <PackageReference Include="FluentValidation" Version="11.9.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.5" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
     <PackageReference Include="Hangfire.Core" Version="1.8.12" />
     <PackageReference Include="Hangfire.AspNetCore" Version="1.8.12" />
@@ -38,7 +38,7 @@
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
-    <PackageReference Include="MailKit" Version="4.5.0" />
+    <PackageReference Include="MailKit" Version="4.6.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
