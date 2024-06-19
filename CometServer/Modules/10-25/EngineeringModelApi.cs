@@ -1024,6 +1024,12 @@ namespace CometServer.Modules
                     credentialsService.Credentials.IsParticipant = true;
 
                     var iteration = DetermineIteration(resourceProcessor, partition, routeSegments);
+
+                    if (!IsPostAllowedOnIterationSetup(resourceProcessor, iteration))
+                    {
+                        throw new Cdp4ModelValidationException($"It is not allowed to write data to a Frozen {nameof(IterationSetup)}, or its full containment tree. (#FROZEN_ITERATION).");
+                    }
+
                     credentialsService.Credentials.Iteration = iteration;
                 }
 
@@ -1421,6 +1427,36 @@ namespace CometServer.Modules
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Determine is a Post request is allowed based on the <see cref="IterationSetup"/>s data.
+        /// </summary>
+        /// <param name="processor">
+        /// The processor instance.
+        /// </param>
+        /// <param name="iteration">
+        /// The <see cref="Iteration"/>
+        /// </param>
+        /// <returns>
+        /// A boolean indication if writing data to an <see cref="Iteration"/> is allowed
+        /// </returns>
+        private static bool IsPostAllowedOnIterationSetup(ResourceProcessor processor, Iteration iteration)
+        {
+            var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
+
+            var partition = "SiteDirectory";
+            var requestedIterationSetupId = iteration.IterationSetup;
+            var iterationSetups = processor.GetResource("IterationSetup", partition, new List<Guid> { requestedIterationSetupId }, securityContext).OfType<IterationSetup>().ToList();
+
+            if (iterationSetups.Count != 1)
+            {
+                throw new ThingNotFoundException($"IterationSetup {requestedIterationSetupId} could not be resolved");
+            }
+
+            var iterationSetup = iterationSetups.First();
+
+            return !iterationSetup.FrozenOn.HasValue;
         }
 
         /// <summary>
