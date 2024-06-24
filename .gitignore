@@ -80,3 +80,4 @@ CometServer/logs/*
 
 
 switcher.json
+/docker-compose-delivery.yml
