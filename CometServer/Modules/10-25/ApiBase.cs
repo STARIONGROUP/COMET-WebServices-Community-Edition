@@ -1047,5 +1047,24 @@ namespace CometServer.Modules
 
             return cometTask;
         }
+
+        /// <summary>
+        /// Adds a specific CDP error tag to an <see cref="HttpResponse"/> message
+        /// </summary>
+        /// <param name="httpResponse">The <see cref="HttpResponse"/></param>
+        /// <param name="errorTag">The the Error tag</param>
+        protected void AddErrorTagHeader(HttpResponse httpResponse, string errorTag)
+        {
+            var errorTagHeader = HttpConstants.CDPErrorTag;
+
+            if (!httpResponse.Headers.ContainsKey(errorTagHeader))
+            {
+                httpResponse.Headers[errorTagHeader] = errorTag;
+            }
+            else
+            {
+                httpResponse.Headers.TryAdd(errorTagHeader, errorTag);
+            }
+        }
     }
 }
