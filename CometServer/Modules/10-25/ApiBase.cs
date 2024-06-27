@@ -1055,7 +1055,7 @@ namespace CometServer.Modules
         /// <param name="errorTag">The the Error tag</param>
         protected void AddErrorTagHeader(HttpResponse httpResponse, string errorTag)
         {
-            var errorTagHeader = "CDPErrorTag";
+            var errorTagHeader = HttpConstants.CDPErrorTag;
 
             if (!httpResponse.Headers.ContainsKey(errorTagHeader))
             {

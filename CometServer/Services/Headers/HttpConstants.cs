@@ -85,6 +85,11 @@ namespace CometServer.Services
         public static readonly string AcceptCdpVersionHeader = "Accept-CDP";
 
         /// <summary>
+        /// The header that specifies the the error tag of an http response message
+        /// </summary>
+        public static readonly string CDPErrorTag = "CDP-Error-Tag";
+
+        /// <summary>
         /// The default data model version.
         /// </summary>
         public static readonly string DefaultDataModelVersion = "1.0.0";
