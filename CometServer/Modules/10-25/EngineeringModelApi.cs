@@ -1027,7 +1027,9 @@ namespace CometServer.Modules
 
                     if (!IsPostAllowedOnIterationSetup(resourceProcessor, iteration))
                     {
-                        throw new Cdp4ModelValidationException($"It is not allowed to write data to a Frozen {nameof(IterationSetup)}, or its full containment tree. (#FROZEN_ITERATION).");
+                        this.AddErrorTagHeader(httpResponse, "#FROZEN_ITERATION");
+
+                        throw new Cdp4ModelValidationException($"It is not allowed to write data to a Frozen {nameof(IterationSetup)}, or its full containment tree.");
                     }
 
                     credentialsService.Credentials.Iteration = iteration;
