@@ -227,6 +227,34 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully deleted.
         /// </returns>
         bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+
+        /// <summary>
+        /// Copy the tables from a source to a target Engineering-Model partition 
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="sourcePartition">
+        /// The source engineering-model
+        /// </param>
+        /// <param name="targetPartition">
+        /// The target Engineering-Model
+        /// </param>
+        void CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
+
+        /// <summary>
+        /// Copy the tables from a source to a target Engineering-Model partition and reset ITimeStampedThing.CreatedOn properties when needed
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="sourcePartition">
+        /// The source engineering-model
+        /// </param>
+        /// <param name="targetPartition">
+        /// The target Engineering-Model
+        /// </param>
+        void CopyEngineeringModelAndResetCreatedOn(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
     }
 }
 

@@ -227,6 +227,34 @@ namespace CDP4Orm.Dao
         /// True if the value link was successfully deleted.
         /// </returns>
         bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+
+        /// <summary>
+        /// Copy the tables from a source to an Iteration partition
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="sourcePartition">
+        /// The source iteration partition
+        /// </param>
+        /// <param name="targetPartition">
+        /// The target iteration partition
+        /// </param>
+        void CopyIteration(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
+
+        /// <summary>
+        /// Copy the tables from a source to an Iteration partition and reset ITimeStampedThing.CreatedOn properties when needed
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="sourcePartition">
+        /// The source iteration partition
+        /// </param>
+        /// <param name="targetPartition">
+        /// The target iteration partition
+        /// </param>
+        void CopyIterationAndResetCreatedOn(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
     }
 }
 

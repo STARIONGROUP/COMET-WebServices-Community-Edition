@@ -214,6 +214,7 @@ namespace CometServer.Services.Operations
         {
             // copy data of all concrete tables
             var modelSetupKvp = this.originalToCopyMap.SingleOrDefault(kvp => kvp.Key is EngineeringModelSetup);
+
             if (modelSetupKvp.Key == null)
             {
                 throw new InvalidOperationException("The engineering model setup to copy could not be found.");
@@ -233,7 +234,7 @@ namespace CometServer.Services.Operations
             this.Logger.LogDebug("Copy EngineeringModel data from {sourcePartition} to {targetPartition}", sourcePartition, targetPartition);
             this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
             this.Logger.LogDebug("Copy Iteration data from {sourceIterationPartition} to {targetIterationPartition}", sourceIterationPartition, targetIterationPartition);
-            this.IterationService.CopyIteration(transaction, sourceIterationPartition, targetIterationPartition);
+            this.IterationService.CopyIterationAndResetCreatedOn(transaction, sourceIterationPartition, targetIterationPartition);
 
             // wipe the organizational participations
             this.IterationService.DeleteAllrganizationalParticipantThings(transaction, targetIterationPartition);
@@ -246,6 +247,7 @@ namespace CometServer.Services.Operations
 
             // update iid for engineering-model and iteration(s)
             var newEngineeringModel = this.EngineeringModelService.GetShallow(transaction, targetPartition, null, securityContext).OfType<EngineeringModel>().SingleOrDefault();
+
             if (newEngineeringModel == null)
             {
                 throw new InvalidOperationException("No EngineeringModel was found.");
