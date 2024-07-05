@@ -24,7 +24,7 @@ services:
       - comet-db-logs:/logs
   
   comet_webservices:
-    image: stariongroup/comet-webservices-community-edition:8.0.0-rc32
+    image: stariongroup/comet-webservices-community-edition:8.0.0-rc33
     container_name: comet-webservices
     shm_size: 512m
     restart: always
