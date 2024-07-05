@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BaseDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2024 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -194,6 +194,11 @@ namespace CDP4Orm.Dao
         public virtual bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             thing.ModifiedOn = this.GetTransactionDateTime(transaction);
+
+            if (thing is ITimeStampedThing timeStampedThing)
+            {
+                timeStampedThing.CreatedOn = thing.ModifiedOn;
+            }
 
             isHandled = false;
             return true;

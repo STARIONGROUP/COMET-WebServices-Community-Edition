@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IIterationDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2024 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -49,20 +49,6 @@ namespace CDP4Orm.Dao
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
         void SetIterationValidityEnd(NpgsqlTransaction transaction, string partition);
-
-        /// <summary>
-        /// Copy the tables from a source to an Iteration partition
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction
-        /// </param>
-        /// <param name="sourcePartition">
-        /// The source iteration partition
-        /// </param>
-        /// <param name="targetPartition">
-        /// The target iteration partition
-        /// </param>
-        void CopyIteration(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
 
         /// <summary>
         /// Copy the tables from a source to an Iteration partition

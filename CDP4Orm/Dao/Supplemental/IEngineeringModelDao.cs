@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IEngineeringModelDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2024 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -65,20 +65,6 @@ namespace CDP4Orm.Dao
         /// The start number.
         /// </param>
         void ResetIterationNumberSequenceStartNumber(NpgsqlTransaction transaction, string partition, int iterationStartNumber);
-
-        /// <summary>
-        /// Copy the tables from a source to a target Engineering-Model partition
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction
-        /// </param>
-        /// <param name="sourcePartition">
-        /// The source engineering-model
-        /// </param>
-        /// <param name="targetPartition">
-        /// The target Engineering-Model
-        /// </param>
-        void CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
 
         /// <summary>
         /// Modify the identifier of all records in a partition

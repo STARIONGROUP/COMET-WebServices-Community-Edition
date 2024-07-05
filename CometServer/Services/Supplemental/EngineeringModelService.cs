@@ -49,7 +49,7 @@ namespace CometServer.Services
         /// </param>
         public void CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
         {
-            this.EngineeringModelDao.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
+            this.EngineeringModelDao.CopyEngineeringModelAndResetCreatedOn(transaction, sourcePartition, targetPartition);
         }
 
         /// <summary>

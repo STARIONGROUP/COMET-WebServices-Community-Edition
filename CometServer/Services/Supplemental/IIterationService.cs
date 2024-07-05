@@ -50,6 +50,20 @@ namespace CometServer.Services
         void CopyIteration(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
 
         /// <summary>
+        /// Copy the tables from a source to an Iteration partition and reset ITimeStampedThing.CreatedOn
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction
+        /// </param>
+        /// <param name="sourcePartition">
+        /// The source iteration partition
+        /// </param>
+        /// <param name="targetPartition">
+        /// The target iteration partition
+        /// </param>
+        void CopyIterationAndResetCreatedOn(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
+
+        /// <summary>
         /// Delete all organizational participations from element definitions
         /// </summary>
         /// <param name="transaction">
