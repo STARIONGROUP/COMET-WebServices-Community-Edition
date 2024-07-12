@@ -90,12 +90,6 @@ namespace CometServer.Services
         /// </remarks>
         public void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
         {
-            //am I owner of the file?
-            if (!this.PermissionService.IsOwner(transaction as NpgsqlTransaction, thing))
-            {
-                throw new SecurityException($"The person {this.CredentialsService.Credentials.Person.UserName} does not have an appropriate permission for {thing.GetType().Name}.");
-            }
-
             if (!partition.Contains("EngineeringModel"))
             {
                 throw new Cdp4ModelValidationException("Wrong partition was resolved for the CommonFileStore");
