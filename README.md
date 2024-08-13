@@ -30,19 +30,19 @@ Development | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-
 
 ## SonarQube Status:
 
-[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=RHEAGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
 ## COMET-SDK
 
@@ -64,4 +64,4 @@ The [RHEA Group](https://www.stariongroup.eu) also provides the [COMET Web Servi
 
 ## Contributions
 
-Contributions to the code-base are welcome. However, before we can accept your contributions we ask any contributor to sign the Contributor License Agreement (CLA) and send this digitaly signed to s.gerene@rheagroup.com. You can find the CLA's in the CLA folder.
+Contributions to the code-base are welcome. However, before we can accept your contributions we ask any contributor to sign the Contributor License Agreement (CLA) and send this digitaly signed to s.gerene@stariongroup.eu. You can find the CLA's in the CLA folder.
