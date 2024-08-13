@@ -133,11 +133,11 @@ namespace CDP4Orm.Tests
             var hstore = valueArray.ToHstoreString();
             var result = hstore.FromHstoreToValueArray<string>();
 
-            Assert.AreEqual(valueArray, result, "ValueArray creation failed for string \"{0}\"", input);
-            
+            Assert.That(result, Is.EqualTo(valueArray), $"ValueArray creation failed for string \"{input}\"");
+
             var resultjson = result.ToHstoreString();
 
-            Assert.AreEqual(hstore, resultjson, "Hstore creation failed for string \"{0}\"", input);
+            Assert.That(resultjson, Is.EqualTo(hstore), $"Hstore creation failed for string \"{input}\"");
         }
 
         private const string JsonString = @"{""widget"": {
