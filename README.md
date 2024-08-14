@@ -32,17 +32,7 @@ Development | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-
 
 [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-white.svg)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
-
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
-
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
-
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
-
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
-
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition) [![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition) [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=bugs)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition) [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition) [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=STARIONGROUP_CDP4-COMET-WebServices-Community-Edition)
 
 ## COMET-SDK
 
