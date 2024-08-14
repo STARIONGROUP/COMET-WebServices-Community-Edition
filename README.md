@@ -23,10 +23,15 @@ Branch | Build Status
 Master | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=master)
 Development | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/actions/workflows/CodeQuality.yml/badge.svg?branch=development)
 
-## Statistics
+## GitHub Statistics
 
-  - Downloads: ![GitHub All Releases](https://img.shields.io/github/downloads/STARIONGROUP/COMET-WebServices-Community-Edition/total.svg)
-  - Issues: ![GitHub issues](https://img.shields.io/github/issues/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+ ![GitHub Downloads](https://img.shields.io/github/downloads/STARIONGROUP/COMET-WebServices-Community-Edition/total.svg)
+ ![GitHub issues](https://img.shields.io/github/issues/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub issues](https://img.shields.io/github/issues-pr/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub Commit Activity](https://img.shields.io/github/commit-activity/t/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub Contrinutors](https://img.shields.io/github/contributors/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub release dates](https://img.shields.io/github/release-date/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub license](https://img.shields.io/github/release/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 
 ## SonarQube Status:
 
