@@ -31,7 +31,7 @@ Development | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-
 ![GitHub Commit Activity](https://img.shields.io/github/commit-activity/t/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 ![GitHub Contrinutors](https://img.shields.io/github/contributors/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 ![GitHub release dates](https://img.shields.io/github/release-date/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
-![GitHub license](https://img.shields.io/github/release/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub release](https://img.shields.io/github/release/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 
 ## SonarQube Status:
 
