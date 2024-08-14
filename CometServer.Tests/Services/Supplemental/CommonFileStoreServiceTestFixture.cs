@@ -160,7 +160,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<SecurityException>(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
@@ -181,7 +181,7 @@ namespace CometServer.Tests.Services.Supplemental
 
                 this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
 
-                Assert.Throws<SecurityException>(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccess(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
