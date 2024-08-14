@@ -193,11 +193,14 @@ namespace CDP4Orm.Dao
         /// </returns>
         public virtual bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
-            thing.ModifiedOn = this.GetTransactionDateTime(transaction);
-
-            if (thing is ITimeStampedThing timeStampedThing)
+            if (thing.ModifiedOn == default)
             {
-                timeStampedThing.CreatedOn = thing.ModifiedOn;
+                thing.ModifiedOn = this.GetTransactionDateTime(transaction);
+            }
+
+            if (thing is ITimeStampedThing timeStampedThing && timeStampedThing.CreatedOn == default)
+            {
+                timeStampedThing.CreatedOn = this.GetTransactionDateTime(transaction);
             }
 
             isHandled = false;
