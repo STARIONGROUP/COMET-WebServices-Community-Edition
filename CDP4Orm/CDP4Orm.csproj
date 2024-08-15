@@ -85,6 +85,10 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
   </ItemGroup>
 
+    <ItemGroup Label="override transitive vulnerable dependency">
+        <PackageReference Include="System.Private.Uri" Version="4.3.2" />
+    </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
   </ItemGroup>
