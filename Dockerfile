@@ -1,17 +1,24 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+
+# Install PowerShell as a .NET Global Tool
+RUN dotnet tool install --global PowerShell
+
+# Ensure that the global tools are in the PATH
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Create a symbolic link for 'powershell' to point to 'pwsh'
+RUN ln -s /root/.dotnet/tools/pwsh /usr/bin/powershell
+
 WORKDIR /app
 COPY CDP4Authentication CDP4Authentication
 COPY CDP4DatabaseAuthentication CDP4DatabaseAuthentication
 COPY CDP4WspDatabaseAuthentication CDP4WspDatabaseAuthentication
 COPY CDP4Orm CDP4Orm
-COPY VersionFileCreator VersionFileCreator
 COPY CometServer CometServer
 
 RUN dotnet build CDP4DatabaseAuthentication -c Release
 RUN dotnet build CDP4WspDatabaseAuthentication -c Release
 RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish
-
-COPY CometServer/bin/Release/linux-x64/VERSION /app/CometServer/bin/Release/publish/VERSION
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0.7-alpine3.20
 WORKDIR /app
