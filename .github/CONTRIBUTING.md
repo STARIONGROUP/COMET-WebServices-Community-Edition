@@ -44,7 +44,7 @@ When you're ready to go you should confirm that you are up to date and rebased w
 
 1. `git push origin myBranch`
 1. Send a descriptive [Pull Request](https://help.github.com/articles/creating-a-pull-request/) on GitHub - making sure you have selected the correct branch in the GitHub UI!
-1. Wait for @samatrhea to merge your changes in.
+1. Wait for @samatstarion to merge your changes in.
 
 And remember; **A pull-request with tests is a pull-request that's likely to be pulled in.** :grin: Bonus points if you document your feature in our [wiki](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki) once it has been pulled in
 

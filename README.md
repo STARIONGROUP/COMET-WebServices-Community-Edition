@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The CDP4-COMET Webservices is the RHEA Group **Concurrent Design** REST API based on ECSS-E-TM-10-25. COMET is the RHEA Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
+The CDP4-COMET Webservices is the Starion Group **Concurrent Design** REST API based on ECSS-E-TM-10-25. COMET is the Starion Group Concurrent Design Solution that allows a team of engineers to perform Concurrent Design. COMET is an implementation of ECSS-E-TM-10-25A Annex A and C. ECSS-E-TM-10-25A Annex A is the so-called master model that is expressed in UML. ECSS-E-TM-10-25A Annex C describes the REST API. 
 
 Read the [Wiki](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
 
@@ -65,7 +65,7 @@ The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctne
 
 The COMET Webservices Community Edition are provided to the community under the GNU Affero General Public License. The COMET Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
 
-The [RHEA Group](https://www.stariongroup.eu) also provides the [COMET Web Services Enterprise Edition](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/COMET-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.stariongroup.eu/contact) us for more details.
+The [Starion Group](https://www.stariongroup.eu) also provides the [COMET Web Services Enterprise Edition](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/COMET-Web-Services-Enterprise-Edition) which comes with commercial support and more features. [Contact](https://www.stariongroup.eu/contact) us for more details.
 
 ## Contributions
 

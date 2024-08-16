@@ -243,13 +243,13 @@
 	<s:Boolean x:Key="/Default/CodeStyle/EditorConfig/EnableStyleCopSupport/@EntryValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/CodeStyle/EditorConfig/ShowEditorConfigStatusBarIndicator/@EntryValue">True</s:Boolean>
 	<s:String x:Key="/Default/CodeStyle/FileHeader/FileHeaderText/@EntryValue">--------------------------------------------------------------------------------------------------------------------&#xD;
-&lt;copyright file="${File.FileName}" company="RHEA System S.A."&gt;&#xD;
-   Copyright (c) 2015-${CurrentDate.Year} RHEA System S.A.&#xD;
+&lt;copyright file="${File.FileName}" company="Starion Group S.A."&gt;&#xD;
+   Copyright (c) 2015-${CurrentDate.Year} Starion Group S.A.&#xD;
 &#xD;
    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate&#xD;
 &#xD;
    This file is part of CDP4-COMET Webservices Community Edition. &#xD;
-   The CDP4-COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.&#xD;
+   The CDP4-COMET Web Services Community Edition is the Starion implementation of ECSS-E-TM-10-25 Annex A and Annex C.&#xD;
    This is an auto-generated class. Any manual changes to this file will be overwritten!&#xD;
 &#xD;
    The CDP4-COMET Web Services Community Edition is free software; you can redistribute it and/or&#xD;

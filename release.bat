@@ -37,11 +37,11 @@ ECHO.
 
 REM cleanup previous if exists
 docker rmi comet-webservices-community-edition:%version%
-docker rmi rheagroup/comet-webservices-community-edition:%version%
+docker rmi stariongroup/comet-webservices-community-edition:%version%
 
 REM remove local latest if exists
 docker rmi  comet-webservices-community-edition:latest
-docker rmi  rheagroup/comet-webservices-community-edition:latest
+docker rmi  stariongroup/comet-webservices-community-edition:latest
 
 ECHO.
 ECHO Building images...
@@ -49,8 +49,8 @@ ECHO.
 
 REM build and tag
 docker build -t comet-webservices-community-edition:%version% -t comet-webservices-community-edition:latest .
-docker tag comet-webservices-community-edition:%version% rheagroup/comet-webservices-community-edition:%version%
-docker tag comet-webservices-community-edition:latest rheagroup/comet-webservices-community-edition:latest
+docker tag comet-webservices-community-edition:%version% stariongroup/comet-webservices-community-edition:%version%
+docker tag comet-webservices-community-edition:latest stariongroup/comet-webservices-community-edition:latest
 
 IF %dry% equ true GOTO End
 
@@ -59,8 +59,8 @@ ECHO Pushing...
 ECHO.
 
 REM push
-docker push rheagroup/comet-webservices-community-edition:%version%
-docker push rheagroup/comet-webservices-community-edition:latest
+docker push stariongroup/comet-webservices-community-edition:%version%
+docker push stariongroup/comet-webservices-community-edition:latest
 
 :End
 
