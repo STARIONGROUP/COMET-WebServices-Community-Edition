@@ -9,7 +9,9 @@ COPY CometServer CometServer
 
 RUN dotnet build CDP4DatabaseAuthentication -c Release
 RUN dotnet build CDP4WspDatabaseAuthentication -c Release
-RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish 
+RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish
+
+COPY CometServer/bin/Release/linux-x64/VERSION /app/CometServer/bin/Release/publish/VERSION
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0.7-alpine3.20
 WORKDIR /app
