@@ -11,8 +11,6 @@ RUN dotnet build CDP4DatabaseAuthentication -c Release
 RUN dotnet build CDP4WspDatabaseAuthentication -c Release
 RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish
 
-COPY CometServer/bin/Release/linux-x64/VERSION /app/CometServer/bin/Release/publish/VERSION
-
 FROM mcr.microsoft.com/dotnet/aspnet:8.0.7-alpine3.20
 WORKDIR /app
 RUN mkdir /app/logs
@@ -23,6 +21,7 @@ RUN mkdir /app/upload
 RUN mkdir /app/Authentication/
 RUN mkdir /app/Authentication/CDP4Database
 RUN mkdir /app/Authentication/CDP4WspDatabase
+RUN mkdir /app/VersionFileCreator
 
 COPY --from=build-env /app/CometServer/bin/Release/publish .
 RUN rm /app/appsettings.Development.json
@@ -35,6 +34,10 @@ COPY --from=build-env /app/CDP4DatabaseAuthentication/bin/Release/config.json /a
 # COPY CDP4WspDatabaseAuthentication plugin
 COPY --from=build-env /app/CDP4WspDatabaseAuthentication/bin/Release/CDP4WspDatabaseAuthentication.dll /app/Authentication/CDP4WspDatabase/CDP4WspDatabaseAuthentication.dll
 COPY --from=build-env /app/CDP4WspDatabaseAuthentication/bin/Release/config.json /app/Authentication/CDP4WspDatabase/config.json
+
+COPY --from=build-env /app/VersionFileCreator/bin/Release /app/VersionFileCreator
+RUN dotnet /app/VersionFileCreator/VersionFileCreator.dll path:/app
+RUN rm -r /app/VersionFileCreator
 
 # set to use the non-root USER here
 RUN chown -R $APP_UID /app
