@@ -68,7 +68,7 @@
     </None>
   </ItemGroup>
   <PropertyGroup>
-    <VersionFileCreatorDll>../VersionFileCreator/bin/$(Configuration)/$(TargetFramework)/VersionFileCreator.dll</VersionFileCreatorDll>
+    <VersionFileCreatorDll>../VersionFileCreator/bin/$(Configuration)/VersionFileCreator.dll</VersionFileCreatorDll>
     <IsVersionFileCreatorCompiled>False</IsVersionFileCreatorCompiled>
     <IsVersionFileCreatorCompiled Condition="Exists('$(VersionFileCreatorDll)')">True</IsVersionFileCreatorCompiled>
   </PropertyGroup>
