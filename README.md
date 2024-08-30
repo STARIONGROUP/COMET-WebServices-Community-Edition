@@ -29,8 +29,8 @@ Development | ![Build Status](https://github.com/STARIONGROUP/COMET-WebServices-
 
 ## GitHub Statistics
 
- ![GitHub Downloads](https://img.shields.io/github/downloads/STARIONGROUP/COMET-WebServices-Community-Edition/total.svg)
- ![GitHub issues](https://img.shields.io/github/issues/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
+![GitHub Downloads](https://img.shields.io/github/downloads/STARIONGROUP/COMET-WebServices-Community-Edition/total.svg)
+![GitHub issues](https://img.shields.io/github/issues/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 ![GitHub issues](https://img.shields.io/github/issues-pr/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 ![GitHub Commit Activity](https://img.shields.io/github/commit-activity/t/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
 ![GitHub Contrinutors](https://img.shields.io/github/contributors/STARIONGROUP/COMET-WebServices-Community-Edition.svg)
