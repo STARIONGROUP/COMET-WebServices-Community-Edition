@@ -6,6 +6,10 @@ The CDP4-COMET Webservices is the Starion Group **Concurrent Design** REST API b
 
 Read the [Wiki](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
 
+Please find a description of the REST API [[here|ICD]].
+
+<img src="https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/raw/development/architecture.png">
+
 ## Concurrent Design
 
 The Concurrent Design method is an approach to design activities in which all design disciplines and stakeholders are brought together to create an integrated design in a collaborative way of working.
