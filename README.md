@@ -1,4 +1,4 @@
-<img src="https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/raw/development/COMET-Community-Edition.jpg">
+![CDP4-COMET-Logo](https://raw.githubusercontent.com/STARIONGROUP/COMET-WebServices-Community-Edition/master/COMET-Community-Edition.jpg)
 
 ## Introduction
 
@@ -6,9 +6,9 @@ The CDP4-COMET Webservices is the Starion Group **Concurrent Design** REST API b
 
 Read the [Wiki](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki) for detailed information on installation, architecture and much more.
 
-Please find a description of the REST API [[here|ICD]].
+Please find a description of the REST API [here](https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/wiki/ICD).
 
-<img src="https://github.com/STARIONGROUP/COMET-WebServices-Community-Edition/raw/development/architecture.png">
+![CDP4-COMET-Architecture](https://raw.githubusercontent.com/STARIONGROUP/COMET-WebServices-Community-Edition/master/architecture.png)
 
 ## Concurrent Design
 
