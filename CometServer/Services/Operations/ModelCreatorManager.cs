@@ -132,8 +132,10 @@ namespace CometServer.Services.Operations
 
             // retrieve all the site-directory data to copy
             this.RequestUtils.QueryParameters.IncludeReferenceData = true; // set to true only to retrieve all data to copy. set back to false once query is over
+            this.RequestUtils.QueryParameters.ExtentDeep = true; // set to true only to retrieve all data to copy. set back to false once query is over
             engineeringModelSetupThings.AddRange(this.EngineeringModelSetupService.GetDeep(transaction, SITE_DIRECTORY_PARTITION, new[] { source }, securityContext));
             this.RequestUtils.QueryParameters.IncludeReferenceData = false;
+            this.RequestUtils.QueryParameters.ExtentDeep = false;
 
             this.newModelIid = setupToCreate.EngineeringModelIid;
 
