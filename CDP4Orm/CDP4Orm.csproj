@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Company>Starion Group S.A.</Company>
     <Title>CDP4Orm-CE</Title>
-    <Version>8.0.1</Version>
+    <Version>8.0.2</Version>
     <Description>CDP4-COMET Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © Starion Group S.A.</Copyright>
     <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>
