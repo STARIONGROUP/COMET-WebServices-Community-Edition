@@ -19,8 +19,8 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Carter" Version="8.2.1" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="27.2.3" />
-    <PackageReference Include="CDP4ServicesMessaging-CE" Version="27.2.3" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="27.3.4" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" Version="27.3.4" />
     <PackageReference Include="FluentValidation" Version="11.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="8.0.8" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.0" />
@@ -38,7 +38,7 @@
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
-    <PackageReference Include="MailKit" Version="4.7.1.1" />
+    <PackageReference Include="MailKit" Version="4.8.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
