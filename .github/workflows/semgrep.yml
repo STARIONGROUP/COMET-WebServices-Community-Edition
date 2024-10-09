@@ -1,4 +1,4 @@
-name: Semgrep Full Scan
+name: Semgrep OWASP Top Ten
 
 on:
     push:
@@ -15,7 +15,7 @@ jobs:
   semgrep-full:
       runs-on: ubuntu-latest
       container:
-        image: returntocorp/semgrep
+        image: semgrep/semgrep
 
       steps:
 
