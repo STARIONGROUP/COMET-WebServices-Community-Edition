@@ -1,0 +1,43 @@
+name: Semgrep Full Scan
+
+on:
+    push:
+      branches:
+        - '**'
+      tags-ignore:
+        - '*'
+    pull_request:
+    schedule:
+      - cron: '42 2 * * 3'
+
+jobs:
+
+  semgrep-full:
+      runs-on: ubuntu-latest
+      container:
+        image: returntocorp/semgrep
+
+      steps:
+
+        - name: clone application source code
+          uses: actions/checkout@v4
+          with:
+            # We must fetch at least the immediate parents so that if this is
+            # a pull request then we can checkout the head.
+            fetch-depth: 2
+
+        - name: full scan
+          run: |
+              semgrep scan --config "https://semgrep.dev/p/owasp-top-ten" --sarif --output=semgrep-sast.sarif --metrics=off
+
+        - name: save report as pipeline artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: semgrep-sast.sarif
+            path: semgrep-sast.sarif
+
+        - name: publish code scanning alerts
+          uses: github/codeql-action/upload-sarif@v3
+          with:
+            sarif_file: semgrep-sast.sarif
+            category: semgrep
