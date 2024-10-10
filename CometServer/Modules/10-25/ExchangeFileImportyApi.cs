@@ -60,6 +60,7 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
+    using System.Text.RegularExpressions;
     
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
@@ -166,7 +167,7 @@ namespace CometServer.Modules
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", Regex.Replace((httpRequest.QueryNameMethodPath()).ToString(), "\n|\r", "-"), requestToken);
 
             if (!this.appConfigService.AppConfig.Backtier.IsDbRestoreEnabled)
             {
@@ -199,7 +200,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", Regex.Replace((httpRequest.QueryNameMethodPath()).ToString(), "\n|\r", "-"), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
