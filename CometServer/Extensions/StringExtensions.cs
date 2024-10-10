@@ -199,5 +199,20 @@ namespace CometServer.Extensions
 
             return $"{input.First().ToString(CultureInfo.InvariantCulture).ToUpper()}{input.Substring(1)}";
         }
+
+        /// <summary>
+        /// Sanitizes the string to prevent malicious injection such as log injection
+        /// The method removes newline, and returns
+        /// </summary>
+        /// <param name="input">
+        /// the string to sanitize
+        /// </param>
+        /// <returns>
+        /// the sanitized string
+        /// </returns>
+        public static string Sanitize(this string input)
+        {
+            return input.Replace(Environment.NewLine, "").Replace("\n", "").Replace("\r", "");
+        }
     }
 }

@@ -638,12 +638,12 @@ namespace CometServer.Modules
 
             var reqsw = Stopwatch.StartNew();
             
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName, requestToken);
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName.Sanitize(), requestToken);
 
             try
             {
                 var dbsw = Stopwatch.StartNew();
-                this.logger.LogDebug("{request}:{requestToken} - Database operations started", postRequestData.MethodPathName, requestToken);
+                this.logger.LogDebug("{request}:{requestToken} - Database operations started", postRequestData.MethodPathName.Sanitize(), requestToken);
 
                 transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
 
@@ -667,7 +667,7 @@ namespace CometServer.Modules
 
                 this.CometTaskService.AddOrUpdateSuccessfulTask(cometTask, transactionRevision);
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName, requestToken, dbsw.ElapsedMilliseconds);
+                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
 
                 // Sends changed things to the AMQP message bus
                 await this.PrepareAndQueueThingsMessage(postRequestData.OperationData, changedThings, actor, jsonSerializer);
@@ -703,7 +703,7 @@ namespace CometServer.Modules
                 var revisionResponse = revisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
                 await transaction.CommitAsync();
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName, requestToken, dbsw.ElapsedMilliseconds);
+                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
 
                 switch (postRequestData.ContentType)
                 {
@@ -722,7 +722,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -736,7 +736,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"FORBIDDEN - {ex.Message}");
 
@@ -750,7 +750,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -764,7 +764,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - InvalidData failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{request}:{requestToken} - InvalidData failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -777,7 +777,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"UNAUTHORIZED - {ex.Message}");
 
@@ -791,7 +791,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"UNAUTHORIZED - {ex.Message}");
 
@@ -806,7 +806,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{request}:{requestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -821,7 +821,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogError(ex, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"INTERNAL SERVER ERROR - {ex.Message}");
 
@@ -840,7 +840,7 @@ namespace CometServer.Modules
                     await connection.DisposeAsync();
                 }
 
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", postRequestData.MethodPathName, requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
