@@ -31,6 +31,7 @@ namespace CometServer.Services.DataStore
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
+    using NpgsqlTypes;
 
     /// <summary>
     /// The data store controller.
@@ -144,7 +145,8 @@ namespace CometServer.Services.DataStore
 
                 cmd.Connection = connection;
 
-                cmd.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{dataStoreName}' AND pid <> pg_backend_pid();";
+                cmd.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = :dataStoreName AND pid <> pg_backend_pid();";
+                cmd.Parameters.Add("dataStoreName", NpgsqlDbType.Varchar).Value = dataStoreName;
 
                 cmd.ExecuteNonQuery();
             }
