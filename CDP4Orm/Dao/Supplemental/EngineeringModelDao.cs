@@ -55,6 +55,11 @@ namespace CDP4Orm.Dao
         /// </exception>
         public int GetNextIterationNumber(NpgsqlTransaction transaction, string partition)
         {
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             var sql = $"SELECT nextval('\"{partition}\".\"IterationNumberSequence\"');";
@@ -87,6 +92,11 @@ namespace CDP4Orm.Dao
         /// </param>
         public void ResetIterationNumberSequenceStartNumber(NpgsqlTransaction transaction, string partition, int iterationStartNumber)
         {
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             var sql = $"ALTER SEQUENCE \"{partition}\".\"IterationNumberSequence\" RESTART WITH {iterationStartNumber};";
@@ -105,6 +115,11 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The egineering-model partition to modify</param>
         public void ModifyIdentifier(NpgsqlTransaction transaction, string partition)
         {
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             var valueTypeDictionaryContents = new Dictionary<string, string>
@@ -132,6 +147,11 @@ namespace CDP4Orm.Dao
         /// <param name="oldIid">The old identifier</param>
         public void ModifyIdentifier(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
         {
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             var sql = $"UPDATE \"{partition}\".\"Thing\" SET \"Iid\" = :newIid WHERE \"Iid\" = :oldIid;";

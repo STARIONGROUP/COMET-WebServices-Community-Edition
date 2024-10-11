@@ -86,12 +86,16 @@ namespace CometServer.Extensions
         /// </returns>
         public static string QueryNameMethodPath(this HttpRequest httpRequest)
         {
+            var userInfo = "";
+
             if (httpRequest.HttpContext.User.Identity == null || string.IsNullOrEmpty(httpRequest.HttpContext.User.Identity.Name))
             {
-                return $"ANONYMOUS:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
+                userInfo = $"ANONYMOUS:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
             }
 
-            return $"{httpRequest.HttpContext.User.Identity.Name}:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
+            userInfo = $"{httpRequest.HttpContext.User.Identity.Name}:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
+
+            return userInfo.Sanitize();
         }
     }
 }

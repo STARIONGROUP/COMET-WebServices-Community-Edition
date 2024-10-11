@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Text;
+    using System.Text.RegularExpressions;
 
     using CDP4Common.DTO;
 
@@ -85,6 +86,11 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void DeleteAllIterationThings(NpgsqlTransaction transaction, string partition)
         {
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             var sqlBuilder = new StringBuilder();
@@ -104,6 +110,11 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string partition)
         {
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             var sqlBuilder = new StringBuilder();
@@ -159,6 +170,23 @@ namespace CDP4Orm.Dao
         /// </param>
         private static void UpdateContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing thing)
         {
+            if (string.IsNullOrWhiteSpace(partition) || string.IsNullOrWhiteSpace(containedType.Name))
+            {
+                throw new ArgumentException("Partition or contained type name cannot be null or whitespace.");
+            }
+
+            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
+            var containedTypePattern = @"^([A-Za-z]+(\.[A-Za-z]+)*)$";
+
+            if (!Regex.IsMatch(containedType.Name, containedTypePattern))
+            {
+                throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
+            }
+
             using var command = new NpgsqlCommand();
 
             command.CommandText = $"UPDATE \"{partition}\".\"{containedType.Name}\" SET \"Container\" = :container;";
