@@ -31,8 +31,6 @@ namespace CometServer.Tests.Health
 
     using Microsoft.Extensions.Caching.Memory;
 
-    using Moq;
-
     using NUnit.Framework;
 
     [TestFixture]

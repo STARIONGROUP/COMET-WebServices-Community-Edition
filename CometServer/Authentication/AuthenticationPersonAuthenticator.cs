@@ -69,10 +69,10 @@ namespace CometServer.Authentication
         /// Authenticates the <see cref="AuthenticationPerson"/> from the E-TM-10-25 datasource
         /// </summary>
         /// <param name="username">
-        /// the username of the <see cref="Person"/> that is to be authenticated
+        /// the username of the <see cref="AuthenticationPerson"/> that is to be authenticated
         /// </param>
         /// <param name="password"></param>
-        /// the password of the <see cref="Person"/> that is to be authenticated
+        /// the password of the <see cref="AuthenticationPerson"/> that is to be authenticated
         /// <returns>
         /// an instance of <see cref="AuthenticationPerson"/> or null if not found
         /// </returns>

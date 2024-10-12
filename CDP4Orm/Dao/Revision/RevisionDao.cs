@@ -484,7 +484,7 @@ namespace CDP4Orm.Dao.Revision
         {
             var result = new List<RevisionInfo>();
 
-            var sqlBuilder = new System.Text.StringBuilder();
+            var sqlBuilder = new StringBuilder();
 
             // get all Thing 'concepts' whose revisions are as per the supplied revision comparator
             sqlBuilder.Append(
@@ -557,7 +557,7 @@ namespace CDP4Orm.Dao.Revision
         {
             var result = new List<RevisionInfo>();
 
-            var sqlBuilder = new System.Text.StringBuilder();
+            var sqlBuilder = new StringBuilder();
 
             var connectedPartition = partition;
             var subPartition = partition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);

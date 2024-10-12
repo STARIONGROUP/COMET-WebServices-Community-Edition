@@ -67,7 +67,7 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="isStartup">Asserts whether the <see cref="IMigrationService"/> is called on startup</param>
         public void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup)
         {
-            var migrations = GetMigrations(isStartup).Where(x => partition.StartsWith(x.MigrationMetaData.MigrationScriptApplicationKind.ToString()) || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All);
+            var migrations = this.GetMigrations(isStartup).Where(x => partition.StartsWith(x.MigrationMetaData.MigrationScriptApplicationKind.ToString()) || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All);
 
             foreach (var migrationBase in migrations.OrderBy(x => x.MigrationMetaData.Version))
             {

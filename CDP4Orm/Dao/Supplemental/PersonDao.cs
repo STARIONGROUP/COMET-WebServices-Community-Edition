@@ -26,8 +26,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-
+    
     using CDP4Authentication;
 
     using CDP4Common.DTO;
@@ -140,26 +139,6 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Gets the given name of a person.
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction.
-        /// </param>
-        /// <param name="personIid">
-        /// The person id.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        public string GivenName(NpgsqlTransaction transaction, Guid personIid)
-        {
-            var partition = "SiteDirectory";
-            var personObject = this.Read(transaction, partition).SingleOrDefault(person => person.Iid == personIid);
-
-            return personObject != null ? personObject.GivenName : null;
-        }
-
-        /// <summary>
         /// Extracts the salt property from the hstore in the <see cref="Person"/> beiung updated and adds it to the the valueType dictionary
         /// </summary>
         /// <param name="transaction">
@@ -251,12 +230,12 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction">The database transaction.</param>
         /// <param name="partition">The database schema</param>
-        /// <param name="person">The person <see cref="CDP4Common.DTO.Person" /></param>
+        /// <param name="person">The person <see cref="Person" /></param>
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
         /// <returns>
         /// The true if operation finished with success
         /// </returns>
-        public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials)
+        public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Person person, MigrationPasswordCredentials credentials)
         {
             var operationSuccess = true;
 

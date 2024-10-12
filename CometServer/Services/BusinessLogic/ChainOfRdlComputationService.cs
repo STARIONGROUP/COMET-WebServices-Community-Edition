@@ -134,7 +134,6 @@ namespace CometServer.Services
                 if (modelReferenceDataLibarary == null)
                 { 
                     this.Logger.LogWarning("The ModelReferenceDataLibarary { modelReferenceDataLibararyIid } could not be found, there is a fault in the data, the EngineeringModelSetup {engineeringModelSetupIid} is ignored", modelReferenceDataLibararyIid, engineeringModelSetup.Iid);
-                    continue;
                 }
                 else
                 {

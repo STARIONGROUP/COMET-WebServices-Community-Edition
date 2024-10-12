@@ -40,7 +40,7 @@ namespace CometServer.Services.Operations.SideEffects
     public sealed class PossibleFiniteStateListSideEffect : OperationSideEffect<PossibleFiniteStateList>
     {
         /// <summary>
-        /// The List of <see cref="ActualFiniteStateList"/> to update after a <see
+        /// The List of <see cref="ActualFiniteStateList"/> to update
         /// </summary>
         private List<Guid> actualFiniteStateListIdsToUpdate;
 

@@ -79,7 +79,7 @@ namespace CometServer.Services.Operations.SideEffects
                 return;
             }
 
-            if (!this.PermissionService.CanWrite(transaction, originalThing, typeof(Term).Name, partition, "update", securityContext))
+            if (!this.PermissionService.CanWrite(transaction, originalThing, nameof(Term), partition, "update", securityContext))
             {
                 return;
             }

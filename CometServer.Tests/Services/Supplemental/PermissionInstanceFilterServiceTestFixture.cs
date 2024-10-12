@@ -105,8 +105,8 @@ namespace CometServer.Tests.Services.Supplemental
             
             this.personRoles = new List<PersonRole>
                                    {
-                                       new PersonRole
-                                           {
+                                       new()
+                                       {
                                                Iid = Guid.NewGuid(),
                                                RevisionNumber = 1,
                                                PersonPermission =
@@ -123,8 +123,8 @@ namespace CometServer.Tests.Services.Supplemental
                                    };
             this.participantRoles = new List<ParticipantRole>
                                         {
-                                            new ParticipantRole
-                                                {
+                                            new()
+                                            {
                                                     Iid = Guid.NewGuid(),
                                                     RevisionNumber = 1,
                                                     ParticipantPermission =

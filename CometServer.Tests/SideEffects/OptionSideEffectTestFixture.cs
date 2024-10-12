@@ -99,7 +99,7 @@ namespace CometServer.Tests.SideEffects
             this.option2 = new Option(Guid.NewGuid(), 0);
             this.options = new List<Option>();
             this.optionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(options);
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.options);
 
             this.iterationSetup = new IterationSetup
             {

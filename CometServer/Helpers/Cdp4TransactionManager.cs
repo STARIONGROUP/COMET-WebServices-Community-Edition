@@ -192,13 +192,12 @@ namespace CometServer.Helpers
         /// </returns>
         public object GetRawSessionInstant(NpgsqlTransaction transaction)
         {
-            using (var command = new NpgsqlCommand(
-                       "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
-                       transaction.Connection,
-                       transaction))
-            { 
-                return command.ExecuteScalar();
-            }
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
+                transaction.Connection,
+                transaction);
+
+            return command.ExecuteScalar();
         }
 
         /// <summary>
@@ -256,26 +255,6 @@ namespace CometServer.Helpers
         }
 
         /// <summary>
-        /// Get the session timeframe start time.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <returns>
-        /// The <see cref="DateTime"/>.
-        /// </returns>
-        public DateTime GetSessionTimeFrameStart(NpgsqlTransaction transaction)
-        {
-            using (var command = new NpgsqlCommand(
-                string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_session_timeframe_start"),
-                transaction.Connection,
-                transaction))
-            { 
-                return (DateTime)command.ExecuteScalar();
-            }
-        }
-
-        /// <summary>
         /// Get the current transaction time.
         /// </summary>
         /// <param name="transaction">
@@ -286,13 +265,11 @@ namespace CometServer.Helpers
         /// </returns>
         public DateTime GetTransactionTime(NpgsqlTransaction transaction)
         {
-            using (var command = new NpgsqlCommand(
-                        string.Format("SELECT * FROM \"SiteDirectory\".\"{0}\"();", "get_transaction_time"),
-                        transaction.Connection,
-                        transaction))
-            {
-                return (DateTime)command.ExecuteScalar();
-            }
+            using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".get_transaction_time();",
+                transaction.Connection,
+                transaction);
+
+            return (DateTime)command.ExecuteScalar();
         }
 
         /// <summary>
@@ -303,14 +280,11 @@ namespace CometServer.Helpers
         /// </param>
         public void SetDefaultContext(NpgsqlTransaction transaction)
         {
-            var sqlBuilder = new StringBuilder();
-            sqlBuilder.AppendFormat(
-                "UPDATE {0} SET ({1}, {2}) = ('-infinity', 'infinity');", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn);
+            var sql = $"UPDATE {TransactionInfoTable} SET ({PeriodStartColumn}, {PeriodEndColumn}) = ('-infinity', 'infinity');";
             
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                command.ExecuteNonQuery();
-            }
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -326,12 +300,11 @@ namespace CometServer.Helpers
         {
             var sql = $"UPDATE {TransactionInfoTable} SET {TransactionAuditEnabled} = :{TransactionAuditEnabled};";
 
-            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
-            {
-                command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-                command.ExecuteNonQuery();
-            }
+            command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -412,17 +385,16 @@ namespace CometServer.Helpers
             var sqlBuilder = new StringBuilder();
             sqlBuilder.AppendFormat("UPDATE {0} SET ({1}, {2}) =", TransactionInfoTable, PeriodStartColumn, PeriodEndColumn);
             sqlBuilder.Append(" (SELECT \"ValidFrom\", \"ValidTo\"");
-            sqlBuilder.Append($"  FROM (SELECT iteration_log.\"IterationIid\", revision_from.\"Revision\" AS \"FromRevision\", revision_from.\"Instant\" AS \"ValidFrom\", revision_to.\"Revision\" AS \"ToRevision\",");
+            sqlBuilder.Append(" FROM (SELECT iteration_log.\"IterationIid\", revision_from.\"Revision\" AS \"FromRevision\", revision_from.\"Instant\" AS \"ValidFrom\", revision_to.\"Revision\" AS \"ToRevision\",");
             sqlBuilder.Append(" CASE WHEN iteration_log.\"ToRevision\" IS NULL THEN 'infinity' ELSE revision_to.\"Instant\" END AS \"ValidTo\" ");
             sqlBuilder.AppendFormat("FROM \"{0}\".\"IterationRevisionLog\" iteration_log LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_from ON iteration_log.\"FromRevision\" = revision_from.\"Revision\" LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_to ON iteration_log.\"ToRevision\" = revision_to.\"Revision\") IterationLogRevision", partition);
-            sqlBuilder.Append("  WHERE \"IterationIid\" = :iterationIid);");
+            sqlBuilder.Append(" WHERE \"IterationIid\" = :iterationIid);");
 
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
-                command.ExecuteNonQuery();
-            }
+            command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -489,15 +461,14 @@ namespace CometServer.Helpers
             sqlBuilder.AppendFormat("INSERT INTO {0} ({1}, {2})", TransactionInfoTable, UserIdColumn, TransactionTimeColumn);
             sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? $":{UserIdColumn}" : "null");
 
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                if (isCredentialSet)
-                {
-                    command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
-                }
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
-                command.ExecuteNonQuery();
+            if (isCredentialSet)
+            {
+                command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
             }
+
+            command.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -520,10 +491,9 @@ namespace CometServer.Helpers
             sqlBuilder.AppendFormat("{0} boolean NOT NULL DEFAULT 'true'", TransactionAuditEnabled);
             sqlBuilder.Append(") ON COMMIT DROP;");
 
-            using (var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction))
-            {
-                command.ExecuteNonQuery();
-            }
+            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+
+            command.ExecuteNonQuery();
         }
     }
 }

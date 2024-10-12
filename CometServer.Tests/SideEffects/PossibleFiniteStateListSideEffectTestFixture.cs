@@ -43,9 +43,9 @@ namespace CometServer.Tests.SideEffects
     [TestFixture]
     public class PossibleFiniteStateListSideEffectTestFixture
     {
-        private PossibleFiniteStateListSideEffect sideEffect = new PossibleFiniteStateListSideEffect();
+        private PossibleFiniteStateListSideEffect sideEffect = new ();
 
-        private NpgsqlTransaction transaction;
+        private NpgsqlTransaction transaction = null;
 
         private Mock<ISecurityContext> securityContext;
         private Mock<IActualFiniteStateListService> actualFiniteStateListService; 
@@ -107,9 +107,7 @@ namespace CometServer.Tests.SideEffects
         private ParameterSubscriptionValueSet psvs21;
         private ParameterSubscriptionValueSet psvs22;
 
-        private Guid owner = Guid.NewGuid();
-
-        private List<string> initValue = new List<string> { "init" };
+        private List<string> initValue = new() { "init" };
 
         [SetUp]
         public void Setup()

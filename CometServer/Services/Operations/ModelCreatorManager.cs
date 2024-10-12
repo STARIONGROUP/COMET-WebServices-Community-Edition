@@ -32,8 +32,7 @@ namespace CometServer.Services.Operations
     using Authorization;
 
     using CDP4Common.DTO;
-    using CDP4Common.MetaInfo;
-
+    
     using CometServer.Helpers;
 
     using Microsoft.Extensions.Logging;
@@ -104,14 +103,6 @@ namespace CometServer.Services.Operations
         /// Gets or sets the <see cref="IRevisionService"/> (injected)
         /// </summary>
         public IRevisionService RevisionService { get; set; }
-
-        /// <summary>
-        /// Gets the original and their copy
-        /// </summary>
-        public IReadOnlyDictionary<Thing, Thing> OriginalToCopyMap
-        {
-            get { return this.originalToCopyMap; }
-        }
 
         /// <summary>
         /// Gets or sets the transaction manager.
@@ -276,7 +267,7 @@ namespace CometServer.Services.Operations
 
             foreach (var modelThing in modelThings)
             {
-                if (modelThing is EngineeringModel model)
+                if (modelThing is EngineeringModel)
                 {
                     continue;
                 }

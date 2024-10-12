@@ -26,7 +26,6 @@ namespace CometServer.Authorization
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
 
     using CDP4Common.CommonData;

@@ -33,7 +33,6 @@ namespace CometServer.Services.Operations.SideEffects
 
     using CDP4Orm.Dao;
 
-    using CometServer.Exceptions;
     using CometServer.Services.Authorization;
 
     using Npgsql;
@@ -47,12 +46,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// a cache of <see cref="Option"/> dependent <see cref="CDP4Common.DTO.Parameter"/>s that is populated in the context of the current <see cref="OptionSideEffect"/>
         /// </summary>
-        private readonly Dictionary<Guid, Parameter> optionDependentParameterCache = new Dictionary<Guid, Parameter>();
+        private readonly Dictionary<Guid, Parameter> optionDependentParameterCache = new();
 
         /// <summary>
         /// a cache of the <see cref="ParameterValueSet"/> that have been created by the current <see cref="OptionSideEffect"/>
         /// </summary>
-        private readonly List<ParameterValueSetCacheItem> createdParameterValuetSetCacheItems = new List<ParameterValueSetCacheItem>();
+        private readonly List<ParameterValueSetCacheItem> createdParameterValuetSetCacheItems = new();
 
         /// <summary>
         /// a cache of <see cref="CDP4Common.DTO.ActualFiniteStateList"/>s that is filled in the context of the current <see cref="OptionSideEffect"/>
@@ -227,7 +226,7 @@ namespace CometServer.Services.Operations.SideEffects
                 if (engineeringModelSetup == null)
                 {
                     throw new KeyNotFoundException(
-                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(CDP4Common.DTO.EngineeringModelSetup)}");
+                        $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup}) could not be found in any {nameof(EngineeringModelSetup)}");
                 }
 
                 var engineeringModelPartition =
@@ -466,9 +465,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private void CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(NpgsqlTransaction transaction, string partition, Option option, ParameterOverride container, ISecurityContext securityContext)
         {
-            Parameter parameter;
-
-            if (!this.optionDependentParameterCache.TryGetValue(container.Parameter, out parameter))
+            if (!this.optionDependentParameterCache.TryGetValue(container.Parameter, out var parameter))
             {
                 throw new KeyNotFoundException($"The Parameter with iid {container.Parameter} could not be found");
             }

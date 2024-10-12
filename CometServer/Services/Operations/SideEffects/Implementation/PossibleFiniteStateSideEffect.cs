@@ -33,7 +33,6 @@ namespace CometServer.Services.Operations.SideEffects
 
     using Npgsql;
 
-    using Iteration = CDP4Common.DTO.Iteration;
     using PossibleFiniteState = CDP4Common.DTO.PossibleFiniteState;
     using PossibleFiniteStateList = CDP4Common.DTO.PossibleFiniteStateList;
 
@@ -97,7 +96,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (possibleList.PossibleState.Count == 1 &&
                 possibleList.PossibleState.Single().V.ToString() == thing.Iid.ToString())
             {
-                throw new InvalidOperationException(string.Format("It is not allowed to delete the last Possible Finite State {0} from the list. Consider deleting the whole Possible Finite State List {1}", thing.Iid, possibleList.Iid));
+                throw new InvalidOperationException($"It is not allowed to delete the last Possible Finite State {thing.Iid} from the list. Consider deleting the whole Possible Finite State List {possibleList.Iid}");
             }
         }
 

@@ -24,7 +24,6 @@
 
 namespace CometServer.Services.Operations.SideEffects
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -44,7 +43,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// The operation side effect map.
         /// </summary>
-        private readonly Dictionary<string, IOperationSideEffect> operationSideEffectMap = new Dictionary<string, IOperationSideEffect>();
+        private readonly Dictionary<string, IOperationSideEffect> operationSideEffectMap = new();
 
         /// <summary>
         /// Gets or sets the <see cref="IRequestUtils" />.

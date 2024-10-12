@@ -92,54 +92,6 @@ namespace CDP4Orm.Dao
         }
 
         /// <summary>
-        /// Read the data from the database based on <see cref="EngineeringModelSetup.Iid"/>.
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource is stored.
-        /// </param>
-        /// <param name="engineeringModelSetupId">
-        /// The <see cref="EngineeringModelSetup"/> Id.
-        /// </param>
-        /// <param name="instant">
-        /// The instant as a nullable <see cref="DateTime"/>
-        /// </param>
-        /// <returns>
-        /// List of instances of <see cref="CDP4Common.DTO.IterationSetup"/>.
-        /// </returns>
-        public IEnumerable<IterationSetup> ReadByEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid engineeringModelSetupId, DateTime? instant = null)
-        {
-            using var command = new NpgsqlCommand();
-
-            var sqlBuilder = new StringBuilder();
-
-            sqlBuilder.Append($"SELECT * FROM {this.BuildReadQuery(partition, instant)}");
-            sqlBuilder.Append($" WHERE \"Iid\"::text = ANY(SELECT unnest(\"IterationSetup\") FROM ({this.EngineeringModelSetupDao.BuildReadQuery(partition, instant)}) EngineeringModelSetup WHERE \"Iid\"::text = :engineeringModelSetupId)");
-
-            command.Parameters.Add("engineeringModelSetupId", NpgsqlDbType.Text).Value = engineeringModelSetupId.ToString();
-
-            if (instant.HasValue && instant.Value != DateTime.MaxValue)
-            {
-                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
-            }
-
-            sqlBuilder.Append(';');
-
-            command.Connection = transaction.Connection;
-            command.Transaction = transaction;
-            command.CommandText = sqlBuilder.ToString();
-
-            using var reader = command.ExecuteReader();
-
-            while (reader.Read())
-            {
-                yield return this.MapToDto(reader);
-            }
-        }
-
-        /// <summary>
         /// Execute additional logic before each delete function call.
         /// </summary>
         /// <param name="transaction">

@@ -132,7 +132,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                     if (!this.ParameterValueSetService.UpdateConcept(transaction, partition, set, parameterOrOverrideBase))
                     {
-                        throw new InvalidOperationException(string.Format("The parameter value set {0} could not be updated", set.Iid));
+                        throw new InvalidOperationException($"The parameter value set {set.Iid} could not be updated");
                     }
                 }
 
@@ -177,7 +177,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                     if (!this.ParameterOverrideValueSetService.UpdateConcept(transaction, partition, set, parameterOrOverrideBase))
                     {
-                        throw new InvalidOperationException(string.Format("The parameter override value set {0} could not be updated", set.Iid));
+                        throw new InvalidOperationException($"The parameter override value set {set.Iid} could not be updated");
                     }
                 }
 

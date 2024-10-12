@@ -77,17 +77,14 @@ namespace CDP4WspDatabaseAuthentication
             var saltBytes = Encoding.UTF8.GetBytes(salt);
             var serverSaltBytes = Encoding.UTF8.GetBytes(serverSalt);
 
-            string hashedPassword;
+            using var hasher = SHA256.Create();
 
-            using (var hasher = SHA256.Create())
-            {
-                hasher.Initialize();
-                hasher.TransformBlock(serverSaltBytes, 0, serverSaltBytes.Length, null, 0);
-                hasher.TransformBlock(passwordBytes, 0, passwordBytes.Length, null, 0);
-                hasher.TransformFinalBlock(saltBytes, 0, saltBytes.Length);
+            hasher.Initialize();
+            hasher.TransformBlock(serverSaltBytes, 0, serverSaltBytes.Length, null, 0);
+            hasher.TransformBlock(passwordBytes, 0, passwordBytes.Length, null, 0);
+            hasher.TransformFinalBlock(saltBytes, 0, saltBytes.Length);
 
-                hashedPassword = BitConverter.ToString(hasher.Hash).Replace("-", "");
-            }
+            var hashedPassword = BitConverter.ToString(hasher.Hash).Replace("-", "");
 
             return hashedPassword;
         }

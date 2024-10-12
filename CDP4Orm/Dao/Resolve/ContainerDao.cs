@@ -134,17 +134,15 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
             {
-                command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
-                
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
-                    }
-                }
+                yield return MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
             }
         }
 
@@ -197,7 +195,7 @@ namespace CDP4Orm.Dao.Resolve
         /// </returns>
         private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
-            var sqlBuilder = new System.Text.StringBuilder();
+            var sqlBuilder = new StringBuilder();
 
             var connectedPartition = partition;
             var otherPartition = partition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
@@ -225,17 +223,15 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
-            {
-                command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
-                    }
-                }
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                yield return MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
             }
         }
 

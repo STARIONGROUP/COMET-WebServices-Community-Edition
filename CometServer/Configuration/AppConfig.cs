@@ -99,7 +99,7 @@ namespace CometServer.Configuration
         public ServiceMessagingConfig ServiceMessagingConfig { get; set; }
 
         /// <summary>
-        /// Gets or sets the configuration for managing long running <see cref="Task"/>s
+        /// Gets or sets the configuration for managing long running task
         /// </summary>
         public LongRunningTasksConfig LongRunningTasksConfig { get; set; }
     }

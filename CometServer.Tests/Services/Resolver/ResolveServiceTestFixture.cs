@@ -88,15 +88,15 @@ namespace CometServer.Tests
 
             this.engineeringModelIid = Guid.NewGuid();
 
-            this.siteDirectoryInfo = new DtoInfo(typeof(SiteDirectory).Name, Guid.NewGuid());
-            this.simpleQuantityKindInfo = new DtoInfo(typeof(SimpleQuantityKind).Name, Guid.NewGuid());
+            this.siteDirectoryInfo = new DtoInfo(nameof(SiteDirectory), Guid.NewGuid());
+            this.simpleQuantityKindInfo = new DtoInfo(nameof(SimpleQuantityKind), Guid.NewGuid());
         
-            this.engineeringModelInfo = new DtoInfo(typeof(EngineeringModel).Name, Guid.NewGuid());
-            this.bookInfo = new DtoInfo(typeof(Book).Name, Guid.NewGuid());
+            this.engineeringModelInfo = new DtoInfo(nameof(EngineeringModel), Guid.NewGuid());
+            this.bookInfo = new DtoInfo(nameof(Book), Guid.NewGuid());
         
-            this.optionInfo = new DtoInfo(typeof(Option).Name, Guid.NewGuid());
-            this.parameterInfo = new DtoInfo(typeof(Parameter).Name, Guid.NewGuid());
-            this.aliasInfo = new DtoInfo(typeof(Alias).Name, Guid.NewGuid());
+            this.optionInfo = new DtoInfo(nameof(Option), Guid.NewGuid());
+            this.parameterInfo = new DtoInfo(nameof(Parameter), Guid.NewGuid());
+            this.aliasInfo = new DtoInfo(nameof(Alias), Guid.NewGuid());
         }
 
         [Test]
@@ -106,8 +106,8 @@ namespace CometServer.Tests
             var expectedPartition = partitionString;
             var unresolvedItems = new List<DtoResolveHelper>
                                       {
-                                          new DtoResolveHelper(this.siteDirectoryInfo),
-                                          new DtoResolveHelper(this.simpleQuantityKindInfo),
+                                          new(this.siteDirectoryInfo),
+                                          new(this.simpleQuantityKindInfo),
                                       };
 
             this.resolveService.ResolvePartitionStatically(partitionString, unresolvedItems);
@@ -125,8 +125,8 @@ namespace CometServer.Tests
 
             var unresolvedItems = new List<DtoResolveHelper>
                                       {
-                                          new DtoResolveHelper(this.engineeringModelInfo),
-                                          new DtoResolveHelper(this.bookInfo),
+                                          new(this.engineeringModelInfo),
+                                          new(this.bookInfo),
                                       };
 
             this.resolveService.ResolvePartitionStatically(partitionString, unresolvedItems);
@@ -145,8 +145,8 @@ namespace CometServer.Tests
 
             var unresolvedItems = new List<DtoResolveHelper>
                                       {
-                                          new DtoResolveHelper(this.optionInfo),
-                                          new DtoResolveHelper(this.parameterInfo),
+                                          new(this.optionInfo),
+                                          new(this.parameterInfo),
                                       };
 
             this.resolveService.ResolvePartitionStatically(partitionString, unresolvedItems);
@@ -164,7 +164,7 @@ namespace CometServer.Tests
 
             var unresolvedItems = new List<DtoResolveHelper>
                                       {
-                                          new DtoResolveHelper(this.aliasInfo)
+                                          new(this.aliasInfo)
                                       };
 
             this.resolveService.ResolvePartitionStatically(partitionString, unresolvedItems);

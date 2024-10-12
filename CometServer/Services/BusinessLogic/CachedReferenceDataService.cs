@@ -77,11 +77,6 @@ namespace CometServer.Services
         private Dictionary<Guid, MeasurementScale> measurementScaleCache;
 
         /// <summary>
-        /// the (per request) cached <see cref="MeasurementUnit"/>
-        /// </summary>
-        private Dictionary<Guid, MeasurementUnit> measurementUnitCache;
-        
-        /// <summary>
         /// the (per request) cached <see cref="EnumerationValueDefinition"/>
         /// </summary>
         private Dictionary<Guid, EnumerationValueDefinition> enumerationValueDefinitionCache;
@@ -282,37 +277,6 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
         /// </returns>
-        public Dictionary<Guid, MeasurementUnit> QueryMeasurementUnits(NpgsqlTransaction transaction, ISecurityContext securityContext)
-        {
-            if (this.measurementUnitCache == null || this.measurementUnitCache.Count == 0)
-            {
-                var sw = new Stopwatch();
-
-                this.Logger.LogDebug("Querying MeasurementUnits");
-
-                this.measurementUnitCache = new Dictionary<Guid, MeasurementUnit>();
-
-                var measurementUnits = this.MeasurementUnitService
-                    .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
-                    .OfType<MeasurementUnit>();
-
-                foreach (var measurementUnit in measurementUnits)
-                {
-                    this.measurementUnitCache.Add(measurementUnit.Iid, measurementUnit);
-                }
-
-                this.Logger.LogDebug("MeasurementUnits Queried in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
-            }
-
-            return this.measurementUnitCache;
-        }
-
-        /// <summary>
-        /// Queries the <see cref="MeasurementUnit"/>s from the data from the datasource or from the cached list
-        /// </summary>
-        /// <returns>
-        /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
-        /// </returns>
         public Dictionary<Guid, EnumerationValueDefinition> QueryEnumerationValueDefinitions(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.enumerationValueDefinitionCache != null && this.enumerationValueDefinitionCache.Count != 0)
@@ -350,7 +314,6 @@ namespace CometServer.Services
             this.dependentParameterTypeAssignment?.Clear();
             this.independentParameterTypeAssignment?.Clear();
             this.measurementScaleCache?.Clear();
-            this.measurementUnitCache?.Clear();
             this.enumerationValueDefinitionCache?.Clear();
 
             this.Logger.LogDebug("Cache Reset");

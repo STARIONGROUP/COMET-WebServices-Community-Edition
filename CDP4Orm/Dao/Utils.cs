@@ -68,11 +68,6 @@ namespace CDP4Orm.Dao
         public const string DateTimeUtcSerializationFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'";
 
         /// <summary>
-        /// The UTC (zulu) date time SQL format.
-        /// </summary>
-        public const string DateTimeUtcSqlFormat = "yyyy-MM-dd HH:mm:ss.fff";
-
-        /// <summary>
         /// The class kind key.
         /// </summary>
         private const string ClassKindKey = "ClassKind";
@@ -90,12 +85,12 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// The key value pair entry separator.
         /// </summary>
-        private static readonly string[] EntrySeparator = new[] { "," };
+        private static readonly string[] EntrySeparator = { "," };
 
         /// <summary>
         /// The key value pair separator.
         /// </summary>
-        private static readonly string[] KvpSeparator = new[] { "=>" };
+        private static readonly string[] KvpSeparator = { "=>" };
 
         /// <summary>
         /// Parse a database HSTORE text representation to a Dictionary instance
@@ -304,32 +299,6 @@ namespace CDP4Orm.Dao
             string strText;
 
             using (var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName), enc ?? System.Text.Encoding.UTF8))
-            {
-                strText = reader.ReadToEnd();
-            }
-
-            AssignCommandText(command, strText, replace);
-        }
-
-        /// <summary>
-        /// Extension method that reads the contents of the passed in SQL file to the NPGSQL command text.
-        /// </summary>
-        /// <param name="command">
-        /// The command object to which the SQL file contents will be set.
-        /// </param>
-        /// <param name="filePath">
-        /// The embedded resource Name.
-        /// </param>
-        /// <param name="enc">
-        /// Optional encoding to be used when reading in the file. By default UTF8 encoding is used.
-        /// </param>
-        /// <param name="replace">
-        /// Optional replacement information expressed in the form of Tuples (item1 = text to replace, item2 = replacement text), these are executed in order.
-        /// </param>
-        public static void ReadSqlFromFile(this NpgsqlCommand command, string filePath, System.Text.Encoding enc = null, IEnumerable<Tuple<string, string>> replace = null)
-        {
-            string strText;
-            using (var reader = new StreamReader(filePath, enc ?? System.Text.Encoding.UTF8))
             {
                 strText = reader.ReadToEnd();
             }

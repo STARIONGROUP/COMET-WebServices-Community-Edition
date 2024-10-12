@@ -68,7 +68,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var parameterSubscriptionValueSet = this.parameterSubscriptionValueSetFactory.CreateWithDefaultValueArray(subscribedValueSetIid, this.defaultValueArray);
 
             Assert.That(parameterSubscriptionValueSet.SubscribedValueSet, Is.EqualTo(subscribedValueSetIid));
-            Assert.That(parameterSubscriptionValueSet.Manual, Is.EqualTo(defaultValueArray));
+            Assert.That(parameterSubscriptionValueSet.Manual, Is.EqualTo(this.defaultValueArray));
             Assert.That(parameterSubscriptionValueSet.ValueSwitch, Is.EqualTo(CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL));
         }
 

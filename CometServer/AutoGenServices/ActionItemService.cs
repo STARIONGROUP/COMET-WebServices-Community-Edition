@@ -34,10 +34,13 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Security;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
-    using Microsoft.Extensions.Logging;
+    
     using Npgsql;
 
     /// <summary>

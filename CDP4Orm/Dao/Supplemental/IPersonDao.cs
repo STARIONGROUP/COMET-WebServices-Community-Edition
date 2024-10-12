@@ -24,8 +24,6 @@
 
 namespace CDP4Orm.Dao
 {
-    using System;
-
     using Npgsql;
 
     /// <summary>
@@ -37,20 +35,6 @@ namespace CDP4Orm.Dao
         /// Gets the password change token that is only valid in the context of this class instance lifetime.
         /// </summary>
         string PasswordChangeToken { get; }
-
-        /// <summary>
-        /// Gets the given name of a person.
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction.
-        /// </param>
-        /// <param name="personIid">
-        /// The person id.
-        /// </param>
-        /// <returns>
-        /// The <see cref="string"/>.
-        /// </returns>
-        string GivenName(NpgsqlTransaction transaction, Guid personIid);
 
         /// <summary>
         /// Update user credentials after migration

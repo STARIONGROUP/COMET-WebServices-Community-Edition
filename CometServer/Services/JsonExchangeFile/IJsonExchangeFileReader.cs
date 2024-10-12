@@ -28,11 +28,8 @@ namespace CometServer.Services
 
     using CDP4Common.DTO;
 
-    using CDP4JsonSerializer;
-
     using CDP4Orm.Dao;
 
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
 
     /// <summary>

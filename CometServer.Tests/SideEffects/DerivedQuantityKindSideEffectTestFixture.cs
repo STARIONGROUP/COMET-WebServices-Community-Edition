@@ -218,7 +218,7 @@ namespace CometServer.Tests.SideEffects
         {
             var rawUpdateInfo = new ClasslessDTO
             {
-                { "QuantityKindFactor", new List<OrderedItem> { new OrderedItem { K = 2, V = this.derivedQkOutsideRdlFactor.Iid } } }
+                { "QuantityKindFactor", new List<OrderedItem> { new() { K = 2, V = this.derivedQkOutsideRdlFactor.Iid } } }
             };
 
             Assert.Throws<AcyclicValidationException>(
@@ -236,7 +236,7 @@ namespace CometServer.Tests.SideEffects
         {
             var rawUpdateInfo = new ClasslessDTO
             {
-                { "QuantityKindFactor", new List<OrderedItem> { new OrderedItem { K = 2, V = this.derivedQkCyclicFactor.Iid } } }
+                { "QuantityKindFactor", new List<OrderedItem> { new() { K = 2, V = this.derivedQkCyclicFactor.Iid } } }
             };
 
             Assert.Throws<AcyclicValidationException>(
@@ -254,7 +254,7 @@ namespace CometServer.Tests.SideEffects
         {
             var rawUpdateInfo = new ClasslessDTO
             {
-                { "QuantityKindFactor", new List<OrderedItem> { new OrderedItem { K = 2, V = this.derivedQkFactor.Iid } } }
+                { "QuantityKindFactor", new List<OrderedItem> { new() { K = 2, V = this.derivedQkFactor.Iid } } }
             };
 
             Assert.DoesNotThrow(

@@ -141,15 +141,13 @@ namespace CometServer
 
                 if (doesMigrationTableExist)
                 {
-                    using (var appliedMigrationCmd = new NpgsqlCommand("SELECT \"version\" FROM \"SiteDirectory\".\"MigrationManagement\"", transaction.Connection, transaction))
+                    using var appliedMigrationCmd = new NpgsqlCommand("SELECT \"version\" FROM \"SiteDirectory\".\"MigrationManagement\"", transaction.Connection, transaction);
+
+                    using var reader = appliedMigrationCmd.ExecuteReader();
+
+                    while (reader.Read())
                     {
-                        using (var reader = appliedMigrationCmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                existingMigrations.Add(new Version(reader[0].ToString()));
-                            }
-                        }
+                        existingMigrations.Add(new Version(reader[0].ToString()));
                     }
                 }
 

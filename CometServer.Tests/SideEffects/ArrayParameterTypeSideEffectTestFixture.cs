@@ -242,8 +242,8 @@ namespace CometServer.Tests.SideEffects
                                              TestKey,
                                              new List<OrderedItem>
                                                  {
-                                                     new OrderedItem
-                                                         {
+                                                     new()
+                                                     {
                                                              K = 3,
                                                              V = this
                                                                  .parameterTypeComponentC
@@ -272,8 +272,8 @@ namespace CometServer.Tests.SideEffects
                                              TestKey,
                                              new List<OrderedItem>
                                                  {
-                                                     new OrderedItem
-                                                         {
+                                                     new()
+                                                     {
                                                              K = 4,
                                                              V = this
                                                                  .parameterTypeComponentD

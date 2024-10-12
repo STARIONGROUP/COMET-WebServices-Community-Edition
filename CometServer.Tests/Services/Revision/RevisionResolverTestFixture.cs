@@ -52,11 +52,11 @@ namespace CometServer.Tests
         private RevisionRegistryInfo revision3;
         private RevisionRegistryInfo revision4;
         private RevisionRegistryInfo revision5;
-        private static readonly DateTime timestamp1 = new DateTime(2020, 1, 1);
-        private static readonly DateTime timestamp2 = new DateTime(2020, 1, 2);
-        private static readonly DateTime timestamp3 = new DateTime(2020, 1, 2, 10, 0, 0);
-        private static readonly DateTime timestamp4 = new DateTime(2020, 1, 2, 14, 0, 0);
-        private static readonly DateTime timestamp5 = new DateTime(2020, 1, 3);
+        private static readonly DateTime timestamp1 = new(2020, 1, 1);
+        private static readonly DateTime timestamp2 = new(2020, 1, 2);
+        private static readonly DateTime timestamp3 = new(2020, 1, 2, 10, 0, 0);
+        private static readonly DateTime timestamp4 = new(2020, 1, 2, 14, 0, 0);
+        private static readonly DateTime timestamp5 = new(2020, 1, 3);
 
         [SetUp]
         public void TestSetup()

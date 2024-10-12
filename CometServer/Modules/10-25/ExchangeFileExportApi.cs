@@ -167,6 +167,9 @@ namespace CometServer.Modules
         /// <param name="metaInfoProvider">
         /// The <see cref="IMetaInfoProvider"/> used to provide metadata for any kind of <see cref="Thing"/>
         /// </param>
+        /// <param name="jsonExchangeFileWriter">
+        /// The <see cref="IJsonExchangeFileWriter"/> used to write to a 10-25 annex C.3 archive
+        /// </param>
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>

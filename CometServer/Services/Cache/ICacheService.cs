@@ -36,14 +36,6 @@ namespace CometServer.Services
     public interface ICacheService
     {
         /// <summary>
-        /// Save a <see cref="Thing"/> to a cache table
-        /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
-        /// <param name="thing">The revised <see cref="Thing"/></param>
-        void WriteToCache(NpgsqlTransaction transaction, string partition, Thing thing);
-
-        /// <summary>
         /// Save a collection of <see cref="Thing"/>s to cache tables
         /// </summary>
         /// <param name="transaction">The current transaction</param>

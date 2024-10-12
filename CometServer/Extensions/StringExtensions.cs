@@ -157,28 +157,6 @@ namespace CometServer.Extensions
         }
 
         /// <summary>
-        /// Coverts the first characther of a string to lowercase
-        /// </summary>
-        /// <param name="input">
-        /// The input instring
-        /// </param>
-        /// <returns>
-        /// The updated <see cref="string"/>.
-        /// </returns>
-        /// <exception cref="ArgumentException">
-        /// If supplied input is null or empty
-        /// </exception>
-        public static string FirstLetterToLower(this string input)
-        {
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                throw new ArgumentException("string can't be empty!");
-            }
-
-            return $"{input.First().ToString(CultureInfo.InvariantCulture).ToLower()}{input.Substring(1)}";
-        }
-
-        /// <summary>
         /// Coverts the first characther of a string to uppercase
         /// </summary>
         /// <param name="input">

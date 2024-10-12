@@ -39,7 +39,7 @@ namespace CometServer.Authorization
         public Credentials Credentials { get; }
 
         /// <summary>
-        /// Resolves the username to <see cref="ICredentials"/>
+        /// Resolves the username to <see cref="Credentials"/>
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.

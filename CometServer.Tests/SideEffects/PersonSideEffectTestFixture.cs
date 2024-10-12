@@ -34,7 +34,6 @@ namespace CometServer.Tests.SideEffects
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
-    using CometServer.Services;
     using CometServer.Services.Operations.SideEffects;
 
     using Moq;

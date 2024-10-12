@@ -248,6 +248,25 @@ namespace CometServer.Modules
         /// <param name="jsonExchangeFileReader">
         /// The (injected) <see cref="IJsonExchangeFileReader"/> used to read the provided Annex C3 archive
         /// </param>
+        /// <param name="migrationService">
+        /// The (injected) <see cref="IMigrationService"/> responsile for execution of migration scripts
+        /// </param>
+        /// <param name="revisionService">
+        /// The (injected)  <see cref="IRevisionService"/> that supports revision based retrievel of data
+        /// </param>
+        /// <param name="engineeringModelDao">
+        /// The (injected) <see cref="IEngineeringModelDao"/>
+        /// </param>
+        /// <param name="serviceProvider">
+        /// The <see cref="Services.IServiceProvider"/> that can be used to resolve other services
+        /// </param>
+        /// <param name="personService"></param>
+        /// <param name="personRoleService"></param>
+        /// <param name="personPermissionService"></param>
+        /// <param name="defaultPermissionProvider"></param>
+        /// <param name="participantRoleService"></param>
+        /// <param name="participantPermissionService"></param>
+        /// <param name="dataStoreController"></param>
         /// <returns>
         /// The <see cref="Task{Response}"/>.
         /// </returns>
@@ -501,7 +520,7 @@ namespace CometServer.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                migrationService.ApplyMigrations(transaction, typeof(SiteDirectory).Name, false);
+                migrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
 
@@ -555,7 +574,7 @@ namespace CometServer.Modules
                             .ReadEngineeringModelFromfile(version, fileName, password, engineeringModelSetup).ToList();
 
                         // should return one engineeringmodel topcontainer
-                        var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().Single();
+                        var engineeringModel = engineeringModelItems.OfType<EngineeringModel>().SingleOrDefault();
 
                         if (engineeringModel == null)
                         {
@@ -652,12 +671,7 @@ namespace CometServer.Modules
             finally
             {
                 transaction?.Dispose();
-
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
+                connection?.Dispose();
             }
         }
 
@@ -928,11 +942,8 @@ namespace CometServer.Modules
             }
             catch (Exception ex)
             {
-                if (transaction != null)
-                {
-                    transaction.Rollback();
-                }
-
+                transaction?.Rollback();
+                
                 this.logger.LogError(ex, "Error occured during data store import");
 
                 return false;
@@ -940,12 +951,7 @@ namespace CometServer.Modules
             finally
             {
                 transaction?.Dispose();
-
-                if (connection != null)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
+                connection?.Dispose();
             }
         }
 
@@ -980,6 +986,7 @@ namespace CometServer.Modules
         private static void PersistFileBinaryData(IRequestUtils requestUtils, IJsonExchangeFileReader jsonExchangeFileReader,  string fileName, EngineeringModelSetup engineeringModelSetup, string password = null)
         {
             var fileRevisions = requestUtils.Cache.OfType<FileRevision>().ToList();
+
             if (fileRevisions.Count == 0)
             {
                 // nothing to do
@@ -1025,31 +1032,30 @@ namespace CometServer.Modules
         private static void ClearDatabaseSchemas(NpgsqlTransaction transaction)
         {
             // clear the current database data (except public and pg_catalog schemas)
-            using (var cleanSchemaCommand = new NpgsqlCommand())
-            {
-                var sqlBuilder = new StringBuilder();
+            using var cleanSchemaCommand = new NpgsqlCommand();
 
-                // setup clear schema function if not existent
-                // source: https://chawlasumit.wordpress.com/2014/07/29/drop-all-schemas-in-postgres/
-                sqlBuilder.AppendLine("CREATE OR REPLACE FUNCTION public.clear_schemas()")
-                    .AppendLine("    RETURNS VOID AS").AppendLine("    $$").AppendLine("    DECLARE rec RECORD;")
-                    .AppendLine("    BEGIN").AppendLine("        -- Get all schemas").AppendLine("        FOR rec IN")
-                    .AppendLine("        SELECT DISTINCT schema_name")
-                    .AppendLine("        FROM information_schema.schemata").AppendLine("        -- exclude schemas")
-                    .AppendLine(
-                        "        WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema' AND schema_name <> 'public'")
-                    .AppendLine("            LOOP")
-                    .AppendLine("                EXECUTE 'DROP SCHEMA \"' || rec.schema_name || '\" CASCADE';")
-                    .AppendLine("            END LOOP;").AppendLine("        RETURN;").AppendLine("    END;")
-                    .AppendLine("    $$ LANGUAGE plpgsql;");
+            var sqlBuilder = new StringBuilder();
 
-                sqlBuilder.AppendLine("SELECT clear_schemas();");
+            // setup clear schema function if not existent
+            // source: https://chawlasumit.wordpress.com/2014/07/29/drop-all-schemas-in-postgres/
+            sqlBuilder.AppendLine("CREATE OR REPLACE FUNCTION public.clear_schemas()")
+                .AppendLine("    RETURNS VOID AS").AppendLine("    $$").AppendLine("    DECLARE rec RECORD;")
+                .AppendLine("    BEGIN").AppendLine("        -- Get all schemas").AppendLine("        FOR rec IN")
+                .AppendLine("        SELECT DISTINCT schema_name")
+                .AppendLine("        FROM information_schema.schemata").AppendLine("        -- exclude schemas")
+                .AppendLine(
+                    "        WHERE schema_name NOT LIKE 'pg_%' AND schema_name NOT LIKE 'information_schema' AND schema_name <> 'public'")
+                .AppendLine("            LOOP")
+                .AppendLine("                EXECUTE 'DROP SCHEMA \"' || rec.schema_name || '\" CASCADE';")
+                .AppendLine("            END LOOP;").AppendLine("        RETURN;").AppendLine("    END;")
+                .AppendLine("    $$ LANGUAGE plpgsql;");
 
-                cleanSchemaCommand.CommandText = sqlBuilder.ToString();
-                cleanSchemaCommand.Connection = transaction.Connection;
-                cleanSchemaCommand.Transaction = transaction;
-                cleanSchemaCommand.ExecuteNonQuery();
-            }
+            sqlBuilder.AppendLine("SELECT clear_schemas();");
+
+            cleanSchemaCommand.CommandText = sqlBuilder.ToString();
+            cleanSchemaCommand.Connection = transaction.Connection;
+            cleanSchemaCommand.Transaction = transaction;
+            cleanSchemaCommand.ExecuteNonQuery();
         }
 
         /// <summary>
@@ -1139,7 +1145,7 @@ namespace CometServer.Modules
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
                 var person = personService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
-                personId = person != null ? person.Iid : Guid.Empty;
+                personId = person?.Iid ?? Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
                 revisionService.SaveRevisions(transaction, TopContainer, personId, EngineeringModelSetupSideEffect.FirstRevision);

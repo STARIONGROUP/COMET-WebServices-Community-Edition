@@ -271,9 +271,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// Creates a new <see cref="EngineeringModel"/> from a source
         /// </summary>
         /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
-        /// <param name="container">The container</param>
         /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The partition</param>
         /// <param name="securityContext">The security context</param>
         private void CreateCopyEngineeringModel(EngineeringModelSetup thing, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
@@ -292,7 +290,6 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="container">The container</param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition</param>
-        /// <param name="securityContext">The security context</param>
         private void CreateDefaultEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition)
         {
             // No need to create a model RDL for the created EngineeringModelSetup since is handled in the client. It happens in the same transaction as the creation of the EngineeringModelSetup itself

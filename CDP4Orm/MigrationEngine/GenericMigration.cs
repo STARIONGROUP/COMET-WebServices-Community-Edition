@@ -49,7 +49,12 @@ namespace CDP4Orm.MigrationEngine
         /// <summary>
         /// Initializes a new instance of the <see cref="GenericMigration"/> class
         /// </summary>
-        /// <param name="migrationMetadata">Themigration metadata</param>
+        /// <param name="migrationMetadata">
+        /// The migration metadata
+        /// </param>
+        /// <param name="logger">
+        /// The (injected) logger
+        /// </param>
         internal GenericMigration(MigrationMetaData migrationMetadata, ILogger<GenericMigration> logger) : base(migrationMetadata)
         {
             this.logger = logger;
@@ -97,15 +102,14 @@ namespace CDP4Orm.MigrationEngine
                     }
                 }
 
-                using (var sqlCommand = new NpgsqlCommand())
-                {
-                    sqlCommand.ReadSqlFromResource(this.MigrationMetaData.ResourceName, null, replaceList);
+                using var sqlCommand = new NpgsqlCommand();
 
-                    sqlCommand.Connection = transaction.Connection;
-                    sqlCommand.Transaction = transaction;
-                    sqlCommand.ExecuteNonQuery();
-                    this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
-                }
+                sqlCommand.ReadSqlFromResource(this.MigrationMetaData.ResourceName, null, replaceList);
+
+                sqlCommand.Connection = transaction.Connection;
+                sqlCommand.Transaction = transaction;
+                sqlCommand.ExecuteNonQuery();
+                this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
             }
 
             base.ApplyMigration(transaction, existingSchemas);

@@ -91,17 +91,15 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
-            {
-                command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return MapToSiteDirectoryDto(reader);
-                    }
-                }
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                yield return MapToSiteDirectoryDto(reader);
             }
         }
 
@@ -145,17 +143,15 @@ namespace CDP4Orm.Dao.Resolve
                 connectedPartition,
                 subPartition);
 
-            using (var command = new NpgsqlCommand(sql, transaction.Connection, transaction))
-            {
-                command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        yield return MapToEngineeringModelDto(reader, connectedPartition, subPartition);
-                    }
-                }
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+
+            using var reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                yield return MapToEngineeringModelDto(reader, connectedPartition, subPartition);
             }
         }
 

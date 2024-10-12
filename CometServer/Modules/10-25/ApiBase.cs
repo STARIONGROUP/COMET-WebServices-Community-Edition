@@ -195,7 +195,7 @@ namespace CometServer.Modules
         {
             try
             {
-                await using var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
 
                 await connection.OpenAsync();
 
@@ -289,7 +289,7 @@ namespace CometServer.Modules
                                       ? topContainer
                                       : processor.GetContainmentType(containmentColl, containerProperty);
 
-                if (serviceType == typeof(Iteration).Name && !generalResourceRequest)
+                if (serviceType == nameof(Iteration) && !generalResourceRequest)
                 {
                     // switch to iteration context for further processing,
                     // in case of Iteration generalResource request, this is handled separately below
@@ -306,7 +306,7 @@ namespace CometServer.Modules
                     var container =
                         processor.GetContainmentResource(serviceType, partition, identifier, authorizedContext);
 
-                    if (serviceType == typeof(Iteration).Name)
+                    if (serviceType == nameof(Iteration))
                     {
                         // switch the partition (schema) for further processing, allowing retrieval of Iteration contained data
                         partition = partition.Replace("EngineeringModel", "Iteration");
@@ -324,7 +324,7 @@ namespace CometServer.Modules
                     // get containment info
                     var containmentInfo = processor.GetContainment(containmentColl, containerProperty);
 
-                    if (serviceType == typeof(Iteration).Name && containmentInfo != null)
+                    if (serviceType == nameof(Iteration) && containmentInfo != null)
                     {
                         // support temporal retrieval if iteration general resource is requested
                         // should only contain 1 element
@@ -523,6 +523,9 @@ namespace CometServer.Modules
         /// <param name="resourceResponse">
         /// The resource response.
         /// </param>
+        /// <param name="version">
+        /// The model <see cref="Version"/>
+        /// </param>
         /// <param name="httpResponse">
         /// The <see cref="HttpResponse"/> to which the results will be written
         /// </param>
@@ -586,29 +589,6 @@ namespace CometServer.Modules
             httpResponse.StatusCode = (int)statusCode;
 
             this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
-        }
-
-        /// <summary>
-        /// Read the current state of the top container.
-        /// </summary>
-        /// <param name="serviceProvider">
-        /// The <see cref="Services.IServiceProvider"/> that provides the service registry
-        /// </param>
-        /// <param name="transaction">
-        /// The databse transaction.
-        /// </param>
-        /// <param name="partition">
-        /// The database partition (schema) where the requested resource is stored.
-        /// </param>
-        /// <param name="topContainer">
-        /// The Top Container type name.
-        /// </param>
-        /// <returns>
-        /// A top container instance.
-        /// </returns>
-        protected Thing GetTopContainer(Services.IServiceProvider serviceProvider, NpgsqlTransaction transaction, string partition, string topContainer)
-        {
-            return serviceProvider.MapToReadService(topContainer).GetShallow(transaction, partition, null, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault();
         }
 
         /// <summary>
@@ -800,6 +780,7 @@ namespace CometServer.Modules
             {
                 byte[] buffer;
                 long fileSize;
+
                 using (var fileStream = fileBinaryService.RetrieveBinaryData(hash))
                 {
                     fileSize = fileStream.Length;
@@ -880,6 +861,7 @@ namespace CometServer.Modules
 
                 byte[] buffer;
                 long fileSize;
+
                 using (var fileStream = new FileStream(temporaryTopFolder + ".zip", FileMode.Open))
                 {
                     fileSize = fileStream.Length;

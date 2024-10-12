@@ -86,16 +86,16 @@ namespace CometServer.Tests
 
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
 
-        private readonly OperationSideEffectProcessor operationSideEffectProcessor = new OperationSideEffectProcessor(new List<IOperationSideEffect>());
+        private readonly OperationSideEffectProcessor operationSideEffectProcessor = new(new List<IOperationSideEffect>());
 
-        private readonly SimpleQuantityKindMetaInfo simpleQuantityKindMetaInfo = new SimpleQuantityKindMetaInfo();
+        private readonly SimpleQuantityKindMetaInfo simpleQuantityKindMetaInfo = new();
 
-        private readonly QuantityKindMetaInfo quantityKindMetaInfo = new QuantityKindMetaInfo();
-        private readonly ThingMetaInfo thingMetaInfo = new ThingMetaInfo();
+        private readonly QuantityKindMetaInfo quantityKindMetaInfo = new();
+        private readonly ThingMetaInfo thingMetaInfo = new ();
 
-        private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new EngineeringModelMetaInfo();
+        private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new ();
 
-        private readonly Dictionary<string, Stream> fileStore = new Dictionary<string, Stream>();
+        private readonly Dictionary<string, Stream> fileStore = new();
 
         private Mock<IMetaInfoProvider> mockedMetaInfoProvider;
         private Mock<ICdp4TransactionManager> transactionManager;
@@ -114,16 +114,20 @@ namespace CometServer.Tests
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationSideEffectProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
 
-            this.operationProcessor = new OperationProcessor();
-            this.operationProcessor.OperationSideEffectProcessor = this.operationSideEffectProcessor;
-            this.operationProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
-            
+            this.operationProcessor = new OperationProcessor
+            {
+                OperationSideEffectProcessor = this.operationSideEffectProcessor,
+                MetaInfoProvider = this.mockedMetaInfoProvider.Object
+            };
+
             this.serviceProvider = new Mock<CometServer.Services.IServiceProvider>();
             this.resolveService = new Mock<IResolveService>();
 
-            var copyservice = new CopySourceService();
-            copyservice.TransactionManager = this.transactionManager.Object;
-            copyservice.ServiceProvider = this.serviceProvider.Object;
+            var copyservice = new CopySourceService
+            {
+                TransactionManager = this.transactionManager.Object,
+                ServiceProvider = this.serviceProvider.Object
+            };
 
             this.operationProcessor.CopySourceService = copyservice;
             this.operationProcessor.ServiceProvider = this.serviceProvider.Object;
@@ -555,8 +559,11 @@ namespace CometServer.Tests
             parameter2.ValueSet.Add(pvs2.Iid);
             sourceElementDef2.Parameter.Add(parameter2.Iid);
 
-            var override2 = new ParameterOverride(Guid.NewGuid(), 1);
-            override2.Parameter = parameter2.Iid;
+            var override2 = new ParameterOverride(Guid.NewGuid(), 1)
+            {
+                Parameter = parameter2.Iid
+            };
+
             var ovs = new ParameterOverrideValueSet(Guid.NewGuid(), 1) {ParameterValueSet = pvs2.Iid};
             override2.ValueSet.Add(ovs.Iid);
             sourceUsage1.ParameterOverride.Add(override2.Iid);
@@ -761,12 +768,12 @@ namespace CometServer.Tests
         }
     }
 
-    public class TestSourceService : ServiceBase, IPersistService, IModelReferenceDataLibraryService, IParameterValueSetService
+    public class TestSourceService : ServiceBase, IModelReferenceDataLibraryService, IParameterValueSetService
     {
         private IReadOnlyList<Thing> dtos;
         private string type;
 
-        private readonly List<Thing> writtenThings = new List<Thing>();
+        private readonly List<Thing> writtenThings = new();
 
         public TestSourceService(IReadOnlyList<Thing> dtos, string type)
         {
@@ -879,7 +886,7 @@ namespace CometServer.Tests
 
     public class TestParameterDao : IParameterDao
     {
-        private List<Thing> writtenThings = new List<Thing>();
+        private List<Thing> writtenThings = new();
         public int WrittenThingCount => this.writtenThings.Count;
 
         public IEnumerable<Parameter> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
@@ -954,7 +961,7 @@ namespace CometServer.Tests
 
     public class TestParameterOverrideDao : IParameterOverrideDao
     {
-        private List<Thing> writtenThings = new List<Thing>();
+        private List<Thing> writtenThings = new();
         public int WrittenThingCount => this.writtenThings.Count;
 
         public IEnumerable<ParameterOverride> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
@@ -1029,7 +1036,7 @@ namespace CometServer.Tests
 
     public class TestElementDefinitionDao : IElementDefinitionDao
     {
-        private List<Thing> writtenThings = new List<Thing>();
+        private List<Thing> writtenThings = new();
 
         public int WrittenThingCount => this.writtenThings.Count;
 

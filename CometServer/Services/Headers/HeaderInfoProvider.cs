@@ -38,22 +38,22 @@ namespace CometServer.Services
         /// <summary>
         /// The response headers.
         /// </summary>
-        private readonly Dictionary<string, string> responseHeaders = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> responseHeaders = new();
 
         /// <summary>
         /// The version of the <see cref="HttpConstants.Cdp4ServerHeader"/>
         /// </summary>
-        private static readonly Lazy<string> Cdp4ServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(Startup)));
+        private static readonly Lazy<string> Cdp4ServerHeaderVersion = new(() => GetAssemblyVersion(typeof(Startup)));
 
         /// <summary>
         /// The version of the <see cref="HttpConstants.Cdp4ServerHeader"/>
         /// </summary>
-        private static readonly Lazy<string> CometServerHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(Startup)));
+        private static readonly Lazy<string> CometServerHeaderVersion = new(() => GetAssemblyVersion(typeof(Startup)));
 
         /// <summary>
         /// The version of the <see cref="HttpConstants.Cdp4CommonHeader"/>
         /// </summary>
-        private static readonly Lazy<string> Cdp4CommonHeaderVersion = new Lazy<string>(() => GetAssemblyVersion(typeof(CDP4Common.DTO.Thing)));
+        private static readonly Lazy<string> Cdp4CommonHeaderVersion = new(() => GetAssemblyVersion(typeof(CDP4Common.DTO.Thing)));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HeaderInfoProvider"/> class.
@@ -119,6 +119,9 @@ namespace CometServer.Services
         /// <param name="contentTypeKind">
         /// The <see cref="ContentTypeKind"/> that is used to determine what the value of the
         /// Content-Type header needs to be
+        /// </param>
+        /// <param name="boundary">
+        /// the boundary string used in the HTTP request
         /// </param>
         public void RegisterResponseHeaders(HttpResponse response, ContentTypeKind contentTypeKind, string boundary)
         {

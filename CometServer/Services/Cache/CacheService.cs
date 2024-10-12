@@ -43,17 +43,6 @@ namespace CometServer.Services
         public ICacheDao CacheDao { get; set; }
 
         /// <summary>
-        /// Save a <see cref="Thing"/> to a cache table
-        /// </summary>
-        /// <param name="transaction">The current transaction</param>
-        /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
-        /// <param name="thing">The revised <see cref="Thing"/></param>
-        public void WriteToCache(NpgsqlTransaction transaction, string partition, Thing thing)
-        {
-            this.CacheDao.Write(transaction, partition, thing);
-        }
-
-        /// <summary>
         /// Save a collection of <see cref="Thing"/>s to cache tables
         /// </summary>
         /// <param name="transaction">The current transaction</param>

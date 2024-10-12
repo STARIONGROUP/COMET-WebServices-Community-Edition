@@ -91,7 +91,7 @@ namespace CometServer.Tests.Authorization
         private static SiteDirectory siteDirectory = new(Guid.NewGuid(), 0);
         private Participant participant;
 
-        private Thing addContainerThingToCache = null;
+        private Thing addContainerThingToCache;
 
         [SetUp]
         public void SetUp()
@@ -109,7 +109,7 @@ namespace CometServer.Tests.Authorization
 
             this.participant = new Participant(Guid.NewGuid(), 0)
             {
-                Domain = new List<Guid> { domain.Iid },
+                Domain = [domain.Iid],
                 Person = this.authenticationPerson.Iid
             };
 
@@ -120,10 +120,11 @@ namespace CometServer.Tests.Authorization
             this.credentialsService = new Mock<ICredentialsService>();
             this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
 
-            this.permissionService = new PermissionService();
-
-            this.permissionService.CredentialsService = this.credentialsService.Object;
-            this.permissionService.Logger = this.logger.Object;
+            this.permissionService = new PermissionService
+            {
+                CredentialsService = this.credentialsService.Object,
+                Logger = this.logger.Object
+            };
 
             this.resolveService = new Mock<IResolveService>();
 
@@ -328,7 +329,7 @@ namespace CometServer.Tests.Authorization
         /// <summary>
         /// Different Cases we want to check access rights for
         /// </summary>
-        /// <returns>an <see cref="IEnumerable"/> of type <see cref="object[]"/>
+        /// <returns>an <see cref="IEnumerable"/> of type object[]
         /// containing the <see cref="PermissionServiceTestFixture.VerifySameAsContainerPermissionAutorization"/> method's parameters.</returns>
         public static IEnumerable TestCases()
         {

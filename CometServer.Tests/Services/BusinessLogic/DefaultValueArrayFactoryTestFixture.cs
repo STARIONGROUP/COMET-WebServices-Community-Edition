@@ -62,7 +62,7 @@ namespace CometServer.Tests.Services.BusinessLogic
         private Dictionary<Guid, IndependentParameterTypeAssignment> independentParameterTypeAssignments;
         private Dictionary<Guid, DependentParameterTypeAssignment> dependentParameterTypeAssignments;
 
-        private Mock<ILogger<DefaultValueArrayFactory>> logger = new Mock<ILogger<DefaultValueArrayFactory>>();
+        private Mock<ILogger<DefaultValueArrayFactory>> logger = new ();
         private Mock<ICachedReferenceDataService> cachedReferenceDataService;
         private Mock<ISecurityContext> secutrityContext;
         private NpgsqlTransaction transaction;
@@ -117,7 +117,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var orderedItemY = new OrderedItem { K = 2, V = y.Iid };
             var orderedItemZ = new OrderedItem { K = 3, V = z.Iid };
             
-            var vector = new  CDP4Common.DTO.ArrayParameterType(this.vectorIid, 0);
+            var vector = new  ArrayParameterType(this.vectorIid, 0);
             vector.Component.Add(orderedItemX);
             vector.Component.Add(orderedItemY);
             vector.Component.Add(orderedItemZ);
@@ -136,7 +136,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var jaggedOrderedItemOne = new OrderedItem { K = 1, V = jaggedComponentOne.Iid };
             var jaggedOrderedItemTwo = new OrderedItem { K = 1, V = jaggedComponentTwo.Iid };
 
-            var jaggedArray = new CDP4Common.DTO.CompoundParameterType(this.jaggedArrayIid, 0);
+            var jaggedArray = new CompoundParameterType(this.jaggedArrayIid, 0);
             jaggedArray.Component.Add(jaggedOrderedItemOne);
             jaggedArray.Component.Add(jaggedOrderedItemTwo);
 
@@ -173,7 +173,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>() {"-"};
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
 
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
@@ -195,7 +195,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>() { "-", "-", "-" };
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
 
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
@@ -217,7 +217,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>() { "-", "-", "-", "-" };
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
 
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
@@ -239,7 +239,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>(0);
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
 
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
             this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));

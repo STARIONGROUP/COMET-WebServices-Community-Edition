@@ -93,7 +93,7 @@ namespace CometServer.Extensions
                 userInfo = $"ANONYMOUS:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
             }
 
-            userInfo = $"{httpRequest.HttpContext.User.Identity.Name}:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
+            userInfo = $"{httpRequest.HttpContext.User.Identity?.Name}:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
 
             return userInfo.Sanitize();
         }

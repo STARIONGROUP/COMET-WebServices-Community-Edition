@@ -289,7 +289,7 @@ namespace CometServer.Services
                     var instanceType = revisionTypeInfo.Key;
 
                     // filter out iteration objects not within the current context
-                    var revisionedInstanceIids = instanceType == typeof(Iteration).Name && !useDefaultContext
+                    var revisionedInstanceIids = instanceType == nameof(Iteration) && !useDefaultContext
                         ? revisionTypeInfo.Select(x => x.Iid).Where(x => x == this.TransactionManager.IterationSetup.IterationIid)
                         : revisionTypeInfo.Select(x => x.Iid);
 

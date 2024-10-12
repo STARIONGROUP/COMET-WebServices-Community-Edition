@@ -194,7 +194,7 @@ namespace CometServer.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
-            if (!(container is CDP4Common.DTO.ParameterOrOverrideBase parameterOrOverrideBase))
+            if (!(container is ParameterOrOverrideBase parameterOrOverrideBase))
             {
                 throw new InvalidOperationException("The container of a ParameterSubscription can only be a ParameterOrOverrideBase.");
             }
@@ -276,7 +276,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private static void CheckOwnership(ParameterSubscription thing, Thing container)
         {
-            if (thing.Owner == ((CDP4Common.DTO.ParameterOrOverrideBase)container).Owner)
+            if (thing.Owner == ((ParameterOrOverrideBase)container).Owner)
             {
                 throw new Cdp4ModelValidationException(
                     "Parameter and ParameterSubscription cannot have the same owner.");

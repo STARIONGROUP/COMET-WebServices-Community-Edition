@@ -136,7 +136,7 @@ namespace CometServer.Services.Email
                     var attachment = new MimePart(MimeTypes.GetMimeType(filepath))
                     {
                         Content = new MimeContent(System.IO.File.OpenRead(filepath), ContentEncoding.Binary),
-                        ContentDisposition = new MimeKit.ContentDisposition("multipart/form-data"),
+                        ContentDisposition = new ContentDisposition("multipart/form-data"),
                         ContentTransferEncoding = ContentEncoding.Base64,
                         FileName = Path.GetFileName(filepath)
                     };

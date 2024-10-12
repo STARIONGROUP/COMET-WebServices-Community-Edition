@@ -28,7 +28,7 @@ namespace CometServer.Exceptions
 
     /// <summary>
     /// The BAdRequestException error exception is an exception that indicates that a bas request was send.
-    /// </summary
+    /// </summary>
     [Serializable]
     public class BadRequestException : Exception
     {

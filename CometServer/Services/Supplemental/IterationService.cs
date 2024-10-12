@@ -33,11 +33,7 @@ namespace CometServer.Services
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
 
-    using CometServer.Exceptions;
-
     using Helpers;
-
-    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 

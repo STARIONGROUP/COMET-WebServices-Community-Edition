@@ -40,11 +40,6 @@ namespace CometServer.Services
     public static class Utils
     {
         /// <summary>
-        /// The UTC (zulu) date time serialization format.
-        /// </summary>
-        public const string DateTimeUtcSerializationFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'ffffff'Z'";
-        
-        /// <summary>
         /// Construct a POSTGRESQL connection string based on the passed in database name.
         /// </summary>
         /// <param name="backtierConfig">

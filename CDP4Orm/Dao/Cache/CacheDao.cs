@@ -76,16 +76,6 @@ namespace CDP4Orm.Dao.Cache
         public IFileDao FileDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the folder dao.
-        /// </summary>
-        public IFolderDao FolderDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the fileRevision dao.
-        /// </summary>
-        public IFileRevisionDao FileRevisionDao { get; set; }
-
-        /// <summary>
         /// Gets or sets the injected <see cref="ILogger{T}" />
         /// </summary>
         public ILogger<CacheDao> Logger { get; set; }
@@ -100,19 +90,18 @@ namespace CDP4Orm.Dao.Cache
         {
             var table = GetThingCacheTableName(thing);
 
-            var columns = string.Format("(\"{0}\", \"{1}\", \"{2}\")", IidKey, RevisionColumnName, JsonColumnName);
+            var columns = $"(\"{IidKey}\", \"{RevisionColumnName}\", \"{JsonColumnName}\")";
             var values = "(:iid, :revisionnumber, :jsonb)";
-            var sqlQuery = string.Format("INSERT INTO \"{0}\".\"{1}\" {2} VALUES {3} ON CONFLICT (\"{4}\") DO UPDATE SET \"{5}\"=:revisionnumber, \"{6}\"=:jsonb;", partition, table, columns, values, IidKey, RevisionColumnName, JsonColumnName);
+            var sqlQuery = $"INSERT INTO \"{partition}\".\"{table}\" {columns} VALUES {values} ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=:revisionnumber, \"{JsonColumnName}\"=:jsonb;";
 
-            using (var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction))
-            {
-                command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
-                command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
-                command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
+            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
-                // log the sql command 
-                command.ExecuteNonQuery();
-            }
+            command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
+            command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
+            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
+
+            // log the sql command 
+            command.ExecuteNonQuery();
         }
 
         /// <summary>

@@ -73,8 +73,7 @@ namespace CometServer.Services
         /// </returns>
         public bool IsFilePersisted(string hash)
         {
-            string filePath;
-            return this.TryGetFileStoragePath(hash, out filePath);
+            return this.TryGetFileStoragePath(hash, out _);
         }
 
         /// <summary>

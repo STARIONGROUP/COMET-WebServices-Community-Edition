@@ -430,7 +430,7 @@ namespace CometServer.Services.Operations
             }
 
             // verify no updates on FileRevision
-            if (operation.Update.Any(x => x[ClasskindKey].ToString() == typeof(FileRevision).Name))
+            if (operation.Update.Any(x => x[ClasskindKey].ToString() == nameof(FileRevision)))
             {
                 throw new InvalidOperationException("FileRevisions updates are not allowed");
             }
@@ -487,6 +487,12 @@ namespace CometServer.Services.Operations
         /// </param>
         /// <param name="fileStore">
         /// The file Store.
+        /// </param>
+        /// <param name="transaction">
+        /// the <see cref="NpgsqlTransaction"/> used to write to the underlying database
+        /// </param>
+        /// <param name="partition">
+        /// The database partition
         /// </param>
         private void ValidatePostMessage(CdpPostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
         {
@@ -547,8 +553,7 @@ namespace CometServer.Services.Operations
                 var typeInfo = updateInfo[ClasskindKey].ToString();
                 var iidInfo = (Guid)updateInfo[IidKey];
 
-                PropertyMetaInfo containerPropertyInfo;
-                if (!metaInfo.TryGetContainerProperty(typeInfo, out containerPropertyInfo))
+                if (!metaInfo.TryGetContainerProperty(typeInfo, out var containerPropertyInfo))
                 {
                     continue;
                 }
@@ -636,10 +641,9 @@ namespace CometServer.Services.Operations
             foreach (var createInfo in operation.Create)
             {
                 var typeInfo = createInfo.GetType().Name;
-                PropertyMetaInfo containerPropertyInfo;
                 ContainerInfo containerInfo;
 
-                if (!metaInfo.TryGetContainerProperty(typeInfo, out containerPropertyInfo))
+                if (!metaInfo.TryGetContainerProperty(typeInfo, out var containerPropertyInfo))
                 {
                     continue;
                 }
@@ -721,8 +725,7 @@ namespace CometServer.Services.Operations
         /// </exception>
         private DtoResolveHelper GetContainerInfo(Thing thing)
         {
-            DtoResolveHelper resolvedThing;
-            if (!this.operationThingCache.TryGetValue(thing.GetInfoPlaceholder(), out resolvedThing))
+            if (!this.operationThingCache.TryGetValue(thing.GetInfoPlaceholder(), out var resolvedThing))
             {
                 throw new InvalidOperationException(
                     $"The resolved information fo '{thing.GetType().Name}' with iid: '{thing.Iid}' was not found.");
@@ -734,8 +737,7 @@ namespace CometServer.Services.Operations
                     $"The container information for '{thing.GetType().Name}' with iid: '{thing.Iid}' was not found.");
             }
 
-            DtoResolveHelper resolvedThingContainer;
-            if (!this.operationThingCache.TryGetValue(resolvedThing.ContainerInfo, out resolvedThingContainer))
+            if (!this.operationThingCache.TryGetValue(resolvedThing.ContainerInfo, out var resolvedThingContainer))
             {
                 throw new InvalidOperationException(
                     $"Expected container for '{thing.GetType().Name}' with iid: '{thing.Iid}' not found in operation message.");
@@ -874,6 +876,9 @@ namespace CometServer.Services.Operations
         /// </param>
         /// <param name="transaction">
         /// The current transaction to the database.
+        /// </param>
+        /// <param name="requestPartition">
+        /// the database partition
         /// </param>
         private void ApplyDeleteOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
@@ -1069,8 +1074,8 @@ namespace CometServer.Services.Operations
             }
 
             // re-order create
-            var targetModelPartition = requestPartition.Contains(typeof(EngineeringModel).Name) ? requestPartition : requestPartition.Replace(typeof(Iteration).Name, typeof(EngineeringModel).Name);
-            var targetIterationPartition = requestPartition.Contains(typeof(EngineeringModel).Name) ? requestPartition.Replace(typeof(EngineeringModel).Name, typeof(Iteration).Name) : requestPartition;
+            var targetModelPartition = requestPartition.Contains(nameof(EngineeringModel)) ? requestPartition : requestPartition.Replace(nameof(Iteration), nameof(EngineeringModel));
+            var targetIterationPartition = requestPartition.Contains(nameof(EngineeringModel)) ? requestPartition.Replace(nameof(EngineeringModel), nameof(Iteration)) : requestPartition;
 
             var modelSetupService = (IEngineeringModelSetupService)this.ServiceProvider.MapToReadService(ClassKind.EngineeringModelSetup.ToString());
 
@@ -1094,8 +1099,8 @@ namespace CometServer.Services.Operations
                     throw new InvalidOperationException("The container for the copy operation cannot be found.");
                 }
 
-                var mrdlService = (IModelReferenceDataLibraryService)this.ServiceProvider.MapToReadService(typeof(ModelReferenceDataLibrary).Name);
-                var iterationservice = this.ServiceProvider.MapToReadService(typeof(Iteration).Name);
+                var mrdlService = (IModelReferenceDataLibraryService)this.ServiceProvider.MapToReadService(nameof(ModelReferenceDataLibrary));
+                var iterationservice = this.ServiceProvider.MapToReadService(nameof(Iteration));
 
                 var targetIteration = (Iteration)iterationservice.GetShallow(transaction, targetModelPartition, new[] {copyinfo.Target.IterationId.Value}, securityContext).SingleOrDefault();
                 if (targetIteration == null)
@@ -1136,7 +1141,7 @@ namespace CometServer.Services.Operations
                         var elementDefContainer = elementDefCopies.SingleOrDefault(x => x.Iid == idmap[sourceElementDefContainer.Iid]);
                         if (elementDefContainer == null)
                         {
-                            throw new InvalidOperationException($"The target element definition container could not be found for the usage to copy.");
+                            throw new InvalidOperationException("The target element definition container could not be found for the usage to copy.");
                         }
 
                         ((ServiceBase)usageService).Copy(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);

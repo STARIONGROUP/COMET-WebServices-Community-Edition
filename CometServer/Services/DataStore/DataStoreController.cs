@@ -57,26 +57,25 @@ namespace CometServer.Services.DataStore
 
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
-            using (var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage)))
+            using var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage));
+
+            connection.Open();
+
+            // Create a clone of the database
+            using (var cmd = new NpgsqlCommand())
             {
-                connection.Open();
+                this.Logger.LogDebug("Clone the data store");
 
-                // Create a clone of the database
-                using (var cmd = new NpgsqlCommand())
-                {
-                    this.Logger.LogDebug("Clone the data store");
+                this.DropDataStoreConnections(backtier.Database, connection);
 
-                    this.DropDataStoreConnections(backtier.Database, connection);
-
-                    cmd.Connection = connection;
+                cmd.Connection = connection;
                     
-                    cmd.CommandText = $"CREATE DATABASE {backtier.DatabaseRestore} WITH OWNER = {backtier.UserName} TEMPLATE = {backtier.Database} ENCODING = 'UTF8';";
+                cmd.CommandText = $"CREATE DATABASE {backtier.DatabaseRestore} WITH OWNER = {backtier.UserName} TEMPLATE = {backtier.Database} ENCODING = 'UTF8';";
 
-                    cmd.ExecuteNonQuery();
-                }
-
-                connection.Close();
+                cmd.ExecuteNonQuery();
             }
+
+            connection.Close();
         }
 
         /// <summary>
@@ -92,38 +91,37 @@ namespace CometServer.Services.DataStore
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
             // Connect to the restore database
-            using (var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage)))
+            using var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage));
+
+            connection.Open();
+
+            // Drop the existing database
+            using (var cmd = new NpgsqlCommand())
             {
-                connection.Open();
+                this.Logger.LogDebug("Drop the data store");
 
-                // Drop the existing database
-                using (var cmd = new NpgsqlCommand())
-                {
-                    this.Logger.LogDebug("Drop the data store");
+                this.DropDataStoreConnections(backtier.Database, connection);
 
-                    this.DropDataStoreConnections(backtier.Database, connection);
-
-                    cmd.Connection = connection;
+                cmd.Connection = connection;
                     
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtier.Database};";
+                cmd.CommandText = $"DROP DATABASE IF EXISTS {backtier.Database};";
 
-                    cmd.ExecuteNonQuery();
-                }
-
-                // Create a new database with a restore template
-                using (var cmd = new NpgsqlCommand())
-                {
-                    this.Logger.LogDebug("Clone the restore data store");
-
-                    cmd.Connection = connection;
-
-                    cmd.CommandText = $"CREATE DATABASE {backtier.Database} WITH OWNER = {backtier.UserName} TEMPLATE = {backtier.DatabaseRestore} ENCODING = 'UTF8';";
-
-                    cmd.ExecuteNonQuery();
-                }
-
-                connection.Close();
+                cmd.ExecuteNonQuery();
             }
+
+            // Create a new database with a restore template
+            using (var cmd = new NpgsqlCommand())
+            {
+                this.Logger.LogDebug("Clone the restore data store");
+
+                cmd.Connection = connection;
+
+                cmd.CommandText = $"CREATE DATABASE {backtier.Database} WITH OWNER = {backtier.UserName} TEMPLATE = {backtier.DatabaseRestore} ENCODING = 'UTF8';";
+
+                cmd.ExecuteNonQuery();
+            }
+
+            connection.Close();
         }
 
         /// <summary>
@@ -137,19 +135,18 @@ namespace CometServer.Services.DataStore
         /// </param>
         public void DropDataStoreConnections(string dataStoreName, NpgsqlConnection connection)
         {
-            using (var cmd = new NpgsqlCommand())
-            {
-                this.Logger.LogDebug("Drop all connections to the data store");
+            using var cmd = new NpgsqlCommand();
 
-                NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, dataStoreName)));
+            this.Logger.LogDebug("Drop all connections to the data store");
 
-                cmd.Connection = connection;
+            NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, dataStoreName)));
 
-                cmd.CommandText = $"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = :dataStoreName AND pid <> pg_backend_pid();";
-                cmd.Parameters.Add("dataStoreName", NpgsqlDbType.Varchar).Value = dataStoreName;
+            cmd.Connection = connection;
 
-                cmd.ExecuteNonQuery();
-            }
+            cmd.CommandText = "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = :dataStoreName AND pid <> pg_backend_pid();";
+            cmd.Parameters.Add("dataStoreName", NpgsqlDbType.Varchar).Value = dataStoreName;
+
+            cmd.ExecuteNonQuery();
         }
     }
 }

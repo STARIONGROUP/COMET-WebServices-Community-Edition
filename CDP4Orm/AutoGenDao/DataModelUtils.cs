@@ -41,8 +41,8 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// The derived properties per class.
         /// </summary>
-        private readonly HashSet<string> derivedProperties = new HashSet<string>
-            {
+        private readonly HashSet<string> derivedProperties = new()
+        {
                 { "ActualFiniteState.Name" },
                 { "ActualFiniteState.Owner" },
                 { "ActualFiniteState.ShortName" },
@@ -124,8 +124,8 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// The type source partition mapping for each concrete class.
         /// </summary>
-        private readonly Dictionary<string, IEnumerable<string>> typePartitionMap = new Dictionary<string, IEnumerable<string>>
-            {
+        private readonly Dictionary<string, IEnumerable<string>> typePartitionMap = new()
+        {
 
                 {
                     "EngineeringModel",

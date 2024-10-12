@@ -28,7 +28,6 @@ namespace CometServer.Tests.Services.Supplemental
     using System.Collections;
     using System.Collections.Generic;
     using System.Data;
-    using System.Security;
 
     using CDP4Authentication;
 
@@ -53,9 +52,9 @@ namespace CometServer.Tests.Services.Supplemental
     [TestFixture]
     public class CommonFileStoreServiceTestFixture
     {
-        private static Folder folder = new Folder(Guid.NewGuid(), 0);
-        private static File file = new File(Guid.NewGuid(), 0);
-        private static CommonFileStore commonFileStore = new CommonFileStore(Guid.NewGuid(), 0);
+        private static Folder folder = new(Guid.NewGuid(), 0);
+        private static File file = new(Guid.NewGuid(), 0);
+        private static CommonFileStore commonFileStore = new(Guid.NewGuid(), 0);
 
         private CommonFileStoreService commonFileStoreService;
         private Mock<IPermissionService> permissionService;
@@ -64,7 +63,6 @@ namespace CometServer.Tests.Services.Supplemental
         private Mock<IDbTransaction> transaction;
         private Mock<ICdp4TransactionManager> transactionManager;
         private string engineeringModelPartitionName;
-        private EngineeringModel engineeringModel;
 
         [SetUp]
         public void Setup()
@@ -90,14 +88,6 @@ namespace CometServer.Tests.Services.Supplemental
 
             commonFileStore.Folder.Clear();
             commonFileStore.Folder.Add(folder.Iid);
-
-            this.engineeringModel = new EngineeringModel(Guid.NewGuid(), 0)
-            {
-                CommonFileStore = new List<Guid>
-                {
-                    commonFileStore.Iid
-                }
-            };
 
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(true);
             this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
@@ -189,14 +179,6 @@ namespace CometServer.Tests.Services.Supplemental
         }
 
         public static IEnumerable TestWriteCases()
-        {
-            yield return new object[] { file, false };
-            yield return new object[] { folder, false };
-            yield return new object[] { commonFileStore, false };
-            yield return new object[] { new ElementDefinition(), true };
-        }
-
-        public static IEnumerable TestReadCases()
         {
             yield return new object[] { file, false };
             yield return new object[] { folder, false };

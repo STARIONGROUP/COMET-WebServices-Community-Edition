@@ -128,7 +128,7 @@ namespace CometServer.ChangeNotification
                         var startDateTime = endDateTime.AddDays(-7);
                         var htmlStringBuilder = new StringBuilder();
                         var textStringBuilder = new StringBuilder();
-                        var subject = $"Weekly Changelog from COMET server";
+                        var subject = "Weekly Changelog from COMET server";
                         htmlStringBuilder.AppendLine($"<h3>{subject}<br />{startDateTime:R} - {endDateTime:R}</h3>");
                         textStringBuilder.AppendLine($"{subject}\n{startDateTime:R} - {endDateTime:R}");
 

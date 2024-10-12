@@ -30,6 +30,8 @@ namespace CometServer.Services
 
     using CDP4Orm.Dao.Revision;
 
+    using CometServer.Services.Protocol;
+
     using Npgsql;
 
     /// <summary>

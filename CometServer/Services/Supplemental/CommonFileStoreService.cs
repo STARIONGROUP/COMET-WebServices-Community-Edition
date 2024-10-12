@@ -28,12 +28,9 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
-    using System.Security;
-
+    
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
-
-    using Npgsql;
 
     /// <summary>
     /// The handcoded part of the <see cref="CommonFileStore"/> Service which uses the ORM layer to interact with the data model.
@@ -49,7 +46,7 @@ namespace CometServer.Services
         /// <see cref="Dictionary{TKey,TValue}"/> that uses a <see cref="Type"/> as it's key and a <see cref="Func{TResult}"/> that returns a <see cref="Func{TResult}"/>
         /// that can be used as a predicate on a list of <see cref="CommonFileStore"/>s.
         /// </summary>
-        private readonly Dictionary<Type, Func<Guid, Func<CommonFileStore, bool>>> commonFileStoreSelectors = new Dictionary<Type, Func<Guid, Func<CommonFileStore, bool>>>
+        private readonly Dictionary<Type, Func<Guid, Func<CommonFileStore, bool>>> commonFileStoreSelectors = new()
         {
             {
                 typeof(File),

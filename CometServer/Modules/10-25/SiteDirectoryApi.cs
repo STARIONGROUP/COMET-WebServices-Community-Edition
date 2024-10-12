@@ -267,7 +267,7 @@ namespace CometServer.Modules
                         {
                             this.logger.LogWarning("Request {requestToken} failed as BadRequest: The SiteDirectory does not support MultiPart POST request", requestToken);
 
-                            this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - The SiteDirectory does not support MultiPart POST request");
+                            this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - The SiteDirectory does not support MultiPart POST request");
 
                             res.StatusCode = (int)HttpStatusCode.BadRequest;
                             await res.AsJson("The SiteDirectory does not support MultiPart POST request");
@@ -355,7 +355,7 @@ namespace CometServer.Modules
 
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
-                IReadOnlyList<Thing> things = null;
+                IReadOnlyList<Thing> things;
 
                 var dbsw = Stopwatch.StartNew();
                 this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);

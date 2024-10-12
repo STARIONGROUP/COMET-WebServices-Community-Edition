@@ -26,7 +26,6 @@ namespace CometServer.Tests.Services
 {
     using System;
     using System.IO;
-    using System.Linq;
 
     using CDP4Common.DTO;
 

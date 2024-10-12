@@ -303,8 +303,7 @@ namespace CDP4Orm.Dao
             {
                 this.currentTransactionDataTimeTransaction = transaction;
 
-                using var command = new NpgsqlCommand(
-                    $"SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
+                using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
                     transaction.Connection,
                     transaction);
                 this.currentTransactionDatetime = (DateTime)command.ExecuteScalar();
@@ -322,7 +321,7 @@ namespace CDP4Orm.Dao
         {
             var jsonObject = JObject.Parse(reader.GetValue(0).ToString());
 
-            Thing thing = null;
+            Thing thing;
 
             try
             {

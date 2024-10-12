@@ -32,6 +32,8 @@ namespace CometServer.Modules.Tasks
     using Carter;
     using Carter.Response;
 
+    using CDP4DalCommon.Tasks;
+
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -82,6 +84,12 @@ namespace CometServer.Modules.Tasks
         /// <param name="cometHasStartedService">
         /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
         /// acceptng requests
+        /// </param>
+        /// <param name="cometTaskService">
+        /// The (injected) <see cref="ICometTaskService"/> used to query tasks
+        /// </param>
+        /// <param name="appConfigService">
+        /// The (injected) <see cref="IAppConfigService"/> used to access application settings
         /// </param>
         public CometTasksModule(ILogger<HealthModule> logger, ICometHasStartedService cometHasStartedService, ICometTaskService cometTaskService, IAppConfigService appConfigService)
         {
@@ -153,7 +161,6 @@ namespace CometServer.Modules.Tasks
 
                 res.UpdateWithNotAutherizedSettings();
                 await res.AsJson("not authorized");
-                return;
             }
         }
 
@@ -207,7 +214,6 @@ namespace CometServer.Modules.Tasks
 
                 res.UpdateWithNotAutherizedSettings();
                 await res.AsJson("not authorized");
-                return;
             }
         }
 

@@ -411,9 +411,6 @@ namespace CometServer.Services.ChangeLog
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        /// <param name="operation">
-        /// The <see cref="CdpPostOperation"/>
-        /// </param>
         /// <param name="deleteInfo">
         /// The <see cref="ClasslessDTO"/>.
         /// </param>
@@ -938,11 +935,11 @@ namespace CometServer.Services.ChangeLog
 
                         foreach (var category in elementUsage.Category)
                         {
-                                AddIfNotExists(affectedThingsData.AffectedItemIds, category);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, category);
                         }
 
-                            AddIfNotExists(affectedThingsData.AffectedDomainIds, elementUsage.Owner);
-                            AddIfNotExists(affectedThingsData.AffectedItemIds, elementUsage.Iid);
+                        AddIfNotExists(affectedThingsData.AffectedDomainIds, elementUsage.Owner);
+                        AddIfNotExists(affectedThingsData.AffectedItemIds, elementUsage.Iid);
                     }
 
                     break;
@@ -955,11 +952,11 @@ namespace CometServer.Services.ChangeLog
 
                         foreach (var category in elementDefinition.Category)
                         {
-                                AddIfNotExists(affectedThingsData.AffectedItemIds, category);
-                        }
-
-                            AddIfNotExists(affectedThingsData.AffectedDomainIds, elementDefinition.Owner);
-                            AddIfNotExists(affectedThingsData.AffectedItemIds, elementDefinition.Iid);
+                            AddIfNotExists(affectedThingsData.AffectedItemIds, category);
+                        } 
+                        
+                        AddIfNotExists(affectedThingsData.AffectedDomainIds, elementDefinition.Owner);
+                        AddIfNotExists(affectedThingsData.AffectedItemIds, elementDefinition.Iid);
                     }
 
                     break;
@@ -1144,6 +1141,9 @@ namespace CometServer.Services.ChangeLog
         /// </summary>
         /// <param name="deletedThing">
         /// The updated <see cref="Thing"/>
+        /// </param>
+        /// <param name="changedThings">
+        /// the changed <see cref="Thing"/>s
         /// </param>
         /// <returns>
         /// <paramref name="deletedThing"/>'s container <see cref="Thing"/> if found, otherwise null

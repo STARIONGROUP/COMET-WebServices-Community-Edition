@@ -149,7 +149,7 @@ namespace CometServer.Services
             {
                 if (!this.ActualFiniteStateService.DeleteConcept(transaction, partition, actualState, actualFiniteStateList))
                 {
-                    throw new InvalidOperationException(string.Format("The actual finite state {0} could not be deleted", actualState.Iid));
+                    throw new InvalidOperationException($"The actual finite state {actualState.Iid} could not be deleted");
                 }
             }
         }

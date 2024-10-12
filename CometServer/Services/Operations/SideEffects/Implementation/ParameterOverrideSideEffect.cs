@@ -179,7 +179,7 @@ namespace CometServer.Services.Operations.SideEffects
                     if (!this.ParameterSubscriptionService.DeleteConcept(transaction, partition, parameterSubscriptionToRemove, thing))
                     {
                         throw new InvalidOperationException(
-                            string.Format("The update operation of the parameter override value set {0} failed.", parameterSubscriptionToRemove.Iid));
+                            $"The update operation of the parameter override value set {parameterSubscriptionToRemove.Iid} failed.");
                     }
                 }
             }

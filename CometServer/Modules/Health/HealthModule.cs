@@ -83,6 +83,9 @@ namespace CometServer.Modules.Health
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
+        /// <param name="cometHasStartedService">
+        /// The <see cref="ICometHasStartedService"/> used to verify that the COMET REST API has started
+        /// </param>
         public HealthModule(ILogger<HealthModule> logger, IAppConfigService appConfigService, ITokenGeneratorService tokenGeneratorService, ICometHasStartedService cometHasStartedService)
         {
             this.logger = logger;

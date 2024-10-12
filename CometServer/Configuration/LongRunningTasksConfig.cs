@@ -74,7 +74,7 @@ namespace CometServer.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the time in seconds for which the long running <see cref="CometTask"/>s
+        /// Gets or sets the time in seconds for which the long running task
         /// are kept in the cache. If the value is set to 0 the Tasks are not cached.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
@@ -88,7 +88,7 @@ namespace CometServer.Configuration
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(this.RetentionTime), $"Value cannot be less than 0 seconds.");
+                    throw new ArgumentOutOfRangeException(nameof(this.RetentionTime), "Value cannot be less than 0 seconds.");
                 }
 
                 if (value > MaxRetentionTime)
@@ -101,8 +101,8 @@ namespace CometServer.Configuration
         }
 
         /// <summary>
-        /// Gets or sets the time in seconds to wait for a long running <see cref="CometTask"/> to complete. If the task takes
-        /// longer to complete the corresponding <see cref="CometTask"/> is returned to the caller which the user can poll to
+        /// Gets or sets the time in seconds to wait for a long running task to complete. If the task takes
+        /// longer to complete the corresponding task is returned to the caller which the user can poll to
         /// inspect its status.
         /// </summary>
         public int WaitTime
@@ -113,7 +113,7 @@ namespace CometServer.Configuration
             {
                 if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException(nameof(this.WaitTime), $"Value cannot be less than 0 seconds.");
+                    throw new ArgumentOutOfRangeException(nameof(this.WaitTime), "Value cannot be less than 0 seconds.");
                 }
 
                 if (value > MaxWaitTime)

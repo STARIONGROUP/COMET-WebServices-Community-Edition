@@ -30,8 +30,6 @@ namespace CometServer.Tests.SideEffects
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
-    using CDP4Authentication;
-
     using CDP4Orm.Dao;
 
     using CometServer.Authorization;
@@ -53,7 +51,6 @@ namespace CometServer.Tests.SideEffects
     [TestFixture]
     public class EngineeringModelSetupSideEffectTestFixture
     {
-        private AuthenticationPerson authenticatedPerson;
         private EngineeringModelSetupSideEffect engineeringModelSetupSideEffect;
         private ModelCreatorManager modelCreatorManager;
 
@@ -77,8 +74,6 @@ namespace CometServer.Tests.SideEffects
         [SetUp]
         public void Setup()
         {
-            this.authenticatedPerson = new AuthenticationPerson(Guid.NewGuid(), 1) { DefaultDomain = Guid.NewGuid() };
-            
             this.iterationService = new Mock<IIterationService>();
             this.iterationSetupService = new Mock<IIterationSetupService>();
             this.engineeringModelService = new Mock<IEngineeringModelService>();

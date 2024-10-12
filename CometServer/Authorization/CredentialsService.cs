@@ -38,8 +38,7 @@ namespace CometServer.Authorization
     using CDP4Orm.Dao.Authentication;
 
     using CometServer.Exceptions;
-    using CometServer.Services;
-
+    
     using Microsoft.Extensions.Logging;
 
     using Npgsql;

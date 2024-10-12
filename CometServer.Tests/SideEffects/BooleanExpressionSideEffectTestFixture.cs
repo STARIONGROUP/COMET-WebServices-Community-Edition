@@ -42,7 +42,7 @@ namespace CometServer.Tests.SideEffects
     using NUnit.Framework;
 
     /// <summary>
-    /// Suite of tests for the <see cref="BooleanExpressionSideEffect"/>
+    /// Suite of tests for the <see cref="BooleanExpression"/>
     /// </summary>
     [TestFixture]
     public class BooleanExpressionSideEffectTestFixture

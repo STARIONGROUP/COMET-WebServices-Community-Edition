@@ -183,7 +183,7 @@ namespace CometServer.Tests.SideEffects
                                           this.siteReferenceDataLibraryService.Object
                                   };
 
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new OrderedItem{K = 3, V = this.unitFactorC.Iid} } } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() {K = 3, V = this.unitFactorC.Iid} } } };
 
             Assert.Throws<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdate(
@@ -206,7 +206,7 @@ namespace CometServer.Tests.SideEffects
                                           this.siteReferenceDataLibraryService.Object
                                   };
 
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new OrderedItem { K = 4, V = this.unitFactorD.Iid } } } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() { K = 4, V = this.unitFactorD.Iid } } } };
 
             Assert.DoesNotThrow(
                 () => this.sideEffect.BeforeUpdate(

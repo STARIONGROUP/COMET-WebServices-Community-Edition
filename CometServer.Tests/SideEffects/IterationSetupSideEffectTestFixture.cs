@@ -90,8 +90,8 @@ namespace CometServer.Tests.SideEffects
             this.iterationSetupSideEffect.RevisionService = this.mockedRevisionService.Object;
 
             var returnedEngineeringModels = new List<EngineeringModel> { this.engineeringModel };
-            var returnedIterations = new List<Iteration> { new Iteration(Guid.NewGuid(), 1) };
-            var returnedIterationSetups = new List<IterationSetup> { new IterationSetup(Guid.NewGuid(), 1) };
+            var returnedIterations = new List<Iteration> { new(Guid.NewGuid(), 1) };
+            var returnedIterationSetups = new List<IterationSetup> { new(Guid.NewGuid(), 1) };
 
             this.mockedIterationSetupService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).Returns(returnedIterationSetups);
             this.mockedIterationSetupService.Setup(x => x.UpdateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModelSetup>())).Returns(true);

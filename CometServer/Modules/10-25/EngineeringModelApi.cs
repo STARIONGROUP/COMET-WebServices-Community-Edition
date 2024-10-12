@@ -246,7 +246,7 @@ namespace CometServer.Modules
                     {
                         this.logger.LogWarning("Request {requestToken} failed as BadRequest: a POST request may not have a wait time when it is multipart", requestToken);
 
-                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - a POST request may not have a wait time when it is multipart");
+                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - a POST request may not have a wait time when it is multipart");
 
                         res.StatusCode = (int)HttpStatusCode.BadRequest;
                         await res.AsJson("a POST request may not have a wait time when it is multipart");

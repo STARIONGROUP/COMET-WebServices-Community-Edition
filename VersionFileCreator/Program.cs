@@ -42,7 +42,7 @@ namespace VersionFileCreator
         {
             try
             {
-                string path = null;
+                string path;
                 var consolePrefix = "VersionFileCreator =>";
 
                 Console.WriteLine($"{consolePrefix} Checking path variable.");

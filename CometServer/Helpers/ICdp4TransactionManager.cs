@@ -28,8 +28,6 @@ namespace CometServer.Helpers
 
     using CDP4Common.DTO;
     
-    using CDP4Orm.Dao;
-
     using CometServer.Authorization;
 
     using Npgsql;
@@ -86,17 +84,6 @@ namespace CometServer.Helpers
         /// </returns>
         DateTime GetTransactionTime(NpgsqlTransaction transaction);
         
-        /// <summary>
-        /// Get the session timeframe start time.
-        /// </summary>
-        /// <param name="transaction">
-        /// The transaction.
-        /// </param>
-        /// <returns>
-        /// The <see cref="DateTime"/>.
-        /// </returns>
-        DateTime GetSessionTimeFrameStart(NpgsqlTransaction transaction);
-
         /// <summary>
         /// Get the current session time instant.
         /// </summary>

@@ -107,7 +107,7 @@ namespace CometServer.Services
             // copy contained things
             foreach (var group in allSourceThings.Where(x => sourceElementDef.ParameterGroup.Contains(x.Iid)))
             {
-                ((ServiceBase)this.ParameterGroupService).Copy(transaction, partition, @group, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                ((ServiceBase)this.ParameterGroupService).Copy(transaction, partition, group, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
 
             foreach (var parameter in allSourceThings.Where(x => sourceElementDef.Parameter.Contains(x.Iid)))

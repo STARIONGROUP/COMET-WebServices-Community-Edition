@@ -47,11 +47,11 @@ namespace CometServer.Tests.Services.BusinessLogic
     [TestFixture]
     public class ChainOfRdlComputationServiceTestFixture
     {
-        private Mock<ILogger<ChainOfRdlComputationService>> logger = new Mock<ILogger<ChainOfRdlComputationService>>();
+        private Mock<ILogger<ChainOfRdlComputationService>> logger = new ();
  
-        private Mock<IModelReferenceDataLibraryDao> modelReferenceDataLibraryDao = new Mock<IModelReferenceDataLibraryDao>();
+        private Mock<IModelReferenceDataLibraryDao> modelReferenceDataLibraryDao = new ();
 
-        private Mock<ISiteReferenceDataLibraryDao> siteReferenceDataLibraryDao = new Mock<ISiteReferenceDataLibraryDao>();
+        private Mock<ISiteReferenceDataLibraryDao> siteReferenceDataLibraryDao = new ();
 
         private List<ModelReferenceDataLibrary> modelReferenceDataLibraries;
 

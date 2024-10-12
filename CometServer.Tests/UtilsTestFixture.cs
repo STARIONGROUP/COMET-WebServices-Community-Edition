@@ -29,18 +29,14 @@ namespace CometServer.Tests
 
     using CDP4Common.DTO;
 
-    using CDP4JsonSerializer;
-
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
-    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Modules;
     using CometServer.Services;
     using CometServer.Services.Authorization;
-    using CometServer.Services.Operations;
     using CometServer.Services.Protocol;
     using CometServer.Tasks;
 
@@ -50,17 +46,15 @@ namespace CometServer.Tests
 
     using NUnit.Framework;
 
-    using IServiceProvider = CometServer.Services.IServiceProvider;
-
     /// <summary>
     /// Test fixture for the <see cref="CometServer.Services.Utils"/> class
     /// </summary>
     [TestFixture]
     public class UtilsTestFixture
     {
-        private readonly SiteDirectory siteDir = new SiteDirectory();
+        private readonly SiteDirectory siteDir = new();
 
-        private readonly EngineeringModelSetup modelSetup = new EngineeringModelSetup();
+        private readonly EngineeringModelSetup modelSetup = new();
 
         private readonly IRequestUtils requestUtils = new RequestUtils { QueryParameters = new QueryParameters() };
         
@@ -72,35 +66,9 @@ namespace CometServer.Tests
 
         private Mock<ITokenGeneratorService> tokenGeneratorService;
 
-        private Mock<IModelCreatorManager> modelCreatorManager;
-
         private Mock<IAppConfigService> appConfigService;
 
-        private Mock<ICredentialsService> credentialsService;
-
-        private Mock<IHeaderInfoProvider> headerInfoProvider;
-
-        private Mock<IServiceProvider> serviceProvider;
-
-        private Mock<IPermissionService> permissionService;
-
-        private Mock<IMetaInfoProvider> metaInfoProvider;
-
-        private Mock<IOperationProcessor> operationProcessor;
-
-        private Mock<IFileBinaryService> fileBinaryService;
-
-        private Mock<IFileArchiveService> fileArchiveService;
-
-        private Mock<IRevisionService> revisionService;
-
-        private Mock<IRevisionResolver> revisionResolver;
-
         private Mock<ICdp4TransactionManager> transactionManager;
-
-        private Mock<ICdp4JsonSerializer> jsonSerializer;
-
-        private Mock<IPermissionInstanceFilterService> permissionInstanceFilterService;
 
         private Mock<IBackgroundThingsMessageProducer> thingsMessageProducer;
 
@@ -131,22 +99,11 @@ namespace CometServer.Tests
         [SetUp]
         public void Setup()
         {
-            this.modelCreatorManager = new Mock<IModelCreatorManager>();
             this.loggerFactory = new Mock<ILoggerFactory>();
             this.appConfigService = new Mock<IAppConfigService>();
-            this.credentialsService = new Mock<ICredentialsService>();
-            this.headerInfoProvider = new Mock<IHeaderInfoProvider>();
-            this.serviceProvider = new Mock<IServiceProvider>();
-            this.permissionService = new Mock<IPermissionService>();
-            this.metaInfoProvider = new Mock<IMetaInfoProvider>();
-            this.operationProcessor = new Mock<IOperationProcessor>();
-            this.fileBinaryService = new Mock<IFileBinaryService>();
-            this.fileArchiveService = new Mock<IFileArchiveService>();
-            this.revisionService = new Mock<IRevisionService>();
-            this.revisionResolver = new Mock<IRevisionResolver>();
+            
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.jsonSerializer = new Mock<ICdp4JsonSerializer>();
-            this.permissionInstanceFilterService= new Mock<IPermissionInstanceFilterService>();
+            
             this.tokenGeneratorService = new Mock<ITokenGeneratorService>();
             this.cometHasStartedService = new Mock<ICometHasStartedService>();
             this.thingsMessageProducer = new Mock<IBackgroundThingsMessageProducer>();

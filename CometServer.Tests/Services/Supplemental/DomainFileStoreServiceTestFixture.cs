@@ -54,9 +54,9 @@ namespace CometServer.Tests.Services.Supplemental
     [TestFixture]
     public class DomainFileStoreServiceTestFixture
     {
-        private static Folder folder = new Folder(Guid.NewGuid(), 0);
-        private static File file = new File(Guid.NewGuid(), 0);
-        private static DomainFileStore domainFileStore = new DomainFileStore(Guid.NewGuid(), 0);
+        private static Folder folder = new(Guid.NewGuid(), 0);
+        private static File file = new(Guid.NewGuid(), 0);
+        private static DomainFileStore domainFileStore = new(Guid.NewGuid(), 0);
 
         private DomainFileStoreService domainFileStoreService;
         private Mock<IPermissionService> permissionService;
@@ -250,14 +250,6 @@ namespace CometServer.Tests.Services.Supplemental
         }
 
         public static IEnumerable TestWriteCases()
-        {
-            yield return new object[] { file, false };
-            yield return new object[] { folder, false };
-            yield return new object[] { domainFileStore, false };
-            yield return new object[] { new ElementDefinition(), true };
-        }
-
-        public static IEnumerable TestReadCases()
         {
             yield return new object[] { file, false };
             yield return new object[] { folder, false };

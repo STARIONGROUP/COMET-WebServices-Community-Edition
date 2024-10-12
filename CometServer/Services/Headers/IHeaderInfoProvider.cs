@@ -47,11 +47,6 @@ namespace CometServer.Services
         string Cdp4CommonVersion { get; }
 
         /// <summary>
-        /// Gets the Content type version.
-        /// </summary>
-        string ContentTypeVersion { get; }
-
-        /// <summary>
         /// Register the CDP4 headers to the passed in response.
         /// </summary>
         /// <param name="response">
@@ -60,6 +55,9 @@ namespace CometServer.Services
         /// <param name="contentTypeKind">
         /// The <see cref="ContentTypeKind"/> that is used to determine what the value of the
         /// Content-Type header needs to be
+        /// </param>
+        /// <param name="boundary">
+        /// the boundary that is used in the response
         /// </param>
         public void RegisterResponseHeaders(HttpResponse response, ContentTypeKind contentTypeKind, string boundary);
     }

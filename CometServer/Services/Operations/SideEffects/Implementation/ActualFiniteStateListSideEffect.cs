@@ -38,19 +38,9 @@ namespace CometServer.Services.Operations.SideEffects
     public sealed class ActualFiniteStateListSideEffect : OperationSideEffect<ActualFiniteStateList>
     {
         /// <summary>
-        /// Gets or sets the <see cref="IActualFiniteStateService"/>
-        /// </summary>
-        public IActualFiniteStateService ActualFiniteStateService { get; set; }
-
-        /// <summary>
         /// Gets or sets the <see cref="IStateDependentParameterUpdateService"/>
         /// </summary>
         public IStateDependentParameterUpdateService StateDependentParameterUpdateService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="IPossibleFiniteStateListService"/>
-        /// </summary>
-        public IPossibleFiniteStateListService PossibleFiniteStateListService { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="IFiniteStateLogicService"/>

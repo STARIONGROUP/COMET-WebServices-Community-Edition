@@ -50,34 +50,34 @@ namespace CometServer.Services
         public ILogger<DefaultValueArrayFactory> Logger { get; set; }
 
         /// <summary>
-        /// A cache of <see cref="ValueArray{string}" /> that has been computed for <see cref="ParameterType" />
+        /// A cache of <see cref="ValueArray{String}" /> that has been computed for <see cref="ParameterType" />
         /// that is used for fast access so taht the default ValueArray does not have to be recomputed.
         /// </summary>
-        private readonly Dictionary<Guid, ValueArray<string>> defaultValueArrayCache = new Dictionary<Guid, ValueArray<string>>();
+        private readonly Dictionary<Guid, ValueArray<string>> defaultValueArrayCache = new();
 
         /// <summary>
         /// a cache of <see cref="ParameterType" />s that is populated in the context of the current
         /// <see cref="DefaultValueArrayFactory" />
         /// </summary>
-        private Dictionary<Guid, ParameterType> parameterTypeCache = new Dictionary<Guid, ParameterType>();
+        private Dictionary<Guid, ParameterType> parameterTypeCache = new();
 
         /// <summary>
         /// a cache of <see cref="IParameterTypeAssignment" />s that is populated in the context of the current
         /// <see cref="DefaultValueArrayFactory" />
         /// </summary>
-        private readonly Dictionary<Guid, IParameterTypeAssignment> parameterTypeAssignmentCache = new Dictionary<Guid, IParameterTypeAssignment>();
+        private readonly Dictionary<Guid, IParameterTypeAssignment> parameterTypeAssignmentCache = new();
 
         /// <summary>
         /// a cache of <see cref="ParameterTypeComponent" />s that is populated in the context of the current
         /// <see cref="DefaultValueArrayFactory" />
         /// </summary>
-        private Dictionary<Guid, ParameterTypeComponent> parameterTypeComponentCache = new Dictionary<Guid, ParameterTypeComponent>();
+        private Dictionary<Guid, ParameterTypeComponent> parameterTypeComponentCache = new();
 
         /// <summary>
         /// a cache of the <see cref="ParameterType" />s and their number-of-values in the context of the current
         /// <see cref="DefaultValueArrayFactory" />
         /// </summary>
-        private readonly Dictionary<ParameterType, int> parameterTypeNumberOfValuesMap = new Dictionary<ParameterType, int>();
+        private readonly Dictionary<ParameterType, int> parameterTypeNumberOfValuesMap = new();
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="ICachedReferenceDataService"/>
@@ -155,16 +155,12 @@ namespace CometServer.Services
         /// </returns>
         public ValueArray<string> CreateDefaultValueArray(Guid parameterTypeIid)
         {
-            ValueArray<string> defaultValueArray;
-
-            if (this.defaultValueArrayCache.TryGetValue(parameterTypeIid, out defaultValueArray))
+            if (this.defaultValueArrayCache.TryGetValue(parameterTypeIid, out var defaultValueArray))
             {
                 return defaultValueArray;
             }
 
-            ParameterType parameterType;
-
-            if (!this.parameterTypeCache.TryGetValue(parameterTypeIid, out parameterType))
+            if (!this.parameterTypeCache.TryGetValue(parameterTypeIid, out var parameterType))
             {
                 var execptionMessage = $"The ParameterType with iid {parameterTypeIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
                 this.Logger.LogError(execptionMessage);
@@ -214,9 +210,7 @@ namespace CometServer.Services
         /// </returns>
         private int ComputeNumberOfValues(ParameterType parameterType)
         {
-            int numberOfValues;
-
-            if (this.parameterTypeNumberOfValuesMap.TryGetValue(parameterType, out numberOfValues))
+            if (this.parameterTypeNumberOfValuesMap.TryGetValue(parameterType, out var numberOfValues))
             {
                 return numberOfValues;
             }
@@ -348,18 +342,15 @@ namespace CometServer.Services
             foreach (var parameterTypeComponentKeyVaulePair in compoundParameterType.Component)
             {
                 var parameterTypeComponentIid = Guid.Parse(parameterTypeComponentKeyVaulePair.V.ToString());
-                ParameterTypeComponent parameterTypeComponent;
 
-                if (!this.parameterTypeComponentCache.TryGetValue(parameterTypeComponentIid, out parameterTypeComponent))
+                if (!this.parameterTypeComponentCache.TryGetValue(parameterTypeComponentIid, out var parameterTypeComponent))
                 {
                     var exceptionMessage = $"The ParameterTypeComponent with Iid {parameterTypeComponentIid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
                     this.Logger.LogError(exceptionMessage);
                     throw new KeyNotFoundException(exceptionMessage);
                 }
 
-                ParameterType parameterType;
-
-                if (!this.parameterTypeCache.TryGetValue(parameterTypeComponent.ParameterType, out parameterType))
+                if (!this.parameterTypeCache.TryGetValue(parameterTypeComponent.ParameterType, out var parameterType))
                 {
                     var exceptionMessage = $"The ParameterType {parameterTypeComponent.ParameterType} of the ParameterTypeComponent {parameterTypeComponent.Iid} could not be found in the DefaultValueArrayFactory cache. A Default ValueArray could not be created";
                     this.Logger.LogError(exceptionMessage);

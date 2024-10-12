@@ -35,7 +35,6 @@ namespace CometServer.Services
     using CDP4Common.Exceptions;
 
     using CometServer.Authorization;
-    using CometServer.Exceptions;
     using CometServer.Services.Authorization;
     using CometServer.Services.Protocol;
 
@@ -325,6 +324,9 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="engineeringModelSetups">
         /// The <see cref="EngineeringModelSetup"/>s that are to be included
+        /// </param>
+        /// <param name="siteDirectoryCache">
+        /// the <see cref="SiteDirectory"/> cache
         /// </param>
         /// <remarks>
         /// Participants that are not inlcuded in any of the EngineeringModelSetups are removed with the exception of the Person that is performing the request

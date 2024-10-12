@@ -82,9 +82,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override void BeforeUpdate(Person thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            string passwordValue;
-
-            if (TryExtractPasswordUpdate(rawUpdateInfo, out passwordValue))
+            if (TryExtractPasswordUpdate(rawUpdateInfo, out var passwordValue))
             {
                 // A password change is invoked:
                 // encapsulate the new 'clear-text' password with a token to signal the ORM layer that further specific processing is required

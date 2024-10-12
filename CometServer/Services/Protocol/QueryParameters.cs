@@ -103,7 +103,7 @@ namespace CometServer.Services.Protocol
         /// <summary>
         /// The query parameter definitions.
         /// </summary>
-        private readonly Dictionary<string, string[]> queryParameterDefinitions = new Dictionary<string, string[]>
+        private readonly Dictionary<string, string[]> queryParameterDefinitions = new()
         {
             { ExtentQuery, new[] { "deep", "shallow" } },
             { IncludeReferenceDataQuery, new[] { "true", "false" } },
@@ -220,12 +220,12 @@ namespace CometServer.Services.Protocol
         /// </exception>
         public void ValidateQueryParameter(string queryParameter, string value)
         {
-            if (!this.queryParameterDefinitions.ContainsKey(queryParameter))
+            if (!this.queryParameterDefinitions.TryGetValue(queryParameter, out var queryParameterDefinition))
             {
                 throw new QueryParameterNotSupportedException($"Query parameter {queryParameter} is not supported");
             }
 
-            if (!this.queryParameterDefinitions[queryParameter].Contains(value))
+            if (!queryParameterDefinition.Contains(value))
             {
                 throw new QueryParameterNotSupportedException("Invalid query parameter value supplied");
             }
@@ -248,12 +248,12 @@ namespace CometServer.Services.Protocol
         /// </returns>
         protected bool ProcessQueryParameter(Dictionary<string, object> queryParameters, string key, string trueValue)
         {
-            if (!queryParameters.ContainsKey(key))
+            if (!queryParameters.TryGetValue(key, out var parameter))
             {
                 return false;
             }
 
-            var queryParameterValue = (string)queryParameters[key];
+            var queryParameterValue = (string)parameter;
             this.ValidateQueryParameter(key, queryParameterValue);
 
             return queryParameterValue == trueValue;
@@ -278,9 +278,7 @@ namespace CometServer.Services.Protocol
                 return -1;
             }
 
-            int revNumber;
-
-            if (!int.TryParse(queryParameters[RevisionNumberQuery].ToString(), out revNumber))
+            if (!int.TryParse(queryParameters[RevisionNumberQuery].ToString(), out var revNumber))
             {
                 return -1;
             }
@@ -302,12 +300,12 @@ namespace CometServer.Services.Protocol
         /// </returns>
         protected object ProcessRevisionHistoryQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
-            if (!queryParameters.ContainsKey(key))
+            if (!queryParameters.TryGetValue(key, out var queryParameter))
             {
                 return null;
             }
 
-            if (int.TryParse(queryParameters[key].ToString(), out var revNumber))
+            if (int.TryParse(queryParameter.ToString(), out var revNumber))
             {
                 return revNumber;
             }
@@ -339,9 +337,7 @@ namespace CometServer.Services.Protocol
                 return 0;
             }
 
-            int waitTime;
-
-            if (!int.TryParse(queryParameters[WaitTimeQuery].ToString(), out waitTime))
+            if (!int.TryParse(queryParameters[WaitTimeQuery].ToString(), out var waitTime))
             {
                 return 0;
             }
@@ -364,7 +360,7 @@ namespace CometServer.Services.Protocol
         /// <exception cref="ArgumentException">If the provided values do not match the array pattern</exception>
         protected IEnumerable<Guid> ProcessCategoryQueryParameter(Dictionary<string, object> queryParameters, string key)
         {
-            return !queryParameters.ContainsKey(key) ? Enumerable.Empty<Guid>() : queryParameters[key].ToString().FromShortGuidArray();
+            return !queryParameters.TryGetValue(key, out var queryParameter) ? Enumerable.Empty<Guid>() : queryParameter.ToString().FromShortGuidArray();
         }
 
         /// <summary>

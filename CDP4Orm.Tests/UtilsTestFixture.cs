@@ -92,8 +92,8 @@ namespace CDP4Orm.Tests
             
             var expected = (IEnumerable)new List<OrderedItem>
                                             {
-                                                new OrderedItem { K = 0, V = "item0" },
-                                                new OrderedItem { K = 1, V = "item1" }
+                                                new() { K = 0, V = "item0" },
+                                                new() { K = 1, V = "item1" }
                                             };
 
             Assert.That(Utils.ParseOrderedList<string>(orderdListSource), Is.EquivalentTo(expected));

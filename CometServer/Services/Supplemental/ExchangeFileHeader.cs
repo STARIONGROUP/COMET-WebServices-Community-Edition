@@ -78,11 +78,6 @@ namespace CometServer.Services
         public ExchangeDateTime CreatedOn { get; set; }
 
         /// <summary>
-        /// Gets or sets the last modified on.
-        /// </summary>
-        public ExchangeDateTime LastModifiedOn { get; set; }
-
-        /// <summary>
         /// Gets or sets the remark.
         /// </summary>
         public string Remark { get; set; }

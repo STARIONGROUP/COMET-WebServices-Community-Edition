@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
 
+    using CDP4Common.DTO;
     using CDP4Common.Types;
 
     using CometServer.Services.Authorization;

@@ -51,7 +51,7 @@ namespace CometServer.Services
         /// <see cref="Dictionary{TKey,TValue}"/> that uses a <see cref="Type"/> as it's key and a <see cref="Func{TResult}"/> that returns a <see cref="Func{TResult}"/>
         /// that can be used as a predicate on a list of <see cref="DomainFileStore"/>s.
         /// </summary>
-        private readonly Dictionary<Type, Func<Guid, Func<DomainFileStore, bool>>> domainFileStoreSelectors = new Dictionary<Type, Func<Guid, Func<DomainFileStore, bool>>>
+        private readonly Dictionary<Type, Func<Guid, Func<DomainFileStore, bool>>> domainFileStoreSelectors = new()
         {
             {
                 typeof(File),
