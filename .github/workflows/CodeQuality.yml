@@ -10,9 +10,32 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: cdp4-test-database-community-edition Image
+        run: docker pull stariongroup/cdp4-test-database-community-edition:3.4.0
+
+      - name: Start PostgreSQL Container
+        run: |
+            docker run -it -d \
+             -e POSTGRES_PASSWORD=postgres \
+             -p 5432:5432 \
+             --tmpfs /var/lib/postgresql/data:rw \
+             --name comet-db \
+             stariongroup/cdp4-test-database-community-edition:3.4.0
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until docker exec comet-db pg_isready -U postgres; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 5
+          done
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -38,13 +61,58 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"STARIONGROUP_CDP4-COMET-WebServices-Community-Edition" /o:"stariongroup" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="./CoverageResults/coverage.opencover.xml"
+          dotnet sonarscanner begin /k:"STARIONGROUP_CDP4-COMET-WebServices-Community-Edition" /o:"stariongroup" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverageReportPaths="./CoverageResultsReport/SonarQube.xml"
 
       - name: Build
-        run: dotnet build COMET-WebServices.sln --no-restore /p:ContinuousIntegrationBuild=true
+        run: dotnet build COMET-WebServices.sln -c Debug --no-restore /p:ContinuousIntegrationBuild=true
 
-      - name: Run Tests and Compute Coverage
-        run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"opencover,json\"
+      - name: Run Unit Tests and Compute Coverage
+        run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"cobertura,opencover,json\"
+
+      - name: install dotnet-coverage
+        run: dotnet tool install --global dotnet-coverage
+
+      - name: install dotnet-reportgenerator-globaltool
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      - name: Start API
+        run: dotnet-coverage collect --output CoverageResults/integration.test.report.coverage.xml --output-format cobertura --session-id integrationtestsession "dotnet run --project CometServer/CometServer.csproj -c Debug" &
+
+      - name: Wait for API to start
+        run: sleep 45  # Adjust as necessary to ensure the API is up
+
+      - name: Checkout Integration Test Suite
+        uses: actions/checkout@v4
+        with:
+          repository: STARIONGROUP/ecss-10-25-annexc-integration-tests
+          path: integration-tests
+          
+      - name: Zip Integration Test Results
+        run: |
+          cd integration-tests/Data
+          zip -r Data.zip .
+          
+      - name: Post Zipped Results to REST API
+        run: |
+          curl --form file=@"integration-tests/Data/Data.zip" http://localhost:5000/Data/Exchange
+
+      - name: Restore Dependencies for Integration Tests
+        run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln
+
+      - name: Run Integration Tests
+        run: dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln --logger "trx;LogFileName=test_results.trx" --verbosity detailed
+
+      - name: Shutdown Integration Test session
+        run: dotnet-coverage shutdown integrationtestsession
+
+      - name: merge integration tests with unit tests
+        run: dotnet-coverage merge --output-format cobertura --output CoverageResults/merged-coverage.cobertura.xml CoverageResults/*.cobertura.xml
+
+      - name: generate SonarQube compatible coverage report
+        run: reportgenerator -reports:CoverageResults/merged-coverage.cobertura.xml -targetdir:CoverageResultsReport -reporttypes:SonarQube -assemblyfilters:"-CDP4Common;-CDP4DalCommon;-CDP4JsonSerializer;-CDP4MessagePackSerializer;-FluentValidation;-HangFire*;-Serilog*"
+
+      - name: Stop PostgreSQL Container
+        run: docker stop comet-db && docker rm comet-db
 
       - name: Sonarqube end
         run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"

@@ -86,7 +86,7 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void DeleteAllIterationThings(NpgsqlTransaction transaction, string partition)
         {
-            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
@@ -110,7 +110,7 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The iteration partition</param>
         public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string partition)
         {
-            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
@@ -175,7 +175,7 @@ namespace CDP4Orm.Dao
                 throw new ArgumentException("Partition or contained type name cannot be null or whitespace.");
             }
 
-            if (!CDP4Orm.Helper.StringExtensions.IsValidatePartitionName(partition))
+            if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }

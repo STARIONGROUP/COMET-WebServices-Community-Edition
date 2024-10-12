@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="StringExtensions.cs" company="Starion Group S.A.">
+// <copyright file="StringExtensionsTestFixture.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -23,49 +23,37 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CDP4Orm.Helper
+namespace CDP4Orm.Tests.Helper
 {
-    using System;
-    
-    /// <summary>
-    /// Extension class for <see cref="string"/> object
-    /// </summary>
-    public static class StringExtensions
+    using NUnit.Framework;
+
+    using CDP4Orm.Helper;
+
+    [TestFixture]
+    public class StringExtensionsTestFixture
     {
-        /// <summary>
-        /// Verifies whether the partition name is a valid partition name
-        /// </summary>
-        /// <param name="partitionName">
-        /// the partitionName to validatie
-        /// </param>
-        /// <returns>
-        /// true when valid, false when not.
-        /// </returns>
-        public static bool IsValidPartitionName(this string partitionName)
+        [Test]
+        public void Verify_that_valid_partitions_return_true()
         {
-            if (partitionName == "SiteDirectory")
-            {
-                return true;
-            }
+            var validSiteDirectory = "SiteDirectory";
+            var validEngineeringModel = "EngineeringModel_9ec982e4_ef72_4953_aa85_b158a95d8d56";
+            var validIteration = "Iteration_9ec982e4_ef72_4953_aa85_b158a95d8d56";
 
-            var firstUnderscoreIndex = partitionName.IndexOf('_');
+            Assert.That(validSiteDirectory.IsValidPartitionName, Is.True);
+            Assert.That(validEngineeringModel.IsValidPartitionName, Is.True);
+            Assert.That(validIteration.IsValidPartitionName, Is.True);
+        }
 
-            if (firstUnderscoreIndex != -1)
-            {
-                var partitionKind = partitionName.Substring(0, firstUnderscoreIndex);
-                var partitionIdentifier = partitionName.Substring(firstUnderscoreIndex + 1);
+        [Test]
+        public void Verify_that_invalid_partitions_return_true()
+        {
+            var inValidSiteDirectory = "SiteDirectorys";
+            var inValidEngineeringModel = "EngineeringModels_9ec982e4_ef72_4953_aa85_b158a95d8d56";
+            var inValidIteration = "Iteration_9ec982e4_ef72_4953_aa85_";
 
-                if (partitionKind != "EngineeringModel" && partitionKind != "Iteration")
-                {
-                    return false;
-                }
-
-                partitionIdentifier = partitionIdentifier.Replace("_", "-");
-
-                return Guid.TryParse(partitionIdentifier, out _);
-            }
-
-            return false;
+            Assert.That(inValidSiteDirectory.IsValidPartitionName, Is.False);
+            Assert.That(inValidEngineeringModel.IsValidPartitionName, Is.False);
+            Assert.That(inValidIteration.IsValidPartitionName, Is.False);
         }
     }
 }
