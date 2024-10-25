@@ -32,7 +32,7 @@ namespace CometServer.Modules.Tasks
     using Carter;
     using Carter.Response;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CometServer.Authorization;
     using CometServer.Configuration;

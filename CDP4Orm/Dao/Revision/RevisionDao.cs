@@ -112,11 +112,6 @@ namespace CDP4Orm.Dao.Revision
         public IResolveDao ResolveDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the injected <see cref="ICdp4JsonSerializer" />
-        /// </summary>
-        public ICdp4JsonSerializer JsonSerializer { get; set; }
-
-        /// <summary>
         /// Retrieves data from the RevisionRegistry table in the specific partition.
         /// </summary>
         /// <param name="transaction">
@@ -195,7 +190,7 @@ namespace CDP4Orm.Dao.Revision
             command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
             command.Parameters.Add("actor", NpgsqlDbType.Uuid).Value = actor;
-            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = this.JsonSerializer.SerializeToString(thing);
+            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(thing);
 
             command.ExecuteNonQuery();
         }
@@ -229,7 +224,7 @@ namespace CDP4Orm.Dao.Revision
                     var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
                     var revisionParam = new NpgsqlParameter($"revisionnumber_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
                     var actorParam = new NpgsqlParameter($"actor_{index}", NpgsqlDbType.Uuid) { Value = actor };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = this.JsonSerializer.SerializeToString(thing) };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = JsonSerializer.Serialize(thing) };
 
                     parameters.Add(iidParam);
                     parameters.Add(revisionParam);
@@ -666,7 +661,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>A <see cref="Thing"/></returns>
         private Thing MapToDto(NpgsqlDataReader reader)
         {
-            var jsonObject = this.JsonSerializer.Deserialize<JsonElement>(reader.GetValue(0).ToString());
+            var jsonObject = JsonSerializer.Deserialize<JsonElement>(reader.GetValue(0).ToString());
 
             Thing thing;
 

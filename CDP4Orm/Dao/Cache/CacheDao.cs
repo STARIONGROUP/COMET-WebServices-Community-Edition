@@ -132,7 +132,16 @@ namespace CDP4Orm.Dao.Cache
                 {
                     var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
                     var revisionParam = new NpgsqlParameter($"revision_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = this.JsonSerializer.SerializeToString(thing) };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb);
+
+                    var serializedJson = this.JsonSerializer.SerializeToString(thing);
+
+                    if (string.IsNullOrWhiteSpace(serializedJson))
+                    {
+                        serializedJson = "{}";
+                    }
+
+                    jsonbParam.Value = serializedJson;
 
                     parameters.Add(iidParam);
                     parameters.Add(revisionParam);

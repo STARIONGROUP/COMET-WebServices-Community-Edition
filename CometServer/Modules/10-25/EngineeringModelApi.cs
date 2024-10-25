@@ -242,6 +242,7 @@ namespace CometServer.Modules
 
                         res.StatusCode = (int)HttpStatusCode.InternalServerError;
                         await res.AsJson($"exception:{ex.Message}");
+                        return;
                     }
 
                     if (postRequestData.IsMultiPart && requestUtils.QueryParameters.WaitTime > 0)
