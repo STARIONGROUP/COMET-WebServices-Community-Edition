@@ -190,7 +190,7 @@ namespace CDP4Orm.Dao.Revision
             command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
             command.Parameters.Add("actor", NpgsqlDbType.Uuid).Value = actor;
-            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = JsonSerializer.Serialize(thing);
+            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonString();
 
             command.ExecuteNonQuery();
         }
@@ -224,7 +224,7 @@ namespace CDP4Orm.Dao.Revision
                     var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
                     var revisionParam = new NpgsqlParameter($"revisionnumber_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
                     var actorParam = new NpgsqlParameter($"actor_{index}", NpgsqlDbType.Uuid) { Value = actor };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = JsonSerializer.Serialize(thing) };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonString() };
 
                     parameters.Add(iidParam);
                     parameters.Add(revisionParam);
