@@ -36,8 +36,6 @@ namespace CometServer
     using CDP4Common.Helpers;
     using CDP4Common.MetaInfo;
 
-    using CDP4DalJsonSerializer;
-
     using CDP4JsonSerializer;
 
     using CDP4MessagePackSerializer;
