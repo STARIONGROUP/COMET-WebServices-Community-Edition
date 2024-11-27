@@ -75,7 +75,7 @@
     <EmbeddedResource Include="MigrationScript\SiteDirectory_20210108_6_3_0_0_Model_Updates.sql" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="28.0.0-rc26" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="28.0.0-rc29" />
     <PackageReference Include="Npgsql" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
   </ItemGroup>
