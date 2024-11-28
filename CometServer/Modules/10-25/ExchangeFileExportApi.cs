@@ -117,28 +117,27 @@ namespace CometServer.Modules
                     return;
                 }
 
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
                 {
                     res.UpdateWithNotAuthenticatedSettings();
                     await res.AsJson("not authenticated");
+                    return;
                 }
-                else
+
+                try
                 {
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
-
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
                 }
+                catch (AuthorizationException)
+                {
+                    this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
+                    return;
+                }
+
+                await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
             });
         }
 

@@ -281,6 +281,7 @@ namespace CometServer.Modules
 
                 response.StatusCode = (int)HttpStatusCode.Forbidden;
                 await response.AsJson("Data store IMPORT is not allowed");
+                return;
             }
 
             this.logger.LogInformation("{request}:{requestToken} - Starting data store IMPORT", httpRequest.QueryNameMethodPath(), requestToken);
@@ -456,6 +457,7 @@ namespace CometServer.Modules
             try
             {
                 var sw = new Stopwatch();
+
                 if (seed)
                 {
                     // clear database schemas if seeding
@@ -544,6 +546,7 @@ namespace CometServer.Modules
                     foreach (var person in items.OfType<Person>())
                     {
                         var credential = migrationCredentials.FirstOrDefault(mc => mc.Iid == person.Iid);
+
                         if (credential != null)
                         {
                             personService.UpdateCredentials(transaction, "SiteDirectory", person, credential);
@@ -558,6 +561,7 @@ namespace CometServer.Modules
                     var engineeringModelSetups =
                         items.OfType<EngineeringModelSetup>()
                             .ToList();
+
                     var engineeringModelService = serviceProvider.MapToPersitableService<EngineeringModelService>("EngineeringModel");
 
                     var iterationService = serviceProvider.MapToPersitableService<IterationService>("Iteration");
