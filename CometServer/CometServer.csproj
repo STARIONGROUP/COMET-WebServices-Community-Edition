@@ -19,9 +19,9 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Carter" Version="9.0.0" />
-    <PackageReference Include="CDP4DalJsonSerializer-CE" Version="28.0.0-rc29" />
-    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="28.0.0-rc29" />
-    <PackageReference Include="CDP4ServicesMessaging-CE" Version="28.0.0-rc29" />
+    <PackageReference Include="CDP4DalJsonSerializer-CE" Version="28.0.0-rc30" />
+    <PackageReference Include="CDP4MessagePackSerializer-CE" Version="28.0.0-rc30" />
+    <PackageReference Include="CDP4ServicesMessaging-CE" Version="28.0.0-rc30" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.1" />
