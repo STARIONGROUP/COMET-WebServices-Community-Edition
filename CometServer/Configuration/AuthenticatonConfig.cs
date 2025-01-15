@@ -37,7 +37,7 @@ namespace CometServer.Configuration
         /// </summary>
         public AuthenticatonConfig()
         {
-            this.BasicAhtenticationConfig = new BasicAhtenticationConfig();
+            this.BasicAuthenticationConfig = new BasicAuthenticationConfig();
             this.LocalJwtAuthenticationConfig = new LocalJwtAuthenticationConfig();
         }
 
@@ -49,17 +49,17 @@ namespace CometServer.Configuration
         /// </param>
         public AuthenticatonConfig(IConfiguration configuration)
         {
-            this.BasicAhtenticationConfig = new BasicAhtenticationConfig(configuration);
+            this.BasicAuthenticationConfig = new BasicAuthenticationConfig(configuration);
             this.LocalJwtAuthenticationConfig = new LocalJwtAuthenticationConfig(configuration);
         }
 
         /// <summary>
-        /// Gets or sets the <see cref="BasicAhtenticationConfig"/>
+        /// Gets or sets the <see cref="BasicAuthenticationConfig"/>
         /// </summary>
-        public BasicAhtenticationConfig BasicAhtenticationConfig { get; set; }
+        public BasicAuthenticationConfig BasicAuthenticationConfig { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="BasicAhtenticationConfig"/>
+        /// Gets or sets the <see cref="BasicAuthenticationConfig"/>
         /// </summary>
         public LocalJwtAuthenticationConfig LocalJwtAuthenticationConfig { get; set; }
     }

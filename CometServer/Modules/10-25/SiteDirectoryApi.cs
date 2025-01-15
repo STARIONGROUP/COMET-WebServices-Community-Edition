@@ -46,10 +46,13 @@ namespace CometServer.Modules
 
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
+    using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Extensions;
+    using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -111,6 +114,10 @@ namespace CometServer.Modules
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
         /// </param>
+        /// <param name="cometHasStartedService">
+        /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
+        /// acceptng requests
+        /// </param>
         /// <param name="tokenGeneratorService">
         /// The (injected) <see cref="ITokenGeneratorService"/> used generate HTTP request tokens
         /// </param>
@@ -144,6 +151,11 @@ namespace CometServer.Modules
                     {
                         return;
                     }
+
+                    try
+                    {
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                    }
                     catch (AuthorizationException)
                     {
                         this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
@@ -154,7 +166,7 @@ namespace CometServer.Modules
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme });
+                }).RequireAuthorization(this.AuthenticationSchemes);
 
             app.MapGet("SiteDirectory/{*path}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
@@ -163,6 +175,10 @@ namespace CometServer.Modules
                     {
                         return;
                     }
+                    try
+                    {
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                    }
                     catch (AuthorizationException)
                     {
                         this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
@@ -173,7 +189,7 @@ namespace CometServer.Modules
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
+                }).RequireAuthorization(this.AuthenticationSchemes);
 
             app.MapPost("SiteDirectory/{iid:guid}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
@@ -182,77 +198,68 @@ namespace CometServer.Modules
                     {
                         return;
                     }
+
+                    var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+
+                    try
+                    {
+                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                    }
                     catch (AuthorizationException)
                     {
-                        res.UpdateWithNotAuthenticatedSettings();
-                        await res.AsJson("not authenticated");
+                        this.logger.LogWarning("The {requestToken} POST REQUEST was not authorized for {Identity}", requestToken, req.HttpContext.User.Identity.Name);
+
+                        res.UpdateWithNotAutherizedSettings();
+                        await res.AsJson("not authorized");
+                        return;
+                    }
+
+                    var cometTask = this.CreateAndRegisterCometTask(credentialsService.Credentials.Person.Iid, TopContainer, requestToken);
+                    
+                    PostRequestData postRequestData = null;
+
+                    try
+                    {
+                        postRequestData = this.ProcessPostRequest(req, requestUtils, metaInfoProvider, jsonSerializer);
+                    }
+                    catch (BadRequestException ex)
+                    {
+                        this.logger.LogWarning("Request {requestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
+
+                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
+
+                        res.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await res.AsJson($"exception:{ex.Message}");
+                    }
+                    catch (Exception ex)
+                    {
+                        this.logger.LogError("Request {requestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
+
+                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"INTERNAL SERVER ERROR - {ex.Message}");
+
+                        res.StatusCode = (int)HttpStatusCode.InternalServerError;
+                        await res.AsJson($"exception:{ex.Message}");
+                    }
+
+                    if (postRequestData.IsMultiPart )
+                    {
+                        this.logger.LogWarning("Request {requestToken} failed as BadRequest: The SiteDirectory does not support MultiPart POST request", requestToken);
+
+                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - The SiteDirectory does not support MultiPart POST request");
+
+                        res.StatusCode = (int)HttpStatusCode.BadRequest;
+                        await res.AsJson("The SiteDirectory does not support MultiPart POST request");
+                    }
+
+                    if (requestUtils.QueryParameters.WaitTime > 0)
+                    {
+                        await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                     }
                     else
                     {
-                        var requestToken = this.TokenGeneratorService.GenerateRandomToken();
-
-                        try
-                        {
-                            await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                        }
-                        catch (AuthorizationException)
-                        {
-                            this.logger.LogWarning("The {requestToken} POST REQUEST was not authorized for {Identity}", requestToken, req.HttpContext.User.Identity.Name);
-
-                            res.UpdateWithNotAutherizedSettings();
-                            await res.AsJson("not authorized");
-                            return;
-                        }
-
-                        var cometTask = this.CreateAndRegisterCometTask(credentialsService.Credentials.Person.Iid, TopContainer, requestToken);
-                        
-                        PostRequestData postRequestData = null;
-
-                        try
-                        {
-                            postRequestData = this.ProcessPostRequest(req, requestUtils, metaInfoProvider, jsonSerializer);
-                        }
-                        catch (BadRequestException ex)
-                        {
-                            this.logger.LogWarning("Request {requestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
-
-                            this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
-
-                            res.StatusCode = (int)HttpStatusCode.BadRequest;
-                            await res.AsJson($"exception:{ex.Message}");
-                        }
-                        catch (Exception ex)
-                        {
-                            this.logger.LogError("Request {requestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
-
-                            this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"INTERNAL SERVER ERROR - {ex.Message}");
-
-                            res.StatusCode = (int)HttpStatusCode.InternalServerError;
-                            await res.AsJson($"exception:{ex.Message}");
-                        }
-
-                        if (postRequestData.IsMultiPart )
-                        {
-                            this.logger.LogWarning("Request {requestToken} failed as BadRequest: The SiteDirectory does not support MultiPart POST request", requestToken);
-
-                            this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - The SiteDirectory does not support MultiPart POST request");
-
-                            res.StatusCode = (int)HttpStatusCode.BadRequest;
-                            await res.AsJson("The SiteDirectory does not support MultiPart POST request");
-                        }
-
-                        if (requestUtils.QueryParameters.WaitTime > 0)
-                        {
-                            await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
-                        }
-                        else
-                        {
-                            await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
-                        }
+                        await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                     }
-
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
-                }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
+                }).RequireAuthorization(this.AuthenticationSchemes);
         }
 
         /// <summary>

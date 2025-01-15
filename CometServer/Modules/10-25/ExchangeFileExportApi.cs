@@ -1,4 +1,4 @@
-// --------------------------------------------------------------------------------------------------------------------
+﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileExportApi.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -40,6 +40,7 @@ namespace CometServer.Modules
     using CDP4JsonSerializer;
 
     using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -117,6 +118,11 @@ namespace CometServer.Modules
                 {
                     return;
                 }
+                
+                try
+                {
+                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                }
                 catch (AuthorizationException)
                 {
                     this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
@@ -127,7 +133,7 @@ namespace CometServer.Modules
                 }
 
                 await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
-            }).RequireAuthorization(new[] { BasicAuthenticationDefaults.AuthenticationScheme });
+            }).RequireAuthorization(this.AuthenticationSchemes);
         }
 
         /// <summary>

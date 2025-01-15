@@ -49,6 +49,8 @@ namespace CometServer.Modules
     using CDP4ServicesMessaging.Messages;
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
+    using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Extensions;
@@ -111,6 +113,11 @@ namespace CometServer.Modules
         /// The (injected) <see cref="ICometHasStartedService"/>
         /// </summary>
         protected readonly ICometHasStartedService CometHasStartedService;
+        
+        /// <summary>
+        /// Provides an array of supported authentication schemes, to be used by routes that requires authentication
+        /// </summary>
+        protected readonly string[] AuthenticationSchemes = [BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme, JwtBearerDefaults.ExternalAuthenticationScheme];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class

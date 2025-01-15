@@ -108,13 +108,13 @@ namespace CometServer.Authentication
         /// <param name="expiration">
         /// The expiration date
         /// </param>
-        /// <returns></returns>
+        /// <returns>The created <see cref="JwtSecurityToken"/></returns>
         private JwtSecurityToken CreateJwtSecurityToken(List<Claim> claims, SigningCredentials credentials,
             DateTime expiration)
         {
             var jwtSecurityToken = new JwtSecurityToken(
-                this.appConfigService.AppConfig.JwtConfig.ValidIssuer,
-                this.appConfigService.AppConfig.JwtConfig.ValidAudience,
+                this.appConfigService.AppConfig.AuthenticatonConfig.LocalJwtAuthenticationConfig.ValidIssuer,
+                this.appConfigService.AppConfig.AuthenticatonConfig.LocalJwtAuthenticationConfig.ValidAudience,
                 claims,
                 expires: expiration,
                 signingCredentials: credentials
@@ -124,10 +124,10 @@ namespace CometServer.Authentication
         }
 
         /// <summary>
-        /// Creates the clains for the <see cref="AuthenticationPerson"/>
+        /// Creates the claims for the <see cref="AuthenticationPerson"/>
         /// </summary>
-        /// <param name="authenticationPerson"></param>
-        /// <returns></returns>
+        /// <param name="authenticationPerson">The <see cref="AuthenticationPerson"/> to use for generate <see cref="Claim"/>s</param>
+        /// <returns>A <see cref="List{T}"/> of <see cref="Claim"/> generated from the <see cref="AuthenticationPerson"/></returns>
         private static List<Claim> CreateClaims(AuthenticationPerson authenticationPerson)
         {
             var claims = new List<Claim>
@@ -151,7 +151,7 @@ namespace CometServer.Authentication
         /// </returns>
         private SigningCredentials CreateSigningCredentials()
         {
-            var symmetricSecurityKey = this.appConfigService.AppConfig.JwtConfig.SymmetricSecurityKey;
+            var symmetricSecurityKey = this.appConfigService.AppConfig.AuthenticatonConfig.LocalJwtAuthenticationConfig.SymmetricSecurityKey;
 
             return new SigningCredentials(
                 new SymmetricSecurityKey(

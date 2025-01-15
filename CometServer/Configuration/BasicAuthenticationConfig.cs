@@ -28,26 +28,26 @@ namespace CometServer.Configuration
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
-    /// The purpose of the <see cref="BasicAhtenticationConfig"/> is to provide an object-oriented
+    /// The purpose of the <see cref="BasicAuthenticationConfig"/> is to provide an object-oriented
     /// and type-safe access to the Basic Authentication settings.
     /// </summary>
-    public class BasicAhtenticationConfig
+    public class BasicAuthenticationConfig
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="BasicAhtenticationConfig"/> class
+        /// Initializes a new instance of the <see cref="BasicAuthenticationConfig"/> class
         /// </summary>
-        public BasicAhtenticationConfig()
+        public BasicAuthenticationConfig()
         {
             this.IsEnabled = true;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="BasicAhtenticationConfig"/> class
+        /// Initializes a new instance of the <see cref="BasicAuthenticationConfig"/> class
         /// </summary>
         /// <param name="configuration">
         /// The injected <see cref="IConfiguration"/> used to access the application configuration
         /// </param>
-        public BasicAhtenticationConfig(IConfiguration configuration)
+        public BasicAuthenticationConfig(IConfiguration configuration)
         {
             this.IsEnabled = bool.Parse(configuration["Authentication:Basic:IsEnabled"]);
         }
