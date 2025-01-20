@@ -168,7 +168,7 @@ namespace CometServer.Modules
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                }).RequireAuthorization(this.AuthenticationSchemes);
+                }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapGet("SiteDirectory/{*path}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
@@ -194,7 +194,7 @@ namespace CometServer.Modules
                     }
 
                     await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService);
-                }).RequireAuthorization(this.AuthenticationSchemes);
+                }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapPost("SiteDirectory/{iid:guid}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
@@ -265,7 +265,7 @@ namespace CometServer.Modules
                     {
                         await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, modelCreatorManager);
                     }
-                }).RequireAuthorization(this.AuthenticationSchemes);
+                }).RequireAuthorization(AuthenticationSchemes);
         }
 
         /// <summary>

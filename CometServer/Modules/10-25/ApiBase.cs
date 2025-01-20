@@ -120,7 +120,7 @@ namespace CometServer.Modules
         /// <summary>
         /// Provides an array of supported authentication schemes, to be used by routes that requires authentication
         /// </summary>
-        protected readonly string[] AuthenticationSchemes = [BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme, JwtBearerDefaults.ExternalAuthenticationScheme];
+        internal static string[] AuthenticationSchemes = [BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme, JwtBearerDefaults.ExternalAuthenticationScheme];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class

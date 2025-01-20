@@ -25,11 +25,15 @@
 namespace CometServer.Modules
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using Carter;
     using Carter.Response;
 
     using CometServer.Authentication;
+    using CometServer.Configuration;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
@@ -69,12 +73,35 @@ namespace CometServer.Modules
                 //return webServiceAuthentication.LogOutResponse(req.HttpContext);
                 throw new NotImplementedException();
             });
+
+            app.MapGet("/auth/schemes", ProvideEnabledAuthenticationScheme);
         }
 
+        /// <summary>
+        /// Provides all enabled authentication scheme that could be used
+        /// </summary>
+        /// <param name="res">The <see cref="HttpResponse"/></param>
+        /// <param name="appConfigService">The injected <see cref="IAppConfigService"/> uses to provides authentication scheme status</param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        private static Task ProvideEnabledAuthenticationScheme(HttpResponse res, IAppConfigService appConfigService)
+        {
+            var enabledSchemes = ApiBase.AuthenticationSchemes.Where(appConfigService.IsAuthenticationSchemeEnabled).ToList();
+            return res.AsJson(enabledSchemes);
+        }
+
+        /// <summary>
+        /// Data model class that defines properties required to proceed to login action
+        /// </summary>
         private class LoginUser
         {
+            /// <summary>
+            /// Gets or sets the user name  used as credentials
+            /// </summary>
             public string UserName { get; set;}
 
+            /// <summary>
+            /// Gets or sets the Password used as credentials
+            /// </summary>
             public string Password { get; set;}
         }
     }

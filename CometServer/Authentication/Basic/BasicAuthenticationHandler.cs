@@ -151,7 +151,7 @@ namespace CometServer.Authentication.Basic
                 return;
             }
             
-            if (!this.appConfigService.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled)
+            if (!this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
             {
                 this.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 this.Response.ContentType = "application/json";
@@ -177,7 +177,7 @@ namespace CometServer.Authentication.Basic
         {
             try
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy || !this.appConfigService.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled)
+                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy || !this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
                 {
                     return AuthenticateResult.NoResult();
                 }

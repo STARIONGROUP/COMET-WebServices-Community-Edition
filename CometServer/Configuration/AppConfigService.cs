@@ -24,6 +24,13 @@
 
 namespace CometServer.Configuration
 {
+    using System.Linq;
+
+    using CDP4Authentication;
+
+    using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
+
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
@@ -32,19 +39,43 @@ namespace CometServer.Configuration
     public class AppConfigService : IAppConfigService
     {
         /// <summary>
+        /// Gets the injected <see cref="IAuthenticationPluginInjector"/>, uses to check wheter that external JWT authentication is enabled or not
+        /// </summary>
+        private readonly IAuthenticationPluginInjector authenticationPluginInjector;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AppConfigService"/>
         /// </summary>
         /// <param name="configuration">
         /// The <see cref="IConfiguration"/> used to set the properties
         /// </param>
-        public AppConfigService(IConfiguration configuration)
+        /// <param name="authenticationPluginInjector">The injected <see cref="IAuthenticationPluginInjector"/>, uses to check wheter that external JWT authentication is enabled or not</param>
+        public AppConfigService(IConfiguration configuration, IAuthenticationPluginInjector authenticationPluginInjector)
         {
             this.AppConfig = new AppConfig(configuration);
+            this.authenticationPluginInjector = authenticationPluginInjector;
         }
 
         /// <summary>
         /// Gets the <see cref="AppConfig"/>
         /// </summary>
         public AppConfig AppConfig { get; }
+
+        /// <summary>
+        /// Assert that an authentication scheme is enabled or not
+        /// </summary>
+        /// <param name="schemeName">The name of the authentication scheme</param>
+        /// <returns>True if the authentication scheme is enabled, false otherwise</returns>
+        public bool IsAuthenticationSchemeEnabled(string schemeName)
+        {
+            return schemeName switch
+            {
+                BasicAuthenticationDefaults.AuthenticationScheme => this.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled,
+                JwtBearerDefaults.LocalAuthenticationScheme => this.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.IsEnabled,
+                JwtBearerDefaults.ExternalAuthenticationScheme => this.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled 
+                                                                  && this.authenticationPluginInjector.Connectors.Any(x => x.Name == "CDP4ExternalJwtAuthentication" && x.Properties.IsEnabled),
+                _ => false
+            };
+        }
     }
 }

@@ -148,9 +148,9 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow).RequireAuthorization(this.AuthenticationSchemes);
+            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow).RequireAuthorization(AuthenticationSchemes);
 
-            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow).RequireAuthorization(this.AuthenticationSchemes);
+            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow).RequireAuthorization(AuthenticationSchemes);
 
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
@@ -176,7 +176,7 @@ namespace CometServer.Modules
                 }
 
                 await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
-            }).RequireAuthorization(this.AuthenticationSchemes);
+            }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
@@ -250,7 +250,7 @@ namespace CometServer.Modules
                 {
                     await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 }
-            }).RequireAuthorization(this.AuthenticationSchemes);
+            }).RequireAuthorization(AuthenticationSchemes);
         }
 
         /// <summary>

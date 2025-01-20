@@ -26,7 +26,6 @@
 namespace CometServer.Authentication.Bearer
 {
     using System;
-    using System.Linq;
     using System.Net;
     using System.Text.Encodings.Web;
     using System.Threading.Tasks;
@@ -61,11 +60,6 @@ namespace CometServer.Authentication.Bearer
         private readonly ICometHasStartedService cometHasStartedService;
 
         /// <summary>
-        /// The injected <see cref="IAuthenticationPluginInjector"/> that allows the verification of having the external JWT authentication enabled or not
-        /// </summary>
-        private readonly IAuthenticationPluginInjector authenticationPluginInjector;
-
-        /// <summary>
         /// Initializes a new instance of <see cref="JwtBearerAuthenticationHandler" />.
         /// </summary>
         /// <param name="options">The monitor for the options instance.</param>
@@ -77,13 +71,11 @@ namespace CometServer.Authentication.Bearer
         /// accepting requests
         /// </param>
         /// <param name="appConfigService">The injected <see cref="IAppConfigService" /></param>
-        /// <param name="authenticationPluginInjector">The injected <see cref="IAuthenticationPluginInjector"/> that allows the verification of having the external JWT authentication enabled or not</param>
         public JwtBearerAuthenticationHandler(IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock,
-            ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService, IAuthenticationPluginInjector authenticationPluginInjector) : base(options, logger, encoder, clock)
+            ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService) : base(options, logger, encoder, clock)
         {
             this.cometHasStartedService = cometHasStartedService;
             this.appConfigService = appConfigService;
-            this.authenticationPluginInjector = authenticationPluginInjector;
         }
 
         /// <summary>
@@ -97,13 +89,11 @@ namespace CometServer.Authentication.Bearer
         /// accepting requests
         /// </param>
         /// <param name="appConfigService">The injected <see cref="IAppConfigService" /></param>
-        /// <param name="authenticationPluginInjector">The injected <see cref="IAuthenticationPluginInjector"/> that allows the verification of having the external JWT authentication enabled or not</param>
         public JwtBearerAuthenticationHandler(IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder, 
-            ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService, IAuthenticationPluginInjector authenticationPluginInjector) : base(options, logger, encoder)
+            ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService) : base(options, logger, encoder)
         {
             this.cometHasStartedService = cometHasStartedService;
             this.appConfigService = appConfigService;
-            this.authenticationPluginInjector = authenticationPluginInjector;
         }
 
         /// <summary>
@@ -134,7 +124,7 @@ namespace CometServer.Authentication.Bearer
                 return;
             }
 
-            if (!this.ComputeIsEnabled())
+            if (!this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
             {
                 this.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                 this.Response.ContentType = "application/json";
@@ -152,7 +142,7 @@ namespace CometServer.Authentication.Bearer
             try
             {
                 if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy
-                    || !this.ComputeIsEnabled())
+                    || this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
                 {
                     return AuthenticateResult.NoResult();
                 }
@@ -181,21 +171,6 @@ namespace CometServer.Authentication.Bearer
             {
                 return AuthenticateResult.Fail("Invalid authentication token");
             }
-        }
-        
-        /// <summary>
-        /// Asserts that the currently assigned Schema is enabled or not, as authentication handler
-        /// </summary>
-        /// <returns>The asserts</returns>
-        private bool ComputeIsEnabled()
-        {
-            return this.Scheme.Name switch
-            {
-                JwtBearerDefaults.LocalAuthenticationScheme => this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.IsEnabled,
-                JwtBearerDefaults.ExternalAuthenticationScheme => this.appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled
-                                                                  && this.authenticationPluginInjector.Connectors.Any(x => x.Name == "CDP4ExternalJwtAuthentication" && x.Properties.IsEnabled),
-                _ => false
-            };
         }
     }
 }

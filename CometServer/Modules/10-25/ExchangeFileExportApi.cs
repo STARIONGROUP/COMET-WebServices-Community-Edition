@@ -135,7 +135,7 @@ namespace CometServer.Modules
                 }
 
                 await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
-            }).RequireAuthorization(this.AuthenticationSchemes);
+            }).RequireAuthorization(AuthenticationSchemes);
         }
 
         /// <summary>

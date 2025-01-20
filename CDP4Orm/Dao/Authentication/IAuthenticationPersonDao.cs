@@ -2,7 +2,7 @@
 // <copyright file="IAuthenticationPersonDao.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2023 Starion Group S.A.
 //
-//    Author: Sam Geren�, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Th�ate
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Webservices Community Edition. 
 //    The CDP4-COMET Webservices Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
