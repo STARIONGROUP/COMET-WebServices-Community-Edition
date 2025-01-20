@@ -61,7 +61,9 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
-    
+
+    using NpgsqlTypes;
+
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
     /// </summary>
@@ -1077,7 +1079,7 @@ namespace CometServer.Modules
                 connection.Open();
 
                 // Drop the existing database
-                using (var cmd = new NpgsqlCommand("", connection))
+                using (var cmd = new NpgsqlCommand())
                 {
                     this.logger.LogDebug("Drop the data store");
 
@@ -1085,8 +1087,8 @@ namespace CometServer.Modules
 
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = "DROP DATABASE IF EXISTS (@databaseName);";
-                    cmd.Parameters.AddWithValue("databaseName", backtierConfig.Database);
+                    cmd.CommandText = "DROP DATABASE IF EXISTS :databaseName;";
+                    cmd.Parameters.Add("databaseName", NpgsqlDbType.Varchar).Value = backtierConfig.Database;
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1097,8 +1099,8 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Drop the restore data store");
 
                     cmd.Connection = connection;
-                    cmd.CommandText = "DROP DATABASE IF EXISTS (@databaseRestoreName);";
-                    cmd.Parameters.AddWithValue("databaseRestoreName", backtierConfig.DatabaseRestore);
+                    cmd.CommandText = "DROP DATABASE IF EXISTS :databaseRestoreName;";
+                    cmd.Parameters.Add("databaseRestoreName", NpgsqlDbType.Varchar).Value = backtierConfig.DatabaseRestore;
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1109,10 +1111,10 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = "CREATE DATABSE (@databaseName) WITH OWNER = (@owner) TEMPLATE = (@databaseManager) ENCODING = UTF8;";
-                    cmd.Parameters.AddWithValue("databaseName", backtierConfig.Database);
-                    cmd.Parameters.AddWithValue("owner", backtierConfig.UserName);
-                    cmd.Parameters.AddWithValue("databaseManager", backtierConfig.DatabaseManage);
+                    cmd.CommandText = "CREATE DATABSE :databaseName WITH OWNER = :owner TEMPLATE = :databaseManager ENCODING = UTF8;";
+                    cmd.Parameters.Add("databaseName", NpgsqlDbType.Varchar).Value = backtierConfig.Database;
+                    cmd.Parameters.Add("owner", NpgsqlDbType.Varchar).Value = backtierConfig.UserName;
+                    cmd.Parameters.Add("databaseManager", NpgsqlDbType.Varchar).Value = backtierConfig.DatabaseManage;
 
                     cmd.ExecuteNonQuery();
                 }
