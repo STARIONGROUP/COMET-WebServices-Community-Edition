@@ -1111,7 +1111,7 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = "CREATE DATABSE :databaseName WITH OWNER = :owner TEMPLATE = :databaseManager ENCODING = UTF8;";
+                    cmd.CommandText = "CREATE DATABASE :databaseName WITH OWNER = :owner TEMPLATE = :databaseManager ENCODING = UTF8;";
                     cmd.Parameters.Add("databaseName", NpgsqlDbType.Varchar).Value = backtierConfig.Database;
                     cmd.Parameters.Add("owner", NpgsqlDbType.Varchar).Value = backtierConfig.UserName;
                     cmd.Parameters.Add("databaseManager", NpgsqlDbType.Varchar).Value = backtierConfig.DatabaseManage;
