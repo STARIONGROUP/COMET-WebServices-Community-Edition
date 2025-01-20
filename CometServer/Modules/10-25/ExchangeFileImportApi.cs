@@ -65,7 +65,7 @@ namespace CometServer.Modules
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
     /// </summary>
-    public class ExchangeFileImportyApi : CarterModule
+    public class ExchangeFileImportApi : CarterModule
     {
         /// <summary>
         /// The top container.
@@ -81,7 +81,7 @@ namespace CometServer.Modules
         /// <summary>
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </summary>
-        private readonly ILogger<ExchangeFileImportyApi> logger;
+        private readonly ILogger<ExchangeFileImportApi> logger;
 
         /// <summary>
         /// The (injected) <see cref="IAppConfigService"/>
@@ -99,7 +99,7 @@ namespace CometServer.Modules
         private readonly ITokenGeneratorService tokenGeneratorService;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/>
+        /// Initializes a new instance of the <see cref="ExchangeFileImportApi"/>
         /// </summary>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
@@ -113,7 +113,7 @@ namespace CometServer.Modules
         /// <param name="logger">
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </param>
-        public ExchangeFileImportyApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportyApi> logger)
+        public ExchangeFileImportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportApi> logger)
         {
             this.appConfigService = appConfigService;
             this.cometHasStartedService = cometHasStartedService;
@@ -133,18 +133,18 @@ namespace CometServer.Modules
                 IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService) =>
             {
                 await this.SeedDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController, siteDirectoryService, engineeringModelSetupService);
-            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
+            });
 
             app.MapPost("/Data/Import", async (HttpRequest req, HttpResponse res,
                 IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDataStoreController dataStoreController) =>
             {
                 await this.ImportDataStore(req, res, requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, dataStoreController);
-            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
+            });
 
             app.MapPost("/Data/Restore", async (HttpRequest req, HttpResponse res, IDataStoreController dataStoreController) =>
             {
                 await this.RestoreDatastore(req, res, dataStoreController);
-            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
+            });
         }
 
         /// <summary>
