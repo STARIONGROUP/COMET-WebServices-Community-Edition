@@ -1087,8 +1087,7 @@ namespace CometServer.Modules
 
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = "DROP DATABASE IF EXISTS :databaseName;";
-                    cmd.Parameters.Add("databaseName", NpgsqlDbType.Varchar).Value = backtierConfig.Database;
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.Database}\";";
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1099,8 +1098,7 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Drop the restore data store");
 
                     cmd.Connection = connection;
-                    cmd.CommandText = "DROP DATABASE IF EXISTS :databaseRestoreName;";
-                    cmd.Parameters.Add("databaseRestoreName", NpgsqlDbType.Varchar).Value = backtierConfig.DatabaseRestore;
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.DatabaseRestore}\";";
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1111,11 +1109,8 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = "CREATE DATABASE :databaseName WITH OWNER = :owner TEMPLATE = :databaseManager ENCODING = UTF8;";
-                    cmd.Parameters.Add("databaseName", NpgsqlDbType.Varchar).Value = backtierConfig.Database;
-                    cmd.Parameters.Add("owner", NpgsqlDbType.Varchar).Value = backtierConfig.UserName;
-                    cmd.Parameters.Add("databaseManager", NpgsqlDbType.Varchar).Value = backtierConfig.DatabaseManage;
-
+                    // Create DATABASE command does not support parameters statements
+                    cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = UTF8;";
                     cmd.ExecuteNonQuery();
                 }
 
