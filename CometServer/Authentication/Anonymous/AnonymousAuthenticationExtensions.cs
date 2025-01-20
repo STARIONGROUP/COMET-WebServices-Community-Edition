@@ -49,7 +49,7 @@ namespace CometServer.Authentication.Anonymous
             this AuthenticationBuilder builder,
             string displayName = AnonymousAuthenticationDefaults.DisplayName,
             Action<AnonymousAuthenticationOptions> configure = null)
-            => builder.AddScheme<AnonymousAuthenticationOptions, AnonymousAuthenticationHandler>(
+        => builder.AddScheme<AnonymousAuthenticationOptions, AnonymousAuthenticationHandler>(
                 AnonymousAuthenticationDefaults.AuthenticationScheme, displayName, configure ?? DefaultConfigureAction);
     }
 }

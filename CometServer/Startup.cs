@@ -26,6 +26,7 @@ namespace CometServer
 {
     using System;
     using System.Configuration;
+    using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using System.Text;
 
@@ -55,10 +56,12 @@ namespace CometServer
     using CometServer.Authentication;
     using CometServer.Authentication.Anonymous;
     using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.ChangeNotification;
     using CometServer.ChangeNotification.Data;
     using CometServer.Configuration;
+    using CometServer.Enumerations;
     using CometServer.Health;
     using CometServer.Helpers;
     using CometServer.Modules.Constraints;
@@ -83,6 +86,7 @@ namespace CometServer
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.IdentityModel.JsonWebTokens;
     using Microsoft.IdentityModel.Tokens;
 
     using Prometheus;
@@ -184,64 +188,53 @@ namespace CometServer
 
             var isLocalJwtBearerEnabled = bool.Parse(isLocalJwtBearerEnabledString);
 
-            var isExteranlJwtBearerEnabledString = configuration["Authentication:ExternalJwtBearer:IsEnabled"];
+            var isExternalJwtBearerEnabledString = configuration["Authentication:ExternalJwtBearer:IsEnabled"];
+            var isExternalJwtBearerEnabled = !string.IsNullOrEmpty(isExternalJwtBearerEnabledString) && bool.Parse(isExternalJwtBearerEnabledString);
 
-            if (string.IsNullOrEmpty(isExteranlJwtBearerEnabledString))
+            if (!isBasicAuthEnabled && !isLocalJwtBearerEnabled && !isExternalJwtBearerEnabled)
             {
-                throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:IsEnabled setting must be available");
+                throw new ConfigurationErrorsException("At least one authentication must be enabled");
             }
 
-            var isExteranlJwtBearerEnabled = bool.Parse(isExteranlJwtBearerEnabledString);
-
-            if (!isBasicAuthEnabled && !isLocalJwtBearerEnabled && !isExteranlJwtBearerEnabled)
+            if (isLocalJwtBearerEnabled && isExternalJwtBearerEnabled)
             {
-                throw new ConfigurationErrorsException("At least one authentucation must be enabled");
-            }
-
-            if (isLocalJwtBearerEnabled && isExteranlJwtBearerEnabled)
-            {
-                throw new ConfigurationErrorsException("Both local and external JWT Bearer authentication is enavbled, only one may be enabled");
+                throw new ConfigurationErrorsException("Both local and external JWT Bearer authentication is enabled, only one may be enabled");
             }
 
             var authenticationBuilder = services
                 .AddAuthentication()
                 .AddAnonymousAuthentication()
-                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme);
-
-            if (isBasicAuthEnabled)
-            {
-                authenticationBuilder.AddBasicAuthentication(configure: options =>
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddBasicAuthentication(configure: options =>
                 {
                     options.IsWWWAuthenticateHeaderSuppressed = false;
                     options.Realm = "CDP4-COMET";
                 });
-            }
 
             if (isLocalJwtBearerEnabled)
             {
-                var validIssuer = configuration["Authentication:LocalJwtBearer:Issuer"];
+                var validIssuer = configuration["Authentication:LocalJwtBearer:ValidIssuer"];
 
                 if (string.IsNullOrEmpty(validIssuer))
                 {
-                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:Issuer setting must be available");
+                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:ValidIssuer setting must be available");
                 }
 
-                var validAudience = configuration["Authentication:LocalJwtBearer:Audience"];
+                var validAudience = configuration["Authentication:LocalJwtBearer:ValidAudience"];
 
                 if (string.IsNullOrEmpty(validAudience))
                 {
-                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:Audience setting must be available");
+                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:ValidAudience setting must be available");
                 }
 
-                var issuerSigningKey = configuration["Authentication:LocalJwtBearer:Key"];
+                var issuerSigningKey = configuration["Authentication:LocalJwtBearer:SymmetricSecurityKey"];
 
                 if (string.IsNullOrEmpty(issuerSigningKey))
                 {
-                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:Key setting must be available");
+                    throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:SymmetricSecurityKey setting must be available");
                 }
 
-                authenticationBuilder.AddJwtBearer(authenticationScheme: Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme,
-                    configureOptions: options =>
+                authenticationBuilder.AddLocalJwtBearerAuthentication(configure: options =>
                     {
                         options.TokenValidationParameters = new TokenValidationParameters
                         {
@@ -255,14 +248,74 @@ namespace CometServer
                         };
                     });
             }
-
-            if (isExteranlJwtBearerEnabled)
+            else
             {
-                authenticationBuilder.AddJwtBearer(authenticationScheme: Authentication.Bearer.JwtBearerDefaults.ExternalAuthenticationScheme,
-                    configureOptions: options =>
-                    {
+                authenticationBuilder.AddLocalJwtBearerAuthentication();
+            }
 
-                    });
+            if (isExternalJwtBearerEnabled)
+            {
+                var validIssuer = configuration["Authentication:ExternalJwtBearer:ValidIssuer"];
+
+                if (string.IsNullOrEmpty(validIssuer))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:ValidIssuer setting must be available");
+                }
+
+                var validAudience = configuration["Authentication:ExternalJwtBearer:ValidAudience"];
+
+                if (string.IsNullOrEmpty(validAudience))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:ValidAudience setting must be available");
+                }
+
+                var authority = configuration["Authentication:ExternalJwtBearer:Authority"];
+
+                if (string.IsNullOrEmpty(authority))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:Authority setting must be available");
+                }
+
+                var claimName = configuration["Authentication:ExternalJwtBearer:IdentifierClaimName"];
+
+                if (string.IsNullOrEmpty(claimName))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:IdentifierClaimName setting must be available");
+                }
+
+                var personIdentifierPropertyKind = configuration["Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind"];
+
+                if (string.IsNullOrEmpty(personIdentifierPropertyKind))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind setting must be available");
+                }
+
+                if (!Enum.TryParse<PersonIdentifierPropertyKind>(personIdentifierPropertyKind, out _))
+                {
+                    throw new ConfigurationErrorsException($"Invalid value for Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind," +
+                                                           $" should be one of: {string.Join(", ",Enum.GetValues<PersonIdentifierPropertyKind>())}");
+                }
+
+                authenticationBuilder.AddExternalJwtBearerAuthentication(configure: options =>
+                {
+                    options.Authority = authority;
+                    
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = false,
+                        SignatureValidator = (token, parameters) => new JsonWebToken(token),
+                        ValidAudience = validAudience,
+                        ValidIssuer = validIssuer
+                    };
+                    }
+                );
+            }
+            else
+            {
+                authenticationBuilder.AddExternalJwtBearerAuthentication();    
             }
 
             services.AddAuthorization(options =>
@@ -289,11 +342,11 @@ namespace CometServer
                 options.AddPolicy(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme, localJwtBearerAuthenticationPolicy);
 
                 var externalJwtBearerAuthenticationPolicy = new AuthorizationPolicyBuilder()
-                    .AddAuthenticationSchemes(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme)
+                    .AddAuthenticationSchemes(Authentication.Bearer.JwtBearerDefaults.ExternalAuthenticationScheme)
                     .RequireAuthenticatedUser()
                     .Build();
 
-                options.AddPolicy(Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme, externalJwtBearerAuthenticationPolicy);
+                options.AddPolicy(Authentication.Bearer.JwtBearerDefaults.ExternalAuthenticationScheme, externalJwtBearerAuthenticationPolicy);
             });
         }
 

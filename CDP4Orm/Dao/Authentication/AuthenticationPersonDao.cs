@@ -101,6 +101,58 @@ namespace CDP4Orm.Dao.Authentication
         }
 
         /// <summary>
+        /// Read the data from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="userId">
+        /// User Iid to retrieve from the database.
+        /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="AuthenticationPerson"/>.
+        /// </returns>
+        public async Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, Guid userId, DateTime? instant = null)
+        {
+            var result = new List<AuthenticationPerson>();
+
+            await using var command = new NpgsqlCommand();
+
+            var sqlBuilder = new System.Text.StringBuilder();
+
+            sqlBuilder.Append(this.PersonDao.BuildReadQuery(partition, instant));
+
+            sqlBuilder.Append(" WHERE \"Iid\" = :userId");
+            command.Parameters.Add("userId", NpgsqlDbType.Uuid).Value = userId;
+
+            if (instant.HasValue && instant.Value != DateTime.MaxValue)
+            {
+                command.Parameters.Add("instant", NpgsqlDbType.Timestamp).Value = instant;
+            }
+
+            sqlBuilder.Append(';');
+
+            command.Connection = transaction.Connection;
+            command.Transaction = transaction;
+            command.CommandText = sqlBuilder.ToString();
+
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                var authenticationPerson = MapToDto(reader);
+                result.Add(authenticationPerson);
+            }
+
+            return result;        }
+        
+        /// <summary>
         /// The mapping from a database record to data transfer object.
         /// </summary>
         /// <param name="reader">

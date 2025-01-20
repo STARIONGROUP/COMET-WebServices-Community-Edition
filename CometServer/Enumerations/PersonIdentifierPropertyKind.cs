@@ -1,11 +1,11 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IJwtTokenService.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2024 RHEA System S.A.
+// <copyright file="PersonIdentifierKind.cs" company="Starion Group S.A.">
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
 //    This file is part of CDP4-COMET Webservices Community Edition.
-//    The CDP4-COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    The CDP4-COMET Web Services Community Edition is the Starion implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 // 
 //    The CDP4-COMET Web Services Community Edition is free software; you can redistribute it and/or
@@ -23,24 +23,24 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authentication
+namespace CometServer.Enumerations
 {
-    using CDP4Authentication;
+    using CDP4Common.DTO;
 
     /// <summary>
-    /// The purpose of the <see cref="IJwtTokenService"/> is to generate a JWT token based on the provided authenticated
-    /// user
+    /// The <see cref="PersonIdentifierPropertyKind" /> defines properties that could be used to identify a <see cref="Person" />
+    /// during the Authorization process
     /// </summary>
-    public interface IJwtTokenService
+    public enum PersonIdentifierPropertyKind
     {
         /// <summary>
-        /// Creates a JWT token based on the <see cref="AuthenticationPerson"/> and the settings provided
-        /// by the <see cref="IAppConfigService"/>
+        /// Allow Person identification based on the shortName (default)
         /// </summary>
-        /// <param name="authenticationPerson">
-        /// The subject <see cref="AuthenticationPerson"/>
-        /// </param>
-        /// <returns>The created JWT token</returns>
-        string CreateToken(AuthenticationPerson authenticationPerson);
+        ShortName,
+        
+        /// <summary>
+        /// Allow Person idenfiication based on the unique Identifier
+        /// </summary>
+        Iid
     }
 }

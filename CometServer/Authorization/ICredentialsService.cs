@@ -24,6 +24,7 @@
 
 namespace CometServer.Authorization
 {
+    using System;
     using System.Threading.Tasks;
 
     using Npgsql;
@@ -48,6 +49,17 @@ namespace CometServer.Authorization
         /// The supplied username
         /// </param>
         Task ResolveCredentials(NpgsqlTransaction transaction, string username);
+        
+        /// <summary>
+        /// Resolves the user to <see cref="Credentials"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="userId">
+        /// The supplied user unique identifier
+        /// </param>
+        Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId);
 
         /// <summary>
         /// Resolve and set participant information for the current <see cref="Credentials"/>

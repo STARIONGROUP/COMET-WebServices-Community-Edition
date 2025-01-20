@@ -148,9 +148,9 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow);
+            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow).RequireAuthorization(this.AuthenticationSchemes);
 
-            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow);
+            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow).RequireAuthorization(this.AuthenticationSchemes);
 
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
@@ -159,14 +159,16 @@ namespace CometServer.Modules
                 {
                     return;
                 }
+                
+                var identity = req.HttpContext.User.Identity!.Name;
 
                 try
                 {
-                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                 }
                 catch (AuthorizationException)
                 {
-                    this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+                    this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", identity);
 
                     res.UpdateWithNotAutherizedSettings();
                     await res.AsJson("not authorized");
@@ -185,14 +187,15 @@ namespace CometServer.Modules
                 }
                 
                 var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+                var identity = req.HttpContext.User.Identity!.Name;
 
                 try
                 {
-                    await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
+                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                 }
                 catch (AuthorizationException)
                 {
-                    this.logger.LogWarning("The {RequestToken} POST REQUEST was not authorized for {Identity}", requestToken, req.HttpContext.User.Identity.Name);
+                    this.logger.LogWarning("The {RequestToken} POST REQUEST was not authorized for {Identity}", identity);
 
                     res.UpdateWithNotAutherizedSettings();
                     await res.AsJson("not authorized");
@@ -280,159 +283,153 @@ namespace CometServer.Modules
                 return;
             }
 
-            if (!(request.HttpContext.User.Identity?.IsAuthenticated ?? false))
+            var identity = request.HttpContext.User.Identity!.Name;
+            
+            try
             {
-                response.UpdateWithNotAuthenticatedSettings();
-                await response.AsJson("not authenticated");
+               identity = await this.Authorize(this.AppConfigService, credentialsService, request);
             }
-            else
+            catch (AuthorizationException)
             {
-                try
+                this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", identity);
+                response.UpdateWithNotAutherizedSettings();
+                await response.AsJson("not authorized");
+                return;
+            }
+            
+            NpgsqlConnection connection = null;
+            var credentials = credentialsService.Credentials;
+            var transaction = transactionManager.SetupTransaction(ref connection, credentials);
+
+            transactionManager.SetCachedDtoReadEnabled(true);
+            transactionManager.SetFullAccessState(true);
+
+            var stopwatch = Stopwatch.StartNew();
+            var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
+            
+            try
+            {
+                var engineeringModels = new List<Thing>();
+                var allEngineeringModelIds = new List<Guid>();
+
+                var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
+                requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
+
+                var securityContext = new RequestSecurityContext();
+
+                // get all the Participants and filter out only those Participants that are active and for the current Person
+                var activeAndAssignedParticipantsForCurrentPerson = processor.GetResource("Participant", SiteDirectoryData, null, securityContext)
+                    .OfType<Participant>().Where(x => x.IsActive && x.Person == credentials.Person.Iid);
+
+                // get all EngineeringModelSetup
+                var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, null, securityContext)
+                    .OfType<EngineeringModelSetup>();
+
+                if (ids is null)
                 {
-                    await this.Authorize(this.AppConfigService, credentialsService, request.HttpContext.User.Identity.Name);
-                }
-                catch (AuthorizationException)
-                {
-                    this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", request.HttpContext.User.Identity.Name);
-                    response.UpdateWithNotAutherizedSettings();
-                    await response.AsJson("not authorized");
-                    return;
-                }
-                
-                NpgsqlConnection connection = null;
-                var credentials = credentialsService.Credentials;
-                var transaction = transactionManager.SetupTransaction(ref connection, credentials);
-
-                transactionManager.SetCachedDtoReadEnabled(true);
-                transactionManager.SetFullAccessState(true);
-
-                var stopwatch = Stopwatch.StartNew();
-                var requestToken = this.TokenGeneratorService.GenerateRandomToken();
-
-                this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
-                
-                try
-                {
-                    var engineeringModels = new List<Thing>();
-                    var allEngineeringModelIds = new List<Guid>();
-
-                    var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
-                    requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
-
-                    var securityContext = new RequestSecurityContext();
-
-                    // get all the Participants and filter out only those Participants that are active and for the current Person
-                    var activeAndAssignedParticipantsForCurrentPerson = processor.GetResource("Participant", SiteDirectoryData, null, securityContext)
-                        .OfType<Participant>().Where(x => x.IsActive && x.Person == credentials.Person.Iid);
-
-                    // get all EngineeringModelSetup
-                    var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, null, securityContext)
-                        .OfType<EngineeringModelSetup>();
-
-                    if (ids is null)
+                    foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
                     {
-                        foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
+                        foreach (var engineeringModelSetup in engineeringModelSetups)
                         {
-                            foreach (var engineeringModelSetup in engineeringModelSetups)
+                            if (engineeringModelSetup.Participant.Contains(participant.Iid))
                             {
-                                if (engineeringModelSetup.Participant.Contains(participant.Iid))
-                                {
-                                    allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
-                                }
+                                allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
                             }
                         }
                     }
-                    else if (ids.TryParseEnumerableOfGuid(out var identifiers))
+                }
+                else if (ids.TryParseEnumerableOfGuid(out var identifiers))
+                {
+                    foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
                     {
-                        foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
+                        foreach (var engineeringModelSetup in engineeringModelSetups)
                         {
-                            foreach (var engineeringModelSetup in engineeringModelSetups)
+                            if (engineeringModelSetup.Participant.Contains(participant.Iid) && identifiers.Contains(engineeringModelSetup.EngineeringModelIid))
                             {
-                                if (engineeringModelSetup.Participant.Contains(participant.Iid) && identifiers.Contains(engineeringModelSetup.EngineeringModelIid))
-                                {
-                                    allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
-                                }
+                                allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
                             }
                         }
                     }
-
-                    foreach (var engineeringModelIid in allEngineeringModelIds.Distinct())
-                    {
-                        var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
-
-                        var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
-                            new[] { nameof(EngineeringModel), engineeringModelIid.ToString() }, out _);
-
-                        engineeringModels.AddRange(things);
-                    }
-
-                    var contentTypeKind = request.QueryContentTypeKind();
-                    var version = request.QueryDataModelVersion();
-
-                    if (contentTypeKind == ContentTypeKind.JSON)
-                    {
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
-                    }
-                    else if (contentTypeKind == ContentTypeKind.MESSAGEPACK)
-                    {
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
-                    }
-                    else
-                    {
-                        throw new NotSupportedException($"ContentType {contentTypeKind} is not supported for this request");
-                    }
                 }
-                catch (SecurityException exception)
+
+                foreach (var engineeringModelIid in allEngineeringModelIds.Distinct())
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.RollbackAsync();
-                    }
+                    var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
 
-                    this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                    var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
+                        new[] { nameof(EngineeringModel), engineeringModelIid.ToString() }, out _);
 
-                    response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await response.AsJson($"exception:{exception.Message}");
+                    engineeringModels.AddRange(things);
                 }
-                catch (ThingNotFoundException exception)
+
+                var contentTypeKind = request.QueryContentTypeKind();
+                var version = request.QueryDataModelVersion();
+
+                if (contentTypeKind == ContentTypeKind.JSON)
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.RollbackAsync();
-                    }
-
-                    this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
-
-                    response.StatusCode = (int)HttpStatusCode.NotFound;
-                    await response.AsJson($"exception:{exception.Message}");
+                    await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
                 }
-                catch (Exception exception)
+                else if (contentTypeKind == ContentTypeKind.MESSAGEPACK)
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.RollbackAsync();
-                    }
-
-                    this.logger.LogError(exception, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
-
-                    // error handling
-                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    await response.AsJson($"exception:{exception.Message}");
+                    await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
                 }
-                finally
+                else
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.DisposeAsync();
-                    }
-
-                    if (connection != null)
-                    {
-                        await connection.DisposeAsync();
-                    }
-
-                    this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                    throw new NotSupportedException($"ContentType {contentTypeKind} is not supported for this request");
                 }
+            }
+            catch (SecurityException exception)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await response.AsJson($"exception:{exception.Message}");
+            }
+            catch (ThingNotFoundException exception)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                await response.AsJson($"exception:{exception.Message}");
+            }
+            catch (Exception exception)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogError(exception, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                // error handling
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await response.AsJson($"exception:{exception.Message}");
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.DisposeAsync();
+                }
+
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
             }
         }
 

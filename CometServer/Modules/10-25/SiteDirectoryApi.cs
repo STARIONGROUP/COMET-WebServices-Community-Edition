@@ -152,13 +152,15 @@ namespace CometServer.Modules
                         return;
                     }
 
+                    var identity = req.HttpContext.User.Identity!.Name;
+                    
                     try
                     {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                        identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                     }
                     catch (AuthorizationException)
                     {
-                        this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", identity);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -175,13 +177,16 @@ namespace CometServer.Modules
                     {
                         return;
                     }
+                    
+                    var identity = req.HttpContext.User.Identity!.Name;
+                    
                     try
                     {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                        identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                     }
                     catch (AuthorizationException)
                     {
-                        this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", identity);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");
@@ -200,14 +205,15 @@ namespace CometServer.Modules
                     }
 
                     var requestToken = this.TokenGeneratorService.GenerateRandomToken();
-
+                    var identity = req.HttpContext.User.Identity!.Name;
+                    
                     try
                     {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity!.Name);
+                        identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                     }
                     catch (AuthorizationException)
                     {
-                        this.logger.LogWarning("The {requestToken} POST REQUEST was not authorized for {Identity}", requestToken, req.HttpContext.User.Identity.Name);
+                        this.logger.LogWarning("The {requestToken} POST REQUEST was not authorized for {Identity}", identity);
 
                         res.UpdateWithNotAutherizedSettings();
                         await res.AsJson("not authorized");

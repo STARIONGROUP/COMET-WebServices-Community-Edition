@@ -127,6 +127,21 @@ namespace CometServer.Authorization
         }
 
         /// <summary>
+        /// Resolves the user to <see cref="Credentials"/>
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="userId">
+        /// The supplied user unique identifier
+        /// </param>
+        public async Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId)
+        {
+            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", userId, null);
+            this.ResvoleCredentials(transaction, userId.ToString(), persons);
+        }
+
+        /// <summary>
         /// Resolves the username to <see cref="Credentials"/>
         /// </summary>
         /// <param name="transaction">
@@ -138,6 +153,22 @@ namespace CometServer.Authorization
         public async Task ResolveCredentials(NpgsqlTransaction transaction, string username)
         {
             var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null);
+            this.ResvoleCredentials(transaction, username, persons);
+        }
+
+        /// <summary>
+        /// Resolves the username to <see cref="Credentials" /> for a collection of <see cref="AuthenticationPerson" />
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="username">
+        /// The supplied username
+        /// </param>
+        /// <param name="persons">The collection of retrieved <see cref="AuthenticationPerson" /></param>
+        /// 
+        private void ResvoleCredentials(NpgsqlTransaction transaction, string username, IEnumerable<AuthenticationPerson> persons)
+        {
             var person = persons.SingleOrDefault();
             
             if (person == null)
@@ -145,7 +176,9 @@ namespace CometServer.Authorization
                 this.Logger.LogTrace("The user {username} does not exist and cannot be resolved", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
-
+            
+            username = person.UserName;
+            
             if (!person.IsActive)
             {
                 this.Logger.LogTrace("The user {username} is not Active and cannot be authorized", username);

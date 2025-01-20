@@ -32,6 +32,7 @@ namespace CometServer.Modules
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Security.Authentication;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -53,6 +54,8 @@ namespace CometServer.Modules
     using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
+    using CometServer.Enumerations;
+    using CometServer.Exceptions;
     using CometServer.Extensions;
     using CometServer.Health;
     using CometServer.Helpers;
@@ -179,7 +182,66 @@ namespace CometServer.Modules
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
-        
+
+        /// <summary>
+        /// Authorizes a <paramref name="request"/> and calls the
+        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
+        /// </summary>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="appConfigService">
+        /// The <see cref="IAppConfigService"/> used to read applicaton settings
+        /// </param>
+        /// <param name="request">
+        /// The <see cref="HttpRequest"/> that provides that should be ahtorized
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/> that contains the value of the identifier uses to check authorization
+        /// </returns>
+        protected async Task<string> Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, HttpRequest request)
+        {
+            var userName = request.HttpContext.User.Identity!.Name;
+
+            if (!request.DoesAuthorizationHeaderMatches(JwtBearerDefaults.ExternalAuthenticationScheme))
+            {
+                await this.Authorize(appConfigService, credentialsService, userName);
+                return userName;
+            }
+
+            var claim = request.HttpContext.User.Claims
+                .FirstOrDefault(x => x.Type == appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
+
+            if (claim != null)
+            {
+                switch ( appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.PersonIdentifierPropertyKind)
+                {
+                    case PersonIdentifierPropertyKind.ShortName:
+                        await this.Authorize(appConfigService, credentialsService, claim.Value);
+                        break;
+                    case PersonIdentifierPropertyKind.Iid:
+                        if (!Guid.TryParse(claim.Value, out var userId))
+                        {
+                            throw new AuthenticationException();
+                        }
+                        
+                        await this.Authorize(appConfigService, credentialsService, userId);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(PersonIdentifierPropertyKind), "Unsupported PersonIdentifierPropertyKind");
+                }
+                
+                return claim.Value;
+            }
+
+            this.logger.LogWarning("Identifier claim {ClaimName} missing User Claims",
+                appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
+
+            throw new AuthorizationException();
+        }
+
         /// <summary>
         /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
         /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
@@ -198,7 +260,7 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
+        private async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
         {
             try
             {
@@ -213,6 +275,44 @@ namespace CometServer.Modules
             catch (Exception)
             {
                 this.logger.LogWarning("Authorization failed for {username}", username);
+
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// Authorizes the user on the bases of the <paramref name="userId"/> and calls the
+        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
+        /// </summary>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="appConfigService">
+        /// The <see cref="IAppConfigService"/> used to read applicaton settings
+        /// </param>
+        /// <param name="userId">
+        /// The user unqiue <see cref="Guid"/> used to authorize
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        private async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, Guid userId)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+
+                await connection.OpenAsync();
+
+                await using var transaction = await connection.BeginTransactionAsync();
+
+                await credentialsService.ResolveCredentials(transaction, userId);
+            }
+            catch (Exception)
+            {
+                this.logger.LogWarning("Authorization failed for {UserId}", userId);
 
                 throw;
             }

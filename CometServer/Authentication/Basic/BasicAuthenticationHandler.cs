@@ -36,7 +36,9 @@ namespace CometServer.Authentication.Basic
     using Carter.Response;
 
     using CometServer.Authentication;
+    using CometServer.Configuration;
     using CometServer.Exceptions;
+    using CometServer.Extensions;
     using CometServer.Health;
 
     using Microsoft.AspNetCore.Authentication;
@@ -60,6 +62,11 @@ namespace CometServer.Authentication.Basic
         private readonly ICometHasStartedService cometHasStartedService;
 
         /// <summary>
+        /// The (inject) <see cref="IAppConfigService" />
+        /// </summary>
+        private readonly IAppConfigService appConfigService;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BasicAuthenticationHandler"/>
         /// </summary>
         /// <param name="options">
@@ -81,11 +88,13 @@ namespace CometServer.Authentication.Basic
         /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
         /// acceptng requests
         /// </param>
-        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService)
+        /// <param name="appConfigService">The injected <see cref="IAppConfigService"/> that is used to enable or not this authentication handler</param>
+        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService)
             : base(options, logger, encoder, clock)
         {
             this.authenticationPersonAuthenticator = authenticationPersonAuthenticator;
             this.cometHasStartedService = cometHasStartedService;
+            this.appConfigService = appConfigService;
         }
 
         /// <summary>
@@ -105,13 +114,15 @@ namespace CometServer.Authentication.Basic
         /// </param>
         /// <param name="cometHasStartedService">
         /// The (injected) <see cref="ICometHasStartedService"/> that is used to check whether CDP4-COMET is ready to start
-        /// acceptng requests
+        /// accepting requests
         /// </param>
-        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService) 
+        /// <param name="appConfigService">The injected <see cref="IAppConfigService"/> that is used to enable or not this authentication handler</param>
+        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService) 
             : base(options, logger, encoder)
         {
             this.authenticationPersonAuthenticator = authenticationPersonAuthenticator;
             this.cometHasStartedService = cometHasStartedService;
+            this.appConfigService = appConfigService;
         }
 
         /// <summary>
@@ -135,6 +146,19 @@ namespace CometServer.Authentication.Basic
                 return;
             }
 
+            if (!this.Request.DoesAuthorizationHeaderMatches(this.Scheme.Name))
+            {
+                return;
+            }
+            
+            if (!this.appConfigService.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled)
+            {
+                this.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                this.Response.ContentType = "application/json";
+                await this.Response.AsJson("The CDP4-COMET Server does not allow basic authentication");
+                return;
+            }
+
             if (!this.Options.IsWWWAuthenticateHeaderSuppressed)
             {
                 this.Response.Headers.WWWAuthenticate = $"Basic realm=\"{Options.Realm}\", charset=\"UTF-8\"";
@@ -153,7 +177,7 @@ namespace CometServer.Authentication.Basic
         {
             try
             {
-                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
+                if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy || !this.appConfigService.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled)
                 {
                     return AuthenticateResult.NoResult();
                 }
@@ -168,7 +192,7 @@ namespace CometServer.Authentication.Basic
 
                 var authHeader = AuthenticationHeaderValue.Parse(authorizationHeader);
 
-                if (authHeader.Scheme != "Basic")
+                if (authHeader.Scheme != this.Scheme.Name)
                 {
                     return AuthenticateResult.NoResult();
                 }

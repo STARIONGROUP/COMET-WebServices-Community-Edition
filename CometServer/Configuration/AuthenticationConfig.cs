@@ -27,30 +27,32 @@ namespace CometServer.Configuration
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
-    /// The purpose of the <see cref="AuthenticatonConfig"/> is to provide an object-oriented
+    /// The purpose of the <see cref="AuthenticationConfig"/> is to provide an object-oriented
     /// and type-safe access to the Authentication settings.
     /// </summary>
-    public class AuthenticatonConfig
+    public class AuthenticationConfig
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthenticatonConfig"/> class
+        /// Initializes a new instance of the <see cref="AuthenticationConfig"/> class
         /// </summary>
-        public AuthenticatonConfig()
+        public AuthenticationConfig()
         {
             this.BasicAuthenticationConfig = new BasicAuthenticationConfig();
             this.LocalJwtAuthenticationConfig = new LocalJwtAuthenticationConfig();
+            this.ExternalJwtAuthenticationConfig = new ExternalJwtAuthenticationConfig();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthenticatonConfig"/> class
+        /// Initializes a new instance of the <see cref="AuthenticationConfig"/> class
         /// </summary>
         /// <param name="configuration">
         /// The injected <see cref="IConfiguration"/> used to access the application configuration
         /// </param>
-        public AuthenticatonConfig(IConfiguration configuration)
+        public AuthenticationConfig(IConfiguration configuration)
         {
             this.BasicAuthenticationConfig = new BasicAuthenticationConfig(configuration);
             this.LocalJwtAuthenticationConfig = new LocalJwtAuthenticationConfig(configuration);
+            this.ExternalJwtAuthenticationConfig = new ExternalJwtAuthenticationConfig(configuration);
         }
 
         /// <summary>
@@ -59,8 +61,13 @@ namespace CometServer.Configuration
         public BasicAuthenticationConfig BasicAuthenticationConfig { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="BasicAuthenticationConfig"/>
+        /// Gets or sets the <see cref="LocalJwtAuthenticationConfig"/>
         /// </summary>
         public LocalJwtAuthenticationConfig LocalJwtAuthenticationConfig { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the <see cref="ExternalJwtAuthenticationConfig"/>
+        /// </summary>
+        public ExternalJwtAuthenticationConfig ExternalJwtAuthenticationConfig { get; set; }
     }
 }

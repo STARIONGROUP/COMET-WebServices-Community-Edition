@@ -2,7 +2,7 @@
 // <copyright file="IAuthenticationPersonDao.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2023 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
+//    Author: Sam Gerenï¿½, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Thï¿½ate
 //
 //    This file is part of CDP4-COMET Webservices Community Edition. 
 //    The CDP4-COMET Webservices Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -56,5 +56,25 @@ namespace CDP4Orm.Dao.Authentication
         /// List of instances of <see cref="AuthenticationPerson"/>.
         /// </returns>
         Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, string userName, DateTime? instant = null);
+
+        /// <summary>
+        /// Read the data from the database.
+        /// </summary>
+        /// <param name="transaction">
+        /// The current transaction to the database.
+        /// </param>
+        /// <param name="partition">
+        /// The database partition (schema) where the requested resource is stored.
+        /// </param>
+        /// <param name="userId">
+        /// User Iid to retrieve from the database.
+        /// </param>
+        /// <param name="instant">
+        /// The instant as a nullable <see cref="DateTime"/>
+        /// </param>
+        /// <returns>
+        /// List of instances of <see cref="AuthenticationPerson"/>.
+        /// </returns>
+        Task<IEnumerable<AuthenticationPerson>> Read(NpgsqlTransaction transaction, string partition, Guid userId, DateTime? instant = null);
     }
 }

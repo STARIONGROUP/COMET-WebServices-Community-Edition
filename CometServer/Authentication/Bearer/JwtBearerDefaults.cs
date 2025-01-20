@@ -33,7 +33,7 @@ namespace CometServer.Authentication.Bearer
         /// <summary>
         /// The name of the scheme used for local JWT Bearer authentication
         /// </summary>
-        public const string LocalAuthenticationScheme = "localJwtBearer";
+        public const string LocalAuthenticationScheme = "LocalJwtBearer";
 
         /// <summary>
         /// The name of the scheme used for external JWT Bearer authentication

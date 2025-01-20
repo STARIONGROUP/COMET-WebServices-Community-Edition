@@ -25,6 +25,9 @@
 
 namespace CometServer.Authentication.Anonymous
 {
+    /// <summary>
+    /// Default values used by Anonymous Authentication scheme.
+    /// </summary>
     public static class AnonymousAuthenticationDefaults
     {
         /// <summary>

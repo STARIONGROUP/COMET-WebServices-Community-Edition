@@ -25,6 +25,13 @@
 
 namespace CometServer.Configuration
 {
+    using System;
+    using System.Linq;
+
+    using CDP4Authentication;
+
+    using CometServer.Enumerations;
+
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
@@ -38,17 +45,54 @@ namespace CometServer.Configuration
         /// </summary>
         public ExternalJwtAuthenticationConfig()
         {
-            this.IsEnabled = true;
+            this.IsEnabled = false;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ExternalJwtAuthenticationConfig"/> class based on the defined <see cref="IConfiguration"/>
+        /// </summary>
+        /// <param name="configuration">The injected <see cref="IConfiguration" /></param>
         public ExternalJwtAuthenticationConfig(IConfiguration configuration)
         {
-            this.IsEnabled = true;
+            this.IsEnabled = bool.Parse(configuration["Authentication:ExternalJwtBearer:IsEnabled"]!);
+            this.ValidAudience = configuration["Authentication:ExternalJwtBearer:ValidAudience"];
+            this.Authority = configuration["Authentication:ExternalJwtBearer:Authority"];
+            this.ValidIssuer = configuration["Authentication:ExternalJwtBearer:ValidIssuer"];
+            this.IdentifierClaimName = configuration["Authentication:ExternalJwtBearer:IdentifierClaimName"];
+            this.PersonIdentifierPropertyKind = Enum.Parse<PersonIdentifierPropertyKind>(configuration["Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind"]!);
         }
+
+        /// <summary>
+        /// Gets or sets the Valid Issuer that issue the JWT token
+        /// </summary>
+        public string ValidIssuer { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether the External JWT Authentication is enabled or not
         /// </summary>
         public bool IsEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the valid audience which is a name of the issuer.
+        /// </summary>
+        /// <remarks>
+        /// this can be a name (string) or a hostname:port
+        /// </remarks>
+        public string ValidAudience { get; set; }
+
+        /// <summary>
+        /// Gets or sets the URI to access the JWT authority
+        /// </summary>
+        public string Authority { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the Claim that should be used as identifier
+        /// </summary>
+        public string IdentifierClaimName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="PersonIdentifierPropertyKind"/> to use for the authorization part
+        /// </summary>
+        public PersonIdentifierPropertyKind PersonIdentifierPropertyKind { get; set; }
     }
 }

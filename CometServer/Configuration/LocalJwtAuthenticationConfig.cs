@@ -41,7 +41,7 @@ namespace CometServer.Configuration
             this.IsEnabled = true;
             this.ValidIssuer = "CDP4-COMET";
             this.ValidAudience = "localhost:5000";
-            this.SymmetricSecurityKey = "needs-to-be-upadted-with-a-secret";
+            this.SymmetricSecurityKey = "needs-to-be-updated-with-a-secret";
         }
 
         /// <summary>

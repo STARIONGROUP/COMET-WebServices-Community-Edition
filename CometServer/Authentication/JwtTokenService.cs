@@ -44,6 +44,9 @@ namespace CometServer.Authentication
     /// </summary>
     public class JwtTokenService : IJwtTokenService
     {
+        /// <summary>
+        /// Provides the expiration times of a generated JWT token, in minutes
+        /// </summary>
         private const int ExpirationMinutes = 30;
 
         /// <summary>
@@ -78,7 +81,7 @@ namespace CometServer.Authentication
         /// <param name="authenticationPerson">
         /// The subject <see cref="AuthenticationPerson"/>
         /// </param>
-        /// <returns></returns>
+        /// <returns>The created JWT token</returns>
         public string CreateToken(AuthenticationPerson authenticationPerson)
         {
             var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
@@ -113,8 +116,8 @@ namespace CometServer.Authentication
             DateTime expiration)
         {
             var jwtSecurityToken = new JwtSecurityToken(
-                this.appConfigService.AppConfig.AuthenticatonConfig.LocalJwtAuthenticationConfig.ValidIssuer,
-                this.appConfigService.AppConfig.AuthenticatonConfig.LocalJwtAuthenticationConfig.ValidAudience,
+                this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.ValidIssuer,
+                this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.ValidAudience,
                 claims,
                 expires: expiration,
                 signingCredentials: credentials
@@ -151,7 +154,7 @@ namespace CometServer.Authentication
         /// </returns>
         private SigningCredentials CreateSigningCredentials()
         {
-            var symmetricSecurityKey = this.appConfigService.AppConfig.AuthenticatonConfig.LocalJwtAuthenticationConfig.SymmetricSecurityKey;
+            var symmetricSecurityKey = this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.SymmetricSecurityKey;
 
             return new SigningCredentials(
                 new SymmetricSecurityKey(

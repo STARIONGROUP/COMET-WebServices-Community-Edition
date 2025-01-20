@@ -76,6 +76,10 @@ namespace CometServer.Tests.Configuration
                 Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.Port, Is.EqualTo(1234));
                 Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.HostName, Is.EqualTo("message-broker"));
                 Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.TimeSpanBetweenAttempts, Is.EqualTo(5));
+                
+                Assert.That(appConfigService.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled, Is.True);
+                Assert.That(appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.IsEnabled, Is.True);
+                Assert.That(appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled, Is.True);
             });
         }
     }

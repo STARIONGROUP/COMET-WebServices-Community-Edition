@@ -45,7 +45,7 @@ namespace CometServer.Configuration
             this.HealthConfig = new HealthConfig();
             this.ServiceMessagingConfig = new ServiceMessagingConfig();
             this.LongRunningTasksConfig = new LongRunningTasksConfig();
-            this.AuthenticatonConfig = new AuthenticatonConfig();
+            this.AuthenticationConfig = new AuthenticationConfig();
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace CometServer.Configuration
             this.HealthConfig = new HealthConfig(configuration);
             this.ServiceMessagingConfig = new ServiceMessagingConfig(configuration);
             this.LongRunningTasksConfig = new LongRunningTasksConfig(configuration);
-            this.AuthenticatonConfig = new AuthenticatonConfig(configuration);
+            this.AuthenticationConfig = new AuthenticationConfig(configuration);
         }
 
         /// <summary>
@@ -108,6 +108,6 @@ namespace CometServer.Configuration
         /// <summary>
         /// Gets or sets the AuthenticatonConfig configuration
         /// </summary>
-        public AuthenticatonConfig AuthenticatonConfig { get; set; }
+        public AuthenticationConfig AuthenticationConfig { get; set; }
     }
 }
