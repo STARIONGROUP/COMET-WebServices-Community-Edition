@@ -1077,7 +1077,7 @@ namespace CometServer.Modules
                 connection.Open();
 
                 // Drop the existing database
-                using (var cmd = new NpgsqlCommand())
+                using (var cmd = new NpgsqlCommand("", connection))
                 {
                     this.logger.LogDebug("Drop the data store");
 
@@ -1085,7 +1085,8 @@ namespace CometServer.Modules
 
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtierConfig.Database};";
+                    cmd.CommandText = "DROP DATABASE IF EXISTS (@databaseName);";
+                    cmd.Parameters.AddWithValue("databaseName", backtierConfig.Database);
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1096,8 +1097,8 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Drop the restore data store");
 
                     cmd.Connection = connection;
-                    
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtierConfig.DatabaseRestore};";
+                    cmd.CommandText = "DROP DATABASE IF EXISTS (@databaseRestoreName);";
+                    cmd.Parameters.AddWithValue("databaseRestoreName", backtierConfig.DatabaseRestore);
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1107,8 +1108,11 @@ namespace CometServer.Modules
                 {
                     this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
-
-                    cmd.CommandText = $"CREATE DATABASE {backtierConfig.Database} WITH OWNER = {backtierConfig.UserName} TEMPLATE = {backtierConfig.DatabaseManage} ENCODING = 'UTF8';";
+                    
+                    cmd.CommandText = "CREATE DATABSE (@databaseName) WITH OWNER = (@owner) TEMPLATE = (@databaseManager) ENCODING = UTF8;";
+                    cmd.Parameters.AddWithValue("databaseName", backtierConfig.Database);
+                    cmd.Parameters.AddWithValue("owner", backtierConfig.UserName);
+                    cmd.Parameters.AddWithValue("databaseManager", backtierConfig.DatabaseManage);
 
                     cmd.ExecuteNonQuery();
                 }
