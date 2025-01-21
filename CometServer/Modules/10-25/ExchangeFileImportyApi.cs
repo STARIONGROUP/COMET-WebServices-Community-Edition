@@ -44,7 +44,6 @@ namespace CometServer.Modules
     using CDP4Orm.Dao;
     using CDP4Orm.MigrationEngine;
 
-    using CometServer.Authentication.Anonymous;
     using CometServer.Configuration;
     using CometServer.Extensions;
     using CometServer.Health;
@@ -61,13 +60,11 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
-
-    using NpgsqlTypes;
-
+    
     /// <summary>
     /// This is an API endpoint class to support the ECSS-E-TM-10-25-AnnexC exchange file format import
     /// </summary>
-    public class ExchangeFileImportApi : CarterModule
+    public class ExchangeFileImportyApi : CarterModule
     {
         /// <summary>
         /// The top container.
@@ -83,7 +80,7 @@ namespace CometServer.Modules
         /// <summary>
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </summary>
-        private readonly ILogger<ExchangeFileImportApi> logger;
+        private readonly ILogger<ExchangeFileImportyApi> logger;
 
         /// <summary>
         /// The (injected) <see cref="IAppConfigService"/>
@@ -101,7 +98,7 @@ namespace CometServer.Modules
         private readonly ITokenGeneratorService tokenGeneratorService;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ExchangeFileImportApi"/>
+        /// Initializes a new instance of the <see cref="ExchangeFileImportyApi"/>
         /// </summary>
         /// <param name="appConfigService">
         /// The (injected) <see cref="IAppConfigService"/>
@@ -115,7 +112,7 @@ namespace CometServer.Modules
         /// <param name="logger">
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </param>
-        public ExchangeFileImportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportApi> logger)
+        public ExchangeFileImportyApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportyApi> logger)
         {
             this.appConfigService = appConfigService;
             this.cometHasStartedService = cometHasStartedService;
@@ -1098,6 +1095,7 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Drop the restore data store");
 
                     cmd.Connection = connection;
+                    
                     cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.DatabaseRestore}\";";
 
                     cmd.ExecuteNonQuery();
@@ -1108,9 +1106,9 @@ namespace CometServer.Modules
                 {
                     this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
-                    
-                    // Create DATABASE command does not support parameters statements
-                    cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = UTF8;";
+
+                    cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = 'UTF8';";
+
                     cmd.ExecuteNonQuery();
                 }
 
