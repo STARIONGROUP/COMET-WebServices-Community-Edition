@@ -1,12 +1,11 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="BasicAuthenticationHandler.cs" company="RHEA System S.A.">
-//    Copyright (c) 2015-2024 RHEA System S.A.
+// <copyright file="BasicAuthenticationHandler.cs" company="Starion Group S.A.">
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
 //    This file is part of CDP4-COMET Webservices Community Edition.
-//    The CDP4-COMET Web Services Community Edition is the RHEA implementation of ECSS-E-TM-10-25 Annex A and Annex C.
-//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//    The CDP4-COMET Web Services Community Edition is the Starion implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 // 
 //    The CDP4-COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
@@ -16,7 +15,7 @@
 //    The CDP4-COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    Lesser General Public License for more details.
+//    Affero General Public License for more details.
 // 
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -117,7 +116,7 @@ namespace CometServer.Authentication.Basic
         /// accepting requests
         /// </param>
         /// <param name="appConfigService">The injected <see cref="IAppConfigService"/> that is used to enable or not this authentication handler</param>
-        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService) 
+        public BasicAuthenticationHandler(IOptionsMonitor<BasicAuthenticationOptions> options, ILoggerFactory logger, UrlEncoder encoder, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService)
             : base(options, logger, encoder)
         {
             this.authenticationPersonAuthenticator = authenticationPersonAuthenticator;
@@ -150,7 +149,7 @@ namespace CometServer.Authentication.Basic
             {
                 return;
             }
-            
+
             if (!this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
             {
                 this.Response.StatusCode = (int)HttpStatusCode.Forbidden;
@@ -236,7 +235,7 @@ namespace CometServer.Authentication.Basic
             }
             catch (AuthenticatorException)
             {
-                this.Logger.LogError( "Basic authentication failed - database error - service unavailable");
+                this.Logger.LogError("Basic authentication failed - database error - service unavailable");
 
                 this.Response.ContentType = "application/json";
                 this.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;

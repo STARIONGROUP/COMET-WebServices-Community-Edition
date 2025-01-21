@@ -37,6 +37,7 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
+    
     using CDP4DalCommon.Tasks;
 
     using CDP4JsonSerializer;
@@ -45,8 +46,6 @@ namespace CometServer.Modules
 
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
-    using CometServer.Authentication.Basic;
-    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;

@@ -26,7 +26,6 @@ namespace CometServer
 {
     using System;
     using System.Configuration;
-    using System.IdentityModel.Tokens.Jwt;
     using System.Linq;
     using System.Text;
 

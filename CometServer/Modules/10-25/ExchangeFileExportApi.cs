@@ -38,9 +38,7 @@ namespace CometServer.Modules
     using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
-
-    using CometServer.Authentication.Basic;
-    using CometServer.Authentication.Bearer;
+    
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;

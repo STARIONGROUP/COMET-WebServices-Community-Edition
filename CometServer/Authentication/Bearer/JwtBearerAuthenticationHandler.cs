@@ -6,7 +6,6 @@
 // 
 //    This file is part of CDP4-COMET Webservices Community Edition.
 //    The CDP4-COMET Web Services Community Edition is the Starion implementation of ECSS-E-TM-10-25 Annex A and Annex C.
-//    This is an auto-generated class. Any manual changes to this file will be overwritten!
 // 
 //    The CDP4-COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
@@ -16,7 +15,7 @@
 //    The CDP4-COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    Lesser General Public License for more details.
+//    Affero General Public License for more details.
 // 
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -89,7 +88,7 @@ namespace CometServer.Authentication.Bearer
         /// accepting requests
         /// </param>
         /// <param name="appConfigService">The injected <see cref="IAppConfigService" /></param>
-        public JwtBearerAuthenticationHandler(IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder, 
+        public JwtBearerAuthenticationHandler(IOptionsMonitor<JwtBearerOptions> options, ILoggerFactory logger, UrlEncoder encoder,
             ICometHasStartedService cometHasStartedService, IAppConfigService appConfigService) : base(options, logger, encoder)
         {
             this.cometHasStartedService = cometHasStartedService;

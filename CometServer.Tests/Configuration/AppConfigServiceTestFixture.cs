@@ -1,12 +1,11 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AppConfigServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
 //    This file is part of CDP4-COMET Webservices Community Edition.
-//    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
-//    This is an auto-generated class. Any manual changes to this file will be overwritten!
+//    The CDP4-COMET Web Services Community Edition is the Starion implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 // 
 //    The CDP4-COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
@@ -38,7 +37,7 @@ namespace CometServer.Tests.Configuration
     using Moq;
 
     using NUnit.Framework;
-    
+
     /// <summary>
     /// Suite of tests for the <see cref="AppConfigService"/>
     /// </summary>
@@ -47,7 +46,7 @@ namespace CometServer.Tests.Configuration
     {
         private IConfiguration configuration;
         private Mock<IAuthenticationPluginInjector> pluginInjector;
-        
+
         [SetUp]
         public void SetUp()
         {
@@ -60,7 +59,7 @@ namespace CometServer.Tests.Configuration
 
             // Build the IConfiguration instance
             this.configuration = configurationBuilder.Build();
-            
+
             this.pluginInjector = new Mock<IAuthenticationPluginInjector>();
             this.pluginInjector.Setup(x => x.Connectors).Returns([]);
         }
@@ -69,7 +68,7 @@ namespace CometServer.Tests.Configuration
         public void Verify_that_configuration_is_loaded_from_appsettings()
         {
             var appConfigService = new AppConfigService(this.configuration, this.pluginInjector.Object);
-            
+
             Assert.Multiple(() =>
             {
                 Assert.That(appConfigService.AppConfig.Backtier.Database, Is.EqualTo("cdp4server"));
@@ -86,7 +85,7 @@ namespace CometServer.Tests.Configuration
                 Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.Port, Is.EqualTo(1234));
                 Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.HostName, Is.EqualTo("message-broker"));
                 Assert.That(appConfigService.AppConfig.ServiceMessagingConfig.TimeSpanBetweenAttempts, Is.EqualTo(5));
-                
+
                 Assert.That(appConfigService.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled, Is.True);
                 Assert.That(appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.IsEnabled, Is.True);
                 Assert.That(appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled, Is.True);
