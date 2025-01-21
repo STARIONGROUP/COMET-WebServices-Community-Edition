@@ -71,8 +71,6 @@ namespace CometServer.Modules
 
             app.MapPost("/logout", async (HttpRequest req, HttpResponse res) =>
             {
-                await req.HttpContext.SignInAsync(req.Headers.Authorization.);
-                //return webServiceAuthentication.LogOutResponse(req.HttpContext);
                 throw new NotImplementedException();
             }).RequireAuthorization(ApiBase.AuthenticationSchemes);
 
