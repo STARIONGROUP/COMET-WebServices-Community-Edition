@@ -37,6 +37,7 @@ namespace CometServer.Tests.Authentication.Basic
     using CometServer.Authentication.Anonymous;
     using CometServer.Authentication.Basic;
     using CometServer.Configuration;
+    using CometServer.Exceptions;
     using CometServer.Health;
 
     using Microsoft.AspNetCore.Authentication;
@@ -269,6 +270,33 @@ namespace CometServer.Tests.Authentication.Basic
             {
                 Assert.That(result.Succeeded, Is.True);
                 Assert.That(result.Principal!.Identity!.Name, Is.EqualTo(username));
+            });
+        }
+
+        [Test]
+        public async Task VerifyAuthenticationCatchesAuthenticatorException()
+        {
+            var context = new DefaultHttpContext
+            {
+                RequestServices = this.requestService.Object
+            };
+
+            const string username ="user";
+            const string password = "password";
+            
+            context.Request.Headers.Authorization = new StringValues($"Basic {Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{username}:{password}"))}");
+            
+            this.cometHasStartedService.Setup(x => x.GetHasStartedAndIsReady()).Returns(new ServerStatus(true, DateTime.Now));
+            await this.handler.InitializeAsync(new AuthenticationScheme(BasicAuthenticationDefaults.AuthenticationScheme, BasicAuthenticationDefaults.DisplayName, typeof(BasicAuthenticationHandler)), context);
+            
+            this.appConfigService.Setup(x => x.IsAuthenticationSchemeEnabled(this.handler.Scheme.Name)).Returns(true);
+            this.authenticatonPersonAuthenticator.Setup(x => x.Authenticate(username, password)).ThrowsAsync(new AuthenticatorException());
+            var result = await this.handler.AuthenticateAsync();
+            
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.Succeeded, Is.False);
+                Assert.That(() => this.handler.ChallengeAsync(result.Properties), Throws.Nothing);
             });
         }
     }

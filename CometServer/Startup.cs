@@ -26,6 +26,7 @@ namespace CometServer
 {
     using System;
     using System.Configuration;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Text;
 
@@ -95,6 +96,7 @@ namespace CometServer
     /// <summary>
     /// The <see cref="Startup"/> used to configure the application
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public class Startup
     {
         /// <summary>
