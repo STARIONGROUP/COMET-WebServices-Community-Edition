@@ -649,7 +649,7 @@ namespace CometServer.Modules
                 if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
+                    await this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
@@ -661,13 +661,13 @@ namespace CometServer.Modules
                     {
                         var iterationPartition = requestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
 
-                        this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
                         return;
                     }
 
                     if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
-                        this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
                         return;
                     }
                 }
@@ -905,10 +905,11 @@ namespace CometServer.Modules
                 this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
             });
 
-            var completed = longRunningCometTask.Wait(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime));
+            var completedTask = await Task.WhenAny(longRunningCometTask, Task.Delay(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime)));
 
-            if (completed)
+            if (completedTask == longRunningCometTask)
             {
+                await longRunningCometTask;
                 this.logger.LogInformation("The task {id} for actor {actor} completed within the requsted wait time {waittime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
             }
             else

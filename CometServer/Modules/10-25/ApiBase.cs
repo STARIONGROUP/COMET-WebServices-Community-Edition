@@ -224,7 +224,7 @@ namespace CometServer.Modules
                     case PersonIdentifierPropertyKind.Iid:
                         if (!Guid.TryParse(claim.Value, out var userId))
                         {
-                            throw new AuthenticationException();
+                            throw new AuthenticationException("Provided claim value is not a valid GUID.");
                         }
                         
                         await this.Authorize(appConfigService, credentialsService, userId);
@@ -236,10 +236,10 @@ namespace CometServer.Modules
                 return claim.Value;
             }
 
-            this.logger.LogWarning("Identifier claim {ClaimName} missing User Claims",
+            this.logger.LogWarning("Identifier claim {ClaimName} missing from User Claims",
                 appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
 
-            throw new AuthorizationException();
+            throw new AuthorizationException($"Identifer claim {appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName} missing from User Claims");
         }
 
         /// <summary>
@@ -642,13 +642,13 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected void WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected Task WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
 
             httpResponse.StatusCode = (int)statusCode;
 
-            this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
+            return this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
         }
 
         /// <summary>
@@ -690,12 +690,12 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected void WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected Task WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
 
-            this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
+            return this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
         }
 
         /// <summary>
@@ -858,7 +858,7 @@ namespace CometServer.Modules
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
         /// </param>
-        private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
+        private async Task PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
             if (fileRevisions.Count == 0)
             {
@@ -892,7 +892,12 @@ namespace CometServer.Modules
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
-                    fileStream.Read(buffer, 0, (int)fileSize);
+                    var readBytes = fileStream.Read(buffer, 0, (int)fileSize);
+
+                    if (readBytes != fileSize)
+                    {
+                        this.logger.LogWarning("Failed to read {FileSize} bytes, only read {ReadBytes}", fileSize, readBytes);
+                    }
                 }
 
                 // write out the binary content to the first multipart content entry
@@ -906,7 +911,7 @@ namespace CometServer.Modules
             }
 
             // stream the multipart content to the request contents target stream
-            content.CopyToAsync(targetStream).Wait();
+            await content.CopyToAsync(targetStream);
             AddMultiPartMimeEndpoint(targetStream);
         }
 
@@ -940,7 +945,7 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
+        private async Task PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
             var temporaryTopFolder = fileArchiveService.CreateFolderAndFileStructureOnDisk(resourceResponse, partition, routeSegments);
 
@@ -973,7 +978,12 @@ namespace CometServer.Modules
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
-                    fileStream.Read(buffer, 0, (int)fileSize);
+                    var readBytes = fileStream.Read(buffer, 0, (int)fileSize);
+                    
+                    if (readBytes != fileSize)
+                    {
+                        this.logger.LogWarning("Failed to read {FileSize} bytes, only read {ReadBytes}", fileSize, readBytes);
+                    }
                 }
 
                 var binaryContent = new ByteArrayContent(buffer);
@@ -989,7 +999,7 @@ namespace CometServer.Modules
                 content.Add(binaryContent);
 
                 // stream the multipart content to the request contents target stream
-                content.CopyToAsync(targetStream).Wait();
+                await content.CopyToAsync(targetStream);
 
                 AddMultiPartMimeEndpoint(targetStream);
             }

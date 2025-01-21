@@ -107,6 +107,9 @@ namespace CometServer.Extensions
         /// <returns>Value of the assert</returns>
         public static bool DoesAuthorizationHeaderMatches(this HttpRequest request, string expectedAuthorizationScheme)
         {
+            ArgumentNullException.ThrowIfNull(request);
+            ArgumentNullException.ThrowIfNull(expectedAuthorizationScheme);
+            
             var authorizationHeader = request.Headers.Authorization;
 
             if (string.IsNullOrEmpty(authorizationHeader))

@@ -233,6 +233,21 @@ namespace CometServer
                     throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:SymmetricSecurityKey setting must be available");
                 }
 
+                var expirationTime = configuration["Authentication:LocalJwtBearer:TokenExpirationMinutes"];
+
+                if (!string.IsNullOrEmpty(expirationTime))
+                {
+                    if (!int.TryParse(expirationTime, out var tokenExpirationMinutes))
+                    {
+                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:TokenExpirationMinutes setting must an integer value");
+                    }
+
+                    if (tokenExpirationMinutes <= 0)
+                    {
+                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:TokenExpirationMinutes setting must be strickly greater than 0");
+                    }
+                }
+
                 authenticationBuilder.AddLocalJwtBearerAuthentication(configure: options =>
                     {
                         options.TokenValidationParameters = new TokenValidationParameters

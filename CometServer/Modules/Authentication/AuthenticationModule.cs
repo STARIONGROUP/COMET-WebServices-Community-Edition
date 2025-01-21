@@ -35,6 +35,7 @@ namespace CometServer.Modules
     using CometServer.Authentication;
     using CometServer.Configuration;
 
+    using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
@@ -68,11 +69,12 @@ namespace CometServer.Modules
                 await res.AsJson("not authenticated");
             });
 
-            app.MapPost("/logout", async (HttpRequest req, HttpResponse res) => 
+            app.MapPost("/logout", async (HttpRequest req, HttpResponse res) =>
             {
+                await req.HttpContext.SignInAsync(req.Headers.Authorization.);
                 //return webServiceAuthentication.LogOutResponse(req.HttpContext);
                 throw new NotImplementedException();
-            });
+            }).RequireAuthorization(ApiBase.AuthenticationSchemes);
 
             app.MapGet("/auth/schemes", ProvideEnabledAuthenticationScheme);
         }

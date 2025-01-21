@@ -44,11 +44,6 @@ namespace CometServer.Authentication
     public class JwtTokenService : IJwtTokenService
     {
         /// <summary>
-        /// Provides the expiration times of a generated JWT token, in minutes
-        /// </summary>
-        private const int ExpirationMinutes = 30;
-
-        /// <summary>
         /// The (injected) logger
         /// </summary>
         private readonly ILogger<JwtTokenService> logger;
@@ -83,7 +78,7 @@ namespace CometServer.Authentication
         /// <returns>The created JWT token</returns>
         public string CreateToken(AuthenticationPerson authenticationPerson)
         {
-            var expiration = DateTime.UtcNow.AddMinutes(ExpirationMinutes);
+            var expiration = DateTime.UtcNow.AddMinutes(this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.TokenExpirationMinutes);
 
             var jwtSecurityToken = this.CreateJwtSecurityToken(
                 CreateClaims(authenticationPerson),

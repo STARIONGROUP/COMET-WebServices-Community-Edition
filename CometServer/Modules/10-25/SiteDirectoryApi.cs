@@ -547,10 +547,11 @@ namespace CometServer.Modules
                 this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
             });
 
-            var completed = longRunningCometTask.Wait(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime));
+            var completedTask = await Task.WhenAny(longRunningCometTask, Task.Delay(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime)));
 
-            if (completed)
+            if (completedTask == longRunningCometTask)
             {
+                await longRunningCometTask;
                 this.logger.LogInformation("The task {id} for actor {actor} completed within the requested wait time {waittime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
             }
             else

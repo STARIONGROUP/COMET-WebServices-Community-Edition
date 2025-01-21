@@ -111,16 +111,12 @@ namespace CometServer.Authentication
             }
             catch (NpgsqlException ex)
             {
-                transaction?.RollbackAsync();
-
                 this.Logger.LogCritical( "The AuthenticationPersonAuthenticator could not interact with the CDP4-COMET database");
 
                 throw new AuthenticatorException("The authenticator could not connect to the CDP4-COMET database", innerException: ex);
             }
             catch (Exception ex)
             {
-                transaction?.RollbackAsync();
-
                 this.Logger.LogCritical(ex, "There was an error while authenticating the user credentials");
 
                 throw new AuthenticatorException("There was an error while authenticating the user credentials", innerException: ex);
