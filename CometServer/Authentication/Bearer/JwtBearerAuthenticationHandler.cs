@@ -31,8 +31,6 @@ namespace CometServer.Authentication.Bearer
 
     using Carter.Response;
 
-    using CDP4Authentication;
-
     using CometServer.Configuration;
     using CometServer.Extensions;
     using CometServer.Health;
@@ -141,7 +139,7 @@ namespace CometServer.Authentication.Bearer
             try
             {
                 if (!this.cometHasStartedService.GetHasStartedAndIsReady().IsHealthy
-                    || this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
+                    || !this.appConfigService.IsAuthenticationSchemeEnabled(this.Scheme.Name))
                 {
                     return AuthenticateResult.NoResult();
                 }
