@@ -35,7 +35,6 @@ namespace CometServer.Tests.Authentication.Bearer
     using CDP4Authentication;
 
     using CometServer.Authentication;
-    using CometServer.Authentication.Basic;
     using CometServer.Authentication.Bearer;
     using CometServer.Configuration;
     using CometServer.Health;
@@ -227,6 +226,27 @@ namespace CometServer.Tests.Authentication.Bearer
             var result = await this.handler.AuthenticateAsync();
 
             Assert.That(result.Succeeded, Is.True);
+        }
+        
+        [Test]
+        public async Task VerifyAuthenticationFailsWithEmptyHeader()
+        {
+            var context = new DefaultHttpContext
+            {
+                RequestServices = this.requestService.Object
+            }; 
+            
+            this.cometHasStartedService.Setup(x => x.GetHasStartedAndIsReady()).Returns(new ServerStatus(true, DateTime.Now));
+            await this.handler.InitializeAsync(new AuthenticationScheme(JwtBearerDefaults.LocalAuthenticationScheme, "", typeof(JwtBearerAuthenticationHandler)), context);
+            
+            this.appConfigService.Setup(x => x.IsAuthenticationSchemeEnabled(this.handler.Scheme.Name)).Returns(true);
+            var result = await this.handler.AuthenticateAsync();
+
+            Assert.That(result.Succeeded, Is.False);
+
+            await this.handler.ChallengeAsync(result.Properties);
+
+            Assert.That(context.Response.StatusCode, Is.EqualTo(401));
         }
     }
 }

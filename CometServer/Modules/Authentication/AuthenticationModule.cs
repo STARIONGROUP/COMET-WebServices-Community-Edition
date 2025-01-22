@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AuthenticationModule.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -26,6 +26,7 @@ namespace CometServer.Modules
 {
     using System;
     using System.Linq;
+    using System.Net;
     using System.Threading.Tasks;
 
     using Carter;
@@ -52,8 +53,16 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/login", async (LoginUser loginUser, HttpResponse res, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, IJwtTokenService jwtTokenService) => 
+            app.MapPost("/login", async (LoginUser loginUser, HttpResponse res, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, IJwtTokenService jwtTokenService
+            , IAppConfigService appConfigService) => 
             {
+                if (!appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.LocalAuthenticationScheme))
+                {
+                    res.StatusCode = (int)HttpStatusCode.Forbidden;
+                    await res.WriteAsync("Local JWT Authentication is disable.");
+                    return;
+                }
+
                 var authenticationPerson = await authenticationPersonAuthenticator.Authenticate(loginUser.UserName, loginUser.Password);
 
                 if (authenticationPerson != null)

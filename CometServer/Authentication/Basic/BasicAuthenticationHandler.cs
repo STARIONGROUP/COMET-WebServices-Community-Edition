@@ -144,6 +144,16 @@ namespace CometServer.Authentication.Basic
 
                 return;
             }
+            
+            var authorizationHeader = this.Request.Headers.Authorization;
+
+            if (string.IsNullOrEmpty(authorizationHeader))
+            {
+                this.Response.ContentType = "application/json";
+                this.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await this.Response.AsJson("Missing Authorization Header");
+                return;
+            }
 
             if (!this.Request.DoesAuthorizationHeaderMatches(this.Scheme.Name))
             {

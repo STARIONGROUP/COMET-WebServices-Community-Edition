@@ -27,6 +27,8 @@ namespace CometServer.Authorization
     using System;
     using System.Threading.Tasks;
 
+    using CDP4Common.DTO;
+
     using Npgsql;
 
     /// <summary>

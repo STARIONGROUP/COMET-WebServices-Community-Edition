@@ -34,7 +34,6 @@ namespace CometServer.Tests.Authentication.Basic
     using CDP4Authentication;
 
     using CometServer.Authentication;
-    using CometServer.Authentication.Anonymous;
     using CometServer.Authentication.Basic;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -143,7 +142,7 @@ namespace CometServer.Tests.Authentication.Basic
         }
 
         [Test]
-        public async Task VerifyAuthenticationNotSucceedNorFailedWithEmptyHeader()
+        public async Task VerifyAuthenticationFailsWithEmptyHeader()
         {
             var context = new DefaultHttpContext
             {
@@ -160,7 +159,7 @@ namespace CometServer.Tests.Authentication.Basic
 
             await this.handler.ChallengeAsync(result.Properties);
 
-            Assert.That(context.Response.StatusCode, Is.EqualTo(200));
+            Assert.That(context.Response.StatusCode, Is.EqualTo(401));
         }
         
         [Test]
