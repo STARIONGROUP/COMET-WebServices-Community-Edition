@@ -25,7 +25,6 @@
 namespace CometServer.Modules
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
 
@@ -33,9 +32,9 @@ namespace CometServer.Modules
     using Carter.Response;
 
     using CometServer.Authentication;
+    using CometServer.Authentication.Bearer;
     using CometServer.Configuration;
 
-    using Microsoft.AspNetCore.Authentication;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
@@ -86,7 +85,12 @@ namespace CometServer.Modules
         private static Task ProvideEnabledAuthenticationScheme(HttpResponse res, IAppConfigService appConfigService)
         {
             var enabledSchemes = ApiBase.AuthenticationSchemes.Where(appConfigService.IsAuthenticationSchemeEnabled).ToList();
-            return res.AsJson(enabledSchemes);
+            
+            var redirectUrl = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
+                ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.RedirectUrl 
+                : string.Empty;
+
+            return res.AsJson(new { Schemes = enabledSchemes, RedirectUrl = redirectUrl });
         }
 
         /// <summary>

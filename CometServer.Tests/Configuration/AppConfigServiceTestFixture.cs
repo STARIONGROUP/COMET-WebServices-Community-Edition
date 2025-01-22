@@ -26,15 +26,11 @@ namespace CometServer.Tests.Configuration
 {
     using System.IO;
 
-    using CDP4Authentication;
-
     using CometServer.Authentication.Basic;
     using CometServer.Authentication.Bearer;
     using CometServer.Configuration;
 
     using Microsoft.Extensions.Configuration;
-
-    using Moq;
 
     using NUnit.Framework;
 
@@ -45,7 +41,6 @@ namespace CometServer.Tests.Configuration
     public class AppConfigServiceTestFixture
     {
         private IConfiguration configuration;
-        private Mock<IAuthenticationPluginInjector> pluginInjector;
 
         [SetUp]
         public void SetUp()
@@ -59,15 +54,12 @@ namespace CometServer.Tests.Configuration
 
             // Build the IConfiguration instance
             this.configuration = configurationBuilder.Build();
-
-            this.pluginInjector = new Mock<IAuthenticationPluginInjector>();
-            this.pluginInjector.Setup(x => x.Connectors).Returns([]);
         }
 
         [Test]
         public void Verify_that_configuration_is_loaded_from_appsettings()
         {
-            var appConfigService = new AppConfigService(this.configuration, this.pluginInjector.Object);
+            var appConfigService = new AppConfigService(this.configuration);
 
             Assert.Multiple(() =>
             {
@@ -91,7 +83,7 @@ namespace CometServer.Tests.Configuration
                 Assert.That(appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled, Is.True);
                 Assert.That(appConfigService.IsAuthenticationSchemeEnabled(BasicAuthenticationDefaults.AuthenticationScheme), Is.True);
                 Assert.That(appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.LocalAuthenticationScheme), Is.True);
-                Assert.That(appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme), Is.False);
+                Assert.That(appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme), Is.True);
             });
         }
     }

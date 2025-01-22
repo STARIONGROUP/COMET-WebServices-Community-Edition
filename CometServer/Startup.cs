@@ -86,6 +86,7 @@ namespace CometServer
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging.Abstractions;
     using Microsoft.IdentityModel.JsonWebTokens;
     using Microsoft.IdentityModel.Tokens;
 
@@ -197,9 +198,9 @@ namespace CometServer
                 throw new ConfigurationErrorsException("At least one authentication must be enabled");
             }
 
-            if (isLocalJwtBearerEnabled && isExternalJwtBearerEnabled)
+            if (isExternalJwtBearerEnabled && (isBasicAuthEnabled || isLocalJwtBearerEnabled))
             {
-                throw new ConfigurationErrorsException("Both local and external JWT Bearer authentication is enabled, only one may be enabled");
+                throw new ConfigurationErrorsException("Both local and external authentication are enabled, local one is not supported while external authentication is enabled");
             }
 
             var authenticationBuilder = services
@@ -311,6 +312,13 @@ namespace CometServer
                     throw new ConfigurationErrorsException($"Invalid value for Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind," +
                                                            $" should be one of: {string.Join(", ",Enum.GetValues<PersonIdentifierPropertyKind>())}");
                 }
+                
+                var redirectUrl = configuration["Authentication:ExternalJwtBearer:RedirectUrl"];
+
+                if (string.IsNullOrEmpty(redirectUrl))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:RedirectUrl setting must be available");
+                }
 
                 authenticationBuilder.AddExternalJwtBearerAuthentication(configure: options =>
                 {
@@ -322,12 +330,18 @@ namespace CometServer
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ValidateIssuerSigningKey = false,
-                        SignatureValidator = (token, parameters) => new JsonWebToken(token),
                         ValidAudience = validAudience,
-                        ValidIssuer = validIssuer
+                        ValidIssuer = validIssuer,
+                        SignatureValidator = (token, _) => new JsonWebToken(token)
                     };
-                    }
-                );
+                });
+
+                var pluginInjector = new AuthenticationPluginInjector(new NullLogger<AuthenticationPluginInjector>());
+
+                if (!pluginInjector.Connectors.Any(x => x.Name == "CDP4ExternalJwtAuthentication" && x.Properties.IsEnabled))
+                {
+                    throw new ConfigurationErrorsException("External JWT Authentication plugin is not present, please contact administrator to include Enterprise Edition plugins.");
+                }
             }
             else
             {

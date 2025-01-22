@@ -24,10 +24,6 @@
 
 namespace CometServer.Configuration
 {
-    using System.Linq;
-
-    using CDP4Authentication;
-
     using CometServer.Authentication.Basic;
     using CometServer.Authentication.Bearer;
 
@@ -39,21 +35,14 @@ namespace CometServer.Configuration
     public class AppConfigService : IAppConfigService
     {
         /// <summary>
-        /// Gets the injected <see cref="IAuthenticationPluginInjector"/>, uses to check wheter that external JWT authentication is enabled or not
-        /// </summary>
-        private readonly IAuthenticationPluginInjector authenticationPluginInjector;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="AppConfigService"/>
         /// </summary>
         /// <param name="configuration">
         /// The <see cref="IConfiguration"/> used to set the properties
         /// </param>
-        /// <param name="authenticationPluginInjector">The injected <see cref="IAuthenticationPluginInjector"/>, uses to check wheter that external JWT authentication is enabled or not</param>
-        public AppConfigService(IConfiguration configuration, IAuthenticationPluginInjector authenticationPluginInjector)
+        public AppConfigService(IConfiguration configuration)
         {
             this.AppConfig = new AppConfig(configuration);
-            this.authenticationPluginInjector = authenticationPluginInjector;
         }
 
         /// <summary>
@@ -72,8 +61,7 @@ namespace CometServer.Configuration
             {
                 BasicAuthenticationDefaults.AuthenticationScheme => this.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled,
                 JwtBearerDefaults.LocalAuthenticationScheme => this.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.IsEnabled,
-                JwtBearerDefaults.ExternalAuthenticationScheme => this.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled 
-                                                                  && this.authenticationPluginInjector.Connectors.Any(x => x.Name == "CDP4ExternalJwtAuthentication" && x.Properties.IsEnabled),
+                JwtBearerDefaults.ExternalAuthenticationScheme => this.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled,
                 _ => false
             };
         }
