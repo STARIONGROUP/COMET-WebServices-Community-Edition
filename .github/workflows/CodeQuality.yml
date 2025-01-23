@@ -79,7 +79,7 @@ jobs:
         run: dotnet-coverage collect --output CoverageResults/integration.test.report.coverage.xml --output-format cobertura --session-id integrationtestsession "dotnet run --project CometServer/CometServer.csproj -c Debug" &
 
       - name: Wait for API to start
-        run: sleep 45  # Adjust as necessary to ensure the API is up
+        run: sleep 60  # Adjust as necessary to ensure the API is up
 
       - name: Checkout Integration Test Suite
         uses: actions/checkout@v4
