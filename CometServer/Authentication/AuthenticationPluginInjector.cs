@@ -41,8 +41,13 @@ namespace CometServer.Authentication
     /// <summary>
     /// The injector loads up authenticator plugins.
     /// </summary>
-    public class AuthenticationPluginInjector : IAuthenticationPluginInjector
+    public class AuthenticationPluginInjector : IAuthenticationPluginInjector, IDisposable
     {
+        /// <summary>
+        /// A collection of <see cref="Assembly" /> that has been discovered
+        /// </summary>
+        private List<Assembly> discoveredAssemblies = new List<Assembly>();
+
         /// <summary>
         /// The name of the folder where all authentication modules reside.
         /// </summary>
@@ -59,6 +64,7 @@ namespace CometServer.Authentication
         public AuthenticationPluginInjector(ILogger<AuthenticationPluginInjector> logger)
         {
             this.logger = logger;
+            AppDomain.CurrentDomain.AssemblyResolve += this.OnAssemblyResolve;
 
             this.Plugins = this.LoadPlugins();
 
@@ -103,6 +109,7 @@ namespace CometServer.Authentication
         /// <returns>The <see cref="List{T}"/> of <see cref="IAuthenticatorPlugin"/> modules</returns>
         private ReadOnlyCollection<IAuthenticatorPlugin> LoadPlugins()
         {
+            this.discoveredAssemblies.Clear();
             var sw = Stopwatch.StartNew();
 
             var result = new List<IAuthenticatorPlugin>();
@@ -116,8 +123,11 @@ namespace CometServer.Authentication
             // load all assemblies types encountered in the plugin folders that implement the IAuthenticatorPlugin interface
             foreach (var pluginFolder in pluginFolders)
             {
-                foreach (var assembly in new DirectoryInfo(pluginFolder).GetFiles().Where(file => file.Extension == ".dll")
-                    .Select(file => Assembly.LoadFile(file.FullName)))
+                var assemblies = new DirectoryInfo(pluginFolder).GetFiles().Where(file => file.Extension == ".dll")
+                    .Select(file => Assembly.LoadFile(file.FullName))
+                    .ToList();
+
+                foreach (var assembly in assemblies)
                 {
                     builder.RegisterAssemblyTypes(assembly)
                         .Where(x => typeof(IAuthenticatorPlugin).IsAssignableFrom(x))
@@ -125,6 +135,8 @@ namespace CometServer.Authentication
                         .PropertiesAutowired()
                         .SingleInstance();
                 }
+
+                this.discoveredAssemblies.AddRange(assemblies);
             }
 
             var container = builder.Build();
@@ -138,5 +150,25 @@ namespace CometServer.Authentication
 
             return result.AsReadOnly();
         }
+        
+        /// <summary>
+        /// Helps resolving assemblies that may be required for loaded plugins
+        /// </summary>
+        /// <param name="sender">The sender object</param>
+        /// <param name="args">The <see cref="ResolveEventArgs"/></param>
+        /// <returns>The resolved assemblies, if found</returns>
+        private Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            return this.discoveredAssemblies.FirstOrDefault(x => x.FullName == args.Name);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve -= this.OnAssemblyResolve;
+        }
     }
 }
+    
