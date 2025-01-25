@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-env
 WORKDIR /app
 COPY CDP4Authentication CDP4Authentication
 COPY CDP4DatabaseAuthentication CDP4DatabaseAuthentication
@@ -11,7 +11,7 @@ RUN dotnet build CDP4DatabaseAuthentication -c Release
 RUN dotnet build CDP4WspDatabaseAuthentication -c Release
 RUN dotnet publish -r linux-x64 CometServer -c Release -o /app/CometServer/bin/Release/publish
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0.10-alpine3.20
+FROM mcr.microsoft.com/dotnet/aspnet:9.0.1-alpine3.21
 WORKDIR /app
 RUN mkdir /app/logs
 RUN mkdir /app/storage

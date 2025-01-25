@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <Company>Starion Group S.A.</Company>
     <Title>CDP4Orm-CE</Title>
-    <Version>8.0.2</Version>
+    <Version>9.0.0</Version>
     <Description>CDP4-COMET Data-Model Object Relational Mapping</Description>
     <Copyright>Copyright © Starion Group S.A.</Copyright>
     <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>
@@ -80,9 +80,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="27.3.5" />
-    <PackageReference Include="Npgsql" Version="8.0.5" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="27.4.1" />
+    <PackageReference Include="Npgsql" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.1" />
   </ItemGroup>
 
     <ItemGroup Label="override transitive vulnerable dependency">
