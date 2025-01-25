@@ -80,7 +80,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="27.4.1" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="27.4.2" />
     <PackageReference Include="Npgsql" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.1" />
   </ItemGroup>
