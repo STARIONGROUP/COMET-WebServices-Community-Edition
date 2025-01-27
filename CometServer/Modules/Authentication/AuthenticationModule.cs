@@ -69,7 +69,7 @@ namespace CometServer.Modules
                 {
                     var token = jwtTokenService.CreateToken(authenticationPerson);
                     res.StatusCode = 200;
-                    await res.WriteAsync(token);
+                    await res.AsJson(token);
                     return;
                 }
 
