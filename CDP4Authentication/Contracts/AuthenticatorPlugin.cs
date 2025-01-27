@@ -27,8 +27,8 @@ namespace CDP4Authentication.Contracts
     using System;
     using System.Collections.Generic;
     using System.IO;
-
-    using Newtonsoft.Json;
+    using System.Text.Json;
+    using System.Text.Json.Serialization;
 
     /// <summary>
     /// Generic abstract Authentication plugin definition.
@@ -44,12 +44,20 @@ namespace CDP4Authentication.Contracts
         where TConnector : AuthenticatorConnector<TProperties>
     {
         /// <summary>
+        /// Gets the <see cref="JsonSerializerOptions"/> to be used on serialization
+        /// </summary>
+        protected JsonSerializerOptions JsonSerializerOptions { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="AuthenticatorPlugin{TProperties, TConnector}"/> class.
         /// </summary>
         protected AuthenticatorPlugin()
         {
             this.LoadConfig();
             this.InitializeConnectors();
+            this.JsonSerializerOptions = new JsonSerializerOptions(JsonSerializerOptions.Default);
+            this.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(null, false));
+            this.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
         }
 
         /// <summary>
@@ -117,7 +125,7 @@ namespace CDP4Authentication.Contracts
         /// </returns>
         protected virtual AuthenticatorConfig<TProperties> DeserializeConfigFile(string json, string configLocation)
         {
-            var appConfig = JsonConvert.DeserializeObject<AuthenticatorConfig<TProperties>>(json);
+            var appConfig = JsonSerializer.Deserialize<AuthenticatorConfig<TProperties>>(json, this.JsonSerializerOptions);
 
             if (appConfig == null)
             {

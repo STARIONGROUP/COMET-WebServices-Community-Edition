@@ -31,7 +31,7 @@ namespace CometServer.Tasks
     
     using CDP4Common.DTO;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CometServer.Configuration;
 

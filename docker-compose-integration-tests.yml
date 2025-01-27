@@ -2,7 +2,7 @@ version: '3.8'
 services:
   
   comet_db:
-    image: stariongroup/cdp4-database-community-edition:3.4.0
+    image: stariongroup/cdp4-test-database-community-edition:3.4.0
     container_name: comet-db
     shm_size: 2gb
     restart: always

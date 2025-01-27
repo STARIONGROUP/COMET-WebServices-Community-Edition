@@ -4,7 +4,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Company>Starion Group S.A.</Company>
     <Title>CDP4DatabaseAuthentication-CE</Title>
-    <Version>9.0.0</Version>
+    <Version>10.0.0</Version>
     <Description>CDP4-COMET Database authentication</Description>
     <Copyright>Copyright © Starion Group S.A.</Copyright>
     <Authors>Sam Gerené, Alex Vorobiev, Alexander van Delft</Authors>

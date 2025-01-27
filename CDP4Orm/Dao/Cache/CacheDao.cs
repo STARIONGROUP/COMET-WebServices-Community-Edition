@@ -37,8 +37,6 @@ namespace CDP4Orm.Dao.Cache
 
     using Microsoft.Extensions.Logging;
 
-    using Newtonsoft.Json;
-
     using Npgsql;
 
     using NpgsqlTypes;
@@ -98,7 +96,7 @@ namespace CDP4Orm.Dao.Cache
 
             command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
-            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
+            command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonString();
 
             // log the sql command 
             command.ExecuteNonQuery();
@@ -129,7 +127,16 @@ namespace CDP4Orm.Dao.Cache
                 {
                     var iidParam = new NpgsqlParameter($"iid_{index}", NpgsqlDbType.Uuid) { Value = thing.Iid };
                     var revisionParam = new NpgsqlParameter($"revision_{index}", NpgsqlDbType.Integer) { Value = thing.RevisionNumber };
-                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb) { Value = thing.ToJsonObject().ToString(Formatting.None) };
+                    var jsonbParam = new NpgsqlParameter($"jsonb_{index}", NpgsqlDbType.Jsonb);
+
+                    var serializedJson = thing.ToJsonString();
+
+                    if (string.IsNullOrWhiteSpace(serializedJson))
+                    {
+                        serializedJson = "{}";
+                    }
+
+                    jsonbParam.Value = serializedJson;
 
                     parameters.Add(iidParam);
                     parameters.Add(revisionParam);

@@ -27,13 +27,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		docker-compose-nginx.yml = docker-compose-nginx.yml
 		docker-compose.yml = docker-compose.yml
 		Dockerfile = Dockerfile
+		DockerfilePreRelease = DockerfilePreRelease
 		Nuget.Config = Nuget.Config
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CDP4Authentication.Tests", "CDP4Authentication.Tests\CDP4Authentication.Tests.csproj", "{551D1D98-92D6-4391-ADB8-448BC9219330}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VersionFileCreator", "VersionFileCreator\VersionFileCreator.csproj", "{E941F9C0-139A-4DB7-9C98-32A320378DDB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "VersionFileCreator", "VersionFileCreator\VersionFileCreator.csproj", "{E941F9C0-139A-4DB7-9C98-32A320378DDB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

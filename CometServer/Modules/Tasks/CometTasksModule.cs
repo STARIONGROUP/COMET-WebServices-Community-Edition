@@ -32,7 +32,7 @@ namespace CometServer.Modules.Tasks
     using Carter;
     using Carter.Response;
 
-    using CDP4DalCommon.Tasks;
+    using CDP4DalCommon.Protocol.Tasks;
 
     using CometServer.Authorization;
     using CometServer.Configuration;
@@ -138,7 +138,7 @@ namespace CometServer.Modules.Tasks
                 return;
             }
 
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
             {
                 res.UpdateWithNotAuthenticatedSettings();
                 await res.AsJson("not authenticated");
@@ -185,7 +185,7 @@ namespace CometServer.Modules.Tasks
                 return;
             }
 
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
             {
                 res.UpdateWithNotAuthenticatedSettings();
                 await res.AsJson("not authenticated");
@@ -241,7 +241,7 @@ namespace CometServer.Modules.Tasks
                 return;
             }
 
-            if (!req.HttpContext.User.Identity.IsAuthenticated)
+            if (!(req.HttpContext.User.Identity?.IsAuthenticated ?? false))
             {
                 res.UpdateWithNotAuthenticatedSettings();
                 await res.AsJson("not authenticated");
