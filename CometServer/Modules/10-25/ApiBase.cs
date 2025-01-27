@@ -224,7 +224,7 @@ namespace CometServer.Modules
                     case PersonIdentifierPropertyKind.Iid:
                         if (!Guid.TryParse(claim.Value, out var userId))
                         {
-                            throw new AuthenticationException("Provided claim value is not a valid GUID.");
+                            throw new AuthorizationException("Provided claim value is not a valid GUID.");
                         }
                         
                         await this.Authorize(appConfigService, credentialsService, userId);
