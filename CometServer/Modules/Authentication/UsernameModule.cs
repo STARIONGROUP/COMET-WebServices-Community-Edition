@@ -134,7 +134,7 @@ namespace CometServer.Modules
                 try
                 {
                     identity = await this.Authorize(appConfigService, credentialsService, req);
-                    await res.WriteAsync(credentialsService.Credentials.UserName);
+                    await res.AsJson(credentialsService.Credentials.UserName);
                 }
                 catch (AuthorizationException)
                 {
