@@ -26,6 +26,7 @@ namespace CometServer.Extensions
 {
     using System;
     using System.Linq;
+    using System.Net.Http.Headers;
 
     using CometServer.Services;
 
@@ -96,6 +97,28 @@ namespace CometServer.Extensions
             userInfo = $"{httpRequest.HttpContext.User.Identity?.Name}:{httpRequest.Method}:{httpRequest.Path}:{httpRequest.QueryString}";
 
             return userInfo.Sanitize();
+        }
+        
+        /// <summary>
+        /// Asserts that authorization scheme provided inside the header matches an expected scheme 
+        /// </summary>
+        /// <param name="request">The <see cref="HttpRequest"/></param>
+        /// <param name="expectedAuthorizationScheme">The expected scheme</param>
+        /// <returns>Value of the assert</returns>
+        public static bool DoesAuthorizationHeaderMatches(this HttpRequest request, string expectedAuthorizationScheme)
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            ArgumentNullException.ThrowIfNull(expectedAuthorizationScheme);
+            
+            var authorizationHeader = request.Headers.Authorization;
+
+            if (string.IsNullOrEmpty(authorizationHeader))
+            {
+                return false;
+            }
+
+            var authHeader = AuthenticationHeaderValue.Parse(authorizationHeader);
+            return authHeader.Scheme == expectedAuthorizationScheme;
         }
     }
 }

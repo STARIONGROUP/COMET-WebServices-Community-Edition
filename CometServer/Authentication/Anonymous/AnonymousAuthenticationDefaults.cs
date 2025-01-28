@@ -1,5 +1,5 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IAppConfigService.cs" company="Starion Group S.A.">
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="AnonymousAuthenticationDefaults.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,23 +22,21 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Configuration
+namespace CometServer.Authentication.Anonymous
 {
     /// <summary>
-    /// A service used to provide access to the <see cref="AppConfig"/>
+    /// Default values used by Anonymous Authentication scheme.
     /// </summary>
-    public interface IAppConfigService
+    public static class AnonymousAuthenticationDefaults
     {
         /// <summary>
-        /// Gets the <see cref="AppConfig"/>
+        /// The default name of the scheme
         /// </summary>
-        public AppConfig AppConfig { get; }
+        public const string AuthenticationScheme = "Anonymous";
 
         /// <summary>
-        /// Assert that an authentication scheme is enabled or not
+        /// The default display name of the scheme
         /// </summary>
-        /// <param name="schemeName">The name of the authentication scheme</param>
-        /// <returns>True if the authentication scheme is enabled, false otherwise</returns>
-        public bool IsAuthenticationSchemeEnabled(string schemeName);
+        public const string DisplayName = "CDP4-COMET Anonymous Authentication";
     }
 }

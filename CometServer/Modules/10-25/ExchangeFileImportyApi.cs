@@ -1084,7 +1084,7 @@ namespace CometServer.Modules
 
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtierConfig.Database};";
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.Database}\";";
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1096,7 +1096,7 @@ namespace CometServer.Modules
 
                     cmd.Connection = connection;
                     
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS {backtierConfig.DatabaseRestore};";
+                    cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.DatabaseRestore}\";";
 
                     cmd.ExecuteNonQuery();
                 }
@@ -1107,7 +1107,7 @@ namespace CometServer.Modules
                     this.logger.LogDebug("Create the data store");
                     cmd.Connection = connection;
 
-                    cmd.CommandText = $"CREATE DATABASE {backtierConfig.Database} WITH OWNER = {backtierConfig.UserName} TEMPLATE = {backtierConfig.DatabaseManage} ENCODING = 'UTF8';";
+                    cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = 'UTF8';";
 
                     cmd.ExecuteNonQuery();
                 }

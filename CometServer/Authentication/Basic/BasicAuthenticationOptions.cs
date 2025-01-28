@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentialsService.cs" company="Starion Group S.A.">
+// <copyright file="BasicAuthenticationOptions.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,53 +22,28 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authorization
+namespace CometServer.Authentication.Basic
 {
-    using System;
-    using System.Threading.Tasks;
-
-    using CDP4Common.DTO;
-
-    using Npgsql;
+    using Microsoft.AspNetCore.Authentication;
 
     /// <summary>
-    /// The ICredentialsService interface.
+    /// The purpose of the <see cref="BasicAuthenticationOptions"/> is to set the options for the <see cref="BasicAuthenticationHandler"/>
     /// </summary>
-    public interface ICredentialsService
+    public class BasicAuthenticationOptions : AuthenticationSchemeOptions
     {
         /// <summary>
-        /// Gets the resolved <see cref="Credentials"/>
+        /// Gets or sets a value indicating whether the WWW-Authenticate header is suppressed on Unauthorized responses.
         /// </summary>
-        public Credentials Credentials { get; }
+        /// <remarks>
+        /// In case the WWWAuthenticateHeader is returned the browser will present the user with a UI to
+        /// provide a username and password. In case this is suppressed the response will only be a
+        /// 401 status code that the client will need to react to.
+        /// </remarks>
+        public bool IsWWWAuthenticateHeaderSuppressed { get; set; } = false;
 
         /// <summary>
-        /// Resolves the username to <see cref="Credentials"/>
+        /// Gets or sets a value for the realm
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="username">
-        /// The supplied username
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, string username);
-
-        /// <summary>
-        /// Resolves the user to <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="userId">
-        /// The supplied user unique identifier
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId);
-
-        /// <summary>
-        /// Resolve and set participant information for the current <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        void ResolveParticipantCredentials(NpgsqlTransaction transaction);
+        public string Realm { get; set; } = "CDP4-COMET";
     }
 }

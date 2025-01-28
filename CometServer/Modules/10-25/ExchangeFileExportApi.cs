@@ -38,7 +38,7 @@ namespace CometServer.Modules
     using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
-
+    
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -116,30 +116,24 @@ namespace CometServer.Modules
                 {
                     return;
                 }
+                
+                var identity = req.HttpContext.User.Identity!.Name;
 
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                try
                 {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
+                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                 }
-                else
+                catch (AuthorizationException)
                 {
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", req.HttpContext.User.Identity.Name);
+                    this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", identity);
 
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
+                    return;
                 }
-            });
+
+                await this.PostResponseData(req, res, requestUtils, transactionManager, credentialsService, metaInfoProvider, jsonSerializer, jsonExchangeFileWriter);
+            }).RequireAuthorization(AuthenticationSchemes);
         }
 
         /// <summary>

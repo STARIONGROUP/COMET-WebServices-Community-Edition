@@ -24,6 +24,9 @@
 
 namespace CometServer.Configuration
 {
+    using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
+
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
@@ -46,5 +49,21 @@ namespace CometServer.Configuration
         /// Gets the <see cref="AppConfig"/>
         /// </summary>
         public AppConfig AppConfig { get; }
+
+        /// <summary>
+        /// Assert that an authentication scheme is enabled or not
+        /// </summary>
+        /// <param name="schemeName">The name of the authentication scheme</param>
+        /// <returns>True if the authentication scheme is enabled, false otherwise</returns>
+        public bool IsAuthenticationSchemeEnabled(string schemeName)
+        {
+            return schemeName switch
+            {
+                BasicAuthenticationDefaults.AuthenticationScheme => this.AppConfig.AuthenticationConfig.BasicAuthenticationConfig.IsEnabled,
+                JwtBearerDefaults.LocalAuthenticationScheme => this.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.IsEnabled,
+                JwtBearerDefaults.ExternalAuthenticationScheme => this.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IsEnabled,
+                _ => false
+            };
+        }
     }
 }

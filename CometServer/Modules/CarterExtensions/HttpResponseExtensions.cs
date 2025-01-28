@@ -42,7 +42,14 @@ namespace CometServer.Modules
         {
             httpResponse.ContentType = "application/json";
             httpResponse.StatusCode = 401;
-            httpResponse.Headers.Add("WWW-Authenticate", "Basic");
+            httpResponse.Headers.Append("WWW-Authenticate", "Basic");
+        }
+
+        public static void UpdateWithNotBearerAuthenticatedSettings(this HttpResponse httpResponse)
+        {
+            httpResponse.ContentType = "application/json";
+            httpResponse.StatusCode = 401;
+            httpResponse.Headers.Append("WWW-Authenticate", "Bearer");
         }
 
         /// <summary>

@@ -32,6 +32,7 @@ namespace CometServer.Modules.Health
 
     using CDP4Orm.Dao;
 
+    using CometServer.Authentication.Anonymous;
     using CometServer.Configuration;
     using CometServer.Extensions;
     using CometServer.Health;
@@ -106,18 +107,21 @@ namespace CometServer.Modules.Health
             app.MapGet("/health/startup",
                     (HttpRequest req, HttpResponse res)
                         => this.QueryStartp(req, res))
+                .RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme })
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
 
             // map the Liveness endpoint to support Liveness probes
             app.MapGet("/healthz",
                  (HttpResponse res)
                     => this.QueryHealth(res))
+                .RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme })
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
 
             // map the Liveness endpoint to support readyness probes
             app.MapGet("/ready",
                     async (HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
                         => await this.QueryReadiness(req, res, transactionManager, siteDirectoryDao))
+                .RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme })
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
         }
 

@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -32,6 +32,7 @@ namespace CometServer.Modules
     using System.Linq;
     using System.Net;
     using System.Net.Http;
+    using System.Security.Authentication;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -49,8 +50,12 @@ namespace CometServer.Modules
     using CDP4ServicesMessaging.Messages;
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
+    using CometServer.Authentication.Basic;
+    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
+    using CometServer.Enumerations;
+    using CometServer.Exceptions;
     using CometServer.Extensions;
     using CometServer.Health;
     using CometServer.Helpers;
@@ -111,6 +116,11 @@ namespace CometServer.Modules
         /// The (injected) <see cref="ICometHasStartedService"/>
         /// </summary>
         protected readonly ICometHasStartedService CometHasStartedService;
+        
+        /// <summary>
+        /// Provides an array of supported authentication schemes, to be used by routes that requires authentication
+        /// </summary>
+        internal static string[] AuthenticationSchemes = [BasicAuthenticationDefaults.AuthenticationScheme, JwtBearerDefaults.LocalAuthenticationScheme, JwtBearerDefaults.ExternalAuthenticationScheme];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
@@ -172,7 +182,66 @@ namespace CometServer.Modules
         /// Gets or sets the <see cref="IAppConfigService"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
-        
+
+        /// <summary>
+        /// Authorizes a <paramref name="request"/> and calls the
+        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
+        /// </summary>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="appConfigService">
+        /// The <see cref="IAppConfigService"/> used to read applicaton settings
+        /// </param>
+        /// <param name="request">
+        /// The <see cref="HttpRequest"/> that provides that should be ahtorized
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/> that contains the value of the identifier uses to check authorization
+        /// </returns>
+        protected async Task<string> Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, HttpRequest request)
+        {
+            var userName = request.HttpContext.User.Identity!.Name;
+
+            if (!request.DoesAuthorizationHeaderMatches(JwtBearerDefaults.ExternalAuthenticationScheme))
+            {
+                await this.Authorize(appConfigService, credentialsService, userName);
+                return userName;
+            }
+
+            var claim = request.HttpContext.User.Claims
+                .FirstOrDefault(x => x.Type == appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
+
+            if (claim != null)
+            {
+                switch ( appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.PersonIdentifierPropertyKind)
+                {
+                    case PersonIdentifierPropertyKind.ShortName:
+                        await this.Authorize(appConfigService, credentialsService, claim.Value);
+                        break;
+                    case PersonIdentifierPropertyKind.Iid:
+                        if (!Guid.TryParse(claim.Value, out var userId))
+                        {
+                            throw new AuthorizationException("Provided claim value is not a valid GUID.");
+                        }
+                        
+                        await this.Authorize(appConfigService, credentialsService, userId);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(PersonIdentifierPropertyKind), "Unsupported PersonIdentifierPropertyKind");
+                }
+                
+                return claim.Value;
+            }
+
+            this.logger.LogWarning("Identifier claim {ClaimName} missing from User Claims",
+                appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
+
+            throw new AuthorizationException($"Identifer claim {appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName} missing from User Claims");
+        }
+
         /// <summary>
         /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
         /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
@@ -191,7 +260,7 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
+        private async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
         {
             try
             {
@@ -206,6 +275,44 @@ namespace CometServer.Modules
             catch (Exception)
             {
                 this.logger.LogWarning("Authorization failed for {username}", username);
+
+                throw;
+            }
+        }
+        
+        /// <summary>
+        /// Authorizes the user on the bases of the <paramref name="userId"/> and calls the
+        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
+        /// </summary>
+        /// <param name="credentialsService">
+        /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
+        /// services while handling a request
+        /// </param>
+        /// <param name="appConfigService">
+        /// The <see cref="IAppConfigService"/> used to read applicaton settings
+        /// </param>
+        /// <param name="userId">
+        /// The user unqiue <see cref="Guid"/> used to authorize
+        /// </param>
+        /// <returns>
+        /// an awaitable <see cref="Task"/>
+        /// </returns>
+        private async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, Guid userId)
+        {
+            try
+            {
+                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
+
+                await connection.OpenAsync();
+
+                await using var transaction = await connection.BeginTransactionAsync();
+
+                await credentialsService.ResolveCredentials(transaction, userId);
+            }
+            catch (Exception)
+            {
+                this.logger.LogWarning("Authorization failed for {UserId}", userId);
 
                 throw;
             }
@@ -535,13 +642,13 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected void WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected Task WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
 
             httpResponse.StatusCode = (int)statusCode;
 
-            this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
+            return this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
         }
 
         /// <summary>
@@ -583,12 +690,12 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected void WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected Task WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
 
-            this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
+            return this.PrepareArchivedResponse(metaInfoProvider,jsonSerializer, fileArchiveService, permissionInstanceFilterService, httpResponse.Body, resourceResponse, version, partition, routeSegments);
         }
 
         /// <summary>
@@ -751,7 +858,7 @@ namespace CometServer.Modules
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
         /// </param>
-        private void PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
+        private async Task PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
             if (fileRevisions.Count == 0)
             {
@@ -785,7 +892,12 @@ namespace CometServer.Modules
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
-                    fileStream.Read(buffer, 0, (int)fileSize);
+                    var readBytes = fileStream.Read(buffer, 0, (int)fileSize);
+
+                    if (readBytes != fileSize)
+                    {
+                        this.logger.LogWarning("Failed to read {FileSize} bytes, only read {ReadBytes}", fileSize, readBytes);
+                    }
                 }
 
                 // write out the binary content to the first multipart content entry
@@ -799,7 +911,7 @@ namespace CometServer.Modules
             }
 
             // stream the multipart content to the request contents target stream
-            content.CopyToAsync(targetStream).Wait();
+            await content.CopyToAsync(targetStream);
             AddMultiPartMimeEndpoint(targetStream);
         }
 
@@ -833,7 +945,7 @@ namespace CometServer.Modules
         ///  <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
+        private async Task PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
             var temporaryTopFolder = fileArchiveService.CreateFolderAndFileStructureOnDisk(resourceResponse, partition, routeSegments);
 
@@ -866,7 +978,12 @@ namespace CometServer.Modules
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
-                    fileStream.Read(buffer, 0, (int)fileSize);
+                    var readBytes = fileStream.Read(buffer, 0, (int)fileSize);
+                    
+                    if (readBytes != fileSize)
+                    {
+                        this.logger.LogWarning("Failed to read {FileSize} bytes, only read {ReadBytes}", fileSize, readBytes);
+                    }
                 }
 
                 var binaryContent = new ByteArrayContent(buffer);
@@ -882,7 +999,7 @@ namespace CometServer.Modules
                 content.Add(binaryContent);
 
                 // stream the multipart content to the request contents target stream
-                content.CopyToAsync(targetStream).Wait();
+                await content.CopyToAsync(targetStream);
 
                 AddMultiPartMimeEndpoint(targetStream);
             }
