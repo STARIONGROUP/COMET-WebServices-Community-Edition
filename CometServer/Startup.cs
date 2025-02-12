@@ -312,6 +312,13 @@ namespace CometServer
                     throw new ConfigurationErrorsException($"Invalid value for Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind," +
                                                            $" should be one of: {string.Join(", ",Enum.GetValues<PersonIdentifierPropertyKind>())}");
                 }
+
+                var cliendId = configuration["Authentication:ExternalJwtBearer:ClientId"];
+                
+                if(string.IsNullOrEmpty(cliendId))
+                {
+                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:CleintId setting must be available");
+                }
                 
                 authenticationBuilder.AddExternalJwtBearerAuthentication(configure: options =>
                 {

@@ -56,6 +56,7 @@ namespace CometServer.Configuration
             this.ValidIssuer = configuration["Authentication:ExternalJwtBearer:ValidIssuer"];
             this.IdentifierClaimName = configuration["Authentication:ExternalJwtBearer:IdentifierClaimName"];
             this.PersonIdentifierPropertyKind = Enum.Parse<PersonIdentifierPropertyKind>(configuration["Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind"]!);
+            this.ClientId = configuration["Authentication:ExternalJwtBearer:ClientId"];
         }
 
         /// <summary>
@@ -90,5 +91,10 @@ namespace CometServer.Configuration
         /// Gets or sets the <see cref="PersonIdentifierPropertyKind"/> to use for the authorization part
         /// </summary>
         public PersonIdentifierPropertyKind PersonIdentifierPropertyKind { get; set; }
+        
+        /// <summary>
+        /// Gets or sets the Client Id
+        /// </summary>
+        public string ClientId { get; set; }
     }
-}
+} 

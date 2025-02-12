@@ -98,8 +98,12 @@ namespace CometServer.Modules
             var authority = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
                 ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.Authority 
                 : string.Empty;
+            
+            var clientId = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
+                ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.ClientId 
+                : string.Empty;
 
-            return res.AsJson(new { Schemes = enabledSchemes, Authority = authority });
+            return res.AsJson(new { Schemes = enabledSchemes, Authority = authority, ClientId = clientId });
         }
 
         /// <summary>
