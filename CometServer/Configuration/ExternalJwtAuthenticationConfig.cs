@@ -55,7 +55,6 @@ namespace CometServer.Configuration
             this.Authority = configuration["Authentication:ExternalJwtBearer:Authority"];
             this.ValidIssuer = configuration["Authentication:ExternalJwtBearer:ValidIssuer"];
             this.IdentifierClaimName = configuration["Authentication:ExternalJwtBearer:IdentifierClaimName"];
-            this.RedirectUrl = configuration["Authentication:ExternalJwtBearer:RedirectUrl"];
             this.PersonIdentifierPropertyKind = Enum.Parse<PersonIdentifierPropertyKind>(configuration["Authentication:ExternalJwtBearer:PersonIdentifierPropertyKind"]!);
         }
 
@@ -91,10 +90,5 @@ namespace CometServer.Configuration
         /// Gets or sets the <see cref="PersonIdentifierPropertyKind"/> to use for the authorization part
         /// </summary>
         public PersonIdentifierPropertyKind PersonIdentifierPropertyKind { get; set; }
-        
-        /// <summary>
-        /// Gets or sets the Url that should be sent back to unauthenticated client
-        /// </summary>
-        public string RedirectUrl { get; set; }
     }
 }

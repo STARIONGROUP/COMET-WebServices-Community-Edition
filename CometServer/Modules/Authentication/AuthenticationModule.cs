@@ -95,11 +95,11 @@ namespace CometServer.Modules
         {
             var enabledSchemes = ApiBase.AuthenticationSchemes.Where(appConfigService.IsAuthenticationSchemeEnabled).ToList();
             
-            var redirectUrl = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
-                ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.RedirectUrl 
+            var authority = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
+                ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.Authority 
                 : string.Empty;
 
-            return res.AsJson(new { Schemes = enabledSchemes, RedirectUrl = redirectUrl });
+            return res.AsJson(new { Schemes = enabledSchemes, Authority = authority });
         }
 
         /// <summary>

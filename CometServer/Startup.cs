@@ -313,13 +313,6 @@ namespace CometServer
                                                            $" should be one of: {string.Join(", ",Enum.GetValues<PersonIdentifierPropertyKind>())}");
                 }
                 
-                var redirectUrl = configuration["Authentication:ExternalJwtBearer:RedirectUrl"];
-
-                if (string.IsNullOrEmpty(redirectUrl))
-                {
-                    throw new ConfigurationErrorsException("The Authentication:ExternalJwtBearer:RedirectUrl setting must be available");
-                }
-
                 authenticationBuilder.AddExternalJwtBearerAuthentication(configure: options =>
                 {
                     options.Authority = authority;
