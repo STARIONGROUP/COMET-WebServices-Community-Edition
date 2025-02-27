@@ -251,6 +251,21 @@ namespace CometServer
                     }
                 }
 
+                var refreshExpirationTime = configuration["Authentcation:LocalJwtBearer:RefreshExpirationMinutes"];
+
+                if (!string.IsNullOrEmpty(refreshExpirationTime))
+                {
+                    if (!int.TryParse(refreshExpirationTime, out var refreshExpirationMinutes))
+                    {
+                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:RefreshExpirationMinutes setting must an integer value");
+                    }
+
+                    if (refreshExpirationMinutes <= 0)
+                    {
+                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:RefreshExpirationMinutes setting must be strickly greater than 0");
+                    }
+                }
+            
                 authenticationBuilder.AddLocalJwtBearerAuthentication(configure: options =>
                     {
                         options.TokenValidationParameters = new TokenValidationParameters
@@ -261,7 +276,8 @@ namespace CometServer
                             ValidateIssuerSigningKey = true,
                             ValidIssuer = validIssuer,
                             ValidAudience = validAudience,
-                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey))
+                            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(issuerSigningKey)),
+                            ClockSkew = TimeSpan.Zero
                         };
                     });
             }
@@ -332,7 +348,8 @@ namespace CometServer
                         ValidateIssuerSigningKey = false,
                         ValidAudience = validAudience,
                         ValidIssuer = validIssuer,
-                        SignatureValidator = (token, _) => new JsonWebToken(token)
+                        SignatureValidator = (token, _) => new JsonWebToken(token),
+                        ClockSkew = TimeSpan.Zero
                     };
                 });
 

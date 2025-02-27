@@ -1,5 +1,5 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IJwtTokenService.cs" company="Starion Group S.A.">
+// --------------------------------------------------------------------------------------------------------------------
+// <copyright file="AuthenticationTokens.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -24,28 +24,30 @@
 
 namespace CometServer.Authentication
 {
-    using System.Threading.Tasks;
-
-    using CDP4Authentication;
-
     /// <summary>
-    /// The purpose of the <see cref="IJwtTokenService"/> is to generate a JWT token based on the provided authenticated
-    /// user
+    /// The <see cref="AuthenticationTokens"/> provides data structure for generated token, used for authentication
     /// </summary>
-    public interface IJwtTokenService
+    public struct AuthenticationTokens
     {
         /// <summary>
-        /// Generates <see cref="AuthenticationTokens"/> based on <see cref="AuthenticationPerson" />
+        /// Initializes a new instance of the <see cref="AuthenticationTokens" /> structure.
         /// </summary>
-        /// <param name="authenticationPerson">The used <see cref="AuthenticationPerson"/></param>
-        /// <returns>The generated <see cref="AuthenticationTokens" /></returns>
-        AuthenticationTokens GenerateTokens(AuthenticationPerson authenticationPerson);
+        /// <param name="accessToken">The generated access token</param>
+        /// <param name="refreshToken">The generated refresh token</param>
+        public AuthenticationTokens(string accessToken, string refreshToken)
+        {
+            this.AccessToken = accessToken;
+            this.RefreshToken = refreshToken;
+        }
 
         /// <summary>
-        /// Tries to generate <see cref="AuthenticationTokens"/> from a refresh token
+        /// Gets the generated access token
         /// </summary>
-        /// <param name="refreshToken">The refresh token that should be used</param>
-        /// <returns>The generated <see cref="AuthenticationTokens"/></returns>
-        Task<AuthenticationTokens> TryGenerateTokenFromRefreshToken(string refreshToken);
+        public string AccessToken { get; private set; }
+        
+        /// <summary>
+        /// Gets the generated refresh token
+        /// </summary>
+        public string RefreshToken { get; private set; }
     }
 }

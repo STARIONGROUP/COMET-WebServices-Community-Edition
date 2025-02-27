@@ -41,7 +41,7 @@ namespace CometServer.Configuration
             this.ValidIssuer = "CDP4-COMET";
             this.ValidAudience = "localhost:5000";
             this.SymmetricSecurityKey = "needs-to-be-updated-with-a-secret";
-            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LocalJwtAuthenticationConfig"/> class
@@ -59,6 +59,11 @@ namespace CometServer.Configuration
             if (int.TryParse(configuration["Authentication:LocalJwtBearer:TokenExpirationMinutes"], out var tokenExpirationMinutes))
             {
                 this.TokenExpirationMinutes = tokenExpirationMinutes;
+            }
+            
+            if (int.TryParse(configuration["Authentication:LocalJwtBearer:RefreshExpirationMinutes"], out var refreshExpirationMinutes))
+            {
+                this.RefreshExpirationMinutes = refreshExpirationMinutes;
             }
         }
         
@@ -92,5 +97,10 @@ namespace CometServer.Configuration
         /// Gets or sets the expiration time of a generated JWT Token, in minutes (defaults: 30)
         /// </summary>
         public int TokenExpirationMinutes { get; set; } = 30;
+        
+        /// <summary>
+        /// Gets or sets the expiration time of a generated Refresh Token, in minutes (default: 60)
+        /// </summary>
+        public int RefreshExpirationMinutes { get; set; } = 60;
     }
 }

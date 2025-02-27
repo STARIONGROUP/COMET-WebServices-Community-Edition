@@ -38,6 +38,7 @@ namespace CometServer.Modules
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
+    using Microsoft.AspNetCore.Mvc;
     using Microsoft.AspNetCore.Routing;
 
     /// <summary>
@@ -67,7 +68,7 @@ namespace CometServer.Modules
 
                 if (authenticationPerson != null)
                 {
-                    var token = jwtTokenService.CreateToken(authenticationPerson);
+                    var token = jwtTokenService.GenerateTokens(authenticationPerson);
                     res.StatusCode = 200;
                     await res.AsJson(token);
                     return;
@@ -82,7 +83,46 @@ namespace CometServer.Modules
                 throw new NotImplementedException();
             }).RequireAuthorization(ApiBase.AuthenticationSchemes);
 
+            app.MapPost("/refresh", RefreshToken);
+            
             app.MapGet("/auth/schemes", ProvideEnabledAuthenticationScheme);
+        }
+
+        /// <summary>
+        /// Refreshes <see cref="AuthenticationTokens"/> based on a provided <paramref name="refreshToken"/>, if a valid one is provided
+        /// </summary>
+        /// <param name="context">The <see cref="HttpContext" /></param>
+        /// <param name="jwtTokenService">The <see cref="IJwtTokenService"/> used to refresh tokens</param>
+        /// <param name="appConfigService">The <see cref="IAppConfigService"/> used to verify that the refresh token process is enabled</param>
+        /// <param name="refreshToken">The provided refresh token</param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        private static async Task RefreshToken(HttpContext context, IJwtTokenService jwtTokenService, IAppConfigService appConfigService, [FromBody] string refreshToken)
+        {
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+                return;
+            }
+            
+            if (!appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.LocalAuthenticationScheme))
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
+                await context.Response.WriteAsync("Local JWT Authentication is disable.");
+                return;
+            }
+
+            try
+            {
+                var tokens = await jwtTokenService.TryGenerateTokenFromRefreshToken(refreshToken);
+
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                await context.Response.AsJson(tokens);
+            }
+            catch
+            {
+                context.Response.UpdateWithNotBearerAuthenticatedSettings();
+                await context.Response.AsJson("not authenticated");
+            }
         }
 
         /// <summary>
