@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentialsService.cs" company="Starion Group S.A.">
+// <copyright file="BasicAuthenticationConfig.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,53 +22,38 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authorization
+namespace CometServer.Configuration
 {
-    using System;
-    using System.Threading.Tasks;
-
-    using CDP4Common.DTO;
-
-    using Npgsql;
+    using Microsoft.Extensions.Configuration;
 
     /// <summary>
-    /// The ICredentialsService interface.
+    /// The purpose of the <see cref="BasicAuthenticationConfig"/> is to provide an object-oriented
+    /// and type-safe access to the Basic Authentication settings.
     /// </summary>
-    public interface ICredentialsService
+    public class BasicAuthenticationConfig
     {
         /// <summary>
-        /// Gets the resolved <see cref="Credentials"/>
+        /// Initializes a new instance of the <see cref="BasicAuthenticationConfig"/> class
         /// </summary>
-        public Credentials Credentials { get; }
+        public BasicAuthenticationConfig()
+        {
+            this.IsEnabled = true;
+        }
 
         /// <summary>
-        /// Resolves the username to <see cref="Credentials"/>
+        /// Initializes a new instance of the <see cref="BasicAuthenticationConfig"/> class
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
+        /// <param name="configuration">
+        /// The injected <see cref="IConfiguration"/> used to access the application configuration
         /// </param>
-        /// <param name="username">
-        /// The supplied username
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, string username);
+        public BasicAuthenticationConfig(IConfiguration configuration)
+        {
+            this.IsEnabled = bool.Parse(configuration["Authentication:Basic:IsEnabled"]);
+        }
 
         /// <summary>
-        /// Resolves the user to <see cref="Credentials"/>
+        /// Gets or sets a value indicating whether the Basic Authentication is enabled or not
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="userId">
-        /// The supplied user unique identifier
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId);
-
-        /// <summary>
-        /// Resolve and set participant information for the current <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        void ResolveParticipantCredentials(NpgsqlTransaction transaction);
+        public bool IsEnabled { get; set; }
     }
 }

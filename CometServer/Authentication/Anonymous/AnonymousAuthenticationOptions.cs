@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="IAppConfigService.cs" company="Starion Group S.A.">
+// <copyright file="AnonymousAuthenticationOptions.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,23 +22,14 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Configuration
+namespace CometServer.Authentication.Anonymous
 {
-    /// <summary>
-    /// A service used to provide access to the <see cref="AppConfig"/>
-    /// </summary>
-    public interface IAppConfigService
-    {
-        /// <summary>
-        /// Gets the <see cref="AppConfig"/>
-        /// </summary>
-        public AppConfig AppConfig { get; }
+    using Microsoft.AspNetCore.Authentication;
 
-        /// <summary>
-        /// Assert that an authentication scheme is enabled or not
-        /// </summary>
-        /// <param name="schemeName">The name of the authentication scheme</param>
-        /// <returns>True if the authentication scheme is enabled, false otherwise</returns>
-        public bool IsAuthenticationSchemeEnabled(string schemeName);
+    /// <summary>
+    /// The purpose of the <see cref="AnonymousAuthenticationOptions"/> is to set the options for the <see cref="AnonymousAuthenticationHandler"/>
+    /// </summary>
+    public class AnonymousAuthenticationOptions : AuthenticationSchemeOptions
+    {
     }
 }

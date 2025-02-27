@@ -37,6 +37,7 @@ namespace CometServer.Modules
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
+    
     using CDP4DalCommon.Tasks;
 
     using CDP4JsonSerializer;
@@ -146,9 +147,9 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow);
+            app.MapGet("EngineeringModel/{ids:EnumerableOfGuid}", this.GetEngineeringModelsShallow).RequireAuthorization(AuthenticationSchemes);
 
-            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow);
+            app.MapGet("EngineeringModel/*", this.GetEngineeringModelsShallow).RequireAuthorization(AuthenticationSchemes);
 
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
@@ -157,30 +158,24 @@ namespace CometServer.Modules
                 {
                     return;
                 }
+                
+                var identity = req.HttpContext.User.Identity!.Name;
 
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                try
                 {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
+                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
                 }
-                else
+                catch (AuthorizationException)
                 {
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", req.HttpContext.User.Identity.Name);
+                    this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", identity);
 
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
+                    return;
                 }
-            });
+
+                await this.GetResponseData(req, res, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, fileBinaryService, fileArchiveService, revisionService, revisionResolver, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, obfuscationService, cherryPickService, containmentService);
+            }).RequireAuthorization(AuthenticationSchemes);
 
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
@@ -189,79 +184,72 @@ namespace CometServer.Modules
                 {
                     return;
                 }
+                
+                var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+                var identity = req.HttpContext.User.Identity!.Name;
 
-                if (!req.HttpContext.User.Identity.IsAuthenticated)
+                try
                 {
-                    res.UpdateWithNotAuthenticatedSettings();
-                    await res.AsJson("not authenticated");
+                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                }
+                catch (AuthorizationException)
+                {
+                    this.logger.LogWarning("The {RequestToken} POST REQUEST was not authorized for {Identity}", identity);
+
+                    res.UpdateWithNotAutherizedSettings();
+                    await res.AsJson("not authorized");
+                    return;
+                }
+
+                var cometTask = this.CreateAndRegisterCometTask(credentialsService.Credentials.Person.Iid, TopContainer, requestToken);
+                
+                PostRequestData postRequestData = null;
+
+                try
+                {
+                    postRequestData = await this.ProcessPostRequest(req, requestUtils, metaInfoProvider, jsonSerializer, fileBinaryService);
+                }
+                catch (BadRequestException ex)
+                {
+                    this.logger.LogWarning("Request {requestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
+
+                    this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
+
+                    res.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await res.AsJson($"exception:{ex.Message}");
+                }
+                catch (Exception ex)
+                {
+                    this.logger.LogError("Request {requestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
+
+                    cometTask.FinishedAt = DateTime.Now;
+                    cometTask.StatusKind = StatusKind.FAILED;
+                    cometTask.Error = $"INTERNAL SERVER ERROR - {ex.Message}";
+                    this.CometTaskService.AddOrUpdateTask(cometTask);
+
+                    res.StatusCode = (int)HttpStatusCode.InternalServerError;
+                    await res.AsJson($"exception:{ex.Message}");
+                }
+
+                if (postRequestData.IsMultiPart && requestUtils.QueryParameters.WaitTime > 0)
+                {
+                    this.logger.LogWarning("Request {requestToken} failed as BadRequest: a POST request may not have a wait time when it is multipart", requestToken);
+
+                    this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - a POST request may not have a wait time when it is multipart");
+
+                    res.StatusCode = (int)HttpStatusCode.BadRequest;
+                    await res.AsJson("a POST request may not have a wait time when it is multipart");
+                }
+
+                if (requestUtils.QueryParameters.WaitTime > 0)
+                {
+                    await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 }
                 else
                 {
-                    var requestToken = this.TokenGeneratorService.GenerateRandomToken();
-
-                    try
-                    {
-                        await this.Authorize(this.AppConfigService, credentialsService, req.HttpContext.User.Identity.Name);
-                    }
-                    catch (AuthorizationException)
-                    {
-                        this.logger.LogWarning("The {requestToken} POST REQUEST was not authorized for {Identity}", requestToken, req.HttpContext.User.Identity.Name);
-
-                        res.UpdateWithNotAutherizedSettings();
-                        await res.AsJson("not authorized");
-                        return;
-                    }
-
-                    var cometTask = this.CreateAndRegisterCometTask(credentialsService.Credentials.Person.Iid, TopContainer, requestToken);
-                    
-                    PostRequestData postRequestData = null;
-
-                    try
-                    {
-                        postRequestData = await this.ProcessPostRequest(req, requestUtils, metaInfoProvider, jsonSerializer, fileBinaryService);
-                    }
-                    catch (BadRequestException ex)
-                    {
-                        this.logger.LogWarning("Request {requestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
-
-                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
-
-                        res.StatusCode = (int)HttpStatusCode.BadRequest;
-                        await res.AsJson($"exception:{ex.Message}");
-                    }
-                    catch (Exception ex)
-                    {
-                        this.logger.LogError("Request {requestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
-
-                        cometTask.FinishedAt = DateTime.Now;
-                        cometTask.StatusKind = StatusKind.FAILED;
-                        cometTask.Error = $"INTERNAL SERVER ERROR - {ex.Message}";
-                        this.CometTaskService.AddOrUpdateTask(cometTask);
-
-                        res.StatusCode = (int)HttpStatusCode.InternalServerError;
-                        await res.AsJson($"exception:{ex.Message}");
-                    }
-
-                    if (postRequestData.IsMultiPart && requestUtils.QueryParameters.WaitTime > 0)
-                    {
-                        this.logger.LogWarning("Request {requestToken} failed as BadRequest: a POST request may not have a wait time when it is multipart", requestToken);
-
-                        this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - a POST request may not have a wait time when it is multipart");
-
-                        res.StatusCode = (int)HttpStatusCode.BadRequest;
-                        await res.AsJson("a POST request may not have a wait time when it is multipart");
-                    }
-
-                    if (requestUtils.QueryParameters.WaitTime > 0)
-                    {
-                        await this.EnqueCometTaskForPostRequest(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
-                    }
-                    else
-                    {
-                        await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
-                    }
+                    await this.PostResponseData(postRequestData, requestToken, res, cometTask, requestUtils, transactionManager, credentialsService, headerInfoProvider, serviceProvider, metaInfoProvider, operationProcessor, revisionService, jsonSerializer, messagePackSerializer, permissionInstanceFilterService, changeLogService);
                 }
-            });
+            }).RequireAuthorization(AuthenticationSchemes);
         }
 
         /// <summary>
@@ -294,159 +282,153 @@ namespace CometServer.Modules
                 return;
             }
 
-            if (!(request.HttpContext.User.Identity?.IsAuthenticated ?? false))
+            var identity = request.HttpContext.User.Identity!.Name;
+            
+            try
             {
-                response.UpdateWithNotAuthenticatedSettings();
-                await response.AsJson("not authenticated");
+               identity = await this.Authorize(this.AppConfigService, credentialsService, request);
             }
-            else
+            catch (AuthorizationException)
             {
-                try
+                this.logger.LogWarning("The GET REQUEST was not authorized for {Identity}", identity);
+                response.UpdateWithNotAutherizedSettings();
+                await response.AsJson("not authorized");
+                return;
+            }
+            
+            NpgsqlConnection connection = null;
+            var credentials = credentialsService.Credentials;
+            var transaction = transactionManager.SetupTransaction(ref connection, credentials);
+
+            transactionManager.SetCachedDtoReadEnabled(true);
+            transactionManager.SetFullAccessState(true);
+
+            var stopwatch = Stopwatch.StartNew();
+            var requestToken = this.TokenGeneratorService.GenerateRandomToken();
+
+            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
+            
+            try
+            {
+                var engineeringModels = new List<Thing>();
+                var allEngineeringModelIds = new List<Guid>();
+
+                var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
+                requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
+
+                var securityContext = new RequestSecurityContext();
+
+                // get all the Participants and filter out only those Participants that are active and for the current Person
+                var activeAndAssignedParticipantsForCurrentPerson = processor.GetResource("Participant", SiteDirectoryData, null, securityContext)
+                    .OfType<Participant>().Where(x => x.IsActive && x.Person == credentials.Person.Iid);
+
+                // get all EngineeringModelSetup
+                var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, null, securityContext)
+                    .OfType<EngineeringModelSetup>();
+
+                if (ids is null)
                 {
-                    await this.Authorize(this.AppConfigService, credentialsService, request.HttpContext.User.Identity.Name);
-                }
-                catch (AuthorizationException)
-                {
-                    this.logger.LogWarning("The GET REQUEST was not authorized for {identity}", request.HttpContext.User.Identity.Name);
-                    response.UpdateWithNotAutherizedSettings();
-                    await response.AsJson("not authorized");
-                    return;
-                }
-                
-                NpgsqlConnection connection = null;
-                var credentials = credentialsService.Credentials;
-                var transaction = transactionManager.SetupTransaction(ref connection, credentials);
-
-                transactionManager.SetCachedDtoReadEnabled(true);
-                transactionManager.SetFullAccessState(true);
-
-                var stopwatch = Stopwatch.StartNew();
-                var requestToken = this.TokenGeneratorService.GenerateRandomToken();
-
-                this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
-                
-                try
-                {
-                    var engineeringModels = new List<Thing>();
-                    var allEngineeringModelIds = new List<Guid>();
-
-                    var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
-                    requestUtils.OverrideQueryParameters = new QueryParameters() { ExtentDeep = false };
-
-                    var securityContext = new RequestSecurityContext();
-
-                    // get all the Participants and filter out only those Participants that are active and for the current Person
-                    var activeAndAssignedParticipantsForCurrentPerson = processor.GetResource("Participant", SiteDirectoryData, null, securityContext)
-                        .OfType<Participant>().Where(x => x.IsActive && x.Person == credentials.Person.Iid);
-
-                    // get all EngineeringModelSetup
-                    var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, null, securityContext)
-                        .OfType<EngineeringModelSetup>();
-
-                    if (ids is null)
+                    foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
                     {
-                        foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
+                        foreach (var engineeringModelSetup in engineeringModelSetups)
                         {
-                            foreach (var engineeringModelSetup in engineeringModelSetups)
+                            if (engineeringModelSetup.Participant.Contains(participant.Iid))
                             {
-                                if (engineeringModelSetup.Participant.Contains(participant.Iid))
-                                {
-                                    allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
-                                }
+                                allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
                             }
                         }
                     }
-                    else if (ids.TryParseEnumerableOfGuid(out var identifiers))
+                }
+                else if (ids.TryParseEnumerableOfGuid(out var identifiers))
+                {
+                    foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
                     {
-                        foreach (var participant in activeAndAssignedParticipantsForCurrentPerson)
+                        foreach (var engineeringModelSetup in engineeringModelSetups)
                         {
-                            foreach (var engineeringModelSetup in engineeringModelSetups)
+                            if (engineeringModelSetup.Participant.Contains(participant.Iid) && identifiers.Contains(engineeringModelSetup.EngineeringModelIid))
                             {
-                                if (engineeringModelSetup.Participant.Contains(participant.Iid) && identifiers.Contains(engineeringModelSetup.EngineeringModelIid))
-                                {
-                                    allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
-                                }
+                                allEngineeringModelIds.Add(engineeringModelSetup.EngineeringModelIid);
                             }
                         }
                     }
-
-                    foreach (var engineeringModelIid in allEngineeringModelIds.Distinct())
-                    {
-                        var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
-
-                        var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
-                            new[] { nameof(EngineeringModel), engineeringModelIid.ToString() }, out _);
-
-                        engineeringModels.AddRange(things);
-                    }
-
-                    var contentTypeKind = request.QueryContentTypeKind();
-                    var version = request.QueryDataModelVersion();
-
-                    if (contentTypeKind == ContentTypeKind.JSON)
-                    {
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
-                    }
-                    else if (contentTypeKind == ContentTypeKind.MESSAGEPACK)
-                    {
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
-                    }
-                    else
-                    {
-                        throw new NotSupportedException($"ContentType {contentTypeKind} is not supported for this request");
-                    }
                 }
-                catch (SecurityException exception)
+
+                foreach (var engineeringModelIid in allEngineeringModelIds.Distinct())
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.RollbackAsync();
-                    }
+                    var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
 
-                    this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                    var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
+                        new[] { nameof(EngineeringModel), engineeringModelIid.ToString() }, out _);
 
-                    response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    await response.AsJson($"exception:{exception.Message}");
+                    engineeringModels.AddRange(things);
                 }
-                catch (ThingNotFoundException exception)
+
+                var contentTypeKind = request.QueryContentTypeKind();
+                var version = request.QueryDataModelVersion();
+
+                if (contentTypeKind == ContentTypeKind.JSON)
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.RollbackAsync();
-                    }
-
-                    this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
-
-                    response.StatusCode = (int)HttpStatusCode.NotFound;
-                    await response.AsJson($"exception:{exception.Message}");
+                    await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
                 }
-                catch (Exception exception)
+                else if (contentTypeKind == ContentTypeKind.MESSAGEPACK)
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.RollbackAsync();
-                    }
-
-                    this.logger.LogError(exception, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
-
-                    // error handling
-                    response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    await response.AsJson($"exception:{exception.Message}");
+                    await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
                 }
-                finally
+                else
                 {
-                    if (transaction != null)
-                    {
-                        await transaction.DisposeAsync();
-                    }
-
-                    if (connection != null)
-                    {
-                        await connection.DisposeAsync();
-                    }
-
-                    this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                    throw new NotSupportedException($"ContentType {contentTypeKind} is not supported for this request");
                 }
+            }
+            catch (SecurityException exception)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                await response.AsJson($"exception:{exception.Message}");
+            }
+            catch (ThingNotFoundException exception)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                response.StatusCode = (int)HttpStatusCode.NotFound;
+                await response.AsJson($"exception:{exception.Message}");
+            }
+            catch (Exception exception)
+            {
+                if (transaction != null)
+                {
+                    await transaction.RollbackAsync();
+                }
+
+                this.logger.LogError(exception, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+
+                // error handling
+                response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await response.AsJson($"exception:{exception.Message}");
+            }
+            finally
+            {
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+
+                if (connection != null)
+                {
+                    await connection.DisposeAsync();
+                }
+
+                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
             }
         }
 
@@ -667,7 +649,7 @@ namespace CometServer.Modules
                 if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
+                    await this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
@@ -679,13 +661,13 @@ namespace CometServer.Modules
                     {
                         var iterationPartition = requestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
 
-                        this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
                         return;
                     }
 
                     if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
-                        this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
                         return;
                     }
                 }
@@ -923,10 +905,11 @@ namespace CometServer.Modules
                 this.logger.LogTrace(task.IsCompletedSuccessfully.ToString());
             });
 
-            var completed = longRunningCometTask.Wait(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime));
+            var completedTask = await Task.WhenAny(longRunningCometTask, Task.Delay(TimeSpan.FromSeconds(requestUtils.QueryParameters.WaitTime)));
 
-            if (completed)
+            if (completedTask == longRunningCometTask)
             {
+                await longRunningCometTask;
                 this.logger.LogInformation("The task {id} for actor {actor} completed within the requsted wait time {waittime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
             }
             else

@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentialsService.cs" company="Starion Group S.A.">
+// <copyright file="AnonymousAuthenticationExtensions.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,53 +22,33 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authorization
+namespace CometServer.Authentication.Anonymous
 {
     using System;
-    using System.Threading.Tasks;
 
-    using CDP4Common.DTO;
-
-    using Npgsql;
+    using Microsoft.AspNetCore.Authentication;
 
     /// <summary>
-    /// The ICredentialsService interface.
+    /// Extension methods with a receiver of <see cref="AuthenticationBuilder"/>
+    /// with which Anonymous Authentication can be added to the ASP.NET Core authentication pipeline.
     /// </summary>
-    public interface ICredentialsService
+    public static class AnonymousAuthenticationExtensions
     {
         /// <summary>
-        /// Gets the resolved <see cref="Credentials"/>
+        /// The default configuration action does nothing
         /// </summary>
-        public Credentials Credentials { get; }
+        public static void DefaultConfigureAction(AnonymousAuthenticationOptions options)
+        {
+        }
 
         /// <summary>
-        /// Resolves the username to <see cref="Credentials"/>
+        /// Adds basic authentication with a custom authentication scheme name and display name
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="username">
-        /// The supplied username
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, string username);
-
-        /// <summary>
-        /// Resolves the user to <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="userId">
-        /// The supplied user unique identifier
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId);
-
-        /// <summary>
-        /// Resolve and set participant information for the current <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        void ResolveParticipantCredentials(NpgsqlTransaction transaction);
+        public static AuthenticationBuilder AddAnonymousAuthentication(
+            this AuthenticationBuilder builder,
+            string displayName = AnonymousAuthenticationDefaults.DisplayName,
+            Action<AnonymousAuthenticationOptions> configure = null)
+            => builder.AddScheme<AnonymousAuthenticationOptions, AnonymousAuthenticationHandler>(
+                AnonymousAuthenticationDefaults.AuthenticationScheme, displayName, configure ?? DefaultConfigureAction);
     }
 }

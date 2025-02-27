@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentialsService.cs" company="Starion Group S.A.">
+// <copyright file="IJwtTokenService.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,53 +22,24 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authorization
+namespace CometServer.Authentication
 {
-    using System;
-    using System.Threading.Tasks;
-
-    using CDP4Common.DTO;
-
-    using Npgsql;
+    using CDP4Authentication;
 
     /// <summary>
-    /// The ICredentialsService interface.
+    /// The purpose of the <see cref="IJwtTokenService"/> is to generate a JWT token based on the provided authenticated
+    /// user
     /// </summary>
-    public interface ICredentialsService
+    public interface IJwtTokenService
     {
         /// <summary>
-        /// Gets the resolved <see cref="Credentials"/>
+        /// Creates a JWT token based on the <see cref="AuthenticationPerson"/> and the settings provided
+        /// by the <see cref="IAppConfigService"/>
         /// </summary>
-        public Credentials Credentials { get; }
-
-        /// <summary>
-        /// Resolves the username to <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
+        /// <param name="authenticationPerson">
+        /// The subject <see cref="AuthenticationPerson"/>
         /// </param>
-        /// <param name="username">
-        /// The supplied username
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, string username);
-
-        /// <summary>
-        /// Resolves the user to <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="userId">
-        /// The supplied user unique identifier
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId);
-
-        /// <summary>
-        /// Resolve and set participant information for the current <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        void ResolveParticipantCredentials(NpgsqlTransaction transaction);
+        /// <returns>The created JWT token</returns>
+        string CreateToken(AuthenticationPerson authenticationPerson);
     }
 }

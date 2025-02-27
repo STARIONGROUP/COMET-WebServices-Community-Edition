@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentialsService.cs" company="Starion Group S.A.">
+// <copyright file="BasicAuthenticationDefaults.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -22,53 +22,26 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace CometServer.Authorization
+namespace CometServer.Authentication.Basic
 {
-    using System;
-    using System.Threading.Tasks;
-
-    using CDP4Common.DTO;
-
-    using Npgsql;
-
     /// <summary>
-    /// The ICredentialsService interface.
+    /// Default values used by Basic Access Authentication scheme.
     /// </summary>
-    public interface ICredentialsService
+    public static class BasicAuthenticationDefaults
     {
         /// <summary>
-        /// Gets the resolved <see cref="Credentials"/>
+        /// The default name of the scheme
         /// </summary>
-        public Credentials Credentials { get; }
+        public const string AuthenticationScheme = "Basic";
 
         /// <summary>
-        /// Resolves the username to <see cref="Credentials"/>
+        /// The default display name of the scheme
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="username">
-        /// The supplied username
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, string username);
+        public const string DisplayName = "CDP4-COMET Basic Authentication";
 
         /// <summary>
-        /// Resolves the user to <see cref="Credentials"/>
+        /// The default realm
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="userId">
-        /// The supplied user unique identifier
-        /// </param>
-        Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId);
-
-        /// <summary>
-        /// Resolve and set participant information for the current <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        void ResolveParticipantCredentials(NpgsqlTransaction transaction);
+        public const string Realm = "CDP4-COMET Basic Realm";
     }
 }

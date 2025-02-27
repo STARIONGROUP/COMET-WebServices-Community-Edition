@@ -1,4 +1,4 @@
-﻿// --------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AuthenticationModule.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2024 Starion Group S.A.
 //
@@ -25,9 +25,16 @@
 namespace CometServer.Modules
 {
     using System;
+    using System.Linq;
     using System.Net;
+    using System.Threading.Tasks;
 
     using Carter;
+    using Carter.Response;
+
+    using CometServer.Authentication;
+    using CometServer.Authentication.Bearer;
+    using CometServer.Configuration;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
@@ -46,20 +53,73 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/login", async (HttpRequest req, HttpResponse res) => {
-                if (req.HttpContext.User.Identity == null)
+            app.MapPost("/login", async (LoginUser loginUser, HttpResponse res, IAuthenticationPersonAuthenticator authenticationPersonAuthenticator, IJwtTokenService jwtTokenService
+            , IAppConfigService appConfigService) => 
+            {
+                if (!appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.LocalAuthenticationScheme))
                 {
-                    res.UpdateWithNotAutherizedSettings();
-                    await res.WriteAsync("not authorized");
+                    res.StatusCode = (int)HttpStatusCode.Forbidden;
+                    await res.WriteAsync("Local JWT Authentication is disable.");
+                    return;
                 }
 
-                res.StatusCode = (int)HttpStatusCode.Accepted;
+                var authenticationPerson = await authenticationPersonAuthenticator.Authenticate(loginUser.UserName, loginUser.Password);
+
+                if (authenticationPerson != null)
+                {
+                    var token = jwtTokenService.CreateToken(authenticationPerson);
+                    res.StatusCode = 200;
+                    await res.AsJson(token);
+                    return;
+                }
+
+                res.UpdateWithNotBearerAuthenticatedSettings();
+                await res.AsJson("not authenticated");
             });
 
-            app.MapGet("/logout", async (HttpRequest req, HttpResponse res) => {
-                //return webServiceAuthentication.LogOutResponse(req.HttpContext);
+            app.MapPost("/logout", async (HttpRequest req, HttpResponse res) =>
+            {
                 throw new NotImplementedException();
-            });
+            }).RequireAuthorization(ApiBase.AuthenticationSchemes);
+
+            app.MapGet("/auth/schemes", ProvideEnabledAuthenticationScheme);
+        }
+
+        /// <summary>
+        /// Provides all enabled authentication scheme that could be used
+        /// </summary>
+        /// <param name="res">The <see cref="HttpResponse"/></param>
+        /// <param name="appConfigService">The injected <see cref="IAppConfigService"/> uses to provides authentication scheme status</param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        private static Task ProvideEnabledAuthenticationScheme(HttpResponse res, IAppConfigService appConfigService)
+        {
+            var enabledSchemes = ApiBase.AuthenticationSchemes.Where(appConfigService.IsAuthenticationSchemeEnabled).ToList();
+            
+            var authority = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
+                ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.Authority 
+                : string.Empty;
+            
+            var clientId = appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.ExternalAuthenticationScheme) 
+                ? appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.ClientId 
+                : string.Empty;
+
+            return res.AsJson(new { Schemes = enabledSchemes, Authority = authority, ClientId = clientId });
+        }
+
+        /// <summary>
+        /// Data model class that defines properties required to proceed to login action
+        /// </summary>
+        private class LoginUser
+        {
+            /// <summary>
+            /// Gets or sets the user name  used as credentials
+            /// </summary>
+            public string UserName { get; set;}
+
+            /// <summary>
+            /// Gets or sets the Password used as credentials
+            /// </summary>
+            public string Password { get; set;}
         }
     }
 }

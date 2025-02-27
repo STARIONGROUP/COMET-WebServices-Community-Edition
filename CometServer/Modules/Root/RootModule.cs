@@ -26,6 +26,7 @@ namespace CometServer.Modules
 {
     using Carter;
 
+    using CometServer.Authentication.Anonymous;
     using CometServer.Resources;
 
     using Microsoft.AspNetCore.Builder;
@@ -61,7 +62,7 @@ namespace CometServer.Modules
                 res.ContentType = "text/html";
                 await res.WriteAsync(rootPageTemplate);
                 await res.CompleteAsync();
-            });
+            }).RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme });
         }
     }
 }
