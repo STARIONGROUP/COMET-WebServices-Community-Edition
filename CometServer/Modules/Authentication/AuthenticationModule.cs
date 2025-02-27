@@ -60,7 +60,7 @@ namespace CometServer.Modules
                 if (!appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.LocalAuthenticationScheme))
                 {
                     res.StatusCode = (int)HttpStatusCode.Forbidden;
-                    await res.WriteAsync("Local JWT Authentication is disable.");
+                    await res.WriteAsync("Local JWT Authentication is disabled.");
                     return;
                 }
 
@@ -107,7 +107,7 @@ namespace CometServer.Modules
             if (!appConfigService.IsAuthenticationSchemeEnabled(JwtBearerDefaults.LocalAuthenticationScheme))
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Forbidden;
-                await context.Response.WriteAsync("Local JWT Authentication is disable.");
+                await context.Response.WriteAsync("Local JWT Authentication is disabled.");
                 return;
             }
 

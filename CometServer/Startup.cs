@@ -247,7 +247,7 @@ namespace CometServer
 
                     if (tokenExpirationMinutes <= 0)
                     {
-                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:TokenExpirationMinutes setting must be strickly greater than 0");
+                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:TokenExpirationMinutes setting must be stricktly greater than 0");
                     }
                 }
 
@@ -262,7 +262,7 @@ namespace CometServer
 
                     if (refreshExpirationMinutes <= 0)
                     {
-                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:RefreshExpirationMinutes setting must be strickly greater than 0");
+                        throw new ConfigurationErrorsException("The Authentication:LocalJwtBearer:RefreshExpirationMinutes setting must be stricktly greater than 0");
                     }
                 }
             

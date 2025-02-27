@@ -49,8 +49,7 @@ namespace CometServer.Authentication
     using JwtRegisteredClaimNames = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames;
 
     /// <summary>
-    /// The purpose of the <see cref="JwtTokenService" /> is to generate a JWT token based on the provided authenticated
-    /// user
+    /// The purpose of the <see cref="JwtTokenService" /> is to generate a JWT token based on the provided authenticated user
     /// </summary>
     public class JwtTokenService : IJwtTokenService
     {
