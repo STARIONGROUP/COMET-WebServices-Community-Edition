@@ -28,6 +28,8 @@ namespace CometServer.Authentication
 
     using CDP4Authentication;
 
+    using CDP4DalCommon.Authentication;
+
     /// <summary>
     /// The purpose of the <see cref="IJwtTokenService"/> is to generate a JWT token based on the provided authenticated
     /// user

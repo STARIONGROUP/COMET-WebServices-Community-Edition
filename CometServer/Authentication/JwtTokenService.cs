@@ -34,6 +34,8 @@ namespace CometServer.Authentication
 
     using CDP4Authentication;
 
+    using CDP4DalCommon.Authentication;
+
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Services;
