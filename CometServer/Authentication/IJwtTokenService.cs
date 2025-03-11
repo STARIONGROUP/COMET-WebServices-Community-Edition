@@ -37,17 +37,17 @@ namespace CometServer.Authentication
     public interface IJwtTokenService
     {
         /// <summary>
-        /// Generates <see cref="AuthenticationTokens"/> based on <see cref="AuthenticationPerson" />
+        /// Generates <see cref="AuthenticationToken"/> based on <see cref="AuthenticationPerson" />
         /// </summary>
         /// <param name="authenticationPerson">The used <see cref="AuthenticationPerson"/></param>
-        /// <returns>The generated <see cref="AuthenticationTokens" /></returns>
-        AuthenticationTokens GenerateTokens(AuthenticationPerson authenticationPerson);
+        /// <returns>The generated <see cref="AuthenticationToken" /></returns>
+        AuthenticationToken GenerateTokens(AuthenticationPerson authenticationPerson);
 
         /// <summary>
-        /// Tries to generate <see cref="AuthenticationTokens"/> from a refresh token
+        /// Tries to generate <see cref="AuthenticationToken"/> from a refresh token
         /// </summary>
         /// <param name="refreshToken">The refresh token that should be used</param>
-        /// <returns>The generated <see cref="AuthenticationTokens"/></returns>
-        Task<AuthenticationTokens> TryGenerateTokenFromRefreshToken(string refreshToken);
+        /// <returns>The generated <see cref="AuthenticationToken"/></returns>
+        Task<AuthenticationToken> TryGenerateTokenFromRefreshToken(string refreshToken);
     }
 }

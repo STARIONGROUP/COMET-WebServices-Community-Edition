@@ -89,7 +89,7 @@ namespace CometServer.Modules
         }
 
         /// <summary>
-        /// Refreshes <see cref="AuthenticationTokens"/> based on a provided <paramref name="refreshToken"/>, if a valid one is provided
+        /// Refreshes <see cref="AuthenticationToken"/> based on a provided <paramref name="refreshToken"/>, if a valid one is provided
         /// </summary>
         /// <param name="context">The <see cref="HttpContext" /></param>
         /// <param name="jwtTokenService">The <see cref="IJwtTokenService"/> used to refresh tokens</param>

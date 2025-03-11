@@ -107,11 +107,11 @@ namespace CometServer.Authentication
         }
 
         /// <summary>
-        /// Generates <see cref="AuthenticationTokens" /> based on <see cref="AuthenticationPerson" />
+        /// Generates <see cref="AuthenticationToken" /> based on <see cref="AuthenticationPerson" />
         /// </summary>
         /// <param name="authenticationPerson">The used <see cref="AuthenticationPerson" /></param>
-        /// <returns>The generated <see cref="AuthenticationTokens" /></returns>
-        public AuthenticationTokens GenerateTokens(AuthenticationPerson authenticationPerson)
+        /// <returns>The generated <see cref="AuthenticationToken" /></returns>
+        public AuthenticationToken GenerateTokens(AuthenticationPerson authenticationPerson)
         {
             var issuedAtTime = DateTimeOffset.UtcNow;
             var accessExpirationTime = issuedAtTime.AddMinutes(this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.TokenExpirationMinutes);
@@ -128,16 +128,16 @@ namespace CometServer.Authentication
 
             var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
 
-            this.logger.LogInformation("JWT AuthenticationTokens created");
-            return new AuthenticationTokens(jwtSecurityTokenHandler.WriteToken(accessToken), jwtSecurityTokenHandler.WriteToken(refreshToken));
+            this.logger.LogInformation("JWT AuthenticationToken created");
+            return new AuthenticationToken(jwtSecurityTokenHandler.WriteToken(accessToken), jwtSecurityTokenHandler.WriteToken(refreshToken));
         }
 
         /// <summary>
-        /// Tries to generate <see cref="AuthenticationTokens" /> from a refresh token
+        /// Tries to generate <see cref="AuthenticationToken" /> from a refresh token
         /// </summary>
         /// <param name="refreshToken">The refresh token that should be used</param>
-        /// <returns>The generated <see cref="AuthenticationTokens"/></returns>
-        public async Task<AuthenticationTokens> TryGenerateTokenFromRefreshToken(string refreshToken)
+        /// <returns>The generated <see cref="AuthenticationToken"/></returns>
+        public async Task<AuthenticationToken> TryGenerateTokenFromRefreshToken(string refreshToken)
         {
             var tokenHandler = this.bearerOptions.TokenHandlers.Single();
 
