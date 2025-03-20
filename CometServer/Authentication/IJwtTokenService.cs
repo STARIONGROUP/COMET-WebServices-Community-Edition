@@ -24,7 +24,11 @@
 
 namespace CometServer.Authentication
 {
+    using System.Threading.Tasks;
+
     using CDP4Authentication;
+
+    using CDP4DalCommon.Authentication;
 
     /// <summary>
     /// The purpose of the <see cref="IJwtTokenService"/> is to generate a JWT token based on the provided authenticated
@@ -33,13 +37,17 @@ namespace CometServer.Authentication
     public interface IJwtTokenService
     {
         /// <summary>
-        /// Creates a JWT token based on the <see cref="AuthenticationPerson"/> and the settings provided
-        /// by the <see cref="IAppConfigService"/>
+        /// Generates <see cref="AuthenticationToken"/> based on <see cref="AuthenticationPerson" />
         /// </summary>
-        /// <param name="authenticationPerson">
-        /// The subject <see cref="AuthenticationPerson"/>
-        /// </param>
-        /// <returns>The created JWT token</returns>
-        string CreateToken(AuthenticationPerson authenticationPerson);
+        /// <param name="authenticationPerson">The used <see cref="AuthenticationPerson"/></param>
+        /// <returns>The generated <see cref="AuthenticationToken" /></returns>
+        AuthenticationToken GenerateTokens(AuthenticationPerson authenticationPerson);
+
+        /// <summary>
+        /// Tries to generate <see cref="AuthenticationToken"/> from a refresh token
+        /// </summary>
+        /// <param name="refreshToken">The refresh token that should be used</param>
+        /// <returns>The generated <see cref="AuthenticationToken"/></returns>
+        Task<AuthenticationToken> TryGenerateTokenFromRefreshToken(string refreshToken);
     }
 }

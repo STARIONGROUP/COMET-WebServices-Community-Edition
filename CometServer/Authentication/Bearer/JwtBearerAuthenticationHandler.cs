@@ -25,6 +25,8 @@
 namespace CometServer.Authentication.Bearer
 {
     using System;
+    using System.IdentityModel.Tokens.Jwt;
+    using System.Linq;
     using System.Net;
     using System.Text.Encodings.Web;
     using System.Threading.Tasks;
@@ -166,9 +168,22 @@ namespace CometServer.Authentication.Bearer
                 {
                     return AuthenticateResult.NoResult();
                 }
-
+                
                 var authHeader = this.Request.Headers.Authorization.ToString();
-                this.Request.Headers.Authorization = string.Concat("Bearer ", authHeader.AsSpan(this.Scheme.Name.Length + 1));
+
+                var token = authHeader.AsSpan(this.Scheme.Name.Length + 1).ToString();
+
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var securityToken = (JwtSecurityToken)tokenHandler.ReadToken(token);
+
+                if (securityToken?.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Typ) is {  } typeClaim
+                    && !typeClaim.Value.Equals("Bearer", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    this.Logger.LogInformation("Invalid claim type");
+                    return AuthenticateResult.NoResult();
+                }
+
+                this.Request.Headers.Authorization = string.Concat("Bearer ", token);
 
                 var value = await base.HandleAuthenticateAsync();
                 this.Request.Headers.Authorization = authHeader;

@@ -36,6 +36,7 @@ namespace CometServer.Tests.Authentication.Bearer
 
     using CometServer.Authentication;
     using CometServer.Authentication.Bearer;
+    using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Health;
 
@@ -67,6 +68,7 @@ namespace CometServer.Tests.Authentication.Bearer
         private Mock<IAppConfigService> appConfigService;
         private Mock<IResponseNegotiator> jsonResponseNegotiator;
         private Mock<IServiceProvider> requestService;
+        private Mock<ICredentialsService> credentialsService;
         private JwtTokenService jwtTokenService;
         private const string key = "68D58F267F5FFEC6B63A5907B3D96B80F101DA5AE167418FCFF416EB123C896B";
 
@@ -107,9 +109,10 @@ namespace CometServer.Tests.Authentication.Bearer
             
             this.handler = new JwtBearerAuthenticationHandler(this.optionsMonitor.Object, this.loggerFactory.Object, this.encoder.Object, this.systemClock.Object, 
                  this.cometHasStartedService.Object,this.appConfigService.Object);
-           
+
+            this.credentialsService = new Mock<ICredentialsService>();
             this.appConfigService.Setup( x=> x.AppConfig).Returns(appConfig);
-            this.jwtTokenService = new JwtTokenService(new NullLogger<JwtTokenService>(), this.appConfigService.Object);
+            this.jwtTokenService = new JwtTokenService(new NullLogger<JwtTokenService>(), this.appConfigService.Object, this.credentialsService.Object, this.optionsMonitor.Object);
         }
         
         [Test]
@@ -212,12 +215,12 @@ namespace CometServer.Tests.Authentication.Bearer
                 RequestServices = this.requestService.Object
             };
 
-            var token = this.jwtTokenService.CreateToken(new AuthenticationPerson(Guid.NewGuid(), 1)
+            var token = this.jwtTokenService.GenerateTokens(new AuthenticationPerson(Guid.NewGuid(), 1)
             {
                 UserName = "admin"
             });
             
-            context.Request.Headers.Authorization = new StringValues($"{JwtBearerDefaults.LocalAuthenticationScheme} {token}");
+            context.Request.Headers.Authorization = new StringValues($"{JwtBearerDefaults.LocalAuthenticationScheme} {token.AccessToken}");
             
             this.cometHasStartedService.Setup(x => x.GetHasStartedAndIsReady()).Returns(new ServerStatus(true, DateTime.Now));
             await this.handler.InitializeAsync(new AuthenticationScheme(JwtBearerDefaults.LocalAuthenticationScheme, "", typeof(JwtBearerAuthenticationHandler)), context);
