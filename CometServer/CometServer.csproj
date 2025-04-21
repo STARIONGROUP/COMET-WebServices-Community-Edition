@@ -22,13 +22,13 @@
     <PackageReference Include="CDP4MessagePackSerializer-CE" Version="28.3.0" />
     <PackageReference Include="CDP4ServicesMessaging-CE" Version="28.3.0" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.1" />
-    <PackageReference Include="Hangfire.Core" Version="1.8.17" />
-    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.17" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.4" />
+    <PackageReference Include="Hangfire.Core" Version="1.8.18" />
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.18" />
     <PackageReference Include="HangFire.Autofac" Version="2.7.0" />
     <PackageReference Include="Hangfire.MemoryStorage" Version="1.8.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
     <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
@@ -37,12 +37,12 @@
     <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageReference Include="Serilog.Sinks.Grafana.Loki" Version="8.3.0" />
     <PackageReference Include="SharpZipLib" Version="1.4.2" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.1" />
-    <PackageReference Include="System.Resources.Extensions" Version="9.0.1" />
-    <PackageReference Include="MailKit" Version="4.9.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.4" />
+    <PackageReference Include="System.Resources.Extensions" Version="9.0.4" />
+    <PackageReference Include="MailKit" Version="4.11.0" />
   </ItemGroup>
   <ItemGroup Label="Transitive Dependency overrides">
-      <PackageReference Include="System.Text.Json" Version="9.0.1" />
+      <PackageReference Include="System.Text.Json" Version="9.0.4" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CDP4Authentication\CDP4Authentication.csproj" />
