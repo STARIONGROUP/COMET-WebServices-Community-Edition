@@ -100,7 +100,7 @@ jobs:
         run: dotnet restore integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln
 
       - name: Run Integration Tests
-        run: dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln --no-parallel --logger "trx;LogFileName=test_results.trx" --verbosity diagnostic
+        run: dotnet test integration-tests/IntegrationTestSuite/WebservicesIntegrationTests.sln --logger "trx;LogFileName=test_results.trx" --verbosity diagnostic -p:TestTfmsInParallel=false
 
       - name: Shutdown Integration Test session
         run: dotnet-coverage shutdown integrationtestsession
