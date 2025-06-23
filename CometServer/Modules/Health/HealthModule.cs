@@ -181,14 +181,13 @@ namespace CometServer.Modules.Health
 
             this.logger.LogDebug("{request}:{requestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
 
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             try
             {
                 transactionManager.SetCachedDtoReadEnabled(false);
 
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
 
                 siteDirectoryDao.Read(transaction, "SiteDirectory", null, false);
 
@@ -207,11 +206,6 @@ namespace CometServer.Modules.Health
                 if (transaction != null)
                 {
                     await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
                 }
             }
         }

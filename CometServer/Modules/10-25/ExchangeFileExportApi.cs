@@ -181,7 +181,6 @@ namespace CometServer.Modules
                 return;
             }
 
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
@@ -211,7 +210,7 @@ namespace CometServer.Modules
 
                 var engineeringModelSetups = QueryExportEngineeringModelSetups(credentialsService, iids);
 
-                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
 
                 zipFilePath = jsonExchangeFileWriter.Create(transaction, this.AppConfigService.AppConfig.Midtier.ExportDirectory, engineeringModelSetups, version);
 
@@ -241,11 +240,6 @@ namespace CometServer.Modules
                 if (transaction != null)
                 {
                     await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
                 }
 
                 if (System.IO.File.Exists(zipFilePath))

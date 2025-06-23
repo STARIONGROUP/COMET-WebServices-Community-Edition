@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -54,6 +55,6 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="IterationSetup"/>.
         /// </returns>
-        IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null);
+        Task<IEnumerable<IterationSetup>> ReadByIterationAsync(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null);
     }
 }

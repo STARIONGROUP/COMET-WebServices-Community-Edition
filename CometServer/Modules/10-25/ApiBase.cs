@@ -354,22 +354,20 @@ namespace CometServer.Modules
         /// <param name="routeSegments">
         /// The route segments.
         /// </param>
-        /// <param name="resourcePath">
-        /// The resource Path.
-        /// </param>
         /// <param name="requestUtils">
         /// The <see cref="IRequestUtils"/> that provides utilities that are valid for the current HttpRequest handling
         /// </param>
         /// <returns>
         /// The collection of retrieved <see cref="CDP4Common.DTO.Thing"/>.
         /// </returns>
-        public IEnumerable<Thing> ProcessRequestPath(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string topContainer, string partition, string[] routeSegments, out List<Thing> resourcePath)
+        public async Task<ProcessRequestPathResult> ProcessRequestPath(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string topContainer, string partition, string[] routeSegments)
         {
-            var containmentColl = new List<Thing>();
-            var responseColl = new List<Thing>();
-            var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
-            resourcePath = new List<Thing>();
+            var result = new ProcessRequestPathResult();
 
+            var containmentColl = new List<Thing>();
+            
+            var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
+            
             // select per route segment tuple (type and optional id)
             // processing containment from top to bottom, we populate first the containmentColl then the responseColl
             for (var i = 0; i < routeSegments.Length; i++)
@@ -400,7 +398,7 @@ namespace CometServer.Modules
                 {
                     // switch to iteration context for further processing,
                     // in case of Iteration generalResource request, this is handled separately below
-                    transactionManager.SetIterationContext(processor.Transaction, partition);
+                    await transactionManager.SetIterationContextAsync(processor.Transaction, partition);
                 }
 
                 if (resourceContainmentSegment)
@@ -421,7 +419,8 @@ namespace CometServer.Modules
 
                     // collect the specified containment resource
                     containmentColl.Add(container);
-                    resourcePath.Add(container);
+
+                    result.ResourcePath.Add(container);
 
                     // authorized
                     authorizedContext.ContainerReadAllowed = true;
@@ -440,13 +439,15 @@ namespace CometServer.Modules
                             // switch to iteration context for further processing
                             // use engineering-model id to set the iteration context
                             // partition here should be EngineeringModel_<uuid>
-                            transactionManager.SetIterationContext(
+                            await transactionManager.SetIterationContextAsync(
                                 processor.Transaction,
                                 partition,
                                 containedIterationId);
 
                             // collect resources
-                            responseColl.AddRange(
+
+
+                            result.RequestedResources.AddRange(
                                 processor.GetResource(
                                     serviceType,
                                     partition,
@@ -457,7 +458,7 @@ namespace CometServer.Modules
                     else
                     {
                         // collect resources
-                        responseColl.AddRange(
+                        result.RequestedResources.AddRange(
                             processor.GetResource(serviceType, partition, containmentInfo, authorizedContext));
                     }
                 }
@@ -478,19 +479,19 @@ namespace CometServer.Modules
                     }
 
                     // collect resources
-                    responseColl.AddRange(resource);
+                    result.RequestedResources.AddRange(resource);
 
                     // set specific resource from uri request
-                    resourcePath.Add(resource.First());
+                    result.ResourcePath.Add(resource.First());
                 }
             }
 
             if (requestUtils.QueryParameters.IncludeAllContainers)
             {
-                responseColl.InsertRange(0, containmentColl);
+                result.RequestedResources.InsertRange(0, containmentColl);
             }
 
-            return responseColl;
+            return result;
         }
 
         /// <summary>

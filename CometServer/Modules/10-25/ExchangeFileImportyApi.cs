@@ -297,7 +297,10 @@ namespace CometServer.Modules
                 var version = httpRequest.QueryDataModelVersion();
 
                 // handle exchange processing
-                if (!this.UpsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null))
+
+                var success = await this.UpsertModelDataAsync(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, revisionService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null);
+
+                if (!success)
                 {
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
                     await response.AsJson("invalid seed file");
@@ -382,7 +385,7 @@ namespace CometServer.Modules
             this.logger.LogInformation("{request}:{requestToken} - Seeding version {version}", request.QueryNameMethodPath(), requestToken, version.ToString());
 
             // handle exchange processing
-            if (!this.InsertModelData(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.appConfigService.AppConfig.Backtier.IsDbSeedEnabled))
+            if (!await this.InsertModelDataAsync(requestUtils, transactionManager, jsonExchangeFileReader, migrationService, engineeringModelDao, serviceProvider, personService, personRoleService, personPermissionService, defaultPermissionProvider, participantRoleService, participantPermissionService, version, temporarysSeedFilePath, null, this.appConfigService.AppConfig.Backtier.IsDbSeedEnabled))
             {
                 response.StatusCode = (int)HttpStatusCode.BadRequest;
                 await response.AsJson("invalid seed file");
@@ -448,9 +451,8 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful, false if not
         /// </returns>
-        private bool InsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
+        private async Task<bool> InsertModelDataAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider,  IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null, bool seed = true)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             try
@@ -460,20 +462,17 @@ namespace CometServer.Modules
                 {
                     // clear database schemas if seeding
                     this.logger.LogInformation("Start clearing the current data store");
-                    transaction = transactionManager.SetupTransaction(ref connection, null);
+                    transaction = await transactionManager.SetupTransactionAsync(null);
                     transactionManager.SetFullAccessState(true);
                     ClearDatabaseSchemas(transaction);
-                    transaction.Commit();
-
-                    // Flushes the type cache and reload the types for this connection
-                    connection.ReloadTypes();
+                    await transaction.CommitAsync();
                 }
 
                 sw.Start();
                 this.logger.LogInformation("Start seeding the data");
 
                 // use new transaction to for inserting the data
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
 
                 // important, make sure to defer the constraints
@@ -481,7 +480,7 @@ namespace CometServer.Modules
                 command.ExecuteNonQuery();
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                transactionManager.SetAuditLoggingState(transaction, false);
+                await transactionManager.SetAuditLoggingStateAsync(transaction, false);
 
                 // get sitedirectory data
                 var items = jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
@@ -671,7 +670,6 @@ namespace CometServer.Modules
             finally
             {
                 transaction?.Dispose();
-                connection?.Dispose();
             }
         }
 
@@ -693,9 +691,8 @@ namespace CometServer.Modules
         /// <returns>
         /// True if successful
         /// </returns>
-        private bool UpsertModelData(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null)
+        private async Task<bool> UpsertModelDataAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IJsonExchangeFileReader jsonExchangeFileReader, IMigrationService migrationService, IRevisionService revisionService, IEngineeringModelDao engineeringModelDao, Services.IServiceProvider serviceProvider, IPersonService personService, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, Version version, string fileName, string password = null)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             try
@@ -704,19 +701,16 @@ namespace CometServer.Modules
 
                 // clear database schemas if seeding
                 this.logger.LogInformation("Start clearing the current data store");
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
                 ClearDatabaseSchemas(transaction);
-                transaction.Commit();
-
-                // Flushes the type cache and reload the types for this connection
-                connection.ReloadTypes();
+                await transaction.CommitAsync();
 
                 sw.Start();
                 this.logger.LogInformation("Start importing the data");
 
                 // use new transaction to for inserting the data
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
 
                 // important, make sure to defer the constraints
@@ -724,7 +718,7 @@ namespace CometServer.Modules
                 command.ExecuteNonQuery();
 
                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                transactionManager.SetAuditLoggingState(transaction, true);
+                await transactionManager.SetAuditLoggingStateAsync(transaction, true);
 
                 // get sitedirectory data
                 var items = jsonExchangeFileReader.ReadSiteDirectoryFromfile(version, fileName, password).ToList();
@@ -897,7 +891,7 @@ namespace CometServer.Modules
                                 if (createRevisionForSiteDirectory)
                                 {
                                     // Create revision history only once for SiteDirectory
-                                    this.CreateRevisionHistoryForSiteDirectory(requestUtils, transactionManager, revisionService, personService, ref actorId);
+                                    await this.CreateRevisionHistoryForSiteDirectoryAsync(requestUtils, transactionManager, revisionService, personService, actorId);
                                     createRevisionForSiteDirectory = false;
                                 }
 
@@ -905,7 +899,7 @@ namespace CometServer.Modules
                                 this.CreateRevisionHistoryForEngineeringModel(requestUtils, transactionManager, revisionService, actorId, revisionNumber, engineeringModelSetup.EngineeringModelIid);
 
                                 // use new transaction to for inserting the data
-                                transaction = transactionManager.SetupTransaction(ref connection, null);
+                                transaction = await transactionManager.SetupTransactionAsync(null);
                                 transactionManager.SetFullAccessState(true);
 
                                 // important, make sure to defer the constraints
@@ -913,7 +907,7 @@ namespace CometServer.Modules
                                 constraintcommand.ExecuteNonQuery();
 
                                 // make sure to only log insert changes, no subsequent trigger updates for exchange import
-                                transactionManager.SetAuditLoggingState(transaction, true);
+                                await transactionManager.SetAuditLoggingStateAsync(transaction, true);
 
                                 // revision number goes up for the next Iteration
                                 revisionNumber += 1;
@@ -951,7 +945,6 @@ namespace CometServer.Modules
             finally
             {
                 transaction?.Dispose();
-                connection?.Dispose();
             }
         }
 
@@ -1130,9 +1123,8 @@ namespace CometServer.Modules
         /// <param name="personId">
         /// First person Id <see cref="Person" />
         /// </param>
-        private void CreateRevisionHistoryForSiteDirectory(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService,  ref Guid personId)
+        private async Task CreateRevisionHistoryForSiteDirectoryAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, Guid personId)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             requestUtils.QueryParameters = new QueryParameters();
@@ -1140,7 +1132,7 @@ namespace CometServer.Modules
             try
             {
                 // Create a revision history for SiteDirectory's entries
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
@@ -1150,22 +1142,21 @@ namespace CometServer.Modules
                 // Save revision history for SiteDirectory's entries
                 revisionService.SaveRevisions(transaction, TopContainer, personId, EngineeringModelSetupSideEffect.FirstRevision);
 
-                transaction.Commit();
+                await transaction.CommitAsync();
             }
             catch (NpgsqlException ex)
             {
-                transaction?.Rollback();
+                await transaction?.RollbackAsync();
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             catch (Exception ex)
             {
-                transaction?.Rollback();
+                await transaction?.RollbackAsync();
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
-                transaction?.Dispose();
-                connection?.Dispose();
+                transaction?.DisposeAsync();
             }
         }
 
@@ -1187,16 +1178,15 @@ namespace CometServer.Modules
         /// <param name="engineeringModelIid">
         /// Engineering model Id <see cref="Guid" />
         /// </param>
-        private void CreateRevisionHistoryForEngineeringModel(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, Guid personId, int revisionNumber, Guid engineeringModelIid)
+        private async Task CreateRevisionHistoryForEngineeringModel(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, Guid personId, int revisionNumber, Guid engineeringModelIid)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             requestUtils.QueryParameters = new QueryParameters();
 
             try
             {
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
 
                 var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
@@ -1220,7 +1210,6 @@ namespace CometServer.Modules
             finally
             {
                 transaction?.Dispose();
-                connection?.Dispose();
             }
         }
 
@@ -1233,9 +1222,8 @@ namespace CometServer.Modules
         /// <param name="transactionManager">
         /// The <see cref="ICdp4TransactionManager"/> that provides database transaction and connection services
         /// </param>
-        private void CreateRevisionHistoryForEachEntry(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
+        private async Task CreateRevisionHistoryForEachEntry(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IRevisionService revisionService, IPersonService personService, ISiteDirectoryService siteDirectoryService, IEngineeringModelSetupService engineeringModelSetupService)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             requestUtils.QueryParameters = new QueryParameters();
@@ -1243,7 +1231,7 @@ namespace CometServer.Modules
             try
             {
                 // Create a revision history for SiteDirectory's entries
-                transaction = transactionManager.SetupTransaction(ref connection, null);
+                transaction = await transactionManager.SetupTransactionAsync(null);
                 transactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
@@ -1267,12 +1255,12 @@ namespace CometServer.Modules
                     .ToList();
 
                 // commit revision history
-                transaction.Commit();
+                await transaction.CommitAsync();
 
                 // Get all EngineeringModelSetups and create a revision history for each EngineeringModel
                 foreach (var engineeringModelSetup in engineeringModelSetups)
                 {
-                    transaction = transactionManager.SetupTransaction(ref connection, null);
+                    transaction = await transactionManager.SetupTransactionAsync(null);
                     transactionManager.SetFullAccessState(true);
 
                     var partition =
@@ -1287,18 +1275,17 @@ namespace CometServer.Modules
             }
             catch (NpgsqlException ex)
             {
-                transaction?.Rollback();
+                await transaction?.RollbackAsync();
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             catch (Exception ex)
             {
-                transaction?.Rollback();
+                await transaction?.RollbackAsync();
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
-                transaction?.Dispose();
-                connection?.Dispose();
+                transaction?.DisposeAsync();
             }
         }
 

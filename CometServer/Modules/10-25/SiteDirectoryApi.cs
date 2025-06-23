@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryApi.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -46,8 +46,6 @@ namespace CometServer.Modules
 
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
-    using CometServer.Authentication.Basic;
-    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
     using CometServer.Exceptions;
@@ -317,7 +315,6 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             transactionManager.SetCachedDtoReadEnabled(true);
@@ -344,7 +341,7 @@ namespace CometServer.Modules
                 this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
 
                 // get prepared data source transaction
-                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
 
                 if (fromRevision > -1)
                 {
@@ -370,8 +367,8 @@ namespace CometServer.Modules
                 {
                     // gather all Things as indicated by the request URI 
                     var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
-                    
-                    things = this.GetContainmentResponse(requestUtils, transactionManager, serviceProvider, metaInfoProvider, transaction, TopContainer, routeSegments).ToList();
+
+                    things = (await this.GetContainmentResponse(requestUtils, transactionManager, serviceProvider, metaInfoProvider, transaction, TopContainer, routeSegments)).ToList();
                 }
 
                 await transaction.CommitAsync();
@@ -436,11 +433,6 @@ namespace CometServer.Modules
                 if (transaction != null)
                 {
                     await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
                 }
 
                 this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
@@ -617,7 +609,6 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task PostResponseData(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             var reqsw = Stopwatch.StartNew();
@@ -629,7 +620,7 @@ namespace CometServer.Modules
                 var dbsw = Stopwatch.StartNew();
                 this.logger.LogDebug("{request}:{requestToken} - Database operations started", postRequestData.MethodPathName.Sanitize(), requestToken);
 
-                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
 
                 // defer all reference data check until after transaction commit
                 using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED", transaction.Connection, transaction))
@@ -659,7 +650,7 @@ namespace CometServer.Modules
                 if (modelCreatorManager.IsUserTriggerDisable)
                 {
                     // re-enable user triggers
-                    transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                    transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
                     modelCreatorManager.EnableUserTrigger(transaction);
                     await transaction.CommitAsync();
                 }
@@ -683,7 +674,7 @@ namespace CometServer.Modules
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
-                transaction = transactionManager.SetupTransaction(ref connection, credentialsService.Credentials);
+                transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
                 var revisionResponse = revisionService.Get(transaction, TopContainer, fromRevision, true).ToArray();
                 await transaction.CommitAsync();
 
@@ -819,11 +810,6 @@ namespace CometServer.Modules
                     await transaction.DisposeAsync();
                 }
 
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
-                }
-
                 this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
@@ -855,8 +841,10 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private IEnumerable<Thing> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, NpgsqlTransaction transaction, string partition, string[] routeParams)
+        private async Task<IEnumerable<Thing>> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, NpgsqlTransaction transaction, string partition, string[] routeParams)
         {
+            var result = new List<Thing>();
+
             var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
             if (routeParams.Length == 1)
@@ -865,32 +853,28 @@ namespace CometServer.Modules
 
                 var things = processor.GetResource(TopContainer, partition, null, new RequestSecurityContext { ContainerReadAllowed = true });
 
-                foreach (var thing in things)
-                {
-                    yield return thing;
-                }
+                result.AddRange(things);
             }
             else
             {
-                var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition, routeParams, out var resolvedResourcePath);
+                var processRequestPathResult = await this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition, routeParams);
 
-                foreach (var thing in things)
-                {
-                    yield return thing;
-                }
+                result.AddRange(processRequestPathResult.RequestedResources);
 
-                if (resolvedResourcePath.Count > 1 && requestUtils.QueryParameters.IncludeReferenceData)
+                if (processRequestPathResult.ResourcePath.Count > 1 && requestUtils.QueryParameters.IncludeReferenceData)
                 {
                     // add reference data information if the resource is a model reference data library
-                    if (resolvedResourcePath.Last().GetType() == typeof(ModelReferenceDataLibrary))
+                    if (processRequestPathResult.ResourcePath.Last().GetType() == typeof(ModelReferenceDataLibrary))
                     {
-                        foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, processor, (ModelReferenceDataLibrary)resolvedResourcePath.Last()))
+                        foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, processor, (ModelReferenceDataLibrary)processRequestPathResult.ResourcePath.Last()))
                         {
-                            yield return thing;
+                            result.Add(thing);
                         }
                     }
                 }
             }
+
+            return result;
         }
     }
 }

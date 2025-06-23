@@ -295,10 +295,9 @@ namespace CometServer.Modules
                 await response.AsJson("not authorized");
                 return;
             }
-            
-            NpgsqlConnection connection = null;
+
             var credentials = credentialsService.Credentials;
-            var transaction = transactionManager.SetupTransaction(ref connection, credentials);
+            var transaction = await transactionManager.SetupTransactionAsync(credentials);
 
             transactionManager.SetCachedDtoReadEnabled(true);
             transactionManager.SetFullAccessState(true);
@@ -357,10 +356,10 @@ namespace CometServer.Modules
                 {
                     var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
 
-                    var things = this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
-                        new[] { nameof(EngineeringModel), engineeringModelIid.ToString() }, out _);
+                    var processRequestPathResult = await this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
+                        new[] { nameof(EngineeringModel), engineeringModelIid.ToString() });
 
-                    engineeringModels.AddRange(things);
+                    engineeringModels.AddRange(processRequestPathResult.RequestedResources);
                 }
 
                 var contentTypeKind = request.QueryContentTypeKind();
@@ -421,11 +420,6 @@ namespace CometServer.Modules
                 if (transaction != null)
                 {
                     await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
                 }
 
                 this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
@@ -494,7 +488,6 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task GetResponseData(HttpRequest httpRequest, HttpResponse httpResponse, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             transactionManager.SetCachedDtoReadEnabled(true);
@@ -533,11 +526,11 @@ namespace CometServer.Modules
                 this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
 
                 transaction = iterationContextRequest
-                    ? transactionManager.SetupTransaction(ref connection, credentials, iterationContextId)
-                    : transactionManager.SetupTransaction(ref connection, credentials);
+                    ? await transactionManager.SetupTransactionAsync(credentials, iterationContextId)
+                    : await transactionManager.SetupTransactionAsync(credentials);
 
                 var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
-                var modelSetup = DetermineEngineeringModelSetup(requestUtils, transactionManager, processor, routeSegments);
+                var modelSetup = await DetermineEngineeringModelSetup(requestUtils, transactionManager, processor, routeSegments);
                 var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
                 // set the participant information
@@ -578,7 +571,7 @@ namespace CometServer.Modules
                         string[] engineeringModelRouteSegments = { routeSegments[0], routeSegments[1] };
 
                         // gather all Things at engineeringmodel level as indicated by the request URI 
-                        resourceResponse.AddRange(this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, engineeringModelRouteSegments));
+                        resourceResponse.AddRange(await this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, engineeringModelRouteSegments));
 
                         // find and remove the engineeringModelInstance, that will be retrieved in the second go.
                         var engineeringModel = resourceResponse.SingleOrDefault(x => x.ClassKind == CDP4Common.CommonData.ClassKind.EngineeringModel);
@@ -586,7 +579,7 @@ namespace CometServer.Modules
                     }
 
                     // gather all Things as indicated by the request URI 
-                    resourceResponse.AddRange(this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, routeSegments));
+                    resourceResponse.AddRange(await this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, routeSegments));
 
                     if (resourceResponse.Count == 0)
                     {
@@ -724,11 +717,6 @@ namespace CometServer.Modules
                 if (transaction != null)
                 {
                     await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
                 }
 
                 this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
@@ -973,7 +961,6 @@ namespace CometServer.Modules
         /// </returns>
         protected async Task PostResponseData(PostRequestData postRequestData, string requestToken, HttpResponse httpResponse, CometTask cometTask, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService)
         {
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             var reqsw = Stopwatch.StartNew();
@@ -989,14 +976,14 @@ namespace CometServer.Modules
 
                 // get prepared data source transaction
                 var credentials = credentialsService.Credentials;
-                transaction = transactionManager.SetupTransaction(ref connection, credentials);
+                transaction = await transactionManager.SetupTransactionAsync(credentials);
 
                 // the route pattern enforces that there is atleast one route segment
                 var routeSegments = HttpRequestHelper.ParseRouteSegments(postRequestData.Path);
 
                 var resourceProcessor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
-                var modelSetup = DetermineEngineeringModelSetup(requestUtils, transactionManager, resourceProcessor, routeSegments);
+                var modelSetup = await DetermineEngineeringModelSetup(requestUtils, transactionManager, resourceProcessor, routeSegments);
 
                 var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
@@ -1067,7 +1054,7 @@ namespace CometServer.Modules
                 var fromRevision = requestUtils.QueryParameters.RevisionNumber;
 
                 // use new transaction to include latest database state
-                transaction = transactionManager.SetupTransaction(ref connection, credentials);
+                transaction = await transactionManager.SetupTransactionAsync(credentials);
                 var revisionResponse = revisionService.Get(transaction, partition, fromRevision, true).ToArray();
 
                 await transaction.CommitAsync();
@@ -1208,11 +1195,6 @@ namespace CometServer.Modules
                     await transaction.DisposeAsync();
                 }
 
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
-                }
-
                 this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
@@ -1315,22 +1297,25 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private IEnumerable<Thing> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
+        private async Task<IEnumerable<Thing>> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor resourceProcessor, string partition, EngineeringModelSetup modelSetup, string[] routeSegments)
         {
-            foreach (var thing in this.ProcessRequestPath(requestUtils, transactionManager, resourceProcessor, TopContainer, partition, routeSegments, out _))
-            {
-                yield return thing;
-            }
+            var result = new List<Thing>();
+
+            var processRequestPathResult = await this.ProcessRequestPath(requestUtils, transactionManager, resourceProcessor, TopContainer, partition, routeSegments);
+
+            result.AddRange(processRequestPathResult.RequestedResources);
 
             if (requestUtils.QueryParameters.IncludeReferenceData)
             {
-                transactionManager.SetDefaultContext(resourceProcessor.Transaction);
+                await transactionManager.SetDefaultContextAsync(resourceProcessor.Transaction);
 
                 foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, resourceProcessor, modelSetup))
                 {
-                    yield return thing;
+                    result.Add(thing);
                 }
             }
+
+            return result;
         }
 
         /// <summary>
@@ -1354,7 +1339,7 @@ namespace CometServer.Modules
         /// <exception cref="Exception">
         /// If engineering model could not be resolved
         /// </exception>
-        private static EngineeringModelSetup DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ResourceProcessor processor, string[] routeSegments)
+        private static async Task<EngineeringModelSetup> DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ResourceProcessor processor, string[] routeSegments)
         {
             // override query parameters to return only extent shallow
             requestUtils.OverrideQueryParameters = new QueryParameters();
@@ -1362,7 +1347,7 @@ namespace CometServer.Modules
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             // set the transaction to default context to retrieve SiteDirectory data
-            transactionManager.SetDefaultContext(processor.Transaction);
+            await transactionManager.SetDefaultContextAsync(processor.Transaction);
 
             // take first segment and try to resolve the engineering model setup for further processing
             var siteDir = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();

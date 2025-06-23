@@ -27,6 +27,7 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -62,9 +63,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="CDP4Common.DTO.IterationSetup"/>.
         /// </returns>
-        public virtual IEnumerable<IterationSetup> ReadByIteration(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null)
+        public virtual async Task<IEnumerable<IterationSetup>> ReadByIterationAsync(NpgsqlTransaction transaction, string partition, Guid iterationId, DateTime? instant = null)
         {
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sqlBuilder = new StringBuilder();
 
@@ -83,12 +84,17 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sqlBuilder.ToString();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            var result = new List<IterationSetup>();
+
+            while (await reader.ReadAsync())
             {
-                yield return this.MapToDto(reader);
+                var dto = this.MapToDto(reader);
+                result.Add(dto);
             }
+
+            return result;
         }
 
         /// <summary>

@@ -28,6 +28,7 @@ namespace CDP4Orm.Dao.Resolve
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Orm.Helper;
 
@@ -88,15 +89,15 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        public IEnumerable<Tuple<Guid, ContainerInfo>> Read(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        public async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> Read(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
                 // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-                return this.ReadInternalFromSiteDirectory(transaction, partition, typeName, ids).ToList();
+                return  (await this.ReadInternalFromSiteDirectory(transaction, partition, typeName, ids)).ToList();
             }
 
-            return this.ReadInternalFromEngineeringModel(transaction, partition, typeName, ids).ToList();
+            return (await this.ReadInternalFromEngineeringModel(transaction, partition, typeName, ids)).ToList();
         }
 
         /// <summary>
@@ -117,7 +118,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new StringBuilder();
 
@@ -134,16 +135,22 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
             command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            var result = new List<Tuple<Guid, ContainerInfo>>();
 
             while (reader.Read())
             {
-                yield return MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
+                var tuple = MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
+
+                result.Add(tuple);
             }
+
+            return result;
         }
 
         /// <summary>
@@ -193,7 +200,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private IEnumerable<Tuple<Guid, ContainerInfo>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new StringBuilder();
 
@@ -223,16 +230,22 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
             command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
+
+            var result = new List<Tuple<Guid, ContainerInfo>>();
 
             while (reader.Read())
             {
-                yield return MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
+                var tuple = MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
+
+                result.Add(tuple);
             }
+
+            return result;
         }
 
         /// <summary>

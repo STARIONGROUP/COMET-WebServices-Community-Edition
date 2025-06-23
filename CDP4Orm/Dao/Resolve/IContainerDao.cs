@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao.Resolve
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using Npgsql;
 
@@ -52,6 +53,6 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        IEnumerable<Tuple<Guid, ContainerInfo>> Read(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids);
+        Task<IEnumerable<Tuple<Guid, ContainerInfo>>> Read(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids);
     }
 }
