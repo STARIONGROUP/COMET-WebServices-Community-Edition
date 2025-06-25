@@ -48,8 +48,8 @@ namespace CDP4Orm.Dao.Resolve
         /// The <see cref="CDP4Common.DTO.Thing"/> instances to resolve information for.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="ResolveInfo"/>.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="ResolveInfo"/> as result.
         /// </returns>
-        Task<IEnumerable<ResolveInfo>> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids);
+        Task<IEnumerable<ResolveInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids);
     }
 }

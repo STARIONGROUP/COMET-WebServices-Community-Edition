@@ -53,6 +53,6 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        Task<IEnumerable<Tuple<Guid, ContainerInfo>>> Read(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids);
+        Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadAsync(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids);
     }
 }

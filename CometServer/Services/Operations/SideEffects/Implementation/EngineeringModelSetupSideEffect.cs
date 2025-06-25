@@ -228,7 +228,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var stopwatch = Stopwatch.StartNew();
                 this.Logger.LogInformation("Create revisions for created EngineeringModel");
-                this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
+                this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 stopwatch.Stop();
                 this.Logger.LogDebug("Revisions written in {time}[ms]", stopwatch.ElapsedMilliseconds);
@@ -238,7 +238,7 @@ namespace CometServer.Services.Operations.SideEffects
             this.CreateDefaultEngineeringModel(thing, container, transaction, partition);
 
             // Create revisions for created EngineeringModel
-            this.RevisionService.SaveRevisions(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
+            this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
         }
 
         /// <summary>

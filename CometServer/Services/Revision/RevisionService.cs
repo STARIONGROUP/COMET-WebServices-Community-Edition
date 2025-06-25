@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RevisionService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -29,6 +29,7 @@ namespace CometServer.Services
     using System.Collections.ObjectModel;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -91,16 +92,16 @@ namespace CometServer.Services
         /// should only be false for engineering-model data
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/>.
+        /// An awaitable <see cref="Task"/> having a collection of revised <see cref="Thing"/> as a result
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext)
         {
             if (partition == Cdp4TransactionManager.SITE_DIRECTORY_PARTITION && !useDefaultContext)
             {
                 throw new ArgumentException("the parameter shall be true for Sitedirectory data", nameof(useDefaultContext));
             }
 
-            return this.InternalGet(transaction, partition, revision, true, useDefaultContext).Select(x => x.Thing);
+            return (await this.InternalGetAsync(transaction, partition, revision, true, useDefaultContext)).Select(x => x.Thing);
         }
 
         /// <summary>
@@ -122,14 +123,15 @@ namespace CometServer.Services
         /// The latest revision to retrieve
         /// </param>
         /// <returns>
-        /// A collection of revised <see cref="Thing"/>
+        /// An awaitable <see cref="Task"/> having a collection of revised <see cref="Thing"/> as a result
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo)
         {
             // Set the transaction to retrieve the latest database state
             // TODO This will cause issue with older iterations
-            this.TransactionManager.SetDefaultContext(transaction);
-            return this.RevisionDao.ReadRevision(transaction, partition, identifier, revisionFrom, revisionTo);
+            await this.TransactionManager.SetDefaultContextAsync(transaction);
+            
+            return await this.RevisionDao.ReadRevisionAsync(transaction, partition, identifier, revisionFrom, revisionTo);
         }
 
         /// <summary>
@@ -149,16 +151,16 @@ namespace CometServer.Services
         /// should only be false for engineering-model data
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/>.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="Thing"/> as a result.
         /// </returns>
-        public IEnumerable<Thing> GetCurrentChanges(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext)
+        public async Task<IEnumerable<Thing>> GetCurrentChangesAsync(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext)
         {
             if (partition == Cdp4TransactionManager.SITE_DIRECTORY_PARTITION && !useDefaultContext)
             {
                 throw new ArgumentException("the parameter shall be true for Sitedirectory data", nameof(useDefaultContext));
             }
 
-            return this.InternalGet(transaction, partition, revision, false, useDefaultContext).Select(x => x.Thing);
+            return (await this.InternalGetAsync(transaction, partition, revision, false, useDefaultContext)).Select(x => x.Thing);
         }
 
         /// <summary>
@@ -177,11 +179,11 @@ namespace CometServer.Services
         /// The base revision number from which the query is performed
         /// </param>
         /// <returns>
-        /// A collection of saved <see cref="Thing"/>
+        /// An awaitable <see cref="Task"/> having a collection of saved <see cref="Thing"/> as a result
         /// </returns>
-        public IEnumerable<Thing> SaveRevisions(NpgsqlTransaction transaction, string partition, Guid actor, int revision)
+        public async Task<IEnumerable<Thing>> SaveRevisionsAsync(NpgsqlTransaction transaction, string partition, Guid actor, int revision)
         {
-            var thingRevisionInfos = this.InternalGet(transaction, partition, revision, false, true);
+            var thingRevisionInfos = await this.InternalGetAsync(transaction, partition, revision, false, true);
 
             var revisionsGroupedByPartitions = thingRevisionInfos.GroupBy(x => x.RevisionInfo.Partition)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.Thing).ToList());
@@ -190,8 +192,8 @@ namespace CometServer.Services
 
             foreach (var revisionsGroupdByPartition in revisionsGroupedByPartitions)
             {
-                this.RevisionDao.BulkWriteRevision(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value, actor);
-                this.CacheService.BulkWriteToCache(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
+                await this.RevisionDao.BulkWriteRevisionAsync(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value, actor);
+                await this.CacheService.BulkWriteToCache(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
             }
 
             this.Logger.LogDebug("Write to Cache and Revisions table done in {time}[ms]", stopwatch.ElapsedMilliseconds);
@@ -217,9 +219,9 @@ namespace CometServer.Services
         /// <param name="toRevision">
         /// The to Revision.
         /// </param>
-        public void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
+        public async Task InsertIterationRevisionLogAsync(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
         {
-            this.RevisionDao.InsertIterationRevisionLog(transaction, partition, iteration, fromRevision, toRevision);
+            await this.RevisionDao.InsertIterationRevisionLogAsync(transaction, partition, iteration, fromRevision, toRevision);
         }
 
         /// <summary>
@@ -235,9 +237,9 @@ namespace CometServer.Services
         /// <returns>
         /// The current or next available revision number
         /// </returns>
-        public int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition)
+        public async Task<int> GetRevisionForTransactionAsync(NpgsqlTransaction transaction, string partition)
         {
-            return this.RevisionDao.GetRevisionForTransaction(transaction, partition);
+            return await this.RevisionDao.GetRevisionForTransactionAsync(transaction, partition);
         }
 
         /// <summary>
@@ -261,23 +263,23 @@ namespace CometServer.Services
         /// <returns>
         /// A collection of <see cref="Thing"/> instances.
         /// </returns>
-        private ReadOnlyCollection<ThingRevisionInfo> InternalGet(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse, bool useDefaultContext)
+        private async Task<ReadOnlyCollection<ThingRevisionInfo>> InternalGetAsync(NpgsqlTransaction transaction, string partition, int revision, bool deltaResponse, bool useDefaultContext)
         {
             var result = new List<ThingRevisionInfo>();
 
             if (useDefaultContext)
             {
                 // Set the transaction to retrieve the latest database state
-                this.TransactionManager.SetDefaultContext(transaction);
+                await this.TransactionManager.SetDefaultContextAsync(transaction);
             }
             else
             {
-                this.TransactionManager.SetIterationContext(transaction, partition);
+                await this.TransactionManager.SetIterationContextAsync(transaction, partition);
             }
              
             var revisionInfoPerPartition = deltaResponse
-                                               ? this.RevisionDao.Read(transaction, partition, revision).GroupBy(x => x.Partition)
-                                               : this.RevisionDao.ReadCurrentRevisionChanges(transaction, partition, revision).GroupBy(x => x.Partition);
+                                               ? (await this.RevisionDao.ReadAsync(transaction, partition, revision)).GroupBy(x => x.Partition)
+                                               : (await this.RevisionDao.ReadCurrentRevisionChangesAsync(transaction, partition, revision)).GroupBy(x => x.Partition);
 
             // Use the revision model data (grouped by partition)
             foreach (var partitionInfo in revisionInfoPerPartition)

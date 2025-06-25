@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IRevisionResolver.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,11 +25,11 @@
 namespace CometServer.Services
 {
     using System;
-    using System.Collections.Generic;
-
-    using CDP4Orm.Dao.Revision;
+    using System.Threading.Tasks;
 
     using CometServer.Services.Protocol;
+
+    using FluentResults;
 
     using Npgsql;
 
@@ -50,8 +50,7 @@ namespace CometServer.Services
         /// </param>
         /// <param name="revisionFrom"><see cref="int"/> or <see cref="DateTime"/> type parameter that indicates the From revision number, or timestamp.</param>
         /// <param name="revisionTo"><see cref="int"/> or <see cref="DateTime"/> type parameter that indicates the To revision number, or timestamp.</param>
-        /// <param name="resolvedValues">A <see cref="ValueTuple"/> containing the resolved From revision number and To revision number.</param>
-        /// <returns>True is revision numbers have been resolved, otherwise false</returns>
-        bool TryResolve(NpgsqlTransaction transaction, string partition, object revisionFrom, object revisionTo, out (int FromRevision, int ToRevision, IEnumerable<RevisionRegistryInfo> RevisionRegistryInfoList) resolvedValues);
+        /// <returns>An awaitable <see cref="Task "/> having result of True if revision numbers have been resolved, otherwise false</returns>
+        Task<Result<RevisionResolveResult>> TryResolve(NpgsqlTransaction transaction, string partition, object revisionFrom, object revisionTo);
     }
 }

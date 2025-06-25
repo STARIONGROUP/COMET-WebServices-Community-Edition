@@ -87,7 +87,7 @@ namespace CDP4Orm.Dao.Cache
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="thing">The revised <see cref="Thing" /></param>
-        public async Task Write(NpgsqlTransaction transaction, string partition, Thing thing)
+        public async Task WriteAsync(NpgsqlTransaction transaction, string partition, Thing thing)
         {
             var table = GetThingCacheTableName(thing);
 
@@ -111,7 +111,7 @@ namespace CDP4Orm.Dao.Cache
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The collection of revised <see cref="Thing" />s</param>
-        public async Task BulkWrite(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
+        public async Task BulkWriteAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
         {
             var thingsGroupedByClasskind = things.GroupBy(x => x.ClassKind).ToDictionary(g => g.Key, g => g.ToList());
 

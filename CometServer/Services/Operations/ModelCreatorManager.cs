@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelCreatorManager.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Services.Operations
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -116,7 +117,7 @@ namespace CometServer.Services.Operations
         /// <param name="setupToCreate">The new <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        public void CreateEngineeringModelSetupFromSource(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task CreateEngineeringModelSetupFromSource(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var engineeringModelSetupThings = new List<Thing>();
             this.originalToCopyMap = new Dictionary<Thing, Thing>();
@@ -124,7 +125,7 @@ namespace CometServer.Services.Operations
             // retrieve all the site-directory data to copy
             this.RequestUtils.QueryParameters.IncludeReferenceData = true; // set to true only to retrieve all data to copy. set back to false once query is over
             this.RequestUtils.QueryParameters.ExtentDeep = true; // set to true only to retrieve all data to copy. set back to false once query is over
-            engineeringModelSetupThings.AddRange(this.EngineeringModelSetupService.GetDeep(transaction, SITE_DIRECTORY_PARTITION, new[] { source }, securityContext));
+            engineeringModelSetupThings.AddRange(this.EngineeringModelSetupService.GetDeep(transaction, SITE_DIRECTORY_PARTITION, [source], securityContext));
             this.RequestUtils.QueryParameters.IncludeReferenceData = false;
             this.RequestUtils.QueryParameters.ExtentDeep = false;
 
@@ -145,6 +146,7 @@ namespace CometServer.Services.Operations
             }
 
             var modelSetupBeforeResolve = setupToCreate.DeepClone<EngineeringModelSetup>();
+
             foreach (var originalToCopy in this.originalToCopyMap)
             {
                 originalToCopy.Value.ResolveCopy(originalToCopy.Key, this.originalToCopyMap);
@@ -179,7 +181,7 @@ namespace CometServer.Services.Operations
             copyOfActiveIterationSetup.IterationNumber = 1;
             copyOfActiveIterationSetup.IterationIid = Guid.NewGuid();
             copyOfActiveIterationSetup.SourceIterationSetup = null;
-            copyOfActiveIterationSetup.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
+            copyOfActiveIterationSetup.CreatedOn = await this.TransactionManager.GetTransactionTimeAsync(transaction);
 
             foreach (var activeIterationSetupToRemove in this.originalToCopyMap.Keys
                          .OfType<IterationSetup>()
@@ -203,7 +205,7 @@ namespace CometServer.Services.Operations
         /// <param name="newModelSetup">The new <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        public void CopyEngineeringModelData(EngineeringModelSetup newModelSetup, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task CopyEngineeringModelData(EngineeringModelSetup newModelSetup, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             // copy data of all concrete tables
             var modelSetupKvp = this.originalToCopyMap.SingleOrDefault(kvp => kvp.Key is EngineeringModelSetup);
@@ -221,21 +223,21 @@ namespace CometServer.Services.Operations
             var targetIterationPartition = targetPartition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
             // disable user triggers
-            this.DisableUserTrigger(transaction);
+            await this.DisableUserTrigger(transaction);
 
             // copy all data from the source to the target partition
-            this.Logger.LogDebug("Copy EngineeringModel data from {sourcePartition} to {targetPartition}", sourcePartition, targetPartition);
+            this.Logger.LogDebug("Copy EngineeringModel data from {SourcePartition} to {TargetPartition}", sourcePartition, targetPartition);
             this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
-            this.Logger.LogDebug("Copy Iteration data from {sourceIterationPartition} to {targetIterationPartition}", sourceIterationPartition, targetIterationPartition);
+            this.Logger.LogDebug("Copy Iteration data from {SourceIterationPartition} to {TargetIterationPartition}", sourceIterationPartition, targetIterationPartition);
             this.IterationService.CopyIterationAndResetCreatedOn(transaction, sourceIterationPartition, targetIterationPartition);
 
             // wipe the organizational participations
             this.IterationService.DeleteAllrganizationalParticipantThings(transaction, targetIterationPartition);
 
             // change id on Thing table for all other things
-            this.Logger.LogDebug("Modify Identifiers of EngineeringModel {targetPartition} data", targetPartition);
+            this.Logger.LogDebug("Modify Identifiers of EngineeringModel {TargetPartition} data", targetPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition);
-            this.Logger.LogDebug("Modify Identifiers of Iteration {targetIterationPartition} data", targetIterationPartition);
+            this.Logger.LogDebug("Modify Identifiers of Iteration {TargetIterationPartition} data", targetIterationPartition);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
@@ -250,7 +252,7 @@ namespace CometServer.Services.Operations
             newEngineeringModel.Iid = newModelSetup.EngineeringModelIid;
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
-            this.Logger.LogDebug("Modify Identifier of new EngineeringModel {oldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
+            this.Logger.LogDebug("Modify Identifier of new EngineeringModel {OldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
             this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, newEngineeringModel, oldIid);
 
             if (!this.EngineeringModelService.UpdateConcept(transaction, targetPartition, newEngineeringModel, null))
@@ -294,8 +296,8 @@ namespace CometServer.Services.Operations
                     }
 
                     // save revision-registry
-                    this.RevisionService.GetRevisionForTransaction(transaction, targetPartition);
-                    this.RevisionService.InsertIterationRevisionLog(transaction, targetPartition, iteration.Iid, null, null);
+                    await this.RevisionService.GetRevisionForTransactionAsync(transaction, targetPartition);
+                    await this.RevisionService.InsertIterationRevisionLogAsync(transaction, targetPartition, iteration.Iid, null, null);
 
                     // increase sequence number
                     this.EngineeringModelService.QueryNextIterationNumber(transaction, targetPartition);
@@ -316,7 +318,7 @@ namespace CometServer.Services.Operations
                 }
             }
 
-            this.Logger.LogDebug("modified {Count} references of things contained in the new engineering-model-setup in {Count} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
+            this.Logger.LogDebug("modified {Count} references of things contained in the new engineering-model-setup in {ElapsedMilliseconds} [ms]", modelThings.Count, sw.ElapsedMilliseconds);
 
             // IMPORTANT: re-enable user trigger once the current transaction is commited commited
         }
@@ -325,29 +327,29 @@ namespace CometServer.Services.Operations
         /// Disable the user-triggers in the engineering-model and iteration schema
         /// </summary>
         /// <param name="transaction">The transaction</param>
-        private void DisableUserTrigger(NpgsqlTransaction transaction)
+        private async Task DisableUserTrigger(NpgsqlTransaction transaction)
         {
             var stopwatch = Stopwatch.StartNew();
 
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            this.Logger.LogDebug("disable triggers for EngineeringModel {partition}", partition);
+            this.Logger.LogDebug("disable triggers for EngineeringModel {Partition}", partition);
             this.EngineeringModelService.ModifyUserTrigger(transaction, partition, false);
 
-            this.Logger.LogDebug("disable triggers for Iteration {iterationPartition}", iterationPartition);
+            this.Logger.LogDebug("disable triggers for Iteration {IterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, false);
 
             this.IsUserTriggerDisable = true;
             stopwatch.Stop();
-            this.Logger.LogDebug("Triggers disabling took {time}[ms]", stopwatch.ElapsedMilliseconds);
+            this.Logger.LogDebug("Triggers disabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
         }
 
         /// <summary>
         /// Enable the user-triggers in the engineering-model and iteration schema
         /// </summary>
         /// <param name="transaction">The current transaction</param>
-        public void EnableUserTrigger(NpgsqlTransaction transaction)
+        public async Task EnableUserTrigger(NpgsqlTransaction transaction)
         {
             if (!this.IsUserTriggerDisable)
             {
@@ -358,13 +360,13 @@ namespace CometServer.Services.Operations
             var partition = this.RequestUtils.GetEngineeringModelPartitionString(this.newModelIid);
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
-            this.Logger.LogDebug("enable triggers for EngineeringModel {partition}", partition);
+            this.Logger.LogDebug("enable triggers for EngineeringModel {Partition}", partition);
             this.EngineeringModelService.ModifyUserTrigger(transaction, partition, true);
 
-            this.Logger.LogDebug("enable triggers for Iteration {iterationPartition}", iterationPartition);
+            this.Logger.LogDebug("enable triggers for Iteration {IterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, true);
             stopwatch.Stop();
-            this.Logger.LogDebug("Triggers enabling took {time}[ms]", stopwatch.ElapsedMilliseconds);
+            this.Logger.LogDebug("Triggers enabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
         }
     }
 }

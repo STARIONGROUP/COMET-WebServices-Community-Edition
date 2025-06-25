@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IRevisionService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -55,9 +56,9 @@ namespace CometServer.Services
         /// Indicates whether the default context shall be used. Else use the request context (set at module-level).
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/>.
+        /// An awaitable <see cref="Task"/> having list of instances of <see cref="Thing"/> as a result.
         /// </returns>
-        IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext);
+        Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext);
 
         /// <summary>
         /// Gets the revisions of the <see cref="Thing"/> with the given <paramref name="{Guid}"/>
@@ -78,9 +79,9 @@ namespace CometServer.Services
         /// The latest revision to retrieve
         /// </param>
         /// <returns>
-        /// A collection of revised <see cref="Thing"/>
+        /// An awaitable <see cref="Task"/> having a collection of revised <see cref="Thing"/> as a result
         /// </returns>
-        IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo);
+        Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, Guid identifier, int revisionFrom, int revisionTo);
 
         /// <summary>
         /// Save The revision of a <see cref="Thing"/>
@@ -98,9 +99,9 @@ namespace CometServer.Services
         /// The base revision number from which the query is performed
         /// </param>
         /// <returns>
-        /// A collection of saved <see cref="Thing"/>
+        /// An awaitable <see cref="Task"/> having a collection of saved <see cref="Thing"/> as a result
         /// </returns>
-        IEnumerable<Thing> SaveRevisions(NpgsqlTransaction transaction, string partition, Guid actor, int revision);
+        Task<IEnumerable<Thing>> SaveRevisionsAsync(NpgsqlTransaction transaction, string partition, Guid actor, int revision);
 
         /// <summary>
         /// Insert new values into the IterationRevisionLog table
@@ -120,7 +121,10 @@ namespace CometServer.Services
         /// <param name="toRevision">
         /// The to Revision.
         /// </param>
-        void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision);
+        /// <returns>
+        /// An awaitable <see ="Task"/> that completes when the operation is done
+        /// </returns>
+        Task InsertIterationRevisionLogAsync(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision);
 
         /// <summary>
         /// Gets a unique revision number for this transaction by reading it from the RevisionRegistry table, or adding it there if it does not exist yet
@@ -133,9 +137,9 @@ namespace CometServer.Services
         /// The partition
         /// </param>
         /// <returns>
-        /// The current or next available revision number
+        /// An awaitable <see cref="Task"/> having the current or next available revision number as a result
         /// </returns>
-        int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition);
+        Task<int> GetRevisionForTransactionAsync(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Get the requested revision data from the ORM layer.
@@ -154,8 +158,8 @@ namespace CometServer.Services
         /// should only be false for engineering-model data
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/>.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="Thing"/> as a result.
         /// </returns>
-        IEnumerable<Thing> GetCurrentChanges(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext);
+        Task<IEnumerable<Thing>> GetCurrentChangesAsync(NpgsqlTransaction transaction, string partition, int revision, bool useDefaultContext);
     }
 }

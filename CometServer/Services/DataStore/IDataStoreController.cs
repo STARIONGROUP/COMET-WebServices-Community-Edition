@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IDataStoreController.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services.DataStore
 {
+    using System.Threading.Tasks;
+
     using Npgsql;
 
     /// <summary>
@@ -34,7 +36,10 @@ namespace CometServer.Services.DataStore
         /// <summary>
         /// Creates a clone of the data store.
         /// </summary>
-        void CloneDataStore();
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns>
+        Task CloneDataStore();
 
         /// <summary>
         /// The restore data store.
@@ -42,7 +47,10 @@ namespace CometServer.Services.DataStore
         /// <exception cref="System.IO.FileNotFoundException">
         /// If the file to restore from is not found
         /// </exception>
-        void RestoreDataStore();
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns>
+        Task RestoreDataStore();
 
         /// <summary>
         /// Drops all connections to a data store.
@@ -53,6 +61,9 @@ namespace CometServer.Services.DataStore
         /// <param name="connection">
         /// The connection to the managing data store.
         /// </param>
-        void DropDataStoreConnections(string dataStoreName, NpgsqlConnection connection);
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns>
+        Task DropDataStoreConnections(string dataStoreName, NpgsqlConnection connection);
     }
 }

@@ -42,7 +42,7 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="thing">The revised <see cref="Thing"/></param>
-        Task Write(NpgsqlTransaction transaction, string partition, Thing thing);
+        Task WriteAsync(NpgsqlTransaction transaction, string partition, Thing thing);
 
         /// <summary>
         /// Save a collection of <see cref="Thing"/> to cache tables
@@ -50,6 +50,6 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The collection of revised <see cref="Thing"/>s</param>
-        Task BulkWrite(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things);
+        Task BulkWriteAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things);
     }
 }

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RevisionResolver.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,12 +25,14 @@
 namespace CometServer.Services
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Orm.Dao.Revision;
 
     using CometServer.Services.Protocol;
+
+    using FluentResults;
 
     using Npgsql;
 
@@ -56,20 +58,18 @@ namespace CometServer.Services
         /// </param>
         /// <param name="revisionFrom"><see cref="int"/> or <see cref="DateTime"/> type parameter that indicates the From revision number, or timestamp.</param>
         /// <param name="revisionTo"><see cref="int"/> or <see cref="DateTime"/> type parameter that indicates the To revision number, or timestamp.</param>
-        /// <param name="resolvedValues">A <see cref="ValueTuple"/> containing the resolved From revision number and To revision number.</param>
-        /// <returns>True is revision numbers have been resolved, otherwise false</returns>
-        public bool TryResolve(NpgsqlTransaction transaction, string partition, object revisionFrom, object revisionTo, out (int FromRevision, int ToRevision, IEnumerable<RevisionRegistryInfo> RevisionRegistryInfoList) resolvedValues)
+        /// <returns>An awaitable <see cref="Task "/> having result of True if revision numbers have been resolved, otherwise false</returns>
+        public async Task<Result<RevisionResolveResult>> TryResolve(NpgsqlTransaction transaction, string partition, object revisionFrom, object revisionTo)
         {
             var resolvedRevisionFrom = 0;
             var resolvedRevisionTo = int.MaxValue;
 
             if (revisionFrom == null && revisionTo == null)
             {
-                resolvedValues = default((int, int, IEnumerable<RevisionRegistryInfo> RevisionRegistryInfoList));
-                return false;
+                Result.Fail("No revisions to search for");
             }
 
-            var revisions = this.RevisionDao.ReadRevisionRegistry(transaction, partition);
+            var revisions = await this.RevisionDao.ReadRevisionRegistryAsync(transaction, partition);
 
             if (revisions.Count != 0)
             {
@@ -95,9 +95,7 @@ namespace CometServer.Services
                 resolvedRevisionTo = revisions.OrderBy(x => x.Instant).LastOrDefault(x => x.Instant <= toAsDateTime)?.Revision ?? resolvedRevisionTo;
             }
 
-            resolvedValues = (resolvedRevisionFrom, resolvedRevisionTo, revisions.Where(x => x.Revision >= resolvedRevisionFrom && x.Revision <= resolvedRevisionTo));
-
-            return true;
+            return Result.Ok(new RevisionResolveResult(resolvedRevisionFrom, resolvedRevisionTo, revisions.Where(x => x.Revision >= resolvedRevisionFrom && x.Revision <= resolvedRevisionTo)));
         }
     }
 }

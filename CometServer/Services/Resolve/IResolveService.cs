@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IResolveService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Orm.Dao.Resolve;
 
@@ -48,7 +49,10 @@ namespace CometServer.Services
         /// <param name="resolvableInfo">
         /// The resolvable info placeholders.
         /// </param>
-        void ResolveItems(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo);
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns> 
+        Task ResolveItems(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo);
 
         /// <summary>
         /// Resolve missing containers from data store.
@@ -63,8 +67,8 @@ namespace CometServer.Services
         /// The guid of the item to resolve type name for.
         /// </param>
         /// <returns>
-        /// The <see cref="string"/> type name of the supplied item.
+        /// An awaitable <see cref="Task"/> having the <see cref="string"/> type name of the supplied item as a result.
         /// </returns> 
-        string ResolveTypeNameByGuid(NpgsqlTransaction transaction, string partition, Guid iid);
+        Task<string> ResolveTypeNameByGuid(NpgsqlTransaction transaction, string partition, Guid iid);
     }
 }

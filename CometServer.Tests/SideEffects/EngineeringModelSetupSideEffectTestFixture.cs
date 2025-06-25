@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -183,11 +185,11 @@ namespace CometServer.Tests.SideEffects
                 this.securityContext.Object)).Returns(new[] { option });
 
             this.revisionService.Setup(
-                x => x.SaveRevisions(
+                x => x.SaveRevisionsAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<Guid>(),
-                    It.IsAny<int>())).Returns(new List<Thing>());
+                    It.IsAny<int>())).Returns(Task.FromResult(new List<Thing>().AsEnumerable()));
 
             this.engineeringModelDao.Setup(x => x.GetNextIterationNumber(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(1);
         }

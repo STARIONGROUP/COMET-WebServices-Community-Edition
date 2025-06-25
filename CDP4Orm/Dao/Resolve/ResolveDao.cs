@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ResolveDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -30,6 +30,7 @@ namespace CDP4Orm.Dao.Resolve
     using System.Threading.Tasks;
 
     using Npgsql;
+
     using NpgsqlTypes;
 
     /// <summary>
@@ -52,13 +53,13 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ResolveInfo"/>.
         /// </returns>
-        public async Task<IEnumerable<ResolveInfo>> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        public async Task<IEnumerable<ResolveInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
             // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
             
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return ReadSiteDirectoryThing(transaction, partition, ids).ToList();
+                return (await ReadSiteDirectoryThing(transaction, partition, ids)).ToList();
             }
 
             // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
@@ -80,7 +81,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ResolveInfo"/>.
         /// </returns>
-        private static IEnumerable<ResolveInfo> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        private static async Task<IEnumerable<ResolveInfo>> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -91,16 +92,20 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
             command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            var result = new List<ResolveInfo>();
+
+            while (await reader.ReadAsync())
             {
-                yield return MapToSiteDirectoryDto(reader);
+                result.Add(MapToSiteDirectoryDto(reader));
             }
+
+            return result;
         }
 
         /// <summary>
@@ -147,7 +152,7 @@ namespace CDP4Orm.Dao.Resolve
 
             command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
 
-            await using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
             var result = new List<ResolveInfo>();
 

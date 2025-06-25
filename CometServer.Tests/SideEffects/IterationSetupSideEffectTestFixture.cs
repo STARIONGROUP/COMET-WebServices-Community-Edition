@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -43,6 +43,7 @@ namespace CometServer.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CometServer.Authorization;
     using CometServer.Exceptions;
@@ -103,18 +104,18 @@ namespace CometServer.Tests.SideEffects
             this.mockedEngineeringModelService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(returnedEngineeringModels);
             this.mockedEngineeringModelService.Setup(x => x.AddToCollectionProperty(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<Thing>())).Returns(true);
 
-            this.mockedTransactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.UtcNow);
+            this.mockedTransactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.UtcNow));
 
             this.mockedRequestUtils.Setup(x => x.GetEngineeringModelPartitionString(It.IsAny<Guid>())).Returns("EngineeringModel");
             this.mockedCredentialsService.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(new Guid(), 1) });
 
             this.mockedRevisionService
                 .Setup(
-                    x => x.SaveRevisions(
+                    x => x.SaveRevisionsAsync(
                         It.IsAny<NpgsqlTransaction>(),
                         It.IsAny<string>(),
                         It.IsAny<Guid>(),
-                        It.IsAny<int>())).Returns(new List<Thing>());
+                        It.IsAny<int>())).Returns(Task.FromResult(new List<Thing>().AsEnumerable()));
         }
 
         [Test]

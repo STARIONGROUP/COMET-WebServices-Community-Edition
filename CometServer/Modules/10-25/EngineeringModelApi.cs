@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelApi.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -22,6 +22,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
+#pragma warning disable S6667
 namespace CometServer.Modules
 {
     using System;
@@ -89,7 +90,7 @@ namespace CometServer.Modules
         /// The supported get query parameters.
         /// </summary>
         private static readonly string[] SupportedGetQueryParameters =
-        {
+        [
             QueryParameters.ExtentQuery,
             QueryParameters.IncludeReferenceDataQuery,
             QueryParameters.IncludeAllContainersQuery,
@@ -100,16 +101,16 @@ namespace CometServer.Modules
             QueryParameters.ClassKindQuery,
             QueryParameters.CategoryQuery,
             QueryParameters.CherryPickQuery
-        };
+        ];
 
         /// <summary>
         /// The supported post query parameter.
         /// </summary>
         private static readonly string[] SupportedPostQueryParameter =
-        {
+        [
             QueryParameters.RevisionNumberQuery,
             QueryParameters.WaitTimeQuery
-        };
+        ];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="EngineeringModelApi"/> class
@@ -194,7 +195,7 @@ namespace CometServer.Modules
                 }
                 catch (AuthorizationException)
                 {
-                    this.logger.LogWarning("The {RequestToken} POST REQUEST was not authorized for {Identity}", identity);
+                    this.logger.LogWarning("The {RequestToken} POST REQUEST was not authorized for {Identity}", requestToken, identity);
 
                     res.UpdateWithNotAutherizedSettings();
                     await res.AsJson("not authorized");
@@ -211,7 +212,7 @@ namespace CometServer.Modules
                 }
                 catch (BadRequestException ex)
                 {
-                    this.logger.LogWarning("Request {requestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
+                    this.logger.LogWarning("Request {RequestToken} failed as BadRequest \n {ErrorMessage}", requestToken, ex.Message);
 
                     this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -220,7 +221,7 @@ namespace CometServer.Modules
                 }
                 catch (Exception ex)
                 {
-                    this.logger.LogError("Request {requestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
+                    this.logger.LogError("Request {RequestToken} failed as InternalServerError \n {ErrorMessage}", requestToken, ex.Message);
 
                     cometTask.FinishedAt = DateTime.Now;
                     cometTask.StatusKind = StatusKind.FAILED;
@@ -233,7 +234,7 @@ namespace CometServer.Modules
 
                 if (postRequestData.IsMultiPart && requestUtils.QueryParameters.WaitTime > 0)
                 {
-                    this.logger.LogWarning("Request {requestToken} failed as BadRequest: a POST request may not have a wait time when it is multipart", requestToken);
+                    this.logger.LogWarning("Request {RequestToken} failed as BadRequest: a POST request may not have a wait time when it is multipart", requestToken);
 
                     this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: "BAD REQUEST - a POST request may not have a wait time when it is multipart");
 
@@ -305,7 +306,7 @@ namespace CometServer.Modules
             var stopwatch = Stopwatch.StartNew();
             var requestToken = this.TokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
+            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", request.QueryNameMethodPath(), requestToken);
             
             try
             {
@@ -385,7 +386,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
 
                 response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await response.AsJson($"exception:{exception.Message}");
@@ -397,7 +398,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
 
                 response.StatusCode = (int)HttpStatusCode.NotFound;
                 await response.AsJson($"exception:{exception.Message}");
@@ -409,7 +410,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(exception, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                this.logger.LogError(exception, "{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
 
                 // error handling
                 response.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -422,7 +423,7 @@ namespace CometServer.Modules
                     await transaction.DisposeAsync();
                 }
 
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
+                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
             }
         }
 
@@ -497,7 +498,7 @@ namespace CometServer.Modules
 
             var contentTypeKind = httpRequest.QueryContentTypeKind();
 
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
 
             try
             {
@@ -523,7 +524,7 @@ namespace CometServer.Modules
                 var credentials = credentialsService.Credentials;
 
                 var dbsw = Stopwatch.StartNew();
-                this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+                this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
 
                 transaction = iterationContextRequest
                     ? await transactionManager.SetupTransactionAsync(credentials, iterationContextId)
@@ -543,11 +544,13 @@ namespace CometServer.Modules
                 if (fromRevision > -1)
                 {
                     // gather all Things that are newer then the indicated revision
-                    resourceResponse.AddRange(revisionService.Get(transaction, partition, fromRevision, false));
+                    resourceResponse.AddRange(await revisionService.GetAsync(transaction, partition, fromRevision, false));
                 }
-                else if (revisionResolver.TryResolve(transaction, partition, requestUtils.QueryParameters.RevisionFrom, requestUtils.QueryParameters.RevisionTo, out var resolvedValues))
+                else if (await revisionResolver.TryResolve(transaction, partition, requestUtils.QueryParameters.RevisionFrom, requestUtils.QueryParameters.RevisionTo) is { IsSuccess: true } resolveResult)
                 {
                     var iid = routeSegments.Last();
+
+                    var resolvedValues = resolveResult.Value;
 
                     if (!Guid.TryParse(iid, out var guid))
                     {
@@ -556,7 +559,7 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    resourceResponse.AddRange(revisionService.Get(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
+                    resourceResponse.AddRange(await revisionService.GetAsync(transaction, partition, guid, resolvedValues.FromRevision, resolvedValues.ToRevision));
                 }
                 else
                 {
@@ -568,7 +571,7 @@ namespace CometServer.Modules
 
                     if (routeSegments.Length == 4 && routeSegments[2] == "iteration" && requestUtils.QueryParameters.ExtentDeep)
                     {
-                        string[] engineeringModelRouteSegments = { routeSegments[0], routeSegments[1] };
+                        string[] engineeringModelRouteSegments = [routeSegments[0], routeSegments[1]];
 
                         // gather all Things at engineeringmodel level as indicated by the request URI 
                         resourceResponse.AddRange(await this.GetContainmentResponse(requestUtils, transactionManager, processor, partition, modelSetup, engineeringModelRouteSegments));
@@ -622,19 +625,19 @@ namespace CometServer.Modules
 
                 await transaction.CommitAsync();
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
+                this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, dbsw.ElapsedMilliseconds);
 
                 // obfuscate if needed
                 if (modelSetup.OrganizationalParticipant.Count != 0)
                 {
                     var obfsw = Stopwatch.StartNew();
                     
-                    this.logger.LogInformation("{request}:{requestToken} - Model has Organizational Participation assigned. Obfuscation enabled.", httpRequest.QueryNameMethodPath(), requestToken);
+                    this.logger.LogInformation("{Request}:{RequestToken} - Model has Organizational Participation assigned. Obfuscation enabled.", httpRequest.QueryNameMethodPath(), requestToken);
 
                     obfuscationService.ObfuscateResponse(resourceResponse, credentials);
 
                     obfsw.Stop();
-                    this.logger.LogInformation("{request}:{requestToken} - Obfuscation completed in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, obfsw.ElapsedMilliseconds);
+                    this.logger.LogInformation("{Request}:{RequestToken} - Obfuscation completed in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, obfsw.ElapsedMilliseconds);
                 }
 
                 var fileRevisions = resourceResponse.OfType<FileRevision>().ToList();
@@ -650,7 +653,7 @@ namespace CometServer.Modules
                 {
                     var routeSegmentList = routeSegments.ToList();
 
-                    if (this.IsValidDomainFileStoreArchiveRoute(routeSegmentList))
+                    if (IsValidDomainFileStoreArchiveRoute(routeSegmentList))
                     {
                         var iterationPartition = requestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
 
@@ -658,7 +661,7 @@ namespace CometServer.Modules
                         return;
                     }
 
-                    if (this.IsValidCommonFileStoreArchiveRoute(routeSegmentList))
+                    if (IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
                         await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
                         return;
@@ -682,7 +685,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 httpResponse.StatusCode = (int)HttpStatusCode.Unauthorized;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -694,7 +697,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 httpResponse.StatusCode = (int)HttpStatusCode.NotFound;
                 await httpResponse.AsJson($"exception:{ex.Message}");
@@ -706,7 +709,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex,"{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogError(ex,"{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -719,7 +722,7 @@ namespace CometServer.Modules
                     await transaction.DisposeAsync();
                 }
 
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
@@ -898,11 +901,11 @@ namespace CometServer.Modules
             if (completedTask == longRunningCometTask)
             {
                 await longRunningCometTask;
-                this.logger.LogInformation("The task {id} for actor {actor} completed within the requsted wait time {waittime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                this.logger.LogInformation("The task {Id} for actor {Actor} completed within the requsted wait time {WaitTime}", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
             }
             else
             {
-                this.logger.LogInformation("The task {id} for actor {actor} did not complete within the requsted wait time {waittime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
+                this.logger.LogInformation("The task {Id} for actor {Actor} did not complete within the requsted wait time {WaitTime}; the CometTask is returned.", cometTask.Id, cometTask.Actor, requestUtils.QueryParameters.WaitTime);
 
                 await httpResponse.AsJson(cometTask);
             }
@@ -965,14 +968,14 @@ namespace CometServer.Modules
 
             var reqsw = Stopwatch.StartNew();
 
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName.Sanitize(), requestToken);
+            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", postRequestData.MethodPathName.Sanitize(), requestToken);
 
             try
             {
-                this.logger.LogDebug("{request} - Request {requestToken} is mutlipart: {isMultiPart}", postRequestData.MethodPathName.Sanitize(), requestToken, postRequestData.IsMultiPart);
+                this.logger.LogDebug("{Request} - Request {RequestToken} is multipart: {IsMultiPart}", postRequestData.MethodPathName.Sanitize(), requestToken, postRequestData.IsMultiPart);
 
                 var dbsw = Stopwatch.StartNew();
-                this.logger.LogDebug("{request}:{requestToken} - Database operations started", postRequestData.MethodPathName.Sanitize(), requestToken);
+                this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", postRequestData.MethodPathName.Sanitize(), requestToken);
 
                 // get prepared data source transaction
                 var credentials = credentialsService.Credentials;
@@ -1006,13 +1009,13 @@ namespace CometServer.Modules
                 }
 
                 // defer all reference data check until after transaction commit
-                using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction))
+                await using (var command = new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED;", transaction.Connection, transaction))
                 {
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
 
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
-                var transactionRevision = revisionService.GetRevisionForTransaction(transaction, partition);
+                var transactionRevision = await revisionService.GetRevisionForTransactionAsync(transaction, partition);
 
                 operationProcessor.Process(postRequestData.OperationData, transaction, partition, postRequestData.Files);
 
@@ -1020,12 +1023,12 @@ namespace CometServer.Modules
 
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
-                    var initiallyChangedThings = revisionService.GetCurrentChanges(transaction, partition, transactionRevision, true).ToList();
+                    var initiallyChangedThings = (await revisionService.GetCurrentChangesAsync(transaction, partition, transactionRevision, true)).ToList();
                     changeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
                 }
 
                 // save revision-history
-                var changedThings = revisionService.SaveRevisions(transaction, partition, actor, transactionRevision).ToList();
+                var changedThings = (await revisionService.SaveRevisionsAsync(transaction, partition, actor, transactionRevision)).ToList();
                 
                 await transaction.CommitAsync();
 
@@ -1034,7 +1037,7 @@ namespace CometServer.Modules
 
                 this.CometTaskService.AddOrUpdateSuccessfulTask(cometTask, transactionRevision);
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
+                this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
 
                 if (requestUtils.QueryParameters.RevisionNumber == -1)
                 {
@@ -1055,11 +1058,11 @@ namespace CometServer.Modules
 
                 // use new transaction to include latest database state
                 transaction = await transactionManager.SetupTransactionAsync(credentials);
-                var revisionResponse = revisionService.Get(transaction, partition, fromRevision, true).ToArray();
+                var revisionResponse = (await revisionService.GetAsync(transaction, partition, fromRevision, true)).ToArray();
 
                 await transaction.CommitAsync();
 
-                this.logger.LogDebug("{request}:{requestToken} - Database operations completed in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
+                this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
 
                 switch (postRequestData.ContentType)
                 {
@@ -1078,7 +1081,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -1092,7 +1095,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"FORBIDDEN - {ex.Message}");
 
@@ -1107,7 +1110,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{Request}:{RequestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -1122,7 +1125,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - InvalidData failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
+                this.logger.LogWarning("{Request}:{RequestToken} - InvalidData failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.BadRequest;
@@ -1135,7 +1138,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"UNAUTHORIZED - {ex.Message}");
 
@@ -1150,7 +1153,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"UNAUTHORIZED - {ex.Message}");
 
@@ -1165,7 +1168,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogWarning("{request}:{requestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogWarning("{Request}:{RequestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"BAD REQUEST - {ex.Message}");
 
@@ -1180,7 +1183,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, "{request}:{requestToken} - Failed after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogError(ex, "{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
 
                 this.CometTaskService.AddOrUpdateTask(cometTask, finishedAt: DateTime.Now, statusKind: StatusKind.FAILED, error: $"INTERNAL SERVER ERROR - {ex.Message}");
 
@@ -1195,7 +1198,7 @@ namespace CometServer.Modules
                     await transaction.DisposeAsync();
                 }
 
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 
@@ -1224,7 +1227,7 @@ namespace CometServer.Modules
                         var multipartjson = await streamReader.ReadToEndAsync();
                         bodyStream.Position = 0;
 
-                        this.logger.LogTrace("multipart post JSON: {multipartjson}", multipartjson);
+                        this.logger.LogTrace("multipart post JSON: {MultipartJson}", multipartjson);
                     }
 
                     return bodyStream;
@@ -1434,7 +1437,7 @@ namespace CometServer.Modules
         /// </summary>
         /// <param name="routeSegmentList"><see cref="IEnumerable{String}"/> that contains the route segments</param>
         /// <returns>True if the route is valid, otherwise false</returns>
-        public bool IsValidDomainFileStoreArchiveRoute(IList<string> routeSegmentList)
+        public static bool IsValidDomainFileStoreArchiveRoute(IList<string> routeSegmentList)
         {
             var domainFileStoreRouteSegment = routeSegmentList.IndexOf("domainFileStore");
 
@@ -1466,7 +1469,7 @@ namespace CometServer.Modules
         /// </summary>
         /// <param name="routeSegmentList"><see cref="IEnumerable{String}"/> that contains the route segments</param>
         /// <returns>True if the route is valid, otherwise false</returns>
-        public bool IsValidCommonFileStoreArchiveRoute(IList<string> routeSegmentList)
+        public static bool IsValidCommonFileStoreArchiveRoute(IList<string> routeSegmentList)
         {
             var commonFileStoreRouteSegment = routeSegmentList.IndexOf("commonFileStore");
 

@@ -143,7 +143,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             foreach (var iterationSetup in iterationSetupsToUpdate.Where(x => x.FrozenOn == null && x.Iid != thing.Iid))
             {
-                iterationSetup.FrozenOn = this.TransactionManager.GetTransactionTime(transaction);
+                iterationSetup.FrozenOn = this.TransactionManager.GetTransactionTimeAsync(transaction);
                 this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
             }
 
@@ -193,10 +193,10 @@ namespace CometServer.Services.Operations.SideEffects
             // Create revisions for created Iteration and updated EngineeringModel
             var actor = this.CredentialsService.Credentials.Person.Iid;
 
-            this.TransactionManager.SetDefaultContext(transaction);
+            this.TransactionManager.SetDefaultContextAsync(transaction);
             this.TransactionManager.SetCachedDtoReadEnabled(false);
-            var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
-            this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+            var transactionRevision = this.RevisionService.GetRevisionForTransactionAsync(transaction, engineeringModelPartition);
+            this.RevisionService.SaveRevisionsAsync(transaction, engineeringModelPartition, actor, transactionRevision);
         }
 
         /// <summary>
@@ -353,8 +353,8 @@ namespace CometServer.Services.Operations.SideEffects
 
                 // Create revisions for deleted Iteration and updated EngineeringModel
                 var actor = this.CredentialsService.Credentials.Person.Iid;
-                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
-                this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+                var transactionRevision = this.RevisionService.GetRevisionForTransactionAsync(transaction, engineeringModelPartition);
+                this.RevisionService.SaveRevisionsAsync(transaction, engineeringModelPartition, actor, transactionRevision);
             }
             else 
             {

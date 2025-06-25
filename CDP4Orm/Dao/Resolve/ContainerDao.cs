@@ -89,15 +89,15 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        public async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> Read(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        public async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadAsync(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
                 // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-                return  (await this.ReadInternalFromSiteDirectory(transaction, partition, typeName, ids)).ToList();
+                return  (await this.ReadInternalFromSiteDirectoryAsync(transaction, partition, typeName, ids)).ToList();
             }
 
-            return (await this.ReadInternalFromEngineeringModel(transaction, partition, typeName, ids)).ToList();
+            return (await this.ReadInternalFromEngineeringModelAsync(transaction, partition, typeName, ids)).ToList();
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadInternalFromSiteDirectory(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadInternalFromSiteDirectoryAsync(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new StringBuilder();
 
@@ -200,7 +200,7 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        private async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadInternalFromEngineeringModel(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        private async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadInternalFromEngineeringModelAsync(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             var sqlBuilder = new StringBuilder();
 
