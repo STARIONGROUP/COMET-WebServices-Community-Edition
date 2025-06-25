@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterTypeSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services.Operations.SideEffects.Implementation
 {
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using CometServer.Services.Authorization;
@@ -66,14 +68,10 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(ParameterType thing, Thing container, ParameterType originalThing,
+        public override async Task AfterCreate(ParameterType thing, Thing container, ParameterType originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.DefaultValueArrayFactory.Reset();
-
-            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.CachedReferenceDataService.Reset();
+            await this.ResetData();
         }
 
         /// <summary>
@@ -97,14 +95,10 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(ParameterType thing, Thing container, ParameterType originalThing,
+        public override async Task AfterDelete(ParameterType thing, Thing container, ParameterType originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.DefaultValueArrayFactory.Reset();
-
-            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.CachedReferenceDataService.Reset();
+            await this.ResetData();
         }
 
         /// <summary>
@@ -128,14 +122,24 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(ParameterType thing, Thing container, ParameterType originalThing, NpgsqlTransaction transaction,
+        public override async Task AfterUpdate(ParameterType thing, Thing container, ParameterType originalThing, NpgsqlTransaction transaction,
             string partition, ISecurityContext securityContext)
+        {
+            await this.ResetData();
+        }
+
+        /// <summary>
+        /// Restes the necessary data
+        /// </summary>
+        private Task ResetData()
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
 
             // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.CachedReferenceDataService.Reset();
+
+            return Task.CompletedTask;
         }
     }
 }

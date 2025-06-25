@@ -400,7 +400,7 @@ namespace CometServer.Tests.SideEffects
             this.actualFiniteStateService.Setup(
                 x => x.DeleteConcept(this.transaction, this.partition, this.as12, this.asl1)).Returns(true);
 
-            this.sideEffect.AfterCreate(this.ps12, this.psl1, originalThing, this.transaction, this.partition, this.securityContext.Object);
+            this.sideEffect.AfterCreateAsync(this.ps12, this.psl1, originalThing, this.transaction, this.partition, this.securityContext.Object);
 
             this.actualFiniteStateService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ActualFiniteState>(), this.asl1, -1), Times.Exactly(4));
 

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ActualFiniteStateListSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services.Operations.SideEffects
 {
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -68,9 +69,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterCreate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.FiniteStateLogicService.UpdateActualFinisteStateList(thing, (Iteration)container, transaction, partition, securityContext);
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -94,7 +97,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterUpdate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (!thing.PossibleFiniteStateList.All(x => originalThing.PossibleFiniteStateList.Any(y => y.K == x.K && y.V.Equals(x.V)))
                 || thing.PossibleFiniteStateList.Count != originalThing.PossibleFiniteStateList.Count)
@@ -102,6 +105,8 @@ namespace CometServer.Services.Operations.SideEffects
                 // Update all actualFiniteStates
                 this.FiniteStateLogicService.UpdateActualFinisteStateList(thing, (Iteration)container, transaction, partition, securityContext);
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -122,10 +127,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(ActualFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDelete(ActualFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // Get all associated state dependent parameters and re-create value set without the state dependency
             this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(thing, (Iteration)container, transaction, partition, securityContext, null);
+
+            return Task.CompletedTask;
         }
     }
 }

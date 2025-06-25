@@ -303,7 +303,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterSubscriptionService.Setup(x => x.DeleteConcept(It.IsAny<NpgsqlTransaction>(),
                 It.IsAny<string>(), It.IsAny<Thing>(), It.IsAny<Thing>())).Returns(true);
 
-            this.sideEffect.AfterUpdate(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterUpdateAsync(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             // Check that the subscription owned by domain2 is deleted since domain2 is now the owner of the parameter
             this.parameterSubscriptionService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterSubscription>(), It.IsAny<Parameter>()),
@@ -319,7 +319,7 @@ namespace CometServer.Tests.SideEffects
 
             var updatedParameter1 = new Parameter(this.parameter.Iid, 0) { ParameterType = this.boolPt.Iid, Owner = domain2.Iid, AllowDifferentOwnerOfOverride = false };
             updatedParameter1.ParameterSubscription.Add(domain2Subscription.Iid);
-            this.sideEffect.AfterUpdate(updatedParameter1, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterUpdateAsync(updatedParameter1, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             // Check that since AllowDifferentOwnerOfOverride is False the owner of the parameterOverride is updated
             this.parameterOverrideService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<ParameterOverride>(), It.IsAny<ElementUsage>()),
@@ -344,7 +344,7 @@ namespace CometServer.Tests.SideEffects
             updatedParameter.ValueSet.Add(valueset.Iid);
             updatedParameter.ParameterType = this.cptParameterType.Iid;
 
-            this.sideEffect.AfterUpdate(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterUpdateAsync(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualState == this.actualState1.Iid), updatedParameter, -1), Times.Exactly(1));
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualState == this.actualState2.Iid), updatedParameter, -1), Times.Exactly(1));
@@ -423,7 +423,7 @@ namespace CometServer.Tests.SideEffects
             updatedParameter.ParameterType = this.cptParameterType.Iid;
             updatedParameter.ParameterSubscription.Add(subscription1.Iid);
 
-            this.sideEffect.AfterUpdate(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterUpdateAsync(updatedParameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(this.npgsqlTransaction, "partition", It.Is<ParameterValueSet>(y => y.Manual.Contains("set")), updatedParameter, -1),
                 Times.Exactly(2));
@@ -458,7 +458,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the newly created parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> {originalThing});
 
-            this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterCreateAsync(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.Manual.Count() == this.cptParameterType.Component.Count), this.parameter, -1), Times.Exactly(1));
         }
@@ -485,7 +485,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the newly created parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { originalThing });
 
-            this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterCreateAsync(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualState == this.actualState1.Iid), this.parameter, -1), Times.Exactly(1));
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualState == this.actualState2.Iid), this.parameter, -1), Times.Exactly(1));
@@ -513,7 +513,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the newly created parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { originalThing });
 
-            this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterCreateAsync(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option1.Iid), this.parameter, -1), Times.Exactly(1));
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option2.Iid), this.parameter, -1), Times.Exactly(1));
@@ -542,7 +542,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the newly created parameter
             this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { originalThing });
 
-            this.sideEffect.AfterCreate(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterCreateAsync(this.parameter, this.elementDefinition, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option1.Iid && vs.ActualState == this.actualState1.Iid), this.parameter, -1), Times.Exactly(1));
             this.valueSetService.Verify(x => x.CreateConcept(null, "partition", It.Is<ParameterValueSet>(vs => vs.ActualOption == this.option1.Iid && vs.ActualState == this.actualState2.Iid), this.parameter, -1), Times.Exactly(1));

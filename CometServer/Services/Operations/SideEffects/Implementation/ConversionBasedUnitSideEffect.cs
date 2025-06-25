@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ConversionBasedUnitSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -77,7 +78,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override Task BeforeUpdate(
             T thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -124,6 +125,8 @@ namespace CometServer.Services.Operations.SideEffects
                         $"ConversionBasedUnit {thing.Iid} cannot have a RefernceUnit {referenceUnitId} that leads to cyclic dependency");
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>

@@ -103,7 +103,7 @@ namespace CometServer.Tests.SideEffects
             this.glossarySideEffect.PermissionService = this.permittingPermissionService.Object;
             this.glossarySideEffect.TermService = this.termService.Object;
 
-            this.glossarySideEffect.AfterUpdate(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.permittingPermissionService.Verify(x => x.CanWrite(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Never);
             
@@ -121,7 +121,7 @@ namespace CometServer.Tests.SideEffects
             this.glossarySideEffect.PermissionService = this.permittingPermissionService.Object;
             this.glossarySideEffect.TermService = this.termService.Object;
 
-            this.glossarySideEffect.AfterUpdate(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.permittingPermissionService.Verify(x => x.CanWrite(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Never);
 
@@ -140,7 +140,7 @@ namespace CometServer.Tests.SideEffects
             this.glossarySideEffect.PermissionService = this.denyingPermissionService.Object;
             this.glossarySideEffect.TermService = this.termService.Object;
 
-            this.glossarySideEffect.AfterUpdate(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.denyingPermissionService.Verify(x => x.CanWrite(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Once);
 
@@ -167,7 +167,7 @@ namespace CometServer.Tests.SideEffects
 
             this.termService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(returnedTerms);
 
-            this.glossarySideEffect.AfterUpdate(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
             
             this.permittingPermissionService.Verify(x => x.CanWrite(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Once);
 

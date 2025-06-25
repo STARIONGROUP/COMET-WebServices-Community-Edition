@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterGroupSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -69,7 +70,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(
+        public override Task BeforeDelete(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -85,6 +86,8 @@ namespace CometServer.Services.Operations.SideEffects
                 parameter.Group = null;
                 this.ParameterService.UpdateConcept(transaction, partition, parameter, container);
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -105,7 +108,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(
+        public override async Task<bool> BeforeCreate(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -116,7 +119,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (thing.ContainingGroup != null)
             {
-                this.ValidateContainingGroup(
+                await this.ValidateContainingGroup(
                     thing,
                     container,
                     transaction,
@@ -151,7 +154,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override async Task BeforeUpdate(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -163,7 +166,7 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 if (containingGroupId != null && Guid.TryParse(containingGroupId.ToString(), out var containingGroupIdGuid))
                 {
-                    this.ValidateContainingGroup(
+                    await this.ValidateContainingGroup(
                         thing,
                         container,
                         transaction,
@@ -195,7 +198,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="containingGroupId">
         /// The containing group id to check for being acyclic
         /// </param>
-        public void ValidateContainingGroup(
+        public Task ValidateContainingGroup(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -230,6 +233,8 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new AcyclicValidationException(
                     $"ParameterGroup {thing.Name} {thing.Iid} cannot have a containing ParameterGroup {containingGroupId} that leads to cyclic dependency");
             }
+
+            return Task.FromResult(true);
         }
 
         /// <summary>

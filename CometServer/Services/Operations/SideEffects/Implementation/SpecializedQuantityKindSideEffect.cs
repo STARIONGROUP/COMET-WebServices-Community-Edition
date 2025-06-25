@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SpecializedQuantityKindSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -74,13 +75,15 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(SpecializedQuantityKind thing,
+        public override async Task BeforeUpdate(SpecializedQuantityKind thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
+            await base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+
             if (rawUpdateInfo.TryGetValue("General", out var value))
             {
                 var kindId = (Guid)value;

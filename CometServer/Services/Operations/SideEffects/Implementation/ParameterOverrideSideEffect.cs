@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterOverrideSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -82,13 +83,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// Gets the list of property names that are to be excluded from validation logic.
         /// </summary>
-        public override IEnumerable<string> DeferPropertyValidation
-        {
-            get
-            {
-                return new[] { "ValueSet" };
-            }
-        }
+        public override IEnumerable<string> DeferPropertyValidation => ["ValueSet"];
 
         /// <summary>
         /// Execute additional logic  before a create operation.
@@ -108,11 +103,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreate(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
 
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -136,11 +131,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreate(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var newValueSet = this.ComputeValueSets(thing, transaction, partition, securityContext).ToList();
-            this.WriteValueSet(transaction, partition, thing, newValueSet);
-            this.CreateSubscriptionFromParameter(transaction, partition, thing, securityContext, newValueSet);
+            var newValueSet = (await this.ComputeValueSets(thing, transaction, partition, securityContext)).ToList();
+            await this.WriteValueSet(transaction, partition, thing, newValueSet);
+            await this.CreateSubscriptionFromParameter(transaction, partition, thing, securityContext, newValueSet);
         }
 
         /// <summary>
@@ -164,16 +159,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterUpdate(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var isOwnerChanged = thing.Owner != originalThing.Owner;
 
             // Remove the subscriptions owned by the new owner of the ParameterOverride
             var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, thing.ParameterSubscription, securityContext).OfType<ParameterSubscription>().ToArray();
+
             if (isOwnerChanged && parameterSubscriptions.Any(s => s.Owner == thing.Owner))
             {
                 var parameterSubscriptionToRemove = parameterSubscriptions.SingleOrDefault(
                         s => s.Owner == thing.Owner && thing.ParameterSubscription.Contains(s.Iid));
+            
                 if (parameterSubscriptionToRemove != null)
                 {
                     if (!this.ParameterSubscriptionService.DeleteConcept(transaction, partition, parameterSubscriptionToRemove, thing))
@@ -183,6 +180,8 @@ namespace CometServer.Services.Operations.SideEffects
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -203,9 +202,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The new <see cref="ParameterOverrideValueSet"/>s
         /// </returns>
-        private IEnumerable<ParameterOverrideValueSet> ComputeValueSets(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private Task<IEnumerable<ParameterOverrideValueSet>> ComputeValueSets(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var parameters = this.ParameterService.GetShallow(transaction, partition, new[] {parameterOverride.Parameter}, securityContext).OfType<Parameter>().ToArray();
+            var parameters = this.ParameterService.GetShallow(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
+
             if (parameters.Length != 1)
             {
                 throw new InvalidOperationException("None or more than one parameters were returned");
@@ -214,15 +214,20 @@ namespace CometServer.Services.Operations.SideEffects
             var parameter = parameters.Single();
 
             var parameterValueSets = this.ParameterValueSetService.GetShallow(transaction, partition, parameter.ValueSet, securityContext).OfType<ParameterValueSet>().ToArray();
+
             if (parameterValueSets.Length != parameter.ValueSet.Count)
             {
                 throw new InvalidOperationException("All the value sets could not be retrieved.");
             }
 
+            var result = new List<ParameterOverrideValueSet>();
+
             foreach (var set in parameterValueSets)
             {
-                yield return this.ParameterOverrideValueSetFactory.CreateParameterOverrideValueSet(set);
+                result.Add(this.ParameterOverrideValueSetFactory.CreateParameterOverrideValueSet(set));
             }
+
+            return Task.FromResult(result.AsEnumerable());
         }
 
         /// <summary>
@@ -232,12 +237,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">The current partition</param>
         /// <param name="parameterOverride">The current <see cref="ParameterOverride"/></param>
         /// <param name="newValueSet">The <see cref="ParameterOverrideValueSet"/> to write</param>
-        private void WriteValueSet(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, IEnumerable<ParameterOverrideValueSet> newValueSet)
+        private Task WriteValueSet(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, IEnumerable<ParameterOverrideValueSet> newValueSet)
         {
             foreach (var parameterValueSet in newValueSet)
             {
                 this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterValueSet, parameterOverride);
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -248,9 +255,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="parameterOverride">The <see cref="ParameterOverride"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         /// <param name="overrideValueset">The <see cref="ParameterOverrideValueSet"/> to subscribe on</param>
-        private void CreateSubscriptionFromParameter(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, ISecurityContext securityContext, IReadOnlyList<ParameterOverrideValueSet> overrideValueset)
+        private Task CreateSubscriptionFromParameter(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, ISecurityContext securityContext, IReadOnlyList<ParameterOverrideValueSet> overrideValueset)
         {
-            var parameters = this.ParameterService.GetShallow(transaction, partition, new[] { parameterOverride.Parameter }, securityContext).OfType<Parameter>().ToArray();
+            var parameters = this.ParameterService.GetShallow(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
+
             if (parameters.Length != 1)
             {
                 throw new InvalidOperationException("None or more than one parameters were returned");
@@ -297,6 +305,8 @@ namespace CometServer.Services.Operations.SideEffects
                     this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, subscriptionValueset, newSubscription);
                 }
             }
+
+            return Task.CompletedTask;
         }
     }
 }

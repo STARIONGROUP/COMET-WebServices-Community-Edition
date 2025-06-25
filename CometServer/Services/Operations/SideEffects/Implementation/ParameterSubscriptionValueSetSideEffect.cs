@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSubscriptionValueSetSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System.Collections.Generic;
     using System.Globalization;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -80,14 +81,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(
+        public override Task<bool> BeforeCreate(
             ParameterSubscriptionValueSet thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext)
         {
-            return false;
+            return Task.FromResult(false);
         }
 
         /// <summary>
@@ -113,14 +114,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(ParameterSubscriptionValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override Task BeforeUpdate(ParameterSubscriptionValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
             base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
             if (rawUpdateInfo.Keys.All(key => !Array.Exists(Enum.GetNames(typeof(ParameterSwitchKind)), 
                     x => key.Equals(x, StringComparison.InvariantCultureIgnoreCase))))
             {
-                return;
+                return Task.CompletedTask;
             }
 
             if (container is not ParameterSubscription parameterSubscription)
@@ -177,6 +178,8 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 throw new BadRequestException(validationResult.Message);
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -187,7 +190,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        public override void BeforeDelete(ParameterSubscriptionValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDelete(ParameterSubscriptionValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             throw new InvalidOperationException("ParameterOverrideValueSet Cannot be deleted");
         }

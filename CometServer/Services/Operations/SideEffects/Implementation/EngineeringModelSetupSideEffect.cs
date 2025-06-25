@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -111,13 +112,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// Gets the list of property names that are to be excluded from validation logic.
         /// </summary>
-        public override IEnumerable<string> DeferPropertyValidation
-        {
-            get
-            {
-                return new[] { "ActiveDomain", "IterationSetup", "Participant", "RequiredRdl" };
-            }
-        }
+        public override IEnumerable<string> DeferPropertyValidation => ["ActiveDomain", "IterationSetup", "Participant", "RequiredRdl"];
 
         /// <summary>
         /// Execute additional logic before a create operation.
@@ -137,7 +132,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.TransactionManager.SetFullAccessState(true);
 
@@ -177,7 +172,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 this.ModelCreatorManager.CreateEngineeringModelSetupFromSource(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
                 stopwatch.Stop();
-                this.Logger.LogDebug("Creation of EngineeringSetup from source took {time}[ms]", stopwatch.ElapsedMilliseconds);
+                this.Logger.LogDebug("Creation of EngineeringSetup from source took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
             }
 
             if (thing.EngineeringModelIid == Guid.Empty)
@@ -187,7 +182,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             this.TransactionManager.SetFullAccessState(false);
 
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -211,19 +206,19 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterCreate(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the cache
             this.RequestUtils.Cache.Clear();
 
             var credentials = this.CredentialsService.Credentials;
             var actor = credentials.Person.Iid;
-            
+
             // at this point the engineering model schema has been created (handled in EngineeringModelSetupDao)
             if (thing.SourceEngineeringModelSetupIid.HasValue)
             {
-
                 this.Logger.LogInformation("Create a Copy of an EngineeringModel");
+
                 this.CreateCopyEngineeringModel(thing, transaction, securityContext);
 
                 var stopwatch = Stopwatch.StartNew();
@@ -231,14 +226,16 @@ namespace CometServer.Services.Operations.SideEffects
                 this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 stopwatch.Stop();
-                this.Logger.LogDebug("Revisions written in {time}[ms]", stopwatch.ElapsedMilliseconds);
-                return;
+                this.Logger.LogDebug("Revisions written in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
+                return Task.CompletedTask;
             }
 
             this.CreateDefaultEngineeringModel(thing, container, transaction, partition);
 
             // Create revisions for created EngineeringModel
             this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -262,9 +259,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="rawUpdateInfo">
         /// The raw Update Info.
         /// </param>
-        public override void BeforeUpdate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override Task BeforeUpdate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
             // TODO: if the EngineeringModelSetup has multiple iterations or is not in PREPARATION Phase and change on ActiveDomain should not be allowed (task T2818 CDP4WEBSERVICES)
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -276,11 +274,12 @@ namespace CometServer.Services.Operations.SideEffects
         private void CreateCopyEngineeringModel(EngineeringModelSetup thing, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var stopWatch = Stopwatch.StartNew();
+
             // copy data from the source engineering-model
             this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
             stopWatch.Stop();
-            
-            this.Logger.LogDebug("Copied of the EngineeringModel took {time}[ms]", stopWatch.ElapsedMilliseconds);
+
+            this.Logger.LogDebug("Copied of the EngineeringModel took {ElapsedMilliseconds}[ms]", stopWatch.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -325,7 +324,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             this.CreateDefaultOption(firstIteration, transaction, newIterationPartition);
         }
-        
+
         /// <summary>
         /// Create the first <see cref="Option"/> in the <see cref="Iteration"/>
         /// </summary>
@@ -446,6 +445,7 @@ namespace CometServer.Services.Operations.SideEffects
             var currentPerson = this.CredentialsService.Credentials.Person;
             var defaultDomain = currentPerson.DefaultDomain;
             var participant = new Participant(Guid.NewGuid(), 1) { IsActive = true, Person = currentPerson.Iid, Role = defaultRole };
+
             if (defaultDomain != null)
             {
                 var domainId = defaultDomain.Value;

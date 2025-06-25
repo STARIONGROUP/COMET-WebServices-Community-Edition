@@ -99,13 +99,13 @@ namespace CometServer.Services
                 copy.ElementDefinition = sourceToCopyMap[sourceElementUsage.ElementDefinition];
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
             this.ElementUsageDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
             foreach (var parameterOverride in allSourceThings.Where(x => sourceElementUsage.ParameterOverride.Contains(x.Iid)))
             {

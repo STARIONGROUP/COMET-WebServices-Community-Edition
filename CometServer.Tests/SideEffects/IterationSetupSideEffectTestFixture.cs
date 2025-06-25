@@ -130,7 +130,7 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
             var originalThing = iterationSetup.DeepClone<Thing>();
 
-            this.iterationSetupSideEffect.AfterCreate(iterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
+            this.iterationSetupSideEffect.AfterCreateAsync(iterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
 
             // Check that the other iterationSetups get frozen when creating the iterationSetup
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", It.IsAny<IterationSetup>(), this.engineeringModelSetup), Times.Once);
@@ -145,7 +145,7 @@ namespace CometServer.Tests.SideEffects
             var removeIiterationSetup = new IterationSetup(Guid.NewGuid(), 1);
             var originalThing = removeIiterationSetup.DeepClone<Thing>();
 
-            this.iterationSetupSideEffect.AfterDelete(removeIiterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
+            this.iterationSetupSideEffect.AfterDeleteAsync(removeIiterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
             this.mockedIterationService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.Is<string>(s => s.Contains("EngineeringModel")), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>()), Times.Never);
@@ -204,7 +204,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(iterationSetup.IsDeleted, Is.False);
 
-            this.iterationSetupSideEffect.AfterDelete(
+            this.iterationSetupSideEffect.AfterDeleteAsync(
                 iterationSetup,
                 this.engineeringModelSetup,
                 originalThing,

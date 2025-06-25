@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OptionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -87,11 +88,6 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the (injected) <see cref="IParameterTypeService"/> that is used to query the <see cref="ParameterType"/>s
         /// </summary>
         public IParameterTypeService ParameterTypeService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="IParameterTypeComponentService"/> that is used to query the <see cref="ParameterTypeComponent"/>s
-        /// </summary>
-        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="IParameterValueSetService"/> that is used to create <see cref="ParameterValueSet"/>s
@@ -166,7 +162,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
 
@@ -174,6 +170,8 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 throw new InvalidOperationException($"Cannot delete the only option with id {thing.Iid}.");
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -197,20 +195,20 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(Option thing, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterDelete(Option thing, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (container is Iteration iteration)
             {
                 if (!(iteration.DefaultOption?.Equals(thing.Iid) ?? false))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.DefaultOption)} to null.";
 
                 var iterationSetup = this.IterationSetupService.GetShallow(transaction,
                     Utils.SiteDirectoryPartition,
-                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+                    [iteration.IterationSetup], securityContext).Cast<IterationSetup>().SingleOrDefault();
 
                 if (iterationSetup == null)
                 {
@@ -233,7 +231,7 @@ namespace CometServer.Services.Operations.SideEffects
                     this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                 var updatedIteration = this.IterationService
-                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                    .GetShallow(transaction, engineeringModelPartition, [iteration.Iid], securityContext)
                     .Cast<Iteration>()
                     .SingleOrDefault();
 
@@ -245,14 +243,14 @@ namespace CometServer.Services.Operations.SideEffects
 
                 if (!(updatedIteration.DefaultOption?.Equals(thing.Iid) ?? false))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 updatedIteration.DefaultOption = null;
 
                 var engineeringModel = this.EngineeringModelService
                     .GetShallow(transaction, engineeringModelPartition,
-                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                        [engineeringModelSetup.EngineeringModelIid], securityContext).Cast<EngineeringModel>()
                     .SingleOrDefault();
 
                 if (engineeringModel == null)
@@ -271,6 +269,8 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
                     nameof(container));
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -294,13 +294,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// Returns true if the create operation may continue, otherwise it shall be skipped.
         /// </returns>
-        public override bool BeforeCreate(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreate(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // when the amount of Options is zero, it is always allowed to create an Option.
             var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+
             if (options.Count == 0)
             {
-                return true;
+                return Task.FromResult(true);
             }
 
             // if there are already option(s) and the EngineeringModel is a Catalogue, it is not allowed to create additional Options
@@ -310,7 +311,7 @@ namespace CometServer.Services.Operations.SideEffects
             var iteration = (Iteration)container;
 
             var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,
-                new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+                [iteration.IterationSetup], securityContext).Cast<IterationSetup>().SingleOrDefault();
 
             var engineeringModelSetup = this.EngineeringModelSetupService
                 .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
@@ -326,10 +327,8 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 throw new InvalidOperationException("The container EngineeringModel is a Catalogue, a Catalogue may not contain more than one Option");
             }
-            else
-            {
-                return true;
-            }
+
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -353,7 +352,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(Option option, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterCreate(Option option, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // query all the parametertypes and parametertype components and store them in cache. this cache is used to compute the number of values for a ValueArray
             this.DefaultValueArrayFactory.Load(transaction, securityContext);
@@ -379,6 +378,8 @@ namespace CometServer.Services.Operations.SideEffects
                     this.CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(transaction, partition, option, parameterOverrideDto, securityContext);
                 }
             }
+
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -615,7 +616,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// The parameter value set cache item class.
         /// </summary>
-        private class ParameterValueSetCacheItem
+        private sealed class ParameterValueSetCacheItem
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="ParameterValueSetCacheItem"/> class. 

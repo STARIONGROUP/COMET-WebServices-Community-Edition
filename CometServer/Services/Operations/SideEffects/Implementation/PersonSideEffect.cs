@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services.Operations.SideEffects
 {
     using System;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -80,13 +81,15 @@ namespace CometServer.Services.Operations.SideEffects
         /// The raw <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be edited likely: it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(Person thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override async Task BeforeUpdate(Person thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            if (TryExtractPasswordUpdate(rawUpdateInfo, out var passwordValue))
+            await base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+
+            if (TryExtractPasswordUpdateAsync(rawUpdateInfo, out var passwordValue))
             {
                 // A password change is invoked:
                 // encapsulate the new 'clear-text' password with a token to signal the ORM layer that further specific processing is required
-                this.EncapsulatePasswordWithChangeToken(passwordValue, rawUpdateInfo);
+                this.EncapsulatePasswordWithChangeTokenAsync(passwordValue, rawUpdateInfo);
             }
         }
 
@@ -114,8 +117,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <remarks>
         /// The person that is executing the request may not update his own role property. 
         /// </remarks>
-        public override void AfterUpdate(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdate(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            await base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+
             var authenticatedCredentials = this.CredentialsService.Credentials;
             
             if (authenticatedCredentials.Person.Iid == thing.Iid)
@@ -149,7 +154,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        private static bool TryExtractPasswordUpdate(ClasslessDTO rawUpdateInfo, out string passwordValue)
+        private static bool TryExtractPasswordUpdateAsync(ClasslessDTO rawUpdateInfo, out string passwordValue)
         {
             if (rawUpdateInfo.TryGetValue(PasswordKey, out var value))
             {
@@ -169,6 +174,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
             
             passwordValue = null;
+
             return false;
         }
 
@@ -181,7 +187,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="rawUpdateInfo">
         /// The raw update info.
         /// </param>
-        private void EncapsulatePasswordWithChangeToken(string passwordValue, ClasslessDTO rawUpdateInfo)
+        private void EncapsulatePasswordWithChangeTokenAsync(string passwordValue, ClasslessDTO rawUpdateInfo)
         {
             // Signal the ORM layer that a password change request is being handled:
             // encapsulate the 'clear-text' password with the PasswordChangeToken that is valid for this request only

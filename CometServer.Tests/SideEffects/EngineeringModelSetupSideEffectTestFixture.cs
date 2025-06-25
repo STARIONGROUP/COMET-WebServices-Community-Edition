@@ -203,7 +203,7 @@ namespace CometServer.Tests.SideEffects
             var domainOfExpertise2 = new DomainOfExpertise(Guid.NewGuid(), 1);
             this.engineeringModelSetup.ActiveDomain.Add(domainOfExpertise2.Iid);
             
-            Assert.That(() => this.engineeringModelSetupSideEffect.AfterUpdate(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object),
+            Assert.That(() => this.engineeringModelSetupSideEffect.AfterUpdateAsync(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object),
                 Throws.Nothing);
         }
 
@@ -211,7 +211,7 @@ namespace CometServer.Tests.SideEffects
         public void VerifyAfterDelete()
         {
             var originalThing = this.engineeringModelSetup.DeepClone<Thing>();
-            this.engineeringModelSetupSideEffect.AfterDelete(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
+            this.engineeringModelSetupSideEffect.AfterDeleteAsync(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
 
             // Check that the engineering model is deleted in the newEngineeringModelPartition
             this.engineeringModelService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<EngineeringModel>(), null), Times.Never);

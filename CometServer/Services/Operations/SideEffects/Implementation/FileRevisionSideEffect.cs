@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileRevisionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services.Operations.SideEffects
 {
+    using System.Threading.Tasks;
+
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -70,9 +72,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDelete(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.HasWriteAccess(container, transaction, partition);
+            await this.HasWriteAccess(container, transaction, partition);
         }
 
         /// <summary>
@@ -98,9 +100,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override async Task BeforeUpdate(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            this.HasWriteAccess(container, transaction, partition);
+            await this.HasWriteAccess(container, transaction, partition);
         }
 
         /// <summary>
@@ -115,7 +117,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void HasWriteAccess(Thing container, NpgsqlTransaction transaction, string partition)
+        private async Task HasWriteAccess(Thing container, NpgsqlTransaction transaction, string partition)
         {
             if (!(container is File file))
             {
@@ -126,14 +128,14 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (partition.StartsWith("EngineeringModel_"))
             {
-                this.CommonFileStoreService.HasWriteAccess(
+                await this.CommonFileStoreService.HasWriteAccess(
                     file,
                     transaction,
                     partition);
             }
             else
             {
-                this.DomainFileStoreService.HasWriteAccess(
+                await this.DomainFileStoreService.HasWriteAccess(
                     file,
                     transaction,
                     partition);

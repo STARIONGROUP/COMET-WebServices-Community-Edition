@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementDefinitionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -101,7 +102,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// Returns true if the create operation may continue, otherwise it shall be skipped.
         /// </returns>
-        public override bool BeforeCreate(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreate(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // inject the organizational participant of the creator to the ED before creating
             if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
@@ -112,7 +113,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
             }
 
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -133,7 +134,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(ElementDefinition thing, Thing container, NpgsqlTransaction transaction,
+        public override Task BeforeDelete(ElementDefinition thing, Thing container, NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext)
         {
@@ -141,14 +142,14 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 if (!(iteration.TopElement?.Equals(thing.Iid) ?? false))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.TopElement)} to null.";
 
                 var iterationSetup = this.IterationSetupService.GetShallow(transaction,
                     Utils.SiteDirectoryPartition,
-                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+                    [iteration.IterationSetup], securityContext).Cast<IterationSetup>().SingleOrDefault();
 
                 if (iterationSetup == null)
                 {
@@ -171,7 +172,7 @@ namespace CometServer.Services.Operations.SideEffects
                     this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                 var updatedIteration = this.IterationService
-                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                    .GetShallow(transaction, engineeringModelPartition, [iteration.Iid], securityContext)
                     .Cast<Iteration>()
                     .SingleOrDefault();
 
@@ -183,14 +184,14 @@ namespace CometServer.Services.Operations.SideEffects
 
                 if (!(updatedIteration.TopElement?.Equals(thing.Iid) ?? false))
                 {
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 updatedIteration.TopElement = null;
 
                 var engineeringModel = this.EngineeringModelService
                     .GetShallow(transaction, engineeringModelPartition,
-                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                        [engineeringModelSetup.EngineeringModelIid], securityContext).Cast<EngineeringModel>()
                     .SingleOrDefault();
 
                 if (engineeringModel == null)
@@ -209,6 +210,8 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new ArgumentException($"(Type:{container.GetType().Name}) should be of type {nameof(Iteration)}.",
                     nameof(container));
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -235,7 +238,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation
         /// processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override Task BeforeUpdate(
             ElementDefinition thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -267,6 +270,8 @@ namespace CometServer.Services.Operations.SideEffects
                     }
                 }
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>

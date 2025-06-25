@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessorTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Tests
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.CommonData;
@@ -54,7 +55,7 @@ namespace CometServer.Tests
     using Npgsql;
 
     using NUnit.Framework;
-    
+
     using Alias = CDP4Common.DTO.Alias;
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
     using ElementUsage = CDP4Common.DTO.ElementUsage;
@@ -91,9 +92,9 @@ namespace CometServer.Tests
         private readonly SimpleQuantityKindMetaInfo simpleQuantityKindMetaInfo = new();
 
         private readonly QuantityKindMetaInfo quantityKindMetaInfo = new();
-        private readonly ThingMetaInfo thingMetaInfo = new ();
+        private readonly ThingMetaInfo thingMetaInfo = new();
 
-        private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new ();
+        private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new();
 
         private readonly Dictionary<string, Stream> fileStore = new();
 
@@ -110,7 +111,7 @@ namespace CometServer.Tests
         {
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
+            this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.MaxValue as object));
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationSideEffectProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
 
@@ -150,7 +151,7 @@ namespace CometServer.Tests
 
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithoutIid);
-            
+
             Assert.Throws(
                 typeof(InvalidOperationException),
                 () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
@@ -176,12 +177,12 @@ namespace CometServer.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
 
             var deleteObjectWithScalarPropertySet = new ClasslessDTO()
-                                                    {
-                                                        { IidKey, Guid.NewGuid() },
-                                                        { ClasskindKey, SimpleQuantityKindTypeString },
-                                                        { "Name", TestName }
-                                                    };
-            
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, SimpleQuantityKindTypeString },
+                { "Name", TestName }
+            };
+
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithScalarPropertySet);
 
@@ -190,11 +191,12 @@ namespace CometServer.Tests
                 () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
 
             var deleteObjectWithListProperty = new ClasslessDTO()
-                                                    {
-                                                        { IidKey, Guid.NewGuid() },
-                                                        { ClasskindKey, SimpleQuantityKindTypeString },
-                                                        { "PossibleScale", new[] { Guid.NewGuid() } }
-                                                    };
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, SimpleQuantityKindTypeString },
+                { "PossibleScale", new[] { Guid.NewGuid() } }
+            };
+
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithListProperty);
 
@@ -210,14 +212,14 @@ namespace CometServer.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == QuantityKindTypeString))).Returns(this.quantityKindMetaInfo);
 
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
-                                        {
-                                            Alias = new List<Guid>(),
-                                            Definition = new List<Guid>(),
-                                            HyperLink = new List<Guid>(),
-                                            PossibleScale = new List<Guid>(),
-                                            ShortName = TestShortName,
-                                            Symbol = "testSymbol"
-                                        };
+            {
+                Alias = new List<Guid>(),
+                Definition = new List<Guid>(),
+                HyperLink = new List<Guid>(),
+                PossibleScale = new List<Guid>(),
+                ShortName = TestShortName,
+                Symbol = "testSymbol"
+            };
 
             var postOperation = new CdpPostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
@@ -322,8 +324,8 @@ namespace CometServer.Tests
                     updatedItem,
                     new List<string> { "PossibleState" },
                     metaInfo
-                    )
-                );
+                )
+            );
 
             Assert.That(exception.Message, Contains.Substring("contains duplicate keys"));
         }
@@ -367,8 +369,6 @@ namespace CometServer.Tests
 
             Assert.That(exception.Message, Contains.Substring("contains duplicate values"));
         }
-
-
 
         [Test]
         public void VerifyCreateWithoutContainerUpdateValidation()
@@ -420,11 +420,11 @@ namespace CometServer.Tests
 
             // simpleQuantityKind container update
             var modelReferenceDataLibrary = new ClasslessDTO()
-                                            {
-                                                { IidKey, Guid.NewGuid() },
-                                                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
-                                                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
-                                            };
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
+                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
+            };
 
             var postOperation = new CdpPostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
@@ -447,7 +447,7 @@ namespace CometServer.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "Alias"))).Returns(aliasMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "ModelReferenceDataLibrary"))).Returns(modelReferenceDataLibraryMetaInfo);
 
-            var newAlias = new Alias(Guid.NewGuid(), 0) { Content = "testContent", LanguageCode = "en-GB"};
+            var newAlias = new Alias(Guid.NewGuid(), 0) { Content = "testContent", LanguageCode = "en-GB" };
 
             // alias container create
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
@@ -463,11 +463,11 @@ namespace CometServer.Tests
 
             // simplequantitykind container update
             var modelReferenceDataLibrary = new ClasslessDTO()
-                                            {
-                                                { IidKey, Guid.NewGuid() },
-                                                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
-                                                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
-                                            };
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
+                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
+            };
 
             var postOperation = new CdpPostOperation();
             postOperation.Create.Add(newAlias);
@@ -476,7 +476,7 @@ namespace CometServer.Tests
 
             Assert.DoesNotThrow(() => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
         }
-        
+
         [Test]
         public void VerifyIncompleteUpdateOperationValidation()
         {
@@ -509,14 +509,13 @@ namespace CometServer.Tests
 
         private static readonly string[] DefaultValueArray = new[] { "-" };
 
-
         [Test]
         public void VerifyCopyElementDefWorks()
         {
             var modelSetupService = new Mock<IEngineeringModelSetupService>();
             var iterationService = new Mock<IIterationService>();
             var defaultArrayService = new Mock<IDefaultValueArrayFactory>();
-            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new [] {"-"}));
+            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
             modelSetupService.Setup(x => x.GetEngineeringModelSetupFromDataBaseCache(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).Returns(modelSetup);
 
@@ -535,16 +534,18 @@ namespace CometServer.Tests
             sourceIteration.Element.Add(sourceElementDef2.Iid);
 
             var parameter1 = new Parameter(Guid.NewGuid(), 1) { ParameterType = boolParamTypeId };
+
             var pvs1 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
-                Manual = new ValueArray<string>(new[] {"true"}),
-                Computed = new ValueArray<string>(new[] {"-"}),
-                Reference = new ValueArray<string>(new[] {"-"}),
-                Published = new ValueArray<string>(new[] {"-"}),
+                Manual = new ValueArray<string>(new[] { "true" }),
+                Computed = new ValueArray<string>(new[] { "-" }),
+                Reference = new ValueArray<string>(new[] { "-" }),
+                Published = new ValueArray<string>(new[] { "-" }),
                 ValueSwitch = ParameterSwitchKind.MANUAL
             };
 
             var parameter2 = new Parameter(Guid.NewGuid(), 1) { ParameterType = boolParamTypeId };
+
             var pvs2 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(new[] { "true" }),
@@ -564,10 +565,9 @@ namespace CometServer.Tests
                 Parameter = parameter2.Iid
             };
 
-            var ovs = new ParameterOverrideValueSet(Guid.NewGuid(), 1) {ParameterValueSet = pvs2.Iid};
+            var ovs = new ParameterOverrideValueSet(Guid.NewGuid(), 1) { ParameterValueSet = pvs2.Iid };
             override2.ValueSet.Add(ovs.Iid);
             sourceUsage1.ParameterOverride.Add(override2.Iid);
-
 
             this.copySourceDtos.Add(sourceIteration);
             this.copySourceDtos.Add(sourceElementDef1);
@@ -583,6 +583,7 @@ namespace CometServer.Tests
             var targetIteration = new Iteration(Guid.NewGuid(), 1);
 
             this.serviceProvider.Setup(x => x.MapToReadService(It.IsAny<string>())).Returns<string>(x => new TestSourceService(this.copySourceDtos, x));
+
             this.serviceProvider.Setup(x => x.MapToReadService(It.Is<string>(t => t == ClassKind.ModelReferenceDataLibrary.ToString())))
                 .Returns<string>(x => new TestSourceService(new List<Thing> { mrdl }, x));
 
@@ -590,8 +591,7 @@ namespace CometServer.Tests
                 .Returns<string>(x => new TestSourceService(new List<Thing> { sourceIteration, targetIteration }, x));
 
             var customOperationSideEffectProcessor = new Mock<IOperationSideEffectProcessor>();
-            customOperationSideEffectProcessor.Setup(x => x.BeforeCreate(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).
-                Returns(true);
+            customOperationSideEffectProcessor.Setup(x => x.BeforeCreateAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(true));
 
             var paramSubscriptionService = new ParameterSubscriptionService
             {
@@ -613,10 +613,12 @@ namespace CometServer.Tests
             };
 
             var valueSetService = new Mock<IParameterValueSetService>();
+
             valueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
                 .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>((a, b, c, d) =>
                 {
                     var list = new List<ParameterValueSet>();
+
                     foreach (var guid in c)
                     {
                         var vs = new ParameterValueSet(guid, 1)
@@ -629,15 +631,17 @@ namespace CometServer.Tests
 
                         list.Add(vs);
                     }
-                    
+
                     return list;
-                });  
+                });
 
             var overrideValueSetService = new Mock<IParameterOverrideValueSetService>();
+
             overrideValueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
                 .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>((a, b, c, d) =>
                 {
                     var list = new List<ParameterOverrideValueSet>();
+
                     foreach (var guid in c)
                     {
                         var vs = new ParameterOverrideValueSet(guid, 1)
@@ -685,6 +689,7 @@ namespace CometServer.Tests
             };
 
             var usageDao = new Mock<IElementUsageDao>();
+
             var usageService = new ElementUsageService
             {
                 PermissionService = this.permissionService.Object,
@@ -696,6 +701,7 @@ namespace CometServer.Tests
             };
 
             var edDao = new TestElementDefinitionDao();
+
             var edService = new ElementDefinitionService
             {
                 PermissionService = this.permissionService.Object,
@@ -716,6 +722,7 @@ namespace CometServer.Tests
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterGroup.ToString())).Returns(paramGroupService);
 
             var postOperation = new CdpPostOperation();
+
             var copyinfo = new CopyInfo
             {
                 ActiveOwner = Guid.NewGuid(),
@@ -758,6 +765,7 @@ namespace CometServer.Tests
             postOperation.Copy.Add(copyinfo);
 
             this.serviceProvider.Setup(x => x.MapToReadService(ClassKind.EngineeringModelSetup.ToString())).Returns(modelSetupService.Object);
+
             // targetIteration
             this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
 
@@ -789,6 +797,7 @@ namespace CometServer.Tests
         public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext securityContext)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
                 return this.dtos.Where(x => x.ClassKind.ToString() == this.type);
@@ -806,6 +815,7 @@ namespace CometServer.Tests
 
             var eds = this.GetShallow(transaction, partition, ids, securityContext).OfType<ElementDefinition>().ToList();
             var dtos = new List<Thing>(eds);
+
             foreach (var thing in eds)
             {
                 dtos.AddRange(this.dtos.Where(x => x.ClassKind.ToString() == ClassKind.ElementUsage.ToString() && thing.ContainedElement.Contains(x.Iid)));
@@ -887,11 +897,13 @@ namespace CometServer.Tests
     public class TestParameterDao : IParameterDao
     {
         private List<Thing> writtenThings = new();
+
         public int WrittenThingCount => this.writtenThings.Count;
 
         public IEnumerable<Parameter> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
                 return this.writtenThings.OfType<Parameter>();
@@ -962,11 +974,13 @@ namespace CometServer.Tests
     public class TestParameterOverrideDao : IParameterOverrideDao
     {
         private List<Thing> writtenThings = new();
+
         public int WrittenThingCount => this.writtenThings.Count;
 
         public IEnumerable<ParameterOverride> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
                 return this.writtenThings.OfType<ParameterOverride>();
@@ -1043,6 +1057,7 @@ namespace CometServer.Tests
         public IEnumerable<ElementDefinition> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
                 return this.writtenThings.OfType<ElementDefinition>();

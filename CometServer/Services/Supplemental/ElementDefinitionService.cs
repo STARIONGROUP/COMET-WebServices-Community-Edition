@@ -95,14 +95,14 @@ namespace CometServer.Services
                 copy.Owner = copyinfo.ActiveOwner;
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
             this.ElementDefinitionDao.Write(transaction, partition, copy, targetContainer);
 
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
             
             // copy contained things
             foreach (var group in allSourceThings.Where(x => sourceElementDef.ParameterGroup.Contains(x.Iid)))

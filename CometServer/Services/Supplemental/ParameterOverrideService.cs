@@ -87,13 +87,13 @@ namespace CometServer.Services
                 copy.Parameter = sourceToCopyMap[sourceParameterOverride.Parameter];
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
             this.ParameterOverrideDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
             var newparameterOverride = this.ParameterOverrideDao.Read(transaction, partition, new[] { copy.Iid }).Single();
 

@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ICommonFileStoreService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System.Data;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -45,7 +46,7 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition);
+        Task HasWriteAccess(Thing thing, IDbTransaction transaction, string partition);
 
         /// <summary>
         /// Check the security related functionality
@@ -59,6 +60,6 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition);
+        Task HasReadAccess(Thing thing, IDbTransaction transaction, string partition);
     }
 }

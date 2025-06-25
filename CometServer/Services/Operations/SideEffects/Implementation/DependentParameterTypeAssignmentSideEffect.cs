@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DependentParameterTypeAssignmentSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services.Operations.SideEffects
 {
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using CometServer.Services.Authorization;
@@ -66,13 +68,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreate(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.DefaultValueArrayFactory.Reset();
-
-            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.CachedReferenceDataService.Reset();
+            await this.ResetData();
         }
 
         /// <summary>
@@ -96,13 +94,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterDelete(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.DefaultValueArrayFactory.Reset();
-
-            // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
-            this.CachedReferenceDataService.Reset();
+            await this.ResetData();
         }
 
         /// <summary>
@@ -126,13 +120,24 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdate(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        {
+            await  this.ResetData();
+        }
+
+        /// <summary>
+        /// Resets the appropriate data
+        /// </summary>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        private Task ResetData()
         {
             // reset the IDefaultValueArrayFactory, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.DefaultValueArrayFactory.Reset();
 
             // reset the ICachedReferenceDataService, this may be used during the same transaction, any update to the ParameterTypeComponents needs to reset the IDefaultValueArrayFactory cache
             this.CachedReferenceDataService.Reset();
+
+            return Task.CompletedTask;
         }
     }
 }

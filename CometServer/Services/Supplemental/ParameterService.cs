@@ -165,13 +165,13 @@ namespace CometServer.Services
                 copy.Owner = copyinfo.ActiveOwner;
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
             this.ParameterDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
             var newparameter = this.ParameterDao.Read(transaction, partition, new[] { copy.Iid }).Single();
 

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParticipantSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -83,9 +84,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// The raw <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be edited likely: it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(Participant thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override async Task BeforeUpdate(Participant thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            ValidateSelectedDomain(thing, rawUpdateInfo);
+            await ValidateSelectedDomain(thing, rawUpdateInfo);
         }
 
         /// <summary>
@@ -109,9 +110,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(Participant thing, Thing container, Participant originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreate(Participant thing, Thing container, Participant originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+            await base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
 
             if (container is not EngineeringModelSetup originalEngineeringModelSetup)
             {
@@ -119,7 +120,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             if (this.EngineeringModelSetupService
-                    .GetShallow(transaction, partition, new[] { originalEngineeringModelSetup.Iid }, securityContext).FirstOrDefault() is not EngineeringModelSetup engineeringModelSetup)
+                    .GetShallow(transaction, partition, [originalEngineeringModelSetup.Iid], securityContext).FirstOrDefault() is not EngineeringModelSetup engineeringModelSetup)
             {
                 throw new Cdp4ModelValidationException($"{nameof(EngineeringModelSetup)} was not found.");
             }
@@ -147,7 +148,7 @@ namespace CometServer.Services.Operations.SideEffects
                         if (newParticipantGuids.Intersect(duplicateParticipantGuids).Any())
                         {
                             var person = this.PersonService
-                                .GetShallow(transaction, partition, new[] { duplicatePerson.Key }, securityContext).OfType<Person>().FirstOrDefault();
+                                .GetShallow(transaction, partition, [duplicatePerson.Key], securityContext).OfType<Person>().FirstOrDefault();
 
                             if (person == null)
                             {
@@ -172,11 +173,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// The raw <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be edited likely: it can/will change the operation processor outcome.
         /// </param>
-        private static void ValidateSelectedDomain(Participant thing, ClasslessDTO rawUpdateInfo)
+        private static Task ValidateSelectedDomain(Participant thing, ClasslessDTO rawUpdateInfo)
         {
             if (rawUpdateInfo.ContainsKey(SelectedDomainKey))
             {
-                Guid selectedDomainUpdate = default;
+                var selectedDomainUpdate = Guid.Empty;
+
                 if (rawUpdateInfo[SelectedDomainKey] != null)
                 {
                     Guid.TryParse(rawUpdateInfo[SelectedDomainKey].ToString(), out selectedDomainUpdate);
@@ -187,6 +189,8 @@ namespace CometServer.Services.Operations.SideEffects
                     throw new InvalidOperationException("Participant selected domain must be contained in participant domain list.");
                 }
             }
+
+            return Task.CompletedTask;
         }
     }
 }

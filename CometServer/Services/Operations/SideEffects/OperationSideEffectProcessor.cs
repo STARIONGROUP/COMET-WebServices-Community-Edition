@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationSideEffectProcessor.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -108,11 +109,21 @@ namespace CometServer.Services.Operations.SideEffects
         /// The security Context used for permission checking.
         /// </param>
         /// <returns>
-        /// Returns a boolean specifying whether the operation shall be executed.
+        /// An awaitable <see cref="Task"/> having true if the create operation may continue, otherwise it shall be skipped as a result.
         /// </returns>
-        public bool BeforeCreate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public async Task<bool> BeforeCreateAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            return this.SideEffects(thing).All(sideEffect => sideEffect.BeforeCreate(thing, container, transaction, partition, securityContext));
+            var sideEffects = this.SideEffects(thing).ToArray();
+
+            foreach (var sideEffect in sideEffects)
+            {
+                if (!(await sideEffect.BeforeCreateAsync(thing, container, transaction, partition, securityContext)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -136,11 +147,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void AfterCreate(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        /// <returns>
+        /// An awaitable <see cref="Task"/> 
+        /// </returns>
+        public async Task AfterCreateAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             foreach (var sideEffect in this.SideEffects(thing))
             {
-                sideEffect.AfterCreate(thing, container, originalThing, transaction, partition, securityContext);
+                await sideEffect.AfterCreateAsync(thing, container, originalThing, transaction, partition, securityContext);
             }
         }
 
@@ -168,11 +182,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor
         /// outcome.
         /// </param>
-        public void BeforeUpdate(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        /// <returns>
+        /// An awaitable <see cref="Task"/> 
+        /// </returns>
+        public async Task BeforeUpdateAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
             foreach (var sideEffect in this.SideEffects(thing))
             {
-                sideEffect.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+                await sideEffect.BeforeUpdateAsync(thing, container, transaction, partition, securityContext, rawUpdateInfo);
             }
         }
 
@@ -197,11 +214,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void AfterUpdate(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        /// <returns>
+        /// An awaitable <see cref="Task"/> 
+        /// </returns>
+        public async Task AfterUpdateAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             foreach (var sideEffect in this.SideEffects(thing))
             {
-                sideEffect.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+                await sideEffect.AfterUpdateAsync(thing, container, originalThing, transaction, partition, securityContext);
             }
         }
 
@@ -223,11 +243,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void BeforeDelete(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        /// <returns>
+        /// An awaitable <see cref="Task"/> 
+        /// </returns>
+        public async Task BeforeDeleteAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             foreach (var sideEffect in this.SideEffects(thing))
             {
-                sideEffect.BeforeDelete(thing, container, transaction, partition, securityContext);
+                await sideEffect.BeforeDeleteAsync(thing, container, transaction, partition, securityContext);
             }
         }
 
@@ -252,11 +275,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void AfterDelete(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        /// <returns>
+        /// An awaitable <see cref="Task"/> 
+        /// </returns>
+        public async Task AfterDeleteAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             foreach (var sideEffect in this.SideEffects(thing))
             {
-                sideEffect.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
+                await sideEffect.AfterDeleteAsync(thing, container, originalThing, transaction, partition, securityContext);
             }
         }
 

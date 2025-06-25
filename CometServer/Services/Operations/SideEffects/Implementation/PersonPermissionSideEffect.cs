@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonPermissionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -46,13 +47,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// Gets the list of property names that are to be excluded from validation logic.
         /// </summary>
-        public override IEnumerable<string> DeferPropertyValidation
-        {
-            get
-            {
-                return new[] { "accessRight" };
-            }
-        }
+        public override IEnumerable<string> DeferPropertyValidation => ["accessRight"];
 
         /// <summary>
         /// Execute additional logic  before a create operation.
@@ -72,14 +67,15 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(
+        public override async Task<bool> BeforeCreate(
             PersonPermission thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext)
         {
-            this.ValidateAccessRightKind(thing);
+            await this.ValidateAccessRightKindAsync(thing);
+
             return true;
         }
 
@@ -104,10 +100,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterUpdate(PersonPermission thing, Thing container, PersonPermission originalThing, NpgsqlTransaction transaction,
+        public override async Task AfterUpdate(PersonPermission thing, Thing container, PersonPermission originalThing, NpgsqlTransaction transaction,
             string partition, ISecurityContext securityContext)
         {
-            this.ValidateAccessRightKind(thing);
+            await this.ValidateAccessRightKindAsync(thing);
         }
 
         /// <summary>
@@ -116,13 +112,15 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="thing">
         /// The <see cref="Thing"/> instance that will be inspected.
         /// </param>
-        private void ValidateAccessRightKind(PersonPermission thing)
+        private Task ValidateAccessRightKindAsync(PersonPermission thing)
         {
             if (!this.AccessRightKindValidationService.IsPersonPermissionValid(thing))
             {
                 throw new InvalidOperationException(
                     "The accessRight " + thing.AccessRight + " cannot be set for the class " + thing.ObjectClass + " .");
             }
+
+            return Task.CompletedTask;
         }
     }
 }

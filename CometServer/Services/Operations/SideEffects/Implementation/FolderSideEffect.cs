@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FolderSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -74,7 +75,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(
+        public override async Task<bool> BeforeCreate(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -83,7 +84,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             if (thing.ContainingFolder != null)
             {
-                this.ValidateContainingFolder(
+                await this.ValidateContainingFolder(
                     thing,
                     container,
                     transaction,
@@ -118,7 +119,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override async Task BeforeUpdate(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -130,7 +131,7 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 var containingFolderId = (Guid)value;
 
-                this.ValidateContainingFolder(
+                await this.ValidateContainingFolder(
                     thing,
                     container,
                     transaction,
@@ -139,7 +140,7 @@ namespace CometServer.Services.Operations.SideEffects
                     containingFolderId);
             }
 
-            this.HasWriteAccess(thing, transaction, partition);
+            await this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -160,9 +161,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDelete(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.HasWriteAccess(thing, transaction, partition);
+            await this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -186,7 +187,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="containingFolderId">
         /// The containing folder id to check for being acyclic
         /// </param>
-        public void ValidateContainingFolder(
+        public Task ValidateContainingFolder(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -218,6 +219,8 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new AcyclicValidationException(
                     $"Folder {thing.Name} {thing.Iid} cannot have a containing Folder {containingFolderId} that leads to cyclic dependency");
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -264,18 +267,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void HasWriteAccess(Folder folder, NpgsqlTransaction transaction, string partition)
+        private async Task HasWriteAccess(Folder folder, NpgsqlTransaction transaction, string partition)
         {
             if (partition.StartsWith("EngineeringModel_"))
             {
-                this.CommonFileStoreService.HasWriteAccess(
+                await this.CommonFileStoreService.HasWriteAccess(
                     folder,
                     transaction,
                     partition);
             }
             else
             {
-                this.DomainFileStoreService.HasWriteAccess(
+                await this.DomainFileStoreService.HasWriteAccess(
                     folder,
                     transaction,
                     partition);
