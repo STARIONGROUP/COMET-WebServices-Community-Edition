@@ -107,7 +107,7 @@ namespace CometServer.Tests.SideEffects
 
             this.permittingPermissionService.Verify(x => x.CanWrite(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Never);
             
-            this.termService.Verify(x => x.Get(this.npgsqlTransaction, "partition", this.glossary.Term, this.securityContext.Object), Times.Never);
+            this.termService.Verify(x => x.GetAsync(this.npgsqlTransaction, "partition", this.glossary.Term, this.securityContext.Object), Times.Never);
 
             this.termService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
         }
@@ -125,7 +125,7 @@ namespace CometServer.Tests.SideEffects
 
             this.permittingPermissionService.Verify(x => x.CanWrite(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Never);
 
-            this.termService.Verify(x => x.Get(this.npgsqlTransaction, "partition", this.glossary.Term, this.securityContext.Object), Times.Never);
+            this.termService.Verify(x => x.GetAsync(this.npgsqlTransaction, "partition", this.glossary.Term, this.securityContext.Object), Times.Never);
 
             this.termService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
         }
@@ -165,7 +165,7 @@ namespace CometServer.Tests.SideEffects
             this.glossarySideEffect.PermissionService = this.permittingPermissionService.Object;
             this.glossarySideEffect.TermService = this.termService.Object;
 
-            this.termService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(returnedTerms);
+            this.termService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(returnedTerms);
 
             this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
             

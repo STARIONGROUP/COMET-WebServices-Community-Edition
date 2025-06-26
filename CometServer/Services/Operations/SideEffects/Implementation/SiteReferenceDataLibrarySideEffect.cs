@@ -173,7 +173,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Get all rdls from the SiteDirectory
-            var rdls = this.SiteReferenceDataLibraryService.Get(
+            var rdls = this.SiteReferenceDataLibraryService.GetAsync(
                 transaction,
                 partition,
                 ((SiteDirectory)container).SiteReferenceDataLibrary,

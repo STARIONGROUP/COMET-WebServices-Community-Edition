@@ -113,13 +113,13 @@ namespace CometServer.Services.Operations.SideEffects
 
                 // Get all CompoundParameterTypes
                 var parameterTypes = this.CompoundParameterTypeService
-                    .Get(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                    .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
                     .Cast<CompoundParameterType>().ToList();
 
                 // Add all ArrayParameterTypes
                 parameterTypes.AddRange(
                     this.ArrayParameterTypeService
-                        .Get(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                        .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
                         .Cast<ArrayParameterType>().ToList());
 
                 // Check every component
@@ -166,7 +166,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var parameterTypeIds = new List<Guid>();
@@ -267,7 +267,7 @@ namespace CometServer.Services.Operations.SideEffects
                 return;
             }
 
-            var parameterTypeComponent = this.ParameterTypeComponentService.Get(
+            var parameterTypeComponent = this.ParameterTypeComponentService.GetAsync(
                 transaction,
                 partition,
                 new List<Guid> { parameterTypeComponentId },

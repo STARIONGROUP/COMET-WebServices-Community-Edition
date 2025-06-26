@@ -108,7 +108,7 @@ namespace CometServer.Tests.SideEffects
             this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
 
             //Locked by someone else
-            this.fileService.Setup(x => x.CheckFileLock(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();
+            this.fileService.Setup(x => x.CheckFileLockAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();
             Assert.Throws<SecurityException>(() => this.sideEffect.BeforeUpdate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
         }
     }

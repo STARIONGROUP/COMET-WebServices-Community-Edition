@@ -110,7 +110,7 @@ namespace CometServer.Services.Operations.SideEffects
                 availableMeasurementScaleIids.AddRange(referenceDataLibrary.Scale);
 
                 var allMeasurementScales = this.MeasurementScaleService
-                    .Get(transaction, partition, null, securityContext)
+                    .GetAsync(transaction, partition, null, securityContext)
                     .Cast<MeasurementScale>()
                     .ToList();
 
@@ -169,7 +169,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var availableRdls = this.SiteReferenceDataLibraryService
-                .Get(transaction, partition, null, securityContext)
+                .GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var next = srdlIid;
@@ -215,18 +215,18 @@ namespace CometServer.Services.Operations.SideEffects
             IEnumerable<Guid> mappingToReferenceScaleIids)
         {
             var mappingToReferenceScales = this.MappingToReferenceScaleService
-                .Get(transaction, partition, mappingToReferenceScaleIids, securityContext)
+                .GetAsync(transaction, partition, mappingToReferenceScaleIids, securityContext)
                 .Cast<MappingToReferenceScale>()
                 .ToList();
 
             var scaleValueDefinitions = new List<Thing>();
 
             scaleValueDefinitions.AddRange(this.ScaleValueDefinitionService
-                .Get(transaction, partition, mappingToReferenceScales.Select(x => x.ReferenceScaleValue), securityContext)
+                .GetAsync(transaction, partition, mappingToReferenceScales.Select(x => x.ReferenceScaleValue), securityContext)
                 .ToList());
 
             scaleValueDefinitions.AddRange(this.ScaleValueDefinitionService
-                .Get(transaction, partition, mappingToReferenceScales.Select(x => x.DependentScaleValue), securityContext)
+                .GetAsync(transaction, partition, mappingToReferenceScales.Select(x => x.DependentScaleValue), securityContext)
                 .ToList());
 
             return scaleValueDefinitions

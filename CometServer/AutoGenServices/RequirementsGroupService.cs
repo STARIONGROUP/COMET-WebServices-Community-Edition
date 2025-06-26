@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RequirementsGroupService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -34,10 +33,16 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
@@ -91,13 +96,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="RequirementsGroup"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="RequirementsGroup"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -119,11 +124,11 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.RequirementsGroupDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.RequirementsGroupDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -145,11 +150,11 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.RequirementsGroupDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.RequirementsGroupDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -171,11 +176,11 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.RequirementsGroupDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return await this.RequirementsGroupDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -191,9 +196,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -214,16 +219,16 @@ namespace CometServer.Services
         /// The container instance of the <see cref="RequirementsGroup"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, DeleteOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, DeleteOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.RequirementsGroupDao.Delete(transaction, partition, thing.Iid);
+            return await this.RequirementsGroupDao.DeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -244,12 +249,12 @@ namespace CometServer.Services
         /// The container instance of the <see cref="RequirementsGroup"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return this.RequirementsGroupDao.RawDelete(transaction, partition, thing.Iid);
+            return await this.RequirementsGroupDao.RawDeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -268,17 +273,17 @@ namespace CometServer.Services
         /// The container instance of the <see cref="RequirementsGroup"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
             var requirementsGroup = thing as RequirementsGroup;
-            return this.RequirementsGroupDao.Update(transaction, partition, requirementsGroup, container);
+            return await this.RequirementsGroupDao.UpdateAsync(transaction, partition, requirementsGroup, container);
         }
 
         /// <summary>
@@ -300,18 +305,18 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, CreateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
             var requirementsGroup = thing as RequirementsGroup;
-            var createSuccesful = this.RequirementsGroupDao.Write(transaction, partition, requirementsGroup, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, requirementsGroup);
+            var createSuccesful = await this.RequirementsGroupDao.WriteAsync(transaction, partition, requirementsGroup, container);
+            return createSuccesful && await this.CreateContainmentAsync(transaction, partition, requirementsGroup);
         }
 
         /// <summary>
@@ -334,13 +339,13 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var requirementsGroup = thing as RequirementsGroup;
-            var createSuccesful = this.RequirementsGroupDao.Upsert(transaction, partition, requirementsGroup, container);
-            return createSuccesful && this.UpsertContainment(transaction, partition, requirementsGroup);
+            var createSuccesful = await this.RequirementsGroupDao.UpsertAsync(transaction, partition, requirementsGroup, container);
+            return createSuccesful && await this.UpsertContainmentAsync(transaction, partition, requirementsGroup);
         }
 
         /// <summary>
@@ -359,21 +364,21 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="RequirementsGroup"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="RequirementsGroup"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("RequirementsGroup", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var requirementsGroupColl = new List<Thing>(this.RequirementsGroupDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
+            var requirementsGroupColl = new List<Thing>(await this.RequirementsGroupDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
 
-            return this.AfterGet(requirementsGroupColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(requirementsGroupColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -392,9 +397,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="RequirementsGroup"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="RequirementsGroup"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -402,14 +407,14 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var results = new List<Thing>(await this.GetShallowAsync(transaction, partition, idFilter, containerSecurityContext));
             var requirementsGroupColl = results.Where(i => i.GetType() == typeof(RequirementsGroup)).Cast<RequirementsGroup>().ToList();
 
-            results.AddRange(this.AliasService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Alias), containerSecurityContext));
-            results.AddRange(this.DefinitionService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Definition), containerSecurityContext));
-            results.AddRange(this.GroupService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.Group), containerSecurityContext));
-            results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.HyperLink), containerSecurityContext));
-            results.AddRange(this.ParameterValueService.GetDeep(transaction, partition, requirementsGroupColl.SelectMany(x => x.ParameterValue), containerSecurityContext));
+            results.AddRange(await this.AliasService.GetDeepAsync(transaction, partition, requirementsGroupColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(await this.DefinitionService.GetDeepAsync(transaction, partition, requirementsGroupColl.SelectMany(x => x.Definition), containerSecurityContext));
+            results.AddRange(await this.GroupService.GetDeepAsync(transaction, partition, requirementsGroupColl.SelectMany(x => x.Group), containerSecurityContext));
+            results.AddRange(await this.HyperLinkService.GetDeepAsync(transaction, partition, requirementsGroupColl.SelectMany(x => x.HyperLink), containerSecurityContext));
+            results.AddRange(await this.ParameterValueService.GetDeepAsync(transaction, partition, requirementsGroupColl.SelectMany(x => x.ParameterValue), containerSecurityContext));
 
             return results;
         }
@@ -433,14 +438,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }
@@ -466,35 +471,35 @@ namespace CometServer.Services
         /// The <see cref="RequirementsGroup"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, RequirementsGroup requirementsGroup)
+        private async Task<bool> CreateContainmentAsync(NpgsqlTransaction transaction, string partition, RequirementsGroup requirementsGroup)
         {
             var results = new List<bool>();
 
             foreach (var alias in this.ResolveFromRequestCache(requirementsGroup.Alias))
             {
-                results.Add(this.AliasService.CreateConcept(transaction, partition, alias, requirementsGroup));
+                results.Add(await this.AliasService.CreateConceptAsync(transaction, partition, alias, requirementsGroup));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(requirementsGroup.Definition))
             {
-                results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, requirementsGroup));
+                results.Add(await this.DefinitionService.CreateConceptAsync(transaction, partition, definition, requirementsGroup));
             }
 
             foreach (var group in this.ResolveFromRequestCache(requirementsGroup.Group))
             {
-                results.Add(this.GroupService.CreateConcept(transaction, partition, group, requirementsGroup));
+                results.Add(await this.GroupService.CreateConceptAsync(transaction, partition, group, requirementsGroup));
             }
 
             foreach (var hyperLink in this.ResolveFromRequestCache(requirementsGroup.HyperLink))
             {
-                results.Add(this.HyperLinkService.CreateConcept(transaction, partition, hyperLink, requirementsGroup));
+                results.Add(await this.HyperLinkService.CreateConceptAsync(transaction, partition, hyperLink, requirementsGroup));
             }
 
             foreach (var parameterValue in this.ResolveFromRequestCache(requirementsGroup.ParameterValue))
             {
-                results.Add(this.ParameterValueService.CreateConcept(transaction, partition, parameterValue, requirementsGroup));
+                results.Add(await this.ParameterValueService.CreateConceptAsync(transaction, partition, parameterValue, requirementsGroup));
             }
 
             return results.All(x => x);
@@ -514,35 +519,35 @@ namespace CometServer.Services
         /// The <see cref="RequirementsGroup"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, RequirementsGroup requirementsGroup)
+        private async Task<bool> UpsertContainmentAsync(NpgsqlTransaction transaction, string partition, RequirementsGroup requirementsGroup)
         {
             var results = new List<bool>();
 
             foreach (var alias in this.ResolveFromRequestCache(requirementsGroup.Alias))
             {
-                results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, requirementsGroup));
+                results.Add(await this.AliasService.UpsertConceptAsync(transaction, partition, alias, requirementsGroup));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(requirementsGroup.Definition))
             {
-                results.Add(this.DefinitionService.UpsertConcept(transaction, partition, definition, requirementsGroup));
+                results.Add(await this.DefinitionService.UpsertConceptAsync(transaction, partition, definition, requirementsGroup));
             }
 
             foreach (var group in this.ResolveFromRequestCache(requirementsGroup.Group))
             {
-                results.Add(this.GroupService.UpsertConcept(transaction, partition, group, requirementsGroup));
+                results.Add(await this.GroupService.UpsertConceptAsync(transaction, partition, group, requirementsGroup));
             }
 
             foreach (var hyperLink in this.ResolveFromRequestCache(requirementsGroup.HyperLink))
             {
-                results.Add(this.HyperLinkService.UpsertConcept(transaction, partition, hyperLink, requirementsGroup));
+                results.Add(await this.HyperLinkService.UpsertConceptAsync(transaction, partition, hyperLink, requirementsGroup));
             }
 
             foreach (var parameterValue in this.ResolveFromRequestCache(requirementsGroup.ParameterValue))
             {
-                results.Add(this.ParameterValueService.UpsertConcept(transaction, partition, parameterValue, requirementsGroup));
+                results.Add(await this.ParameterValueService.UpsertConceptAsync(transaction, partition, parameterValue, requirementsGroup));
             }
 
             return results.All(x => x);

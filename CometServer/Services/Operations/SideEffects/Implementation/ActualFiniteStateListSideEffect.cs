@@ -71,7 +71,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override Task AfterCreate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.FiniteStateLogicService.UpdateActualFinisteStateList(thing, (Iteration)container, transaction, partition, securityContext);
+            this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
 
             return Task.CompletedTask;
         }
@@ -103,7 +103,7 @@ namespace CometServer.Services.Operations.SideEffects
                 || thing.PossibleFiniteStateList.Count != originalThing.PossibleFiniteStateList.Count)
             {
                 // Update all actualFiniteStates
-                this.FiniteStateLogicService.UpdateActualFinisteStateList(thing, (Iteration)container, transaction, partition, securityContext);
+                this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
             }
 
             return Task.CompletedTask;

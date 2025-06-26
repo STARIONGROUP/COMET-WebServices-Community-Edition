@@ -164,7 +164,7 @@ namespace CometServer.Services.Operations.SideEffects
             var isOwnerChanged = thing.Owner != originalThing.Owner;
 
             // Remove the subscriptions owned by the new owner of the ParameterOverride
-            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, thing.ParameterSubscription, securityContext).OfType<ParameterSubscription>().ToArray();
+            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, thing.ParameterSubscription, securityContext).OfType<ParameterSubscription>().ToArray();
 
             if (isOwnerChanged && parameterSubscriptions.Any(s => s.Owner == thing.Owner))
             {
@@ -173,7 +173,7 @@ namespace CometServer.Services.Operations.SideEffects
             
                 if (parameterSubscriptionToRemove != null)
                 {
-                    if (!this.ParameterSubscriptionService.DeleteConcept(transaction, partition, parameterSubscriptionToRemove, thing))
+                    if (!this.ParameterSubscriptionService.DeleteConceptAsync(transaction, partition, parameterSubscriptionToRemove, thing))
                     {
                         throw new InvalidOperationException(
                             $"The update operation of the parameter override value set {parameterSubscriptionToRemove.Iid} failed.");
@@ -204,7 +204,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </returns>
         private Task<IEnumerable<ParameterOverrideValueSet>> ComputeValueSets(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var parameters = this.ParameterService.GetShallow(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
+            var parameters = this.ParameterService.GetShallowAsync(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
 
             if (parameters.Length != 1)
             {
@@ -213,7 +213,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             var parameter = parameters.Single();
 
-            var parameterValueSets = this.ParameterValueSetService.GetShallow(transaction, partition, parameter.ValueSet, securityContext).OfType<ParameterValueSet>().ToArray();
+            var parameterValueSets = this.ParameterValueSetService.GetShallowAsync(transaction, partition, parameter.ValueSet, securityContext).OfType<ParameterValueSet>().ToArray();
 
             if (parameterValueSets.Length != parameter.ValueSet.Count)
             {
@@ -241,7 +241,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             foreach (var parameterValueSet in newValueSet)
             {
-                this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterValueSet, parameterOverride);
+                this.ParameterOverrideValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, parameterOverride);
             }
 
             return Task.CompletedTask;
@@ -257,7 +257,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="overrideValueset">The <see cref="ParameterOverrideValueSet"/> to subscribe on</param>
         private Task CreateSubscriptionFromParameter(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, ISecurityContext securityContext, IReadOnlyList<ParameterOverrideValueSet> overrideValueset)
         {
-            var parameters = this.ParameterService.GetShallow(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
+            var parameters = this.ParameterService.GetShallowAsync(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
 
             if (parameters.Length != 1)
             {
@@ -267,7 +267,7 @@ namespace CometServer.Services.Operations.SideEffects
             var parameter = parameters.Single();
 
             var existingSubscriptions = this.ParameterSubscriptionService
-                                            .GetShallow(transaction, partition, null, securityContext)
+                                            .GetShallowAsync(transaction, partition, null, securityContext)
                                             .OfType<ParameterSubscription>()
                                             .ToList();
 
@@ -280,7 +280,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             var subscriptionValueSets =
                 this.ParameterSubscriptionValueSetService
-                    .GetShallow(transaction, partition, parameterSubscriptions.SelectMany(x => x.ValueSet), securityContext)
+                    .GetShallowAsync(transaction, partition, parameterSubscriptions.SelectMany(x => x.ValueSet), securityContext)
                     .OfType<ParameterSubscriptionValueSet>()
                     .ToList();
 
@@ -292,7 +292,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 var newSubscription = new ParameterSubscription(Guid.NewGuid(), 0) { Owner = parameterSubscription.Owner };
-                this.ParameterSubscriptionService.CreateConcept(transaction, partition, newSubscription, parameterOverride);
+                this.ParameterSubscriptionService.CreateConceptAsync(transaction, partition, newSubscription, parameterOverride);
 
                 foreach (var parameterOverrideValueSet in overrideValueset)
                 {
@@ -302,7 +302,7 @@ namespace CometServer.Services.Operations.SideEffects
                             parameterOverrideValueSet.Iid, 
                             defaultArray);
 
-                    this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, subscriptionValueset, newSubscription);
+                    this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, subscriptionValueset, newSubscription);
                 }
             }
 

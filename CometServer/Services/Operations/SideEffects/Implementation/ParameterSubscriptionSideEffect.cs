@@ -195,8 +195,8 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var paramContainer = container is CDP4Common.DTO.Parameter
-                    ? (ParameterOrOverrideBase)this.ParameterService.GetShallow(transaction, partition, [container.Iid], securityContext).OfType<CDP4Common.DTO.Parameter>().SingleOrDefault()
-                    : this.ParameterOverrideService.GetShallow(transaction, partition, [container.Iid], securityContext).OfType<CDP4Common.DTO.ParameterOverride>().SingleOrDefault();
+                    ? (ParameterOrOverrideBase)this.ParameterService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).OfType<CDP4Common.DTO.Parameter>().SingleOrDefault()
+                    : this.ParameterOverrideService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).OfType<CDP4Common.DTO.ParameterOverride>().SingleOrDefault();
             
             if (paramContainer == null || !paramContainer.ValueSets.Any())
             {
@@ -204,8 +204,8 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var parameterValueSets = parameterOrOverrideBase is CDP4Common.DTO.Parameter
-                ? this.ParameterValueSetService.GetShallow(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray()
-                : this.ParameterOverrideValueSetService.GetShallow(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
+                ? this.ParameterValueSetService.GetShallowAsync(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray()
+                : this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
 
             foreach (var parameterValueSet in parameterValueSets)
             {
@@ -219,7 +219,7 @@ namespace CometServer.Services.Operations.SideEffects
                 var valueArray = new ValueArray<string>(this.DefaultValueArrayFactory.CreateDefaultValueArray(parameterValueSet.Manual.Count));
                 parameterSubscriptionValueSet.Manual = valueArray;
 
-                this.ParameterSubscriptionValueSetService.CreateConcept(
+                this.ParameterSubscriptionValueSetService.CreateConceptAsync(
                     transaction,
                     partition,
                     parameterSubscriptionValueSet,
@@ -295,15 +295,15 @@ namespace CometServer.Services.Operations.SideEffects
         private Task<bool> IsUniqueSubscription(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ParameterSubscription newSubscription, Thing container)
         {
             var parameterOrOverride =
-                (ParameterOrOverrideBase)this.ParameterService.GetShallow(transaction, partition, [container.Iid], securityContext).SingleOrDefault()
-                ?? (ParameterOrOverrideBase)this.ParameterOverrideService.GetShallow(transaction, partition, [container.Iid], securityContext).SingleOrDefault();
+                (ParameterOrOverrideBase)this.ParameterService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).SingleOrDefault()
+                ?? (ParameterOrOverrideBase)this.ParameterOverrideService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).SingleOrDefault();
 
             if (parameterOrOverride == null)
             {
                 throw new InvalidOperationException("The container of a new parameter-subscription can only be a ParameterOrOverrideBase");
             }
 
-            var existingSubscription = this.ParameterSubscriptionService.GetShallow(transaction, partition, parameterOrOverride.ParameterSubscription, securityContext).OfType<ParameterSubscription>().FirstOrDefault(x => x.Owner == newSubscription.Owner);
+            var existingSubscription = this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, parameterOrOverride.ParameterSubscription, securityContext).OfType<ParameterSubscription>().FirstOrDefault(x => x.Owner == newSubscription.Owner);
 
             if (existingSubscription != null)
             {

@@ -26,6 +26,7 @@ namespace CometServer.Services.ChangeLog
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -62,6 +63,6 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// True if change log data was added, otherwise false
         /// </returns>
-        bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things);
+        Task<bool> TryAppendModelChangeLogDataAsync(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things);
     }
 }

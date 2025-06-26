@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelReferenceDataLibraryService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -34,10 +33,16 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
@@ -131,13 +136,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="ModelReferenceDataLibrary"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="ModelReferenceDataLibrary"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep|| this.RequestUtils.QueryParameters.IncludeReferenceData
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -159,11 +164,11 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.ModelReferenceDataLibraryDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.ModelReferenceDataLibraryDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -185,11 +190,11 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.ModelReferenceDataLibraryDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.ModelReferenceDataLibraryDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -211,11 +216,11 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.ModelReferenceDataLibraryDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return await this.ModelReferenceDataLibraryDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -231,9 +236,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -254,16 +259,16 @@ namespace CometServer.Services
         /// The container instance of the <see cref="ModelReferenceDataLibrary"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, DeleteOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, DeleteOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.ModelReferenceDataLibraryDao.Delete(transaction, partition, thing.Iid);
+            return await this.ModelReferenceDataLibraryDao.DeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -284,12 +289,12 @@ namespace CometServer.Services
         /// The container instance of the <see cref="ModelReferenceDataLibrary"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return this.ModelReferenceDataLibraryDao.RawDelete(transaction, partition, thing.Iid);
+            return await this.ModelReferenceDataLibraryDao.RawDeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -308,17 +313,17 @@ namespace CometServer.Services
         /// The container instance of the <see cref="ModelReferenceDataLibrary"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
             var modelReferenceDataLibrary = thing as ModelReferenceDataLibrary;
-            return this.ModelReferenceDataLibraryDao.Update(transaction, partition, modelReferenceDataLibrary, container);
+            return await this.ModelReferenceDataLibraryDao.UpdateAsync(transaction, partition, modelReferenceDataLibrary, container);
         }
 
         /// <summary>
@@ -340,18 +345,18 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, CreateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
             var modelReferenceDataLibrary = thing as ModelReferenceDataLibrary;
-            var createSuccesful = this.ModelReferenceDataLibraryDao.Write(transaction, partition, modelReferenceDataLibrary, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, modelReferenceDataLibrary);
+            var createSuccesful = await this.ModelReferenceDataLibraryDao.WriteAsync(transaction, partition, modelReferenceDataLibrary, container);
+            return createSuccesful && await this.CreateContainmentAsync(transaction, partition, modelReferenceDataLibrary);
         }
 
         /// <summary>
@@ -374,13 +379,13 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var modelReferenceDataLibrary = thing as ModelReferenceDataLibrary;
-            var createSuccesful = this.ModelReferenceDataLibraryDao.Upsert(transaction, partition, modelReferenceDataLibrary, container);
-            return createSuccesful && this.UpsertContainment(transaction, partition, modelReferenceDataLibrary);
+            var createSuccesful = await this.ModelReferenceDataLibraryDao.UpsertAsync(transaction, partition, modelReferenceDataLibrary, container);
+            return createSuccesful && await this.UpsertContainmentAsync(transaction, partition, modelReferenceDataLibrary);
         }
 
         /// <summary>
@@ -399,21 +404,21 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="ModelReferenceDataLibrary"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="ModelReferenceDataLibrary"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("ModelReferenceDataLibrary", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var modelReferenceDataLibraryColl = new List<Thing>(this.ModelReferenceDataLibraryDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
+            var modelReferenceDataLibraryColl = new List<Thing>(await this.ModelReferenceDataLibraryDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
 
-            return this.AfterGet(modelReferenceDataLibraryColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(modelReferenceDataLibraryColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -432,9 +437,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="ModelReferenceDataLibrary"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="ModelReferenceDataLibrary"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -442,7 +447,7 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var results = new List<Thing>(await this.GetShallowAsync(transaction, partition, idFilter, containerSecurityContext));
             if (!this.RequestUtils.QueryParameters.IncludeReferenceData)
             {
                 // if the includeReferenceData=true retrieval mode is requested 
@@ -451,19 +456,19 @@ namespace CometServer.Services
             }
             var modelReferenceDataLibraryColl = results.Where(i => i.GetType() == typeof(ModelReferenceDataLibrary)).Cast<ModelReferenceDataLibrary>().ToList();
 
-            results.AddRange(this.AliasService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Alias), containerSecurityContext));
-            results.AddRange(this.ConstantService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Constant), containerSecurityContext));
-            results.AddRange(this.DefinedCategoryService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.DefinedCategory), containerSecurityContext));
-            results.AddRange(this.DefinitionService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Definition), containerSecurityContext));
-            results.AddRange(this.FileTypeService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.FileType), containerSecurityContext));
-            results.AddRange(this.GlossaryService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Glossary), containerSecurityContext));
-            results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.HyperLink), containerSecurityContext));
-            results.AddRange(this.ParameterTypeService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.ParameterType), containerSecurityContext));
-            results.AddRange(this.ReferenceSourceService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.ReferenceSource), containerSecurityContext));
-            results.AddRange(this.RuleService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Rule), containerSecurityContext));
-            results.AddRange(this.ScaleService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Scale), containerSecurityContext));
-            results.AddRange(this.UnitService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Unit), containerSecurityContext));
-            results.AddRange(this.UnitPrefixService.GetDeep(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.UnitPrefix), containerSecurityContext));
+            results.AddRange(await this.AliasService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Alias), containerSecurityContext));
+            results.AddRange(await this.ConstantService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Constant), containerSecurityContext));
+            results.AddRange(await this.DefinedCategoryService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.DefinedCategory), containerSecurityContext));
+            results.AddRange(await this.DefinitionService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Definition), containerSecurityContext));
+            results.AddRange(await this.FileTypeService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.FileType), containerSecurityContext));
+            results.AddRange(await this.GlossaryService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Glossary), containerSecurityContext));
+            results.AddRange(await this.HyperLinkService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.HyperLink), containerSecurityContext));
+            results.AddRange(await this.ParameterTypeService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.ParameterType), containerSecurityContext));
+            results.AddRange(await this.ReferenceSourceService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.ReferenceSource), containerSecurityContext));
+            results.AddRange(await this.RuleService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Rule), containerSecurityContext));
+            results.AddRange(await this.ScaleService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Scale), containerSecurityContext));
+            results.AddRange(await this.UnitService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.Unit), containerSecurityContext));
+            results.AddRange(await this.UnitPrefixService.GetDeepAsync(transaction, partition, modelReferenceDataLibraryColl.SelectMany(x => x.UnitPrefix), containerSecurityContext));
 
             return results;
         }
@@ -487,14 +492,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }
@@ -520,75 +525,75 @@ namespace CometServer.Services
         /// The <see cref="ModelReferenceDataLibrary"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, ModelReferenceDataLibrary modelReferenceDataLibrary)
+        private async Task<bool> CreateContainmentAsync(NpgsqlTransaction transaction, string partition, ModelReferenceDataLibrary modelReferenceDataLibrary)
         {
             var results = new List<bool>();
 
             foreach (var alias in this.ResolveFromRequestCache(modelReferenceDataLibrary.Alias))
             {
-                results.Add(this.AliasService.CreateConcept(transaction, partition, alias, modelReferenceDataLibrary));
+                results.Add(await this.AliasService.CreateConceptAsync(transaction, partition, alias, modelReferenceDataLibrary));
             }
 
             foreach (var constant in this.ResolveFromRequestCache(modelReferenceDataLibrary.Constant))
             {
-                results.Add(this.ConstantService.CreateConcept(transaction, partition, constant, modelReferenceDataLibrary));
+                results.Add(await this.ConstantService.CreateConceptAsync(transaction, partition, constant, modelReferenceDataLibrary));
             }
 
             foreach (var definedCategory in this.ResolveFromRequestCache(modelReferenceDataLibrary.DefinedCategory))
             {
-                results.Add(this.DefinedCategoryService.CreateConcept(transaction, partition, definedCategory, modelReferenceDataLibrary));
+                results.Add(await this.DefinedCategoryService.CreateConceptAsync(transaction, partition, definedCategory, modelReferenceDataLibrary));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(modelReferenceDataLibrary.Definition))
             {
-                results.Add(this.DefinitionService.CreateConcept(transaction, partition, definition, modelReferenceDataLibrary));
+                results.Add(await this.DefinitionService.CreateConceptAsync(transaction, partition, definition, modelReferenceDataLibrary));
             }
 
             foreach (var fileType in this.ResolveFromRequestCache(modelReferenceDataLibrary.FileType))
             {
-                results.Add(this.FileTypeService.CreateConcept(transaction, partition, fileType, modelReferenceDataLibrary));
+                results.Add(await this.FileTypeService.CreateConceptAsync(transaction, partition, fileType, modelReferenceDataLibrary));
             }
 
             foreach (var glossary in this.ResolveFromRequestCache(modelReferenceDataLibrary.Glossary))
             {
-                results.Add(this.GlossaryService.CreateConcept(transaction, partition, glossary, modelReferenceDataLibrary));
+                results.Add(await this.GlossaryService.CreateConceptAsync(transaction, partition, glossary, modelReferenceDataLibrary));
             }
 
             foreach (var hyperLink in this.ResolveFromRequestCache(modelReferenceDataLibrary.HyperLink))
             {
-                results.Add(this.HyperLinkService.CreateConcept(transaction, partition, hyperLink, modelReferenceDataLibrary));
+                results.Add(await this.HyperLinkService.CreateConceptAsync(transaction, partition, hyperLink, modelReferenceDataLibrary));
             }
 
             foreach (var parameterType in this.ResolveFromRequestCache(modelReferenceDataLibrary.ParameterType))
             {
-                results.Add(this.ParameterTypeService.CreateConcept(transaction, partition, parameterType, modelReferenceDataLibrary));
+                results.Add(await this.ParameterTypeService.CreateConceptAsync(transaction, partition, parameterType, modelReferenceDataLibrary));
             }
 
             foreach (var referenceSource in this.ResolveFromRequestCache(modelReferenceDataLibrary.ReferenceSource))
             {
-                results.Add(this.ReferenceSourceService.CreateConcept(transaction, partition, referenceSource, modelReferenceDataLibrary));
+                results.Add(await this.ReferenceSourceService.CreateConceptAsync(transaction, partition, referenceSource, modelReferenceDataLibrary));
             }
 
             foreach (var rule in this.ResolveFromRequestCache(modelReferenceDataLibrary.Rule))
             {
-                results.Add(this.RuleService.CreateConcept(transaction, partition, rule, modelReferenceDataLibrary));
+                results.Add(await this.RuleService.CreateConceptAsync(transaction, partition, rule, modelReferenceDataLibrary));
             }
 
             foreach (var scale in this.ResolveFromRequestCache(modelReferenceDataLibrary.Scale))
             {
-                results.Add(this.ScaleService.CreateConcept(transaction, partition, scale, modelReferenceDataLibrary));
+                results.Add(await this.ScaleService.CreateConceptAsync(transaction, partition, scale, modelReferenceDataLibrary));
             }
 
             foreach (var unit in this.ResolveFromRequestCache(modelReferenceDataLibrary.Unit))
             {
-                results.Add(this.UnitService.CreateConcept(transaction, partition, unit, modelReferenceDataLibrary));
+                results.Add(await this.UnitService.CreateConceptAsync(transaction, partition, unit, modelReferenceDataLibrary));
             }
 
             foreach (var unitPrefix in this.ResolveFromRequestCache(modelReferenceDataLibrary.UnitPrefix))
             {
-                results.Add(this.UnitPrefixService.CreateConcept(transaction, partition, unitPrefix, modelReferenceDataLibrary));
+                results.Add(await this.UnitPrefixService.CreateConceptAsync(transaction, partition, unitPrefix, modelReferenceDataLibrary));
             }
 
             return results.All(x => x);
@@ -608,75 +613,75 @@ namespace CometServer.Services
         /// The <see cref="ModelReferenceDataLibrary"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, ModelReferenceDataLibrary modelReferenceDataLibrary)
+        private async Task<bool> UpsertContainmentAsync(NpgsqlTransaction transaction, string partition, ModelReferenceDataLibrary modelReferenceDataLibrary)
         {
             var results = new List<bool>();
 
             foreach (var alias in this.ResolveFromRequestCache(modelReferenceDataLibrary.Alias))
             {
-                results.Add(this.AliasService.UpsertConcept(transaction, partition, alias, modelReferenceDataLibrary));
+                results.Add(await this.AliasService.UpsertConceptAsync(transaction, partition, alias, modelReferenceDataLibrary));
             }
 
             foreach (var constant in this.ResolveFromRequestCache(modelReferenceDataLibrary.Constant))
             {
-                results.Add(this.ConstantService.UpsertConcept(transaction, partition, constant, modelReferenceDataLibrary));
+                results.Add(await this.ConstantService.UpsertConceptAsync(transaction, partition, constant, modelReferenceDataLibrary));
             }
 
             foreach (var definedCategory in this.ResolveFromRequestCache(modelReferenceDataLibrary.DefinedCategory))
             {
-                results.Add(this.DefinedCategoryService.UpsertConcept(transaction, partition, definedCategory, modelReferenceDataLibrary));
+                results.Add(await this.DefinedCategoryService.UpsertConceptAsync(transaction, partition, definedCategory, modelReferenceDataLibrary));
             }
 
             foreach (var definition in this.ResolveFromRequestCache(modelReferenceDataLibrary.Definition))
             {
-                results.Add(this.DefinitionService.UpsertConcept(transaction, partition, definition, modelReferenceDataLibrary));
+                results.Add(await this.DefinitionService.UpsertConceptAsync(transaction, partition, definition, modelReferenceDataLibrary));
             }
 
             foreach (var fileType in this.ResolveFromRequestCache(modelReferenceDataLibrary.FileType))
             {
-                results.Add(this.FileTypeService.UpsertConcept(transaction, partition, fileType, modelReferenceDataLibrary));
+                results.Add(await this.FileTypeService.UpsertConceptAsync(transaction, partition, fileType, modelReferenceDataLibrary));
             }
 
             foreach (var glossary in this.ResolveFromRequestCache(modelReferenceDataLibrary.Glossary))
             {
-                results.Add(this.GlossaryService.UpsertConcept(transaction, partition, glossary, modelReferenceDataLibrary));
+                results.Add(await this.GlossaryService.UpsertConceptAsync(transaction, partition, glossary, modelReferenceDataLibrary));
             }
 
             foreach (var hyperLink in this.ResolveFromRequestCache(modelReferenceDataLibrary.HyperLink))
             {
-                results.Add(this.HyperLinkService.UpsertConcept(transaction, partition, hyperLink, modelReferenceDataLibrary));
+                results.Add(await this.HyperLinkService.UpsertConceptAsync(transaction, partition, hyperLink, modelReferenceDataLibrary));
             }
 
             foreach (var parameterType in this.ResolveFromRequestCache(modelReferenceDataLibrary.ParameterType))
             {
-                results.Add(this.ParameterTypeService.UpsertConcept(transaction, partition, parameterType, modelReferenceDataLibrary));
+                results.Add(await this.ParameterTypeService.UpsertConceptAsync(transaction, partition, parameterType, modelReferenceDataLibrary));
             }
 
             foreach (var referenceSource in this.ResolveFromRequestCache(modelReferenceDataLibrary.ReferenceSource))
             {
-                results.Add(this.ReferenceSourceService.UpsertConcept(transaction, partition, referenceSource, modelReferenceDataLibrary));
+                results.Add(await this.ReferenceSourceService.UpsertConceptAsync(transaction, partition, referenceSource, modelReferenceDataLibrary));
             }
 
             foreach (var rule in this.ResolveFromRequestCache(modelReferenceDataLibrary.Rule))
             {
-                results.Add(this.RuleService.UpsertConcept(transaction, partition, rule, modelReferenceDataLibrary));
+                results.Add(await this.RuleService.UpsertConceptAsync(transaction, partition, rule, modelReferenceDataLibrary));
             }
 
             foreach (var scale in this.ResolveFromRequestCache(modelReferenceDataLibrary.Scale))
             {
-                results.Add(this.ScaleService.UpsertConcept(transaction, partition, scale, modelReferenceDataLibrary));
+                results.Add(await this.ScaleService.UpsertConceptAsync(transaction, partition, scale, modelReferenceDataLibrary));
             }
 
             foreach (var unit in this.ResolveFromRequestCache(modelReferenceDataLibrary.Unit))
             {
-                results.Add(this.UnitService.UpsertConcept(transaction, partition, unit, modelReferenceDataLibrary));
+                results.Add(await this.UnitService.UpsertConceptAsync(transaction, partition, unit, modelReferenceDataLibrary));
             }
 
             foreach (var unitPrefix in this.ResolveFromRequestCache(modelReferenceDataLibrary.UnitPrefix))
             {
-                results.Add(this.UnitPrefixService.UpsertConcept(transaction, partition, unitPrefix, modelReferenceDataLibrary));
+                results.Add(await this.UnitPrefixService.UpsertConceptAsync(transaction, partition, unitPrefix, modelReferenceDataLibrary));
             }
 
             return results.All(x => x);

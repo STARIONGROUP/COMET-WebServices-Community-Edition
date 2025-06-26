@@ -302,7 +302,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Create the engineering model in the newEngineeringModelPartition
             var engineeringModel = new EngineeringModel(thing.EngineeringModelIid, 1) { EngineeringModelSetup = thing.Iid };
 
-            if (!this.EngineeringModelService.CreateConcept(transaction, newEngineeringModelPartition, engineeringModel, container))
+            if (!this.EngineeringModelService.CreateConceptAsync(transaction, newEngineeringModelPartition, engineeringModel, container))
             {
                 var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
                 this.Logger.LogError(errorMessage);
@@ -312,7 +312,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Create the first iteration in the newEngineeringModelPartition
             var firstIteration = new Iteration(firstIterationSetup.IterationIid, 1) { IterationSetup = firstIterationSetup.Iid };
 
-            if (!this.IterationService.CreateConcept(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
+            if (!this.IterationService.CreateConceptAsync(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
             {
                 var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";
                 this.Logger.LogError(errorMessage);
@@ -345,7 +345,7 @@ namespace CometServer.Services.Operations.SideEffects
                 ShortName = "option_1"
             };
 
-            if (!this.OptionService.CreateConcept(transaction, partition, newOption, container))
+            if (!this.OptionService.CreateConceptAsync(transaction, partition, newOption, container))
             {
                 var errorMessage = $"There was a problem creating the new Option: {newOption.Iid} contained by Iteration: {container.Iid}";
                 this.Logger.LogError(errorMessage);
@@ -380,7 +380,7 @@ namespace CometServer.Services.Operations.SideEffects
                 Description = "Iteration 1"
             };
 
-            if (!this.IterationSetupService.CreateConcept(transaction, partition, iterationSetup, engineeringModelSetup))
+            if (!this.IterationSetupService.CreateConceptAsync(transaction, partition, iterationSetup, engineeringModelSetup))
             {
                 throw new InvalidOperationException($"There was a problem creating the new IterationSetup: {iterationSetup.Iid} contained by EngineeringModelSetup: {engineeringModelSetup.Iid}");
             }
@@ -453,7 +453,7 @@ namespace CometServer.Services.Operations.SideEffects
                 participant.SelectedDomain = domainId;
             }
 
-            if (!this.ParticipantService.CreateConcept(transaction, partition, participant, thing))
+            if (!this.ParticipantService.CreateConceptAsync(transaction, partition, participant, thing))
             {
                 throw new InvalidOperationException($"There was a problem creating the new Participant: {participant.Iid} contained by EngineeringModelSetup: {thing.Iid}");
             }

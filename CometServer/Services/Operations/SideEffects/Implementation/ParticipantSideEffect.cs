@@ -120,12 +120,12 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             if (this.EngineeringModelSetupService
-                    .GetShallow(transaction, partition, [originalEngineeringModelSetup.Iid], securityContext).FirstOrDefault() is not EngineeringModelSetup engineeringModelSetup)
+                    .GetShallowAsync(transaction, partition, [originalEngineeringModelSetup.Iid], securityContext).FirstOrDefault() is not EngineeringModelSetup engineeringModelSetup)
             {
                 throw new Cdp4ModelValidationException($"{nameof(EngineeringModelSetup)} was not found.");
             }
 
-            var participants = this.ParticipantService.GetShallow(transaction, partition, engineeringModelSetup.Participant, securityContext).OfType<Participant>().ToList();
+            var participants = this.ParticipantService.GetShallowAsync(transaction, partition, engineeringModelSetup.Participant, securityContext).OfType<Participant>().ToList();
 
             var newParticipantGuids = participants.Select(x => x.Iid).Except(originalEngineeringModelSetup.Participant).ToList();
 
@@ -148,7 +148,7 @@ namespace CometServer.Services.Operations.SideEffects
                         if (newParticipantGuids.Intersect(duplicateParticipantGuids).Any())
                         {
                             var person = this.PersonService
-                                .GetShallow(transaction, partition, [duplicatePerson.Key], securityContext).OfType<Person>().FirstOrDefault();
+                                .GetShallowAsync(transaction, partition, [duplicatePerson.Key], securityContext).OfType<Person>().FirstOrDefault();
 
                             if (person == null)
                             {

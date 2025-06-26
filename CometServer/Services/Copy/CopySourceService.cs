@@ -79,7 +79,7 @@ namespace CometServer.Services
 
             var sourceThings = copyinfo.Options.CopyKind == CopyKind.Deep
                 ? readservice.GetDeep(transaction, partition, new[] {copyinfo.Source.Thing.Iid}, securityContext)
-                : readservice.GetShallow(transaction, partition, new[] {copyinfo.Source.Thing.Iid}, securityContext);
+                : readservice.GetShallowAsync(transaction, partition, new[] {copyinfo.Source.Thing.Iid}, securityContext);
 
             var source = sourceThings.ToList();
 

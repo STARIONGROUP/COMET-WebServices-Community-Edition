@@ -85,7 +85,7 @@ namespace CometServer.Tests.SideEffects
 
             this.folderService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.folderA.Iid, this.folderB.Iid, this.folderC.Iid },

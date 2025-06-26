@@ -78,7 +78,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext)
         {
             // Get all Parameters that reference the given ParameterGroup and set references to null
-            var parameters = this.ParameterService.Get(transaction, partition, null, securityContext)
+            var parameters = this.ParameterService.GetAsync(transaction, partition, null, securityContext)
                 .OfType<Parameter>().Where(x => x.Group == thing.Iid).ToList();
 
             foreach (var parameter in parameters)
@@ -221,7 +221,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Get all parameter groups from the container
-            var parameterGroups = this.ParameterGroupService.Get(
+            var parameterGroups = this.ParameterGroupService.GetAsync(
                 transaction,
                 partition,
                 ((ElementDefinition)container).ParameterGroup,

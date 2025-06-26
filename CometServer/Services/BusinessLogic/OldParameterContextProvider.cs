@@ -118,7 +118,7 @@ namespace CometServer.Services
         public void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration)
         {
             this.OldParameter = oldParameter;
-            this.OldValueSet = this.ParameterValueSetService.GetShallow(transaction, partition, this.OldParameter.ValueSet, securityContext).Cast<ParameterValueSet>().ToList();
+            this.OldValueSet = this.ParameterValueSetService.GetShallowAsync(transaction, partition, this.OldParameter.ValueSet, securityContext).Cast<ParameterValueSet>().ToList();
 
             this.OldActualFiniteStateList = null;
             this.OldActualFiniteStates = null;
@@ -127,12 +127,12 @@ namespace CometServer.Services
             if (this.OldParameter.StateDependence.HasValue)
             {
                 this.OldActualFiniteStateList = this.ActualFiniteStateListService
-                    .GetShallow(transaction, partition, new[] { this.OldParameter.StateDependence.Value }, securityContext)
+                    .GetShallowAsync(transaction, partition, new[] { this.OldParameter.StateDependence.Value }, securityContext)
                     .Cast<ActualFiniteStateList>()
                     .First();
 
                 this.OldActualFiniteStates = this.ActualFiniteStateService
-                    .GetShallow(transaction, partition, this.OldActualFiniteStateList.ActualState, securityContext)
+                    .GetShallowAsync(transaction, partition, this.OldActualFiniteStateList.ActualState, securityContext)
                     .Cast<ActualFiniteState>()
                     .ToList();
 
@@ -145,7 +145,7 @@ namespace CometServer.Services
             {
                 ArgumentNullException.ThrowIfNull(iteration);
 
-                var options = this.OptionService.GetShallow(transaction, partition, iteration.Option.Select(x => Guid.Parse(x.V.ToString())), securityContext).Cast<Option>().ToList();
+                var options = this.OptionService.GetShallowAsync(transaction, partition, iteration.Option.Select(x => Guid.Parse(x.V.ToString())), securityContext).Cast<Option>().ToList();
 
                 this.OptionBusinessLogicService.Initialize(iteration, options);
                 this.OldDefaultOption = this.OptionBusinessLogicService.GetDefaultOption();

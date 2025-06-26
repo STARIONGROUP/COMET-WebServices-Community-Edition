@@ -77,7 +77,7 @@ namespace CometServer.Services.Operations.SideEffects
                 || thing.PossibleState.Count != originalThing.PossibleState.Count)
             {
                 // Update all actualFiniteStateLists
-                this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateList(thing, transaction, partition, securityContext);
+                this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync(thing, transaction, partition, securityContext);
             }
         }
 
@@ -104,7 +104,7 @@ namespace CometServer.Services.Operations.SideEffects
             await base.BeforeDelete(thing, container, transaction, partition, securityContext);
 
             var actualFiniteStateListCollectionToUpdate =
-                this.ActualFiniteStateListService.GetShallow(transaction, partition, null, securityContext)
+                this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, null, securityContext)
                     .OfType<ActualFiniteStateList>()
                     .Where(x => x.PossibleFiniteStateList.Select(oi => Guid.Parse(oi.V.ToString())).Contains(thing.Iid))
                     .ToList();
@@ -119,7 +119,7 @@ namespace CometServer.Services.Operations.SideEffects
                 {
                     this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext, null);
 
-                    if (!this.ActualFiniteStateListService.DeleteConcept(transaction, partition, actualFiniteStateList, container))
+                    if (!this.ActualFiniteStateListService.DeleteConceptAsync(transaction, partition, actualFiniteStateList, container))
                     {
                         throw new InvalidOperationException($"The actual finite state list {actualFiniteStateList.Iid} could not be deleted");
                     }
@@ -146,13 +146,13 @@ namespace CometServer.Services.Operations.SideEffects
             await base.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
 
             var actualFiniteStateLists = this.ActualFiniteStateListService
-                .GetShallow(transaction, partition, this.actualFiniteStateListIdsToUpdate, securityContext)
+                .GetShallowAsync(transaction, partition, this.actualFiniteStateListIdsToUpdate, securityContext)
                 .OfType<ActualFiniteStateList>()
                 .ToList(); 
 
             foreach (var actualFiniteStateList in actualFiniteStateLists)
             {
-                this.FiniteStateLogicService.UpdateActualFinisteStateList(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext);
+                this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext);
             }
         }
     }

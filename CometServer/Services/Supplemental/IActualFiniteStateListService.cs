@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -55,6 +56,6 @@ namespace CometServer.Services
         /// <param name="securityContext">The security-context</param>
         /// <param name="transaction">The current transaction</param>
         /// <returns>The default <see cref="ActualFiniteState"/> if any, null otherwise</returns>
-        ActualFiniteState GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, string partition, ISecurityContext securityContext, NpgsqlTransaction transaction);
+        Task<ActualFiniteState> GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, string partition, ISecurityContext securityContext, NpgsqlTransaction transaction);
     }
 }

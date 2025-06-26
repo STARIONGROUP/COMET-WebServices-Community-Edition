@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementUsageService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -60,7 +61,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup"></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is ElementUsage sourceElementUsage))
@@ -99,17 +100,17 @@ namespace CometServer.Services
                 copy.ElementDefinition = sourceToCopyMap[sourceElementUsage.ElementDefinition];
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
+            if (!await this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
-            this.ElementUsageDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
+            await this.ElementUsageDao.WriteAsync(transaction, partition, copy, targetContainer);
+            await this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
             foreach (var parameterOverride in allSourceThings.Where(x => sourceElementUsage.ParameterOverride.Contains(x.Iid)))
             {
-                ((ServiceBase)this.ParameterOverrideService).Copy(transaction, partition, parameterOverride, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                await ((ServiceBase)this.ParameterOverrideService).CopyAsync(transaction, partition, parameterOverride, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
         }
     }

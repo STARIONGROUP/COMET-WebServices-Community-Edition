@@ -634,7 +634,7 @@ namespace CometServer.Modules
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
                 var transactionRevision = await revisionService.GetRevisionForTransactionAsync(transaction, TopContainer);
 
-                operationProcessor.Process(postRequestData.OperationData, transaction, TopContainer);
+                operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, TopContainer);
 
                 // save revision-history
                 var actor = credentialsService.Credentials.Person.Iid;

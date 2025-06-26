@@ -153,7 +153,7 @@ namespace CometServer.Services
 
                 var activeIterationSetups =
                     this.IterationSetupService
-                        .GetShallow(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, iterations.Select(x => x.IterationSetup), securityContext)
+                        .GetShallowAsync(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, iterations.Select(x => x.IterationSetup), securityContext)
                         .OfType<IterationSetup>()
                         .Where(x => x.FrozenOn == null)
                         .ToArray();

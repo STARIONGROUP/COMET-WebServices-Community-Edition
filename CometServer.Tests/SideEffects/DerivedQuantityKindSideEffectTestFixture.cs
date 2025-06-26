@@ -152,7 +152,7 @@ namespace CometServer.Tests.SideEffects
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,
@@ -164,7 +164,7 @@ namespace CometServer.Tests.SideEffects
 
             this.quantityKindFactorService = new Mock<IQuantityKindFactorService>();
             this.quantityKindFactorService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
@@ -185,7 +185,7 @@ namespace CometServer.Tests.SideEffects
 
             this.quantityKindService = new Mock<IQuantityKindService>();
             this.quantityKindService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),

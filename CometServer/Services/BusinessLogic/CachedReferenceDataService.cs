@@ -133,7 +133,7 @@ namespace CometServer.Services
                 this.parameterTypeCache = new Dictionary<Guid, ParameterType>();
 
                 var parameterTypes = this.ParameterTypeService
-                    .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<ParameterType>();
                 
                 foreach (var parameterType in parameterTypes)
@@ -164,7 +164,7 @@ namespace CometServer.Services
                 this.parameterTypeComponentCache = new Dictionary<Guid, ParameterTypeComponent>();
 
                 var parameterTypeComponents = this.ParameterTypeComponentService
-                    .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<ParameterTypeComponent>();
 
                 foreach (var parameterTypeComponent in parameterTypeComponents)
@@ -195,7 +195,7 @@ namespace CometServer.Services
                 this.dependentParameterTypeAssignment = new Dictionary<Guid, DependentParameterTypeAssignment>();
 
                 var dependentParameterTypeAssignments = this.DependentParameterTypeAssignmentService
-                    .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<DependentParameterTypeAssignment>();
 
                 foreach (var parameterTypeAssignment in dependentParameterTypeAssignments)
@@ -226,7 +226,7 @@ namespace CometServer.Services
                 this.independentParameterTypeAssignment = new Dictionary<Guid, IndependentParameterTypeAssignment>();
 
                 var independentParameterTypeAssignments = this.IndependentParameterTypeAssignmentService
-                    .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<IndependentParameterTypeAssignment>();
 
                 foreach (var parameterTypeAssignment in independentParameterTypeAssignments)
@@ -257,7 +257,7 @@ namespace CometServer.Services
                 this.measurementScaleCache = new Dictionary<Guid, MeasurementScale>();
 
                 var measurementScales = this.MeasurementScaleService
-                    .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                     .OfType<MeasurementScale>();
 
                 foreach (var measurementScale in measurementScales)
@@ -291,7 +291,7 @@ namespace CometServer.Services
             this.enumerationValueDefinitionCache = [];
 
             var enumerationValueDefinitions = this.EnumerationValueDefinitionService
-                .GetShallow(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
                 .OfType<EnumerationValueDefinition>();
 
             foreach (var enumerationValueDefinition in enumerationValueDefinitions)

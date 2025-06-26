@@ -85,7 +85,7 @@ namespace CometServer.Services.Operations.SideEffects
                 return Task.CompletedTask;
             }
 
-            var terms = this.TermService.GetShallow(transaction, partition, glossary.Term, securityContext)
+            var terms = this.TermService.GetShallowAsync(transaction, partition, glossary.Term, securityContext)
                 .Where(i => i.GetType() == typeof(Term)).Cast<Term>();
 
             foreach (var term in terms)

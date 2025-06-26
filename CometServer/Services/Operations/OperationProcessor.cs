@@ -92,7 +92,7 @@ namespace CometServer.Services.Operations
         /// <summary>
         /// Gets the operation <see cref="Thing"/> instance cache.
         /// In this cache you can find <see cref="DtoInfo"/>s, or <see cref="ContainerInfo"/>s and their <see cref="DtoResolveHelper"/>s
-        /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="Process"/> method.
+        /// from <see cref="Thing"/>s that were resolved during the execution of the <see cref="ProcessAsync"/> method.
         /// </summary>
         private readonly Dictionary<DtoInfo, DtoResolveHelper> operationThingCache = new();
 
@@ -165,14 +165,14 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
-        public async Task Process(
+        public async Task ProcessAsync(
             CdpPostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
             Dictionary<string, Stream> fileStore = null)
         {
-            await this.ValidatePostMessage(operation, fileStore ?? new Dictionary<string, Stream>(), transaction, partition);
-            await this.ApplyOperation(operation, transaction, partition, fileStore ?? new Dictionary<string, Stream>());
+            await this.ValidatePostMessageAsync(operation, fileStore ?? new Dictionary<string, Stream>(), transaction, partition);
+            await this.ApplyOperationAsync(operation, transaction, partition, fileStore ?? new Dictionary<string, Stream>());
         }
 
         /// <summary>
@@ -190,7 +190,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If validation failed
         /// </exception>
-        internal async Task ValidateDeleteOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string partition)
+        internal async Task ValidateDeleteOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string partition)
         {
             // verify presence of classkind and iid
             if (operation.Delete.Any(x => !x.ContainsKey(ClasskindKey) || !x.ContainsKey(IidKey)))
@@ -497,9 +497,9 @@ namespace CometServer.Services.Operations
         /// <param name="partition">
         /// The database partition
         /// </param>
-        private async Task ValidatePostMessage(CdpPostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
+        private async Task ValidatePostMessageAsync(CdpPostOperation operation, Dictionary<string, Stream> fileStore, NpgsqlTransaction transaction, string partition)
         {
-            await this.ValidateDeleteOperations(operation, transaction, partition);
+            await this.ValidateDeleteOperationsAsync(operation, transaction, partition);
             this.ValidateCreateOperations(operation, fileStore);
             ValidateUpdateOperations(operation);
             ValidateCopyOperations(operation);
@@ -765,7 +765,7 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The file Store.
         /// </param>
-        private async Task ApplyOperation(
+        private async Task ApplyOperationAsync(
             CdpPostOperation operation,
             NpgsqlTransaction transaction,
             string partition,
@@ -775,9 +775,9 @@ namespace CometServer.Services.Operations
             await this.ResolveService.ResolveItems(transaction, partition, this.operationThingCache);
 
             // apply the operations
-            await this.ApplyDeleteOperations(operation, transaction, partition);
-            await this.ApplyCreateOperations(operation, transaction);
-            await this.ApplyUpdateOperations(operation, transaction);
+            await this.ApplyDeleteOperationsAsync(operation, transaction, partition);
+            await this.ApplyCreateOperationsAsync(operation, transaction);
+            await this.ApplyUpdateOperationsAsync(operation, transaction);
 
             // all operations passed successfully: store the validated uploaded files to disk
             foreach (var kvp in fileStore)
@@ -785,7 +785,7 @@ namespace CometServer.Services.Operations
                 this.FileBinaryService.StoreBinaryData(kvp.Key, kvp.Value);
             }
 
-            this.ApplyCopyOperations(operation, transaction, partition);
+            await this.ApplyCopyOperationsAsync(operation, transaction, partition);
         }
 
         /// <summary>
@@ -803,18 +803,18 @@ namespace CometServer.Services.Operations
         /// <param name="persistedThing">
         /// The persisted thing to delete.
         /// </param>
-        private static void DeletePersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Thing persistedThing)
+        private static async Task DeletePersistedItemAsync(NpgsqlTransaction transaction, string partition, IPersistService service, Thing persistedThing)
         {
             // get the persisted thing (full) so that permission can be checked against potential owner
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
-            var thing = service.GetShallow(transaction, partition, [persistedThing.Iid], securityContext).FirstOrDefault();
+            var thing = (await service.GetShallowAsync(transaction, partition, [persistedThing.Iid], securityContext)).FirstOrDefault();
 
             if (thing == null)
             {
                 return;
             }
 
-            service.DeleteConcept(transaction, partition, thing);
+            await service.DeleteConceptAsync(transaction, partition, thing);
         }
 
         /// <summary>
@@ -838,9 +838,9 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private static IEnumerable<Thing> GetPersistedItems(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
+        private static async Task<IEnumerable<Thing>> GetPersistedItemsAsync(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
         {
-            return service.GetShallow(
+            return await service.GetShallowAsync(
                 transaction, partition, iids, securityContext);
         }
 
@@ -865,10 +865,10 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private static Thing GetPersistedItem(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
+        private static async Task<Thing> GetPersistedItemAsync(NpgsqlTransaction transaction, string partition, IPersistService service, Guid iid, ISecurityContext securityContext)
         {
-            return service.GetShallow(
-                    transaction, partition, [iid], securityContext)
+            return (await service.GetShallowAsync(
+                    transaction, partition, [iid], securityContext))
                 .SingleOrDefault();
         }
 
@@ -884,7 +884,7 @@ namespace CometServer.Services.Operations
         /// <param name="requestPartition">
         /// the database partition
         /// </param>
-        private async Task ApplyDeleteOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        private async Task ApplyDeleteOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
             foreach (var deleteInfo in operation.Delete)
             {
@@ -899,7 +899,7 @@ namespace CometServer.Services.Operations
                 if (operationProperties.Count == 0)
                 {
                     var dtoInfo = deleteInfo.GetInfoPlaceholder();
-                    await this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
+                    await this.ExecuteDeleteOperationAsync(dtoInfo, transaction, metaInfo);
                 }
                 else
                 {
@@ -924,12 +924,12 @@ namespace CometServer.Services.Operations
                                     var childTypeName = await this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
                                     var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
-                                    await this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
+                                    await this.ExecuteDeleteOperationAsync(dtoInfo, transaction, metaInfo);
                                     continue;
                                 }
 
                                 // remove link information
-                                if (!service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, iid, deletedValue))
+                                if (!await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, iid, deletedValue))
                                 {
                                     this.Logger.LogInformation(
                                         "The item '{PropInfoTypeName}' with iid: '{DeletedValue}' in '{TypeName}.{PropInfoName}' was already deleted: continue processing.",
@@ -952,12 +952,12 @@ namespace CometServer.Services.Operations
                                     var childTypeName = await this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
                                     var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
-                                    await this.ExecuteDeleteOperation(dtoInfo, transaction, metaInfo);
+                                    await this.ExecuteDeleteOperationAsync(dtoInfo, transaction, metaInfo);
                                     continue;
                                 }
 
                                 // remove link information
-                                if (!service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, iid, deletedOrderedItem))
+                                if (!await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, iid, deletedOrderedItem))
                                 {
                                     this.Logger.LogInformation(
                                         "The ordered item '{PropInfoTypeName}' with value: '{DeletedOrderedItemV}' in '{TypeName}.{PropInfoName}' was already deleted: continue processing.",
@@ -985,7 +985,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If the item already exists
         /// </exception>
-        private async Task ApplyCreateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
+        private async Task ApplyCreateOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
             // re-order create
             ReorderCreateOrder(operation);
@@ -1006,7 +1006,7 @@ namespace CometServer.Services.Operations
                         var service = this.ServiceProvider.MapToPersitableService(typeGroup.TypeName);
                         var typeGroupIids = typeGroup.Things.Select(x => x.Iid);
 
-                        var persistedItems = GetPersistedItems(transaction, partition, service, typeGroupIids, securityContext).ToArray();
+                        var persistedItems = (await GetPersistedItemsAsync(transaction, partition, service, typeGroupIids, securityContext)).ToArray();
 
                         foreach (var createInfo in typeGroup.Things)
                         {
@@ -1039,14 +1039,14 @@ namespace CometServer.Services.Operations
 
                             if (resolvedInfo.ContainerInfo.ContainmentSequence != -1)
                             {
-                                service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);
+                                await service.CreateConceptAsync(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing, resolvedInfo.ContainerInfo.ContainmentSequence);
                             }
                             else
                             {
-                                service.CreateConcept(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
+                                await service.CreateConceptAsync(transaction, resolvedInfo.Partition, resolvedInfo.Thing, resolvedContainerInfo.Thing);
                             }
 
-                            var createdItem = GetPersistedItem(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
+                            var createdItem = await GetPersistedItemAsync(transaction, resolvedInfo.Partition, service, createInfo.Iid, securityContext);
 
                             // call after create hook
                             await this.OperationSideEffectProcessor.AfterCreateAsync(createdItem, resolvedContainerInfo.Thing, originalThing, transaction, resolvedInfo.Partition, securityContext);
@@ -1071,7 +1071,7 @@ namespace CometServer.Services.Operations
         /// <exception cref="InvalidOperationException">
         /// If mandatory resources cannot be found to perform the operation
         /// </exception>
-        private void ApplyCopyOperations(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
+        private async Task ApplyCopyOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string requestPartition)
         {
             if (operation.Copy.Count == 0)
             {
@@ -1086,7 +1086,7 @@ namespace CometServer.Services.Operations
 
             foreach (var copyinfo in operation.Copy)
             {
-                var targetEngineeringModelSetup = modelSetupService.GetEngineeringModelSetupFromDataBaseCache(transaction, copyinfo.Target.TopContainer.Iid);
+                var targetEngineeringModelSetup = await modelSetupService.GetEngineeringModelSetupFromDataBaseCache(transaction, copyinfo.Target.TopContainer.Iid);
 
                 if (targetEngineeringModelSetup == null)
                 {
@@ -1099,7 +1099,7 @@ namespace CometServer.Services.Operations
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
 
                 var containerService = this.ServiceProvider.MapToReadService(copyinfo.Target.Container.ClassKind.ToString());
-                var container = containerService.GetShallow(transaction, requestPartition, [copyinfo.Target.Container.Iid], securityContext).SingleOrDefault();
+                var container = (await containerService.GetShallowAsync(transaction, requestPartition, [copyinfo.Target.Container.Iid], securityContext)).SingleOrDefault();
 
                 if (container == null)
                 {
@@ -1109,7 +1109,7 @@ namespace CometServer.Services.Operations
                 var mrdlService = (IModelReferenceDataLibraryService)this.ServiceProvider.MapToReadService(nameof(ModelReferenceDataLibrary));
                 var iterationservice = this.ServiceProvider.MapToReadService(nameof(Iteration));
 
-                var targetIteration = (Iteration)iterationservice.GetShallow(transaction, targetModelPartition, [copyinfo.Target.IterationId.Value], securityContext).SingleOrDefault();
+                var targetIteration = (Iteration)(await iterationservice.GetShallowAsync(transaction, targetModelPartition, [copyinfo.Target.IterationId.Value], securityContext)).SingleOrDefault();
 
                 if (targetIteration == null)
                 {
@@ -1127,7 +1127,7 @@ namespace CometServer.Services.Operations
 
                 if (elementDefs.Count == 1)
                 {
-                    ((ServiceBase)service).Copy(transaction, targetIterationPartition, topCopy, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
+                    await ((ServiceBase)service).CopyAsync(transaction, targetIterationPartition, topCopy, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                 }
                 else
                 {
@@ -1135,12 +1135,12 @@ namespace CometServer.Services.Operations
                     // copy usages after all definitions
                     foreach (var elementDefinition in elementDefs)
                     {
-                        ((ServiceBase)service).Copy(transaction, targetIterationPartition, elementDefinition, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
+                        await ((ServiceBase)service).CopyAsync(transaction, targetIterationPartition, elementDefinition, container, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                     }
 
                     var sourceElementDefIds = elementDefs.Select(x => x.Iid).ToArray();
                     var elementDefCopyIds = idmap.Where(x => sourceElementDefIds.Contains(x.Key)).Select(x => x.Value);
-                    var elementDefCopies = service.GetShallow(transaction, targetIterationPartition, elementDefCopyIds, securityContext).ToList();
+                    var elementDefCopies = (await service.GetShallowAsync(transaction, targetIterationPartition, elementDefCopyIds, securityContext)).ToList();
 
                     var sourceUsages = sourceThings.OfType<ElementUsage>().ToList();
                     var usageService = this.ServiceProvider.MapToPersitableService(ClassKind.ElementUsage.ToString());
@@ -1155,7 +1155,7 @@ namespace CometServer.Services.Operations
                             throw new InvalidOperationException("The target element definition container could not be found for the usage to copy.");
                         }
 
-                        ((ServiceBase)usageService).Copy(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
+                        await ((ServiceBase)usageService).CopyAsync(transaction, targetIterationPartition, elementUsage, elementDefContainer, sourceThings, copyinfo, idmap, rdls, targetEngineeringModelSetup, securityContext);
                     }
                 }
             }
@@ -1170,7 +1170,7 @@ namespace CometServer.Services.Operations
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private async Task ApplyUpdateOperations(CdpPostOperation operation, NpgsqlTransaction transaction)
+        private async Task ApplyUpdateOperationsAsync(CdpPostOperation operation, NpgsqlTransaction transaction)
         {
             foreach (var updateInfo in operation.Update)
             {
@@ -1253,7 +1253,7 @@ namespace CometServer.Services.Operations
                                 // add new collection items to unordered non-composite list property
                                 foreach (var newValue in collectionItems)
                                 {
-                                    isUpdated = service.AddToCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newValue);
+                                    isUpdated = await service.AddToCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newValue);
 
                                     isAnyUpdated = isAnyUpdated || isUpdated;
                                 }
@@ -1271,11 +1271,11 @@ namespace CometServer.Services.Operations
                                     // change containment of the indicated item
                                     var containedThingService = this.ServiceProvider.MapToPersitableService(propInfo.TypeName);
 
-                                    var containedThing = containedThingService.GetShallow(
+                                    var containedThing = (await containedThingService.GetShallowAsync(
                                         transaction,
                                         resolvedInfo.Partition,
                                         [containedIid],
-                                        new RequestSecurityContext { ContainerReadAllowed = true }).SingleOrDefault();
+                                        new RequestSecurityContext { ContainerReadAllowed = true })).SingleOrDefault();
 
                                     if (containedThing == null)
                                     {
@@ -1288,7 +1288,7 @@ namespace CometServer.Services.Operations
                                     }
 
                                     // try apply containment change
-                                    isUpdated = containedThingService.UpdateConcept(transaction, resolvedInfo.Partition, containedThing, updatableThing);
+                                    isUpdated = await containedThingService.UpdateConceptAsync(transaction, resolvedInfo.Partition, containedThing, updatableThing);
 
                                     // try apply containment change
                                     if (!isUpdated)
@@ -1316,10 +1316,10 @@ namespace CometServer.Services.Operations
                             {
                                 foreach (var newOrderedItem in orderedCollectionItems.Where(x => !x.M.HasValue))
                                 {
-                                    var isDeleteUpdated = service.DeleteFromCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
+                                    var isDeleteUpdated = await service.DeleteFromCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, newOrderedItem);
 
                                     // add ordered item to collection property
-                                    isUpdated = service.AddToCollectionProperty(
+                                    isUpdated = await service.AddToCollectionPropertyAsync(
                                         transaction,
                                         resolvedInfo.Partition,
                                         propertyName,
@@ -1334,7 +1334,7 @@ namespace CometServer.Services.Operations
                                     orderedItemUpdate.MoveItem(orderedItemUpdate.K, orderedItemUpdate.M.Value);
 
                                     // try apply collection property reorder
-                                    isUpdated = service.ReorderCollectionProperty(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate);
+                                    isUpdated = await service.ReorderCollectionPropertyAsync(transaction, resolvedInfo.Partition, propertyName, resolvedInfo.InstanceInfo.Iid, orderedItemUpdate);
 
                                     if (!isUpdated)
                                     {
@@ -1371,11 +1371,11 @@ namespace CometServer.Services.Operations
                                     //Resolve the correct partition for the specific object
                                     await this.ResolveService.ResolveItems(transaction, resolvedInfo.Partition, new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } });
 
-                                    var containedThing = containedThingService.GetShallow(
+                                    var containedThing = (await containedThingService.GetShallowAsync(
                                             transaction,
                                             dtoResolverHelper.Partition,
                                             [containedItemIid],
-                                            new RequestSecurityContext { ContainerReadAllowed = true })
+                                            new RequestSecurityContext { ContainerReadAllowed = true }))
                                         .SingleOrDefault();
 
                                     if (containedThing == null)
@@ -1396,7 +1396,7 @@ namespace CometServer.Services.Operations
 
                                     orderedItemUpdate.MoveItem(orderUpdateItemInfo.K, orderUpdateItemInfo.M.Value);
 
-                                    isUpdated = containedThingService.ReorderContainment(transaction, dtoResolverHelper.Partition, orderedItemUpdate);
+                                    isUpdated = await containedThingService.ReorderContainmentAsync(transaction, dtoResolverHelper.Partition, orderedItemUpdate);
 
                                     if (!orderedListToBeChecked.Contains(propertyName))
                                     {
@@ -1432,10 +1432,10 @@ namespace CometServer.Services.Operations
                     }
 
                     // apply scalar updates to the thing
-                    service.UpdateConcept(transaction, resolvedInfo.Partition, updatableThing, containerInfo);
+                    await service.UpdateConceptAsync(transaction, resolvedInfo.Partition, updatableThing, containerInfo);
 
                     // get persisted thing
-                    var updatedThing = GetPersistedItem(transaction, resolvedInfo.Partition, service, resolvedInfo.InstanceInfo.Iid, securityContext);
+                    var updatedThing = await GetPersistedItemAsync(transaction, resolvedInfo.Partition, service, resolvedInfo.InstanceInfo.Iid, securityContext);
 
                     if (orderedListToBeChecked.Count != 0)
                     {
@@ -1483,7 +1483,7 @@ namespace CometServer.Services.Operations
         /// <param name="dtoInfo">The <see cref="DtoInfo"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="metaInfo">The <see cref="IMetaInfo"/> for the deleted object</param>
-        private async Task ExecuteDeleteOperation(DtoInfo dtoInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
+        private async Task ExecuteDeleteOperationAsync(DtoInfo dtoInfo, NpgsqlTransaction transaction, IMetaInfo metaInfo)
         {
             if (!this.operationThingCache.TryGetValue(dtoInfo, out var resolvedInfo))
             {
@@ -1519,7 +1519,7 @@ namespace CometServer.Services.Operations
 
             // delete the item
             var propertyService = this.ServiceProvider.MapToPersitableService(dtoInfo.TypeName);
-            DeletePersistedItem(transaction, resolvedInfo.Partition, propertyService, persistedThing);
+            await DeletePersistedItemAsync(transaction, resolvedInfo.Partition, propertyService, persistedThing);
 
             // call after delete hook
             await this.OperationSideEffectProcessor.AfterDeleteAsync(persistedThing, container, originalThing, transaction, resolvedInfo.Partition, securityContext);

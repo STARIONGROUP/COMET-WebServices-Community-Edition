@@ -88,8 +88,8 @@ namespace CometServer.Services.Operations.SideEffects
             thing.CreatedOn = await this.TransactionManager.GetTransactionTimeAsync(transaction);
 
             // gets all parameter/override which value-set to update
-            var parameterToUpdate = this.ParameterService.GetShallow(transaction, partition, thing.PublishedParameter, securityContext).OfType<Parameter>().ToArray();
-            var overridesToUpdate = this.ParameterOverrideService.GetShallow(transaction, partition, thing.PublishedParameter, securityContext).OfType<ParameterOverride>().ToArray();
+            var parameterToUpdate = this.ParameterService.GetShallowAsync(transaction, partition, thing.PublishedParameter, securityContext).OfType<Parameter>().ToArray();
+            var overridesToUpdate = this.ParameterOverrideService.GetShallowAsync(transaction, partition, thing.PublishedParameter, securityContext).OfType<ParameterOverride>().ToArray();
 
             if (parameterToUpdate.Length + overridesToUpdate.Length != thing.PublishedParameter.Count)
             {
@@ -112,7 +112,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">The security context</param>
         private void UpdatePublishedParameter(Publication thing, IReadOnlyCollection<Parameter> parameterToUpdate, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var parameterValueSets = this.ParameterValueSetService.GetShallow(transaction, partition, parameterToUpdate.SelectMany(po => po.ValueSets), securityContext).OfType<ParameterValueSet>().ToArray();
+            var parameterValueSets = this.ParameterValueSetService.GetShallowAsync(transaction, partition, parameterToUpdate.SelectMany(po => po.ValueSets), securityContext).OfType<ParameterValueSet>().ToArray();
 
             foreach (var parameterOrOverrideBase in parameterToUpdate)
             {
@@ -156,7 +156,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">The security context</param>
         private void UpdatePublishedOverride(Publication thing, IReadOnlyCollection<ParameterOverride> overrideToUpdate, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var overrideValueSets = this.ParameterOverrideValueSetService.GetShallow(transaction, partition, overrideToUpdate.SelectMany(po => po.ValueSets), securityContext).OfType<ParameterOverrideValueSet>().ToArray();
+            var overrideValueSets = this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, overrideToUpdate.SelectMany(po => po.ValueSets), securityContext).OfType<ParameterOverrideValueSet>().ToArray();
 
             foreach (var parameterOrOverrideBase in overrideToUpdate)
             {

@@ -140,7 +140,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Freeze all other iterationSetups contained by this EngineeringModelSetup that are not frozen yet
             var engineeringModelSetup = (EngineeringModelSetup)container;
             var iterationSetupIidsToUpdate = engineeringModelSetup.IterationSetup.Except([thing.Iid]);
-            var iterationSetupsToUpdate = this.IterationSetupService.GetShallow(transaction, partition, iterationSetupIidsToUpdate, securityContext).OfType<IterationSetup>();
+            var iterationSetupsToUpdate = this.IterationSetupService.GetShallowAsync(transaction, partition, iterationSetupIidsToUpdate, securityContext).OfType<IterationSetup>();
 
             foreach (var iterationSetup in iterationSetupsToUpdate.Where(x => x.FrozenOn == null && x.Iid != thing.Iid))
             {
@@ -158,9 +158,9 @@ namespace CometServer.Services.Operations.SideEffects
             this.CredentialsService.Credentials.EngineeringModelSetup = engineeringModelSetup;
             this.CredentialsService.ResolveParticipantCredentials(transaction);
 
-            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, [engineeringModelIid], securityContext).SingleOrDefault() as EngineeringModel;
+            var engineeringModel = this.EngineeringModelService.GetShallowAsync(transaction, engineeringModelPartition, [engineeringModelIid], securityContext).SingleOrDefault() as EngineeringModel;
 
-            var sourceIterationSetups = this.IterationSetupService.GetShallow(
+            var sourceIterationSetups = this.IterationSetupService.GetShallowAsync(
                 transaction,
                 Cdp4TransactionManager.SITE_DIRECTORY_PARTITION,
                 engineeringModelSetup.IterationSetup,
@@ -246,7 +246,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 var iterationSetups = this.IterationSetupService
-                    .Get(transaction, partition, engineeringModelSetup.IterationSetup, securityContext)
+                    .GetAsync(transaction, partition, engineeringModelSetup.IterationSetup, securityContext)
                     .Cast<IterationSetup>()
                     .ToList();
 
@@ -286,7 +286,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override Task BeforeDelete(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, [thing.Iid], securityContext)
+            var iterationSetups = this.IterationSetupService.GetShallowAsync(transaction, partition, [thing.Iid], securityContext)
                                                             .OfType<IterationSetup>();
 
             var iterationSetup = iterationSetups.SingleOrDefault();
@@ -313,11 +313,11 @@ namespace CometServer.Services.Operations.SideEffects
             this.CredentialsService.Credentials.EngineeringModelSetup = (EngineeringModelSetup)container;
             this.CredentialsService.ResolveParticipantCredentials(transaction);
 
-            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, [iterationSetup.IterationIid], securityContext)
+            var iteration = this.IterationService.GetShallowAsync(transaction, engineeringModelPartition, [iterationSetup.IterationIid], securityContext)
                                                  .Cast<Iteration>()
                                                  .SingleOrDefault();
 
-            this.IterationService.DeleteConcept(transaction, engineeringModelPartition, iteration, container);
+            this.IterationService.DeleteConceptAsync(transaction, engineeringModelPartition, iteration, container);
 
             return Task.CompletedTask;
         }
@@ -345,7 +345,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override async Task AfterDelete(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var iterationSetup = this.IterationSetupService.GetShallow(transaction, partition, [thing.Iid], securityContext)
+            var iterationSetup = this.IterationSetupService.GetShallowAsync(transaction, partition, [thing.Iid], securityContext)
                                                            .OfType<IterationSetup>()
                                                            .SingleOrDefault();
 

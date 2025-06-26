@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryDataAnnotationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -34,10 +33,16 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
@@ -76,13 +81,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="SiteDirectoryDataAnnotation"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="SiteDirectoryDataAnnotation"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -104,11 +109,11 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.SiteDirectoryDataAnnotationDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.SiteDirectoryDataAnnotationDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -130,11 +135,11 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.SiteDirectoryDataAnnotationDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.SiteDirectoryDataAnnotationDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -156,11 +161,11 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.SiteDirectoryDataAnnotationDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return await this.SiteDirectoryDataAnnotationDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -176,9 +181,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -199,16 +204,16 @@ namespace CometServer.Services
         /// The container instance of the <see cref="SiteDirectoryDataAnnotation"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, DeleteOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, DeleteOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.SiteDirectoryDataAnnotationDao.Delete(transaction, partition, thing.Iid);
+            return await this.SiteDirectoryDataAnnotationDao.DeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -229,12 +234,12 @@ namespace CometServer.Services
         /// The container instance of the <see cref="SiteDirectoryDataAnnotation"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return this.SiteDirectoryDataAnnotationDao.RawDelete(transaction, partition, thing.Iid);
+            return await this.SiteDirectoryDataAnnotationDao.RawDeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -253,17 +258,17 @@ namespace CometServer.Services
         /// The container instance of the <see cref="SiteDirectoryDataAnnotation"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
             var siteDirectoryDataAnnotation = thing as SiteDirectoryDataAnnotation;
-            return this.SiteDirectoryDataAnnotationDao.Update(transaction, partition, siteDirectoryDataAnnotation, container);
+            return await this.SiteDirectoryDataAnnotationDao.UpdateAsync(transaction, partition, siteDirectoryDataAnnotation, container);
         }
 
         /// <summary>
@@ -285,18 +290,18 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, CreateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
             var siteDirectoryDataAnnotation = thing as SiteDirectoryDataAnnotation;
-            var createSuccesful = this.SiteDirectoryDataAnnotationDao.Write(transaction, partition, siteDirectoryDataAnnotation, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, siteDirectoryDataAnnotation);
+            var createSuccesful = await this.SiteDirectoryDataAnnotationDao.WriteAsync(transaction, partition, siteDirectoryDataAnnotation, container);
+            return createSuccesful && await this.CreateContainmentAsync(transaction, partition, siteDirectoryDataAnnotation);
         }
 
         /// <summary>
@@ -319,13 +324,13 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var siteDirectoryDataAnnotation = thing as SiteDirectoryDataAnnotation;
-            var createSuccesful = this.SiteDirectoryDataAnnotationDao.Upsert(transaction, partition, siteDirectoryDataAnnotation, container);
-            return createSuccesful && this.UpsertContainment(transaction, partition, siteDirectoryDataAnnotation);
+            var createSuccesful = await this.SiteDirectoryDataAnnotationDao.UpsertAsync(transaction, partition, siteDirectoryDataAnnotation, container);
+            return createSuccesful && await this.UpsertContainmentAsync(transaction, partition, siteDirectoryDataAnnotation);
         }
 
         /// <summary>
@@ -344,21 +349,21 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="SiteDirectoryDataAnnotation"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="SiteDirectoryDataAnnotation"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("SiteDirectoryDataAnnotation", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var siteDirectoryDataAnnotationColl = new List<Thing>(this.SiteDirectoryDataAnnotationDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
+            var siteDirectoryDataAnnotationColl = new List<Thing>(await this.SiteDirectoryDataAnnotationDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
 
-            return this.AfterGet(siteDirectoryDataAnnotationColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(siteDirectoryDataAnnotationColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -377,9 +382,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="SiteDirectoryDataAnnotation"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="SiteDirectoryDataAnnotation"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -387,11 +392,11 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var results = new List<Thing>(await this.GetShallowAsync(transaction, partition, idFilter, containerSecurityContext));
             var siteDirectoryDataAnnotationColl = results.Where(i => i.GetType() == typeof(SiteDirectoryDataAnnotation)).Cast<SiteDirectoryDataAnnotation>().ToList();
 
-            results.AddRange(this.DiscussionService.GetDeep(transaction, partition, siteDirectoryDataAnnotationColl.SelectMany(x => x.Discussion), containerSecurityContext));
-            results.AddRange(this.RelatedThingService.GetDeep(transaction, partition, siteDirectoryDataAnnotationColl.SelectMany(x => x.RelatedThing), containerSecurityContext));
+            results.AddRange(await this.DiscussionService.GetDeepAsync(transaction, partition, siteDirectoryDataAnnotationColl.SelectMany(x => x.Discussion), containerSecurityContext));
+            results.AddRange(await this.RelatedThingService.GetDeepAsync(transaction, partition, siteDirectoryDataAnnotationColl.SelectMany(x => x.RelatedThing), containerSecurityContext));
 
             return results;
         }
@@ -415,14 +420,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }
@@ -448,20 +453,20 @@ namespace CometServer.Services
         /// The <see cref="SiteDirectoryDataAnnotation"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, SiteDirectoryDataAnnotation siteDirectoryDataAnnotation)
+        private async Task<bool> CreateContainmentAsync(NpgsqlTransaction transaction, string partition, SiteDirectoryDataAnnotation siteDirectoryDataAnnotation)
         {
             var results = new List<bool>();
 
             foreach (var discussion in this.ResolveFromRequestCache(siteDirectoryDataAnnotation.Discussion))
             {
-                results.Add(this.DiscussionService.CreateConcept(transaction, partition, discussion, siteDirectoryDataAnnotation));
+                results.Add(await this.DiscussionService.CreateConceptAsync(transaction, partition, discussion, siteDirectoryDataAnnotation));
             }
 
             foreach (var relatedThing in this.ResolveFromRequestCache(siteDirectoryDataAnnotation.RelatedThing))
             {
-                results.Add(this.RelatedThingService.CreateConcept(transaction, partition, relatedThing, siteDirectoryDataAnnotation));
+                results.Add(await this.RelatedThingService.CreateConceptAsync(transaction, partition, relatedThing, siteDirectoryDataAnnotation));
             }
 
             return results.All(x => x);
@@ -481,20 +486,20 @@ namespace CometServer.Services
         /// The <see cref="SiteDirectoryDataAnnotation"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, SiteDirectoryDataAnnotation siteDirectoryDataAnnotation)
+        private async Task<bool> UpsertContainmentAsync(NpgsqlTransaction transaction, string partition, SiteDirectoryDataAnnotation siteDirectoryDataAnnotation)
         {
             var results = new List<bool>();
 
             foreach (var discussion in this.ResolveFromRequestCache(siteDirectoryDataAnnotation.Discussion))
             {
-                results.Add(this.DiscussionService.UpsertConcept(transaction, partition, discussion, siteDirectoryDataAnnotation));
+                results.Add(await this.DiscussionService.UpsertConceptAsync(transaction, partition, discussion, siteDirectoryDataAnnotation));
             }
 
             foreach (var relatedThing in this.ResolveFromRequestCache(siteDirectoryDataAnnotation.RelatedThing))
             {
-                results.Add(this.RelatedThingService.UpsertConcept(transaction, partition, relatedThing, siteDirectoryDataAnnotation));
+                results.Add(await this.RelatedThingService.UpsertConceptAsync(transaction, partition, relatedThing, siteDirectoryDataAnnotation));
             }
 
             return results.All(x => x);

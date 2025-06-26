@@ -124,7 +124,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private async Task HasWriteAccess(File file, NpgsqlTransaction transaction, string partition)
         {
-            this.FileService.CheckFileLock(transaction, partition, file);
+            this.FileService.CheckFileLockAsync(transaction, partition, file);
 
             if (partition.StartsWith("EngineeringModel_"))
             {

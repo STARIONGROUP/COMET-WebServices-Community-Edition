@@ -255,7 +255,7 @@ namespace CometServer.Services
 
                     // Get all fileTypes
                     var fileTypes = this.FileTypeService
-                        .GetShallow(transaction, "SiteDirectory", fileTypeIids.Distinct(), authorizedContext)
+                        .GetShallowAsync(transaction, "SiteDirectory", fileTypeIids.Distinct(), authorizedContext)
                         .OfType<FileType>().ToList();
 
                     if (thing.ClassKind != ClassKind.Folder)

@@ -113,7 +113,7 @@ namespace CometServer.Services.Operations.SideEffects
                     }
                 }
 
-                var categories = this.CategoryService.Get(transaction, partition, categoryIdsFromChain, securityContext)
+                var categories = this.CategoryService.GetAsync(transaction, partition, categoryIdsFromChain, securityContext)
                     .Cast<Category>().ToList();
 
                 // Check every super category that it is acyclic
@@ -154,7 +154,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var categoryIds = new List<Guid>();

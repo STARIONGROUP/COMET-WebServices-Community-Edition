@@ -147,7 +147,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.TopElement)} to null.";
 
-                var iterationSetup = this.IterationSetupService.GetShallow(transaction,
+                var iterationSetup = this.IterationSetupService.GetShallowAsync(transaction,
                     Utils.SiteDirectoryPartition,
                     [iteration.IterationSetup], securityContext).Cast<IterationSetup>().SingleOrDefault();
 
@@ -158,7 +158,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 var engineeringModelSetup = this.EngineeringModelSetupService
-                    .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                    .GetShallowAsync(transaction, Utils.SiteDirectoryPartition, null, securityContext)
                     .Cast<EngineeringModelSetup>()
                     .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
@@ -172,7 +172,7 @@ namespace CometServer.Services.Operations.SideEffects
                     this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
                 var updatedIteration = this.IterationService
-                    .GetShallow(transaction, engineeringModelPartition, [iteration.Iid], securityContext)
+                    .GetShallowAsync(transaction, engineeringModelPartition, [iteration.Iid], securityContext)
                     .Cast<Iteration>()
                     .SingleOrDefault();
 
@@ -190,7 +190,7 @@ namespace CometServer.Services.Operations.SideEffects
                 updatedIteration.TopElement = null;
 
                 var engineeringModel = this.EngineeringModelService
-                    .GetShallow(transaction, engineeringModelPartition,
+                    .GetShallowAsync(transaction, engineeringModelPartition,
                         [engineeringModelSetup.EngineeringModelIid], securityContext).Cast<EngineeringModel>()
                     .SingleOrDefault();
 
@@ -251,9 +251,9 @@ namespace CometServer.Services.Operations.SideEffects
                 var containedElementsId = (IEnumerable<Guid>) value;
 
                 var elementDefinitions = this.ElementDefinitionService
-                    .Get(transaction, partition, null, securityContext).Cast<ElementDefinition>().ToList();
+                    .GetAsync(transaction, partition, null, securityContext).Cast<ElementDefinition>().ToList();
 
-                var elementUsages = this.ElementUsageService.Get(transaction, partition, null, securityContext)
+                var elementUsages = this.ElementUsageService.GetAsync(transaction, partition, null, securityContext)
                     .Cast<ElementUsage>().ToList();
 
                 // Check every contained element that it is acyclic

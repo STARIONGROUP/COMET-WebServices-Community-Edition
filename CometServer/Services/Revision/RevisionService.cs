@@ -298,7 +298,7 @@ namespace CometServer.Services
                     var service = this.ServiceProvider.MapToReadService(instanceType);
                     
                     // Retrieve typed information filtered by the revisioned iids
-                    var versionedThings = service.GetShallow(
+                    var versionedThings = service.GetShallowAsync(
                         transaction,
                         resolvedPartition,
                         revisionedInstanceIids,

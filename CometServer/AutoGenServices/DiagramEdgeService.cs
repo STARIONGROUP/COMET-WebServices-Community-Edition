@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DiagramEdgeService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -34,10 +33,16 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
@@ -86,13 +91,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="DiagramEdge"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="DiagramEdge"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -114,11 +119,11 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.DiagramEdgeDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.DiagramEdgeDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -140,11 +145,11 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.DiagramEdgeDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return await this.DiagramEdgeDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -166,11 +171,11 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.DiagramEdgeDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return await this.DiagramEdgeDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -186,9 +191,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -209,16 +214,16 @@ namespace CometServer.Services
         /// The container instance of the <see cref="DiagramEdge"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, DeleteOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, DeleteOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.DiagramEdgeDao.Delete(transaction, partition, thing.Iid);
+            return await this.DiagramEdgeDao.DeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -239,12 +244,12 @@ namespace CometServer.Services
         /// The container instance of the <see cref="DiagramEdge"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return this.DiagramEdgeDao.RawDelete(transaction, partition, thing.Iid);
+            return await this.DiagramEdgeDao.RawDeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -263,17 +268,17 @@ namespace CometServer.Services
         /// The container instance of the <see cref="DiagramEdge"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
             var diagramEdge = thing as DiagramEdge;
-            return this.DiagramEdgeDao.Update(transaction, partition, diagramEdge, container);
+            return await this.DiagramEdgeDao.UpdateAsync(transaction, partition, diagramEdge, container);
         }
 
         /// <summary>
@@ -295,18 +300,18 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, CreateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
             var diagramEdge = thing as DiagramEdge;
-            var createSuccesful = this.DiagramEdgeDao.Write(transaction, partition, diagramEdge, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, diagramEdge);
+            var createSuccesful = await this.DiagramEdgeDao.WriteAsync(transaction, partition, diagramEdge, container);
+            return createSuccesful && await this.CreateContainmentAsync(transaction, partition, diagramEdge);
         }
 
         /// <summary>
@@ -329,13 +334,13 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var diagramEdge = thing as DiagramEdge;
-            var createSuccesful = this.DiagramEdgeDao.Upsert(transaction, partition, diagramEdge, container);
-            return createSuccesful && this.UpsertContainment(transaction, partition, diagramEdge);
+            var createSuccesful = await this.DiagramEdgeDao.UpsertAsync(transaction, partition, diagramEdge, container);
+            return createSuccesful && await this.UpsertContainmentAsync(transaction, partition, diagramEdge);
         }
 
         /// <summary>
@@ -354,21 +359,21 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="DiagramEdge"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="DiagramEdge"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("DiagramEdge", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var diagramEdgeColl = new List<Thing>(this.DiagramEdgeDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
+            var diagramEdgeColl = new List<Thing>(await this.DiagramEdgeDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
 
-            return this.AfterGet(diagramEdgeColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(diagramEdgeColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -387,9 +392,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="DiagramEdge"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="DiagramEdge"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -397,13 +402,13 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var results = new List<Thing>(await this.GetShallowAsync(transaction, partition, idFilter, containerSecurityContext));
             var diagramEdgeColl = results.Where(i => i.GetType() == typeof(DiagramEdge)).Cast<DiagramEdge>().ToList();
 
-            results.AddRange(this.BoundsService.GetDeep(transaction, partition, diagramEdgeColl.SelectMany(x => x.Bounds), containerSecurityContext));
-            results.AddRange(this.DiagramElementService.GetDeep(transaction, partition, diagramEdgeColl.SelectMany(x => x.DiagramElement), containerSecurityContext));
-            results.AddRange(this.LocalStyleService.GetDeep(transaction, partition, diagramEdgeColl.SelectMany(x => x.LocalStyle), containerSecurityContext));
-            results.AddRange(this.PointService.GetDeep(transaction, partition, diagramEdgeColl.SelectMany(x => x.Point).ToIdList(), containerSecurityContext));
+            results.AddRange(await this.BoundsService.GetDeepAsync(transaction, partition, diagramEdgeColl.SelectMany(x => x.Bounds), containerSecurityContext));
+            results.AddRange(await this.DiagramElementService.GetDeepAsync(transaction, partition, diagramEdgeColl.SelectMany(x => x.DiagramElement), containerSecurityContext));
+            results.AddRange(await this.LocalStyleService.GetDeepAsync(transaction, partition, diagramEdgeColl.SelectMany(x => x.LocalStyle), containerSecurityContext));
+            results.AddRange(await this.PointService.GetDeepAsync(transaction, partition, diagramEdgeColl.SelectMany(x => x.Point).ToIdList(), containerSecurityContext));
 
             return results;
         }
@@ -427,14 +432,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }
@@ -460,30 +465,30 @@ namespace CometServer.Services
         /// The <see cref="DiagramEdge"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, DiagramEdge diagramEdge)
+        private async Task<bool> CreateContainmentAsync(NpgsqlTransaction transaction, string partition, DiagramEdge diagramEdge)
         {
             var results = new List<bool>();
 
             foreach (var bounds in this.ResolveFromRequestCache(diagramEdge.Bounds))
             {
-                results.Add(this.BoundsService.CreateConcept(transaction, partition, bounds, diagramEdge));
+                results.Add(await this.BoundsService.CreateConceptAsync(transaction, partition, bounds, diagramEdge));
             }
 
             foreach (var diagramElement in this.ResolveFromRequestCache(diagramEdge.DiagramElement))
             {
-                results.Add(this.DiagramElementService.CreateConcept(transaction, partition, diagramElement, diagramEdge));
+                results.Add(await this.DiagramElementService.CreateConceptAsync(transaction, partition, diagramElement, diagramEdge));
             }
 
             foreach (var localStyle in this.ResolveFromRequestCache(diagramEdge.LocalStyle))
             {
-                results.Add(this.LocalStyleService.CreateConcept(transaction, partition, localStyle, diagramEdge));
+                results.Add(await this.LocalStyleService.CreateConceptAsync(transaction, partition, localStyle, diagramEdge));
             }
 
             foreach (var point in this.ResolveFromRequestCache(diagramEdge.Point))
             {
-                results.Add(this.PointService.CreateConcept(transaction, partition, (Point)point.V, diagramEdge, point.K));
+                results.Add(await this.PointService.CreateConceptAsync(transaction, partition, (Point)point.V, diagramEdge, point.K));
             }
 
             return results.All(x => x);
@@ -503,30 +508,30 @@ namespace CometServer.Services
         /// The <see cref="DiagramEdge"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, DiagramEdge diagramEdge)
+        private async Task<bool> UpsertContainmentAsync(NpgsqlTransaction transaction, string partition, DiagramEdge diagramEdge)
         {
             var results = new List<bool>();
 
             foreach (var bounds in this.ResolveFromRequestCache(diagramEdge.Bounds))
             {
-                results.Add(this.BoundsService.UpsertConcept(transaction, partition, bounds, diagramEdge));
+                results.Add(await this.BoundsService.UpsertConceptAsync(transaction, partition, bounds, diagramEdge));
             }
 
             foreach (var diagramElement in this.ResolveFromRequestCache(diagramEdge.DiagramElement))
             {
-                results.Add(this.DiagramElementService.UpsertConcept(transaction, partition, diagramElement, diagramEdge));
+                results.Add(await this.DiagramElementService.UpsertConceptAsync(transaction, partition, diagramElement, diagramEdge));
             }
 
             foreach (var localStyle in this.ResolveFromRequestCache(diagramEdge.LocalStyle))
             {
-                results.Add(this.LocalStyleService.UpsertConcept(transaction, partition, localStyle, diagramEdge));
+                results.Add(await this.LocalStyleService.UpsertConceptAsync(transaction, partition, localStyle, diagramEdge));
             }
 
             foreach (var point in this.ResolveFromRequestCache(diagramEdge.Point))
             {
-                results.Add(this.PointService.UpsertConcept(transaction, partition, (Point)point.V, diagramEdge, point.K));
+                results.Add(await this.PointService.UpsertConceptAsync(transaction, partition, (Point)point.V, diagramEdge, point.K));
             }
 
             return results.All(x => x);

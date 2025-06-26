@@ -98,7 +98,7 @@ namespace CometServer.Tests.SideEffects
             this.option1 = new Option(Guid.NewGuid(), 0);
             this.option2 = new Option(Guid.NewGuid(), 0);
             this.options = new List<Option>();
-            this.optionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
+            this.optionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.options);
 
             this.iterationSetup = new IterationSetup
@@ -259,7 +259,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForDeleteOptionTest();
 
             this.engineeringModelSetupService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
             .Returns(Array.Empty<EngineeringModelSetup>());
 
@@ -288,7 +288,7 @@ namespace CometServer.Tests.SideEffects
             iterationSetups.Add(this.iterationSetup);
             
             this.iterationSetupService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     new[] { this.iteration.IterationSetup }, this.securityContext.Object))
                 .Returns(iterationSetups);
 
@@ -296,7 +296,7 @@ namespace CometServer.Tests.SideEffects
             engineeringModelSetups.Add(this.engineeringModelSetup);
             
             this.engineeringModelSetupService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
                 .Returns(engineeringModelSetups);
 
@@ -304,7 +304,7 @@ namespace CometServer.Tests.SideEffects
             newIterations.Add(this.updatedIteration);
 
             this.iterationService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, this.engineeringModelPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.iteration.Iid }, this.securityContext.Object))
                 .Returns(newIterations);
 
@@ -312,7 +312,7 @@ namespace CometServer.Tests.SideEffects
             engineeringModels.Add(this.engineeringModel);
 
             this.engineeringModelService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, this.engineeringModelPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.engineeringModelSetup.EngineeringModelIid }, this.securityContext.Object))
                 .Returns(engineeringModels);
         }

@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -41,6 +42,6 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="engineeringModelId">The identifier of the associated <see cref="EngineeringModel"/></param>
         /// <returns>The requested <see cref="EngineeringModelSetup"/></returns>
-        EngineeringModelSetup GetEngineeringModelSetupFromDataBaseCache(NpgsqlTransaction transaction, Guid engineeringModelId);
+        Task<EngineeringModelSetup> GetEngineeringModelSetupFromDataBaseCache(NpgsqlTransaction transaction, Guid engineeringModelId);
     }
 }

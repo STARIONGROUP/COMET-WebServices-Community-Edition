@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using Npgsql;
@@ -49,6 +51,6 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition);
+        Task<bool> IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition);
     }
 }

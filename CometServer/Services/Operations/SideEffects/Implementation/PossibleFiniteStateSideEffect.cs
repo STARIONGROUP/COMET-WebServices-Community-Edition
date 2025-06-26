@@ -72,7 +72,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             await base.AfterCreate(thing, container, originalThing, transaction, partition, securityContext);
 
-            this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateList((PossibleFiniteStateList)container, transaction, partition, securityContext);
+            this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync((PossibleFiniteStateList)container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             await base.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
 
-            this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateList((PossibleFiniteStateList)container, transaction, partition, securityContext);
+            this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync((PossibleFiniteStateList)container, transaction, partition, securityContext);
         }
     }
 }

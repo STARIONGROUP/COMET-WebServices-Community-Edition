@@ -1017,14 +1017,14 @@ namespace CometServer.Modules
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
                 var transactionRevision = await revisionService.GetRevisionForTransactionAsync(transaction, partition);
 
-                operationProcessor.Process(postRequestData.OperationData, transaction, partition, postRequestData.Files);
+                operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, partition, postRequestData.Files);
 
                 var actor = credentialsService.Credentials.Person.Iid;
 
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
                     var initiallyChangedThings = (await revisionService.GetCurrentChangesAsync(transaction, partition, transactionRevision, true)).ToList();
-                    changeLogService?.TryAppendModelChangeLogData(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
+                    changeLogService?.TryAppendModelChangeLogDataAsync(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
                 }
 
                 // save revision-history

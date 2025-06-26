@@ -79,7 +79,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterGroupService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterGroupA.Iid, this.parameterGroupB.Iid, this.parameterGroupC.Iid },

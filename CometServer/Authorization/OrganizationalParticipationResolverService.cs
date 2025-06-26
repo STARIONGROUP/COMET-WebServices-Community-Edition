@@ -101,7 +101,7 @@ namespace CometServer.Authorization
                 thing.ClassKind == ClassKind.Citation)
             {
                 // add also element usages of allowed EDs and their contained items to list
-                var elementUsages = this.ElementUsageService.Get(transaction, partition, elementDefinitions.SelectMany(ed => ed.ContainedElement), securityContext).Cast<ElementUsage>();
+                var elementUsages = this.ElementUsageService.GetAsync(transaction, partition, elementDefinitions.SelectMany(ed => ed.ContainedElement), securityContext).Cast<ElementUsage>();
 
                 // select relevant
                 var relevatElementUsages = elementUsages.Where(eu => relevantOpenDefinitions.Select(ed => ed.Iid).Contains(eu.ElementDefinition));
@@ -208,7 +208,7 @@ namespace CometServer.Authorization
         private void ResolveElementDefinitionTree(NpgsqlTransaction transaction, string partition, Iteration iteration, Guid organizationalParticipantIid, RequestSecurityContext securityContext, out List<ElementDefinition> elementDefinitions, out List<ElementDefinition> relevantOpenDefinitions, out IEnumerable<Thing> fullTree)
         {
             // get all ED's shallow to determine relevant
-            elementDefinitions = this.ElementDefinitionService.Get(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>().ToList();
+            elementDefinitions = this.ElementDefinitionService.GetAsync(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>().ToList();
 
             // given a participation, select only allowed EDs
             relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid)).ToList();

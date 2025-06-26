@@ -202,13 +202,13 @@ namespace CometServer.Services.Operations.SideEffects
 
                 // Get all CompoundParameterTypes
                 var parameterTypes = this.CompoundParameterTypeService
-                    .Get(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                    .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
                     .Cast<CompoundParameterType>().ToList();
 
                 // Add all ArrayParameterTypes
                 parameterTypes.AddRange(
                     this.ArrayParameterTypeService
-                        .Get(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                        .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
                         .Cast<ArrayParameterType>().ToList());
 
                 if (!await this.IsParameterTypeComponentAcyclic(
@@ -249,10 +249,10 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             Guid compoundParameterTypeId)
         {
-            var availableRdls = this.ModelReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = this.ModelReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                 .Cast<ReferenceDataLibrary>().ToList();
 
-            availableRdls.AddRange(this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            availableRdls.AddRange(this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                     .Cast<ReferenceDataLibrary>().ToList());
 
             Guid? requiredRdl = availableRdls.Find(x => x.ParameterType.Contains(compoundParameterTypeId)).Iid;
@@ -361,7 +361,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (firstParameterTypeId == Guid.Empty)
             {
-                parameterTypeId = this.ParameterTypeComponentService.Get(
+                parameterTypeId = this.ParameterTypeComponentService.GetAsync(
                     transaction,
                     partition,
                     new List<Guid> { parameterTypeComponentId },

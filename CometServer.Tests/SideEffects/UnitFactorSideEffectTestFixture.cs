@@ -141,18 +141,18 @@ namespace CometServer.Tests.SideEffects
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
-                .Setup(x => x.Get(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
+                .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
                 .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB });
 
             this.modelReferenceDataLibraryService = new Mock<IModelReferenceDataLibraryService>();
             this.modelReferenceDataLibraryService
-                .Setup(x => x.Get(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
+                .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
                 .Returns(new List<ReferenceDataLibrary>());
 
             this.derivedUnitService = new Mock<IDerivedUnitService>();
             this.derivedUnitService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
@@ -169,28 +169,28 @@ namespace CometServer.Tests.SideEffects
             this.unitFactorService = new Mock<IUnitFactorService>();
             this.unitFactorService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorA.Iid },
                         It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorA });
             this.unitFactorService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorB.Iid },
                         It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorB });
             this.unitFactorService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorC.Iid },
                         It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorC });
             this.unitFactorService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorD.Iid },

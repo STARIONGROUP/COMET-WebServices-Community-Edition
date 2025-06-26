@@ -27,7 +27,8 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    
+    using System.Threading.Tasks;
+
     using Authorization;
     
     using CDP4Common.Dto;
@@ -60,7 +61,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup"></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is ParameterSubscription sourceSubscription))
@@ -71,20 +72,20 @@ namespace CometServer.Services
             var copy = sourceSubscription.DeepClone<ParameterSubscription>();
             copy.Iid = sourceToCopyMap[sourceSubscription.Iid];
 
-            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
+            if (!await this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
-            this.ParameterSubscriptionDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
+            await this.ParameterSubscriptionDao.WriteAsync(transaction, partition, copy, targetContainer);
+            await this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
-            var newparameterSubscription = this.ParameterSubscriptionDao.Read(transaction, partition, new[] { copy.Iid }).Single();
+            var newparameterSubscription = (await this.ParameterSubscriptionDao.ReadAsync(transaction, partition, [copy.Iid])).Single();
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ValueSetService
-                    .GetShallow(transaction, partition, newparameterSubscription.ValueSet, securityContext)
+                var valuesets = (await this.ValueSetService
+                    .GetShallowAsync(transaction, partition, newparameterSubscription.ValueSet, securityContext))
                     .OfType<ParameterSubscriptionValueSet>().ToList();
 
                 // update all value-set
@@ -106,7 +107,7 @@ namespace CometServer.Services
                     valueset.Manual = sourceSubscriptionValueSet.Manual;
                     valueset.ValueSwitch = sourceSubscriptionValueSet.ValueSwitch;
 
-                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    await this.ValueSetService.UpdateConceptAsync(transaction, partition, valueset, copy);
                 }
             }
         }

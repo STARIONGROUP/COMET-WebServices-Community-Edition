@@ -116,7 +116,7 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
@@ -126,7 +126,7 @@ namespace CometServer.Tests.SideEffects
             this.specializedQuantityKindService = new Mock<ISpecializedQuantityKindService>();
             this.specializedQuantityKindService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>

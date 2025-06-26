@@ -124,7 +124,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new IncompleteModelException($"{nameof(FileRevision)} has an incompatible container.");
             }
 
-            this.FileService.CheckFileLock(transaction, partition, file);
+            this.FileService.CheckFileLockAsync(transaction, partition, file);
 
             if (partition.StartsWith("EngineeringModel_"))
             {

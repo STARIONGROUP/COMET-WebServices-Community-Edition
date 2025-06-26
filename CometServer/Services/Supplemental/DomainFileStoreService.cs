@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DomainFileStoreService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -29,6 +29,7 @@ namespace CometServer.Services
     using System.Data;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -91,9 +92,9 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected override bool IsInstanceModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
+        protected override async Task<bool> IsInstanceModifyAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
         {
-            var result = base.IsInstanceModifyAllowed(transaction, thing, partition, modifyOperation);
+            var result = await base.IsInstanceModifyAllowedAsync(transaction, thing, partition, modifyOperation);
 
             if (result)
             {
@@ -118,9 +119,9 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected override bool IsInstanceReadAllowed(NpgsqlTransaction transaction, Thing thing, string partition)
+        protected override async Task<bool> IsInstanceReadAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            var result = base.IsInstanceReadAllowed(transaction, thing, partition);
+            var result = await base.IsInstanceReadAllowedAsync(transaction, thing, partition);
 
             if (result)
             {
@@ -194,7 +195,7 @@ namespace CometServer.Services
         /// Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
         /// the to be created <see cref="DomainFileStore"/>. The isHidden check will then be ignored.
         /// </remarks>
-        public void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
+        public async Task HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
         {
             //am I owner of the file?
             if (!this.PermissionService.IsOwner(transaction as NpgsqlTransaction, thing))
@@ -221,7 +222,7 @@ namespace CometServer.Services
                 var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
 
                 var domainFileStore =
-                    this.GetShallow(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext { ContainerReadAllowed = true })
+                    (await this.GetShallowAsync(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext { ContainerReadAllowed = true }))
                         .Cast<DomainFileStore>()
                         .SingleOrDefault(domainFileStoreSelector);
 
@@ -244,7 +245,7 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        public bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
+        public async Task<bool> HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
         {
             if (!partition.Contains("Iteration"))
             {
@@ -268,7 +269,7 @@ namespace CometServer.Services
             var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
 
             var domainFileStore =
-                this.GetShallow(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext())
+                (await this.GetShallowAsync(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext()))
                     .Cast<DomainFileStore>()
                     .SingleOrDefault(domainFileStoreSelector);
 

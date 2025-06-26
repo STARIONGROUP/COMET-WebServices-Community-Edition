@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -28,6 +28,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.Dto;
     using CDP4Common.DTO;
@@ -127,7 +128,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary" /></param>
         /// <param name="targetEngineeringModelSetup"></param>
         /// <param name="securityContext">The <see cref="ISecurityContext" /></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is Parameter sourceParameter))
@@ -165,26 +166,26 @@ namespace CometServer.Services
                 copy.Owner = copyinfo.ActiveOwner;
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
+            if (!await this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
-            this.ParameterDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
+            await this.ParameterDao.WriteAsync(transaction, partition, copy, targetContainer);
+            await this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
-            var newparameter = this.ParameterDao.Read(transaction, partition, new[] { copy.Iid }).Single();
+            var newparameter = (await this.ParameterDao.ReadAsync(transaction, partition, [copy.Iid])).Single();
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ValueSetService
-                    .GetShallow(transaction, partition, newparameter.ValueSet, securityContext)
+                var valuesets = (await this.ValueSetService
+                    .GetShallowAsync(transaction, partition, newparameter.ValueSet, securityContext))
                     .OfType<ParameterValueSet>().ToList();
 
                 var topcontainerPartition = $"EngineeringModel_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
-                this.TransactionManager.SetIterationContext(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
+                await this.TransactionManager.SetIterationContextAsync(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
                 var sourcepartition = $"Iteration_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
-                var iteration = (Iteration)this.IterationService.Get(transaction, topcontainerPartition, new[] { copyinfo.Source.IterationId.Value }, securityContext).SingleOrDefault();
+                var iteration = (Iteration)(await this.IterationService.GetAsync(transaction, topcontainerPartition, [copyinfo.Source.IterationId.Value], securityContext)).SingleOrDefault();
 
                 if (iteration == null)
                 {
@@ -195,7 +196,7 @@ namespace CometServer.Services
 
                 // switch back to request context
                 var engineeringModelPartition = partition.Replace("Iteration", "EngineeringModel");
-                this.TransactionManager.SetIterationContext(transaction, engineeringModelPartition, copyinfo.Target.IterationId.Value);
+                await this.TransactionManager.SetIterationContextAsync(transaction, engineeringModelPartition, copyinfo.Target.IterationId.Value);
 
                 // update all value-set
                 this.DefaultValueArrayFactory.Load(transaction, securityContext);
@@ -228,7 +229,7 @@ namespace CometServer.Services
 
                     try
                     {
-                        this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                        await this.ValueSetService.UpdateConceptAsync(transaction, partition, valueset, copy);
                     }
                     finally
                     {
@@ -247,7 +248,7 @@ namespace CometServer.Services
                     continue;
                 }
 
-                ((ServiceBase)this.ParameterSubscriptionService).Copy(transaction, partition, sourceSubscription, newparameter, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                await ((ServiceBase)this.ParameterSubscriptionService).CopyAsync( transaction, partition, sourceSubscription, newparameter, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
         }
 

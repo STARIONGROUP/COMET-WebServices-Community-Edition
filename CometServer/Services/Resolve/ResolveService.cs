@@ -188,7 +188,7 @@ namespace CometServer.Services
 
                     // resolve the items from the datastore
                     var resolvedItems =
-                        service.GetShallow(
+                        service.GetShallowAsync(
                             transaction,
                             resolvedPartition,
                             resolveIds,

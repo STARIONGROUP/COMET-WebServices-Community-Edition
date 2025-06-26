@@ -309,18 +309,18 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var parameterOverrides = this.ParameterOverrideService
-                .GetShallow(transaction, partition, null, securityContext)
+                .GetShallowAsync(transaction, partition, null, securityContext)
                 .OfType<ParameterOverride>()
                 .Where(x => x.Parameter == thing.Iid).ToList();
 
-            var elementUsages = this.ElementUsageService.GetShallow(transaction, partition, null, securityContext)
+            var elementUsages = this.ElementUsageService.GetShallowAsync(transaction, partition, null, securityContext)
                 .Cast<ElementUsage>().Where(x => x.ElementDefinition == container.Iid).ToList();
 
             var parameterSubscriptionIds = new List<Guid>(thing.ParameterSubscription);
             parameterSubscriptionIds.AddRange(parameterOverrides.SelectMany(x => x.ParameterSubscription));
 
             var parameterSubscriptions = this.ParameterSubscriptionService
-                .GetShallow(transaction, partition, parameterSubscriptionIds, securityContext)
+                .GetShallowAsync(transaction, partition, parameterSubscriptionIds, securityContext)
                 .OfType<ParameterSubscription>().ToList();
 
             foreach (var parameterOverride in parameterOverrides)
@@ -360,7 +360,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 if (parameterSubscriptionToRemove != null)
                 {
-                    if (this.ParameterSubscriptionService.DeleteConcept(
+                    if (this.ParameterSubscriptionService.DeleteConceptAsync(
                             transaction,
                             partition,
                             parameterSubscriptionToRemove,
@@ -379,7 +379,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                     if (subscriptionToRemove != null)
                     {
-                        if (this.ParameterSubscriptionService.DeleteConcept(
+                        if (this.ParameterSubscriptionService.DeleteConceptAsync(
                                 transaction,
                                 partition,
                                 subscriptionToRemove,
@@ -442,7 +442,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new Cdp4ModelValidationException($"{nameof(ElementDefinition)} not found for {nameof(Parameter)} having id {thing.Iid}");
             }
 
-            var updatedElementDefinition = this.ElementDefinitionService.GetShallow(transaction, partition, new[] { elementDefinition.Iid }, securityContext).SingleOrDefault() as ElementDefinition;
+            var updatedElementDefinition = this.ElementDefinitionService.GetShallowAsync(transaction, partition, new[] { elementDefinition.Iid }, securityContext).SingleOrDefault() as ElementDefinition;
 
             if (updatedElementDefinition == null)
             {
@@ -459,7 +459,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Get all updated Parameters from the database
-            var updatedParameters = this.ParameterService.GetShallow(transaction, partition, updatedParameterGuids, securityContext);
+            var updatedParameters = this.ParameterService.GetShallowAsync(transaction, partition, updatedParameterGuids, securityContext);
             var updatedParameterTypes = updatedParameters.OfType<Parameter>().Select(x => x.ParameterType).ToArray();
 
             // Find new/updated parameters that cause a duplication in the current Transaction/Operation Container
@@ -479,7 +479,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Get all non-removed existing Parameters from the database
             var existingNonRemovedParameters =
                 existingNonRemovedParameterGuids.Length != 0
-                    ? this.ParameterService.GetShallow(transaction, partition, existingNonRemovedParameterGuids, securityContext)
+                    ? this.ParameterService.GetShallowAsync(transaction, partition, existingNonRemovedParameterGuids, securityContext)
                     : Array.Empty<Thing>();
 
             var existingParameterTypes = existingNonRemovedParameters.OfType<Parameter>().Select(x => x.ParameterType).Distinct().ToArray();
@@ -524,11 +524,11 @@ namespace CometServer.Services.Operations.SideEffects
                 .Where(x => parameterOverride.ParameterSubscription.Contains(x.Iid)).ToList();
 
             var overrideSubscriptionValueSets =
-                this.ParameterSubscriptionValueSetService.GetShallow(transaction, partition, overrideSubscription.SelectMany(x => x.ValueSet), securityContext)
+                this.ParameterSubscriptionValueSetService.GetShallowAsync(transaction, partition, overrideSubscription.SelectMany(x => x.ValueSet), securityContext)
                     .Cast<ParameterSubscriptionValueSet>()
                     .ToList();
 
-            var oldOverrideSets = this.ParameterOverrideValueSetService.GetShallow(transaction, partition, parameterOverride.ValueSet, securityContext).Cast<ParameterOverrideValueSet>().ToList();
+            var oldOverrideSets = this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, parameterOverride.ValueSet, securityContext).Cast<ParameterOverrideValueSet>().ToList();
 
             foreach (var parameterValueSet in newOldValueSet)
             {
@@ -539,7 +539,7 @@ namespace CometServer.Services.Operations.SideEffects
                         oldOverrideValueSet,
                         parameterValueSet.Key);
 
-                this.ParameterOverrideValueSetService.CreateConcept(
+                this.ParameterOverrideValueSetService.CreateConceptAsync(
                     transaction,
                     partition,
                     newValueSetOverride,
@@ -555,7 +555,7 @@ namespace CometServer.Services.Operations.SideEffects
                             newValueSetOverride.Iid,
                             defaultValueArray);
 
-                    this.ParameterSubscriptionValueSetService.CreateConcept(
+                    this.ParameterSubscriptionValueSetService.CreateConceptAsync(
                         transaction,
                         partition,
                         newSubscriptionValueSet,
@@ -586,7 +586,7 @@ namespace CometServer.Services.Operations.SideEffects
             var subscriptions = parameterSubscriptions.Where(x => parameter.ParameterSubscription.Contains(x.Iid))
                 .ToList();
 
-            var subscriptionValueSets = this.ParameterSubscriptionValueSetService.GetShallow(transaction, partition, subscriptions.SelectMany(x => x.ValueSet), securityContext).Cast<ParameterSubscriptionValueSet>().ToList();
+            var subscriptionValueSets = this.ParameterSubscriptionValueSetService.GetShallowAsync(transaction, partition, subscriptions.SelectMany(x => x.ValueSet), securityContext).Cast<ParameterSubscriptionValueSet>().ToList();
 
             foreach (var parameterValueSet in newOldValueSet)
             {
@@ -600,7 +600,7 @@ namespace CometServer.Services.Operations.SideEffects
                             parameterValueSet.Key.Iid,
                             defaultValueArray);
 
-                    this.ParameterSubscriptionValueSetService.CreateConcept(
+                    this.ParameterSubscriptionValueSetService.CreateConceptAsync(
                         transaction,
                         partition,
                         newSubscriptionValueSet,
@@ -669,7 +669,7 @@ namespace CometServer.Services.Operations.SideEffects
             else if (parameter.StateDependence != null)
             {
                 var actualList = this.ActualFiniteStateListService
-                    .GetShallow(transaction, partition, [parameter.StateDependence.Value], securityContext)
+                    .GetShallowAsync(transaction, partition, [parameter.StateDependence.Value], securityContext)
                     .Cast<ActualFiniteStateList>()
                     .First();
 
@@ -723,7 +723,7 @@ namespace CometServer.Services.Operations.SideEffects
             if (parameter.StateDependence != null)
             {
                 var actualFiniteStateList = this.ActualFiniteStateListService
-                    .GetShallow(
+                    .GetShallowAsync(
                         transaction,
                         partition,
                         new List<Guid> { parameter.StateDependence.Value },
@@ -795,7 +795,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             foreach (var valueset in originalThing.ValueSet)
             {
-                this.ParameterValueSetService.DeleteConcept(transaction, partition, new ParameterValueSet(valueset, 0), originalThing);
+                this.ParameterValueSetService.DeleteConceptAsync(transaction, partition, new ParameterValueSet(valueset, 0), originalThing);
             }
 
             return Task.CompletedTask;
@@ -816,7 +816,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             foreach (var parameterValueSet in newValueSet)
             {
-                this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, parameter);
+                this.ParameterValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, parameter);
             }
 
             return Task.CompletedTask;

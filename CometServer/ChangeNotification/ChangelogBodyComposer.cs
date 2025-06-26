@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ChangelogBodyComposer.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.ChangeNotification
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -135,7 +136,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// An <see cref="IEnumerable{T}"/> of type <see cref="ChangelogSection"/>s
         /// </returns>
-        public IEnumerable<ChangelogSection> CreateChangelogSections(
+        public async Task<IEnumerable<ChangelogSection>> CreateChangelogSectionsAsync(
             NpgsqlTransaction transaction, 
             Guid engineeringModelIid, 
             Person person, 
@@ -147,28 +148,24 @@ namespace CometServer.ChangeNotification
 
             // if a model does not exist anymore, do not send report
             var engineeringModelSetup = 
-                this.EngineeringModelSetupDao.Read(transaction, "SiteDirectory")
+                (await this.EngineeringModelSetupDao.ReadAsync(transaction, "SiteDirectory"))
                     .FirstOrDefault(x => x.EngineeringModelIid == engineeringModelIid);
 
             if (engineeringModelSetup == null)
             {
-                yield return CreateEngineeringModelNotFoundSection(changeNotificationSubscriptionUserPreference);
-
-                yield break;
+                return [CreateEngineeringModelNotFoundSection(changeNotificationSubscriptionUserPreference)];
             }
 
             // if a user is no longer a participant in a model, or if the participant is not active, then do not send report
             var participants =
-                this.ParticipantDao
-                    .Read(transaction, "SiteDirectory")
+                (await this.ParticipantDao
+                    .ReadAsync(transaction, "SiteDirectory"))
                     .Where(x => x.Person == person.Iid && x.IsActive)
                     .ToList();
 
             if (participants.Count == 0)
             {
-                yield return CreateParticipantNotActiveSection(engineeringModelSetup);
-
-                yield break;
+                return [CreateParticipantNotActiveSection(engineeringModelSetup)];
             }
 
             var engineeringModelParticipants = 
@@ -178,9 +175,7 @@ namespace CometServer.ChangeNotification
 
             if (engineeringModelParticipants.Count == 0)
             {
-                yield return CreateNoEngineeringModelParticipantSection(engineeringModelSetup);
-
-                yield break;
+                return [CreateNoEngineeringModelParticipantSection(engineeringModelSetup)];
             }
 
             var domains =
@@ -191,14 +186,12 @@ namespace CometServer.ChangeNotification
 
             if (domains.Count == 0)
             {
-                yield return CreateNoDomainOfExpertiseSection(engineeringModelSetup);
-
-                yield break;
+                return [CreateNoDomainOfExpertiseSection(engineeringModelSetup)];
             }
 
             var modelLogEntries = 
-                this.ModelLogEntryDao
-                    .Read(transaction, partition)
+                (await this.ModelLogEntryDao
+                    .ReadAsync(transaction, partition))
                     .Where(x => 
                         x.ModifiedOn >= startDateTime
                         && x.ModifiedOn < endDateTime)
@@ -206,16 +199,12 @@ namespace CometServer.ChangeNotification
 
             if (modelLogEntries.Count == 0 || !modelLogEntries.SelectMany(x => x.LogEntryChangelogItem).Any())
             {
-                yield return CreateNoModelLogEntriesSection(engineeringModelSetup);
-
-                yield break;
+                return [CreateNoModelLogEntriesSection(engineeringModelSetup)];
             }
 
             if (!modelLogEntries.Any(x => x.AffectedDomainIid.Intersect(domains).Any()))
             {
-                yield return CreateNoRelevantChangesFoundSection(engineeringModelSetup);
-
-                yield break;
+                return [CreateNoRelevantChangesFoundSection(engineeringModelSetup)];
             }
 
             var filteredModelLogEntries = FilterDomains(modelLogEntries, domains);
@@ -248,8 +237,10 @@ namespace CometServer.ChangeNotification
                     descriptionBuilder.AppendLine("");
                 }
 
-                yield return new ChangelogSection($"{engineeringModelSetup.Name}", subTitle, descriptionBuilder.ToString());
+                return [new ChangelogSection($"{engineeringModelSetup.Name}", subTitle, descriptionBuilder.ToString())];
             }
+
+            return [];
         }
 
         /// <summary>

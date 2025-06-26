@@ -129,12 +129,12 @@ namespace CometServer.Tests.SideEffects
 
             this.elementDefinitionService = new Mock<IElementDefinitionService>();
             this.elementDefinitionService
-                .Setup(x => x.Get(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
+                .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
                 .Returns(new List<Thing> { this.edA, this.edB, this.edC, this.edD });
 
             this.elementUsageService = new Mock<IElementUsageService>();
             this.elementUsageService
-                .Setup(x => x.Get(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
+                .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
                 .Returns(new List<Thing> { this.euA, this.euB, this.euC, this.euD, this.euE });
 
             this.iterationSetup = new IterationSetup
@@ -443,7 +443,7 @@ namespace CometServer.Tests.SideEffects
             }
 
             this.iterationSetupService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
                     new[] { this.iteration.IterationSetup }, this.securityContext.Object))
                 .Returns(iterationSetups);
 
@@ -455,7 +455,7 @@ namespace CometServer.Tests.SideEffects
             }
 
             this.engineeringModelSetupService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
                 .Returns(engineeringModelSetups);
 
@@ -466,7 +466,7 @@ namespace CometServer.Tests.SideEffects
             }
 
             this.iterationService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, this.engineeringModelPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.iteration.Iid }, this.securityContext.Object))
                 .Returns(newIterations);
 
@@ -479,7 +479,7 @@ namespace CometServer.Tests.SideEffects
             }
 
             this.engineeringModelService
-                .Setup(x => x.GetShallow(this.npgsqlTransaction, this.engineeringModelPartition,
+                .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.engineeringModelSetup.EngineeringModelIid }, this.securityContext.Object))
                 .Returns(engineeringModels);
         }

@@ -47,7 +47,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        Task<bool> IsAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing);
+        bool IsAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing);
 
         /// <summary>
         /// Check the security related functionality

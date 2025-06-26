@@ -47,7 +47,7 @@ namespace CometServer.Services
         /// <returns>True if opperation succeeded</returns>
         public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException($"The person {this.CredentialsService.Credentials.Person.UserName} does not have an appropriate update permission for {thing.GetType().Name}.");
             }

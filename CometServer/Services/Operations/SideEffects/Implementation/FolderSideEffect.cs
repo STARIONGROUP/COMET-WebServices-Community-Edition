@@ -210,7 +210,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Get all folders from the container
-            var folders = this.FolderService.Get(transaction, partition, ((FileStore)container).Folder, securityContext)
+            var folders = this.FolderService.GetAsync(transaction, partition, ((FileStore)container).Folder, securityContext)
                 .Cast<Folder>().ToList();
 
             // Check whether containing folder is acyclic

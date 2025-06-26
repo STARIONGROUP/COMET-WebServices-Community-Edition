@@ -113,7 +113,7 @@ namespace CometServer.Tests.SideEffects
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,
@@ -125,7 +125,7 @@ namespace CometServer.Tests.SideEffects
 
             this.mappingToReferenceScaleService = new Mock<IMappingToReferenceScaleService>();
             this.mappingToReferenceScaleService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
@@ -143,7 +143,7 @@ namespace CometServer.Tests.SideEffects
 
             this.scaleValueDefinitionService = new Mock<IScaleValueDefinitionService>();
             this.scaleValueDefinitionService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
@@ -161,7 +161,7 @@ namespace CometServer.Tests.SideEffects
 
             this.measurementScaleService = new Mock<IMeasurementScaleService>();
             this.measurementScaleService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,

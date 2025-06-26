@@ -129,7 +129,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new ArgumentException("The container of the ParameterOverrideValueSet is not a ParameterOverride", nameof(container));
             }
 
-            var parameter = this.ParameterService.Get(transaction, partition, new List<Guid> { parameterOverride.Parameter }, securityContext)
+            var parameter = this.ParameterService.GetAsync(transaction, partition, new List<Guid> { parameterOverride.Parameter }, securityContext)
                 .OfType<Parameter>()
                 .Single(x => x.Iid == parameterOverride.Parameter);
 

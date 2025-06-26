@@ -115,7 +115,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 // Get all ConversionBasedUnits
                 var units = this.ConversionBasedUnitService
-                    .Get(transaction, partition, unitIdsFromChain, securityContext).Cast<ConversionBasedUnit>()
+                    .GetAsync(transaction, partition, unitIdsFromChain, securityContext).Cast<ConversionBasedUnit>()
                     .ToList();
 
                 // Check reference unit that it is acyclic
@@ -153,7 +153,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var unitIds = new List<Guid>();

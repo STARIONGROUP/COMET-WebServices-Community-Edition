@@ -53,7 +53,7 @@ namespace CometServer.Services.Operations
         /// The optional file binaries that were included in the request.
         /// </param>
         /// <returns>An awaitable <see cref="Task"/></returns>
-        Task Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
+        Task ProcessAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.

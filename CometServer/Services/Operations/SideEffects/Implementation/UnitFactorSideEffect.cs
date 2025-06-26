@@ -113,7 +113,7 @@ namespace CometServer.Services.Operations.SideEffects
                     container.Iid);
 
                 // Get all Derived units
-                var units = this.DerivedUnitService.Get(transaction, partition, unitIdsFromChain, securityContext)
+                var units = this.DerivedUnitService.GetAsync(transaction, partition, unitIdsFromChain, securityContext)
                     .Cast<DerivedUnit>().ToList();
 
                 if (!this.IsUnitFactorAcyclic(transaction, partition, securityContext, units, container.Iid, unitId))
@@ -149,10 +149,10 @@ namespace CometServer.Services.Operations.SideEffects
             Guid derivedUnitId)
         {
             var availableRdls = this.ModelReferenceDataLibraryService
-                .Get(transaction, partition, null, securityContext).Cast<ReferenceDataLibrary>().ToList();
+                .GetAsync(transaction, partition, null, securityContext).Cast<ReferenceDataLibrary>().ToList();
 
             availableRdls.AddRange(
-                this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+                this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                     .Cast<ReferenceDataLibrary>().ToList());
 
             Guid? requiredRdl = availableRdls.Find(x => x.Unit.Contains(derivedUnitId)).Iid;
@@ -261,7 +261,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (measurementUnitId == Guid.Empty)
             {
-                measurementUnitId = this.UnitFactorService.Get(
+                measurementUnitId = this.UnitFactorService.GetAsync(
                     transaction,
                     partition,
                     new List<Guid> { unitFactorId },

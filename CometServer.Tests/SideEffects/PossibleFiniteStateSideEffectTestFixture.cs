@@ -186,15 +186,15 @@ namespace CometServer.Tests.SideEffects
             this.asl2.ActualState.Add(this.as22.Iid);
 
             this.possibleFiniteStateListslService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
+                x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
                 .Returns(new List<Thing> {this.psl1, this.psl2});
 
             this.actualFiniteStateListService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
+                x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
                 .Returns(new List<Thing> {this.asl1, this.asl2});
 
             this.actualFiniteStateService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
+                x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
                 .Returns(new List<Thing> {this.as11, this.as12});
 
             this.iterationService.Setup(x => x.GetActiveIteration(this.transaction, this.partition, this.securityContext.Object))
@@ -338,41 +338,41 @@ namespace CometServer.Tests.SideEffects
             this.parameterSubscription2.ValueSet.Add(this.psvs21.Iid);
             this.parameterSubscription2.ValueSet.Add(this.psvs22.Iid);
 
-            this.parameterService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
+            this.parameterService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameter1, this.parameter2 });
 
-            this.parameterOverrideService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
+            this.parameterOverrideService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameterOverride1, this.parameterOverride2 });
 
-            this.parameterSubscriptionService.Setup(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object))
+            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
                 .Returns(new List<Thing> { this.parameterSubscription1, this.parameterSubscription2 });
 
             this.parameterValueSetService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, this.parameter1.ValueSet, this.securityContext.Object))
+                x => x.GetShallowAsync(this.transaction, this.partition, this.parameter1.ValueSet, this.securityContext.Object))
                 .Returns(new List<Thing> {this.pvs11, this.pvs12});
             this.parameterValueSetService.Setup(
-                x => x.GetShallow(this.transaction, this.partition, this.parameter2.ValueSet, this.securityContext.Object))
+                x => x.GetShallowAsync(this.transaction, this.partition, this.parameter2.ValueSet, this.securityContext.Object))
                 .Returns(new List<Thing> {this.pvs21, this.pvs22});
 
             this.parameterOverrideValueSetService.Setup(
                 x =>
-                    x.GetShallow(this.transaction, this.partition, this.parameterOverride1.ValueSet,
+                    x.GetShallowAsync(this.transaction, this.partition, this.parameterOverride1.ValueSet,
                         this.securityContext.Object))
                 .Returns(new List<Thing> {this.povs11, this.povs12});
             this.parameterOverrideValueSetService.Setup(
                 x =>
-                    x.GetShallow(this.transaction, this.partition, this.parameterOverride2.ValueSet,
+                    x.GetShallowAsync(this.transaction, this.partition, this.parameterOverride2.ValueSet,
                         this.securityContext.Object))
                 .Returns(new List<Thing> {this.povs21, this.povs22});
 
             this.parameterSubscriptionValueSetService.Setup(
                 x =>
-                    x.GetShallow(this.transaction, this.partition, this.parameterSubscription1.ValueSet,
+                    x.GetShallowAsync(this.transaction, this.partition, this.parameterSubscription1.ValueSet,
                         this.securityContext.Object))
                 .Returns(new List<Thing> {this.psvs11, this.psvs12});
             this.parameterSubscriptionValueSetService.Setup(
                 x =>
-                    x.GetShallow(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
+                    x.GetShallowAsync(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
                         this.securityContext.Object))
                 .Returns(new List<Thing> {this.psvs21, this.psvs22});
 
@@ -386,9 +386,9 @@ namespace CometServer.Tests.SideEffects
             this.sideEffect.FiniteStateLogicService = this.finiteStateLogicService;
 
             this.parameterUpdateService.DefaultValueSetFactory = this.defaultValueArrayFactory.Object;
-            this.parameterValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(true);
-            this.parameterOverrideValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(true);
-            this.parameterSubscriptionValueSetService.Setup(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>())).Returns(true);
+            this.parameterValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(true);
+            this.parameterOverrideValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(true);
+            this.parameterSubscriptionValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>())).Returns(true);
         }
 
         [Test]
@@ -396,22 +396,22 @@ namespace CometServer.Tests.SideEffects
         {
             var originalThing = this.ps12.DeepClone<Thing>();
             this.actualFiniteStateService.Setup(
-                x => x.DeleteConcept(this.transaction, this.partition, this.as11, this.asl1)).Returns(true);
+                x => x.DeleteConceptAsync(this.transaction, this.partition, this.as11, this.asl1)).Returns(true);
             this.actualFiniteStateService.Setup(
-                x => x.DeleteConcept(this.transaction, this.partition, this.as12, this.asl1)).Returns(true);
+                x => x.DeleteConceptAsync(this.transaction, this.partition, this.as12, this.asl1)).Returns(true);
 
             this.sideEffect.AfterCreateAsync(this.ps12, this.psl1, originalThing, this.transaction, this.partition, this.securityContext.Object);
 
-            this.actualFiniteStateService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ActualFiniteState>(), this.asl1, -1), Times.Exactly(4));
+            this.actualFiniteStateService.Verify(x => x.CreateConceptAsync(this.transaction, this.partition, It.IsAny<ActualFiniteState>(), this.asl1, -1), Times.Exactly(4));
 
-            this.parameterValueSetService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>(), -1), Times.Exactly(8));
+            this.parameterValueSetService.Verify(x => x.CreateConceptAsync(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>(), -1), Times.Exactly(8));
 
-            this.parameterOverrideValueSetService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>(), -1), Times.Exactly(8));
+            this.parameterOverrideValueSetService.Verify(x => x.CreateConceptAsync(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>(), -1), Times.Exactly(8));
 
-            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConcept(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), -1), Times.Exactly(8));
+            this.parameterSubscriptionValueSetService.Verify(x => x.CreateConceptAsync(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>(), -1), Times.Exactly(8));
 
-            this.actualFiniteStateService.Verify(x => x.DeleteConcept(this.transaction, this.partition, this.as11, this.asl1), Times.Once);
-            this.actualFiniteStateService.Verify(x => x.DeleteConcept(this.transaction, this.partition, this.as12, this.asl1), Times.Once);
+            this.actualFiniteStateService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, this.as11, this.asl1), Times.Once);
+            this.actualFiniteStateService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, this.as12, this.asl1), Times.Once);
         }
 
         [Test]
@@ -420,8 +420,8 @@ namespace CometServer.Tests.SideEffects
             // A PossibleFiniteState is deleted but other states still exist
             this.sideEffect.BeforeDelete(this.ps22, this.psl2, this.transaction, this.partition, this.securityContext.Object);
 
-            this.actualFiniteStateListService.Verify(x => x.GetShallow(this.transaction, this.partition, null, this.securityContext.Object), Times.Never);
-            this.possibleFiniteStateListslService.Verify(x => x.DeleteConcept(this.transaction, this.partition, It.IsAny<Thing>(), It.IsAny<Thing>()), Times.Never);
+            this.actualFiniteStateListService.Verify(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object), Times.Never);
+            this.possibleFiniteStateListslService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<Thing>(), It.IsAny<Thing>()), Times.Never);
         }
 
         [Test]

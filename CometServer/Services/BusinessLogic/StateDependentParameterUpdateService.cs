@@ -99,10 +99,10 @@ namespace CometServer.Services
         {
             ArgumentNullException.ThrowIfNull(iteration);
 
-            var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Where(i => i is Parameter).Cast<Parameter>()
+            var parameters = this.ParameterService.GetShallowAsync(transaction, partition, null, securityContext).Where(i => i is Parameter).Cast<Parameter>()
                 .Where(x => x.StateDependence == actualFiniteStateList.Iid).ToList();
 
-            var parameterOverrides = this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext).Where(i => i is ParameterOverride).Cast<ParameterOverride>()
+            var parameterOverrides = this.ParameterOverrideService.GetShallowAsync(transaction, partition, null, securityContext).Where(i => i is ParameterOverride).Cast<ParameterOverride>()
                 .Where(x => parameters.Select(p => p.Iid).Contains(x.Parameter)).ToList();
 
             // update the parameters with the new actual states
@@ -134,7 +134,7 @@ namespace CometServer.Services
             // update the parameter subscription from the updated parameter/overide value sets
             var parameterOrOverrides = parameters.Cast<ParameterOrOverrideBase>().Union(parameterOverrides).ToList();
 
-            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, null, securityContext).Where(i => i is ParameterSubscription).Cast<ParameterSubscription>()
+            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, null, securityContext).Where(i => i is ParameterSubscription).Cast<ParameterSubscription>()
                 .Where(x => parameterOrOverrides.SelectMany(p => p.ParameterSubscription).Contains(x.Iid));
 
             foreach (var parameterSubscription in parameterSubscriptions)
@@ -156,7 +156,7 @@ namespace CometServer.Services
         /// <param name="newOldValueSetMap">The resulting map that links the new to old <see cref="ParameterValueSet"/></param>
         private void UpdateParameter(Parameter parameter, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ActualFiniteState, ActualFiniteState> newOldActualStateMap, ref Dictionary<ParameterValueSet, ParameterValueSet> newOldValueSetMap)
         {
-            var oldValueSets = this.ParameterValueSetService.GetShallow(transaction, partition, parameter.ValueSet, securityContext)
+            var oldValueSets = this.ParameterValueSetService.GetShallowAsync(transaction, partition, parameter.ValueSet, securityContext)
                     .Where(i => i is ParameterValueSet).Cast<ParameterValueSet>().ToList();
 
             if (parameter.IsOptionDependent)
@@ -247,7 +247,7 @@ namespace CometServer.Services
                 ValueSwitch = isOldValueNull ? CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL : oldValue.ValueSwitch
             };
 
-            this.ParameterValueSetService.CreateConcept(transaction, partition, valueSet, parameter);
+            this.ParameterValueSetService.CreateConceptAsync(transaction, partition, valueSet, parameter);
             return valueSet;
         }
 
@@ -263,7 +263,7 @@ namespace CometServer.Services
         private void UpdateParameterOverride(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IDictionary<ParameterValueSet, ParameterValueSet> newOldParameterValueSetMap, ref Dictionary<ParameterValueSetBase, ParameterValueSetBase> newOldValueSetMap)
         {
             var oldValueSets =
-                this.ParameterOverrideValueSetService.GetShallow(transaction, partition, parameterOverride.ValueSet, securityContext)
+                this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, parameterOverride.ValueSet, securityContext)
                     .Where(i => i is ParameterOverrideValueSet).Cast<ParameterOverrideValueSet>().ToList();
 
             foreach (var newOldParameterValueSetPair in newOldParameterValueSetMap)
@@ -309,7 +309,7 @@ namespace CometServer.Services
                 ValueSwitch = isOldValueNull ? CDP4Common.EngineeringModelData.ParameterSwitchKind.MANUAL : oldValue.ValueSwitch
             };
 
-            this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, newValueSet, container);
+            this.ParameterOverrideValueSetService.CreateConceptAsync(transaction, partition, newValueSet, container);
             return newValueSet;
         }
 
@@ -323,7 +323,7 @@ namespace CometServer.Services
         /// <param name="newOldValueSetBaseMap">The map linking the old subscribed <see cref="ParameterValueSetBase"/> to the new ones</param>
         private void UpdateParameterSubscription(ParameterSubscription parameterSubscription, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyDictionary<ParameterValueSetBase, ParameterValueSetBase> newOldValueSetBaseMap)
         {
-            var oldValueSets = this.ParameterSubscriptionValueSetService.GetShallow(transaction, partition, parameterSubscription.ValueSet, securityContext)
+            var oldValueSets = this.ParameterSubscriptionValueSetService.GetShallowAsync(transaction, partition, parameterSubscription.ValueSet, securityContext)
                     .Where(i => i is ParameterSubscriptionValueSet).Cast<ParameterSubscriptionValueSet>().ToList();
 
             foreach (var newOldParameterValueSetPair in newOldValueSetBaseMap)
@@ -359,7 +359,7 @@ namespace CometServer.Services
                 SubscribedValueSet = valueSetBase.Iid
             };
 
-            this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, newValueSet, container);
+            this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, newValueSet, container);
         }
     }
 }

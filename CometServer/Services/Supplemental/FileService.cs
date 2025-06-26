@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -58,13 +59,13 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected override bool IsInstanceReadAllowed(NpgsqlTransaction transaction, Thing thing, string partition)
+        protected override async Task<bool> IsInstanceReadAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            var result = base.IsInstanceReadAllowed(transaction, thing, partition);
+            var result = await base.IsInstanceReadAllowedAsync(transaction, thing, partition);
 
             if (result)
             {
-                result = this.IsAllowedAccordingToIsHidden(transaction, thing, partition);
+                result = await this.IsAllowedAccordingToIsHiddenAsync(transaction, thing, partition);
             }
 
             return result;
@@ -87,11 +88,11 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition)
+        public async Task<bool> IsAllowedAccordingToIsHiddenAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
             if (partition.StartsWith("Iteration"))
             {
-                return this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+                return await this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
             }
 
             return true;
@@ -109,9 +110,9 @@ namespace CometServer.Services
         /// <param name="file">
         /// The <see cref="File"/> to check
         /// </param>
-        public void CheckFileLock(NpgsqlTransaction transaction, string partition, File file)
+        public async Task CheckFileLockAsync(NpgsqlTransaction transaction, string partition, File file)
         {
-            var currentStoredFile = this.GetShallow(transaction, partition, new [] {file.Iid}, new RequestSecurityContext { ContainerReadAllowed = true }).FirstOrDefault() as File;
+            var currentStoredFile =(await this.GetShallowAsync(transaction, partition, [file.Iid], new RequestSecurityContext { ContainerReadAllowed = true })).FirstOrDefault() as File;
 
             if (!new object[] { this.CredentialsService.Credentials.Person.Iid, null }.Contains(currentStoredFile?.LockedBy))
             {

@@ -113,7 +113,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 // Get all SpecializedQuantityKinds
                 var parameterTypes = this.SpecializedQuantityKindService
-                    .Get(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                    .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
                     .Cast<SpecializedQuantityKind>().ToList();
 
                 // Check whether containing folder is acyclic
@@ -145,7 +145,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </returns>
         private List<Guid> GetParameterTypeIdsFromRdlChain(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var parameterTypeIds = new List<Guid>();

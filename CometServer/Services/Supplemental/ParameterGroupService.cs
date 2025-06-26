@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterGroupService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,7 +26,8 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.Threading.Tasks;
+
     using Authorization;
     
     using CDP4Common.Dto;
@@ -52,7 +53,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup">The target <see cref="EngineeringModelSetup"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is ParameterGroup sourceParameterGroup))
@@ -68,7 +69,7 @@ namespace CometServer.Services
                 copy.ContainingGroup = sourceToCopyMap[copy.ContainingGroup.Value];
             }
 
-            this.ParameterGroupDao.Write(transaction, partition, copy, targetContainer);
+            await this.ParameterGroupDao.WriteAsync(transaction, partition, copy, targetContainer);
         }
     }
 }

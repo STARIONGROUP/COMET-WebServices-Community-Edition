@@ -129,7 +129,7 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new ArgumentException("The container of the ParameterSubscriptionValueSet is not a ParameterSubscription", nameof(container));
             }
 
-            var parameters = this.ParameterService.Get(transaction, partition, null, securityContext).ToList();
+            var parameters = this.ParameterService.GetAsync(transaction, partition, null, securityContext).ToList();
 
             var parameterOrOverrideBase =
                 parameters
@@ -137,7 +137,7 @@ namespace CometServer.Services.Operations.SideEffects
                     .SingleOrDefault(
                         x => x.ParameterSubscription.Contains(parameterSubscription.Iid)) 
                 ?? 
-                this.ParameterOverrideService.Get(transaction, partition, null, securityContext)
+                this.ParameterOverrideService.GetAsync(transaction, partition, null, securityContext)
                     .OfType<ParameterOrOverrideBase>()
                     .SingleOrDefault(
                         x => x.ParameterSubscription.Contains(parameterSubscription.Iid));

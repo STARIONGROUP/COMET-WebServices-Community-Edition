@@ -225,7 +225,7 @@ namespace CometServer.Services
         public IEnumerable<Thing> GetResource(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.ServiceProvider.MapToReadService(serviceType)
-                                 .Get(this.Transaction, topContainer, ids, containerSecurityContext);
+                                 .GetAsync(this.Transaction, topContainer, ids, containerSecurityContext);
         }
 
         /// <summary>

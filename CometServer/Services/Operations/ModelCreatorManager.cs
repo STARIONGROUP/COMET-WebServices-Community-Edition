@@ -236,12 +236,12 @@ namespace CometServer.Services.Operations
 
             // change id on Thing table for all other things
             this.Logger.LogDebug("Modify Identifiers of EngineeringModel {TargetPartition} data", targetPartition);
-            this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition);
+            this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition);
             this.Logger.LogDebug("Modify Identifiers of Iteration {TargetIterationPartition} data", targetIterationPartition);
-            this.EngineeringModelService.ModifyIdentifier(transaction, targetIterationPartition);
+            this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
-            var newEngineeringModel = this.EngineeringModelService.GetShallow(transaction, targetPartition, null, securityContext).OfType<EngineeringModel>().SingleOrDefault();
+            var newEngineeringModel = this.EngineeringModelService.GetShallowAsync(transaction, targetPartition, null, securityContext).OfType<EngineeringModel>().SingleOrDefault();
 
             if (newEngineeringModel == null)
             {
@@ -253,7 +253,7 @@ namespace CometServer.Services.Operations
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
             this.Logger.LogDebug("Modify Identifier of new EngineeringModel {OldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
-            this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, newEngineeringModel, oldIid);
+            this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, newEngineeringModel, oldIid);
 
             if (!this.EngineeringModelService.UpdateConcept(transaction, targetPartition, newEngineeringModel, null))
             {
@@ -288,7 +288,7 @@ namespace CometServer.Services.Operations
                     iteration.IterationSetup = iterationSetupKvp.Value.Iid;
                     iteration.DefaultOption = modelThings.OfType<Option>().First().Iid;
 
-                    this.EngineeringModelService.ModifyIdentifier(transaction, targetPartition, iteration, oldIterationIid);
+                    this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, iteration, oldIterationIid);
 
                     if (!this.IterationService.UpdateConcept(transaction, targetPartition, iteration, newEngineeringModel))
                     {
@@ -335,7 +335,7 @@ namespace CometServer.Services.Operations
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
             this.Logger.LogDebug("disable triggers for EngineeringModel {Partition}", partition);
-            this.EngineeringModelService.ModifyUserTrigger(transaction, partition, false);
+            this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, false);
 
             this.Logger.LogDebug("disable triggers for Iteration {IterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, false);
@@ -361,7 +361,7 @@ namespace CometServer.Services.Operations
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
             this.Logger.LogDebug("enable triggers for EngineeringModel {Partition}", partition);
-            this.EngineeringModelService.ModifyUserTrigger(transaction, partition, true);
+            this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, true);
 
             this.Logger.LogDebug("enable triggers for Iteration {IterationPartition}", iterationPartition);
             this.IterationService.ModifyUserTrigger(transaction, iterationPartition, true);

@@ -104,15 +104,15 @@ namespace CometServer.Services.Operations.SideEffects
                     referenceDataLibrary.RequiredRdl);
 
                 availableQuantityKindIids.AddRange(this.QuantityKindService
-                    .Get(transaction, partition, referenceDataLibrary.ParameterType, securityContext)
+                    .GetAsync(transaction, partition, referenceDataLibrary.ParameterType, securityContext)
                     .Select(x => x.Iid));
 
                 var quantityKindFactors = this.QuantityKindFactorService
-                    .Get(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext)
+                    .GetAsync(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext)
                     .Cast<QuantityKindFactor>();
 
                 var quantityKinds = this.QuantityKindService
-                    .Get(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
+                    .GetAsync(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
                     .Cast<QuantityKind>()
                     .ToList();
 
@@ -160,7 +160,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var availableRdls = this.SiteReferenceDataLibraryService
-                .Get(transaction, partition, null, securityContext)
+                .GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var next = srdlIid;
@@ -173,7 +173,7 @@ namespace CometServer.Services.Operations.SideEffects
             } while (next != null);
 
             return this.QuantityKindService
-                .Get(transaction, partition, parameterTypeIids, securityContext)
+                .GetAsync(transaction, partition, parameterTypeIids, securityContext)
                 .Cast<QuantityKind>()
                 .Select(x => x.Iid)
                 .ToList();
@@ -218,18 +218,18 @@ namespace CometServer.Services.Operations.SideEffects
                 {
                     case SpecializedQuantityKind specializedQuantityKind:
                         nextQuantityKinds = this.QuantityKindService
-                            .Get(transaction, partition, new List<Guid> { specializedQuantityKind.General }, securityContext)
+                            .GetAsync(transaction, partition, new List<Guid> { specializedQuantityKind.General }, securityContext)
                             .Cast<QuantityKind>();
 
                         break;
 
                     case DerivedQuantityKind derivedQuantityKind:
                         var quantityKindFactors = this.QuantityKindFactorService
-                            .Get(transaction, partition, derivedQuantityKind.QuantityKindFactor.ToIdList(), securityContext)
+                            .GetAsync(transaction, partition, derivedQuantityKind.QuantityKindFactor.ToIdList(), securityContext)
                             .Cast<QuantityKindFactor>();
 
                         nextQuantityKinds = this.QuantityKindService
-                            .Get(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
+                            .GetAsync(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
                             .Cast<QuantityKind>();
 
                         break;

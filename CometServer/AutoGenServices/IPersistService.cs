@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IPersistService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -31,6 +30,7 @@
 namespace CometServer.Services
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -59,8 +59,8 @@ namespace CometServer.Services
         /// <returns>
         /// True if the update was successful.
         /// </returns>
-        bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container);
- 
+        Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container);
+
         /// <summary>
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name
         /// </summary>
@@ -82,8 +82,8 @@ namespace CometServer.Services
         /// <returns>
         /// True if the value link was successfully reordered.
         /// </returns>
-        bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate);
- 
+        Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate);
+
         /// <summary>
         /// Update the containment order as indicated by the supplied orderedItem.
         /// </summary>
@@ -99,8 +99,8 @@ namespace CometServer.Services
         /// <returns>
         /// True if the contained item was successfully reordered.
         /// </returns>
-        bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem);
- 
+        Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem);
+
         /// <summary>
         /// Create the supplied DTO instance.
         /// </summary>
@@ -122,8 +122,8 @@ namespace CometServer.Services
         /// <returns>
         /// True if the create was successful.
         /// </returns>
-        bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1);
- 
+        Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1);
+
         /// <summary>
         /// Create the supplied DTO instance. Update if it already exists.
         /// This is typically used during the import of existing data to the Database.
@@ -146,8 +146,8 @@ namespace CometServer.Services
         /// <returns>
         /// True if the create was successful.
         /// </returns>
-        bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1);
- 
+        Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1);
+
         /// <summary>
         /// Add the supplied value to the association property as indicated by the supplied property name.
         /// </summary>
@@ -169,8 +169,8 @@ namespace CometServer.Services
         /// <returns>
         /// True if the link was created.
         /// </returns>
-        bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
- 
+        Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+
         /// <summary>
         /// Delete the supplied DTO instance.
         /// </summary>
@@ -189,7 +189,7 @@ namespace CometServer.Services
         /// <returns>
         /// True if the delete was successful.
         /// </returns>
-        bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null);
+        Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null);
 
         /// <summary>
         /// Delete the supplied DTO instance.
@@ -211,7 +211,7 @@ namespace CometServer.Services
         /// <returns>
         /// True if the delete was successful.
         /// </returns>
-        bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null);
+        Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null);
 
         /// <summary>
         /// Remove the supplied value from the association property as indicated by the supplied property name.
@@ -234,7 +234,7 @@ namespace CometServer.Services
         /// <returns>
         /// True if the link was deleted.
         /// </returns>
-        bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+        Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
     }
 }
 

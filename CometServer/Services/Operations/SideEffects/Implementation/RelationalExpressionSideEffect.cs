@@ -66,13 +66,13 @@ namespace CometServer.Services.Operations.SideEffects
             await base.BeforeDelete(thing, container, transaction, partition, securityContext);
 
             var parametricConstraintThatContainsRelationalExpression =
-                this.ParametricConstraintService.GetShallow(transaction, partition, [container.Iid], securityContext)
+                this.ParametricConstraintService.GetShallowAsync(transaction, partition, [container.Iid], securityContext)
                     .SingleOrDefault(x => x.Iid == container.Iid);
 
             if (parametricConstraintThatContainsRelationalExpression is ParametricConstraint parametricConstraint)
             {
                 var relationalExpressions =
-                    this.RelationalExpressionService.GetShallow(transaction, partition, parametricConstraint.Expression, securityContext).ToList();
+                    this.RelationalExpressionService.GetShallowAsync(transaction, partition, parametricConstraint.Expression, securityContext).ToList();
 
                 if (relationalExpressions.Any(x => x.Iid == thing.Iid) && relationalExpressions.Count == 1)
                 {

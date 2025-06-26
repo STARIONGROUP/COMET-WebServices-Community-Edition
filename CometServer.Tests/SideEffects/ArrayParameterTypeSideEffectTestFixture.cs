@@ -144,7 +144,7 @@ namespace CometServer.Tests.SideEffects
 
             this.siteReferenceDataLibraryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
@@ -155,7 +155,7 @@ namespace CometServer.Tests.SideEffects
 
             this.arrayParameterTypeService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
@@ -170,7 +170,7 @@ namespace CometServer.Tests.SideEffects
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
 
             this.compoundParameterTypeService.Setup(
-                x => x.Get(
+                x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     new List<Guid>
@@ -185,7 +185,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
@@ -194,7 +194,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
@@ -203,7 +203,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
@@ -212,7 +212,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },

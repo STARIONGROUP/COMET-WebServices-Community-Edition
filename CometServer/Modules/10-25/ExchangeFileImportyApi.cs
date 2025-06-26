@@ -1055,7 +1055,7 @@ namespace CometServer.Modules
                                     foreach (var thing in thingsToBeDeleted)
                                     {
                                         var service = serviceProvider.MapToPersitableService<IPersistService>(thing.ClassKind.ToString());
-                                        service.RawDeleteConcept(transaction, iterationPartition, thing);
+                                        service.RawDeleteConceptAsync(transaction, iterationPartition, thing);
                                     }
                                 }
 
@@ -1319,7 +1319,7 @@ namespace CometServer.Modules
                 transactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
-                var person = personService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
+                var person = personService.GetShallowAsync(transaction, TopContainer, null, new RequestSecurityContext { ContainerReadAllowed = true }).OfType<Person>().FirstOrDefault();
                 var personId = person?.Iid ?? Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
@@ -1455,19 +1455,19 @@ namespace CometServer.Modules
                 transactionManager.SetFullAccessState(true);
 
                 // Get first person Id (so that actor isnt guid.empty), it is hard to determine who it should be.
-                var actor = personService.GetShallow(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
+                var actor = personService.GetShallowAsync(transaction, TopContainer, null, new RequestSecurityContext {ContainerReadAllowed = true}).OfType<Person>().FirstOrDefault();
                 var actorId = actor?.Iid ?? Guid.Empty;
 
                 // Save revision history for SiteDirectory's entries
                 await revisionService.SaveRevisionsAsync(transaction, TopContainer, actorId, EngineeringModelSetupSideEffect.FirstRevision);
 
-                var siteDirectory = siteDirectoryService.Get(
+                var siteDirectory = siteDirectoryService.GetAsync(
                     transaction,
                     TopContainer,
                     null,
                     new RequestSecurityContext { ContainerReadAllowed = true }).OfType<SiteDirectory>().ToList();
 
-                var engineeringModelSetups = engineeringModelSetupService.GetShallow(
+                var engineeringModelSetups = engineeringModelSetupService.GetShallowAsync(
                         transaction,
                         TopContainer,
                         siteDirectory[0].Model,
@@ -1537,7 +1537,7 @@ namespace CometServer.Modules
         /// </param>
         private void CreateMissingParticipantPermissions(NpgsqlTransaction transaction, IParticipantRoleService participantRoleService, IParticipantPermissionService participantPermissionService, IDefaultPermissionProvider defaultPermissionProvider)
         {
-            var participantRoles = participantRoleService.GetShallow(
+            var participantRoles = participantRoleService.GetShallowAsync(
                 transaction,
                 TopContainer,
                 null,
@@ -1567,7 +1567,7 @@ namespace CometServer.Modules
         /// </param>
         private void FindAndCreateMissingParticipantPermissions(ParticipantRole participantRole, NpgsqlTransaction transaction, IParticipantPermissionService participantPermissionService,  IDefaultPermissionProvider defaultPermissionProvider)
         {
-            var participantPermissions = participantPermissionService.GetShallow(
+            var participantPermissions = participantPermissionService.GetShallowAsync(
                 transaction,
                 TopContainer,
                 participantRole.ParticipantPermission,
@@ -1592,7 +1592,7 @@ namespace CometServer.Modules
                         };
 
                         participantRole.ParticipantPermission.Add(permission.Iid);
-                        participantPermissionService.CreateConcept(transaction, TopContainer, permission, participantRole);
+                        participantPermissionService.CreateConceptAsync(transaction, TopContainer, permission, participantRole);
                     }
                 }
             }
@@ -1615,7 +1615,7 @@ namespace CometServer.Modules
         /// </param>
         private void CreateMissingPersonPermissions(NpgsqlTransaction transaction, IPersonRoleService personRoleService, IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider)
         {
-            var personRoles = personRoleService.GetShallow(
+            var personRoles = personRoleService.GetShallowAsync(
                 transaction,
                 TopContainer,
                 null,
@@ -1645,7 +1645,7 @@ namespace CometServer.Modules
         /// </param>
         private void FindAndCreateMissingPersonPermissions(IPersonPermissionService personPermissionService, IDefaultPermissionProvider defaultPermissionProvider, PersonRole personRole, NpgsqlTransaction transaction)
         {
-            var personPermissions = personPermissionService.GetShallow(
+            var personPermissions = personPermissionService.GetShallowAsync(
                 transaction,
                 TopContainer,
                 personRole.PersonPermission,
@@ -1670,7 +1670,7 @@ namespace CometServer.Modules
                         };
 
                         personRole.PersonPermission.Add(permission.Iid);
-                        personPermissionService.CreateConcept(transaction, TopContainer, permission, personRole);
+                        personPermissionService.CreateConceptAsync(transaction, TopContainer, permission, personRole);
                     }
                 }
             }

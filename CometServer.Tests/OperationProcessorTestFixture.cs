@@ -154,20 +154,20 @@ namespace CometServer.Tests
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithoutClassKind);
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             var completeDeleteObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, SimpleQuantityKindTypeString } };
             postOperation.Delete.Clear();
             postOperation.Delete.Add(completeDeleteObject);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
         }
 
         [Test]
@@ -188,7 +188,7 @@ namespace CometServer.Tests
 
             Assert.Throws(
                 typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             var deleteObjectWithListProperty = new ClasslessDTO()
             {
@@ -200,7 +200,7 @@ namespace CometServer.Tests
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithListProperty);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
         }
 
         [Test]
@@ -614,7 +614,7 @@ namespace CometServer.Tests
 
             var valueSetService = new Mock<IParameterValueSetService>();
 
-            valueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
+            valueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
                 .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>((a, b, c, d) =>
                 {
                     var list = new List<ParameterValueSet>();
@@ -637,7 +637,7 @@ namespace CometServer.Tests
 
             var overrideValueSetService = new Mock<IParameterOverrideValueSetService>();
 
-            overrideValueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
+            overrideValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
                 .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>((a, b, c, d) =>
                 {
                     var list = new List<ParameterOverrideValueSet>();
@@ -659,8 +659,8 @@ namespace CometServer.Tests
                 });
 
             var paramDao = new TestParameterDao();
-            iterationService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { sourceIteration });
-            iterationService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { targetIteration });
+            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { sourceIteration });
+            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { targetIteration });
 
             var paramService = new ParameterService
             {
@@ -767,7 +767,7 @@ namespace CometServer.Tests
             this.serviceProvider.Setup(x => x.MapToReadService(ClassKind.EngineeringModelSetup.ToString())).Returns(modelSetupService.Object);
 
             // targetIteration
-            this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
+            this.operationProcessor.ProcessAsync(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
 
             Assert.That(edDao.WrittenThingCount, Is.EqualTo(2));
             Assert.That(paramDao.WrittenThingCount, Is.EqualTo(2));

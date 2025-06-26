@@ -103,7 +103,7 @@ namespace CometServer.Services.Operations.SideEffects
                 unitIdsFromChain.AddRange(((ReferenceDataLibrary)container).Unit);
 
                 // Get all Derived units
-                var units = this.DerivedUnitService.Get(transaction, partition, unitIdsFromChain, securityContext)
+                var units = this.DerivedUnitService.GetAsync(transaction, partition, unitIdsFromChain, securityContext)
                     .Cast<DerivedUnit>().ToList();
 
                 // Check every unit factor
@@ -150,7 +150,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var unitIds = new List<Guid>();
@@ -251,7 +251,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var unitFactor = this.UnitFactorService
-                .Get(transaction, partition, new List<Guid> { unitFactorId }, securityContext).Cast<UnitFactor>()
+                .GetAsync(transaction, partition, new List<Guid> { unitFactorId }, securityContext).Cast<UnitFactor>()
                 .ToList()[0];
 
             if (unitFactor.Unit == unitId)
