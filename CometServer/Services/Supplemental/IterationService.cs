@@ -97,7 +97,7 @@ namespace CometServer.Services
         /// </param>
         public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string targetPartition)
         {
-            this.IterationDao.DeleteAllrganizationalParticipantThings(transaction, targetPartition);
+            this.IterationDao.DeleteAllrganizationalParticipantThingsAsync(transaction, targetPartition);
         }
 
         /// <summary>
@@ -193,7 +193,7 @@ namespace CometServer.Services
 
             var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
 
-            this.IterationDao.MoveToNextIterationFromLast(transaction, iterationPartition, newiteration);
+            this.IterationDao.MoveToNextIterationFromLastAsync(transaction, iterationPartition, newiteration);
             this.PublicationService.DeleteAll(transaction, iterationPartition);
             Logger.Info("End populate data for new iteration. Operation took {sw} ms", start.ElapsedMilliseconds);
         }
@@ -214,7 +214,7 @@ namespace CometServer.Services
             var engineeringModelPartition = iterationPartition.Replace(Cdp4TransactionManager.ITERATION_PARTITION_PREFIX, Cdp4TransactionManager.ENGINEERING_MODEL_PARTITION_PREFIX);
 
             // Set end-validity for all current data
-            this.IterationDao.SetIterationValidityEnd(transaction, iterationPartition);
+            this.IterationDao.SetIterationValidityEndAsync(transaction, iterationPartition);
 
             Logger.Info("Setting end validity took {start} ms", start.ElapsedMilliseconds);
             start.Reset();
@@ -228,15 +228,15 @@ namespace CometServer.Services
             this.ModifyUserTrigger(transaction, iterationPartition, false);
 
             // delete current data
-            this.IterationDao.DeleteAllIterationThings(transaction, iterationPartition);
+            this.IterationDao.DeleteAllIterationThingsAsync(transaction, iterationPartition);
 
             // re-enable triggers
             this.ModifyUserTrigger(transaction, iterationPartition, true);
 
-            this.IterationDao.InsertDataFromAudit(transaction, iterationPartition, sourceInstant);
+            this.IterationDao.InsertDataFromAuditAsync(transaction, iterationPartition, sourceInstant);
 
             var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
-            this.IterationDao.MoveToNextIterationFromLast(transaction, iterationPartition, newiteration);
+            this.IterationDao.MoveToNextIterationFromLastAsync(transaction, iterationPartition, newiteration);
 
             Logger.Info("Inserting data took {sw} ms", start.ElapsedMilliseconds);
 

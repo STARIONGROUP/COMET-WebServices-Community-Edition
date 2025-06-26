@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -31,6 +31,8 @@ namespace CDP4Orm.Dao
 
     using CDP4Common.DTO;
 
+    using CDP4Orm.Helper;
+
     using Npgsql;
 
     using NpgsqlTypes;
@@ -40,11 +42,6 @@ namespace CDP4Orm.Dao
     /// </summary>
     public partial class IterationSetupDao
     {
-        /// <summary>
-        /// Gets or sets the injected <see cref="IEngineeringModelSetupDao"/>
-        /// </summary>
-        public IEngineeringModelSetupDao EngineeringModelSetupDao { get; set; }
-
         /// <summary>
         /// Read the data from the database.
         /// </summary>
@@ -109,19 +106,15 @@ namespace CDP4Orm.Dao
         /// <param name="iid">
         /// The thing DTO id that is to be deleted.
         /// </param>
-        /// <param name="isHandled">
-        /// Logic flag that can be set to true to skip the generated deleted logic
-        /// </param>
         /// <returns>
         /// True if the concept was deleted.
         /// </returns>
         /// <remarks>
         /// IterationSetups cannot be deleted at all.
         /// </remarks>>
-        public override bool BeforeDelete(NpgsqlTransaction transaction, string partition, Guid iid, out bool isHandled)
+        public override Task<BooleanValueAndHandledResult> BeforeDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
-            isHandled = true;
-            return true;
+            return Task.FromResult(new BooleanValueAndHandledResult(true, true) );
         }
     }
 }

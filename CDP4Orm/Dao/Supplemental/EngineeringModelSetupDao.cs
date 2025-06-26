@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CDP4Orm.Dao
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -76,9 +77,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="EngineeringModelSetup"/>.
         /// </returns>
-        public IEnumerable<EngineeringModelSetup> ReadByPerson(NpgsqlTransaction transaction, string partition, Guid personId, DateTime? instant = null)
+        public async Task<IEnumerable<EngineeringModelSetup>> ReadByPersonAsync(NpgsqlTransaction transaction, string partition, Guid personId, DateTime? instant = null)
         {
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -101,12 +102,16 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sqlBuilder.ToString();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            var result= new List<EngineeringModelSetup>();
+
+            while (await reader.ReadAsync())
             {
-                yield return this.MapToDto(reader);
+                result.Add(this.MapToDto(reader));
             }
+
+            return result;
         }
 
         /// <summary>
@@ -133,11 +138,11 @@ namespace CDP4Orm.Dao
         /// <remarks>
         /// THIS MUST BE "new" AND NOT OVERRIDE. Else this will be called by every abstract layer of the EngineeringModelSetupDao.
         /// </remarks>
-        public new bool AfterWrite(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public new async Task<bool> AfterWriteAsync(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var result = base.AfterWrite(writeResult, transaction, partition, thing, container);
+            var result = await base.AfterWriteAsync(writeResult, transaction, partition, thing, container);
             
             var engineeringModelSetup = (EngineeringModelSetup)thing;
             
@@ -155,23 +160,23 @@ namespace CDP4Orm.Dao
                 "Iteration_REPLACE",
                 $"{iterationPartition}"));
 
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
-                ExecuteEngineeringModelSchemaScripts(command, replacementInfo);
+                await ExecuteEngineeringModelSchemaScriptsAsync(command, replacementInfo);
             }
 
             stopwatch.Stop();
-            this.Logger.LogDebug("EngineeringModelDefinition.sql scripts took {time}[ms]", stopwatch.ElapsedMilliseconds);
+            this.Logger.LogDebug("EngineeringModelDefinition.sql scripts took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
 
             stopwatch.Reset();
             stopwatch.Start();
-            this.MigrationService.ApplyMigrations(transaction, engineeringModelPartition, false);
-            this.MigrationService.ApplyMigrations(transaction, iterationPartition, false);
+            await this.MigrationService.ApplyMigrationsAsync(transaction, engineeringModelPartition, false);
+            await this.MigrationService.ApplyMigrationsAsync(transaction, iterationPartition, false);
 
             stopwatch.Stop();
-            this.Logger.LogDebug("Migration applied in {time}[ms]", stopwatch.ElapsedMilliseconds);
+            this.Logger.LogDebug("Migration applied in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
             return result;
         }
 
@@ -180,14 +185,15 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="sqlCommand">The <see cref="NpgsqlCommand"/></param>
         /// <param name="replacementInfo">The collection of replacement information</param>
-        private static void ExecuteEngineeringModelSchemaScripts(NpgsqlCommand sqlCommand, IReadOnlyCollection<Tuple<string, string>> replacementInfo)
+        /// <returns>A <see cref="Task"/> representing the asynchronous operation</returns>
+        private static async Task ExecuteEngineeringModelSchemaScriptsAsync(NpgsqlCommand sqlCommand, IReadOnlyCollection<Tuple<string, string>> replacementInfo)
         {
             sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.04_EngineeringModel_setup.sql", replace: replacementInfo);
-            sqlCommand.ExecuteNonQuery();
+            await sqlCommand.ExecuteNonQueryAsync();
             sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.05_EngineeringModel_structure.sql", replace: replacementInfo);
-            sqlCommand.ExecuteNonQuery();
+            await sqlCommand.ExecuteNonQueryAsync();
             sqlCommand.ReadSqlFromResource("CDP4Orm.AutoGenStructure.06_EngineeringModel_triggers.sql", replace: replacementInfo);
-            sqlCommand.ExecuteNonQuery();
+            await sqlCommand.ExecuteNonQueryAsync();
         }
     }
 }

@@ -431,7 +431,7 @@ namespace CDP4Orm.Dao.Revision
 
             await using var reader = await command.ExecuteReaderAsync();
 
-            return MapToRevisionRegistryInfoList(reader);
+            return await MapToRevisionRegistryInfoList(reader);
         }
 
         /// <summary>
@@ -443,11 +443,11 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// Enumerable of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        private static ReadOnlyCollection<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
+        private static async Task<ReadOnlyCollection<RevisionRegistryInfo>> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
         {
             var result = new List<RevisionRegistryInfo>();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var revision = reader["Revision"];
                 var instant = reader["Instant"];

@@ -406,7 +406,7 @@ namespace CometServer.Services.Operations.SideEffects
         private int QeuryIterationNumberForFirstIteration(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction)
         {
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
-            var iterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
+            var iterationNumber = this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, engineeringModelPartition);
 
             if (iterationNumber != 1)
             {

@@ -110,7 +110,7 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
             // set the next iteration number
-            thing.IterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
+            thing.IterationNumber = this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, engineeringModelPartition);
             return true;
         }
 

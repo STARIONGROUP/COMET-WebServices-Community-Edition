@@ -631,7 +631,7 @@ namespace CometServer.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                migrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
+                migrationService.ApplyMigrationsAsync(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
 
@@ -719,7 +719,7 @@ namespace CometServer.Modules
                         var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
-                        engineeringModelDao.ResetIterationNumberSequenceStartNumber(
+                        engineeringModelDao.ResetIterationNumberSequenceStartNumberAsync(
                             transaction,
                             dataPartition,
                             maxIterationNumber);
@@ -923,7 +923,7 @@ namespace CometServer.Modules
                 }
 
                 // apply migration on new SiteDirectory partition
-                migrationService.ApplyMigrations(transaction, nameof(SiteDirectory), false);
+                migrationService.ApplyMigrationsAsync(transaction, nameof(SiteDirectory), false);
 
                 var result = false;
 
@@ -1008,7 +1008,7 @@ namespace CometServer.Modules
                         var maxIterationNumber = iterationSetups.Select(x => x.IterationNumber).Max() + IterationNumberSequenceInitialization;
 
                         // reset the start number of iterationNumber sequence
-                        engineeringModelDao.ResetIterationNumberSequenceStartNumber(
+                        engineeringModelDao.ResetIterationNumberSequenceStartNumberAsync(
                             transaction,
                             dataPartition,
                             maxIterationNumber);

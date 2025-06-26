@@ -143,7 +143,7 @@ namespace CDP4Orm.Dao.Resolve
 
             var result = new List<Tuple<Guid, ContainerInfo>>();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var tuple = MapToSiteDirectoryContainmentInfo(reader, connectedPartition);
 
@@ -238,7 +238,7 @@ namespace CDP4Orm.Dao.Resolve
 
             var result = new List<Tuple<Guid, ContainerInfo>>();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var tuple = MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
 

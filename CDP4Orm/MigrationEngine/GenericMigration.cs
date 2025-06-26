@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="GenericMigration.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -29,6 +29,7 @@ namespace CDP4Orm.MigrationEngine
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     using Dao;
 
@@ -65,10 +66,11 @@ namespace CDP4Orm.MigrationEngine
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="existingSchemas">The schema on which the migration shall be applied on</param>
-        public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
+        public override async Task ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
             this.logger.LogInformation("Start migration script {ResourceName}", this.MigrationMetaData.ResourceName);
             var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName);
+
             if (resource == null)
             {
                 throw new FileNotFoundException($"The resource {this.MigrationMetaData.ResourceName} could not be found.");
@@ -102,17 +104,17 @@ namespace CDP4Orm.MigrationEngine
                     }
                 }
 
-                using var sqlCommand = new NpgsqlCommand();
+                await using var sqlCommand = new NpgsqlCommand();
 
                 sqlCommand.ReadSqlFromResource(this.MigrationMetaData.ResourceName, null, replaceList);
 
                 sqlCommand.Connection = transaction.Connection;
                 sqlCommand.Transaction = transaction;
-                sqlCommand.ExecuteNonQuery();
+                await sqlCommand.ExecuteNonQueryAsync();
                 this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
             }
 
-            base.ApplyMigration(transaction, existingSchemas);
+            await base.ApplyMigration(transaction, existingSchemas);
         }
     }
 }

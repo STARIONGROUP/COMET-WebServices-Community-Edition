@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IMigrationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CDP4Orm.MigrationEngine
     using Npgsql;
 
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// The interface for the migration service which is responsible for applying all migration scripts
@@ -39,7 +40,8 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The target partition</param>
         /// <param name="isStartup"> Asserts whether the <see cref= "IMigrationService" /> is called on startup</param>
-        void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup);
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        Task ApplyMigrationsAsync(NpgsqlTransaction transaction, string partition, bool isStartup);
 
         /// <summary>
         /// Gets all migration scripts

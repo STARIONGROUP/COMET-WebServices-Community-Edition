@@ -58,6 +58,6 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="DomainOfExpertise"/>.
         /// </returns>
-        Task<IEnumerable<DomainOfExpertise>> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null);
+        Task<IEnumerable<DomainOfExpertise>> ReadByPersonAndEngineeringModelSetupAsync(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null);
     }
 }

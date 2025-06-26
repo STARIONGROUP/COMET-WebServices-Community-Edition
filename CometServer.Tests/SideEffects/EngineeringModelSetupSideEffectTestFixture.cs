@@ -191,7 +191,7 @@ namespace CometServer.Tests.SideEffects
                     It.IsAny<Guid>(),
                     It.IsAny<int>())).Returns(Task.FromResult(new List<Thing>().AsEnumerable()));
 
-            this.engineeringModelDao.Setup(x => x.GetNextIterationNumber(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(1);
+            this.engineeringModelDao.Setup(x => x.GetNextIterationNumberAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(1);
         }
 
         [Test]

@@ -149,7 +149,7 @@ namespace CDP4Orm.Dao.Cache
                 sqlQueryBuilder.Append($" ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=EXCLUDED.\"{RevisionColumnName}\", \"{JsonColumnName}\"=EXCLUDED.\"{JsonColumnName}\";");
 
                 var sqlQuery = sqlQueryBuilder.ToString();
-                this.Logger.LogDebug("Running insert command for Cache : {sqlQuery}", sqlQuery);
+                this.Logger.LogDebug("Running insert command for Cache : {SqlQuery}", sqlQuery);
 
                 await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 

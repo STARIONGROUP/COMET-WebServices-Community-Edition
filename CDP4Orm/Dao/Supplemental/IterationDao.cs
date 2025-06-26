@@ -27,6 +27,7 @@ namespace CDP4Orm.Dao
     using System;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -44,9 +45,9 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
-        public void SetIterationValidityEnd(NpgsqlTransaction transaction, string partition)
+        public async Task SetIterationValidityEndAsync(NpgsqlTransaction transaction, string partition)
         {
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             const string sql = "SELECT \"SiteDirectory\".end_all_current_data_validity(:partitionname);";
 
@@ -55,7 +56,7 @@ namespace CDP4Orm.Dao
             command.CommandText = sql;
             command.Connection = transaction.Connection;
             command.Transaction = transaction;
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -64,9 +65,9 @@ namespace CDP4Orm.Dao
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="instant">The instant that matches an iteration</param>
-        public void InsertDataFromAudit(NpgsqlTransaction transaction, string partition, DateTime instant)
+        public async Task InsertDataFromAuditAsync(NpgsqlTransaction transaction, string partition, DateTime instant)
         {
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             const string sql = "SELECT \"SiteDirectory\".insert_data_from_audit(:partitionname, :instant);";
 
@@ -76,7 +77,7 @@ namespace CDP4Orm.Dao
             command.CommandText = sql;
             command.Connection = transaction.Connection;
             command.Transaction = transaction;
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -84,14 +85,14 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
-        public void DeleteAllIterationThings(NpgsqlTransaction transaction, string partition)
+        public async Task DeleteAllIterationThingsAsync(NpgsqlTransaction transaction, string partition)
         {
-            if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
+            if (!Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sqlBuilder = new StringBuilder();
 
@@ -100,7 +101,7 @@ namespace CDP4Orm.Dao
             command.CommandText = sqlBuilder.ToString();
             command.Connection = transaction.Connection;
             command.Transaction = transaction;
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -108,14 +109,14 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The iteration partition</param>
-        public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string partition)
+        public async Task DeleteAllrganizationalParticipantThingsAsync(NpgsqlTransaction transaction, string partition)
         {
-            if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
+            if (!Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sqlBuilder = new StringBuilder();
 
@@ -124,7 +125,7 @@ namespace CDP4Orm.Dao
             command.CommandText = sqlBuilder.ToString();
             command.Connection = transaction.Connection;
             command.Transaction = transaction;
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -139,18 +140,18 @@ namespace CDP4Orm.Dao
         /// <param name="thing">
         /// The thing DTO that is to be persisted.
         /// </param>
-        public void MoveToNextIterationFromLast(NpgsqlTransaction transaction, string partition, Thing thing)
+        public async Task MoveToNextIterationFromLastAsync(NpgsqlTransaction transaction, string partition, Thing thing)
         {
-            UpdateContainment(transaction, partition, typeof(Option), thing);
-            UpdateContainment(transaction, partition, typeof(Publication), thing);
-            UpdateContainment(transaction, partition, typeof(PossibleFiniteStateList), thing);
-            UpdateContainment(transaction, partition, typeof(ElementDefinition), thing);
-            UpdateContainment(transaction, partition, typeof(Relationship), thing);
-            UpdateContainment(transaction, partition, typeof(ExternalIdentifierMap), thing);
-            UpdateContainment(transaction, partition, typeof(RequirementsSpecification), thing);
-            UpdateContainment(transaction, partition, typeof(DomainFileStore), thing);
-            UpdateContainment(transaction, partition, typeof(ActualFiniteStateList), thing);
-            UpdateContainment(transaction, partition, typeof(RuleVerificationList), thing);
+            await UpdateContainment(transaction, partition, typeof(Option), thing);
+            await UpdateContainment(transaction, partition, typeof(Publication), thing);
+            await UpdateContainment(transaction, partition, typeof(PossibleFiniteStateList), thing);
+            await UpdateContainment(transaction, partition, typeof(ElementDefinition), thing);
+            await UpdateContainment(transaction, partition, typeof(Relationship), thing);
+            await UpdateContainment(transaction, partition, typeof(ExternalIdentifierMap), thing);
+            await UpdateContainment(transaction, partition, typeof(RequirementsSpecification), thing);
+            await UpdateContainment(transaction, partition, typeof(DomainFileStore), thing);
+            await UpdateContainment(transaction, partition, typeof(ActualFiniteStateList), thing);
+            await UpdateContainment(transaction, partition, typeof(RuleVerificationList), thing);
         }
 
         /// <summary>
@@ -168,14 +169,14 @@ namespace CDP4Orm.Dao
         /// <param name="thing">
         /// The thing DTO that is to be persisted.
         /// </param>
-        private static void UpdateContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing thing)
+        private static async Task UpdateContainment(NpgsqlTransaction transaction, string partition, Type containedType, Thing thing)
         {
             if (string.IsNullOrWhiteSpace(partition) || string.IsNullOrWhiteSpace(containedType.Name))
             {
                 throw new ArgumentException("Partition or contained type name cannot be null or whitespace.");
             }
 
-            if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
+            if (!Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
@@ -187,14 +188,14 @@ namespace CDP4Orm.Dao
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             command.CommandText = $"UPDATE \"{partition}\".\"{containedType.Name}\" SET \"Container\" = :container;";
             command.Parameters.Add("container", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Connection = transaction.Connection;
             command.Transaction = transaction;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
     }
 }

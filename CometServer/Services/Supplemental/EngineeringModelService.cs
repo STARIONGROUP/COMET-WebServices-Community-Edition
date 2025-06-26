@@ -59,7 +59,7 @@ namespace CometServer.Services
         /// <param name="partition">The egineering-model partition to modify</param>
         public void ModifyIdentifier(NpgsqlTransaction transaction, string partition)
         {
-            this.EngineeringModelDao.ModifyIdentifier(transaction, partition);
+            this.EngineeringModelDao.ModifyIdentifierAsync(transaction, partition);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace CometServer.Services
         /// <param name="oldIid">The old identifier</param>
         public void ModifyIdentifier(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
         {
-            this.EngineeringModelDao.ModifyIdentifier(transaction, partition, thing, oldIid);
+            this.EngineeringModelDao.ModifyIdentifierAsync(transaction, partition, thing, oldIid);
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace CometServer.Services
         /// <returns>The next iteration number</returns>
         public int QueryNextIterationNumber(NpgsqlTransaction transaction, string partition)
         {
-            return this.EngineeringModelDao.GetNextIterationNumber(transaction, partition);
+            return this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, partition);
         }
     }
 }

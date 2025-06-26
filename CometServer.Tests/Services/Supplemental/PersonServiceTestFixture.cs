@@ -116,7 +116,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
 
-            this.personDao.Setup(x => x.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, this.person, credentials)).Returns(true);
+            this.personDao.Setup(x => x.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, this.person, credentials)).Returns(true);
 
             Assert.DoesNotThrow(() => this.personService.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, credentials));
         }

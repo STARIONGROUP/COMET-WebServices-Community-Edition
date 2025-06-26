@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BaseDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,10 +26,13 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
     using CDP4JsonSerializer;
+
+    using CDP4Orm.Helper;
 
     using Newtonsoft.Json.Linq;
 
@@ -70,9 +73,6 @@ namespace CDP4Orm.Dao
         /// <param name="container">
         /// The container of the DTO to be persisted.
         /// </param>
-        /// <param name="isHandled">
-        /// Logic flag that can be set to true to skip the generated update logic
-        /// </param>
         /// <param name="valueTypeDictionaryAdditions">
         /// This dictionary instance can be used to add additional value (non reference) variables that are to be persisted as a HSTORE implementation together with the supplied <see cref="Thing"/> instance.
         /// Developers are required to take care to add property keys that are not already in the ValueTypeDictionary that is managed in the respective generated partial class.
@@ -80,15 +80,14 @@ namespace CDP4Orm.Dao
         /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again. 
         /// </param>
         /// <returns>
-        /// True if the concept was persisted.
+        /// An awaitable <see cref="Task"/> having True if the concept was persisted as result.
         /// </returns>
-        public virtual bool BeforeUpdate(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
+        public virtual async Task<BooleanValueAndHandledResult> BeforeUpdateAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
-            var transactionDateTime = this.GetTransactionDateTime(transaction);
+            var transactionDateTime = await this.GetTransactionDateTimeAsync(transaction);
             thing.ModifiedOn = transactionDateTime;
 
-            isHandled = false;
-            return true;
+            return BooleanValueAndHandledResult.Default;
         }
 
         /// <summary>
@@ -110,11 +109,11 @@ namespace CDP4Orm.Dao
         /// The container of the updated DTO.
         /// </param>
         /// <returns>
-        /// True if the after update logic and the update result were both successful.
+        /// An awaitable <see cref="Task"/> having True if the after update logic and the update result were both successful as result.
         /// </returns>
-        public virtual bool AfterUpdate(bool updateResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public virtual Task<bool> AfterUpdateAsync(bool updateResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            return updateResult;
+            return Task.FromResult(updateResult);
         }
 
         /// <summary>
@@ -129,16 +128,12 @@ namespace CDP4Orm.Dao
         /// <param name="iid">
         /// The thing DTO id that is to be deleted.
         /// </param>
-        /// <param name="isHandled">
-        /// Logic flag that can be set to true to skip the generated deleted logic
-        /// </param>
         /// <returns>
-        /// True if the concept was deleted.
+        /// An awaitable <see cref="Task"/> having True if the concept was deleted as result.
         /// </returns>
-        public virtual bool BeforeDelete(NpgsqlTransaction transaction, string partition, Guid iid, out bool isHandled)
+        public virtual Task<BooleanValueAndHandledResult> BeforeDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
-            isHandled = false;
-            return true;
+            return Task.FromResult(BooleanValueAndHandledResult.Default);
         }
 
         /// <summary>
@@ -159,9 +154,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// True if the after delete logic and the delete result were both successful.
         /// </returns>
-        public virtual bool AfterDelete(bool deleteResult, NpgsqlTransaction transaction, string partition, Guid iid)
+        public virtual Task<bool> AfterDeleteAsync(bool deleteResult, NpgsqlTransaction transaction, string partition, Guid iid)
         {
-            return deleteResult;
+            return Task.FromResult(deleteResult);
         }
 
         /// <summary>
@@ -189,22 +184,21 @@ namespace CDP4Orm.Dao
         /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again. 
         /// </param>
         /// <returns>
-        /// True if the concept was persisted.
+        /// An awaitable <see cref="Task"/> having True if the concept was persisted as result.
         /// </returns>
-        public virtual bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
+        public virtual async Task<BooleanValueAndHandledResult> BeforeWriteAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             if (thing.ModifiedOn == default)
             {
-                thing.ModifiedOn = this.GetTransactionDateTime(transaction);
+                thing.ModifiedOn = await this.GetTransactionDateTimeAsync(transaction);
             }
 
             if (thing is ITimeStampedThing timeStampedThing && timeStampedThing.CreatedOn == default)
             {
-                timeStampedThing.CreatedOn = this.GetTransactionDateTime(transaction);
+                timeStampedThing.CreatedOn = await this.GetTransactionDateTimeAsync(transaction);
             }
 
-            isHandled = false;
-            return true;
+            return BooleanValueAndHandledResult.Default;
         }
 
         /// <summary>
@@ -226,11 +220,11 @@ namespace CDP4Orm.Dao
         /// The container of the persisted DTO.
         /// </param>
         /// <returns>
-        /// True if the after write logic and the write result were both successful.
+        /// An awaitable <see cref="Task"/> having True if the after write logic and the write result were both successful as result.
         /// </returns>
-        public virtual bool AfterWrite(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public virtual Task<bool> AfterWriteAsync(bool writeResult, NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            return writeResult;
+            return Task.FromResult(writeResult);
         }
 
         /// <summary>
@@ -279,9 +273,9 @@ namespace CDP4Orm.Dao
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition of the table to delete</param>
         /// <param name="table">The table to clear</param>
-        protected static void DeleteAll(NpgsqlTransaction transaction, string partition, string table)
+        protected static async Task DeleteAllAsync(NpgsqlTransaction transaction, string partition, string table)
         {
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
             var sqlBuilder = new System.Text.StringBuilder();
 
             sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"{1}\";", partition, table);
@@ -289,24 +283,25 @@ namespace CDP4Orm.Dao
             command.CommandText = sqlBuilder.ToString();
             command.Connection = transaction.Connection;
             command.Transaction = transaction;
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
         /// Returns the current transaction time from the server
         /// </summary>
         /// <param name="transaction"></param>
-        /// <returns></returns>
-        private DateTime GetTransactionDateTime(NpgsqlTransaction transaction)
+        /// <returns>An awaitable <see cref="Task"/> having the transaction DateTime as a result.</returns>
+        private async Task<DateTime> GetTransactionDateTimeAsync(NpgsqlTransaction transaction)
         {
             if (transaction != null && this.currentTransactionDataTimeTransaction != transaction)
             {
                 this.currentTransactionDataTimeTransaction = transaction;
 
-                using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
+                await using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".\"get_transaction_time\"();",
                     transaction.Connection,
                     transaction);
-                this.currentTransactionDatetime = (DateTime)command.ExecuteScalar();
+
+                this.currentTransactionDatetime = (DateTime)await command.ExecuteScalarAsync();
             }
 
             return this.currentTransactionDatetime;
@@ -316,7 +311,7 @@ namespace CDP4Orm.Dao
         /// Instantiates a <see cref="Thing"/> from the content of a <see cref="NpgsqlDataReader"/>
         /// </summary>
         /// <param name="reader">The <see cref="NpgsqlDataReader"/></param>
-        /// <returns>A <see cref="Thing"/></returns>
+        /// <returns>An awaitable <see cref="Task"/> having a <see cref="Thing"/> as result</returns>
         protected Thing MapJsonbToDto(NpgsqlDataReader reader)
         {
             var jsonObject = JObject.Parse(reader.GetValue(0).ToString());

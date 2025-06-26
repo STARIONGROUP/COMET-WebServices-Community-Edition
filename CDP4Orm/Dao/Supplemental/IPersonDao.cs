@@ -24,6 +24,8 @@
 
 namespace CDP4Orm.Dao
 {
+    using System.Threading.Tasks;
+
     using Npgsql;
 
     /// <summary>
@@ -43,7 +45,7 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The database schema</param>
         /// <param name="person">The person <see cref="CDP4Common.DTO.Person" /></param>
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
-        /// <returns></returns>
-        bool UpdateCredentials(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials);
+        /// <returns>An awaitable<see cref="Task"/> having True if credentials were updated as result</returns>
+        Task<bool> UpdateCredentialsAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Person person, MigrationPasswordCredentials credentials);
     }
 }

@@ -448,7 +448,7 @@ namespace CometServer.Authorization
             try
             {
                 var engineeringModelSetupDao = (EngineeringModelSetupDao)this.EngineeringModelSetupDao;
-                return engineeringModelSetupDao.ReadByPerson(transaction, "SiteDirectory", person.Iid).ToList();
+                return engineeringModelSetupDao.ReadByPersonAsync(transaction, "SiteDirectory", person.Iid).ToList();
             }
             catch (Exception ex)
             {

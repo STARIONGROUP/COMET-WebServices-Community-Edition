@@ -52,7 +52,7 @@ namespace CometServer.Services
                 throw new SecurityException($"The person {this.CredentialsService.Credentials.Person.UserName} does not have an appropriate update permission for {thing.GetType().Name}.");
             }
 
-            return this.PersonDao.UpdateCredentials(transaction, partition, thing as Person, credentials);
+            return this.PersonDao.UpdateCredentialsAsync(transaction, partition, thing as Person, credentials);
         }
     }
 }

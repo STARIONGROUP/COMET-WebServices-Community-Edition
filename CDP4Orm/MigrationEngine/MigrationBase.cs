@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MigrationBase.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CDP4Orm.MigrationEngine
 {
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Threading.Tasks;
 
     using Npgsql;
 
@@ -63,18 +64,18 @@ namespace CDP4Orm.MigrationEngine
         /// <summary>
         /// Apply the current migration on the specified schema if applicable
         /// </summary>
-        public virtual void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
+        public virtual async Task ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
-            this.SaveMigrationMetadata(transaction);
+            await this.SaveMigrationMetadata(transaction);
         }
 
         /// <summary>
         /// Save the migration in the migration management table which contains the list of migrations that have been applied in the current database
         /// </summary>
         /// <param name="transaction">The current transaction</param>
-        protected void SaveMigrationMetadata(NpgsqlTransaction transaction)
+        protected async Task SaveMigrationMetadata(NpgsqlTransaction transaction)
         {
-            using var sqlCommand = new NpgsqlCommand();
+            await using var sqlCommand = new NpgsqlCommand();
 
             const string cmdText = "INSERT INTO \"SiteDirectory\".\"MigrationManagement\" (\"version\", \"name\", \"date\", \"scope\", \"resource_name\") VALUES (:version, :name, :date, :scope, :resourceName) ON CONFLICT (\"version\") DO NOTHING;";
 
@@ -87,7 +88,7 @@ namespace CDP4Orm.MigrationEngine
 
             sqlCommand.Connection = transaction.Connection;
             sqlCommand.Transaction = transaction;
-            sqlCommand.ExecuteNonQuery();
+            await sqlCommand.ExecuteNonQueryAsync();
         }
     }
 }
