@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -64,9 +65,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target iteration partition
         /// </param>
-        public void CopyIteration(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
+        public async Task CopyIterationAsync(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
         {
-            this.IterationDao.CopyIteration(transaction, sourcePartition, targetPartition);
+            await this.IterationDao.CopyIterationAsync(transaction, sourcePartition, targetPartition);
         }
 
         /// <summary>
@@ -81,9 +82,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target iteration partition
         /// </param>
-        public void CopyIterationAndResetCreatedOn(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
+        public async Task CopyIterationAndResetCreatedOnAsync(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
         {
-            this.IterationDao.CopyIterationAndResetCreatedOn(transaction, sourcePartition, targetPartition);
+            await this.IterationDao.CopyIterationAndResetCreatedOnAsync(transaction, sourcePartition, targetPartition);
         }
 
         /// <summary>
@@ -95,9 +96,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target iteration partition
         /// </param>
-        public void DeleteAllrganizationalParticipantThings(NpgsqlTransaction transaction, string targetPartition)
+        public async Task DeleteAllrganizationalParticipantThingsAsync(NpgsqlTransaction transaction, string targetPartition)
         {
-            this.IterationDao.DeleteAllrganizationalParticipantThingsAsync(transaction, targetPartition);
+            await this.IterationDao.DeleteAllrganizationalParticipantThingsAsync(transaction, targetPartition);
         }
 
         /// <summary>
@@ -112,9 +113,9 @@ namespace CometServer.Services
         /// <param name="enable">
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
-        public void ModifyUserTrigger(NpgsqlTransaction transaction, string sourcePartition, bool enable)
+        public async Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable)
         {
-            this.IterationDao.ModifyUserTrigger(transaction, sourcePartition, enable);
+            await this.IterationDao.ModifyUserTriggerAsync(transaction, sourcePartition, enable);
         }
 
         /// <summary>
@@ -124,14 +125,14 @@ namespace CometServer.Services
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
         /// <returns>The active <see cref="Iteration"/></returns>
-        public Iteration GetActiveIteration(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public async Task<Iteration> GetActiveIterationAsync(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             Iteration iteration = null;
 
             if (this.activeIterationId != Guid.Empty)
             {
                 // If there is a cached activeIterationId try to find that first.
-                var activeIterations = this.GetShallow(transaction, partition, new [] { this.activeIterationId }, securityContext).OfType<Iteration>().ToArray();
+                var activeIterations = (await this.GetShallowAsync(transaction, partition, [this.activeIterationId], securityContext)).OfType<Iteration>().ToArray();
 
                 if (activeIterations.Length > 1)
                 {
@@ -149,11 +150,11 @@ namespace CometServer.Services
                 // Might also be that the cached activeIterationId cannot be found anymoreF
                 // For example as a result of copy EngineeringModelSetup based on an existing EngineeringModelSetup where the active Iteration.Iid is replaced at some point. The Iteration having the cached activeIterationId as its Iid will not be there anymore.
                 // In this case we try to find the new active Iteration.Iid.
-                var iterations = this.GetShallow(transaction, partition, null, securityContext).OfType<Iteration>().ToArray();
+                var iterations = (await this.GetShallowAsync(transaction, partition, null, securityContext)).OfType<Iteration>().ToArray();
 
                 var activeIterationSetups =
-                    this.IterationSetupService
-                        .GetShallowAsync(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, iterations.Select(x => x.IterationSetup), securityContext)
+                    (await this.IterationSetupService
+                        .GetShallowAsync(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, iterations.Select(x => x.IterationSetup), securityContext))
                         .OfType<IterationSetup>()
                         .Where(x => x.FrozenOn == null)
                         .ToArray();
@@ -164,6 +165,7 @@ namespace CometServer.Services
                 }
 
                 var activeIterations = iterations.Where(x => x.Iid == activeIterationSetups.Single().IterationIid).ToArray();
+
                 if (activeIterations.Length != 1)
                 {
                     throw new ThingNotFoundException($"The active iteration could not be found for partition {partition}.");
@@ -186,16 +188,16 @@ namespace CometServer.Services
         /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
         /// <param name="engineeringModel">The current <see cref="EngineeringModel"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public void PopulateDataFromLastIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
+        public async Task PopulateDataFromLastIterationAsync(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
         {
             Logger.Info("Creating new iteration using the last iteration");
             var start = Stopwatch.StartNew();
 
-            var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
+            var newiteration = await this.CreateIterationObjectFromSourceAsync(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
 
-            this.IterationDao.MoveToNextIterationFromLastAsync(transaction, iterationPartition, newiteration);
-            this.PublicationService.DeleteAll(transaction, iterationPartition);
-            Logger.Info("End populate data for new iteration. Operation took {sw} ms", start.ElapsedMilliseconds);
+            await this.IterationDao.MoveToNextIterationFromLastAsync(transaction, iterationPartition, newiteration);
+            await this.PublicationService.DeleteAllAsync(transaction, iterationPartition);
+            Logger.Info("End populate data for new iteration. Operation took {ElapsedMilliseconds} ms", start.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -207,41 +209,41 @@ namespace CometServer.Services
         /// <param name="sourceIterationSetup">The source <see cref="IterationSetup"/></param>
         /// <param name="engineeringModel">The current <see cref="EngineeringModel"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public void PopulateDataFromOlderIteration(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
+        public async Task PopulateDataFromOlderIterationAsync(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
         {
-            Logger.Info("Creating new iteration using the source iteration number {sourceIterationSetup}", sourceIterationSetup.IterationNumber);
+            Logger.Info("Creating new iteration using the source iteration number {IterationNumber}", sourceIterationSetup.IterationNumber);
             var start = Stopwatch.StartNew();
             var engineeringModelPartition = iterationPartition.Replace(Cdp4TransactionManager.ITERATION_PARTITION_PREFIX, Cdp4TransactionManager.ENGINEERING_MODEL_PARTITION_PREFIX);
 
             // Set end-validity for all current data
-            this.IterationDao.SetIterationValidityEndAsync(transaction, iterationPartition);
+            await this.IterationDao.SetIterationValidityEndAsync(transaction, iterationPartition);
 
-            Logger.Info("Setting end validity took {start} ms", start.ElapsedMilliseconds);
+            Logger.Info("Setting end validity took {ElapsedMilliseconds} ms", start.ElapsedMilliseconds);
             start.Reset();
             start.Start();
 
             // Get source data to copy
-            this.TransactionManager.SetIterationContext(transaction, engineeringModelPartition, sourceIterationSetup.IterationIid);
-            var sourceInstant = this.TransactionManager.GetSessionInstant(transaction);
+            await this.TransactionManager.SetIterationContextAsync(transaction, engineeringModelPartition, sourceIterationSetup.IterationIid);
+            var sourceInstant = await this.TransactionManager.GetSessionInstantAsync(transaction);
 
             // disable triggers to delete all current data in the context of this transaction
-            this.ModifyUserTrigger(transaction, iterationPartition, false);
+            await this.ModifyUserTriggerAsync(transaction, iterationPartition, false);
 
             // delete current data
-            this.IterationDao.DeleteAllIterationThingsAsync(transaction, iterationPartition);
+            await this.IterationDao.DeleteAllIterationThingsAsync(transaction, iterationPartition);
 
             // re-enable triggers
-            this.ModifyUserTrigger(transaction, iterationPartition, true);
+            await this.ModifyUserTriggerAsync(transaction, iterationPartition, true);
 
-            this.IterationDao.InsertDataFromAuditAsync(transaction, iterationPartition, sourceInstant);
+            await this.IterationDao.InsertDataFromAuditAsync(transaction, iterationPartition, sourceInstant);
 
-            var newiteration = this.CreateIterationObjectFromSource(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
-            this.IterationDao.MoveToNextIterationFromLastAsync(transaction, iterationPartition, newiteration);
+            var newiteration = await this.CreateIterationObjectFromSourceAsync(transaction, iterationPartition, iterationSetup, sourceIterationSetup, engineeringModel, securityContext);
+            await this.IterationDao.MoveToNextIterationFromLastAsync(transaction, iterationPartition, newiteration);
 
-            Logger.Info("Inserting data took {sw} ms", start.ElapsedMilliseconds);
+            Logger.Info("Inserting data took {ElapsedMilliseconds} ms", start.ElapsedMilliseconds);
 
             // Delete Publications (cascading all things that references them)
-            this.PublicationService.DeleteAll(transaction, iterationPartition);
+            await this.PublicationService.DeleteAllAsync(transaction, iterationPartition);
 
             Logger.Info("End populate data for new iteration");
         }
@@ -256,10 +258,11 @@ namespace CometServer.Services
         /// <param name="engineeringModel">The <see cref="EngineeringModel"/></param>
         /// <param name="securityContext">The security-context</param>
         /// <returns>The new <see cref="Iteration"/></returns>
-        private Iteration CreateIterationObjectFromSource(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
+        private async Task<Iteration> CreateIterationObjectFromSourceAsync(NpgsqlTransaction transaction, string iterationPartition, IterationSetup iterationSetup, IterationSetup sourceIterationSetup, EngineeringModel engineeringModel, ISecurityContext securityContext)
         {
             var engineeringModelPartition = iterationPartition.Replace(Cdp4TransactionManager.ITERATION_PARTITION_PREFIX, Cdp4TransactionManager.ENGINEERING_MODEL_PARTITION_PREFIX);
-            var sourceIteration = (Iteration)this.GetShallow(transaction, engineeringModelPartition, new[] { sourceIterationSetup.IterationIid }, securityContext).SingleOrDefault();
+            var sourceIteration = (Iteration)(await this.GetShallowAsync(transaction, engineeringModelPartition, [sourceIterationSetup.IterationIid], securityContext)).SingleOrDefault();
+
             if (sourceIteration == null)
             {
                 throw new InvalidOperationException("The source iteration could not be found.");
@@ -274,7 +277,7 @@ namespace CometServer.Services
             };
 
             // create from last iteration
-            if (!this.IterationDao.Write(transaction, engineeringModelPartition, iteration, engineeringModel))
+            if (!await this.IterationDao.WriteAsync(transaction, engineeringModelPartition, iteration, engineeringModel))
             {
                 throw new InvalidOperationException($"There was a problem creating the new Iteration: {iteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}");
             }

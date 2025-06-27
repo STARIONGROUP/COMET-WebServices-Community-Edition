@@ -462,9 +462,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public virtual async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public virtual Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -488,9 +488,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the value link was successfully reordered as result.
         /// </returns>
-        public virtual async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public virtual Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -594,9 +594,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the value link was successfully deleted as result.
         /// </returns>
-        public virtual async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public virtual Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>

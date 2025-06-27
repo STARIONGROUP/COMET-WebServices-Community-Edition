@@ -198,7 +198,7 @@ namespace CometServer.Tests.SideEffects
         public void VerifyAfterUpdate()
         {
             var originalThing = this.engineeringModelSetup.DeepClone<Thing>();
-            this.engineeringModelSetupSideEffect.BeforeUpdate(this.engineeringModelSetup, this.siteDirectory, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object, null);
+            this.engineeringModelSetupSideEffect.BeforeUpdateAsync(this.engineeringModelSetup, this.siteDirectory, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object, null);
             this.engineeringModelSetup.ActiveDomain.RemoveAt(0);
             var domainOfExpertise2 = new DomainOfExpertise(Guid.NewGuid(), 1);
             this.engineeringModelSetup.ActiveDomain.Add(domainOfExpertise2.Iid);

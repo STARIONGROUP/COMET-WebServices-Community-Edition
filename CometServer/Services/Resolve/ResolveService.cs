@@ -93,7 +93,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns> 
-        public async Task ResolveItems(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
+        public async Task ResolveItemsAsync(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
         {
             // 1. try to statically resolve partition info (without access to datastore) 
             this.ResolvePartitionStatically(partition, resolvableInfo.Values);
@@ -121,7 +121,7 @@ namespace CometServer.Services
             // 3. resolve instance info for any remaining un-resolved items
             // group the items to limit database calls
             var unresolvedPerPartition = resolvableInfo.Values.Where(x => !x.IsInstanceResolved).GroupBy(x => x.Partition);
-            this.ResolveInstances(transaction, unresolvedPerPartition);
+            await this.ResolveInstancesAsync(transaction, unresolvedPerPartition);
 
             // All items should be resolved, break if not
             if (resolvableInfo.Values.Any(x => !x.IsResolved))
@@ -145,7 +145,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> type name of the supplied item.
         /// </returns> 
-        public async Task<string> ResolveTypeNameByGuid(NpgsqlTransaction transaction, string partition, Guid iid)
+        public async Task<string> ResolveTypeNameByGuidAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             var resolveInfo = (
                 await this.ResolveDao.ReadAsync(
@@ -174,7 +174,7 @@ namespace CometServer.Services
         /// <exception cref="Exception">
         /// Exception if unresolved
         /// </exception>
-        internal void ResolveInstances(NpgsqlTransaction transaction, IEnumerable<IGrouping<string, DtoResolveHelper>> unresolvedPerPartition)
+        internal async Task ResolveInstancesAsync(NpgsqlTransaction transaction, IEnumerable<IGrouping<string, DtoResolveHelper>> unresolvedPerPartition)
         {
             foreach (var partitionedInfo in unresolvedPerPartition)
             {
@@ -188,15 +188,16 @@ namespace CometServer.Services
 
                     // resolve the items from the datastore
                     var resolvedItems =
-                        service.GetShallowAsync(
+                        (await service.GetShallowAsync(
                             transaction,
                             resolvedPartition,
                             resolveIds,
-                            new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
+                            new RequestSecurityContext { ContainerReadAllowed = true })).ToList();
 
                     foreach (var unresolved in unresolvedTypeInfo)
                     {
                         var resolvedItem = resolvedItems.SingleOrDefault(x => x.Iid == unresolved.InstanceInfo.Iid);
+
                         if (resolvedItem == null)
                         {
                             throw new ResolveException($"Could not resolve item {unresolved.InstanceInfo.TypeName}:{unresolved.InstanceInfo.Iid}");
@@ -278,12 +279,9 @@ namespace CometServer.Services
             {
                 var resolvedPartition = this.ResolvePartition(partition, unresolved.InstanceInfo.TypeName);
 
-                if (resolvedPartition.Any())
+                if (resolvedPartition.Count == 1)
                 {
-                    if (resolvedPartition.Count == 1)
-                    {
-                        unresolved.Partition = resolvedPartition.Single();
-                    }
+                    unresolved.Partition = resolvedPartition.Single();
                 }
             }
         }

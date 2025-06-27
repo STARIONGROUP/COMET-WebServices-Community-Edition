@@ -52,7 +52,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns> 
-        Task ResolveItems(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo);
+        Task ResolveItemsAsync(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo);
 
         /// <summary>
         /// Resolve missing containers from data store.
@@ -69,6 +69,6 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having the <see cref="string"/> type name of the supplied item as a result.
         /// </returns> 
-        Task<string> ResolveTypeNameByGuid(NpgsqlTransaction transaction, string partition, Guid iid);
+        Task<string> ResolveTypeNameByGuidAsync(NpgsqlTransaction transaction, string partition, Guid iid);
     }
 }

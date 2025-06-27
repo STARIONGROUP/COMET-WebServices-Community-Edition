@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OrganizationalParticipationResolverService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,8 +25,8 @@
 namespace CometServer.Authorization
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -83,13 +83,15 @@ namespace CometServer.Authorization
         /// The list of the applicable <see cref="OrganizationalParticipant" />s needed to edit a particulat
         /// <see cref="CDP4Common.DTO.Thing" />
         /// </returns>
-        public bool ResolveApplicableOrganizationalParticipations(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid)
+        public async Task<bool> ResolveApplicableOrganizationalParticipationsAsync(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid)
         {
-            this.Logger.LogTrace("Resolve OrganizationalParticipation {iteration}.{thing} for Participant {organizationalParticipantIid}", iteration, thing, organizationalParticipantIid);
+            this.Logger.LogTrace("Resolve OrganizationalParticipation {Iteration}.{Thing} for Participant {OrganizationalParticipantIid}", iteration, thing, organizationalParticipantIid);
 
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
-            this.ResolveElementDefinitionTree(transaction, partition, iteration, organizationalParticipantIid, securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+            var resolvedElementDefinitionTree = await this.ResolveElementDefinitionTreeAsync(transaction, partition, iteration, organizationalParticipantIid, securityContext);
+
+            var fullTree = resolvedElementDefinitionTree.FullTree;
 
             // only perform usage checks if certain classkinds are checked
             if (thing.ClassKind == ClassKind.ElementUsage ||
@@ -101,13 +103,13 @@ namespace CometServer.Authorization
                 thing.ClassKind == ClassKind.Citation)
             {
                 // add also element usages of allowed EDs and their contained items to list
-                var elementUsages = this.ElementUsageService.GetAsync(transaction, partition, elementDefinitions.SelectMany(ed => ed.ContainedElement), securityContext).Cast<ElementUsage>();
+                var elementUsages = (await this.ElementUsageService.GetAsync(transaction, partition, resolvedElementDefinitionTree.ElementDefinitions.SelectMany(ed => ed.ContainedElement), securityContext)).Cast<ElementUsage>();
 
                 // select relevant
-                var relevatElementUsages = elementUsages.Where(eu => relevantOpenDefinitions.Select(ed => ed.Iid).Contains(eu.ElementDefinition));
+                var relevatElementUsages = elementUsages.Where(eu => resolvedElementDefinitionTree.RelevantOpenDefinitions.Select(ed => ed.Iid).Contains(eu.ElementDefinition));
 
                 // get subtrees
-                var relevantUsageSubtrees = this.ElementUsageService.GetDeep(transaction, partition, relevatElementUsages.Select(eu => eu.Iid), securityContext);
+                var relevantUsageSubtrees = await this.ElementUsageService.GetDeepAsync(transaction, partition, relevatElementUsages.Select(eu => eu.Iid), securityContext);
 
                 //concat to ed trees
                 fullTree = fullTree.Concat(relevantUsageSubtrees);
@@ -134,9 +136,9 @@ namespace CometServer.Authorization
         /// <remarks>
         /// If the organizational setup prevents it an <see cref="InvalidOperationException" /> is thrown.
         /// </remarks>
-        public void ValidateCreateOrganizationalParticipation(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        public async Task ValidateCreateOrganizationalParticipationAsync(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
-            this.Logger.LogTrace("Validate Create OrganizationalParticipation {container}.{thing}", container, thing);
+            this.Logger.LogTrace("Validate Create OrganizationalParticipation {Container}.{Thing}", container, thing);
 
             if (partition == "SiteDirectory")
             {
@@ -162,24 +164,24 @@ namespace CometServer.Authorization
                     }
                     case ClassKind.ParameterSubscription:
                     {
-                        this.ValidateCreateParameterOrParameterOverrideContainedThing(container, securityContext, transaction, partition);
+                        await this.ValidateCreateParameterOrParameterOverrideContainedThingAsync(container, securityContext, transaction, partition);
                         break;
                     }
                     case ClassKind.ParameterOverride:
                     {
-                        this.ValidateCreateElementUsageContainedThing(container, securityContext, transaction, partition);
+                        await this.ValidateCreateElementUsageContainedThingAsync(container, securityContext, transaction, partition);
                         break;
                     }
                     case ClassKind.Alias:
                     case ClassKind.Definition:
                     case ClassKind.HyperLink:
                     {
-                        this.ValidateCreateElementDefinitionOrUsageContainedThing(container, securityContext, transaction, partition);
+                        await this.ValidateCreateElementDefinitionOrUsageContainedThingAsync(container, securityContext, transaction, partition);
                         break;
                     }
                     case ClassKind.Citation:
                     {
-                        this.ValidateCreateDefinitionContainedThing(container, securityContext, transaction, partition);
+                        await this.ValidateCreateDefinitionContainedThingAsync(container, securityContext, transaction, partition);
                         break;
                     }
                 }
@@ -199,22 +201,18 @@ namespace CometServer.Authorization
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
         /// <param name="securityContext">The security context</param>
-        /// <param name="elementDefinitions">The list of all element definitions</param>
-        /// <param name="relevantOpenDefinitions">
-        /// The list of element definitions that are allowed to be seen by the organizational
-        /// participant
-        /// </param>
-        /// <param name="fullTree">The full tree of allowed element definitions</param>
-        private void ResolveElementDefinitionTree(NpgsqlTransaction transaction, string partition, Iteration iteration, Guid organizationalParticipantIid, RequestSecurityContext securityContext, out List<ElementDefinition> elementDefinitions, out List<ElementDefinition> relevantOpenDefinitions, out IEnumerable<Thing> fullTree)
+        private async Task<ResolveElementDefinitionTreeResult> ResolveElementDefinitionTreeAsync(NpgsqlTransaction transaction, string partition, Iteration iteration, Guid organizationalParticipantIid, RequestSecurityContext securityContext)
         {
             // get all ED's shallow to determine relevant
-            elementDefinitions = this.ElementDefinitionService.GetAsync(transaction, partition, iteration.Element, securityContext).Cast<ElementDefinition>().ToList();
+            var elementDefinitions = (await this.ElementDefinitionService.GetAsync(transaction, partition, iteration.Element, securityContext)).Cast<ElementDefinition>().ToList();
 
             // given a participation, select only allowed EDs
-            relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid)).ToList();
+            var relevantOpenDefinitions = elementDefinitions.Where(ed => ed.OrganizationalParticipant.Contains(organizationalParticipantIid)).ToList();
 
             // get deep expansions only of relevant Element Definitions
-            fullTree = this.ElementDefinitionService.GetDeep(transaction, partition, relevantOpenDefinitions.Select(ed => ed.Iid), securityContext);
+            var fullTree = await this.ElementDefinitionService.GetDeepAsync(transaction, partition, relevantOpenDefinitions.Select(ed => ed.Iid), securityContext);
+
+            return new ResolveElementDefinitionTreeResult(elementDefinitions, relevantOpenDefinitions, fullTree);
         }
 
         /// <summary>
@@ -230,15 +228,15 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        private void ValidateCreateParameterOrParameterOverrideContainedThing(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        private async Task ValidateCreateParameterOrParameterOverrideContainedThingAsync(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
             switch (container.ClassKind)
             {
                 case ClassKind.ParameterOverride:
-                    this.ValidateCreateParameterOverrideContainedThing(container, securityContext, transaction, partition);
+                    await this.ValidateCreateParameterOverrideContainedThingAsync(container, securityContext, transaction, partition);
                     break;
                 case ClassKind.Parameter:
-                    this.ValidateCreateParameterContainedThing(container, securityContext, transaction, partition);
+                    await this.ValidateCreateParameterContainedThingAsync(container, securityContext, transaction, partition);
                     break;
             }
         }
@@ -255,15 +253,15 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        private void ValidateCreateDefinitionContainedThing(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        private async Task ValidateCreateDefinitionContainedThingAsync(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
             if (container is Definition definition)
             {
                 // the definition container must be inside the the allowed subtree. It has to pass check on being in the ED tree to begin with to prevent blocking unwanted definitions
-                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                var resolvedElementDefinitionTree = await this.ResolveElementDefinitionTreeAsync(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
+                    (RequestSecurityContext) securityContext);
 
-                var allElementDefinitionSubtree = this.ElementDefinitionService.GetDeep(transaction, partition, elementDefinitions.Select(ed => ed.Iid), securityContext);
+                var allElementDefinitionSubtree = await this.ElementDefinitionService.GetDeepAsync(transaction, partition, resolvedElementDefinitionTree.ElementDefinitions.Select(ed => ed.Iid), securityContext);
 
                 // if Definition IS in full try but NOT in allowed tree, throw an exception
                 if (allElementDefinitionSubtree.FirstOrDefault(t => t.Iid.Equals(definition.Iid)) == null)
@@ -273,7 +271,7 @@ namespace CometServer.Authorization
                 }
 
                 // else check in allowed tree
-                if (fullTree.FirstOrDefault(t => t.Iid.Equals(definition.Iid)) == null)
+                if (resolvedElementDefinitionTree.FullTree.FirstOrDefault(t => t.Iid.Equals(definition.Iid)) == null)
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
@@ -293,7 +291,7 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        private void ValidateCreateElementDefinitionOrUsageContainedThing(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        private async Task ValidateCreateElementDefinitionOrUsageContainedThingAsync(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
             switch (container.ClassKind)
             {
@@ -301,7 +299,7 @@ namespace CometServer.Authorization
                     this.ValidateCreateElementDefinitionContainedThing(container);
                     break;
                 case ClassKind.ElementUsage:
-                    this.ValidateCreateElementUsageContainedThing(container, securityContext, transaction, partition);
+                    await this.ValidateCreateElementUsageContainedThingAsync(container, securityContext, transaction, partition);
                     break;
             }
         }
@@ -318,15 +316,15 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        private void ValidateCreateElementUsageContainedThing(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        private async Task ValidateCreateElementUsageContainedThingAsync(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
             if (container is ElementUsage usage)
             {
                 // the usage container must ref a ED that is in the allowed tree
-                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                var resolvedElementDefinitionTree = await this.ResolveElementDefinitionTreeAsync(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
+                    (RequestSecurityContext) securityContext);
 
-                if (relevantOpenDefinitions.FirstOrDefault(t => t.Iid.Equals(usage.ElementDefinition)) == null)
+                if (resolvedElementDefinitionTree.RelevantOpenDefinitions.FirstOrDefault(t => t.Iid.Equals(usage.ElementDefinition)) == null)
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
@@ -345,15 +343,15 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        private void ValidateCreateParameterContainedThing(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        private async Task ValidateCreateParameterContainedThingAsync(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
             if (container is Parameter parameter)
             {
                 // the parameter container must be in the allowed tree
-                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                var resolvedElementDefinitionTree = await this.ResolveElementDefinitionTreeAsync(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
+                    (RequestSecurityContext) securityContext);
 
-                if (fullTree.FirstOrDefault(t => t.Iid.Equals(parameter.Iid)) == null)
+                if (resolvedElementDefinitionTree.FullTree.FirstOrDefault(t => t.Iid.Equals(parameter.Iid)) == null)
                 {
                     throw new InvalidOperationException("Not enough organizational participation priviliges.");
                 }
@@ -372,22 +370,22 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        private void ValidateCreateParameterOverrideContainedThing(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
+        private async Task ValidateCreateParameterOverrideContainedThingAsync(Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition)
         {
             if (container is ParameterOverride parameterOverride)
             {
                 // the parameter container must be in the allowed tree
-                this.ResolveElementDefinitionTree(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
-                    (RequestSecurityContext) securityContext, out var elementDefinitions, out var relevantOpenDefinitions, out var fullTree);
+                var resolvedElementDefinitionTree = await this.ResolveElementDefinitionTreeAsync(transaction, partition, this.CredentialsService.Credentials.Iteration, this.CredentialsService.Credentials.OrganizationalParticipant.Iid,
+                    (RequestSecurityContext) securityContext);
 
                 // need to resolve element usage that contains it
-                var allElementUsages = this.ElementDefinitionService.GetDeep(transaction, partition, elementDefinitions.Select(ed => ed.Iid), securityContext).OfType<ElementUsage>();
+                var allElementUsages = (await this.ElementDefinitionService.GetDeepAsync(transaction, partition, resolvedElementDefinitionTree.ElementDefinitions.Select(ed => ed.Iid), securityContext)).OfType<ElementUsage>();
 
                 var euContainer = allElementUsages.FirstOrDefault(eu => eu.ParameterOverride.Contains(parameterOverride.Iid));
 
                 if (euContainer != null)
                 {
-                    this.ValidateCreateElementUsageContainedThing(euContainer, securityContext, transaction, partition);
+                    await this.ValidateCreateElementUsageContainedThingAsync(euContainer, securityContext, transaction, partition);
                 }
             }
         }

@@ -396,7 +396,7 @@ namespace CometServer.Tests.SideEffects
             var option2 = new Option(Guid.NewGuid(), 1);
             this.iteration.Option.Add(new OrderedItem { K = 2, V = option2.Iid.ToString() });
 
-            this.sideEffect.BeforeDelete(this.asl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
+            this.sideEffect.BeforeDeleteAsync(this.asl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
 
             // new value set created
             this.parameterValueSetService.Verify(x => x.CreateConceptAsync(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>(), -1), Times.Exactly(2));
@@ -428,7 +428,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             //ActualFiniteStateList
-            this.sideEffect.AfterUpdate(this.asl1, this.iteration, this.asl2, this.transaction, this.partition, this.securityContext.Object);
+            this.sideEffect.AfterUpdateAsync(this.asl1, this.iteration, this.asl2, this.transaction, this.partition, this.securityContext.Object);
             this.finateTrategyLogicService.Verify(x => x.UpdateActualFinisteStateListAsync(this.asl1, this.iteration, this.transaction, this.partition, this.securityContext.Object), Times.Never);
         }
     }

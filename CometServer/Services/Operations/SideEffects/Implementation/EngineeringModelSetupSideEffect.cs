@@ -132,7 +132,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task<bool> BeforeCreate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreateAsync(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.TransactionManager.SetFullAccessState(true);
 
@@ -170,7 +170,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var stopwatch = Stopwatch.StartNew();
 
-                this.ModelCreatorManager.CreateEngineeringModelSetupFromSource(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
+                this.ModelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
                 stopwatch.Stop();
                 this.Logger.LogDebug("Creation of EngineeringSetup from source took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
             }
@@ -206,7 +206,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task AfterCreate(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreateAsync(EngineeringModelSetup thing, Thing container, EngineeringModelSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // reset the cache
             this.RequestUtils.Cache.Clear();
@@ -223,19 +223,18 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var stopwatch = Stopwatch.StartNew();
                 this.Logger.LogInformation("Create revisions for created EngineeringModel");
-                this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
+                await this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
 
                 stopwatch.Stop();
                 this.Logger.LogDebug("Revisions written in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
-                return Task.CompletedTask;
+
+                return;
             }
 
-            this.CreateDefaultEngineeringModel(thing, container, transaction, partition);
+            await this.CreateDefaultEngineeringModelAsync(thing, container, transaction, partition);
 
             // Create revisions for created EngineeringModel
-            this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
-
-            return Task.CompletedTask;
+            await this.RevisionService.SaveRevisionsAsync(transaction, this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid), actor, FirstRevision);
         }
 
         /// <summary>
@@ -259,7 +258,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="rawUpdateInfo">
         /// The raw Update Info.
         /// </param>
-        public override Task BeforeUpdate(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override Task BeforeUpdateAsync(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
             // TODO: if the EngineeringModelSetup has multiple iterations or is not in PREPARATION Phase and change on ActiveDomain should not be allowed (task T2818 CDP4WEBSERVICES)
             return Task.CompletedTask;
@@ -289,12 +288,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="container">The container</param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The partition</param>
-        private void CreateDefaultEngineeringModel(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition)
+        private async Task CreateDefaultEngineeringModelAsync(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition)
         {
             // No need to create a model RDL for the created EngineeringModelSetup since is handled in the client. It happens in the same transaction as the creation of the EngineeringModelSetup itself
-            var firstIterationSetup = this.CreateIterationSetup(thing, transaction, partition);
+            var firstIterationSetup = await this.CreateIterationSetupAsync(thing, transaction, partition);
 
-            this.CreateParticipant(thing, (SiteDirectory)container, transaction, partition);
+            await this.CreateParticipantAsync(thing, (SiteDirectory)container, transaction, partition);
 
             // The EngineeringModel schema (for the new EngineeringModelSetup) is already created from the DAO at this point, get its partition name
             var newEngineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(thing.EngineeringModelIid);
@@ -302,7 +301,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Create the engineering model in the newEngineeringModelPartition
             var engineeringModel = new EngineeringModel(thing.EngineeringModelIid, 1) { EngineeringModelSetup = thing.Iid };
 
-            if (!this.EngineeringModelService.CreateConceptAsync(transaction, newEngineeringModelPartition, engineeringModel, container))
+            if (!await this.EngineeringModelService.CreateConceptAsync(transaction, newEngineeringModelPartition, engineeringModel, container))
             {
                 var errorMessage = $"There was a problem creating the new EngineeringModel: {engineeringModel.Iid} from EngineeringModelSetup: {thing.Iid}";
                 this.Logger.LogError(errorMessage);
@@ -312,7 +311,7 @@ namespace CometServer.Services.Operations.SideEffects
             // Create the first iteration in the newEngineeringModelPartition
             var firstIteration = new Iteration(firstIterationSetup.IterationIid, 1) { IterationSetup = firstIterationSetup.Iid };
 
-            if (!this.IterationService.CreateConceptAsync(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
+            if (!await this.IterationService.CreateConceptAsync(transaction, newEngineeringModelPartition, firstIteration, engineeringModel))
             {
                 var errorMessage = $"There was a problem creating the new Iteration: {firstIteration.Iid} contained by EngineeringModel: {engineeringModel.Iid}";
                 this.Logger.LogError(errorMessage);
@@ -322,7 +321,7 @@ namespace CometServer.Services.Operations.SideEffects
             // switch to iteration partition:
             var newIterationPartition = newEngineeringModelPartition.Replace(Utils.EngineeringModelPartition, Utils.IterationSubPartition);
 
-            this.CreateDefaultOption(firstIteration, transaction, newIterationPartition);
+            await this.CreateDefaultOptionAsync(firstIteration, transaction, newIterationPartition);
         }
 
         /// <summary>
@@ -337,7 +336,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CreateDefaultOption(Iteration container, NpgsqlTransaction transaction, string partition)
+        private async Task CreateDefaultOptionAsync(Iteration container, NpgsqlTransaction transaction, string partition)
         {
             var newOption = new Option(Guid.NewGuid(), 1)
             {
@@ -345,7 +344,7 @@ namespace CometServer.Services.Operations.SideEffects
                 ShortName = "option_1"
             };
 
-            if (!this.OptionService.CreateConceptAsync(transaction, partition, newOption, container))
+            if (!await this.OptionService.CreateConceptAsync(transaction, partition, newOption, container))
             {
                 var errorMessage = $"There was a problem creating the new Option: {newOption.Iid} contained by Iteration: {container.Iid}";
                 this.Logger.LogError(errorMessage);
@@ -368,9 +367,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="IterationSetup"/>.
         /// </returns>
-        private IterationSetup CreateIterationSetup(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction, string partition)
+        private async Task<IterationSetup> CreateIterationSetupAsync(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction, string partition)
         {
-            var iterationNumber = this.QeuryIterationNumberForFirstIteration(engineeringModelSetup, transaction);
+            var iterationNumber = await this.QueryIterationNumberForFirstIterationAsync(engineeringModelSetup, transaction);
 
             // create iteration setup in sitedirectory (= partition)
             var iterationSetup = new IterationSetup(Guid.NewGuid(), 1)
@@ -380,7 +379,7 @@ namespace CometServer.Services.Operations.SideEffects
                 Description = "Iteration 1"
             };
 
-            if (!this.IterationSetupService.CreateConceptAsync(transaction, partition, iterationSetup, engineeringModelSetup))
+            if (!await this.IterationSetupService.CreateConceptAsync(transaction, partition, iterationSetup, engineeringModelSetup))
             {
                 throw new InvalidOperationException($"There was a problem creating the new IterationSetup: {iterationSetup.Iid} contained by EngineeringModelSetup: {engineeringModelSetup.Iid}");
             }
@@ -403,10 +402,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <remarks>
         /// The function shall always return 1. When creating a new <see cref="EngineeringModelSetup"/>
         /// </remarks>
-        private int QeuryIterationNumberForFirstIteration(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction)
+        private async Task<int> QueryIterationNumberForFirstIterationAsync(EngineeringModelSetup engineeringModelSetup, NpgsqlTransaction transaction)
         {
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
-            var iterationNumber = this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, engineeringModelPartition);
+            var iterationNumber = await this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, engineeringModelPartition);
 
             if (iterationNumber != 1)
             {
@@ -432,7 +431,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CreateParticipant(EngineeringModelSetup thing, SiteDirectory container, NpgsqlTransaction transaction, string partition)
+        private async Task CreateParticipantAsync(EngineeringModelSetup thing, SiteDirectory container, NpgsqlTransaction transaction, string partition)
         {
             if (!container.DefaultParticipantRole.HasValue)
             {
@@ -453,14 +452,14 @@ namespace CometServer.Services.Operations.SideEffects
                 participant.SelectedDomain = domainId;
             }
 
-            if (!this.ParticipantService.CreateConceptAsync(transaction, partition, participant, thing))
+            if (!await this.ParticipantService.CreateConceptAsync(transaction, partition, participant, thing))
             {
                 throw new InvalidOperationException($"There was a problem creating the new Participant: {participant.Iid} contained by EngineeringModelSetup: {thing.Iid}");
             }
 
             thing.Participant.Add(participant.Iid);
 
-            if (!this.EngineeringModelSetupService.UpdateConcept(transaction, partition, thing, container))
+            if (!await this.EngineeringModelSetupService.UpdateConceptAsync(transaction, partition, thing, container))
             {
                 throw new InvalidOperationException($"There was a problem adding the new Participant: {participant.Iid} to the EngineeringModelSetup: {thing.Iid}");
             }

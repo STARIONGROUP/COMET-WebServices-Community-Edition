@@ -50,7 +50,7 @@ namespace CometServer.Services.Operations
         /// <param name="setupToCreate">The new <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        Task CreateEngineeringModelSetupFromSource(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext);
+        Task CreateEngineeringModelSetupFromSourceAsync(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Copy the engineering-model data from the source to the target <see cref="EngineeringModel"/>

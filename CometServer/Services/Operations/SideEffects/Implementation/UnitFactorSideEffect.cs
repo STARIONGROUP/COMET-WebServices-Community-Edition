@@ -85,7 +85,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             UnitFactor thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -93,7 +93,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            await base.BeforeUpdate(
+            await base.BeforeUpdateAsync(
                 thing,
                 container,
                 transaction,
@@ -106,17 +106,17 @@ namespace CometServer.Services.Operations.SideEffects
                 var unitId = (Guid)value;
 
                 // Get RDL chain and collect units' ids
-                var unitIdsFromChain = this.GetUnitIdsFromRdlChain(
+                var unitIdsFromChain = await this.GetUnitIdsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
                     container.Iid);
 
                 // Get all Derived units
-                var units = this.DerivedUnitService.GetAsync(transaction, partition, unitIdsFromChain, securityContext)
+                var units = (await this.DerivedUnitService.GetAsync(transaction, partition, unitIdsFromChain, securityContext))
                     .Cast<DerivedUnit>().ToList();
 
-                if (!this.IsUnitFactorAcyclic(transaction, partition, securityContext, units, container.Iid, unitId))
+                if (!await this.IsUnitFactorAcyclicAsync(transaction, partition, securityContext, units, container.Iid, unitId))
                 {
                     throw new AcyclicValidationException(
                         $"UnitFactor {thing.Iid} cannot have a UnitFactor {unitId} that leads to cyclic dependency");
@@ -142,17 +142,17 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of unit ids.
         /// </returns>
-        private List<Guid> GetUnitIdsFromRdlChain(
+        private async Task<List<Guid>> GetUnitIdsFromRdlChainAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             Guid derivedUnitId)
         {
-            var availableRdls = this.ModelReferenceDataLibraryService
-                .GetAsync(transaction, partition, null, securityContext).Cast<ReferenceDataLibrary>().ToList();
+            var availableRdls = (await this.ModelReferenceDataLibraryService
+                .GetAsync(transaction, partition, null, securityContext)).Cast<ReferenceDataLibrary>().ToList();
 
             availableRdls.AddRange(
-                this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
+                (await this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext))
                     .Cast<ReferenceDataLibrary>().ToList());
 
             Guid? requiredRdl = availableRdls.Find(x => x.Unit.Contains(derivedUnitId)).Iid;
@@ -192,7 +192,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether applied unit factor will not lead to cyclic dependency.
         /// </returns>
-        private bool IsUnitFactorAcyclic(
+        private async Task<bool> IsUnitFactorAcyclicAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -202,7 +202,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var cyclicDerivedUnitList = new List<Guid>();
 
-            this.SetSetCyclicDerivedUnitIdToList(
+            await this.SetSetCyclicDerivedUnitIdToListAsync(
                 transaction,
                 partition,
                 securityContext,
@@ -242,7 +242,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="firstUnitId">
         /// Unit id to start from. Is used for the first iteration.
         /// </param>
-        private void SetSetCyclicDerivedUnitIdToList(
+        private async Task SetSetCyclicDerivedUnitIdToListAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -261,11 +261,11 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (measurementUnitId == Guid.Empty)
             {
-                measurementUnitId = this.UnitFactorService.GetAsync(
+                measurementUnitId = (await this.UnitFactorService.GetAsync(
                     transaction,
                     partition,
                     new List<Guid> { unitFactorId },
-                    securityContext).Cast<UnitFactor>().ToList()[0].Unit;
+                    securityContext)).Cast<UnitFactor>().ToList()[0].Unit;
             }
 
             if (measurementUnitId == unitId)
@@ -280,7 +280,7 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 foreach (var orderedItem in unit.UnitFactor)
                 {
-                    this.SetSetCyclicDerivedUnitIdToList(
+                    await this.SetSetCyclicDerivedUnitIdToListAsync(
                         transaction,
                         partition,
                         securityContext,

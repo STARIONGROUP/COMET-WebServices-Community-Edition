@@ -98,7 +98,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreate(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
+        public override async Task AfterCreateAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
@@ -125,7 +125,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterDelete(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
+        public override async Task AfterDeleteAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
@@ -152,7 +152,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterUpdate(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
+        public override async Task AfterUpdateAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
@@ -181,7 +181,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             ParameterTypeComponent thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -194,24 +194,24 @@ namespace CometServer.Services.Operations.SideEffects
                 var parameterTypeId = (Guid)value;
 
                 // Get RDL chain and collect types' ids
-                var parameterTypeIdsFromChain = await this.GetParameterTypeIdsFromRdlChain(
+                var parameterTypeIdsFromChain = await this.GetParameterTypeIdsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
                     container.Iid);
 
                 // Get all CompoundParameterTypes
-                var parameterTypes = this.CompoundParameterTypeService
-                    .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                var parameterTypes = (await this.CompoundParameterTypeService
+                    .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext))
                     .Cast<CompoundParameterType>().ToList();
 
                 // Add all ArrayParameterTypes
                 parameterTypes.AddRange(
-                    this.ArrayParameterTypeService
-                        .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                    (await this.ArrayParameterTypeService
+                        .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext))
                         .Cast<ArrayParameterType>().ToList());
 
-                if (!await this.IsParameterTypeComponentAcyclic(
+                if (!await this.IsParameterTypeComponentAcyclicAsync(
                         transaction,
                         partition,
                         securityContext,
@@ -243,16 +243,16 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of parameter types ids.
         /// </returns>
-        private Task<List<Guid>> GetParameterTypeIdsFromRdlChain(
+        private async Task<List<Guid>> GetParameterTypeIdsFromRdlChainAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             Guid compoundParameterTypeId)
         {
-            var availableRdls = this.ModelReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
+            var availableRdls = (await this.ModelReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext))
                 .Cast<ReferenceDataLibrary>().ToList();
 
-            availableRdls.AddRange(this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
+            availableRdls.AddRange((await this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext))
                     .Cast<ReferenceDataLibrary>().ToList());
 
             Guid? requiredRdl = availableRdls.Find(x => x.ParameterType.Contains(compoundParameterTypeId)).Iid;
@@ -265,7 +265,7 @@ namespace CometServer.Services.Operations.SideEffects
                 requiredRdl = rdl.RequiredRdl;
             }
 
-            return Task.FromResult(parameterTypeIds);
+            return parameterTypeIds;
         }
 
         /// <summary>
@@ -292,7 +292,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The <see cref="bool"/> whether applied parameter type component will not lead to cyclic dependency.
         /// </returns>
-        private async Task<bool> IsParameterTypeComponentAcyclic(
+        private async Task<bool> IsParameterTypeComponentAcyclicAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -302,7 +302,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             var cyclicParameterTypeList = new List<Guid>();
 
-            await this.SetCyclicParameterTypeIdToList(
+            await this.SetCyclicParameterTypeIdToListAsync(
                 transaction,
                 partition,
                 securityContext,
@@ -342,7 +342,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="firstParameterTypeId">
         /// Parameter type id to start from. Is used for the first iteration.
         /// </param>
-        private async Task SetCyclicParameterTypeIdToList(
+        private async Task SetCyclicParameterTypeIdToListAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -361,11 +361,11 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (firstParameterTypeId == Guid.Empty)
             {
-                parameterTypeId = this.ParameterTypeComponentService.GetAsync(
+                parameterTypeId = (await this.ParameterTypeComponentService.GetAsync(
                     transaction,
                     partition,
                     new List<Guid> { parameterTypeComponentId },
-                    securityContext).Cast<ParameterTypeComponent>().ToList()[0].ParameterType;
+                    securityContext)).Cast<ParameterTypeComponent>().ToList()[0].ParameterType;
             }
 
             if (parameterTypeId == compoundParameterTypeId)
@@ -380,7 +380,7 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 foreach (var orderedItem in parameterType.Component)
                 {
-                    await this.SetCyclicParameterTypeIdToList(
+                    await this.SetCyclicParameterTypeIdToListAsync(
                         transaction,
                         partition,
                         securityContext,

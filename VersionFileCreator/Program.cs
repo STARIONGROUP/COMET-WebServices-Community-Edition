@@ -125,14 +125,14 @@ namespace VersionFileCreator
         /// </summary>
         /// <param name="args">The array of command line arguments</param>
         /// <returns>Build Configuration when found in arguments, otherwise null</returns>
-        private static async Task<string> GetOutputFolderFromArgs(string[] args)
+        private static Task<string> GetOutputFolderFromArgs(string[] args)
         {
             var configParameterPosition = Array.FindIndex(args, x => x.StartsWith("path:"));
 
-            return
+            return Task.FromResult(
                 configParameterPosition >= 0
-                    ? args[configParameterPosition].Split(new[] { ':' }, StringSplitOptions.None)[1]
-                    : null;
+                    ? args[configParameterPosition].Split([':'], StringSplitOptions.None)[1]
+                    : null);
         }
 
         /// <summary>

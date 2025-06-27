@@ -152,7 +152,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -176,7 +176,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitE.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -188,7 +188,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -212,7 +212,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitD.Iid } };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

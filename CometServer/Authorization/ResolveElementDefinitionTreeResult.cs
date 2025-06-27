@@ -1,5 +1,5 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
-// <copyright file="ICredentialsService.cs" company="Starion Group S.A.">
+// <copyright file="ResolveElementDefinitionTreeResult.cs" company="Starion Group S.A.">
 //    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
@@ -15,7 +15,7 @@
 //    The CDP4-COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-//    Affero General Public License for more details.
+//    Lesser General Public License for more details.
 // 
 //    You should have received a copy of the GNU Affero General Public License
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
@@ -24,49 +24,28 @@
 
 namespace CometServer.Authorization
 {
-    using System;
-    using System.Threading.Tasks;
+    using System.Collections.Generic;
 
-    using Npgsql;
+    using CDP4Common.DTO;
 
     /// <summary>
-    /// The ICredentialsService interface.
+    /// Represents the result of resolving an element definition tree.
     /// </summary>
-    public interface ICredentialsService
+    public class ResolveElementDefinitionTreeResult(List<ElementDefinition> elementDefinitions, List<ElementDefinition> relevantOpenDefinitions, IEnumerable<Thing> fullTree)
     {
         /// <summary>
-        /// Gets the resolved <see cref="Credentials"/>
+        /// Gets a collection of ElementDefinitions that are relevant to the resolved tree.
         /// </summary>
-        public Credentials Credentials { get; }
+        public List<ElementDefinition> ElementDefinitions { get; } = elementDefinitions;
 
         /// <summary>
-        /// Resolves the username to <see cref="Credentials"/>
+        /// Gets a collection of ElementDefinitions that are relevant to the open definitions in the tree.
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="username">
-        /// The supplied username
-        /// </param>
-        Task ResolveCredentialsAsync(NpgsqlTransaction transaction, string username);
+        public List<ElementDefinition> RelevantOpenDefinitions { get; } = relevantOpenDefinitions;
 
         /// <summary>
-        /// Resolves the user to <see cref="Credentials"/>
+        /// Gets a collection of all <see cref="Thing"/>s in the tree.
         /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        /// <param name="userId">
-        /// The supplied user unique identifier
-        /// </param>
-        Task ResolveCredentialsAsync(NpgsqlTransaction transaction, Guid userId);
-
-        /// <summary>
-        /// Resolve and set participant information for the current <see cref="Credentials"/>
-        /// </summary>
-        /// <param name="transaction">
-        /// The current transaction to the database.
-        /// </param>
-        Task ResolveParticipantCredentialsAsync(NpgsqlTransaction transaction);
+        public IEnumerable<Thing> FullTree { get; } = fullTree;
     }
 }

@@ -197,7 +197,7 @@ namespace CometServer.Tests.SideEffects
                 x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
                 .Returns(new List<Thing> {this.as11, this.as12});
 
-            this.iterationService.Setup(x => x.GetActiveIteration(this.transaction, this.partition, this.securityContext.Object))
+            this.iterationService.Setup(x => x.GetActiveIterationAsync(this.transaction, this.partition, this.securityContext.Object))
                 .Returns(this.iteration);
 
             this.parameter1 = new Parameter(Guid.NewGuid(), 1);
@@ -418,7 +418,7 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatBeforeDeleteWorksNormalOperation()
         {
             // A PossibleFiniteState is deleted but other states still exist
-            this.sideEffect.BeforeDelete(this.ps22, this.psl2, this.transaction, this.partition, this.securityContext.Object);
+            this.sideEffect.BeforeDeleteAsync(this.ps22, this.psl2, this.transaction, this.partition, this.securityContext.Object);
 
             this.actualFiniteStateListService.Verify(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object), Times.Never);
             this.possibleFiniteStateListslService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<Thing>(), It.IsAny<Thing>()), Times.Never);
@@ -431,7 +431,7 @@ namespace CometServer.Tests.SideEffects
             this.psl1.PossibleState.Add(new OrderedItem { K = 1, V = this.ps11.Iid.ToString() });
 
             Assert.Throws<InvalidOperationException>(
-                () => this.sideEffect.BeforeDelete(this.ps11, this.psl1, this.transaction, this.partition, this.securityContext.Object));
+                () => this.sideEffect.BeforeDeleteAsync(this.ps11, this.psl1, this.transaction, this.partition, this.securityContext.Object));
         }
     }
 }

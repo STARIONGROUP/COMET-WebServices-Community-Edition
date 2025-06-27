@@ -73,7 +73,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             RequirementsGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -81,7 +81,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            await base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+            await base.BeforeUpdateAsync(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
             if (rawUpdateInfo.TryGetValue("Group", out var value))
             {
@@ -94,8 +94,8 @@ namespace CometServer.Services.Operations.SideEffects
                         $"RequirementsGroup {thing.Name} {thing.Iid} cannot contain itself.");
                 }
 
-                var requirementsGroups = this.RequirementsSpecificationService
-                    .GetDeep(transaction, partition, null, securityContext)
+                var requirementsGroups = (await this.RequirementsSpecificationService
+                    .GetDeepAsync(transaction, partition, null, securityContext))
                     .Where(x => x.ClassKind == ClassKind.RequirementsGroup)
                     .Cast<RequirementsGroup>()
                     .ToList();

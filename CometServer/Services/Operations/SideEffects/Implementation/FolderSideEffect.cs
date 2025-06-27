@@ -75,7 +75,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task<bool> BeforeCreate(
+        public override async Task<bool> BeforeCreateAsync(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -119,7 +119,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -161,7 +161,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDelete(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.HasWriteAccess(thing, transaction, partition);
         }
@@ -187,7 +187,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="containingFolderId">
         /// The containing folder id to check for being acyclic
         /// </param>
-        public Task ValidateContainingFolder(
+        public async Task ValidateContainingFolder(
             Folder thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -210,7 +210,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Get all folders from the container
-            var folders = this.FolderService.GetAsync(transaction, partition, ((FileStore)container).Folder, securityContext)
+            var folders = (await this.FolderService.GetAsync(transaction, partition, ((FileStore)container).Folder, securityContext))
                 .Cast<Folder>().ToList();
 
             // Check whether containing folder is acyclic
@@ -219,8 +219,6 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new AcyclicValidationException(
                     $"Folder {thing.Name} {thing.Iid} cannot have a containing Folder {containingFolderId} that leads to cyclic dependency");
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -278,7 +276,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
             else
             {
-                await this.DomainFileStoreService.HasWriteAccess(
+                await this.DomainFileStoreService.HasWriteAccessAsync(
                     folder,
                     transaction,
                     partition);

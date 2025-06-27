@@ -213,7 +213,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.derivedUnitC.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.unitFactorB,
                     this.derivedUnitB,
                     this.npgsqlTransaction,
@@ -228,7 +228,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.simpleUnitE.Iid } };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.unitFactorB,
                     this.derivedUnitB,
                     this.npgsqlTransaction,

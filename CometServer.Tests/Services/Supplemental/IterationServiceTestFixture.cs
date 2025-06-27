@@ -79,7 +79,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.iterationDaoService.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), "", It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue)).Returns(new[] {it1, it2});
             this.iterationSetupService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new[] {setup1, setup2});
 
-            var active = this.iterationService.GetActiveIteration(null, "", null);
+            var active = this.iterationService.GetActiveIterationAsync(null, "", null);
 
             Assert.That(it2.Iid, Is.EqualTo(active.Iid));
         }

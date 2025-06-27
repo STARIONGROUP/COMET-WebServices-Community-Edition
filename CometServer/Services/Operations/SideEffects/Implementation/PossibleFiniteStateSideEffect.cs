@@ -68,11 +68,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreate(PossibleFiniteState thing, Thing container, PossibleFiniteState originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreateAsync(PossibleFiniteState thing, Thing container, PossibleFiniteState originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.AfterCreate(thing, container, originalThing, transaction, partition, securityContext);
+            await base.AfterCreateAsync(thing, container, originalThing, transaction, partition, securityContext);
 
-            this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync((PossibleFiniteStateList)container, transaction, partition, securityContext);
+            await this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync((PossibleFiniteStateList)container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -93,9 +93,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDelete(PossibleFiniteState thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(PossibleFiniteState thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.BeforeDelete(thing, container, transaction, partition, securityContext);
+            await base.BeforeDeleteAsync(thing, container, transaction, partition, securityContext);
 
             var possibleList = (PossibleFiniteStateList)container;
             
@@ -115,11 +115,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        public override async Task AfterDelete(PossibleFiniteState thing, Thing container, PossibleFiniteState originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterDeleteAsync(PossibleFiniteState thing, Thing container, PossibleFiniteState originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
+            await base.AfterDeleteAsync(thing, container, originalThing, transaction, partition, securityContext);
 
-            this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync((PossibleFiniteStateList)container, transaction, partition, securityContext);
+            await this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync((PossibleFiniteStateList)container, transaction, partition, securityContext);
         }
     }
 }

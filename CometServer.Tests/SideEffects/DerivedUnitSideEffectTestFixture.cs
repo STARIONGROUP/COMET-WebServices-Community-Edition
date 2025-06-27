@@ -186,7 +186,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() {K = 3, V = this.unitFactorC.Iid} } } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedUnitB,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -209,7 +209,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() { K = 4, V = this.unitFactorD.Iid } } } };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedUnitB,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

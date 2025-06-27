@@ -175,7 +175,7 @@ namespace CometServer.Tests.SideEffects
                                      };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -201,7 +201,7 @@ namespace CometServer.Tests.SideEffects
                                      };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -216,7 +216,7 @@ namespace CometServer.Tests.SideEffects
                                      };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -243,7 +243,7 @@ namespace CometServer.Tests.SideEffects
                                      };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

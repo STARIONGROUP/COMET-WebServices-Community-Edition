@@ -129,7 +129,7 @@ namespace CometServer.Tests.SideEffects
 
             var copy = new EngineeringModelSetup(Guid.NewGuid(), 0);
 
-            this.modelCreatorManager.CreateEngineeringModelSetupFromSource(modelSetup.Iid, copy, null, null);
+            this.modelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(modelSetup.Iid, copy, null, null);
 
             Assert.That(copy.RequiredRdl, Is.Not.Empty);
             Assert.That(copy.IterationSetup, Is.Not.Empty);

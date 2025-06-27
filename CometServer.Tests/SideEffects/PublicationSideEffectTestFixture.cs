@@ -148,7 +148,7 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyBeforeCreate()
         {
-            this.publicationSideEffect.BeforeCreate(this.publication, this.iteration, this.npgsqlTransaction, "EngineeringModel", this.securityContext.Object);
+            this.publicationSideEffect.BeforeCreateAsync(this.publication, this.iteration, this.npgsqlTransaction, "EngineeringModel", this.securityContext.Object);
 
             // Check that the value sets of the parameters and parameterOverrides included in this publications are updated
             this.parameterValueSetService.Verify(x => 

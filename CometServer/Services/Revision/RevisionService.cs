@@ -196,7 +196,7 @@ namespace CometServer.Services
                 await this.CacheService.BulkWriteToCache(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
             }
 
-            this.Logger.LogDebug("Write to Cache and Revisions table done in {time}[ms]", stopwatch.ElapsedMilliseconds);
+            this.Logger.LogDebug("Write to Cache and Revisions table done in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
             stopwatch.Stop();
             return thingRevisionInfos.Select(x => x.Thing);
         }
@@ -298,7 +298,7 @@ namespace CometServer.Services
                     var service = this.ServiceProvider.MapToReadService(instanceType);
                     
                     // Retrieve typed information filtered by the revisioned iids
-                    var versionedThings = service.GetShallowAsync(
+                    var versionedThings = await service.GetShallowAsync(
                         transaction,
                         resolvedPartition,
                         revisionedInstanceIids,

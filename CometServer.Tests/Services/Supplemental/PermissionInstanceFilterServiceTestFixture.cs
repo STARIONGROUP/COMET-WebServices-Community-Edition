@@ -196,7 +196,7 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyThatPersonPermissionPropertyIsFilteredForPureRequest()
         {
-            var result = this.service.FilterOutPermissions(this.personRoles, new Version("1.0.0")).OfType<PersonRole>().ToArray();
+            var result = this.service.FilterOutPermissionsAsync(this.personRoles, new Version("1.0.0")).OfType<PersonRole>().ToArray();
 
             Assert.That(result[0].PersonPermission, Is.EquivalentTo(new List<Guid> { this.personPermission1id, this.personPermission2id }));
         }
@@ -204,7 +204,7 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyThatPersonPermissionPropertyIsNotFilteredForCDP4Request()
         {
-            var result = this.service.FilterOutPermissions(this.personRoles, new Version("1.1.0")).OfType<PersonRole>().ToArray();
+            var result = this.service.FilterOutPermissionsAsync(this.personRoles, new Version("1.1.0")).OfType<PersonRole>().ToArray();
 
             Assert.That(result[0].PersonPermission, Is.EquivalentTo(new List<Guid> { this.personPermission1id, this.personPermission2id, this.personPermission3id }));
         }
@@ -212,7 +212,7 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyThatParticipantPermissionPropertyIsFilteredForPureRequest()
         {
-            var result = this.service.FilterOutPermissions(this.participantRoles, new Version("1.0.0")).OfType<ParticipantRole>().ToArray();
+            var result = this.service.FilterOutPermissionsAsync(this.participantRoles, new Version("1.0.0")).OfType<ParticipantRole>().ToArray();
 
             Assert.That(result[0].ParticipantPermission, Is.EquivalentTo(new List<Guid> { this.participantPermission1id, this.participantPermission2id }));
         }
@@ -220,7 +220,7 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyThatParticipantPermissionPropertyIsNotFilteredForCDP4Request()
         {
-            var result = this.service.FilterOutPermissions(this.participantRoles, new Version("1.1.0")).OfType<ParticipantRole>().ToArray();
+            var result = this.service.FilterOutPermissionsAsync(this.participantRoles, new Version("1.1.0")).OfType<ParticipantRole>().ToArray();
 
             Assert.That(result[0].ParticipantPermission, Is.EquivalentTo(new List<Guid> { this.participantPermission1id, this.participantPermission2id, this.participantPermission3id }));
         }
@@ -281,7 +281,7 @@ namespace CometServer.Tests.Services.Supplemental
                                 this.participantPermission3
                             };
 
-            var result = this.service.FilterOutPermissions(
+            var result = this.service.FilterOutPermissionsAsync(
                 input,
                 new Version(1, 0)).ToArray();
 

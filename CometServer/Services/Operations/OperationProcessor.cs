@@ -257,7 +257,7 @@ namespace CometServer.Services.Operations
                         foreach (var deletedValue in deletedCollectionItems)
                         {
                             var deletedValueIid = (Guid)deletedValue;
-                            var childTypeName = await this.ResolveService.ResolveTypeNameByGuid(transaction, partition, deletedValueIid);
+                            var childTypeName = await this.ResolveService.ResolveTypeNameByGuidAsync(transaction, partition, deletedValueIid);
                             var dtoInfo = new DtoInfo(childTypeName, deletedValueIid);
 
                             if (!this.operationThingCache.ContainsKey(dtoInfo))
@@ -273,7 +273,7 @@ namespace CometServer.Services.Operations
                         foreach (var deletedOrderedItem in deletedOrderedCollectionItems)
                         {
                             var deletedValueIid = Guid.Parse(deletedOrderedItem.V.ToString());
-                            var childTypeName = await this.ResolveService.ResolveTypeNameByGuid(transaction, partition, Guid.Parse(deletedOrderedItem.V.ToString()));
+                            var childTypeName = await this.ResolveService.ResolveTypeNameByGuidAsync(transaction, partition, Guid.Parse(deletedOrderedItem.V.ToString()));
                             var dtoInfo = new DtoInfo(childTypeName, deletedValueIid);
 
                             if (!this.operationThingCache.ContainsKey(dtoInfo))
@@ -772,7 +772,7 @@ namespace CometServer.Services.Operations
             Dictionary<string, Stream> fileStore)
         {
             // resolve any meta data from the persitence store
-            await this.ResolveService.ResolveItems(transaction, partition, this.operationThingCache);
+            await this.ResolveService.ResolveItemsAsync(transaction, partition, this.operationThingCache);
 
             // apply the operations
             await this.ApplyDeleteOperationsAsync(operation, transaction, partition);
@@ -921,7 +921,7 @@ namespace CometServer.Services.Operations
                                 {
                                     var deletedValueId = (Guid)deletedValue;
 
-                                    var childTypeName = await this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
+                                    var childTypeName = await this.ResolveService.ResolveTypeNameByGuidAsync(transaction, requestPartition, deletedValueId);
                                     var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
                                     await this.ExecuteDeleteOperationAsync(dtoInfo, transaction, metaInfo);
@@ -949,7 +949,7 @@ namespace CometServer.Services.Operations
                                 if (propInfo.Aggregation == AggregationKind.Composite)
                                 {
                                     var deletedValueId = Guid.Parse(deletedOrderedItem.V.ToString());
-                                    var childTypeName = await this.ResolveService.ResolveTypeNameByGuid(transaction, requestPartition, deletedValueId);
+                                    var childTypeName = await this.ResolveService.ResolveTypeNameByGuidAsync(transaction, requestPartition, deletedValueId);
                                     var dtoInfo = new DtoInfo(childTypeName, deletedValueId);
 
                                     await this.ExecuteDeleteOperationAsync(dtoInfo, transaction, metaInfo);
@@ -1093,7 +1093,7 @@ namespace CometServer.Services.Operations
                     throw new InvalidOperationException("The target EngineeringModelSetup could not be found");
                 }
 
-                var sourceThings = this.CopySourceService.GetCopySourceData(transaction, copyinfo, requestPartition);
+                var sourceThings = await this.CopySourceService.GetCopySourceDataAsync(transaction, copyinfo, requestPartition);
 
                 var service = this.ServiceProvider.MapToPersitableService(copyinfo.Source.Thing.ClassKind.ToString());
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
@@ -1116,7 +1116,7 @@ namespace CometServer.Services.Operations
                     throw new InvalidOperationException("The target iteration could not be found");
                 }
 
-                var rdls = mrdlService.QueryReferenceDataLibrary(transaction, targetIteration).ToList();
+                var rdls = (await mrdlService.QueryReferenceDataLibraryAsync(transaction, targetIteration)).ToList();
 
                 // copy all sourceDtos from copySource
                 var topCopy = sourceThings.Single(x => x.Iid == copyinfo.Source.Thing.Iid);
@@ -1369,7 +1369,7 @@ namespace CometServer.Services.Operations
                                     var dtoResolverHelper = new DtoResolveHelper(dtoInfo);
 
                                     //Resolve the correct partition for the specific object
-                                    await this.ResolveService.ResolveItems(transaction, resolvedInfo.Partition, new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } });
+                                    await this.ResolveService.ResolveItemsAsync(transaction, resolvedInfo.Partition, new Dictionary<DtoInfo, DtoResolveHelper> { { dtoInfo, dtoResolverHelper } });
 
                                     var containedThing = (await containedThingService.GetShallowAsync(
                                             transaction,
@@ -1425,7 +1425,7 @@ namespace CometServer.Services.Operations
                     // PreCheck CanWrite
                     if (service is ServiceBase serviceBase
                         && !serviceBase.TransactionManager.IsFullAccessEnabled()
-                        && !serviceBase.PermissionService.CanWrite(transaction, originalThing, updateInfoKey.TypeName,
+                        && !await serviceBase.PermissionService.CanWriteAsync(transaction, originalThing, updateInfoKey.TypeName,
                             resolvedInfo.Partition, ServiceBase.UpdateOperation, securityContext))
                     {
                         throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + originalThing.GetType().Name + ".");

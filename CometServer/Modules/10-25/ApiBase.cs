@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ApiBase.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -32,7 +32,6 @@ namespace CometServer.Modules
     using System.Linq;
     using System.Net;
     using System.Net.Http;
-    using System.Security.Authentication;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -185,7 +184,7 @@ namespace CometServer.Modules
 
         /// <summary>
         /// Authorizes a <paramref name="request"/> and calls the
-        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.ResolveCredentialsAsync"/> to resolve and set the
         /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
         /// </summary>
         /// <param name="credentialsService">
@@ -201,13 +200,13 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/> that contains the value of the identifier uses to check authorization
         /// </returns>
-        protected async Task<string> Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, HttpRequest request)
+        protected async Task<string> AuthorizeAsync(IAppConfigService appConfigService, ICredentialsService credentialsService, HttpRequest request)
         {
             var userName = request.HttpContext.User.Identity!.Name;
 
             if (!request.DoesAuthorizationHeaderMatches(JwtBearerDefaults.ExternalAuthenticationScheme))
             {
-                await this.Authorize(appConfigService, credentialsService, userName);
+                await this.AuthorizeAsync(appConfigService, credentialsService, userName);
                 return userName;
             }
 
@@ -219,7 +218,7 @@ namespace CometServer.Modules
                 switch ( appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.PersonIdentifierPropertyKind)
                 {
                     case PersonIdentifierPropertyKind.ShortName:
-                        await this.Authorize(appConfigService, credentialsService, claim.Value);
+                        await this.AuthorizeAsync(appConfigService, credentialsService, claim.Value);
                         break;
                     case PersonIdentifierPropertyKind.Iid:
                         if (!Guid.TryParse(claim.Value, out var userId))
@@ -227,7 +226,7 @@ namespace CometServer.Modules
                             throw new AuthorizationException("Provided claim value is not a valid GUID.");
                         }
                         
-                        await this.Authorize(appConfigService, credentialsService, userId);
+                        await this.AuthorizeAsync(appConfigService, credentialsService, userId);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(PersonIdentifierPropertyKind), "Unsupported PersonIdentifierPropertyKind");
@@ -244,7 +243,7 @@ namespace CometServer.Modules
 
         /// <summary>
         /// Authorizes the user on the bases of the <paramref name="username"/> and calls the
-        /// <see cref="ICredentialsService.ResolveCredentials"/> to resolve and set the
+        /// <see cref="ICredentialsService.ResolveCredentialsAsync"/> to resolve and set the
         /// <see cref="ICredentialsService.Credentials"/> to be used in the following pipeline
         /// </summary>
         /// <param name="credentialsService">
@@ -260,7 +259,7 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        private async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
+        private async Task AuthorizeAsync(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
         {
             try
             {
@@ -270,11 +269,11 @@ namespace CometServer.Modules
 
                 await using var transaction = await connection.BeginTransactionAsync();
 
-                await credentialsService.ResolveCredentials(transaction, username);
+                await credentialsService.ResolveCredentialsAsync(transaction, username);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                this.logger.LogWarning("Authorization failed for {username}", username);
+                this.logger.LogWarning(ex, "Authorization failed for {Username}", username);
 
                 throw;
             }
@@ -298,7 +297,7 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        private async Task Authorize(IAppConfigService appConfigService, ICredentialsService credentialsService, Guid userId)
+        private async Task AuthorizeAsync(IAppConfigService appConfigService, ICredentialsService credentialsService, Guid userId)
         {
             try
             {
@@ -308,11 +307,11 @@ namespace CometServer.Modules
 
                 await using var transaction = await connection.BeginTransactionAsync();
 
-                await credentialsService.ResolveCredentials(transaction, userId);
+                await credentialsService.ResolveCredentialsAsync(transaction, userId);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                this.logger.LogWarning("Authorization failed for {UserId}", userId);
+                this.logger.LogWarning(ex, "Authorization failed for {UserId}", userId);
 
                 throw;
             }
@@ -323,7 +322,7 @@ namespace CometServer.Modules
         /// </summary>
         /// <param name="response">The HTTP response object.</param>
         /// <returns>True if the server is ready; otherwise, false.</returns>
-        protected async Task<bool> IsServerReady(HttpResponse response)
+        protected async Task<bool> IsServerReadyAsync(HttpResponse response)
         {
             if (this.CometHasStartedService.GetHasStartedAndIsReady().IsHealthy)
             {
@@ -360,7 +359,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The collection of retrieved <see cref="CDP4Common.DTO.Thing"/>.
         /// </returns>
-        public async Task<ProcessRequestPathResult> ProcessRequestPath(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string topContainer, string partition, string[] routeSegments)
+        public async Task<ProcessRequestPathResult> ProcessRequestPathAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, IProcessor processor, string topContainer, string partition, string[] routeSegments)
         {
             var result = new ProcessRequestPathResult();
 
@@ -391,6 +390,7 @@ namespace CometServer.Modules
 
                 var containerProperty = routeSegments[i];
                 var serviceType = i == 0
+
                                       ? topContainer
                                       : processor.GetContainmentType(containmentColl, containerProperty);
 
@@ -409,7 +409,7 @@ namespace CometServer.Modules
                     processor.ValidateContainment(containmentColl, containerProperty, identifier);
 
                     var container =
-                        processor.GetContainmentResource(serviceType, partition, identifier, authorizedContext);
+                        await processor.GetContainmentResource(serviceType, partition, identifier, authorizedContext);
 
                     if (serviceType == nameof(Iteration))
                     {
@@ -445,13 +445,11 @@ namespace CometServer.Modules
                                 containedIterationId);
 
                             // collect resources
-
-
                             result.RequestedResources.AddRange(
-                                processor.GetResource(
+                                await processor.GetResourceAsync(
                                     serviceType,
                                     partition,
-                                    new[] { containedIterationId },
+                                    [containedIterationId],
                                     authorizedContext));
                         }
                     }
@@ -459,7 +457,7 @@ namespace CometServer.Modules
                     {
                         // collect resources
                         result.RequestedResources.AddRange(
-                            processor.GetResource(serviceType, partition, containmentInfo, authorizedContext));
+                            await processor.GetResourceAsync(serviceType, partition, containmentInfo, authorizedContext));
                     }
                 }
                 else if (specificResourceRequest)
@@ -468,11 +466,12 @@ namespace CometServer.Modules
 
                     processor.ValidateContainment(containmentColl, containerProperty, identifier);
 
-                    var resource = processor.GetResource(
+                    var resource = (await processor.GetResourceAsync(
                         serviceType,
                         partition,
-                        new[] { identifier },
-                        authorizedContext).ToList();
+                        [identifier],
+                        authorizedContext)).ToList();
+
                     if (resource.Count == 0)
                     {
                         continue;
@@ -527,28 +526,28 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task WriteJsonResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
+        protected async Task WriteJsonResponseAsync(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
             try
             {
                 var sw = Stopwatch.StartNew();
 
-                this.logger.LogInformation("JSON serialization to response started for {token}", requestToken);
+                this.logger.LogInformation("JSON serialization to response started for {Token}", requestToken);
 
                 headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.JSON, "");
 
                 httpResponse.StatusCode = (int)statusCode;
 
                 var resultStream = new MemoryStream();
-                this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
+                await this.CreateFilteredJsonResponseStreamAsync(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
                 resultStream.Seek(0, SeekOrigin.Begin);
                 await resultStream.CopyToAsync(httpResponse.Body);
 
-                this.logger.LogInformation("JSON serialization to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("JSON serialization to response for {Token} completed in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException ex)
             {
-                this.logger.LogTrace("The HttpResponse has been disposed of for {requestToken}", requestToken);
+                this.logger.LogTrace(ex, "The HttpResponse has been disposed of for {RequestToken}", requestToken);
             }
         }
 
@@ -582,28 +581,28 @@ namespace CometServer.Modules
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected async Task WriteMessagePackResponse(IHeaderInfoProvider headerInfoProvider, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
+        protected async Task WriteMessagePackResponseAsync(IHeaderInfoProvider headerInfoProvider, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IReadOnlyList<Thing> resourceResponse, Version requestDataModelVersion, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK, string requestToken = "")
         {
             try
             {
                 var sw = Stopwatch.StartNew();
 
-                this.logger.LogInformation("MessagePack serialization to response started for {token}", requestToken);
+                this.logger.LogInformation("MessagePack serialization to response started for {Token}", requestToken);
 
                 headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MESSAGEPACK, "");
 
                 httpResponse.StatusCode = (int)statusCode;
 
                 var resultStream = new MemoryStream();
-                this.CreateFilteredMessagePackResponseStream(messagePackSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
+                await this.CreateFilteredMessagePackResponseStreamAsync(messagePackSerializer, permissionInstanceFilterService, resourceResponse, resultStream, requestDataModelVersion, requestToken);
                 resultStream.Seek(0, SeekOrigin.Begin);
                 await resultStream.CopyToAsync(httpResponse.Body);
 
-                this.logger.LogInformation("MessagePack serialization to response for {token} completed in {elapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
+                this.logger.LogInformation("MessagePack serialization to response for {Token} completed in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
             }
-            catch (ObjectDisposedException)
+            catch (ObjectDisposedException ex)
             {
-                this.logger.LogTrace("The HttpResponse has been disposed of for {requestToken}", requestToken);
+                this.logger.LogTrace(ex, "The HttpResponse has been disposed of for {RequestToken}", requestToken);
             }
         }
 
@@ -643,13 +642,13 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected Task WriteMultipartResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected Task WriteMultipartResponseAsync(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
 
             httpResponse.StatusCode = (int)statusCode;
 
-            return this.PrepareMultiPartResponse(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
+            return this.PrepareMultiPartResponseAsync(metaInfoProvider,jsonSerializer, fileBinaryService, permissionInstanceFilterService,  httpResponse.Body, fileRevisions, resourceResponse, version);
         }
 
         /// <summary>
@@ -691,7 +690,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The <see cref="HttpResponse"/>.
         /// </returns>
-        protected Task WriteArchivedResponse(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
+        protected Task WriteArchivedResponseAsync(IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, List<Thing> resourceResponse, string partition, string[] routeSegments, Version version, HttpResponse httpResponse, HttpStatusCode statusCode = HttpStatusCode.OK)
         {
             headerInfoProvider.RegisterResponseHeaders(httpResponse, ContentTypeKind.MULTIPARTMIXED, HttpConstants.BoundaryString);
             httpResponse.StatusCode = (int)statusCode;
@@ -714,16 +713,16 @@ namespace CometServer.Modules
         /// <returns>
         /// IEnumerable collection of data reference library items.
         /// </returns>
-        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IRequestUtils requestUtils,
+        protected static async Task<IEnumerable<Thing>> CollectReferenceDataLibraryChainAsync(IRequestUtils requestUtils,
             IProcessor processor,
             EngineeringModelSetup modelSetup)
         {
             var securityContext = SetupSecurityContextForLibraryRead(requestUtils);
 
             // retrieve the required model reference data library
-            var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, modelSetup.RequiredRdl, securityContext);
+            var modelReferenceDataLibraryData = await processor.GetResourceAsync(ModelReferenceDataLibraryType, SiteDirectoryData, modelSetup.RequiredRdl, securityContext);
 
-            return RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData);
+            return await RetrieveChainedReferenceDataAsync(requestUtils, processor, securityContext, modelReferenceDataLibraryData);
         }
 
         /// <summary>
@@ -741,14 +740,14 @@ namespace CometServer.Modules
         /// <returns>
         /// IEnumerable collection of data reference library items.
         /// </returns>
-        protected IEnumerable<Thing> CollectReferenceDataLibraryChain(IRequestUtils requestUtils, IProcessor processor, ModelReferenceDataLibrary modelReferenceDataLibrary)
+        protected static async Task<IEnumerable<Thing>> CollectReferenceDataLibraryChainAsync(IRequestUtils requestUtils, IProcessor processor, ModelReferenceDataLibrary modelReferenceDataLibrary)
         {
             var securityContext = SetupSecurityContextForLibraryRead(requestUtils);
 
             // retrieve the required model reference data library with extent = deep
-            var modelReferenceDataLibraryData = processor.GetResource(ModelReferenceDataLibraryType, SiteDirectoryData, new[] { modelReferenceDataLibrary.Iid }, securityContext);
+            var modelReferenceDataLibraryData = await processor.GetResourceAsync(ModelReferenceDataLibraryType, SiteDirectoryData, [modelReferenceDataLibrary.Iid], securityContext);
 
-            return RetrieveChainedReferenceData(requestUtils, processor, securityContext, modelReferenceDataLibraryData)
+            return (await RetrieveChainedReferenceDataAsync(requestUtils, processor, securityContext, modelReferenceDataLibraryData))
                 .Where(x => x.Iid != modelReferenceDataLibrary.Iid);
         }
 
@@ -776,22 +775,22 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateFilteredJsonResponseStream(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService,
+        private async Task CreateFilteredJsonResponseStreamAsync(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IPermissionInstanceFilterService permissionInstanceFilterService,
             IReadOnlyList<Thing> dtos,
             Stream stream,
             Version requestDataModelVersion,
             string requestToken = "")
         {
-            var filteredDtos = permissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
+            var filteredDtos = (await permissionInstanceFilterService.FilterOutPermissionsAsync(dtos, requestDataModelVersion)).ToArray();
 
             var sw = new Stopwatch();
             sw.Start();
-            this.logger.LogDebug("{requestToken} start serializing dtos as JSON", requestToken);
+            this.logger.LogDebug("{RequestToken} start serializing dtos as JSON", requestToken);
             jsonSerializer.Initialize(metaInfoProvider, requestDataModelVersion);
             jsonSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            this.logger.LogDebug("serializing dtos as JSON - {requestToken} in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
+            this.logger.LogDebug("serializing dtos as JSON - {RequestToken} in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -815,21 +814,21 @@ namespace CometServer.Modules
         /// <param name="requestToken">
         /// optional request token
         /// </param>
-        private void CreateFilteredMessagePackResponseStream(IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService,
+        private async Task CreateFilteredMessagePackResponseStreamAsync(IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService,
             IReadOnlyList<Thing> dtos,
             Stream stream,
             Version requestDataModelVersion,
             string requestToken = "")
         {
-            var filteredDtos = permissionInstanceFilterService.FilterOutPermissions(dtos, requestDataModelVersion).ToArray();
+            var filteredDtos = (await permissionInstanceFilterService.FilterOutPermissionsAsync(dtos, requestDataModelVersion)).ToArray();
 
             var sw = new Stopwatch();
             sw.Start();
-            this.logger.LogDebug("{requestToken} start serializing dtos as MessagePack", requestToken);
+            this.logger.LogDebug("{RequestToken} start serializing dtos as MessagePack", requestToken);
             messagePackSerializer.SerializeToStream(filteredDtos, stream);
             sw.Stop();
 
-            this.logger.LogDebug("serializing dtos as MessagePack - {requestToken} in {sw} [ms]", requestToken, sw.ElapsedMilliseconds);
+            this.logger.LogDebug("serializing dtos as MessagePack - {RequestToken} in {ElapsedMilliseconds} [ms]", requestToken, sw.ElapsedMilliseconds);
         }
 
         /// <summary>
@@ -859,7 +858,7 @@ namespace CometServer.Modules
         /// <param name="jsonSerializer">
         /// The <see cref="ICdp4JsonSerializer"/> used to serialize data to JSOIN
         /// </param>
-        private async Task PrepareMultiPartResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
+        private async Task PrepareMultiPartResponseAsync(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileBinaryService fileBinaryService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<FileRevision> fileRevisions, List<Thing> resourceResponse, Version requestDataModelVersion)
         {
             if (fileRevisions.Count == 0)
             {
@@ -868,20 +867,21 @@ namespace CometServer.Modules
             }
 
             var content = new MultipartContent("mixed", HttpConstants.BoundaryString);
+
             using (var stream = new MemoryStream())
             {
-                this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
+                await this.CreateFilteredJsonResponseStreamAsync(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
 
                 // rewind stream prior to reading
                 stream.Position = 0;
 
                 // write out the json content to the first multipart content entry
-                var jsonContent = new StringContent(new StreamReader(stream).ReadToEnd());
+                var jsonContent = new StringContent(await new StreamReader(stream).ReadToEndAsync());
                 jsonContent.Headers.Clear();
                 jsonContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeJson);
                 content.Add(jsonContent);
 
-                stream.Flush();
+                await stream.FlushAsync();
             }
 
             foreach (var hash in fileRevisions.Select(x => x.ContentHash).Distinct())
@@ -889,11 +889,11 @@ namespace CometServer.Modules
                 byte[] buffer;
                 long fileSize;
 
-                using (var fileStream = fileBinaryService.RetrieveBinaryData(hash))
+                await using (var fileStream = fileBinaryService.RetrieveBinaryData(hash))
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
-                    var readBytes = fileStream.Read(buffer, 0, (int)fileSize);
+                    var readBytes = await fileStream.ReadAsync(buffer, 0, (int)fileSize);
 
                     if (readBytes != fileSize)
                     {
@@ -948,7 +948,7 @@ namespace CometServer.Modules
         /// </param>
         private async Task PrepareArchivedResponse(IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IFileArchiveService fileArchiveService, IPermissionInstanceFilterService permissionInstanceFilterService, Stream targetStream, List<Thing> resourceResponse, Version requestDataModelVersion, string partition, string[] routeSegments)
         {
-            var temporaryTopFolder = fileArchiveService.CreateFolderAndFileStructureOnDisk(resourceResponse, partition, routeSegments);
+            var temporaryTopFolder = await fileArchiveService.CreateFolderAndFileStructureOnDiskAsync(resourceResponse, partition, routeSegments);
 
             try
             {
@@ -956,18 +956,18 @@ namespace CometServer.Modules
 
                 using (var stream = new MemoryStream())
                 {
-                    this.CreateFilteredJsonResponseStream(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
+                    await this.CreateFilteredJsonResponseStreamAsync(metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, stream, requestDataModelVersion);
 
                     // rewind stream prior to reading
                     stream.Position = 0;
 
                     // write out the json content to the first multipart content entry
-                    var jsonContent = new StringContent(new StreamReader(stream).ReadToEnd());
+                    var jsonContent = new StringContent(await new StreamReader(stream).ReadToEndAsync());
                     jsonContent.Headers.Clear();
                     jsonContent.Headers.Add(HttpConstants.ContentTypeHeader, HttpConstants.MimeTypeJson);
                     content.Add(jsonContent);
 
-                    stream.Flush();
+                    await stream.FlushAsync();
                 }
 
                 fileArchiveService.CreateZipArchive(temporaryTopFolder);
@@ -975,11 +975,11 @@ namespace CometServer.Modules
                 byte[] buffer;
                 long fileSize;
 
-                using (var fileStream = new FileStream(temporaryTopFolder + ".zip", FileMode.Open))
+                await using (var fileStream = new FileStream(temporaryTopFolder + ".zip", FileMode.Open))
                 {
                     fileSize = fileStream.Length;
                     buffer = new byte[(int)fileSize];
-                    var readBytes = fileStream.Read(buffer, 0, (int)fileSize);
+                    var readBytes = await fileStream.ReadAsync(buffer, 0, (int)fileSize);
                     
                     if (readBytes != fileSize)
                     {
@@ -1059,7 +1059,7 @@ namespace CometServer.Modules
         /// <returns>
         /// A collection of retrieved reference data.
         /// </returns>
-        private static ReadOnlyCollection<Thing> RetrieveChainedReferenceData(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
+        private static async Task<ReadOnlyCollection<Thing>> RetrieveChainedReferenceDataAsync(IRequestUtils requestUtils, IProcessor processor, ISecurityContext securityContext, IEnumerable<Thing> modelReferenceDataLibraryData)
         {
             var chainedReferenceDataColl = new List<Thing>();
 
@@ -1070,11 +1070,12 @@ namespace CometServer.Modules
             // while the requiredRdl is set retrieve the reference data library chain bottom up
             while (referenceDataLibrary.RequiredRdl != null)
             {
-                var siteReferenceDataLibraryData = processor.GetResource(
+                var siteReferenceDataLibraryData = (await processor.GetResourceAsync(
                     SiteReferenceDataLibraryType,
                     SiteDirectoryData,
                     new List<Guid> { (Guid)referenceDataLibrary.RequiredRdl },
-                    securityContext).ToList();
+                    securityContext)).ToList();
+
                 chainedReferenceDataColl.AddRange(siteReferenceDataLibraryData);
                 referenceDataLibrary = (ReferenceDataLibrary)siteReferenceDataLibraryData.First();
             }
@@ -1093,7 +1094,7 @@ namespace CometServer.Modules
         /// <param name="actorId">The actor id.</param>
         /// <param name="serializer">The <see cref="ICdp4JsonSerializer"/></param>
         /// <returns>An asynchronous task representing the operation.</returns>
-        protected async Task PrepareAndQueueThingsMessage(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
+        protected async Task PrepareAndQueueThingsMessageAsync(CdpPostOperation originalPostOperation, IEnumerable<Thing> changedThings, Guid actorId, ICdp4JsonSerializer serializer)
         {
             if (!this.AppConfigService.AppConfig.ServiceMessagingConfig.IsEnabled || this.thingsMessageProducer is null)
             {
@@ -1153,7 +1154,7 @@ namespace CometServer.Modules
         /// </summary>
         /// <param name="httpResponse">The <see cref="HttpResponse"/></param>
         /// <param name="errorTag">The the Error tag</param>
-        protected void AddErrorTagHeader(HttpResponse httpResponse, string errorTag)
+        protected static void AddErrorTagHeader(HttpResponse httpResponse, string errorTag)
         {
             var errorTagHeader = HttpConstants.CDPErrorTag;
 

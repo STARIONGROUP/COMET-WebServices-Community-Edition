@@ -68,33 +68,31 @@ namespace CometServer.Services.Operations.SideEffects
         /// When a <see cref="Glossary"/> is deprecated the <see cref="Term"/>s that are contained by that <see cref="Glossary"/> shall be deprecated as well.
         /// When the <see cref="Person"/> does not have the permission to write to <see cref="Term"/>s, this will be ignored.
         /// </remarks>
-        public override Task AfterUpdate(Glossary glossary, Thing container, Glossary originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdateAsync(Glossary glossary, Thing container, Glossary originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (!glossary.IsDeprecated)
             {
-                return Task.CompletedTask;
+                return;
             }
 
             if (glossary.Term.Count == 0)
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            if (!this.PermissionService.CanWrite(transaction, originalThing, nameof(Term), partition, "update", securityContext))
+            if (!await this.PermissionService.CanWriteAsync(transaction, originalThing, nameof(Term), partition, "update", securityContext))
             {
-                return Task.CompletedTask;
+                return;
             }
 
-            var terms = this.TermService.GetShallowAsync(transaction, partition, glossary.Term, securityContext)
+            var terms = (await this.TermService.GetShallowAsync(transaction, partition, glossary.Term, securityContext))
                 .Where(i => i.GetType() == typeof(Term)).Cast<Term>();
 
             foreach (var term in terms)
             {
                 term.IsDeprecated = true;
-                this.TermService.UpdateConcept(transaction, partition, term, glossary);
+                await this.TermService.UpdateConceptAsync(transaction, partition, term, glossary);
             }
-
-            return Task.CompletedTask;
         }
     }
 }

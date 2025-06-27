@@ -90,7 +90,7 @@ namespace CometServer.Tests.SideEffects
                     };
 
             Assert.Throws<InvalidOperationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     participantPermission,
                     null,
                     this.npgsqlTransaction,
@@ -98,7 +98,7 @@ namespace CometServer.Tests.SideEffects
                     this.securityContext.Object));
 
             Assert.Throws<InvalidOperationException>(
-                () => this.sideEffect.AfterUpdate(
+                () => this.sideEffect.AfterUpdateAsync(
                     participantPermission,
                     null,
                     null,
@@ -123,14 +123,14 @@ namespace CometServer.Tests.SideEffects
                         AccessRightKindValidationService =
                             this.permissiveAccessRightKindValidationService.Object
                     };
-            this.sideEffect.BeforeCreate(
+            this.sideEffect.BeforeCreateAsync(
                 participantPermission,
                 null,
                 this.npgsqlTransaction,
                 "partition",
                 this.securityContext.Object);
 
-            this.sideEffect.AfterUpdate(
+            this.sideEffect.AfterUpdateAsync(
                 participantPermission,
                 null,
                 null,

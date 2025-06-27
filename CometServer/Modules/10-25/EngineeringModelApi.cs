@@ -155,7 +155,7 @@ namespace CometServer.Modules
             app.MapGet("EngineeringModel/{*path}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IFileBinaryService fileBinaryService, IFileArchiveService fileArchiveService, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IObfuscationService obfuscationService, ICherryPickService cherryPickService, IContainmentService containmentService) =>
             {
-                if (!await this.IsServerReady(res))
+                if (!await this.IsServerReadyAsync(res))
                 {
                     return;
                 }
@@ -164,7 +164,7 @@ namespace CometServer.Modules
 
                 try
                 {
-                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
                 }
                 catch (AuthorizationException)
                 {
@@ -181,7 +181,7 @@ namespace CometServer.Modules
             app.MapPost("EngineeringModel/{engineeringModelIid:guid}/iteration/{iterationIid:guid}", 
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IFileBinaryService fileBinaryService, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IChangeLogService changeLogService) =>
             {
-                if (!await this.IsServerReady(res))
+                if (!await this.IsServerReadyAsync(res))
                 {
                     return;
                 }
@@ -191,7 +191,7 @@ namespace CometServer.Modules
 
                 try
                 {
-                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
                 }
                 catch (AuthorizationException)
                 {
@@ -278,7 +278,7 @@ namespace CometServer.Modules
             IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, 
             IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService)
         {
-            if (!await this.IsServerReady(response))
+            if (!await this.IsServerReadyAsync(response))
             {
                 return;
             }
@@ -287,7 +287,7 @@ namespace CometServer.Modules
             
             try
             {
-               identity = await this.Authorize(this.AppConfigService, credentialsService, request);
+               identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, request);
             }
             catch (AuthorizationException)
             {
@@ -319,11 +319,11 @@ namespace CometServer.Modules
                 var securityContext = new RequestSecurityContext();
 
                 // get all the Participants and filter out only those Participants that are active and for the current Person
-                var activeAndAssignedParticipantsForCurrentPerson = processor.GetResource("Participant", SiteDirectoryData, null, securityContext)
+                var activeAndAssignedParticipantsForCurrentPerson = (await processor.GetResourceAsync("Participant", SiteDirectoryData, null, securityContext))
                     .OfType<Participant>().Where(x => x.IsActive && x.Person == credentials.Person.Iid);
 
                 // get all EngineeringModelSetup
-                var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, null, securityContext)
+                var engineeringModelSetups = (await processor.GetResourceAsync("EngineeringModelSetup", SiteDirectoryData, null, securityContext))
                     .OfType<EngineeringModelSetup>();
 
                 if (ids is null)
@@ -357,8 +357,8 @@ namespace CometServer.Modules
                 {
                     var partition = requestUtils.GetEngineeringModelPartitionString(engineeringModelIid);
 
-                    var processRequestPathResult = await this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition,
-                        new[] { nameof(EngineeringModel), engineeringModelIid.ToString() });
+                    var processRequestPathResult = await this.ProcessRequestPathAsync(requestUtils, transactionManager, processor, TopContainer, partition,
+                        [nameof(EngineeringModel), engineeringModelIid.ToString()]);
 
                     engineeringModels.AddRange(processRequestPathResult.RequestedResources);
                 }
@@ -368,11 +368,11 @@ namespace CometServer.Modules
 
                 if (contentTypeKind == ContentTypeKind.JSON)
                 {
-                    await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
+                    await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
                 }
                 else if (contentTypeKind == ContentTypeKind.MESSAGEPACK)
                 {
-                    await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
+                    await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, engineeringModels, version, response, HttpStatusCode.OK, requestToken);
                 }
                 else
                 {
@@ -531,14 +531,14 @@ namespace CometServer.Modules
                     : await transactionManager.SetupTransactionAsync(credentials);
 
                 var processor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
-                var modelSetup = await DetermineEngineeringModelSetup(requestUtils, transactionManager, processor, routeSegments);
+                var modelSetup = await DetermineEngineeringModelSetupAsync(requestUtils, transactionManager, processor, routeSegments);
                 var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
                 // set the participant information
                 if (credentials != null)
                 {
                     credentials.EngineeringModelSetup = modelSetup;
-                    credentialsService.ResolveParticipantCredentials(transaction);
+                    await credentialsService.ResolveParticipantCredentialsAsync(transaction);
                 }
 
                 if (fromRevision > -1)
@@ -645,7 +645,7 @@ namespace CometServer.Modules
                 if (requestUtils.QueryParameters.IncludeFileData && fileRevisions.Any())
                 {
                     // return multipart response including file binaries
-                    await this.WriteMultipartResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
+                    await this.WriteMultipartResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, fileBinaryService, permissionInstanceFilterService, fileRevisions, resourceResponse, version, httpResponse);
                     return;
                 }
 
@@ -657,13 +657,13 @@ namespace CometServer.Modules
                     {
                         var iterationPartition = requestUtils.GetIterationPartitionString(modelSetup.EngineeringModelIid);
 
-                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, iterationPartition, routeSegments, version, httpResponse);
                         return;
                     }
 
                     if (IsValidCommonFileStoreArchiveRoute(routeSegmentList))
                     {
-                        await this.WriteArchivedResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
+                        await this.WriteArchivedResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, fileArchiveService, permissionInstanceFilterService, resourceResponse, partition, routeSegments, version, httpResponse);
                         return;
                     }
                 }
@@ -671,10 +671,10 @@ namespace CometServer.Modules
                 switch (contentTypeKind)
                 {
                     case ContentTypeKind.JSON:
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, version, httpResponse, HttpStatusCode.OK, requestToken);
+                        await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, resourceResponse, version, httpResponse, HttpStatusCode.OK, requestToken);
                         break;
                     case ContentTypeKind.MESSAGEPACK:
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, resourceResponse, version, httpResponse, HttpStatusCode.OK, requestToken);
+                        await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, resourceResponse, version, httpResponse, HttpStatusCode.OK, requestToken);
                         break;
                 }
             }
@@ -986,21 +986,21 @@ namespace CometServer.Modules
 
                 var resourceProcessor = new ResourceProcessor(transaction, serviceProvider, requestUtils, metaInfoProvider);
 
-                var modelSetup = await DetermineEngineeringModelSetup(requestUtils, transactionManager, resourceProcessor, routeSegments);
+                var modelSetup = await DetermineEngineeringModelSetupAsync(requestUtils, transactionManager, resourceProcessor, routeSegments);
 
                 var partition = requestUtils.GetEngineeringModelPartitionString(modelSetup.EngineeringModelIid);
 
                 if (credentials != null)
                 {
                     credentialsService.Credentials.EngineeringModelSetup = modelSetup;
-                    credentialsService.ResolveParticipantCredentials(transaction);
+                    await credentialsService.ResolveParticipantCredentialsAsync(transaction);
                     credentialsService.Credentials.IsParticipant = true;
 
-                    var iteration = DetermineIteration(resourceProcessor, partition, routeSegments);
+                    var iteration = await DetermineIterationAsync(resourceProcessor, partition, routeSegments);
 
-                    if (!IsPostAllowedOnIterationSetup(resourceProcessor, iteration))
+                    if (!await IsPostAllowedOnIterationSetupAsync(resourceProcessor, iteration))
                     {
-                        this.AddErrorTagHeader(httpResponse, "#FROZEN_ITERATION");
+                        AddErrorTagHeader(httpResponse, "#FROZEN_ITERATION");
 
                         throw new Cdp4ModelValidationException($"It is not allowed to write data to a Frozen {nameof(IterationSetup)}, or its full containment tree.");
                     }
@@ -1017,7 +1017,7 @@ namespace CometServer.Modules
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
                 var transactionRevision = await revisionService.GetRevisionForTransactionAsync(transaction, partition);
 
-                operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, partition, postRequestData.Files);
+                await operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, partition, postRequestData.Files);
 
                 var actor = credentialsService.Credentials.Person.Iid;
 
@@ -1033,7 +1033,7 @@ namespace CometServer.Modules
                 await transaction.CommitAsync();
 
                 // Sends changed things to the AMQP message bus
-                await this.PrepareAndQueueThingsMessage(postRequestData.OperationData, changedThings, actor, jsonSerializer);
+                await this.PrepareAndQueueThingsMessageAsync(postRequestData.OperationData, changedThings, actor, jsonSerializer);
 
                 this.CometTaskService.AddOrUpdateSuccessfulTask(cometTask, transactionRevision);
 
@@ -1044,10 +1044,10 @@ namespace CometServer.Modules
                     switch (postRequestData.ContentType)
                     {
                         case ContentTypeKind.JSON:
-                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
+                            await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
                             break;
                         case ContentTypeKind.MESSAGEPACK:
-                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
+                            await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
                             break;
                     }
 
@@ -1067,10 +1067,10 @@ namespace CometServer.Modules
                 switch (postRequestData.ContentType)
                 {
                     case ContentTypeKind.JSON:
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
+                        await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
                         break;
                     case ContentTypeKind.MESSAGEPACK:
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
+                        await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
                         break;
                 }
             }
@@ -1304,7 +1304,7 @@ namespace CometServer.Modules
         {
             var result = new List<Thing>();
 
-            var processRequestPathResult = await this.ProcessRequestPath(requestUtils, transactionManager, resourceProcessor, TopContainer, partition, routeSegments);
+            var processRequestPathResult = await this.ProcessRequestPathAsync(requestUtils, transactionManager, resourceProcessor, TopContainer, partition, routeSegments);
 
             result.AddRange(processRequestPathResult.RequestedResources);
 
@@ -1312,7 +1312,7 @@ namespace CometServer.Modules
             {
                 await transactionManager.SetDefaultContextAsync(resourceProcessor.Transaction);
 
-                foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, resourceProcessor, modelSetup))
+                foreach (var thing in await CollectReferenceDataLibraryChainAsync(requestUtils, resourceProcessor, modelSetup))
                 {
                     result.Add(thing);
                 }
@@ -1342,7 +1342,7 @@ namespace CometServer.Modules
         /// <exception cref="Exception">
         /// If engineering model could not be resolved
         /// </exception>
-        private static async Task<EngineeringModelSetup> DetermineEngineeringModelSetup(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ResourceProcessor processor, string[] routeSegments)
+        private static async Task<EngineeringModelSetup> DetermineEngineeringModelSetupAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ResourceProcessor processor, string[] routeSegments)
         {
             // override query parameters to return only extent shallow
             requestUtils.OverrideQueryParameters = new QueryParameters();
@@ -1353,9 +1353,9 @@ namespace CometServer.Modules
             await transactionManager.SetDefaultContextAsync(processor.Transaction);
 
             // take first segment and try to resolve the engineering model setup for further processing
-            var siteDir = (SiteDirectory)processor.GetResource("SiteDirectory", SiteDirectoryData, null, securityContext).Single();
+            var siteDir = (SiteDirectory)(await processor.GetResourceAsync("SiteDirectory", SiteDirectoryData, null, securityContext)).Single();
             var requestedModelId = routeSegments[1].ParseIdentifier();
-            var engineeringModelSetups = processor.GetResource("EngineeringModelSetup", SiteDirectoryData, siteDir.Model, securityContext);
+            var engineeringModelSetups = await processor.GetResourceAsync("EngineeringModelSetup", SiteDirectoryData, siteDir.Model, securityContext);
             var modelSetups = engineeringModelSetups.Where(x => ((EngineeringModelSetup)x).EngineeringModelIid == requestedModelId).ToList();
 
             if (modelSetups.Count != 1)
@@ -1382,14 +1382,14 @@ namespace CometServer.Modules
         /// <returns>
         /// The resolved <see cref="Iteration"/>.
         /// </returns>
-        private static Iteration DetermineIteration(ResourceProcessor processor, string partition, string[] routeSegments)
+        private static async Task<Iteration> DetermineIterationAsync(ResourceProcessor processor, string partition, string[] routeSegments)
         {
             if (routeSegments.Length >= 4 && routeSegments[2] == "iteration")
             {
                 var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
                 var requestedIterationId = routeSegments[3].ParseIdentifier();
-                var iterations = processor.GetResource("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext).ToList();
+                var iterations = (await processor.GetResourceAsync("Iteration", partition, new List<Guid> { requestedIterationId }, securityContext)).ToList();
 
                 if (iterations.Count != 1)
                 {
@@ -1414,13 +1414,13 @@ namespace CometServer.Modules
         /// <returns>
         /// A boolean indication if writing data to an <see cref="Iteration"/> is allowed
         /// </returns>
-        private static bool IsPostAllowedOnIterationSetup(ResourceProcessor processor, Iteration iteration)
+        private static async Task<bool> IsPostAllowedOnIterationSetupAsync(ResourceProcessor processor, Iteration iteration)
         {
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             var partition = "SiteDirectory";
             var requestedIterationSetupId = iteration.IterationSetup;
-            var iterationSetups = processor.GetResource("IterationSetup", partition, new List<Guid> { requestedIterationSetupId }, securityContext).OfType<IterationSetup>().ToList();
+            var iterationSetups = (await processor.GetResourceAsync("IterationSetup", partition, new List<Guid> { requestedIterationSetupId }, securityContext)).OfType<IterationSetup>().ToList();
 
             if (iterationSetups.Count != 1)
             {

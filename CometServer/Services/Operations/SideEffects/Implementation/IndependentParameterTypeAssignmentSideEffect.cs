@@ -68,7 +68,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreate(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreateAsync(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
         }
@@ -94,7 +94,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterDelete(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterDeleteAsync(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
         }
@@ -120,7 +120,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterUpdate(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdateAsync(IndependentParameterTypeAssignment thing, Thing container, IndependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
         }

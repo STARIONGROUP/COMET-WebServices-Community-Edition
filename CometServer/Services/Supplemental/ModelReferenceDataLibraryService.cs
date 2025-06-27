@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelReferenceDataLibraryService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -56,16 +57,16 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="iteration">The <see cref="Iteration"/></param>
         /// <returns>The <see cref="ReferenceDataLibrary"/></returns>
-        public IEnumerable<ReferenceDataLibrary> QueryReferenceDataLibrary(NpgsqlTransaction transaction, Iteration iteration)
+        public async Task<IEnumerable<ReferenceDataLibrary>> QueryReferenceDataLibraryAsync(NpgsqlTransaction transaction, Iteration iteration)
         {
-            var engineeringModelSetup = this.EngineeringModelSetupDao.Read(transaction, nameof(SiteDirectory), null, true).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
+            var engineeringModelSetup = (await this.EngineeringModelSetupDao.ReadAsync(transaction, nameof(SiteDirectory), null, true)).FirstOrDefault(ems => ems.IterationSetup.Contains(iteration.IterationSetup));
 
             if (engineeringModelSetup == null)
             {
                 throw new InvalidOperationException($"Could not find the associated EngineeringModelSetup for Iteration {iteration.Iid}");
             }
 
-            var mrdl = this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), engineeringModelSetup.RequiredRdl, true).FirstOrDefault();
+            var mrdl = (await this.ModelReferenceDataLibraryDao.ReadAsync(transaction, nameof(SiteDirectory), engineeringModelSetup.RequiredRdl, true)).FirstOrDefault();
 
             if (mrdl == null)
             {
@@ -73,7 +74,7 @@ namespace CometServer.Services
             }
 
             var requiredRdls = new List<ReferenceDataLibrary> { mrdl };
-            TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, mrdl), requiredRdls);
+            TryCopyToRequiredRdls(await this.GetRequiredRdlAsync(transaction, mrdl), requiredRdls);
 
             return requiredRdls;
         }
@@ -84,7 +85,7 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="rdl">The <see cref="ReferenceDataLibrary"/></param>
         /// <returns>The required <see cref="ReferenceDataLibrary"/></returns>
-        private ReadOnlyCollection<ReferenceDataLibrary> GetRequiredRdl(NpgsqlTransaction transaction, ReferenceDataLibrary rdl)
+        private async Task<ReadOnlyCollection<ReferenceDataLibrary>> GetRequiredRdlAsync(NpgsqlTransaction transaction, ReferenceDataLibrary rdl)
         {
             var requiredRdls = new List<ReferenceDataLibrary>();
 
@@ -94,13 +95,13 @@ namespace CometServer.Services
             }
 
             var requiredRdl =
-                this.ModelReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }, true).FirstOrDefault() as ReferenceDataLibrary
-                ?? this.SiteReferenceDataLibraryDao.Read(transaction, nameof(SiteDirectory), new[] { rdl.RequiredRdl.Value }, true).FirstOrDefault();
+                (await this.ModelReferenceDataLibraryDao.ReadAsync(transaction, nameof(SiteDirectory), [rdl.RequiredRdl.Value], true)).FirstOrDefault() as ReferenceDataLibrary
+                ?? (await this.SiteReferenceDataLibraryDao.ReadAsync(transaction, nameof(SiteDirectory), [rdl.RequiredRdl.Value], true)).FirstOrDefault();
 
             if (requiredRdl != null)
             {
-                TryCopyToRequiredRdls(new[] { requiredRdl }, requiredRdls);
-                TryCopyToRequiredRdls(this.GetRequiredRdl(transaction, requiredRdl), requiredRdls);
+                TryCopyToRequiredRdls([requiredRdl], requiredRdls);
+                TryCopyToRequiredRdls(await this.GetRequiredRdlAsync(transaction, requiredRdl), requiredRdls);
             }
 
             return requiredRdls.AsReadOnly();

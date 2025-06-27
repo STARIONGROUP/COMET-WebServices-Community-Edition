@@ -704,7 +704,7 @@ namespace CometServer.Services.ChangeLog
 
             if (this.DataModelUtils.GetSourcePartition(metaInfo.TypeName) != null)
             {
-                await this.ResolveService.ResolveItems(transaction, partition, resolverDictionary);
+                await this.ResolveService.ResolveItemsAsync(transaction, partition, resolverDictionary);
 
                 var changedValueThing = (await service.GetShallowAsync(transaction, dtoResolverHelper.Partition, [changedValue], securityContext)).FirstOrDefault();
 

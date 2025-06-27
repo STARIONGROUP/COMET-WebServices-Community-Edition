@@ -81,9 +81,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// The raw <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be edited likely: it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(Person thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override async Task BeforeUpdateAsync(Person thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            await base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+            await base.BeforeUpdateAsync(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
             if (TryExtractPasswordUpdateAsync(rawUpdateInfo, out var passwordValue))
             {
@@ -117,9 +117,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <remarks>
         /// The person that is executing the request may not update his own role property. 
         /// </remarks>
-        public override async Task AfterUpdate(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdateAsync(Person thing, Thing container, Person originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+            await base.AfterUpdateAsync(thing, container, originalThing, transaction, partition, securityContext);
 
             var authenticatedCredentials = this.CredentialsService.Credentials;
             

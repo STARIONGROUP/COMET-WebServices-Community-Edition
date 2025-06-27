@@ -93,7 +93,7 @@ namespace CometServer.Services
                 CDP4Orm.Dao.Utils.EngineeringModelPartition);
 
             var iteration =
-                this.IterationService.GetActiveIteration(transaction, engineeringModelPartition, securityContext);
+                await this.IterationService.GetActiveIterationAsync(transaction, engineeringModelPartition, securityContext);
 
             // get all actual finite state list
             var actualFiniteStateList = (await this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, null, securityContext)).Cast<ActualFiniteStateList>();
@@ -141,7 +141,7 @@ namespace CometServer.Services
 
             var newOldActualStateMap = await this.CreateActualStates(orderedPslCollection, 0, null, actualFiniteStateList, transaction, partition, oldActualStates);
 
-            this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(actualFiniteStateList, iteration, transaction, partition, securityContext, newOldActualStateMap);
+            await this.StateDependentParameterUpdateService.UpdateAllStateDependentParametersAsync(actualFiniteStateList, iteration, transaction, partition, securityContext, newOldActualStateMap);
 
             // This is where value-set are cleaned up
             // delete old actual states which will clean up all value sets that depend on it

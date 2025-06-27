@@ -98,7 +98,7 @@ namespace CometServer.Services
 
             if (result)
             {
-                this.CheckAllowedAccordingToIsHidden(transaction, thing);
+                await this.CheckAllowedAccordingToIsHidden(transaction, thing);
             }
 
             return result;
@@ -125,7 +125,7 @@ namespace CometServer.Services
 
             if (result)
             {
-                result = this.IsAllowedAccordingToIsHidden(transaction, thing);
+                result =await  this.IsAllowedAccordingToIsHiddenAsync(transaction, thing);
             }
 
             return result;
@@ -144,9 +144,9 @@ namespace CometServer.Services
         /// <remarks>
         /// Throws an error if <see cref="DomainFileStore"/> is hidden and the current user does not have ownership.
         /// </remarks>
-        public void CheckAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing)
+        public async Task CheckAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing)
         {
-            if (!this.IsAllowedAccordingToIsHidden(transaction, thing))
+            if (!await this.IsAllowedAccordingToIsHiddenAsync(transaction, thing))
             {
                 throw new ThingNotFoundException("Resource not found");
             }
@@ -165,14 +165,12 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public bool IsAllowedAccordingToIsHidden(IDbTransaction transaction, Thing thing)
+        public async Task<bool> IsAllowedAccordingToIsHiddenAsync(IDbTransaction transaction, Thing thing)
         {
-            if (thing is DomainFileStore domainFileStore)
+            if (thing is DomainFileStore { IsHidden: true } domainFileStore 
+                && ! await this.PermissionService.IsOwnerAsync(transaction as NpgsqlTransaction, domainFileStore))
             {
-                if (domainFileStore.IsHidden && !this.PermissionService.IsOwner(transaction as NpgsqlTransaction, domainFileStore))
-                {
-                    return false;
-                }
+                return false;
             }
 
             return true;
@@ -195,10 +193,10 @@ namespace CometServer.Services
         /// Also if a new DomainFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DomainFileStores might not return
         /// the to be created <see cref="DomainFileStore"/>. The isHidden check will then be ignored.
         /// </remarks>
-        public async Task HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
+        public async Task HasWriteAccessAsync(Thing thing, IDbTransaction transaction, string partition)
         {
             //am I owner of the file?
-            if (!this.PermissionService.IsOwner(transaction as NpgsqlTransaction, thing))
+            if (!await this.PermissionService.IsOwnerAsync(transaction as NpgsqlTransaction, thing))
             {
                 throw new SecurityException($"The person {this.CredentialsService.Credentials.Person.UserName} does not have an appropriate permission for {thing.GetType().Name}.");
             }
@@ -219,14 +217,14 @@ namespace CometServer.Services
                     CDP4Orm.Dao.Utils.IterationSubPartition,
                     CDP4Orm.Dao.Utils.EngineeringModelPartition);
 
-                var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
+                var iteration = await this.IterationService.GetActiveIterationAsync(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
 
                 var domainFileStore =
                     (await this.GetShallowAsync(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext { ContainerReadAllowed = true }))
                         .Cast<DomainFileStore>()
                         .SingleOrDefault(domainFileStoreSelector);
 
-                if (domainFileStore != null && !this.IsAllowedAccordingToIsHidden(transaction, domainFileStore))
+                if (domainFileStore != null && !await this.IsAllowedAccordingToIsHiddenAsync(transaction, domainFileStore))
                 {
                     throw new SecurityException($"{nameof(DomainFileStore)} {domainFileStore.Name ?? "<No Name>"} is a private {nameof(DomainFileStore)}");
                 }
@@ -245,7 +243,7 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        public async Task<bool> HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
+        public async Task<bool> HasReadAccessAsync(Thing thing, IDbTransaction transaction, string partition)
         {
             if (!partition.Contains("Iteration"))
             {
@@ -266,14 +264,14 @@ namespace CometServer.Services
                 CDP4Orm.Dao.Utils.IterationSubPartition,
                 CDP4Orm.Dao.Utils.EngineeringModelPartition);
 
-            var iteration = this.IterationService.GetActiveIteration(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
+            var iteration = await this.IterationService.GetActiveIterationAsync(transaction as NpgsqlTransaction, engineeringModelPartition, new RequestSecurityContext());
 
             var domainFileStore =
                 (await this.GetShallowAsync(transaction as NpgsqlTransaction, partition, iteration.DomainFileStore, new RequestSecurityContext()))
                     .Cast<DomainFileStore>()
                     .SingleOrDefault(domainFileStoreSelector);
 
-            return domainFileStore != null && this.IsAllowedAccordingToIsHidden(transaction, domainFileStore);
+            return domainFileStore != null && await this.IsAllowedAccordingToIsHiddenAsync(transaction, domainFileStore);
         }
     }
 }

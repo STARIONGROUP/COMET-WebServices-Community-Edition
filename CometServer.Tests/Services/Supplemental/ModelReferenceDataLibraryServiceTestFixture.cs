@@ -100,7 +100,7 @@ namespace CometServer.Tests.Services.Supplemental
                 .Returns(new List<EngineeringModelSetup>());
 
             Assert.Throws<InvalidOperationException>(
-                () => this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration)
+                () => this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration)
                 );
         }
 
@@ -116,7 +116,7 @@ namespace CometServer.Tests.Services.Supplemental
                 .Returns(new List<EngineeringModelSetup> {this.engineeringModelSetup});
 
             Assert.Throws<InvalidOperationException>(
-                () => this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration)
+                () => this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration)
             );
         }
 
@@ -139,7 +139,7 @@ namespace CometServer.Tests.Services.Supplemental
                 null))
                 .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary});
 
-            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
+            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
             
             Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary }));
         }
@@ -175,7 +175,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
 
-            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
+            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
 
             Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1 }));
         }
@@ -220,7 +220,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
             this.siteReferenceDataLibrary1.RequiredRdl = this.siteReferenceDataLibrary2.Iid;
 
-            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibrary(null, this.iteration);
+            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
 
             Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1, this.siteReferenceDataLibrary2 }));
         }

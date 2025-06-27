@@ -92,7 +92,7 @@ namespace CometServer.Services
         {
             if (partition.StartsWith("Iteration"))
             {
-                return await this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+                return await this.DomainFileStoreService.HasReadAccessAsync(thing, transaction, partition);
             }
 
             return true;

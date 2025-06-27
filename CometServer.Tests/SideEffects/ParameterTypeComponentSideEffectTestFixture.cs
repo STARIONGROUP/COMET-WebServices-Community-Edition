@@ -272,7 +272,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.compoundParameterTypeC.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterTypeComponentB,
                     this.compoundParameterTypeB,
                     this.npgsqlTransaction,
@@ -287,7 +287,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.booleanParameterTypeE.Iid } };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterTypeComponentB,
                     this.compoundParameterTypeB,
                     this.npgsqlTransaction,
@@ -299,7 +299,7 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void Verify_that_upon_AfterCreate_DefaultValueArrayFactory_is_reset()
         {
-            this.sideEffect.AfterCreate(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
+            this.sideEffect.AfterCreateAsync(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
 
@@ -309,7 +309,7 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void Verify_that_upon_AfterDelete_DefaultValueArrayFactory_is_reset()
         {
-            this.sideEffect.AfterDelete(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
+            this.sideEffect.AfterDeleteAsync(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
 
@@ -319,7 +319,7 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void Verify_that_upon_AfterUpdate_DefaultValueArrayFactory_is_reset()
         {
-            this.sideEffect.AfterUpdate(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
+            this.sideEffect.AfterUpdateAsync(It.IsAny<ParameterTypeComponent>(), It.IsAny<Thing>(), It.IsAny<ParameterTypeComponent>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>());
 
             this.defaultValueArrayFactory.Verify(x => x.Reset(), Times.Once);
 

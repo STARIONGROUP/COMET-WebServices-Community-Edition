@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IJsonExchangeFileWriter.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -55,6 +56,6 @@ namespace CometServer.Services
         /// <returns>
         /// The path to the temporary E-TM-10-25 Annex-C3 zip archive
         /// </returns>
-        string Create(NpgsqlTransaction transaction, string exportDirectory, IEnumerable<EngineeringModelSetup> engineeringModelSetups, Version version);
+        Task<string> CreateAsync(NpgsqlTransaction transaction, string exportDirectory, IEnumerable<EngineeringModelSetup> engineeringModelSetups, Version version);
     }
 }

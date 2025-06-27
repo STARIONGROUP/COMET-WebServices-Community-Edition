@@ -123,7 +123,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public async Task<bool> Insert(NpgsqlTransaction transaction, string partition, Thing dto, Thing container = null)
+        public async Task<bool> InsertAsync(NpgsqlTransaction transaction, string partition, Thing dto, Thing container = null)
         {
             var engineeringModel = dto as EngineeringModel;
             return await this.CreateConceptAsync(transaction, partition, engineeringModel, container);
@@ -222,7 +222,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }

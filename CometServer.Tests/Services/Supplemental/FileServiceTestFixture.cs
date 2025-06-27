@@ -85,7 +85,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
 
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(true);
 
             this.credentialsService.Setup(x => x.Credentials)
                 .Returns(
@@ -109,7 +109,7 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyCheckFileLock()
         {
-            this.domainFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
 
             Assert.DoesNotThrow(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
 
@@ -123,11 +123,11 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyContainerIsInstanceReadAllowed()
         {
-            this.domainFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
 
             Assert.That(this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.True);
 
-            this.domainFileStoreService.Setup(x => x.HasReadAccess(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(false);
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(false);
 
             Assert.That(this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.False);
         }

@@ -105,7 +105,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.folderA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.folderA,
                     this.fileStore,
                     this.npgsqlTransaction,
@@ -121,7 +121,7 @@ namespace CometServer.Tests.SideEffects
             this.folderA.ContainingFolder = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.folderA,
                     this.fileStore,
                     this.npgsqlTransaction,
@@ -136,7 +136,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.folderD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.folderA,
                     this.fileStore,
                     this.npgsqlTransaction,
@@ -148,7 +148,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.folderA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.folderC,
                     this.fileStore,
                     this.npgsqlTransaction,
@@ -165,7 +165,7 @@ namespace CometServer.Tests.SideEffects
             this.folderA.ContainingFolder = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.folderA,
                     this.fileStore,
                     this.npgsqlTransaction,
@@ -179,7 +179,7 @@ namespace CometServer.Tests.SideEffects
             this.folderC.ContainingFolder = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.folderC,
                     this.fileStore,
                     this.npgsqlTransaction,
@@ -190,9 +190,9 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatBeforeDeleteCheckSecurityWorks()
         {
-           this.sideEffect.BeforeDelete(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+           this.sideEffect.BeforeDeleteAsync(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
@@ -200,17 +200,17 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO();
 
-            this.sideEffect.BeforeUpdate(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), this.rawUpdateInfo);
+            this.sideEffect.BeforeUpdateAsync(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), this.rawUpdateInfo);
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void VerifyThatBeforeCreateCheckSecurityWorks()
         {
-            this.sideEffect.BeforeCreate(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+            this.sideEffect.BeforeCreateAsync(this.folderA, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Never);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<Folder>(), null, It.IsAny<string>()), Times.Never);
         }
     }
 }

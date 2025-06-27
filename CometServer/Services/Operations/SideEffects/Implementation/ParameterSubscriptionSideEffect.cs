@@ -113,14 +113,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task<bool> BeforeCreate(
+        public override async Task<bool> BeforeCreateAsync(
             ParameterSubscription thing, 
             Thing container, 
             NpgsqlTransaction transaction, 
             string partition, 
             ISecurityContext securityContext)
         {
-            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
+            await this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipationAsync(thing, container, securityContext, transaction, partition);
 
             if (thing.Owner == Guid.Empty)
             {
@@ -129,7 +129,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             CheckOwnership(thing, container);
 
-            return await this.IsUniqueSubscription(transaction, partition, securityContext, thing, container);
+            return await this.IsUniqueSubscriptionAsync(transaction, partition, securityContext, thing, container);
         }
 
         /// <summary>
@@ -153,7 +153,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreate(
+        public override async Task AfterCreateAsync(
             ParameterSubscription thing,
             Thing container,
             ParameterSubscription originalThing,
@@ -161,7 +161,7 @@ namespace CometServer.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
-            await this.CreateParameterSubscriptionValueSets(thing, container, transaction, partition, securityContext);
+            await this.CreateParameterSubscriptionValueSetsAsync(thing, container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -182,7 +182,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         ///     The security-context
         /// </param>
-        private Task CreateParameterSubscriptionValueSets(
+        private async Task CreateParameterSubscriptionValueSetsAsync(
             ParameterSubscription thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -195,8 +195,8 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var paramContainer = container is CDP4Common.DTO.Parameter
-                    ? (ParameterOrOverrideBase)this.ParameterService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).OfType<CDP4Common.DTO.Parameter>().SingleOrDefault()
-                    : this.ParameterOverrideService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).OfType<CDP4Common.DTO.ParameterOverride>().SingleOrDefault();
+                    ? (ParameterOrOverrideBase)(await this.ParameterService.GetShallowAsync(transaction, partition, [container.Iid], securityContext)).OfType<CDP4Common.DTO.Parameter>().SingleOrDefault()
+                    : (await this.ParameterOverrideService.GetShallowAsync(transaction, partition, [container.Iid], securityContext)).OfType<CDP4Common.DTO.ParameterOverride>().SingleOrDefault();
             
             if (paramContainer == null || !paramContainer.ValueSets.Any())
             {
@@ -204,8 +204,8 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             var parameterValueSets = parameterOrOverrideBase is CDP4Common.DTO.Parameter
-                ? this.ParameterValueSetService.GetShallowAsync(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray()
-                : this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, paramContainer.ValueSets, securityContext).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
+                ? (await this.ParameterValueSetService.GetShallowAsync(transaction, partition, paramContainer.ValueSets, securityContext)).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray()
+                : (await this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, paramContainer.ValueSets, securityContext)).OfType<CDP4Common.DTO.ParameterValueSetBase>().ToArray();
 
             foreach (var parameterValueSet in parameterValueSets)
             {
@@ -219,14 +219,12 @@ namespace CometServer.Services.Operations.SideEffects
                 var valueArray = new ValueArray<string>(this.DefaultValueArrayFactory.CreateDefaultValueArray(parameterValueSet.Manual.Count));
                 parameterSubscriptionValueSet.Manual = valueArray;
 
-                this.ParameterSubscriptionValueSetService.CreateConceptAsync(
+                await this.ParameterSubscriptionValueSetService.CreateConceptAsync(
                     transaction,
                     partition,
                     parameterSubscriptionValueSet,
                     thing);
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -250,7 +248,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="rawUpdateInfo">
         /// The raw Update Info.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override Task BeforeUpdateAsync(
             ParameterSubscription thing, 
             Thing container, 
             NpgsqlTransaction transaction, 
@@ -258,7 +256,9 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext, 
             ClasslessDTO rawUpdateInfo)
         {
-            await CheckOwnership(thing, container);
+            CheckOwnership(thing, container);
+
+            return Task.CompletedTask;
         }
         
         /// <summary>
@@ -270,15 +270,13 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="container">
         /// The container instance of the <see cref="Thing"/> that is inspected.
         /// </param>
-        private static Task CheckOwnership(ParameterSubscription thing, Thing container)
+        private static void CheckOwnership(ParameterSubscription thing, Thing container)
         {
             if (thing.Owner == ((ParameterOrOverrideBase)container).Owner)
             {
                 throw new Cdp4ModelValidationException(
                     "Parameter and ParameterSubscription cannot have the same owner.");
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -292,27 +290,27 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// Returns true if the create operation may continue, otherwise it shall be skipped.
         /// </returns>
-        private Task<bool> IsUniqueSubscription(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ParameterSubscription newSubscription, Thing container)
+        private async Task<bool> IsUniqueSubscriptionAsync(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ParameterSubscription newSubscription, Thing container)
         {
             var parameterOrOverride =
-                (ParameterOrOverrideBase)this.ParameterService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).SingleOrDefault()
-                ?? (ParameterOrOverrideBase)this.ParameterOverrideService.GetShallowAsync(transaction, partition, [container.Iid], securityContext).SingleOrDefault();
+                (ParameterOrOverrideBase)(await this.ParameterService.GetShallowAsync(transaction, partition, [container.Iid], securityContext)).SingleOrDefault()
+                ?? (ParameterOrOverrideBase)(await this.ParameterOverrideService.GetShallowAsync(transaction, partition, [container.Iid], securityContext)).SingleOrDefault();
 
             if (parameterOrOverride == null)
             {
                 throw new InvalidOperationException("The container of a new parameter-subscription can only be a ParameterOrOverrideBase");
             }
 
-            var existingSubscription = this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, parameterOrOverride.ParameterSubscription, securityContext).OfType<ParameterSubscription>().FirstOrDefault(x => x.Owner == newSubscription.Owner);
+            var existingSubscription = (await this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, parameterOrOverride.ParameterSubscription, securityContext)).OfType<ParameterSubscription>().FirstOrDefault(x => x.Owner == newSubscription.Owner);
 
             if (existingSubscription != null)
             {
                 this.Logger.LogWarning("A subscription already exist on parameter {Container}.", container.Iid);
 
-                return Task.FromResult(false);
+                return false;
             }
 
-            return Task.FromResult(true);
+            return true;
         }
     }
 }

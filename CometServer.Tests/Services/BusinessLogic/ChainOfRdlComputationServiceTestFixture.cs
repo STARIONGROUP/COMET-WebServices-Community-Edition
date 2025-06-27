@@ -84,7 +84,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a };
 
             var expectedResult = new List<Guid> { Guid.Parse("a43bcec9-3293-4ffa-adf1-2ba36de90d7c"), Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a") };
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependency(null, engineeringModelSetups);
+            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
 
             Assert.That(result, Is.EquivalentTo(expectedResult));
 
@@ -93,7 +93,7 @@ namespace CometServer.Tests.Services.BusinessLogic
 
             engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_b };
             expectedResult = new List<Guid> { Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a") };
-            result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependency(null, engineeringModelSetups);
+            result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
             
             Assert.That(result, Is.EquivalentTo(expectedResult));
         }
@@ -110,7 +110,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a, engineeringModelSetup_aa };
 
             var expectedResult = new List<Guid> { Guid.Parse("a43bcec9-3293-4ffa-adf1-2ba36de90d7c"), Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a") };
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependency(null, engineeringModelSetups);
+            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
 
             Assert.That(result, Is.EquivalentTo(expectedResult));
         }
@@ -121,11 +121,11 @@ namespace CometServer.Tests.Services.BusinessLogic
             var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1);
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a };
             
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependency(null, engineeringModelSetups);
+            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
             Assert.That(result, Is.Empty);
 
             engineeringModelSetup_a.RequiredRdl = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
-            result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependency(null, engineeringModelSetups);
+            result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
             Assert.That(result, Is.Empty);
         }
 
@@ -136,7 +136,7 @@ namespace CometServer.Tests.Services.BusinessLogic
             engineeringModelSetup_a.RequiredRdl = new List<Guid> { Guid.NewGuid() };
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a };
 
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependency(null, engineeringModelSetups);
+            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
 
             Assert.That(result, Is.Empty);
         }

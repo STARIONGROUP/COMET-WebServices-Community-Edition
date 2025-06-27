@@ -146,7 +146,7 @@ namespace CometServer.Modules
             app.MapGet("SiteDirectory",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
-                    if (!await this.IsServerReady(res))
+                    if (!await this.IsServerReadyAsync(res))
                     {
                         return;
                     }
@@ -155,7 +155,7 @@ namespace CometServer.Modules
                     
                     try
                     {
-                        identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                        identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
                     }
                     catch (AuthorizationException)
                     {
@@ -172,7 +172,7 @@ namespace CometServer.Modules
             app.MapGet("SiteDirectory/{*path}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, IRevisionService revisionService, IRevisionResolver revisionResolver, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService) =>
                 {
-                    if (!await this.IsServerReady(res))
+                    if (!await this.IsServerReadyAsync(res))
                     {
                         return;
                     }
@@ -181,7 +181,7 @@ namespace CometServer.Modules
                     
                     try
                     {
-                        identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                        identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
                     }
                     catch (AuthorizationException)
                     {
@@ -198,7 +198,7 @@ namespace CometServer.Modules
             app.MapPost("SiteDirectory/{iid:guid}",
                 async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IHeaderInfoProvider headerInfoProvider, IMetaInfoProvider metaInfoProvider, IOperationProcessor operationProcessor, IRevisionService revisionService, ICdp4JsonSerializer jsonSerializer, IMessagePackSerializer messagePackSerializer, IPermissionInstanceFilterService permissionInstanceFilterService, IModelCreatorManager modelCreatorManager) =>
                 {
-                    if (!await this.IsServerReady(res))
+                    if (!await this.IsServerReadyAsync(res))
                     {
                         return;
                     }
@@ -208,7 +208,7 @@ namespace CometServer.Modules
                     
                     try
                     {
-                        identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                        identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
                     }
                     catch (AuthorizationException)
                     {
@@ -371,7 +371,7 @@ namespace CometServer.Modules
                     // gather all Things as indicated by the request URI 
                     var routeSegments = HttpRequestHelper.ParseRouteSegments(httpRequest.Path);
 
-                    things = (await this.GetContainmentResponse(requestUtils, transactionManager, serviceProvider, metaInfoProvider, transaction, TopContainer, routeSegments)).ToList();
+                    things = (await this.GetContainmentResponseAsync(requestUtils, transactionManager, serviceProvider, metaInfoProvider, transaction, TopContainer, routeSegments)).ToList();
                 }
 
                 await transaction.CommitAsync();
@@ -386,10 +386,10 @@ namespace CometServer.Modules
                 switch (contentTypeKind)
                 {
                     case ContentTypeKind.JSON:
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
+                        await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
                         break;
                     case ContentTypeKind.MESSAGEPACK:
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
+                        await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, things, version, httpResponse, HttpStatusCode.OK, requestToken);
                         break;
                 }
             }
@@ -634,7 +634,7 @@ namespace CometServer.Modules
                 // retrieve the revision for this transaction (or get next revision if it does not exist)
                 var transactionRevision = await revisionService.GetRevisionForTransactionAsync(transaction, TopContainer);
 
-                operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, TopContainer);
+                await operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, TopContainer);
 
                 // save revision-history
                 var actor = credentialsService.Credentials.Person.Iid;
@@ -648,13 +648,13 @@ namespace CometServer.Modules
                 this.logger.LogDebug("{Request}:{RequestToken} - Database operations completed in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, dbsw.ElapsedMilliseconds);
 
                 // Sends changed things to the AMQP message bus
-                await this.PrepareAndQueueThingsMessage(postRequestData.OperationData, changedThings, actor, jsonSerializer);
+                await this.PrepareAndQueueThingsMessageAsync(postRequestData.OperationData, changedThings, actor, jsonSerializer);
 
                 if (modelCreatorManager.IsUserTriggerDisable)
                 {
                     // re-enable user triggers
                     transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
-                    modelCreatorManager.EnableUserTrigger(transaction);
+                    await modelCreatorManager.EnableUserTrigger(transaction);
                     await transaction.CommitAsync();
                 }
 
@@ -663,10 +663,10 @@ namespace CometServer.Modules
                     switch (postRequestData.ContentType)
                     {
                         case ContentTypeKind.JSON:
-                            await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
+                            await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
                             break;
                         case ContentTypeKind.MESSAGEPACK:
-                            await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
+                            await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, changedThings, postRequestData.Version, httpResponse);
                             break;
                     }
                     
@@ -686,10 +686,10 @@ namespace CometServer.Modules
                 switch (postRequestData.ContentType)
                 {
                     case ContentTypeKind.JSON:
-                        await this.WriteJsonResponse(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
+                        await this.WriteJsonResponseAsync(headerInfoProvider, metaInfoProvider, jsonSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
                         break;
                     case ContentTypeKind.MESSAGEPACK:
-                        await this.WriteMessagePackResponse(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
+                        await this.WriteMessagePackResponseAsync(headerInfoProvider, messagePackSerializer, permissionInstanceFilterService, revisionResponse, postRequestData.Version, httpResponse);
                         break;
                 }
             }
@@ -844,7 +844,7 @@ namespace CometServer.Modules
         /// <returns>
         /// The list of containment <see cref="Thing"/>.
         /// </returns>
-        private async Task<IEnumerable<Thing>> GetContainmentResponse(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, NpgsqlTransaction transaction, string partition, string[] routeParams)
+        private async Task<IEnumerable<Thing>> GetContainmentResponseAsync(IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, Services.IServiceProvider serviceProvider, IMetaInfoProvider metaInfoProvider, NpgsqlTransaction transaction, string partition, string[] routeParams)
         {
             var result = new List<Thing>();
 
@@ -854,13 +854,13 @@ namespace CometServer.Modules
             {
                 // sitedirectory singleton resource request (IncludeReferenceData is handled in the sitedirectory service logic)
 
-                var things = processor.GetResource(TopContainer, partition, null, new RequestSecurityContext { ContainerReadAllowed = true });
+                var things = await processor.GetResourceAsync(TopContainer, partition, null, new RequestSecurityContext { ContainerReadAllowed = true });
 
                 result.AddRange(things);
             }
             else
             {
-                var processRequestPathResult = await this.ProcessRequestPath(requestUtils, transactionManager, processor, TopContainer, partition, routeParams);
+                var processRequestPathResult = await this.ProcessRequestPathAsync(requestUtils, transactionManager, processor, TopContainer, partition, routeParams);
 
                 result.AddRange(processRequestPathResult.RequestedResources);
 
@@ -869,7 +869,7 @@ namespace CometServer.Modules
                     // add reference data information if the resource is a model reference data library
                     if (processRequestPathResult.ResourcePath.Last().GetType() == typeof(ModelReferenceDataLibrary))
                     {
-                        foreach (var thing in this.CollectReferenceDataLibraryChain(requestUtils, processor, (ModelReferenceDataLibrary)processRequestPathResult.ResourcePath.Last()))
+                        foreach (var thing in await CollectReferenceDataLibraryChainAsync(requestUtils, processor, (ModelReferenceDataLibrary)processRequestPathResult.ResourcePath.Last()))
                         {
                             result.Add(thing);
                         }

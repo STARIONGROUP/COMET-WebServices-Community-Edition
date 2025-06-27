@@ -73,7 +73,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task<bool> BeforeCreate(ParameterOverrideValueSet thing, Thing container,  NpgsqlTransaction transaction,  string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreateAsync(ParameterOverrideValueSet thing, Thing container,  NpgsqlTransaction transaction,  string partition, ISecurityContext securityContext)
         {
             return Task.FromResult(false);
         }
@@ -86,7 +86,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        public override Task BeforeDelete(ParameterOverrideValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDeleteAsync(ParameterOverrideValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             throw new InvalidOperationException("ParameterOverrideValueSet Cannot be deleted");
         }
@@ -114,9 +114,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(ParameterOverrideValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override async Task BeforeUpdateAsync(ParameterOverrideValueSet thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            await base.BeforeUpdate(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+            await base.BeforeUpdateAsync(thing, container, transaction, partition, securityContext, rawUpdateInfo);
 
             if (rawUpdateInfo.Keys.All(key => !Array.Exists(Enum.GetNames(typeof(ParameterSwitchKind)), 
                     x => key.Equals(x, StringComparison.InvariantCultureIgnoreCase))))
@@ -129,13 +129,13 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new ArgumentException("The container of the ParameterOverrideValueSet is not a ParameterOverride", nameof(container));
             }
 
-            var parameter = this.ParameterService.GetAsync(transaction, partition, new List<Guid> { parameterOverride.Parameter }, securityContext)
+            var parameter = (await this.ParameterService.GetAsync(transaction, partition, new List<Guid> { parameterOverride.Parameter }, securityContext))
                 .OfType<Parameter>()
                 .Single(x => x.Iid == parameterOverride.Parameter);
 
             var things = new List<Thing>();
 
-            things.AddRange(this.ParameterService.QueryReferencedSiteDirectoryThings(parameter, transaction,securityContext));
+            things.AddRange(await this.ParameterService.QueryReferencedSiteDirectoryThingsAsync(parameter, transaction,securityContext));
 
             var validationResult = parameter.ValidateAndCleanup(rawUpdateInfo, things, CultureInfo.InvariantCulture);
 

@@ -135,10 +135,10 @@ namespace CometServer.Authorization
         /// <param name="userId">
         /// The supplied user unique identifier
         /// </param>
-        public async Task ResolveCredentials(NpgsqlTransaction transaction, Guid userId)
+        public async Task ResolveCredentialsAsync(NpgsqlTransaction transaction, Guid userId)
         {
-            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", userId, null);
-            this.ResvoleCredentials(transaction, userId.ToString(), persons);
+            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", userId);
+            await this.ResvoleCredentialsAsync(transaction, userId.ToString(), persons);
         }
 
         /// <summary>
@@ -150,10 +150,10 @@ namespace CometServer.Authorization
         /// <param name="username">
         /// The supplied username
         /// </param>
-        public async Task ResolveCredentials(NpgsqlTransaction transaction, string username)
+        public async Task ResolveCredentialsAsync(NpgsqlTransaction transaction, string username)
         {
-            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null);
-            this.ResvoleCredentials(transaction, username, persons);
+            var persons = await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username);
+            await this.ResvoleCredentialsAsync(transaction, username, persons);
         }
 
         /// <summary>
@@ -167,13 +167,13 @@ namespace CometServer.Authorization
         /// </param>
         /// <param name="persons">The collection of retrieved <see cref="AuthenticationPerson" /></param>
         /// 
-        private void ResvoleCredentials(NpgsqlTransaction transaction, string username, IEnumerable<AuthenticationPerson> persons)
+        private async Task ResvoleCredentialsAsync(NpgsqlTransaction transaction, string username, IEnumerable<AuthenticationPerson> persons)
         {
             var person = persons.SingleOrDefault();
 
             if (person == null)
             {
-                this.Logger.LogTrace("The user {username} does not exist and cannot be resolved", username);
+                this.Logger.LogTrace("The user {Username} does not exist and cannot be resolved", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
@@ -181,17 +181,17 @@ namespace CometServer.Authorization
 
             if (!person.IsActive)
             {
-                this.Logger.LogTrace("The user {username} is not Active and cannot be authorized", username);
+                this.Logger.LogTrace("The user {Username} is not Active and cannot be authorized", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
             if (person.IsDeprecated)
             {
-                this.Logger.LogTrace("The user {username} is Deprecated and cannot be authorized", username);
+                this.Logger.LogTrace("The user {Username} is Deprecated and cannot be authorized", username);
                 throw new AuthorizationException($"The user {username} could not be authorized");
             }
 
-            this.credentials = this.ResolveCredentials(transaction, person);
+            this.credentials = await this.ResolveCredentialsAsync(transaction, person);
 
             if (this.credentials == null)
             {
@@ -211,14 +211,14 @@ namespace CometServer.Authorization
         /// <returns>
         /// A completely resolved <see cref="Credentials"/> class.
         /// </returns>
-        private Credentials ResolveCredentials(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private async Task<Credentials> ResolveCredentialsAsync(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             var personPermissions = new List<PersonPermission>();
-            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, person);
+            var engineeringModelSetups = await this.GetEngineeringModelSetupsAsync(transaction, person);
 
             if (person.Role != null)
             {
-                personPermissions = this.GetPersonPermissions(transaction, person).ToList();
+                personPermissions = (await this.GetPersonPermissionsAsync(transaction, person)).ToList();
             }
 
             var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
@@ -228,7 +228,7 @@ namespace CometServer.Authorization
             // get org participation if the models have it enabled and person is part of an organization
             if (allOrganizationalParticipants.Count != 0 && person.Organization != null)
             {
-                personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(person.Organization.Value, allOrganizationalParticipants, transaction);
+                personOrganizationalParticipants = await this.GetPersonOrganizationalParticipantsAsync(person.Organization.Value, allOrganizationalParticipants, transaction);
             }
 
             return new Credentials
@@ -249,14 +249,14 @@ namespace CometServer.Authorization
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        public void ResolveParticipantCredentials(NpgsqlTransaction transaction)
+        public async Task ResolveParticipantCredentialsAsync(NpgsqlTransaction transaction)
         {
             if (this.credentials?.Person == null || this.credentials.EngineeringModelSetup == null)
             {
                 return;
             }
 
-            var participant = this.GetParticipant(transaction, this.credentials.Person, this.credentials.EngineeringModelSetup);
+            var participant = await this.GetParticipantAsync(transaction, this.credentials.Person, this.credentials.EngineeringModelSetup);
 
             if (participant == null)
             {
@@ -264,8 +264,8 @@ namespace CometServer.Authorization
             }
 
             // Set participant information for the resolved participant
-            this.credentials.ParticipantPermissions = this.GetParticipantPermissions(transaction, participant);
-            this.credentials.DomainOfExpertise = this.GetSelectedDomain(transaction, participant);
+            this.credentials.ParticipantPermissions = await this.GetParticipantPermissionsAsync(transaction, participant);
+            this.credentials.DomainOfExpertise = await this.GetSelectedDomainAsync(transaction, participant);
             this.credentials.IsParticipant = true;
 
             // take care of organizational participation
@@ -274,13 +274,13 @@ namespace CometServer.Authorization
             this.credentials.IsDefaultOrganizationalParticipant = false;
 
             // recompute organizational participation
-            var engineeringModelSetups = this.GetEngineeringModelSetups(transaction, this.credentials.Person).ToList();
+            var engineeringModelSetups = (await this.GetEngineeringModelSetupsAsync(transaction, this.credentials.Person)).ToList();
             var allOrganizationalParticipants = engineeringModelSetups.SelectMany(ems => ems.OrganizationalParticipant).ToList();
 
             // get org participation if the models have it enabled and person is part of an organization
             if (allOrganizationalParticipants.Count != 0 && this.credentials.OrganizationIid != null)
             {
-                var personOrganizationalParticipants = this.GetPersonOrganizationalParticipants(this.credentials.OrganizationIid.Value, allOrganizationalParticipants, transaction);
+                var personOrganizationalParticipants = await this.GetPersonOrganizationalParticipantsAsync(this.credentials.OrganizationIid.Value, allOrganizationalParticipants, transaction);
                 this.credentials.OrganizationalParticipants = personOrganizationalParticipants;
             }
 
@@ -315,16 +315,16 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="Participant"/> of the specified <see cref="AuthenticationPerson"/> in the <see cref="EngineeringModelSetup"/>.
         /// </returns>
-        private Participant GetParticipant(NpgsqlTransaction transaction, AuthenticationPerson person, EngineeringModelSetup modelSetup)
+        private async Task<Participant> GetParticipantAsync(NpgsqlTransaction transaction, AuthenticationPerson person, EngineeringModelSetup modelSetup)
         {
             try
             {
-                var participants = this.ParticipantDao.Read(transaction, "SiteDirectory", modelSetup.Participant).ToList();
+                var participants = (await this.ParticipantDao.ReadAsync(transaction, "SiteDirectory", modelSetup.Participant)).ToList();
                 return participants.FirstOrDefault(p => p.Person.Equals(person.Iid));
             }
             catch (Exception ex)
             {
-                this.Logger.LogError(ex, "There was an error while retrieving the participant for person {person} from the backtier", person.UserName);
+                this.Logger.LogError(ex, "There was an error while retrieving the participant for person {Person} from the backtier", person.UserName);
                 return null;
             }
         }
@@ -341,11 +341,11 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="DomainOfExpertise"/> of the specified <see cref="Participant"/>.
         /// </returns>
-        private DomainOfExpertise GetSelectedDomain(NpgsqlTransaction transaction, Participant participant)
+        private async Task<DomainOfExpertise> GetSelectedDomainAsync(NpgsqlTransaction transaction, Participant participant)
         {
             try
             {
-                return this.DomainOfExpertiseDao.Read(transaction, "SiteDirectory", new List<Guid> { participant.SelectedDomain }, false).SingleOrDefault();
+                return (await this.DomainOfExpertiseDao.ReadAsync(transaction, "SiteDirectory", new List<Guid> { participant.SelectedDomain })).SingleOrDefault();
             }
             catch (Exception ex)
             {
@@ -367,14 +367,15 @@ namespace CometServer.Authorization
         /// The <see cref="IEnumerable{ParticipantPermission}"/> of the <see cref="ParticipantRole"/> connected to this
         /// <see cref="AuthenticationPerson"/> in the supplied <see cref="EngineeringModelSetup"/>.
         /// </returns>
-        private ReadOnlyCollection<ParticipantPermission> GetParticipantPermissions(NpgsqlTransaction transaction, Participant participant)
+        private async Task<ReadOnlyCollection<ParticipantPermission>> GetParticipantPermissionsAsync(NpgsqlTransaction transaction, Participant participant)
         {
             // retrieve PersonRole
-            var paricipantRole = this.GetParticipantRole(transaction, participant);
+            var paricipantRole = await this.GetParticipantRoleAsync(transaction, participant);
 
             try
             {
-                return this.ParticipantPermissionDao.Read(transaction, "SiteDirectory", paricipantRole.ParticipantPermission).ToList().AsReadOnly();
+                return (await this.ParticipantPermissionDao.ReadAsync(transaction, "SiteDirectory", paricipantRole.ParticipantPermission))
+                    .ToList().AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -390,11 +391,11 @@ namespace CometServer.Authorization
         /// <param name="allOrganizationalParticipants">The list of all Organizationa Participant Iids</param>
         /// <param name="transaction">The transaction</param>
         /// <returns>The list of all applicable OrganizationalParticipations</returns>
-        private List<OrganizationalParticipant> GetPersonOrganizationalParticipants(Guid personOrganization, List<Guid> allOrganizationalParticipants, NpgsqlTransaction transaction)
+        private async Task<List<OrganizationalParticipant>> GetPersonOrganizationalParticipantsAsync(Guid personOrganization, List<Guid> allOrganizationalParticipants, NpgsqlTransaction transaction)
         {
             try
             {
-                return this.OrganizationalParticipantDao.Read(transaction, "SiteDirectory", allOrganizationalParticipants).Where(op => op.Organization.Equals(personOrganization)).ToList();
+                return (await this.OrganizationalParticipantDao.ReadAsync(transaction, "SiteDirectory", allOrganizationalParticipants)).Where(op => op.Organization.Equals(personOrganization)).ToList();
             }
             catch (Exception ex)
             {
@@ -415,14 +416,15 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="IEnumerable{PersonPermission}"/> of the <see cref="PersonRole"/> connected to this <see cref="AuthenticationPerson"/>.
         /// </returns>
-        private ReadOnlyCollection<PersonPermission> GetPersonPermissions(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private async Task<ReadOnlyCollection<PersonPermission>> GetPersonPermissionsAsync(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             // retrieve PersonRole
-            var personRole = this.GetPersonRole(transaction, person);
+            var personRole = await this.GetPersonRoleAsync(transaction, person);
 
             try
             {
-                return this.PersonPermissionDao.Read(transaction, "SiteDirectory", personRole.PersonPermission).ToList().AsReadOnly();
+                return (await this.PersonPermissionDao.ReadAsync(transaction, "SiteDirectory", personRole.PersonPermission))
+                    .ToList().AsReadOnly();
             }
             catch (Exception ex)
             {
@@ -443,12 +445,12 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="IEnumerable{EngineeringModelSetup}"/> of the <see cref="Person"/>.
         /// </returns>
-        private List<EngineeringModelSetup> GetEngineeringModelSetups(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private async Task<List<EngineeringModelSetup>> GetEngineeringModelSetupsAsync(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             try
             {
                 var engineeringModelSetupDao = (EngineeringModelSetupDao)this.EngineeringModelSetupDao;
-                return engineeringModelSetupDao.ReadByPersonAsync(transaction, "SiteDirectory", person.Iid).ToList();
+                return (await engineeringModelSetupDao.ReadByPersonAsync(transaction, "SiteDirectory", person.Iid)).ToList();
             }
             catch (Exception ex)
             {
@@ -469,7 +471,7 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="PersonRole"/> of the specified <see cref="AuthenticationPerson"/>.
         /// </returns>
-        private PersonRole GetPersonRole(NpgsqlTransaction transaction, AuthenticationPerson person)
+        private async Task<PersonRole> GetPersonRoleAsync(NpgsqlTransaction transaction, AuthenticationPerson person)
         {
             if (person.Role == null)
             {
@@ -478,11 +480,11 @@ namespace CometServer.Authorization
 
             try
             {
-                return this.PersonRoleDao.Read(transaction, "SiteDirectory", new List<Guid> { (Guid)person.Role }).SingleOrDefault();
+                return (await this.PersonRoleDao.ReadAsync(transaction, "SiteDirectory", new List<Guid> { (Guid)person.Role })).SingleOrDefault();
             }
             catch (Exception ex)
             {
-                this.Logger.LogError(ex, "There was an error while retrieving the person roles from the backtier for person:{person}", person.UserName);
+                this.Logger.LogError(ex, "There was an error while retrieving the person roles from the backtier for person:{Person}", person.UserName);
                 return null;
             }
         }
@@ -499,11 +501,11 @@ namespace CometServer.Authorization
         /// <returns>
         /// The <see cref="ParticipantRole"/> of the specified <see cref="Participant"/>.
         /// </returns>
-        private ParticipantRole GetParticipantRole(NpgsqlTransaction transaction, Participant participant)
+        private async Task<ParticipantRole> GetParticipantRoleAsync(NpgsqlTransaction transaction, Participant participant)
         {
             try
             {
-                return this.ParticipantRoleDao.Read(transaction, "SiteDirectory", new List<Guid> { participant.Role }).SingleOrDefault();
+                return (await this.ParticipantRoleDao.ReadAsync(transaction, "SiteDirectory", new List<Guid> { participant.Role })).SingleOrDefault();
             }
             catch (Exception ex)
             {

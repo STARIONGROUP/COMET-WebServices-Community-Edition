@@ -69,7 +69,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task AfterCreate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterCreateAsync(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
 
@@ -97,7 +97,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task AfterUpdate(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterUpdateAsync(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (!thing.PossibleFiniteStateList.All(x => originalThing.PossibleFiniteStateList.Any(y => y.K == x.K && y.V.Equals(x.V)))
                 || thing.PossibleFiniteStateList.Count != originalThing.PossibleFiniteStateList.Count)
@@ -127,10 +127,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task BeforeDelete(ActualFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDeleteAsync(ActualFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // Get all associated state dependent parameters and re-create value set without the state dependency
-            this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(thing, (Iteration)container, transaction, partition, securityContext, null);
+            this.StateDependentParameterUpdateService.UpdateAllStateDependentParametersAsync(thing, (Iteration)container, transaction, partition, securityContext, null);
 
             return Task.CompletedTask;
         }

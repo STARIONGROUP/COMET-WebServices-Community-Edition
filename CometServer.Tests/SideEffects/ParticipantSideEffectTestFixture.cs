@@ -121,7 +121,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.BeforeUpdate(
+                    this.participantSideEffect.BeforeUpdateAsync(
                         this.participant,
                         null,
                         this.npgsqlTransaction,
@@ -137,7 +137,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.BeforeUpdate(
+                    this.participantSideEffect.BeforeUpdateAsync(
                         this.participant,
                         null,
                         this.npgsqlTransaction,
@@ -151,7 +151,7 @@ namespace CometServer.Tests.SideEffects
         {
             Assert.That(
                 () =>
-                this.participantSideEffect.AfterCreate(this.participant, null, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                this.participantSideEffect.AfterCreateAsync(this.participant, null, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
@@ -161,7 +161,7 @@ namespace CometServer.Tests.SideEffects
         {
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.participant, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.participant, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
@@ -173,7 +173,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
@@ -187,7 +187,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Nothing
             );
         }
@@ -201,7 +201,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Nothing
             );
         }
@@ -217,7 +217,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Nothing
             );
         }
@@ -238,7 +238,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                     , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
                     .With.Message.Contains($"{nameof(Person)} itself was not found.")
             );
@@ -260,7 +260,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
                     .With.Message.Contains($"is already a {nameof(Participant)}")
             );

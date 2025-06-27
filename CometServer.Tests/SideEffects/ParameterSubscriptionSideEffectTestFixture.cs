@@ -77,7 +77,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterOverrideService = new Mock<IParameterOverrideService>();
 
             this.organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
-            this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipation(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
+            this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipationAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
 
             this.parameterSubscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
 
@@ -120,7 +120,7 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(existingSub.Iid)), this.securityContext.Object)).Returns(new List<Thing> { existingSub });
 
-            Assert.That(this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Is.False);
+            Assert.That(this.sideEffect.BeforeCreateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Is.False);
         }
 
         [Test]
@@ -137,9 +137,9 @@ namespace CometServer.Tests.SideEffects
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(i => i.Single() == parameter.Iid), this.securityContext.Object))
                 .Returns(new Thing[] { parameter });
 
-            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeCreate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeCreateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeUpdate(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object, null));
+            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeUpdateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object, null));
         }
 
         [Test]
@@ -159,7 +159,7 @@ namespace CometServer.Tests.SideEffects
                 .Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(enu => enu.Contains(parameter.Iid)), It.IsAny<ISecurityContext>()))
                 .Returns(new[] { parameter });
 
-            this.sideEffect.AfterCreate(parameterSubscription, parameter, originalparameterSubscription, this.npgsqlTransaction, "partition", this.securityContext.Object);
+            this.sideEffect.AfterCreateAsync(parameterSubscription, parameter, originalparameterSubscription, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
             this.parameterSubscriptionValueSetService.Verify(x => x.CreateConceptAsync(this.npgsqlTransaction, "partition", It.Is<ParameterSubscriptionValueSet>(s => s.Manual.Count == 2), It.IsAny<ParameterSubscription>(), It.IsAny<long>()), Times.Once);
         }

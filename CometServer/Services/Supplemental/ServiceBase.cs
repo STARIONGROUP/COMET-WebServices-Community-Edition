@@ -243,9 +243,10 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected virtual Task<bool> IsInstanceReadAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition)
+        protected virtual async Task<bool> IsInstanceReadAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            return Task.FromResult(this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanRead(transaction, thing, partition));
+            return this.TransactionManager.IsFullAccessEnabled() 
+                   || await this.PermissionService.CanReadAsync(transaction, thing, partition);
         }
 
         /// <summary>
@@ -266,9 +267,10 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected virtual Task<bool> IsInstanceModifyAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
+        protected virtual async Task<bool> IsInstanceModifyAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
         {
-            return Task.FromResult(this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanWrite(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true }));
+            return this.TransactionManager.IsFullAccessEnabled() 
+                   || await this.PermissionService.CanWriteAsync(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true });
         }
     }
 }

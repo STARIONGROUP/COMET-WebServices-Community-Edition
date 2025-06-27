@@ -128,7 +128,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
                     this.npgsqlTransaction,
@@ -151,7 +151,7 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryA.RequiredRdl = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
                     this.npgsqlTransaction,
@@ -173,7 +173,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
                     this.npgsqlTransaction,
@@ -185,7 +185,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.siteReferenceDataLibraryC,
                     this.siteDirectory,
                     this.npgsqlTransaction,
@@ -209,7 +209,7 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryA.RequiredRdl = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
                     this.npgsqlTransaction,
@@ -222,7 +222,7 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryC.RequiredRdl = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.siteReferenceDataLibraryC,
                     this.siteDirectory,
                     this.npgsqlTransaction,

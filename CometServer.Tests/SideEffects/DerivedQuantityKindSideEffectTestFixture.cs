@@ -222,7 +222,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedQk,
                     this.mrdl,
                     this.npgsqlTransaction,
@@ -240,7 +240,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedQk,
                     this.mrdl,
                     this.npgsqlTransaction,
@@ -258,7 +258,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.rootQk,
                     this.mrdl,
                     this.npgsqlTransaction,

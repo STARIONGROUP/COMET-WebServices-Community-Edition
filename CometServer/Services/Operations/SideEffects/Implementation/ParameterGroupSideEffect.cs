@@ -70,7 +70,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task BeforeDelete(
+        public override async Task BeforeDeleteAsync(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -78,16 +78,14 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext)
         {
             // Get all Parameters that reference the given ParameterGroup and set references to null
-            var parameters = this.ParameterService.GetAsync(transaction, partition, null, securityContext)
+            var parameters = (await this.ParameterService.GetAsync(transaction, partition, null, securityContext))
                 .OfType<Parameter>().Where(x => x.Group == thing.Iid).ToList();
 
             foreach (var parameter in parameters)
             {
                 parameter.Group = null;
-                this.ParameterService.UpdateConcept(transaction, partition, parameter, container);
+                await this.ParameterService.UpdateConceptAsync(transaction, partition, parameter, container);
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -108,18 +106,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task<bool> BeforeCreate(
+        public override async Task<bool> BeforeCreateAsync(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext)
         {
-            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
+            await this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipationAsync(thing, container, securityContext, transaction, partition);
 
             if (thing.ContainingGroup != null)
             {
-                await this.ValidateContainingGroup(
+                await this.ValidateContainingGroupAsync(
                     thing,
                     container,
                     transaction,
@@ -154,7 +152,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -162,18 +160,17 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            if (rawUpdateInfo.TryGetValue("ContainingGroup", out var containingGroupId))
+            if (rawUpdateInfo.TryGetValue("ContainingGroup", out var containingGroupId) 
+                && containingGroupId != null 
+                && Guid.TryParse(containingGroupId.ToString(), out var containingGroupIdGuid))
             {
-                if (containingGroupId != null && Guid.TryParse(containingGroupId.ToString(), out var containingGroupIdGuid))
-                {
-                    await this.ValidateContainingGroup(
-                        thing,
-                        container,
-                        transaction,
-                        partition,
-                        securityContext,
-                        containingGroupIdGuid);
-                }
+                await this.ValidateContainingGroupAsync(
+                    thing,
+                    container,
+                    transaction,
+                    partition,
+                    securityContext,
+                    containingGroupIdGuid);
             }
         }
 
@@ -198,7 +195,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="containingGroupId">
         /// The containing group id to check for being acyclic
         /// </param>
-        public Task ValidateContainingGroup(
+        public async Task ValidateContainingGroupAsync(
             ParameterGroup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -221,11 +218,11 @@ namespace CometServer.Services.Operations.SideEffects
             }
 
             // Get all parameter groups from the container
-            var parameterGroups = this.ParameterGroupService.GetAsync(
+            var parameterGroups = (await this.ParameterGroupService.GetAsync(
                 transaction,
                 partition,
                 ((ElementDefinition)container).ParameterGroup,
-                securityContext).Cast<ParameterGroup>().ToList();
+                securityContext)).Cast<ParameterGroup>().ToList();
 
             // Check whether containing parameter group is acyclic
             if (!IsParameterGroupAcyclic(parameterGroups, containingGroupId, thing.Iid))
@@ -233,8 +230,6 @@ namespace CometServer.Services.Operations.SideEffects
                 throw new AcyclicValidationException(
                     $"ParameterGroup {thing.Name} {thing.Iid} cannot have a containing ParameterGroup {containingGroupId} that leads to cyclic dependency");
             }
-
-            return Task.FromResult(true);
         }
 
         /// <summary>

@@ -61,18 +61,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDelete(RelationalExpression thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(RelationalExpression thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.BeforeDelete(thing, container, transaction, partition, securityContext);
+            await base.BeforeDeleteAsync(thing, container, transaction, partition, securityContext);
 
             var parametricConstraintThatContainsRelationalExpression =
-                this.ParametricConstraintService.GetShallowAsync(transaction, partition, [container.Iid], securityContext)
+                (await this.ParametricConstraintService.GetShallowAsync(transaction, partition, [container.Iid], securityContext))
                     .SingleOrDefault(x => x.Iid == container.Iid);
 
             if (parametricConstraintThatContainsRelationalExpression is ParametricConstraint parametricConstraint)
             {
                 var relationalExpressions =
-                    this.RelationalExpressionService.GetShallowAsync(transaction, partition, parametricConstraint.Expression, securityContext).ToList();
+                    (await this.RelationalExpressionService.GetShallowAsync(transaction, partition, parametricConstraint.Expression, securityContext)).ToList();
 
                 if (relationalExpressions.Any(x => x.Iid == thing.Iid) && relationalExpressions.Count == 1)
                 {

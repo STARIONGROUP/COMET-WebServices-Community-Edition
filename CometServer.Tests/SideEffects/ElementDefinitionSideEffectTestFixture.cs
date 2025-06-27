@@ -192,7 +192,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, new List<Guid> { this.euE.Iid } } };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.edC,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -207,7 +207,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, new List<Guid> { this.euD.Iid } } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.edC,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -221,7 +221,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
-            this.sideEffect.BeforeDelete(
+            this.sideEffect.BeforeDeleteAsync(
                 this.edD,
                 this.iteration,
                 this.npgsqlTransaction,
@@ -243,7 +243,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
             this.updatedIteration.TopElement = null;
 
-            this.sideEffect.BeforeDelete(
+            this.sideEffect.BeforeDeleteAsync(
                 this.edA,
                 this.iteration,
                 this.npgsqlTransaction,
@@ -263,7 +263,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
-            this.sideEffect.BeforeDelete(
+            this.sideEffect.BeforeDeleteAsync(
                 this.edA,
                 this.iteration,
                 this.npgsqlTransaction,
@@ -284,7 +284,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
             Assert.Throws<ArgumentNullException>(() =>
-                this.sideEffect.BeforeDelete(
+                this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     null,
                     this.npgsqlTransaction,
@@ -304,7 +304,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
             Assert.Throws<ArgumentException>(() =>
-                this.sideEffect.BeforeDelete(
+                this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.edB,
                     this.npgsqlTransaction,
@@ -324,7 +324,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.EngineeringModelNotFound);
 
             Assert.Throws<KeyNotFoundException>(() =>
-                this.sideEffect.BeforeDelete(
+                this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -347,7 +347,7 @@ namespace CometServer.Tests.SideEffects
                 .EngineeringModelSetupNotFound);
 
             Assert.Throws<KeyNotFoundException>(() =>
-                this.sideEffect.BeforeDelete(
+                this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -366,7 +366,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.IterationNotFound);
 
             Assert.Throws<KeyNotFoundException>(() =>
-                this.sideEffect.BeforeDelete(
+                this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -386,7 +386,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.IterationSetupNotFound);
 
             Assert.Throws<KeyNotFoundException>(() =>
-                this.sideEffect.BeforeDelete(
+                this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
                     this.npgsqlTransaction,

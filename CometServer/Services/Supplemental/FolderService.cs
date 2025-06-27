@@ -101,7 +101,7 @@ namespace CometServer.Services
             }
             else
             {
-                return await this.DomainFileStoreService.HasReadAccess(thing, transaction, partition);
+                return await this.DomainFileStoreService.HasReadAccessAsync(thing, transaction, partition);
             }
         }
     }

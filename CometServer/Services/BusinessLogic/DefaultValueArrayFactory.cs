@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefaultValueArrayFactory.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -93,32 +94,32 @@ namespace CometServer.Services
         /// <param name="securityContext">
         /// The <see cref="ISecurityContext" /> used for permission checking.
         /// </param>
-        public void Load(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task LoadAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             this.Logger.LogTrace("Loading reference data");
 
             var sw = Stopwatch.StartNew();
 
-            this.parameterTypeCache = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
-            this.parameterTypeComponentCache = this.CachedReferenceDataService.QueryParameterTypeComponents(transaction, securityContext);
+            this.parameterTypeCache = await this.CachedReferenceDataService.QueryParameterTypesAsync(transaction, securityContext);
+            this.parameterTypeComponentCache = await this.CachedReferenceDataService.QueryParameterTypeComponentsAsync(transaction, securityContext);
 
             this.parameterTypeAssignmentCache.Clear();
 
-            var dependentParameterTypeAssignments = this.CachedReferenceDataService.QueryDependentParameterTypeAssignments(transaction, securityContext);
+            var dependentParameterTypeAssignments = await this.CachedReferenceDataService.QueryDependentParameterTypeAssignmentsAsync(transaction, securityContext);
 
             foreach (var kvp in dependentParameterTypeAssignments)
             {
                 this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            var independentParameterTypeAssignments = this.CachedReferenceDataService.QueryIndependentParameterTypeAssignments(transaction, securityContext);
+            var independentParameterTypeAssignments = await this.CachedReferenceDataService.QueryIndependentParameterTypeAssignmentsAsync(transaction, securityContext);
 
             foreach (var kvp in independentParameterTypeAssignments)
             {
                 this.parameterTypeAssignmentCache.Add(kvp.Key, kvp.Value);
             }
 
-            this.Logger.LogTrace("Cache initialized with {parameterTypeCache} ParameterTypes, {dependentParameterTypeAssignments} DependentParameterTypeAssignments, {independentParameterTypeAssignments} IndependentParameterTypeAssignments and {parameterTypeComponentCache} ParameterTypeComponents in {ElapsedMilliseconds}",
+            this.Logger.LogTrace("Cache initialized with {ParameterTypeCache} ParameterTypes, {DependentParameterTypeAssignments} DependentParameterTypeAssignments, {IndependentParameterTypeAssignments} IndependentParameterTypeAssignments and {ParameterTypeComponentCache} ParameterTypeComponents in {ElapsedMilliseconds}",
                 this.parameterTypeCache.Count,
                 dependentParameterTypeAssignments.Count,
                 independentParameterTypeAssignments.Count,
@@ -249,13 +250,13 @@ namespace CometServer.Services
 
             if (sampledFunctionParameterType.IndependentParameterType.Count == 0)
             {
-                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {sampledFunctionParameterType} does not contain any IndependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
+                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {SampledFunctionParameterType} does not contain any IndependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
                 return 0;
             }
 
             if (sampledFunctionParameterType.DependentParameterType.Count == 0)
             {
-                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {sampledFunctionParameterType} does not contain any DependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
+                this.Logger.LogWarning("The SampledFunctionParameterType with Iid {SampledFunctionParameterType} does not contain any DependetnParameterTypeAssignments", sampledFunctionParameterType.Iid);
                 return 0;
             }
 
@@ -335,7 +336,7 @@ namespace CometServer.Services
 
             if (compoundParameterType.Component.Count == 0)
             {
-                this.Logger.LogWarning("The CompoundParameterType with Iid {compoundParameterType} does not contain any ParameterTypeComponents", compoundParameterType.Iid);
+                this.Logger.LogWarning("The CompoundParameterType with Iid {CompoundParameterType} does not contain any ParameterTypeComponents", compoundParameterType.Iid);
                 return 0;
             }
 

@@ -68,7 +68,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.schemaName = Cdp4TransactionManager.SITE_DIRECTORY_PARTITION;
 
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
 
             var credentials = new Credentials();
 
@@ -106,7 +106,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(false);
 
-            Assert.Throws<SecurityException>(() => this.personService.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, null));
+            Assert.Throws<SecurityException>(() => this.personService.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, null));
         }
 
         [Test]
@@ -118,7 +118,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.personDao.Setup(x => x.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, this.person, credentials)).Returns(true);
 
-            Assert.DoesNotThrow(() => this.personService.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, credentials));
+            Assert.DoesNotThrow(() => this.personService.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, credentials));
         }
     }
 }

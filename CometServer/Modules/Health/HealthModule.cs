@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="HealthModule.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -105,23 +105,21 @@ namespace CometServer.Modules.Health
         {
             // map the startup endpoint to support Startup probes
             app.MapGet("/health/startup",
-                    (HttpRequest req, HttpResponse res)
-                        => this.QueryStartp(req, res))
-                .RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme })
+                    this.QueryStartp)
+                .RequireAuthorization(AnonymousAuthenticationDefaults.AuthenticationScheme)
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
 
             // map the Liveness endpoint to support Liveness probes
             app.MapGet("/healthz",
-                 (HttpResponse res)
-                    => this.QueryHealth(res))
-                .RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme })
+                 QueryHealth)
+                .RequireAuthorization(AnonymousAuthenticationDefaults.AuthenticationScheme)
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
 
             // map the Liveness endpoint to support readyness probes
             app.MapGet("/ready",
                     async (HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
-                        => await this.QueryReadiness(req, res, transactionManager, siteDirectoryDao))
-                .RequireAuthorization(new[] { AnonymousAuthenticationDefaults.AuthenticationScheme })
+                        => await this.QueryReadinessAsync(req, res, transactionManager, siteDirectoryDao))
+                .RequireAuthorization(AnonymousAuthenticationDefaults.AuthenticationScheme)
                 .RequireHost(this.appConfigService.AppConfig.HealthConfig.RequireHost);
         }
 
@@ -141,7 +139,7 @@ namespace CometServer.Modules.Health
         {
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogDebug("{request}:{requestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
+            this.logger.LogDebug("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
 
             var serverStatus = this.cometHasStartedService.GetHasStartedAndIsReady();
 
@@ -175,11 +173,11 @@ namespace CometServer.Modules.Health
         /// <returns>
         /// an instance of <see cref="IResult"/>
         /// </returns>
-        public async Task<IResult> QueryReadiness(HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
+        public async Task<IResult> QueryReadinessAsync(HttpRequest req, HttpResponse res, ICdp4TransactionManager transactionManager, ISiteDirectoryDao siteDirectoryDao)
         {
             var requestToken = this.tokenGeneratorService.GenerateRandomToken();
 
-            this.logger.LogDebug("{request}:{requestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
+            this.logger.LogDebug("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", req.QueryNameMethodPath(), requestToken);
 
             NpgsqlTransaction transaction = null;
 
@@ -189,14 +187,14 @@ namespace CometServer.Modules.Health
 
                 transaction = await transactionManager.SetupTransactionAsync(null);
 
-                siteDirectoryDao.Read(transaction, "SiteDirectory", null, false);
+                await siteDirectoryDao.ReadAsync(transaction, "SiteDirectory");
 
                 res.StatusCode = (int)HttpStatusCode.OK;
                 return Results.Text("Healthy");
             }
             catch (NpgsqlException ex)
             {
-                this.logger.LogWarning("{request}:{requestToken} - The CDP4-COMET Server is not healthy: {excption}", req.QueryNameMethodPath(), requestToken, ex.Message);
+                this.logger.LogWarning(ex, "{Request}:{RequestToken} - The CDP4-COMET Server is not healthy: {Exception}", req.QueryNameMethodPath(), requestToken, ex.Message);
 
                 res.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
                 return Results.Text("Unhealthy");
@@ -219,7 +217,7 @@ namespace CometServer.Modules.Health
         /// <returns>
         /// an instance of <see cref="IResult"/>
         /// </returns>
-        public IResult QueryHealth(HttpResponse res)
+        public static IResult QueryHealth(HttpResponse res)
         {
             res.StatusCode = (int)HttpStatusCode.OK;
             return Results.Text("Healthy");

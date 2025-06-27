@@ -396,7 +396,7 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatBeforeDeleteWorksPossibleListDeleted()
         {
             // The actual list is not deleted
-            this.sideEffect.BeforeDelete(this.psl1, this.iteration, this.transaction, this.partition, this.securityContext.Object);
+            this.sideEffect.BeforeDeleteAsync(this.psl1, this.iteration, this.transaction, this.partition, this.securityContext.Object);
             this.actualFiniteStateListService.Verify(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object), Times.Once);
             this.actualFiniteStateListService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<Thing>(), It.IsAny<Thing>()), Times.Never);
         }
@@ -411,7 +411,7 @@ namespace CometServer.Tests.SideEffects
             this.actualFiniteStateListService.Setup(
                 x => x.DeleteConceptAsync(this.transaction, this.partition, this.asl2, this.iteration)).Returns(true);
 
-            this.sideEffect.BeforeDelete(this.psl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
+            this.sideEffect.BeforeDeleteAsync(this.psl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
 
             this.actualFiniteStateListService.Verify(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object), Times.Once);
             this.actualFiniteStateListService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, this.asl2, this.iteration), Times.Once);

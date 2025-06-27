@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ICopySourceService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
+    using System.Threading.Tasks;
 
     using CDP4Common.Dto;
     using CDP4Common.DTO;
@@ -45,7 +46,7 @@ namespace CometServer.Services
         /// <param name="copyinfo">The <see cref="CopyInfo"/></param>
         /// <param name="requestPartition">The contextual partition</param>
         /// <returns>The source data</returns>
-        ReadOnlyCollection<Thing> GetCopySourceData(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition);
+        Task<ReadOnlyCollection<Thing>> GetCopySourceDataAsync(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition);
 
         /// <summary>
         /// Generates the copy references

@@ -87,7 +87,7 @@ namespace CometServer.Tests.SideEffects
                     new List<ParameterGroup> { this.parameterGroupA, this.parameterGroupB, this.parameterGroupC });
 
             this.organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
-            this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipation(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
+            this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipationAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
         }
 
         private NpgsqlTransaction npgsqlTransaction;
@@ -125,7 +125,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterGroupA.ContainingGroup = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.parameterGroupA,
                     this.elementDefinition,
                     this.npgsqlTransaction,
@@ -139,7 +139,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterGroupC.ContainingGroup = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.parameterGroupC,
                     this.elementDefinition,
                     this.npgsqlTransaction,
@@ -157,7 +157,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.parameterGroupD.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterGroupA,
                     this.elementDefinition,
                     this.npgsqlTransaction,
@@ -169,7 +169,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.parameterGroupA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterGroupC,
                     this.elementDefinition,
                     this.npgsqlTransaction,
@@ -188,7 +188,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterGroupA.ContainingGroup = id;
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeCreate(
+                () => this.sideEffect.BeforeCreateAsync(
                     this.parameterGroupA,
                     this.elementDefinition,
                     this.npgsqlTransaction,
@@ -205,7 +205,7 @@ namespace CometServer.Tests.SideEffects
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.parameterGroupA.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterGroupA,
                     this.elementDefinition,
                     this.npgsqlTransaction,

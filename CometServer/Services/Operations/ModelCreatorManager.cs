@@ -117,7 +117,7 @@ namespace CometServer.Services.Operations
         /// <param name="setupToCreate">The new <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        public async Task CreateEngineeringModelSetupFromSource(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task CreateEngineeringModelSetupFromSourceAsync(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var engineeringModelSetupThings = new List<Thing>();
             this.originalToCopyMap = new Dictionary<Thing, Thing>();
@@ -125,7 +125,7 @@ namespace CometServer.Services.Operations
             // retrieve all the site-directory data to copy
             this.RequestUtils.QueryParameters.IncludeReferenceData = true; // set to true only to retrieve all data to copy. set back to false once query is over
             this.RequestUtils.QueryParameters.ExtentDeep = true; // set to true only to retrieve all data to copy. set back to false once query is over
-            engineeringModelSetupThings.AddRange(this.EngineeringModelSetupService.GetDeep(transaction, SITE_DIRECTORY_PARTITION, [source], securityContext));
+            engineeringModelSetupThings.AddRange(await this.EngineeringModelSetupService.GetDeepAsync(transaction, SITE_DIRECTORY_PARTITION, [source], securityContext));
             this.RequestUtils.QueryParameters.IncludeReferenceData = false;
             this.RequestUtils.QueryParameters.ExtentDeep = false;
 
@@ -227,21 +227,21 @@ namespace CometServer.Services.Operations
 
             // copy all data from the source to the target partition
             this.Logger.LogDebug("Copy EngineeringModel data from {SourcePartition} to {TargetPartition}", sourcePartition, targetPartition);
-            this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
+            await this.EngineeringModelService.CopyEngineeringModel(transaction, sourcePartition, targetPartition);
             this.Logger.LogDebug("Copy Iteration data from {SourceIterationPartition} to {TargetIterationPartition}", sourceIterationPartition, targetIterationPartition);
-            this.IterationService.CopyIterationAndResetCreatedOn(transaction, sourceIterationPartition, targetIterationPartition);
+            await this.IterationService.CopyIterationAndResetCreatedOnAsync(transaction, sourceIterationPartition, targetIterationPartition);
 
             // wipe the organizational participations
-            this.IterationService.DeleteAllrganizationalParticipantThings(transaction, targetIterationPartition);
+            await this.IterationService.DeleteAllrganizationalParticipantThingsAsync(transaction, targetIterationPartition);
 
             // change id on Thing table for all other things
             this.Logger.LogDebug("Modify Identifiers of EngineeringModel {TargetPartition} data", targetPartition);
-            this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition);
+            await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition);
             this.Logger.LogDebug("Modify Identifiers of Iteration {TargetIterationPartition} data", targetIterationPartition);
-            this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetIterationPartition);
+            await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetIterationPartition);
 
             // update iid for engineering-model and iteration(s)
-            var newEngineeringModel = this.EngineeringModelService.GetShallowAsync(transaction, targetPartition, null, securityContext).OfType<EngineeringModel>().SingleOrDefault();
+            var newEngineeringModel = (await this.EngineeringModelService.GetShallowAsync(transaction, targetPartition, null, securityContext)).OfType<EngineeringModel>().SingleOrDefault();
 
             if (newEngineeringModel == null)
             {
@@ -253,16 +253,16 @@ namespace CometServer.Services.Operations
             newEngineeringModel.EngineeringModelSetup = newModelSetup.Iid;
 
             this.Logger.LogDebug("Modify Identifier of new EngineeringModel {OldIid} to {EngineeringModelIid}", oldIid, newModelSetup.EngineeringModelIid);
-            this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, newEngineeringModel, oldIid);
+            await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, newEngineeringModel, oldIid);
 
-            if (!this.EngineeringModelService.UpdateConcept(transaction, targetPartition, newEngineeringModel, null))
+            if (!await this.EngineeringModelService.UpdateConceptAsync(transaction, targetPartition, newEngineeringModel, null))
             {
                 throw new InvalidOperationException("Updating the copied EngineeringModel failed.");
             }
 
             // modify references of things contained in the new engineering-model-setup (rdl included)
-            var modelThings = this.EngineeringModelService.GetDeep(transaction, targetPartition, null, securityContext).ToList();
-            modelThings.AddRange(this.IterationService.GetDeep(transaction, targetPartition, null, securityContext));
+            var modelThings = (await this.EngineeringModelService.GetDeepAsync(transaction, targetPartition, null, securityContext)).ToList();
+            modelThings.AddRange(await this.IterationService.GetDeepAsync(transaction, targetPartition, null, securityContext));
 
             var sw = Stopwatch.StartNew();
             this.Logger.LogDebug("start modify {Count} references of things contained in the new engineering-model-setup (rdl included)", modelThings.Count);
@@ -288,9 +288,9 @@ namespace CometServer.Services.Operations
                     iteration.IterationSetup = iterationSetupKvp.Value.Iid;
                     iteration.DefaultOption = modelThings.OfType<Option>().First().Iid;
 
-                    this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, iteration, oldIterationIid);
+                    await this.EngineeringModelService.ModifyIdentifierAsync(transaction, targetPartition, iteration, oldIterationIid);
 
-                    if (!this.IterationService.UpdateConcept(transaction, targetPartition, iteration, newEngineeringModel))
+                    if (!await this.IterationService.UpdateConceptAsync(transaction, targetPartition, iteration, newEngineeringModel))
                     {
                         throw new InvalidOperationException("Updating the copied Iteration failed.");
                     }
@@ -300,7 +300,7 @@ namespace CometServer.Services.Operations
                     await this.RevisionService.InsertIterationRevisionLogAsync(transaction, targetPartition, iteration.Iid, null, null);
 
                     // increase sequence number
-                    this.EngineeringModelService.QueryNextIterationNumber(transaction, targetPartition);
+                    await this.EngineeringModelService.QueryNextIterationNumber(transaction, targetPartition);
 
                     continue;
                 }
@@ -314,7 +314,7 @@ namespace CometServer.Services.Operations
 
                     var service = this.ServiceProvider.MapToPersitableService(modelThing.ClassKind.ToString());
                     
-                    service.UpdateConcept(transaction, partition, modelThing, container);
+                    await service.UpdateConceptAsync(transaction, partition, modelThing, container);
                 }
             }
 
@@ -335,10 +335,10 @@ namespace CometServer.Services.Operations
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
             this.Logger.LogDebug("disable triggers for EngineeringModel {Partition}", partition);
-            this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, false);
+            await this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, false);
 
             this.Logger.LogDebug("disable triggers for Iteration {IterationPartition}", iterationPartition);
-            this.IterationService.ModifyUserTrigger(transaction, iterationPartition, false);
+            await this.IterationService.ModifyUserTriggerAsync(transaction, iterationPartition, false);
 
             this.IsUserTriggerDisable = true;
             stopwatch.Stop();
@@ -361,10 +361,10 @@ namespace CometServer.Services.Operations
             var iterationPartition = partition.Replace(CDP4Orm.Dao.Utils.EngineeringModelPartition, CDP4Orm.Dao.Utils.IterationSubPartition);
 
             this.Logger.LogDebug("enable triggers for EngineeringModel {Partition}", partition);
-            this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, true);
+            await this.EngineeringModelService.ModifyUserTriggerAsync(transaction, partition, true);
 
             this.Logger.LogDebug("enable triggers for Iteration {IterationPartition}", iterationPartition);
-            this.IterationService.ModifyUserTrigger(transaction, iterationPartition, true);
+            await this.IterationService.ModifyUserTriggerAsync(transaction, iterationPartition, true);
             stopwatch.Stop();
             this.Logger.LogDebug("Triggers enabling took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
         }

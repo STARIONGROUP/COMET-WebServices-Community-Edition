@@ -77,7 +77,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             T thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -139,8 +139,8 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Get all BooleanExpressions
-                var expressions = this.ParametricConstraintService
-                    .GetDeep(transaction, partition, new List<Guid> { container.Iid }, securityContext)
+                var expressions = (await this.ParametricConstraintService
+                    .GetDeepAsync(transaction, partition, new List<Guid> { container.Iid }, securityContext))
                     .Where(x => x is BooleanExpression).Cast<BooleanExpression>().ToList();
 
                 // Check every term that it is acyclic
@@ -153,8 +153,6 @@ namespace CometServer.Services.Operations.SideEffects
                     }
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>

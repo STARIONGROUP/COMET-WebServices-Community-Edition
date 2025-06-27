@@ -76,7 +76,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             File thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -105,7 +105,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDelete(File thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(File thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.HasWriteAccess(thing, transaction, partition);
         }
@@ -124,7 +124,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private async Task HasWriteAccess(File file, NpgsqlTransaction transaction, string partition)
         {
-            this.FileService.CheckFileLockAsync(transaction, partition, file);
+            await this.FileService.CheckFileLockAsync(transaction, partition, file);
 
             if (partition.StartsWith("EngineeringModel_"))
             {
@@ -135,7 +135,7 @@ namespace CometServer.Services.Operations.SideEffects
             }
             else
             {
-                await this.DomainFileStoreService.HasWriteAccess(
+                await this.DomainFileStoreService.HasWriteAccessAsync(
                     file,
                     transaction,
                     partition);

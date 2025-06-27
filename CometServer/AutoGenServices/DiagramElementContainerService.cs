@@ -106,7 +106,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotSupportedException();
         }
@@ -132,7 +132,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotSupportedException();
         }
@@ -158,7 +158,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
             throw new NotSupportedException();
         }
@@ -178,7 +178,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public async Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -201,7 +201,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public async Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotSupportedException();
         }
@@ -226,7 +226,7 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public async Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotSupportedException();
         }

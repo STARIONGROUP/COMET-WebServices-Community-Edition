@@ -133,7 +133,7 @@ namespace CometServer.Tests.SideEffects
             this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
 
             this.organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
-            this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipation(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
+            this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipationAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));
 
             this.npgsqlTransaction = null;
 
@@ -194,7 +194,7 @@ namespace CometServer.Tests.SideEffects
 
             this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid } };
 
-            this.iterationService.Setup(x => x.GetActiveIteration(null, "partition", this.securityContext.Object))
+            this.iterationService.Setup(x => x.GetActiveIterationAsync(null, "partition", this.securityContext.Object))
                 .Returns(this.iteration);
 
             this.actualFiniteStateListService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(this.actualList.Iid)), this.securityContext.Object))
@@ -204,14 +204,14 @@ namespace CometServer.Tests.SideEffects
             parameterTypeDictionary.Add(this.cptParameterType.Iid, this.cptParameterType);
             parameterTypeDictionary.Add(this.boolPt.Iid, this.boolPt);
 
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypes(this.npgsqlTransaction, this.securityContext.Object))
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypesAsync(this.npgsqlTransaction, this.securityContext.Object))
                 .Returns(parameterTypeDictionary);
 
             var parameterTypeComponentDictionary = new Dictionary<Guid, ParameterTypeComponent>();
             parameterTypeComponentDictionary.Add(this.cpt1.Iid, this.cpt1);
             parameterTypeComponentDictionary.Add(this.cpt2.Iid, this.cpt2);
 
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponents(this.npgsqlTransaction, this.securityContext.Object))
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponentsAsync(this.npgsqlTransaction, this.securityContext.Object))
                 .Returns(parameterTypeComponentDictionary);
 
             this.parameterOverrideService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", null, this.securityContext.Object))
@@ -238,7 +238,7 @@ namespace CometServer.Tests.SideEffects
             this.parameter.ParameterType = this.notExistingParameterTypeGuid;
 
             Assert.Throws<ArgumentException>(
-                () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
+                () => this.sideEffect.BeforeCreateAsync(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
 
         [Test]
@@ -248,7 +248,7 @@ namespace CometServer.Tests.SideEffects
             this.parameter.Scale = this.scaleGuid;
 
             Assert.Throws<ArgumentException>(
-                () => this.sideEffect.BeforeCreate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
+                () => this.sideEffect.BeforeCreateAsync(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
 
         [Test]
@@ -257,7 +257,7 @@ namespace CometServer.Tests.SideEffects
             var rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.notExistingParameterTypeGuid } };
 
             Assert.Throws<ArgumentException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+                () => this.sideEffect.BeforeUpdateAsync(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
         }
 
         [Test]
@@ -267,18 +267,18 @@ namespace CometServer.Tests.SideEffects
             this.parameter.Scale = this.scaleGuid;
 
             Assert.Throws<ArgumentException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+                () => this.sideEffect.BeforeUpdateAsync(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
 
             rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid } };
 
             Assert.Throws<ArgumentException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+                () => this.sideEffect.BeforeUpdateAsync(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
 
             rawUpdateInfo = new ClasslessDTO { { ParameterTypeTestKey, this.existingNotQuantityKindParameterTypeGuid }, { ScaleTestKey, this.scaleGuid } };
             this.parameter.Scale = null;
 
             Assert.Throws<ArgumentException>(
-                () => this.sideEffect.BeforeUpdate(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
+                () => this.sideEffect.BeforeUpdateAsync(this.parameter, this.elementDefinition, this.npgsqlTransaction, "partition", this.securityContext.Object, rawUpdateInfo));
         }
 
         [Test]
@@ -569,7 +569,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the existing parameter
             this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Count() == 2), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.parameter, newParameter });
 
-            Assert.That(() => this.sideEffect.AfterUpdate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
+            Assert.That(() => this.sideEffect.AfterUpdateAsync(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
         }
 
         [Test]
@@ -592,7 +592,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the existing parameter
             this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.parameter.Iid)), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { this.parameter });
 
-            Assert.That(() => this.sideEffect.AfterCreate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
+            Assert.That(() => this.sideEffect.AfterCreateAsync(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("already contains"));
         }
 
         [Test]
@@ -615,7 +615,7 @@ namespace CometServer.Tests.SideEffects
             //Setup ParameterService to return the newly created parameter
             this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(new List<Thing> { newParameter, this.parameter });
 
-            Assert.That(() => this.sideEffect.AfterCreate(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("multiple times"));
+            Assert.That(() => this.sideEffect.AfterCreateAsync(newParameter, this.elementDefinition, this.parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Throws.TypeOf<BadRequestException>().With.Message.Contain("multiple times"));
         }
     }
 }

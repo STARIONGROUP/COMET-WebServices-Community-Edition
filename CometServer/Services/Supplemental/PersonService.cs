@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -31,6 +31,7 @@ namespace CometServer.Services
     using Npgsql;
 
     using System.Security;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Extension for the code-generated <see cref="PersonService"/>
@@ -45,14 +46,14 @@ namespace CometServer.Services
         /// <param name="thing">The person <see cref="Thing" /></param>
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
         /// <returns>True if opperation succeeded</returns>
-        public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials)
+        public async Task<bool> UpdateCredentialsAsync(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials)
         {
-            if (!this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException($"The person {this.CredentialsService.Credentials.Person.UserName} does not have an appropriate update permission for {thing.GetType().Name}.");
             }
 
-            return this.PersonDao.UpdateCredentialsAsync(transaction, partition, thing as Person, credentials);
+            return await this.PersonDao.UpdateCredentialsAsync(transaction, partition, thing as Person, credentials);
         }
     }
 }

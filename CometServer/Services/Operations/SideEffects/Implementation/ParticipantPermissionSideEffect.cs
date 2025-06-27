@@ -67,7 +67,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task<bool> BeforeCreate(
+        public override async Task<bool> BeforeCreateAsync(
             ParticipantPermission thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -79,7 +79,7 @@ namespace CometServer.Services.Operations.SideEffects
             return true;
         }
         
-        public override async Task AfterUpdate(ParticipantPermission thing, Thing container, ParticipantPermission originalThing,
+        public override async Task AfterUpdateAsync(ParticipantPermission thing, Thing container, ParticipantPermission originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ValidateAccessRightKindAsync(thing);

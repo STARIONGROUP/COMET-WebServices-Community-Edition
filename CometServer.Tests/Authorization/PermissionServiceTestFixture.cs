@@ -128,7 +128,7 @@ namespace CometServer.Tests.Authorization
 
             this.resolveService = new Mock<IResolveService>();
 
-            this.resolveService.Setup(x => x.ResolveItems(null, It.IsAny<string>(), It.IsAny<Dictionary<DtoInfo, DtoResolveHelper>>()))
+            this.resolveService.Setup(x => x.ResolveItemsAsync(null, It.IsAny<string>(), It.IsAny<Dictionary<DtoInfo, DtoResolveHelper>>()))
                 .Callback<NpgsqlTransaction, string, Dictionary<DtoInfo, DtoResolveHelper>>
                 ((npgsqlTransaction, partition, operationThingContainerCache) =>
                 {
@@ -170,7 +170,7 @@ namespace CometServer.Tests.Authorization
                         x.QueryPersonAccessRightKind(It.IsAny<Credentials>(), ClassKind.EngineeringModelSetup.ToString()))
                 .Returns(PersonAccessRightKind.MODIFY_IF_PARTICIPANT);
 
-            Assert.That(this.permissionService.CanWrite(
+            Assert.That(this.permissionService.CanWriteAsync(
                 null,
                 new EngineeringModelSetup(),
                 ClassKind.EngineeringModelSetup.ToString(),
@@ -179,7 +179,7 @@ namespace CometServer.Tests.Authorization
                 new RequestSecurityContext()), Is.True);
 
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     new EngineeringModelSetup(),
                     ClassKind.EngineeringModelSetup.ToString(),
@@ -196,7 +196,7 @@ namespace CometServer.Tests.Authorization
                 .Returns(PersonAccessRightKind.MODIFY);
 
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     new EngineeringModelSetup(),
                     ClassKind.EngineeringModelSetup.ToString(),
@@ -205,7 +205,7 @@ namespace CometServer.Tests.Authorization
                     new RequestSecurityContext()), Is.True);
 
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     new EngineeringModelSetup(),
                     ClassKind.EngineeringModelSetup.ToString(),
@@ -255,7 +255,7 @@ namespace CometServer.Tests.Authorization
                 .Returns(PersonAccessRightKind.MODIFY);
 
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
@@ -279,7 +279,7 @@ namespace CometServer.Tests.Authorization
                 .Returns(PersonAccessRightKind.READ);
 
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
@@ -294,7 +294,7 @@ namespace CometServer.Tests.Authorization
             // RequestSecurityContext setting
             //-------------------------------------------------------------
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     thing,
                     thing.ClassKind.ToString(),
@@ -315,7 +315,7 @@ namespace CometServer.Tests.Authorization
                 .Returns(ParticipantAccessRightKind.MODIFY);
 
             Assert.That(
-                this.permissionService.CanWrite(
+                this.permissionService.CanWriteAsync(
                     null,
                     thing,
                     thing.ClassKind.ToString(),

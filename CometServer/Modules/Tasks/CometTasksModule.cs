@@ -294,7 +294,7 @@ namespace CometServer.Modules.Tasks
 
                 await using var transaction = await connection.BeginTransactionAsync();
 
-                await credentialsService.ResolveCredentials(transaction, username);
+                await credentialsService.ResolveCredentialsAsync(transaction, username);
             }
             catch (Exception)
             {

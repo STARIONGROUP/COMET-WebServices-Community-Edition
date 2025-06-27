@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CachedReferenceDataService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -122,7 +123,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="IEnumerable{ParameterType}"/>
         /// </returns>
-        public Dictionary<Guid, ParameterType> QueryParameterTypes(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<Dictionary<Guid, ParameterType>> QueryParameterTypesAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.parameterTypeCache == null || this.parameterTypeCache.Count == 0)
             {
@@ -132,8 +133,8 @@ namespace CometServer.Services
 
                 this.parameterTypeCache = new Dictionary<Guid, ParameterType>();
 
-                var parameterTypes = this.ParameterTypeService
-                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                var parameterTypes = (await this.ParameterTypeService
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext))
                     .OfType<ParameterType>();
                 
                 foreach (var parameterType in parameterTypes)
@@ -153,7 +154,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterTypeComponent}"/>
         /// </returns>
-        public Dictionary<Guid, ParameterTypeComponent> QueryParameterTypeComponents(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<Dictionary<Guid, ParameterTypeComponent>> QueryParameterTypeComponentsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.parameterTypeComponentCache == null || this.parameterTypeComponentCache.Count == 0)
             {
@@ -163,8 +164,8 @@ namespace CometServer.Services
 
                 this.parameterTypeComponentCache = new Dictionary<Guid, ParameterTypeComponent>();
 
-                var parameterTypeComponents = this.ParameterTypeComponentService
-                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                var parameterTypeComponents = (await this.ParameterTypeComponentService
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext))
                     .OfType<ParameterTypeComponent>();
 
                 foreach (var parameterTypeComponent in parameterTypeComponents)
@@ -184,7 +185,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterType}"/>
         /// </returns>
-        public Dictionary<Guid, DependentParameterTypeAssignment> QueryDependentParameterTypeAssignments(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<Dictionary<Guid, DependentParameterTypeAssignment>> QueryDependentParameterTypeAssignmentsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.dependentParameterTypeAssignment == null || this.dependentParameterTypeAssignment.Count == 0)
             {
@@ -194,8 +195,8 @@ namespace CometServer.Services
 
                 this.dependentParameterTypeAssignment = new Dictionary<Guid, DependentParameterTypeAssignment>();
 
-                var dependentParameterTypeAssignments = this.DependentParameterTypeAssignmentService
-                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                var dependentParameterTypeAssignments = (await this.DependentParameterTypeAssignmentService
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext))
                     .OfType<DependentParameterTypeAssignment>();
 
                 foreach (var parameterTypeAssignment in dependentParameterTypeAssignments)
@@ -215,7 +216,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterType}"/>
         /// </returns>
-        public Dictionary<Guid, IndependentParameterTypeAssignment> QueryIndependentParameterTypeAssignments(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<Dictionary<Guid, IndependentParameterTypeAssignment>> QueryIndependentParameterTypeAssignmentsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.independentParameterTypeAssignment == null || this.independentParameterTypeAssignment.Count == 0)
             {
@@ -225,8 +226,8 @@ namespace CometServer.Services
 
                 this.independentParameterTypeAssignment = new Dictionary<Guid, IndependentParameterTypeAssignment>();
 
-                var independentParameterTypeAssignments = this.IndependentParameterTypeAssignmentService
-                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                var independentParameterTypeAssignments = (await this.IndependentParameterTypeAssignmentService
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext))
                     .OfType<IndependentParameterTypeAssignment>();
 
                 foreach (var parameterTypeAssignment in independentParameterTypeAssignments)
@@ -246,7 +247,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, MeasurementScale}"/>
         /// </returns>
-        public Dictionary<Guid, MeasurementScale> QueryMeasurementScales(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<Dictionary<Guid, MeasurementScale>> QueryMeasurementScalesAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.measurementScaleCache == null || this.measurementScaleCache.Count == 0)
             {
@@ -256,8 +257,8 @@ namespace CometServer.Services
 
                 this.measurementScaleCache = new Dictionary<Guid, MeasurementScale>();
 
-                var measurementScales = this.MeasurementScaleService
-                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+                var measurementScales = (await this.MeasurementScaleService
+                    .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext))
                     .OfType<MeasurementScale>();
 
                 foreach (var measurementScale in measurementScales)
@@ -277,7 +278,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
         /// </returns>
-        public Dictionary<Guid, EnumerationValueDefinition> QueryEnumerationValueDefinitions(NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<Dictionary<Guid, EnumerationValueDefinition>> QueryEnumerationValueDefinitionsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             if (this.enumerationValueDefinitionCache != null && this.enumerationValueDefinitionCache.Count != 0)
             {
@@ -290,8 +291,8 @@ namespace CometServer.Services
 
             this.enumerationValueDefinitionCache = [];
 
-            var enumerationValueDefinitions = this.EnumerationValueDefinitionService
-                .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext)
+            var enumerationValueDefinitions = (await this.EnumerationValueDefinitionService
+                .GetShallowAsync(transaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition, null, securityContext))
                 .OfType<EnumerationValueDefinition>();
 
             foreach (var enumerationValueDefinition in enumerationValueDefinitions)

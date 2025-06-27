@@ -26,7 +26,8 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using CometServer.Services.Authorization;
@@ -83,7 +84,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterType}"/>
         /// </returns>
-        public Dictionary<Guid, ParameterType> QueryParameterTypes(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        public Task<Dictionary<Guid, ParameterType>> QueryParameterTypesAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Queries the <see cref="ParameterTypeComponent"/>s from the data from the datasource or from the cached list
@@ -91,7 +92,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterTypeComponent}"/>
         /// </returns>
-        public Dictionary<Guid, ParameterTypeComponent> QueryParameterTypeComponents(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        public Task<Dictionary<Guid, ParameterTypeComponent>> QueryParameterTypeComponentsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
@@ -99,7 +100,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterType}"/>
         /// </returns>
-        public Dictionary<Guid, DependentParameterTypeAssignment> QueryDependentParameterTypeAssignments(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        public Task<Dictionary<Guid, DependentParameterTypeAssignment>> QueryDependentParameterTypeAssignmentsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Queries the <see cref="ParameterType"/>s from the data from the datasource or from the cached list
@@ -107,7 +108,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, ParameterType}"/>
         /// </returns>
-        public Dictionary<Guid, IndependentParameterTypeAssignment> QueryIndependentParameterTypeAssignments(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        public Task<Dictionary<Guid, IndependentParameterTypeAssignment>> QueryIndependentParameterTypeAssignmentsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Queries the <see cref="MeasurementScale"/>s from the data from the datasource or from the cached list
@@ -115,7 +116,7 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, MeasurementScale}"/>
         /// </returns>
-        public Dictionary<Guid, MeasurementScale> QueryMeasurementScales(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        public Task<Dictionary<Guid, MeasurementScale>> QueryMeasurementScalesAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Resets (clears) the cached data from the <see cref="ICachedReferenceDataService" />.
@@ -128,6 +129,6 @@ namespace CometServer.Services
         /// <returns>
         /// An <see cref="Dictionary{Guid, MeasurementUnit}"/>
         /// </returns>
-        Dictionary<Guid, EnumerationValueDefinition> QueryEnumerationValueDefinitions(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        Task<Dictionary<Guid, EnumerationValueDefinition>> QueryEnumerationValueDefinitionsAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
     }
 }

@@ -90,16 +90,16 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyBeforeDeleteSideEffectDoesNotThrowExceptionWhenMultipleRelationalExpressionsArePresent()
         {
-            Assert.DoesNotThrow(() => this.sideEffect.BeforeDelete(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
-            Assert.DoesNotThrow(() => this.sideEffect.BeforeDelete(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.DoesNotThrow(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.DoesNotThrow(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
 
         [Test]
         public void VerifyBeforeDeleteSideEffectThrowsExceptionLastRelationalExpressionsIsDeleted()
         {
             this.parametricConstraint.Expression.Remove(this.relationalExpression2.Iid);
-            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeDelete(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
-            Assert.DoesNotThrow(() => this.sideEffect.BeforeDelete(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.DoesNotThrow(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
     }
 }

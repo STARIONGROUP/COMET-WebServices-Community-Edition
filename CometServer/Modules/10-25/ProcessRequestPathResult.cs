@@ -29,7 +29,7 @@ namespace CometServer.Modules
     using CDP4Common.DTO;
 
     /// <summary>
-    /// Represents the results of the <see cref="ApiBase.ProcessRequestPath"/> method
+    /// Represents the results of the <see cref="ApiBase.ProcessRequestPathAsync"/> method
     /// </summary>
     public class ProcessRequestPathResult
     {

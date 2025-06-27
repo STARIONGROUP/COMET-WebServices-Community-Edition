@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ExchangeFileExportApi.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -75,10 +75,7 @@ namespace CometServer.Modules
         /// <summary>
         /// The supported post query parameter.
         /// </summary>
-        private static readonly string[] SupportedPostQueryParameter =
-        {
-            QueryParameters.IncludeFileDataQuery
-        };
+        private static readonly string[] SupportedPostQueryParameter = [ QueryParameters.IncludeFileDataQuery ];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileExportApi"/> class
@@ -112,7 +109,7 @@ namespace CometServer.Modules
             app.MapPost("/export",
             async (HttpRequest req, HttpResponse res, IRequestUtils requestUtils, ICdp4TransactionManager transactionManager, ICredentialsService credentialsService, IMetaInfoProvider metaInfoProvider, ICdp4JsonSerializer jsonSerializer, IJsonExchangeFileWriter jsonExchangeFileWriter) =>
             {
-                if (!await this.IsServerReady(res))
+                if (!await this.IsServerReadyAsync(res))
                 {
                     return;
                 }
@@ -121,11 +118,11 @@ namespace CometServer.Modules
 
                 try
                 {
-                    identity = await this.Authorize(this.AppConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
                 }
-                catch (AuthorizationException)
+                catch (AuthorizationException ex)
                 {
-                    this.logger.LogWarning("The POST REQUEST was not authorized for {Identity}", identity);
+                    this.logger.LogWarning(ex, "The POST REQUEST was not authorized for {Identity}", identity);
 
                     res.UpdateWithNotAutherizedSettings();
                     await res.AsJson("not authorized");
@@ -172,7 +169,7 @@ namespace CometServer.Modules
             var reqsw = Stopwatch.StartNew();
             var requestToken = this.TokenGeneratorService.GenerateRandomToken();
             
-            this.logger.LogInformation("{request}:{requestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
+            this.logger.LogInformation("{Request}:{RequestToken} - START HTTP REQUEST PROCESSING", httpRequest.QueryNameMethodPath(), requestToken);
 
             if (!this.AppConfigService.AppConfig.Midtier.IsExportEnabled)
             {
@@ -183,7 +180,7 @@ namespace CometServer.Modules
 
             NpgsqlTransaction transaction = null;
 
-            this.logger.LogDebug("{request}:{requestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
+            this.logger.LogDebug("{Request}:{RequestToken} - Database operations started", httpRequest.QueryNameMethodPath(), requestToken);
 
             transactionManager.SetCachedDtoReadEnabled(true);
 
@@ -212,7 +209,7 @@ namespace CometServer.Modules
 
                 transaction = await transactionManager.SetupTransactionAsync(credentialsService.Credentials);
 
-                zipFilePath = jsonExchangeFileWriter.Create(transaction, this.AppConfigService.AppConfig.Midtier.ExportDirectory, engineeringModelSetups, version);
+                zipFilePath = await jsonExchangeFileWriter.CreateAsync(transaction, this.AppConfigService.AppConfig.Midtier.ExportDirectory, engineeringModelSetups, version);
 
                 await transaction.CommitAsync();
 
@@ -229,7 +226,7 @@ namespace CometServer.Modules
                     await transaction.RollbackAsync();
                 }
 
-                this.logger.LogError(ex, "{request}:{requestToken} - Request failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogError(ex, "{Request}:{RequestToken} - Request failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
 
                 // error handling
                 httpResponse.StatusCode = (int)HttpStatusCode.InternalServerError;
@@ -247,7 +244,7 @@ namespace CometServer.Modules
                     System.IO.File.Delete(zipFilePath);
                 }
 
-                this.logger.LogInformation("{request}:{requestToken} - Response returned in {sw} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
+                this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
             }
         }
 

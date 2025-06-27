@@ -136,7 +136,7 @@ namespace CometServer.Tests.SideEffects
             this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", It.IsAny<IterationSetup>(), this.engineeringModelSetup), Times.Once);
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
-            this.mockedIterationService.Verify(x => x.PopulateDataFromLastIteration(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModel>(), this.mockedSecurityContext.Object), Times.Once);
+            this.mockedIterationService.Verify(x => x.PopulateDataFromLastIterationAsync(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModel>(), this.mockedSecurityContext.Object), Times.Once);
         }
 
         [Test]
@@ -157,8 +157,8 @@ namespace CometServer.Tests.SideEffects
             var iterationSetup = this.mockedIterationSetupService.Object.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
 
             Assert.Throws<InvalidOperationException>(() => 
-                this.iterationSetupSideEffect.BeforeDelete(
-                    iterationSetup,
+                this.iterationSetupSideEffect.BeforeDeleteAsync(
+                    (IterationSetup)iterationSetup,
                     this.engineeringModelSetup, 
                     this.npgsqlTransaction, 
                     "siteDirectory", 
@@ -176,8 +176,8 @@ namespace CometServer.Tests.SideEffects
 
             var originalThing = iterationSetup.DeepClone<Thing>();
 
-            this.iterationSetupSideEffect.BeforeDelete(
-                    iterationSetup,
+            this.iterationSetupSideEffect.BeforeDeleteAsync(
+                    (IterationSetup)iterationSetup,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,
                     "siteDirectory",
@@ -195,8 +195,8 @@ namespace CometServer.Tests.SideEffects
             var originalThing = iterationSetup.DeepClone<Thing>();
             iterationSetup.FrozenOn = DateTime.Now;
 
-            this.iterationSetupSideEffect.BeforeDelete(
-                iterationSetup,
+            this.iterationSetupSideEffect.BeforeDeleteAsync(
+                (IterationSetup)iterationSetup,
                 this.engineeringModelSetup,
                 this.npgsqlTransaction,
                 "siteDirectory",
@@ -205,7 +205,7 @@ namespace CometServer.Tests.SideEffects
             Assert.That(iterationSetup.IsDeleted, Is.False);
 
             this.iterationSetupSideEffect.AfterDeleteAsync(
-                iterationSetup,
+                (Thing)iterationSetup,
                 this.engineeringModelSetup,
                 originalThing,
                 this.npgsqlTransaction,
@@ -227,8 +227,8 @@ namespace CometServer.Tests.SideEffects
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.iterationSetupSideEffect.BeforeUpdate(
-                    iterationSetup,
+                () => this.iterationSetupSideEffect.BeforeUpdateAsync(
+                    (IterationSetup)iterationSetup,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,
                     "siteDirectory",
@@ -246,8 +246,8 @@ namespace CometServer.Tests.SideEffects
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", Guid.NewGuid() } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.iterationSetupSideEffect.BeforeUpdate(
-                    iterationSetup,
+                () => this.iterationSetupSideEffect.BeforeUpdateAsync(
+                    (IterationSetup)iterationSetup,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,
                     "siteDirectory",
@@ -277,7 +277,7 @@ namespace CometServer.Tests.SideEffects
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup3.Iid } };
 
             Assert.Throws<AcyclicValidationException>(
-                () => this.iterationSetupSideEffect.BeforeUpdate(
+                () => this.iterationSetupSideEffect.BeforeUpdateAsync(
                     iterationSetup1,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,

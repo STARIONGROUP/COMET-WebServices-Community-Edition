@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IDefaultValueArrayFactory.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -54,13 +55,13 @@ namespace CometServer.Services
         /// <param name="securityContext">
         /// The <see cref="ISecurityContext"/> used for permission checking.
         /// </param>
-        void Load(NpgsqlTransaction transaction, ISecurityContext securityContext);
+        Task LoadAsync(NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Resets the <see cref="IDefaultValueArrayFactory"/>.
         /// </summary>
         /// <remarks>
-        /// After the <see cref="IDefaultValueArrayFactory"/> has been reset the data needs to be loaded again using the <see cref="Load"/> method.
+        /// After the <see cref="IDefaultValueArrayFactory"/> has been reset the data needs to be loaded again using the <see cref="LoadAsync"/> method.
         /// </remarks>
         void Reset();
 

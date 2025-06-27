@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IFileArchiveService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System.Collections.Generic;
     using System.IO;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -51,7 +52,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="DirectoryInfo"/> that holds a reference to the top folder that is created
         /// </returns>
-        DirectoryInfo CreateFolderAndFileStructureOnDisk(List<Thing> resourceResponse, string partition, string[] routeSegments);
+        Task<DirectoryInfo> CreateFolderAndFileStructureOnDiskAsync(List<Thing> resourceResponse, string partition, string[] routeSegments);
 
         /// <summary>
         /// Delete file structure and temporary ZIP archive.

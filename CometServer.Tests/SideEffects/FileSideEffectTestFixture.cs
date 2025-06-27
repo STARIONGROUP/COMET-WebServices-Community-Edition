@@ -79,37 +79,37 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatBeforeDeleteCheckSecurityWorks()
         {
-           this.sideEffect.BeforeDelete(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+           this.sideEffect.BeforeDeleteAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void VerifyThatBeforeUpdateCheckSecurityWorks()
         {
-            this.sideEffect.BeforeUpdate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
+            this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void VerifyThatBeforeCreateCheckSecurityWorks()
         {
-            this.sideEffect.BeforeCreate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+            this.sideEffect.BeforeCreateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Never);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Never);
         }
 
         [Test]
         public void VerifyThatAdditionalCheckSecurityChecksWork()
         {
             //Locked by me
-            this.sideEffect.BeforeUpdate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
 
             //Locked by someone else
             this.fileService.Setup(x => x.CheckFileLockAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();
-            Assert.Throws<SecurityException>(() => this.sideEffect.BeforeUpdate(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
+            Assert.Throws<SecurityException>(() => this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
         }
     }
 }

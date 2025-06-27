@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IChainOfRdlComputationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,10 +26,9 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
-
-    using CDP4Orm.Dao;
 
     using Npgsql;
 
@@ -43,16 +42,6 @@ namespace CometServer.Services
     public interface IChainOfRdlComputationService : IBusinessLogicService
     {
         /// <summary>
-        /// Gets or sets the (injected) <see cref="IModelReferenceDataLibraryDao"/> used to query the <see cref="ModelReferenceDataLibrary"/> objects from the datastore
-        /// </summary>
-        public IModelReferenceDataLibraryDao ModelReferenceDataLibraryDao { get; set; }
-
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="ISiteReferenceDataLibraryDao"/> used to query the <see cref="SiteReferenceDataLibrary"/> objects from the datastore
-        /// </summary>
-        public ISiteReferenceDataLibraryDao SiteReferenceDataLibraryDao { get; set; }
-
-        /// <summary>
         /// Gets the identifiers of the chain of <see cref="SiteReferenceDataLibrary"/> dependencies for a list of <see cref="EngineeringModelSetup"/>s
         /// </summary>
         /// <param name="engineeringModelSetups">
@@ -64,6 +53,6 @@ namespace CometServer.Services
         /// <returns>
         /// The unique identifiers of the <see cref="SiteReferenceDataLibrary"/> dependency of the provided <see cref="IEnumerable{EngineeringModelSetup}"/>
         /// </returns>
-        IEnumerable<Guid> QueryReferenceDataLibraryDependency(NpgsqlTransaction transaction, IEnumerable<EngineeringModelSetup> engineeringModelSetups);
+        Task<IEnumerable<Guid>> QueryReferenceDataLibraryDependencyAsync(NpgsqlTransaction transaction, IEnumerable<EngineeringModelSetup> engineeringModelSetups);
     }
 }

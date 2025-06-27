@@ -78,7 +78,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             T thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -98,7 +98,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Get RDL chain and collect units' ids
-                var unitIdsFromChain = this.GetUnitIdsFromRdlChain(
+                var unitIdsFromChain = await this.GetUnitIdsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
@@ -114,8 +114,8 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Get all ConversionBasedUnits
-                var units = this.ConversionBasedUnitService
-                    .GetAsync(transaction, partition, unitIdsFromChain, securityContext).Cast<ConversionBasedUnit>()
+                var units = (await this.ConversionBasedUnitService
+                    .GetAsync(transaction, partition, unitIdsFromChain, securityContext)).Cast<ConversionBasedUnit>()
                     .ToList();
 
                 // Check reference unit that it is acyclic
@@ -125,8 +125,6 @@ namespace CometServer.Services.Operations.SideEffects
                         $"ConversionBasedUnit {thing.Iid} cannot have a RefernceUnit {referenceUnitId} that leads to cyclic dependency");
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -147,13 +145,13 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of unit ids.
         /// </returns>
-        private List<Guid> GetUnitIdsFromRdlChain(
+        private async Task<List<Guid>> GetUnitIdsFromRdlChainAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext)
+            var availableRdls = (await this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext))
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var unitIds = new List<Guid>();

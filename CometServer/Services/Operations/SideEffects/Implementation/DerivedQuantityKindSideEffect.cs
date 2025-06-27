@@ -82,7 +82,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override Task BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             DerivedQuantityKind thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -97,22 +97,22 @@ namespace CometServer.Services.Operations.SideEffects
                 var referenceDataLibrary = (ReferenceDataLibrary)container;
 
                 // Check that all referenced QuantityKinds are from the same RDL chain
-                var availableQuantityKindIids = this.GetQuantityKindIidsFromRdlChain(
+                var availableQuantityKindIids = await this.GetQuantityKindIidsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
                     referenceDataLibrary.RequiredRdl);
 
-                availableQuantityKindIids.AddRange(this.QuantityKindService
-                    .GetAsync(transaction, partition, referenceDataLibrary.ParameterType, securityContext)
+                availableQuantityKindIids.AddRange((await this.QuantityKindService
+                    .GetAsync(transaction, partition, referenceDataLibrary.ParameterType, securityContext))
                     .Select(x => x.Iid));
 
-                var quantityKindFactors = this.QuantityKindFactorService
-                    .GetAsync(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext)
+                var quantityKindFactors = (await this.QuantityKindFactorService
+                    .GetAsync(transaction, partition, quantityKindFactorIids.Select(x => Guid.Parse(x.V.ToString())), securityContext))
                     .Cast<QuantityKindFactor>();
 
-                var quantityKinds = this.QuantityKindService
-                    .GetAsync(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
+                var quantityKinds = (await this.QuantityKindService
+                    .GetAsync(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext))
                     .Cast<QuantityKind>()
                     .ToList();
 
@@ -122,10 +122,8 @@ namespace CometServer.Services.Operations.SideEffects
                                                          $"a QuantityKind factor from outside the current RDL chain.");
                 }
 
-                this.CheckCycleDeep(transaction, partition, securityContext, thing, quantityKinds);
+                await this.CheckCycleDeepAsync(transaction, partition, securityContext, thing, quantityKinds);
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -146,7 +144,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of <see cref="QuantityKind"/> iids.
         /// </returns>
-        private List<Guid> GetQuantityKindIidsFromRdlChain(
+        private async Task<List<Guid>> GetQuantityKindIidsFromRdlChainAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -159,8 +157,8 @@ namespace CometServer.Services.Operations.SideEffects
                 return parameterTypeIids;
             }
 
-            var availableRdls = this.SiteReferenceDataLibraryService
-                .GetAsync(transaction, partition, null, securityContext)
+            var availableRdls = (await this.SiteReferenceDataLibraryService
+                .GetAsync(transaction, partition, null, securityContext))
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var next = srdlIid;
@@ -172,8 +170,8 @@ namespace CometServer.Services.Operations.SideEffects
                 next = rdl.RequiredRdl;
             } while (next != null);
 
-            return this.QuantityKindService
-                .GetAsync(transaction, partition, parameterTypeIids, securityContext)
+            return (await this.QuantityKindService
+                .GetAsync(transaction, partition, parameterTypeIids, securityContext))
                 .Cast<QuantityKind>()
                 .Select(x => x.Iid)
                 .ToList();
@@ -197,7 +195,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="quantityKinds">
         /// The <see cref="QuantityKind"/>s that will be inspected.
         /// </param>
-        private void CheckCycleDeep(
+        private async Task CheckCycleDeepAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -217,19 +215,19 @@ namespace CometServer.Services.Operations.SideEffects
                 switch (quantityKind)
                 {
                     case SpecializedQuantityKind specializedQuantityKind:
-                        nextQuantityKinds = this.QuantityKindService
-                            .GetAsync(transaction, partition, new List<Guid> { specializedQuantityKind.General }, securityContext)
+                        nextQuantityKinds = (await this.QuantityKindService
+                            .GetAsync(transaction, partition, new List<Guid> { specializedQuantityKind.General }, securityContext))
                             .Cast<QuantityKind>();
 
                         break;
 
                     case DerivedQuantityKind derivedQuantityKind:
-                        var quantityKindFactors = this.QuantityKindFactorService
-                            .GetAsync(transaction, partition, derivedQuantityKind.QuantityKindFactor.ToIdList(), securityContext)
+                        var quantityKindFactors = (await this.QuantityKindFactorService
+                            .GetAsync(transaction, partition, derivedQuantityKind.QuantityKindFactor.ToIdList(), securityContext))
                             .Cast<QuantityKindFactor>();
 
-                        nextQuantityKinds = this.QuantityKindService
-                            .GetAsync(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext)
+                        nextQuantityKinds = (await this.QuantityKindService
+                            .GetAsync(transaction, partition, quantityKindFactors.Select(x => x.QuantityKind), securityContext))
                             .Cast<QuantityKind>();
 
                         break;
@@ -240,7 +238,7 @@ namespace CometServer.Services.Operations.SideEffects
                     continue;
                 }
 
-                this.CheckCycleDeep(transaction, partition, securityContext, thing, nextQuantityKinds);
+                await this.CheckCycleDeepAsync(transaction, partition, securityContext, thing, nextQuantityKinds);
             }
         }
     }

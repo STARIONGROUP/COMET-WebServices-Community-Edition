@@ -103,9 +103,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task<bool> BeforeCreate(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreateAsync(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipation(thing, container, securityContext, transaction, partition);
+            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipationAsync(thing, container, securityContext, transaction, partition);
 
             return Task.FromResult(true);
         }
@@ -131,11 +131,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreate(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreateAsync(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var newValueSet = (await this.ComputeValueSets(thing, transaction, partition, securityContext)).ToList();
+            var newValueSet = (await this.ComputeValueSetsAsync(thing, transaction, partition, securityContext)).ToList();
             await this.WriteValueSet(transaction, partition, thing, newValueSet);
-            await this.CreateSubscriptionFromParameter(transaction, partition, thing, securityContext, newValueSet);
+            await this.CreateSubscriptionFromParameterAsync(transaction, partition, thing, securityContext, newValueSet);
         }
 
         /// <summary>
@@ -159,12 +159,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task AfterUpdate(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdateAsync(ParameterOverride thing, Thing container, ParameterOverride originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             var isOwnerChanged = thing.Owner != originalThing.Owner;
 
             // Remove the subscriptions owned by the new owner of the ParameterOverride
-            var parameterSubscriptions = this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, thing.ParameterSubscription, securityContext).OfType<ParameterSubscription>().ToArray();
+            var parameterSubscriptions = (await this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, thing.ParameterSubscription, securityContext)).OfType<ParameterSubscription>().ToArray();
 
             if (isOwnerChanged && parameterSubscriptions.Any(s => s.Owner == thing.Owner))
             {
@@ -173,15 +173,13 @@ namespace CometServer.Services.Operations.SideEffects
             
                 if (parameterSubscriptionToRemove != null)
                 {
-                    if (!this.ParameterSubscriptionService.DeleteConceptAsync(transaction, partition, parameterSubscriptionToRemove, thing))
+                    if (!await this.ParameterSubscriptionService.DeleteConceptAsync(transaction, partition, parameterSubscriptionToRemove, thing))
                     {
                         throw new InvalidOperationException(
                             $"The update operation of the parameter override value set {parameterSubscriptionToRemove.Iid} failed.");
                     }
                 }
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -202,9 +200,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The new <see cref="ParameterOverrideValueSet"/>s
         /// </returns>
-        private Task<IEnumerable<ParameterOverrideValueSet>> ComputeValueSets(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private async Task<IEnumerable<ParameterOverrideValueSet>> ComputeValueSetsAsync(ParameterOverride parameterOverride, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var parameters = this.ParameterService.GetShallowAsync(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
+            var parameters = (await this.ParameterService.GetShallowAsync(transaction, partition, [parameterOverride.Parameter], securityContext)).OfType<Parameter>().ToArray();
 
             if (parameters.Length != 1)
             {
@@ -213,7 +211,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             var parameter = parameters.Single();
 
-            var parameterValueSets = this.ParameterValueSetService.GetShallowAsync(transaction, partition, parameter.ValueSet, securityContext).OfType<ParameterValueSet>().ToArray();
+            var parameterValueSets = (await this.ParameterValueSetService.GetShallowAsync(transaction, partition, parameter.ValueSet, securityContext)).OfType<ParameterValueSet>().ToArray();
 
             if (parameterValueSets.Length != parameter.ValueSet.Count)
             {
@@ -227,7 +225,7 @@ namespace CometServer.Services.Operations.SideEffects
                 result.Add(this.ParameterOverrideValueSetFactory.CreateParameterOverrideValueSet(set));
             }
 
-            return Task.FromResult(result.AsEnumerable());
+            return result;
         }
 
         /// <summary>
@@ -237,14 +235,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">The current partition</param>
         /// <param name="parameterOverride">The current <see cref="ParameterOverride"/></param>
         /// <param name="newValueSet">The <see cref="ParameterOverrideValueSet"/> to write</param>
-        private Task WriteValueSet(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, IEnumerable<ParameterOverrideValueSet> newValueSet)
+        private async Task WriteValueSet(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, IEnumerable<ParameterOverrideValueSet> newValueSet)
         {
             foreach (var parameterValueSet in newValueSet)
             {
-                this.ParameterOverrideValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, parameterOverride);
+                await this.ParameterOverrideValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, parameterOverride);
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -255,9 +251,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="parameterOverride">The <see cref="ParameterOverride"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         /// <param name="overrideValueset">The <see cref="ParameterOverrideValueSet"/> to subscribe on</param>
-        private Task CreateSubscriptionFromParameter(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, ISecurityContext securityContext, IReadOnlyList<ParameterOverrideValueSet> overrideValueset)
+        private async Task CreateSubscriptionFromParameterAsync(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, ISecurityContext securityContext, IReadOnlyList<ParameterOverrideValueSet> overrideValueset)
         {
-            var parameters = this.ParameterService.GetShallowAsync(transaction, partition, [parameterOverride.Parameter], securityContext).OfType<Parameter>().ToArray();
+            var parameters = (await this.ParameterService.GetShallowAsync(transaction, partition, [parameterOverride.Parameter], securityContext)).OfType<Parameter>().ToArray();
 
             if (parameters.Length != 1)
             {
@@ -266,21 +262,21 @@ namespace CometServer.Services.Operations.SideEffects
 
             var parameter = parameters.Single();
 
-            var existingSubscriptions = this.ParameterSubscriptionService
-                                            .GetShallowAsync(transaction, partition, null, securityContext)
+            var existingSubscriptions = (await this.ParameterSubscriptionService
+                                            .GetShallowAsync(transaction, partition, null, securityContext))
                                             .OfType<ParameterSubscription>()
                                             .ToList();
 
             var parameterSubscriptions = existingSubscriptions.Where(x => parameter.ParameterSubscription.Contains(x.Iid)).ToList();
 
-            this.DefaultValueArrayFactory.Load(transaction, securityContext);
+            await this.DefaultValueArrayFactory.LoadAsync(transaction, securityContext);
             var defaultArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(parameter.ParameterType);
 
             var existingOverrideSubscriptions = existingSubscriptions.Where(x => parameterOverride.ParameterSubscription.Contains(x.Iid)).ToList();
 
             var subscriptionValueSets =
-                this.ParameterSubscriptionValueSetService
-                    .GetShallowAsync(transaction, partition, parameterSubscriptions.SelectMany(x => x.ValueSet), securityContext)
+                (await this.ParameterSubscriptionValueSetService
+                    .GetShallowAsync(transaction, partition, parameterSubscriptions.SelectMany(x => x.ValueSet), securityContext))
                     .OfType<ParameterSubscriptionValueSet>()
                     .ToList();
 
@@ -292,7 +288,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 var newSubscription = new ParameterSubscription(Guid.NewGuid(), 0) { Owner = parameterSubscription.Owner };
-                this.ParameterSubscriptionService.CreateConceptAsync(transaction, partition, newSubscription, parameterOverride);
+                await this.ParameterSubscriptionService.CreateConceptAsync(transaction, partition, newSubscription, parameterOverride);
 
                 foreach (var parameterOverrideValueSet in overrideValueset)
                 {
@@ -302,11 +298,9 @@ namespace CometServer.Services.Operations.SideEffects
                             parameterOverrideValueSet.Iid, 
                             defaultArray);
 
-                    this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, subscriptionValueset, newSubscription);
+                    await this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, subscriptionValueset, newSubscription);
                 }
             }
-
-            return Task.CompletedTask;
         }
     }
 }

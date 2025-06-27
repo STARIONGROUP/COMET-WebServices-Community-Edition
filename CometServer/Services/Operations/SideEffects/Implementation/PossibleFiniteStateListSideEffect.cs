@@ -69,15 +69,15 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">the current transaction</param>
         /// <param name="partition">the current partition</param>
         /// <param name="securityContext">The security context</param>
-        public override async Task AfterUpdate(PossibleFiniteStateList thing, Thing container, PossibleFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdateAsync(PossibleFiniteStateList thing, Thing container, PossibleFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.AfterUpdate(thing, container, originalThing, transaction, partition, securityContext);
+            await base.AfterUpdateAsync(thing, container, originalThing, transaction, partition, securityContext);
 
             if (!thing.PossibleState.All(x => originalThing.PossibleState.Any(y => y.K == x.K && y.V == x.V))
                 || thing.PossibleState.Count != originalThing.PossibleState.Count)
             {
                 // Update all actualFiniteStateLists
-                this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync(thing, transaction, partition, securityContext);
+                await this.FiniteStateLogicService.UpdateAllRelevantActualFiniteStateListAsync(thing, transaction, partition, securityContext);
             }
         }
 
@@ -99,17 +99,17 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDelete(PossibleFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(PossibleFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.BeforeDelete(thing, container, transaction, partition, securityContext);
+            await base.BeforeDeleteAsync(thing, container, transaction, partition, securityContext);
 
             var actualFiniteStateListCollectionToUpdate =
-                this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, null, securityContext)
+                (await this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, null, securityContext))
                     .OfType<ActualFiniteStateList>()
                     .Where(x => x.PossibleFiniteStateList.Select(oi => Guid.Parse(oi.V.ToString())).Contains(thing.Iid))
                     .ToList();
 
-            this.actualFiniteStateListIdsToUpdate = new List<Guid>();
+            this.actualFiniteStateListIdsToUpdate = [];
 
             foreach (var actualFiniteStateList in actualFiniteStateListCollectionToUpdate)
             {
@@ -117,9 +117,9 @@ namespace CometServer.Services.Operations.SideEffects
                 // do it before as otherwise the ActualStateList would not contain the PossibleFiniteStateList anymore
                 if (actualFiniteStateList.PossibleFiniteStateList.Count == 1)
                 {
-                    this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext, null);
+                    await this.StateDependentParameterUpdateService.UpdateAllStateDependentParametersAsync(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext, null);
 
-                    if (!this.ActualFiniteStateListService.DeleteConceptAsync(transaction, partition, actualFiniteStateList, container))
+                    if (!await this.ActualFiniteStateListService.DeleteConceptAsync(transaction, partition, actualFiniteStateList, container))
                     {
                         throw new InvalidOperationException($"The actual finite state list {actualFiniteStateList.Iid} could not be deleted");
                     }
@@ -141,18 +141,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        public override async Task AfterDelete(PossibleFiniteStateList thing, Thing container, PossibleFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterDeleteAsync(PossibleFiniteStateList thing, Thing container, PossibleFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await base.AfterDelete(thing, container, originalThing, transaction, partition, securityContext);
+            await base.AfterDeleteAsync(thing, container, originalThing, transaction, partition, securityContext);
 
-            var actualFiniteStateLists = this.ActualFiniteStateListService
-                .GetShallowAsync(transaction, partition, this.actualFiniteStateListIdsToUpdate, securityContext)
+            var actualFiniteStateLists = (await this.ActualFiniteStateListService
+                .GetShallowAsync(transaction, partition, this.actualFiniteStateListIdsToUpdate, securityContext))
                 .OfType<ActualFiniteStateList>()
                 .ToList(); 
 
             foreach (var actualFiniteStateList in actualFiniteStateLists)
             {
-                this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext);
+                await this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(actualFiniteStateList, (Iteration)container, transaction, partition, securityContext);
             }
         }
     }

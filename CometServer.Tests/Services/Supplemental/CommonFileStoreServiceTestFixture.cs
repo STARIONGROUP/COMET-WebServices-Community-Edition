@@ -89,9 +89,9 @@ namespace CometServer.Tests.Services.Supplemental
             commonFileStore.Folder.Clear();
             commonFileStore.Folder.Add(folder.Iid);
 
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(true);
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), file)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), file)).Returns(true);
 
             this.credentialsService.Setup(x => x.Credentials)
                 .Returns(
@@ -135,7 +135,7 @@ namespace CometServer.Tests.Services.Supplemental
                     this.transaction.Object,
                     this.engineeringModelPartitionName), Is.True);
 
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(false);
+                this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(false);
 
                 Assert.That(this.commonFileStoreService.HasReadAccess(
                     thing,
@@ -155,7 +155,7 @@ namespace CometServer.Tests.Services.Supplemental
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
 
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
+                this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
 
                 Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccess(
                     thing,
@@ -169,7 +169,7 @@ namespace CometServer.Tests.Services.Supplemental
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
 
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
+                this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
 
                 Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccess(
                     thing,

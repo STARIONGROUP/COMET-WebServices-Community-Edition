@@ -145,7 +145,7 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void Verify_that_when_an_iteration_contains_no_options_an_option_can_be_added()
         {
-            Assert.That(this.optionSideEffect.BeforeCreate(this.option1, this.iteration, null, null, null),
+            Assert.That(this.optionSideEffect.BeforeCreateAsync(this.option1, this.iteration, null, null, null),
                 Is.True);
         }
 
@@ -159,7 +159,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForDeleteOptionTest();
 
             Assert.Throws<InvalidOperationException>(() =>
-                this.optionSideEffect.BeforeCreate(
+                this.optionSideEffect.BeforeCreateAsync(
                     this.option1,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -177,7 +177,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForDeleteOptionTest();
 
             Assert.That(
-                this.optionSideEffect.BeforeCreate(
+                this.optionSideEffect.BeforeCreateAsync(
                     this.option1,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -190,7 +190,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
-            this.optionSideEffect.AfterDelete(
+            this.optionSideEffect.AfterDeleteAsync(
                 this.option1,
                 this.iteration,
                 this.option1,
@@ -212,7 +212,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
-            this.optionSideEffect.AfterDelete(
+            this.optionSideEffect.AfterDeleteAsync(
                 this.option2,
                 this.iteration,
                 this.option2,
@@ -234,7 +234,7 @@ namespace CometServer.Tests.SideEffects
 
             this.updatedIteration.DefaultOption = null;
 
-            this.optionSideEffect.AfterDelete(
+            this.optionSideEffect.AfterDeleteAsync(
                 this.option1,
                 this.iteration,
                 this.option1,
@@ -265,7 +265,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(() =>
             {
-                this.optionSideEffect.BeforeCreate(
+                this.optionSideEffect.BeforeCreateAsync(
                     this.option1,
                     this.iteration,
                     this.npgsqlTransaction,

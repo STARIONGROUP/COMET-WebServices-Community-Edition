@@ -209,7 +209,7 @@ namespace CometServer.ChangeNotification
 
             var filteredModelLogEntries = FilterDomains(modelLogEntries, domains);
 
-            var modelLogEntryData = this.ModelLogEntryDataCreator.Create(transaction, partition, filteredModelLogEntries, domains, changeNotificationSubscriptionUserPreference);
+            var modelLogEntryData = await this.ModelLogEntryDataCreator.CreateAsync(transaction, partition, filteredModelLogEntries, domains, changeNotificationSubscriptionUserPreference);
 
             var changeNotificationSubscriptionDataGroups =
                 modelLogEntryData
@@ -237,7 +237,7 @@ namespace CometServer.ChangeNotification
                     descriptionBuilder.AppendLine("");
                 }
 
-                return [new ChangelogSection($"{engineeringModelSetup.Name}", subTitle, descriptionBuilder.ToString())];
+                return [ new ChangelogSection($"{engineeringModelSetup.Name}", subTitle, descriptionBuilder.ToString()) ];
             }
 
             return [];

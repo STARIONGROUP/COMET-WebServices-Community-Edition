@@ -68,7 +68,7 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreate(ParameterType thing, Thing container, ParameterType originalThing,
+        public override async Task AfterCreateAsync(ParameterType thing, Thing container, ParameterType originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
@@ -95,7 +95,7 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterDelete(ParameterType thing, Thing container, ParameterType originalThing,
+        public override async Task AfterDeleteAsync(ParameterType thing, Thing container, ParameterType originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             await this.ResetData();
@@ -122,7 +122,7 @@ namespace CometServer.Services.Operations.SideEffects.Implementation
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterUpdate(ParameterType thing, Thing container, ParameterType originalThing, NpgsqlTransaction transaction,
+        public override async Task AfterUpdateAsync(ParameterType thing, Thing container, ParameterType originalThing, NpgsqlTransaction transaction,
             string partition, ISecurityContext securityContext)
         {
             await this.ResetData();

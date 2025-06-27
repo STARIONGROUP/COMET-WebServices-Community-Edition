@@ -25,6 +25,7 @@
 namespace CometServer.Authorization
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -53,7 +54,7 @@ namespace CometServer.Authorization
         /// The list of the applicable <see cref="OrganizationalParticipant" />s needed to edit a particulat
         /// <see cref="Thing" />
         /// </returns>
-        bool ResolveApplicableOrganizationalParticipations(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid);
+        Task<bool> ResolveApplicableOrganizationalParticipationsAsync(NpgsqlTransaction transaction, string partition, Iteration iteration, Thing thing, Guid organizationalParticipantIid);
 
         /// <summary>
         /// Validates whether a create of some <see cref="Thing"/>  is allowed based on Organizational Participation
@@ -67,6 +68,6 @@ namespace CometServer.Authorization
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        void ValidateCreateOrganizationalParticipation(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition);
+        Task ValidateCreateOrganizationalParticipationAsync(Thing thing, Thing container, ISecurityContext securityContext, NpgsqlTransaction transaction, string partition);
     }
 }
