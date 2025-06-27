@@ -92,7 +92,7 @@ namespace CometServer.Health
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -102,10 +102,9 @@ namespace CometServer.Health
                     this.applicationLifetime.StopApplication();
                 }
 
-                if (!this.MigrationEngine.MigrateAllAtStartUp())
+                if (!await this.MigrationEngine.MigrateAllAtStartUpAsync())
                 {
                     this.Logger.LogWarning("The Migrations could not be completed");
-                    return Task.CompletedTask;
                 }
 
                 this.CometHasStartedService.SetHasStartedAndIsReady(true);
@@ -118,8 +117,6 @@ namespace CometServer.Health
                 // Stop the application
                 this.applicationLifetime.StopApplication();
             }
-            
-            return Task.CompletedTask;
         }
     }
 }

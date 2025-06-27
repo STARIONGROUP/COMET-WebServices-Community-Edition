@@ -29,6 +29,7 @@ namespace CometServer
     using System.Data;
     using System.Diagnostics;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Orm.MigrationEngine;
 
@@ -74,7 +75,7 @@ namespace CometServer
         /// <summary>
         /// Apply migration scripts at start-up
         /// </summary>
-        public bool MigrateAllAtStartUp()
+        public async Task<bool> MigrateAllAtStartUpAsync()
         {
             NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
@@ -91,26 +92,26 @@ namespace CometServer
                 {
                     try
                     {
-                        connection.Open();
+                        await connection.OpenAsync();
                     }
                     catch (PostgresException e)
                     {
-                        this.logger.LogWarning("Could not connect to the database for migration, the database might not exist yet. Error message: {message}", e.Message);
+                        this.logger.LogWarning(e, "Could not connect to the database for migration, the database might not exist yet. Error message: {Message}", e.Message);
                         return false;
                     }
                 }
 
                 // start transaction with rollback support
-                transaction = connection.BeginTransaction();
+                transaction = await connection.BeginTransactionAsync();
 
                 // list all schema where the migration script shall be applied on
                 var existingSchemas = new List<string>();
 
-                using (var schemaListCmd = new NpgsqlCommand("select nspname from pg_catalog.pg_namespace", transaction.Connection, transaction))
+                await using (var schemaListCmd = new NpgsqlCommand("select nspname from pg_catalog.pg_namespace", transaction.Connection, transaction))
                 {
-                    using (var reader = schemaListCmd.ExecuteReader())
+                    await using (var reader = await schemaListCmd.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             var schemaName = reader[0].ToString();
                             if (schemaName.StartsWith(MigrationScriptApplicationKind.SiteDirectory.ToString())
@@ -128,11 +129,11 @@ namespace CometServer
                 var existingMigrations = new List<Version>();
                 var doesMigrationTableExist = false;
 
-                using (var appliedMigrationCmd = new NpgsqlCommand("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'SiteDirectory' AND table_name = 'MigrationManagement')", transaction.Connection, transaction))
+                await using (var appliedMigrationCmd = new NpgsqlCommand("SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'SiteDirectory' AND table_name = 'MigrationManagement')", transaction.Connection, transaction))
                 {
-                    using (var reader = appliedMigrationCmd.ExecuteReader())
+                    await using (var reader = await appliedMigrationCmd.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             doesMigrationTableExist = bool.Parse(reader[0].ToString());
                         }
@@ -141,11 +142,11 @@ namespace CometServer
 
                 if (doesMigrationTableExist)
                 {
-                    using var appliedMigrationCmd = new NpgsqlCommand("SELECT \"version\" FROM \"SiteDirectory\".\"MigrationManagement\"", transaction.Connection, transaction);
+                    await using var appliedMigrationCmd = new NpgsqlCommand("SELECT \"version\" FROM \"SiteDirectory\".\"MigrationManagement\"", transaction.Connection, transaction);
 
-                    using var reader = appliedMigrationCmd.ExecuteReader();
+                    await using var reader = await appliedMigrationCmd.ExecuteReaderAsync();
 
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         existingMigrations.Add(new Version(reader[0].ToString()));
                     }
@@ -153,26 +154,27 @@ namespace CometServer
 
                 // exclude migration of already applied migrations at start up
                 migrations.AddRange(this.MigrationService.GetMigrations(true).Where(x => !existingMigrations.Contains(x.MigrationMetaData.Version)));
+
                 foreach (var migration in migrations.Where(x => x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.SiteDirectory || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All).OrderBy(x => x.MigrationMetaData.Version))
                 {
-                    migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.SiteDirectory.ToString())).ToList());
+                    await migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.SiteDirectory.ToString())).ToList());
                 }
 
                 foreach (var migration in migrations.Where(x => x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.EngineeringModel || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All).OrderBy(x => x.MigrationMetaData.Version))
                 {
                     // apply migration on all EngineeringModel schema
-                    migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.EngineeringModel.ToString())).ToList());
+                    await migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.EngineeringModel.ToString())).ToList());
                 }
 
                 foreach (var migration in migrations.Where(x => x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.Iteration || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All).OrderBy(x => x.MigrationMetaData.Version))
                 {
                     // apply migration on all Iteration schema
-                    migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.Iteration.ToString())).ToList());
+                    await migration.ApplyMigration(transaction, existingSchemas.Where(x => x.StartsWith(MigrationScriptApplicationKind.Iteration.ToString())).ToList());
                 }
 
-                transaction.Commit();
+                await transaction.CommitAsync();
 
-                this.logger.LogInformation("Migration done in {sw} ms.", sw.ElapsedMilliseconds);
+                this.logger.LogInformation("Migration done in {ElapsedMilliseconds} ms.", sw.ElapsedMilliseconds);
 
                 return true;
             }
@@ -180,7 +182,7 @@ namespace CometServer
             {
                 if (transaction != null)
                 {
-                    transaction.Rollback();
+                    await transaction.RollbackAsync();
                 }
 
                 this.logger.LogError(exception, "An error occured during migration.");
@@ -190,12 +192,12 @@ namespace CometServer
             {
                 if (transaction != null)
                 {
-                    transaction.Dispose();
+                    await transaction.DisposeAsync();
                 }
 
                 if (connection != null)
                 {
-                    connection.Dispose();
+                    await connection.DisposeAsync();
                 }
             }
         }

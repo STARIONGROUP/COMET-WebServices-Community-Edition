@@ -25,6 +25,8 @@
 
 namespace CometServer
 {
+    using System.Threading.Tasks;
+
     /// <summary>
     /// The migration engine that handle database migration at start-up
     /// </summary>
@@ -33,6 +35,6 @@ namespace CometServer
         /// <summary>
         /// Apply migration scripts at start-up
         /// </summary>
-        public bool MigrateAllAtStartUp();
+        public Task<bool> MigrateAllAtStartUpAsync();
     }
 }
