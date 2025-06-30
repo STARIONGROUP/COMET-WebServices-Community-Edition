@@ -838,9 +838,9 @@ namespace CometServer.Services.Operations
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private static async Task<IEnumerable<Thing>> GetPersistedItemsAsync(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
+        private static Task<IEnumerable<Thing>> GetPersistedItemsAsync(NpgsqlTransaction transaction, string partition, IPersistService service, IEnumerable<Guid> iids, ISecurityContext securityContext)
         {
-            return await service.GetShallowAsync(
+            return service.GetShallowAsync(
                 transaction, partition, iids, securityContext);
         }
 

@@ -79,14 +79,11 @@ namespace CometServer.Authentication
         /// </returns>
         public async Task<AuthenticationPerson> Authenticate(string username, string password)
         {
-            NpgsqlConnection connection = null;
-            NpgsqlTransaction transaction = null;
-
             try
             {
-                connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
                 await connection.OpenAsync();
-                transaction = await connection.BeginTransactionAsync();
+                await using var transaction = await connection.BeginTransactionAsync();
 
                 var authenticationPerson = (await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null)).SingleOrDefault();
 
@@ -111,7 +108,7 @@ namespace CometServer.Authentication
             }
             catch (NpgsqlException ex)
             {
-                this.Logger.LogCritical( "The AuthenticationPersonAuthenticator could not interact with the CDP4-COMET database");
+                this.Logger.LogCritical(ex, "The AuthenticationPersonAuthenticator could not interact with the CDP4-COMET database");
 
                 throw new AuthenticatorException("The authenticator could not connect to the CDP4-COMET database", innerException: ex);
             }
@@ -120,19 +117,6 @@ namespace CometServer.Authentication
                 this.Logger.LogCritical(ex, "There was an error while authenticating the user credentials");
 
                 throw new AuthenticatorException("There was an error while authenticating the user credentials", innerException: ex);
-            }
-            finally
-            {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.CloseAsync();
-                    await connection.DisposeAsync();
-                }
             }
         }
 

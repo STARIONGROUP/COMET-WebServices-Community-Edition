@@ -72,9 +72,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDeleteAsync(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDeleteAsync(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.HasWriteAccess(container, transaction, partition);
+            return this.HasWriteAccess(container, transaction, partition);
         }
 
         /// <summary>
@@ -100,9 +100,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdateAsync(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public override Task BeforeUpdateAsync(FileRevision thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            await this.HasWriteAccess(container, transaction, partition);
+            return this.HasWriteAccess(container, transaction, partition);
         }
 
         /// <summary>

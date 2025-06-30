@@ -65,9 +65,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target iteration partition
         /// </param>
-        public async Task CopyIterationAsync(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
+        public Task CopyIterationAsync(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
         {
-            await this.IterationDao.CopyIterationAsync(transaction, sourcePartition, targetPartition);
+            return this.IterationDao.CopyIterationAsync(transaction, sourcePartition, targetPartition);
         }
 
         /// <summary>
@@ -82,9 +82,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target iteration partition
         /// </param>
-        public async Task CopyIterationAndResetCreatedOnAsync(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
+        public Task CopyIterationAndResetCreatedOnAsync(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
         {
-            await this.IterationDao.CopyIterationAndResetCreatedOnAsync(transaction, sourcePartition, targetPartition);
+            return this.IterationDao.CopyIterationAndResetCreatedOnAsync(transaction, sourcePartition, targetPartition);
         }
 
         /// <summary>
@@ -96,9 +96,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target iteration partition
         /// </param>
-        public async Task DeleteAllrganizationalParticipantThingsAsync(NpgsqlTransaction transaction, string targetPartition)
+        public Task DeleteAllrganizationalParticipantThingsAsync(NpgsqlTransaction transaction, string targetPartition)
         {
-            await this.IterationDao.DeleteAllrganizationalParticipantThingsAsync(transaction, targetPartition);
+            return this.IterationDao.DeleteAllrganizationalParticipantThingsAsync(transaction, targetPartition);
         }
 
         /// <summary>
@@ -113,9 +113,9 @@ namespace CometServer.Services
         /// <param name="enable">
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
-        public async Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable)
+        public Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable)
         {
-            await this.IterationDao.ModifyUserTriggerAsync(transaction, sourcePartition, enable);
+            return this.IterationDao.ModifyUserTriggerAsync(transaction, sourcePartition, enable);
         }
 
         /// <summary>

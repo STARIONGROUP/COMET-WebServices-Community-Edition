@@ -193,7 +193,7 @@ namespace CometServer.Services
             foreach (var revisionsGroupdByPartition in revisionsGroupedByPartitions)
             {
                 await this.RevisionDao.BulkWriteRevisionAsync(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value, actor);
-                await this.CacheService.BulkWriteToCache(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
+                await this.CacheService.BulkWriteToCacheAsync(transaction, revisionsGroupdByPartition.Key, revisionsGroupdByPartition.Value);
             }
 
             this.Logger.LogDebug("Write to Cache and Revisions table done in {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
@@ -219,9 +219,9 @@ namespace CometServer.Services
         /// <param name="toRevision">
         /// The to Revision.
         /// </param>
-        public async Task InsertIterationRevisionLogAsync(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
+        public Task InsertIterationRevisionLogAsync(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
         {
-            await this.RevisionDao.InsertIterationRevisionLogAsync(transaction, partition, iteration, fromRevision, toRevision);
+            return this.RevisionDao.InsertIterationRevisionLogAsync(transaction, partition, iteration, fromRevision, toRevision);
         }
 
         /// <summary>
@@ -237,9 +237,9 @@ namespace CometServer.Services
         /// <returns>
         /// The current or next available revision number
         /// </returns>
-        public async Task<int> GetRevisionForTransactionAsync(NpgsqlTransaction transaction, string partition)
+        public Task<int> GetRevisionForTransactionAsync(NpgsqlTransaction transaction, string partition)
         {
-            return await this.RevisionDao.GetRevisionForTransactionAsync(transaction, partition);
+            return this.RevisionDao.GetRevisionForTransactionAsync(transaction, partition);
         }
 
         /// <summary>

@@ -330,7 +330,7 @@ namespace CometServer.Services.ChangeLog
             }
             catch (ResolveException ex)
             {
-                this.Logger.LogDebug("{Message}", ex.Message);
+                this.Logger.LogDebug(ex, "{Message}", ex.Message);
             }
             catch (Exception ex)
             {

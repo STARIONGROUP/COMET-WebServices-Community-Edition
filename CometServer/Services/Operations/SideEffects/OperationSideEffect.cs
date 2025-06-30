@@ -287,9 +287,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public async Task<bool> BeforeCreateAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public Task<bool> BeforeCreateAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            return await this.BeforeCreateAsync((T)thing, container, transaction, partition, securityContext);
+            return this.BeforeCreateAsync((T)thing, container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -313,9 +313,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public async Task AfterCreateAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public Task AfterCreateAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.AfterCreateAsync((T)thing, container, (T)originalThing, transaction, partition, securityContext);
+            return this.AfterCreateAsync((T)thing, container, (T)originalThing, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -339,9 +339,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="rawUpdateInfo">
         /// The raw Update Info.
         /// </param>
-        public async Task BeforeUpdateAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
+        public Task BeforeUpdateAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, ClasslessDTO rawUpdateInfo)
         {
-            await this.BeforeUpdateAsync((T)thing, container, transaction, partition, securityContext, rawUpdateInfo);
+            return this.BeforeUpdateAsync((T)thing, container, transaction, partition, securityContext, rawUpdateInfo);
         }
 
         /// <summary>
@@ -365,9 +365,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public async Task AfterUpdateAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public Task AfterUpdateAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.AfterUpdateAsync((T)thing, container, (T)originalThing, transaction, partition, securityContext);
+            return this.AfterUpdateAsync((T)thing, container, (T)originalThing, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -388,9 +388,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public async Task BeforeDeleteAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public Task BeforeDeleteAsync(Thing thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.BeforeDeleteAsync((T)thing, container, transaction, partition, securityContext);
+            return this.BeforeDeleteAsync((T)thing, container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -414,9 +414,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public async Task AfterDeleteAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public Task AfterDeleteAsync(Thing thing, Thing container, Thing originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.AfterDeleteAsync((T)thing, container, (T)originalThing, transaction, partition, securityContext);
+            return this.AfterDeleteAsync((T)thing, container, (T)originalThing, transaction, partition, securityContext);
         }
     }
 }

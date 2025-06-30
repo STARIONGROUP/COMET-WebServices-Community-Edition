@@ -93,16 +93,14 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public async Task<bool> IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition)
+        public Task<bool> IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition)
         {
             if (partition.StartsWith("EngineeringModel_"))
             {
-                return await this.CommonFileStoreService.HasReadAccess(thing, transaction, partition);
+                return this.CommonFileStoreService.HasReadAccess(thing, transaction, partition);
             }
-            else
-            {
-                return await this.DomainFileStoreService.HasReadAccessAsync(thing, transaction, partition);
-            }
+
+            return this.DomainFileStoreService.HasReadAccessAsync(thing, transaction, partition);
         }
     }
 }

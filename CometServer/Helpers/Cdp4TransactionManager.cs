@@ -25,7 +25,7 @@
 namespace CometServer.Helpers
 {
     using System;
-    using System.Data;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -47,7 +47,7 @@ namespace CometServer.Helpers
     /// <summary>
     /// A wrapper class for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
     /// </summary>
-    public class Cdp4TransactionManager : ICdp4TransactionManager
+    public class Cdp4TransactionManager : ICdp4TransactionManager, IDisposable
     {
         /// <summary>
         /// The SiteDirectory partition
@@ -157,9 +157,9 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        public async Task<NpgsqlTransaction> SetupTransactionAsync(Credentials credentials)
+        public Task<NpgsqlTransaction> SetupTransactionAsync(Credentials credentials)
         {
-            return await this.GetTransactionAsync(credentials);
+            return this.GetTransactionAsync(credentials);
         }
 
         /// <summary>
@@ -311,9 +311,9 @@ namespace CometServer.Helpers
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        public async Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition)
+        public Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition)
         {
-            await ApplyIterationContextAsync(transaction, partition, this.IterationSetup);
+            return ApplyIterationContextAsync(transaction, partition, this.IterationSetup);
         }
 
         /// <summary>
@@ -409,6 +409,8 @@ namespace CometServer.Helpers
             return iterationSetups.SingleOrDefault();
         }
 
+        private List<NpgsqlConnection> connections = [];
+
         /// <summary>
         /// The setup new transaction.
         /// </summary>
@@ -419,8 +421,9 @@ namespace CometServer.Helpers
         {
             var connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
             
+            this.connections.Add(connection);
             await connection.OpenAsync();
-            
+
             // start transaction with rollback support
             var transaction = await connection.BeginTransactionAsync();
 
@@ -478,6 +481,21 @@ namespace CometServer.Helpers
             await using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
             await command.ExecuteNonQueryAsync();
+        }
+
+        public void Dispose()
+        {
+            foreach (var connection in this.connections)
+            {
+                try
+                {
+                    connection?.Dispose();
+                }
+                catch (Exception ex)
+                {
+
+                }
+            }
         }
     }
 }

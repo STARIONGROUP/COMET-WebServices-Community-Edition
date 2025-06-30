@@ -53,7 +53,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup">The target <see cref="EngineeringModelSetup"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is ParameterGroup sourceParameterGroup))
@@ -69,7 +69,7 @@ namespace CometServer.Services
                 copy.ContainingGroup = sourceToCopyMap[copy.ContainingGroup.Value];
             }
 
-            await this.ParameterGroupDao.WriteAsync(transaction, partition, copy, targetContainer);
+            return this.ParameterGroupDao.WriteAsync(transaction, partition, copy, targetContainer);
         }
     }
 }

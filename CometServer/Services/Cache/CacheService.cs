@@ -50,9 +50,9 @@ namespace CometServer.Services
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The collection of revised <see cref="Thing"/>s</param>
         /// <returns>An awaitable <see cref="Task"/></returns>
-        public async Task BulkWriteToCache(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
+        public Task BulkWriteToCacheAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
         {
-            await this.CacheDao.BulkWriteAsync(transaction, partition, things);
+            return this.CacheDao.BulkWriteAsync(transaction, partition, things);
         }
     }
 }

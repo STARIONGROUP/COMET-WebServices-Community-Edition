@@ -98,10 +98,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreateAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
+        public override Task AfterCreateAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.ResetData();
+            return this.ResetData();
         }
 
         /// <summary>
@@ -125,10 +125,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterDeleteAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
+        public override Task AfterDeleteAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.ResetData();
+            return this.ResetData();
         }
 
         /// <summary>
@@ -152,10 +152,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterUpdateAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
+        public override Task AfterUpdateAsync(ParameterTypeComponent thing, Thing container, ParameterTypeComponent originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.ResetData();
+            return this.ResetData();
         }
 
         /// <summary>

@@ -68,9 +68,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreateAsync(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterCreateAsync(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.ResetData();
+            return this.ResetData();
         }
 
         /// <summary>
@@ -94,9 +94,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterDeleteAsync(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterDeleteAsync(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.ResetData();
+            return this.ResetData();
         }
 
         /// <summary>
@@ -120,9 +120,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterUpdateAsync(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task AfterUpdateAsync(DependentParameterTypeAssignment thing, Thing container, DependentParameterTypeAssignment originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await  this.ResetData();
+            return this.ResetData();
         }
 
         /// <summary>

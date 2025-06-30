@@ -126,9 +126,9 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return await this.OrdinalScaleDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
+            return this.OrdinalScaleDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -152,9 +152,9 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return await this.OrdinalScaleDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
+            return this.OrdinalScaleDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -178,9 +178,9 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return await this.OrdinalScaleDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
+            return this.OrdinalScaleDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -251,10 +251,10 @@ namespace CometServer.Services
         /// <returns>
         /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public async Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return await this.OrdinalScaleDao.RawDeleteAsync(transaction, partition, thing.Iid);
+            return this.OrdinalScaleDao.RawDeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>

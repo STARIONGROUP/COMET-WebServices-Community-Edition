@@ -153,7 +153,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task AfterCreateAsync(
+        public override Task AfterCreateAsync(
             ParameterSubscription thing,
             Thing container,
             ParameterSubscription originalThing,
@@ -161,7 +161,7 @@ namespace CometServer.Services.Operations.SideEffects
             string partition,
             ISecurityContext securityContext)
         {
-            await this.CreateParameterSubscriptionValueSetsAsync(thing, container, transaction, partition, securityContext);
+            return this.CreateParameterSubscriptionValueSetsAsync(thing, container, transaction, partition, securityContext);
         }
 
         /// <summary>

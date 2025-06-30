@@ -33,7 +33,7 @@ namespace CDP4Orm.Helper
         /// <summary>
         /// The default instance of <see cref="BooleanValueAndHandledResult"/> with a value of true and IsHandled set to false.
         /// </summary>
-        public static BooleanValueAndHandledResult Default = new();
+        public static BooleanValueAndHandledResult Default = new(true, false);
 
         /// <summary>
         /// Gets a value indicating the result of the "event"
@@ -55,6 +55,5 @@ namespace CDP4Orm.Helper
             this.Value = value;
             this.IsHandled = isHandled;
         }
-
     }
 }

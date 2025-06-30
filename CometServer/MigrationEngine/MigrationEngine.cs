@@ -77,15 +77,13 @@ namespace CometServer
         /// </summary>
         public async Task<bool> MigrateAllAtStartUpAsync()
         {
-            NpgsqlConnection connection = null;
-            NpgsqlTransaction transaction = null;
             var sw = Stopwatch.StartNew();
 
             this.logger.LogInformation("Start migration");
 
             try
             {
-                connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
 
                 // ensure an open connection
                 if (connection.State != ConnectionState.Open)
@@ -102,7 +100,7 @@ namespace CometServer
                 }
 
                 // start transaction with rollback support
-                transaction = await connection.BeginTransactionAsync();
+                await using var transaction = await connection.BeginTransactionAsync();
 
                 // list all schema where the migration script shall be applied on
                 var existingSchemas = new List<string>();
@@ -180,25 +178,8 @@ namespace CometServer
             }
             catch (Exception exception)
             {
-                if (transaction != null)
-                {
-                    await transaction.RollbackAsync();
-                }
-
                 this.logger.LogError(exception, "An error occured during migration.");
                 throw;
-            }
-            finally
-            {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
-
-                if (connection != null)
-                {
-                    await connection.DisposeAsync();
-                }
             }
         }
     }

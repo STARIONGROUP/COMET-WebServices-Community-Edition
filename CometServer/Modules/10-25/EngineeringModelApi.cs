@@ -1024,7 +1024,11 @@ namespace CometServer.Modules
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
                     var initiallyChangedThings = (await revisionService.GetCurrentChangesAsync(transaction, partition, transactionRevision, true)).ToList();
-                    changeLogService?.TryAppendModelChangeLogDataAsync(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
+
+                    if (changeLogService != null)
+                    {
+                        await changeLogService?.TryAppendModelChangeLogDataAsync(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
+                    }
                 }
 
                 // save revision-history

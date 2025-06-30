@@ -66,7 +66,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override async Task BeforeUpdateAsync(
+        public override Task BeforeUpdateAsync(
             DomainFileStore thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -74,7 +74,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            await this.HasWriteAccess(thing, transaction, partition);
+            return this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -95,9 +95,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDeleteAsync(DomainFileStore thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDeleteAsync(DomainFileStore thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.HasWriteAccess(thing, transaction, partition);
+            return this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -114,12 +114,10 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         private Task HasWriteAccess(Thing thing, NpgsqlTransaction transaction, string partition)
         {
-            this.DomainFileStoreService.HasWriteAccessAsync(
+            return this.DomainFileStoreService.HasWriteAccessAsync(
                 thing,
                 transaction,
                 partition);
-
-            return Task.CompletedTask;
         }
     }
 }

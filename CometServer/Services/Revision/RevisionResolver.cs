@@ -66,7 +66,7 @@ namespace CometServer.Services
 
             if (revisionFrom == null && revisionTo == null)
             {
-                Result.Fail("No revisions to search for");
+                return Result.Fail("No revisions to search for");
             }
 
             var revisions = await this.RevisionDao.ReadRevisionRegistryAsync(transaction, partition);

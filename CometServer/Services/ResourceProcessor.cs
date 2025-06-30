@@ -223,9 +223,9 @@ namespace CometServer.Services
         /// <returns>
         /// Collection of retrieved resources.
         /// </returns>
-        public async Task<IEnumerable<Thing>> GetResourceAsync(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public Task<IEnumerable<Thing>> GetResourceAsync(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
-            return await this.ServiceProvider.MapToReadService(serviceType)
+            return this.ServiceProvider.MapToReadService(serviceType)
                                  .GetAsync(this.Transaction, topContainer, ids, containerSecurityContext);
         }
 

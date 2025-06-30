@@ -38,9 +38,9 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        public async Task DeleteAllAsync(NpgsqlTransaction transaction, string partition)
+        public Task DeleteAllAsync(NpgsqlTransaction transaction, string partition)
         {
-             await this.PublicationDao.DeleteAllAsync(transaction, partition);
+             return this.PublicationDao.DeleteAllAsync(transaction, partition);
         }
     }
 }

@@ -132,7 +132,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task<bool> BeforeCreateAsync(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task<bool> BeforeCreateAsync(EngineeringModelSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             this.TransactionManager.SetFullAccessState(true);
 
@@ -170,7 +170,7 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var stopwatch = Stopwatch.StartNew();
 
-                this.ModelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
+                await this.ModelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(thing.SourceEngineeringModelSetupIid.Value, thing, transaction, securityContext);
                 stopwatch.Stop();
                 this.Logger.LogDebug("Creation of EngineeringSetup from source took {ElapsedMilliseconds}[ms]", stopwatch.ElapsedMilliseconds);
             }
@@ -182,7 +182,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             this.TransactionManager.SetFullAccessState(false);
 
-            return Task.FromResult(true);
+            return true;
         }
 
         /// <summary>

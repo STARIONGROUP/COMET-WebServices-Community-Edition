@@ -161,9 +161,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override async Task BeforeDeleteAsync(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDeleteAsync(Folder thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.HasWriteAccess(thing, transaction, partition);
+            return this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>

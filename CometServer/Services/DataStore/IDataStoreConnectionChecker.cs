@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IDataStoreConnectionChecker.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -26,6 +26,7 @@
 namespace CometServer.Services.DataStore
 {
     using System.Threading;
+    using System.Threading.Tasks;
 
     using CometServer.Configuration;
     
@@ -44,6 +45,6 @@ namespace CometServer.Services.DataStore
         /// <returns>
         /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
         /// </returns>
-        public bool CheckConnection(CancellationToken cancellationToken);
+        Task<bool> CheckConnectionAsync(CancellationToken cancellationToken);
     }
 }

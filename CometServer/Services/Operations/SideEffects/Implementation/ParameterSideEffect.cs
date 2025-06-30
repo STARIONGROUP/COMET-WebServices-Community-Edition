@@ -785,14 +785,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="originalThing">
         /// The original Thing.
         /// </param>
-        private Task DeleteOldValueSet(NpgsqlTransaction transaction, string partition, Parameter originalThing)
+        private async Task DeleteOldValueSet(NpgsqlTransaction transaction, string partition, Parameter originalThing)
         {
             foreach (var valueset in originalThing.ValueSet)
             {
-                this.ParameterValueSetService.DeleteConceptAsync(transaction, partition, new ParameterValueSet(valueset, 0), originalThing);
+                await this.ParameterValueSetService.DeleteConceptAsync(transaction, partition, new ParameterValueSet(valueset, 0), originalThing);
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -802,7 +800,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">The current partition</param>
         /// <param name="parameter">The current <see cref="Parameter"/></param>
         /// <param name="newValueSet">The <see cref="ParameterValueSet"/> to write</param>
-        private Task WriteValueSet(
+        private async Task WriteValueSet(
             NpgsqlTransaction transaction,
             string partition,
             Parameter parameter,
@@ -810,10 +808,8 @@ namespace CometServer.Services.Operations.SideEffects
         {
             foreach (var parameterValueSet in newValueSet)
             {
-                this.ParameterValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, parameter);
+                await this.ParameterValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, parameter);
             }
-
-            return Task.CompletedTask;
         }
 
         /// <summary>

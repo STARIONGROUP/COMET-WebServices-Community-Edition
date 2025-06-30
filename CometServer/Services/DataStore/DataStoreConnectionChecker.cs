@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DataStoreConnectionChecker.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services.DataStore
 {
     using System;
     using System.Threading;
+    using System.Threading.Tasks;
 
     using CometServer.Configuration;
     using CometServer.Services;
@@ -56,9 +57,9 @@ namespace CometServer.Services.DataStore
         /// <returns>
         /// returns true when a connection can be made within the <see cref="MidtierConfig.BacktierWaitTime"/>, false otherwise
         /// </returns>
-        public bool CheckConnection(CancellationToken cancellationToken)
+        public async Task<bool> CheckConnectionAsync(CancellationToken cancellationToken)
         {
-            var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.DatabaseManage));
+            await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.DatabaseManage));
 
             var startTime = DateTime.UtcNow;
 
@@ -69,20 +70,20 @@ namespace CometServer.Services.DataStore
             {
                 try
                 {
-                    connection.Open();
-                    connection.Close();
+                    await connection.OpenAsync(cancellationToken);
+                    await connection.CloseAsync();
 
                     return true;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    this.Logger.LogInformation("Waiting for the data store at {HostName}:{Port} to become availble in {remainingSeconds} [s]",
+                    this.Logger.LogInformation(ex, "Waiting for the data store at {HostName}:{Port} to become availble in {RemainingSeconds} [s]",
                         this.AppConfigService.AppConfig.Backtier.HostName,
                         this.AppConfigService.AppConfig.Backtier.Port,
                         remainingSeconds);
 
-                    Thread.Sleep(5000);
-                    remainingSeconds = remainingSeconds - 5;
+                    await Task.Delay(5000, cancellationToken);
+                    remainingSeconds -= 5;
                 }
             }
 

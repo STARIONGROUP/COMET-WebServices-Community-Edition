@@ -48,9 +48,9 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target Engineering-Model
         /// </param>
-        public async Task CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
+        public Task CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition)
         {
-            await this.EngineeringModelDao.CopyEngineeringModelAndResetCreatedOnAsync(transaction, sourcePartition, targetPartition);
+            return this.EngineeringModelDao.CopyEngineeringModelAndResetCreatedOnAsync(transaction, sourcePartition, targetPartition);
         }
 
         /// <summary>
@@ -58,9 +58,9 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The egineering-model partition to modify</param>
-        public async Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition)
+        public Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition)
         {
-            await this.EngineeringModelDao.ModifyIdentifierAsync(transaction, partition);
+            return this.EngineeringModelDao.ModifyIdentifierAsync(transaction, partition);
         }
 
         /// <summary>
@@ -75,9 +75,9 @@ namespace CometServer.Services
         /// <param name="enable">
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
-        public async Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable)
+        public Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable)
         {
-            await this.EngineeringModelDao.ModifyUserTriggerAsync(transaction, sourcePartition, enable);
+            return this.EngineeringModelDao.ModifyUserTriggerAsync(transaction, sourcePartition, enable);
         }
 
         /// <summary>
@@ -87,9 +87,9 @@ namespace CometServer.Services
         /// <param name="partition">The partition</param>
         /// <param name="thing">The updated <see cref="Thing"/></param>
         /// <param name="oldIid">The old identifier</param>
-        public async Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
+        public Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
         {
-            await this.EngineeringModelDao.ModifyIdentifierAsync(transaction, partition, thing, oldIid);
+            return this.EngineeringModelDao.ModifyIdentifierAsync(transaction, partition, thing, oldIid);
         }
 
         /// <summary>
@@ -98,9 +98,9 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <returns>The next iteration number</returns>
-        public async Task<int> QueryNextIterationNumber(NpgsqlTransaction transaction, string partition)
+        public  Task<int> QueryNextIterationNumber(NpgsqlTransaction transaction, string partition)
         {
-            return await this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, partition);
+            return this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, partition);
         }
     }
 }

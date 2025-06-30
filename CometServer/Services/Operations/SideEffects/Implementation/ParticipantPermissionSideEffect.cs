@@ -79,10 +79,10 @@ namespace CometServer.Services.Operations.SideEffects
             return true;
         }
         
-        public override async Task AfterUpdateAsync(ParticipantPermission thing, Thing container, ParticipantPermission originalThing,
+        public override Task AfterUpdateAsync(ParticipantPermission thing, Thing container, ParticipantPermission originalThing,
             NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            await this.ValidateAccessRightKindAsync(thing);
+            return this.ValidateAccessRightKindAsync(thing);
         }
 
         /// <summary>

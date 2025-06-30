@@ -71,9 +71,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// </param>
         public override Task AfterCreateAsync(ActualFiniteStateList thing, Thing container, ActualFiniteStateList originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
-
-            return Task.CompletedTask;
+            return this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
         }
 
         /// <summary>
@@ -103,7 +101,7 @@ namespace CometServer.Services.Operations.SideEffects
                 || thing.PossibleFiniteStateList.Count != originalThing.PossibleFiniteStateList.Count)
             {
                 // Update all actualFiniteStates
-                this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
+                return this.FiniteStateLogicService.UpdateActualFinisteStateListAsync(thing, (Iteration)container, transaction, partition, securityContext);
             }
 
             return Task.CompletedTask;
@@ -130,9 +128,7 @@ namespace CometServer.Services.Operations.SideEffects
         public override Task BeforeDeleteAsync(ActualFiniteStateList thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // Get all associated state dependent parameters and re-create value set without the state dependency
-            this.StateDependentParameterUpdateService.UpdateAllStateDependentParametersAsync(thing, (Iteration)container, transaction, partition, securityContext, null);
-
-            return Task.CompletedTask;
+            return this.StateDependentParameterUpdateService.UpdateAllStateDependentParametersAsync(thing, (Iteration)container, transaction, partition, securityContext, null);
         }
     }
 }

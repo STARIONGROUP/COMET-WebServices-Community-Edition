@@ -103,11 +103,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override Task<bool> BeforeCreateAsync(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task<bool> BeforeCreateAsync(ParameterOverride thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipationAsync(thing, container, securityContext, transaction, partition);
+            await this.OrganizationalParticipationResolverService.ValidateCreateOrganizationalParticipationAsync(thing, container, securityContext, transaction, partition);
 
-            return Task.FromResult(true);
+            return true;
         }
 
         /// <summary>
