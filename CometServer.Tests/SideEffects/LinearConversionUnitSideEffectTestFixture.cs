@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="LinearConversionUnitSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -115,7 +116,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
 
             this.conversionBasedUnitService = new Mock<IConversionBasedUnitService>();
             this.conversionBasedUnitService
@@ -131,13 +132,13 @@ namespace CometServer.Tests.SideEffects
                                 this.linearConversionUnitC.Iid
                             },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ConversionBasedUnit>
+                    Task.FromResult<IEnumerable<Thing>>(new List<ConversionBasedUnit>
                         {
                             this.linearConversionUnitD,
                             this.linearConversionUnitA,
                             this.linearConversionUnitB,
                             this.linearConversionUnitC
-                        });
+                        }));
         }
 
         [Test]
@@ -153,7 +154,7 @@ namespace CometServer.Tests.SideEffects
 
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitA,
                     this.referenceDataLibraryA,
@@ -177,7 +178,7 @@ namespace CometServer.Tests.SideEffects
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitE.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitC,
                     this.referenceDataLibraryA,
@@ -189,7 +190,7 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitC,
                     this.referenceDataLibraryA,
@@ -213,7 +214,7 @@ namespace CometServer.Tests.SideEffects
             // There is a chain a -> b -> c
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitD.Iid } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitC,
                     this.referenceDataLibraryA,

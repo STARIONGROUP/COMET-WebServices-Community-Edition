@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelCreatorManagerTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -77,7 +78,7 @@ namespace CometServer.Tests.SideEffects
                 TransactionManager = this.transactionManager.Object
             };
 
-            this.transactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.Now);
+            this.transactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.Now));
 
             this.requestUtilCache = new List<Thing>();
 
@@ -92,7 +93,7 @@ namespace CometServer.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyThatModelSetupIsCopiedCorrectly()
+        public async Task VerifyThatModelSetupIsCopiedCorrectly()
         {
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
             var mrdl = new ModelReferenceDataLibrary(Guid.NewGuid(), 0);
@@ -124,12 +125,12 @@ namespace CometServer.Tests.SideEffects
             modelSetup.IterationSetup.Add(iterationSetup2.Iid);
             modelSetup.Participant.Add(participant.Iid);
 
-            this.modelSetupService.Setup(x => x.GetDeep(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(modelSetup.Iid)), It.IsAny<ISecurityContext>()))
-                .Returns(new Thing[] { modelSetup, mrdl, cat, participant, iterationSetup1, iterationSetup2 });
+            this.modelSetupService.Setup(x => x.GetDeepAsync(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(modelSetup.Iid)), It.IsAny<ISecurityContext>()))
+                .Returns(Task.FromResult<IEnumerable<Thing>>([modelSetup, mrdl, cat, participant, iterationSetup1, iterationSetup2]));
 
             var copy = new EngineeringModelSetup(Guid.NewGuid(), 0);
 
-            this.modelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(modelSetup.Iid, copy, null, null);
+            await this.modelCreatorManager.CreateEngineeringModelSetupFromSourceAsync(modelSetup.Iid, copy, null, null);
 
             Assert.That(copy.RequiredRdl, Is.Not.Empty);
             Assert.That(copy.IterationSetup, Is.Not.Empty);

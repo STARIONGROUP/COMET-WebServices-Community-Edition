@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OptionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -98,8 +99,9 @@ namespace CometServer.Tests.SideEffects
             this.option1 = new Option(Guid.NewGuid(), 0);
             this.option2 = new Option(Guid.NewGuid(), 0);
             this.options = new List<Option>();
+
             this.optionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(),
-                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(this.options);
+                It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(this.options));
 
             this.iterationSetup = new IterationSetup
             {
@@ -109,19 +111,18 @@ namespace CometServer.Tests.SideEffects
             this.iteration = new Iteration
             {
                 Iid = Guid.NewGuid(),
-                IterationSetup = this.iterationSetup.Iid
+                IterationSetup = this.iterationSetup.Iid,
+                DefaultOption = this.option1.Iid
             };
 
-            this.iteration.DefaultOption = this.option1.Iid;
-
             this.iterationSetup.IterationIid = this.iteration.Iid;
-            
+
             this.updatedIteration = this.iteration.DeepClone<Iteration>();
 
             this.engineeringModelSetup = new EngineeringModelSetup
             {
                 Iid = Guid.NewGuid(),
-                IterationSetup = new List<Guid> { this.iterationSetup.Iid },
+                IterationSetup = [this.iterationSetup.Iid],
             };
 
             this.engineeringModel = new EngineeringModel
@@ -129,6 +130,7 @@ namespace CometServer.Tests.SideEffects
                 Iid = Guid.NewGuid(),
                 EngineeringModelSetup = this.engineeringModelSetup.Iid
             };
+
             this.engineeringModelSetup.EngineeringModelIid = this.engineeringModel.Iid;
 
             this.optionSideEffect = new OptionSideEffect
@@ -152,13 +154,13 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void Verify_that_after_delete_option_everything_an_EngineeringModel_is_a_catalogue_no_more_than_one_option_can_be_added()
         {
-            this.engineeringModelSetup.Kind= CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE;
+            this.engineeringModelSetup.Kind = CDP4Common.SiteDirectoryData.EngineeringModelKind.MODEL_CATALOGUE;
             this.options.Add(this.option1);
             this.options.Add(this.option2);
 
             this.SetupMethodCallsForDeleteOptionTest();
 
-            Assert.Throws<InvalidOperationException>(() =>
+            Assert.ThrowsAsync<InvalidOperationException>(() =>
                 this.optionSideEffect.BeforeCreateAsync(
                     this.option1,
                     this.iteration,
@@ -186,11 +188,11 @@ namespace CometServer.Tests.SideEffects
         }
 
         [Test]
-        public void Verify_that_DefaultOption_is_not_set_and_not_saved_when_Option_is_deleted()
+        public async Task Verify_that_DefaultOption_is_not_set_and_not_saved_when_Option_is_deleted()
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
-            this.optionSideEffect.AfterDeleteAsync(
+            await this.optionSideEffect.AfterDeleteAsync(
                 this.option1,
                 this.iteration,
                 this.option1,
@@ -203,16 +205,16 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Once);
         }
 
         [Test]
-        public void Verify_that_DefaultOption_is_set_and_saved_when_Option_is_deleted()
+        public async Task Verify_that_DefaultOption_is_set_and_saved_when_Option_is_deleted()
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
-            this.optionSideEffect.AfterDeleteAsync(
+            await this.optionSideEffect.AfterDeleteAsync(
                 this.option2,
                 this.iteration,
                 this.option2,
@@ -221,20 +223,21 @@ namespace CometServer.Tests.SideEffects
                 this.securityContext.Object);
 
             Assert.That(this.updatedIteration.DefaultOption, Is.Not.Null);
+
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
         [Test]
-        public void Verify_that_DefaultOption_is_not_set_and_not_saved_when_DefaultOption_is_deleted_and_DefautOption_was_already_reset_earlier()
+        public async Task Verify_that_DefaultOption_is_not_set_and_not_saved_when_DefaultOption_is_deleted_and_DefautOption_was_already_reset_earlier()
         {
             this.SetupMethodCallsForDeleteOptionTest();
 
             this.updatedIteration.DefaultOption = null;
 
-            this.optionSideEffect.AfterDeleteAsync(
+            await this.optionSideEffect.AfterDeleteAsync(
                 this.option1,
                 this.iteration,
                 this.option1,
@@ -243,9 +246,10 @@ namespace CometServer.Tests.SideEffects
                 this.securityContext.Object);
 
             Assert.That(this.iteration.DefaultOption, Is.Not.Null);
+
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -261,11 +265,11 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
-            .Returns(Array.Empty<EngineeringModelSetup>());
+                .Returns(Task.FromResult<IEnumerable<Thing>>(Array.Empty<EngineeringModelSetup>()));
 
-            Assert.That(() =>
+            Assert.That(async () =>
             {
-                this.optionSideEffect.BeforeCreateAsync(
+                await this.optionSideEffect.BeforeCreateAsync(
                     this.option1,
                     this.iteration,
                     this.npgsqlTransaction,
@@ -284,37 +288,33 @@ namespace CometServer.Tests.SideEffects
                 .Setup(x => x.GetEngineeringModelPartitionString(this.engineeringModelSetup.EngineeringModelIid))
                 .Returns(this.engineeringModelPartition);
 
-            var iterationSetups = new List<IterationSetup>();
-            iterationSetups.Add(this.iterationSetup);
-            
+            var iterationSetups = new List<IterationSetup> { this.iterationSetup };
+
             this.iterationSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     new[] { this.iteration.IterationSetup }, this.securityContext.Object))
-                .Returns(iterationSetups);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(iterationSetups));
 
-            var engineeringModelSetups = new List<EngineeringModelSetup>(); 
-            engineeringModelSetups.Add(this.engineeringModelSetup);
-            
+            var engineeringModelSetups = new List<EngineeringModelSetup> { this.engineeringModelSetup };
+
             this.engineeringModelSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, CDP4Orm.Dao.Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
-                .Returns(engineeringModelSetups);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(engineeringModelSetups));
 
-            var newIterations = new List<Iteration>();
-            newIterations.Add(this.updatedIteration);
+            var newIterations = new List<Iteration> { this.updatedIteration };
 
             this.iterationService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.iteration.Iid }, this.securityContext.Object))
-                .Returns(newIterations);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(newIterations));
 
-            var engineeringModels = new List<EngineeringModel>();
-            engineeringModels.Add(this.engineeringModel);
+            var engineeringModels = new List<EngineeringModel> { this.engineeringModel };
 
             this.engineeringModelService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.engineeringModelSetup.EngineeringModelIid }, this.securityContext.Object))
-                .Returns(engineeringModels);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(engineeringModels));
         }
     }
 }

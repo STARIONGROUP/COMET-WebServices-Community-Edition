@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelReferenceDataLibraryServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.Services.Supplemental
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -91,15 +92,15 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyQueryReferenceDataLibraryThrowsOnUnknownEngineeringModelSetup()
         {
-            this.engineeringModelSetupDao.Setup(x => x.Read(
+            this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                         It.IsAny<NpgsqlTransaction>(), 
                         It.IsAny<string>(), 
                         It.IsAny<IEnumerable<Guid>>(), 
                         It.IsAny<bool>(),
                         null))
-                .Returns(new List<EngineeringModelSetup>());
+                .Returns(Task.FromResult<IEnumerable<EngineeringModelSetup>>(new List<EngineeringModelSetup>()));
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.ThrowsAsync<InvalidOperationException>(
                 () => this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration)
                 );
         }
@@ -107,15 +108,15 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyQueryReferenceDataLibraryThrowsOnNotHavingModelReferenceDataLibrary()
         {
-            this.engineeringModelSetupDao.Setup(x => x.Read(
+            this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<bool>(), 
                     null))
-                .Returns(new List<EngineeringModelSetup> {this.engineeringModelSetup});
+                .Returns(Task.FromResult<IEnumerable<EngineeringModelSetup>>(new List<EngineeringModelSetup> {this.engineeringModelSetup}));
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.ThrowsAsync<InvalidOperationException>(
                 () => this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration)
             );
         }
@@ -123,21 +124,21 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibrary()
         {
-            this.engineeringModelSetupDao.Setup(x => x.Read(
+            this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<bool>(),
                     null))
-                .Returns(new List<EngineeringModelSetup> { this.engineeringModelSetup });
+                .Returns(Task.FromResult<IEnumerable<EngineeringModelSetup>>(new List<EngineeringModelSetup> { this.engineeringModelSetup }));
 
-            this.modelReferenceDataLibraryDao.Setup( x => x.Read(
+            this.modelReferenceDataLibraryDao.Setup( x => x.ReadAsync(
                 It.IsAny<NpgsqlTransaction>(),
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(),
                 It.IsAny<bool>(), 
                 null))
-                .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary});
+                .Returns(Task.FromResult<IEnumerable<ModelReferenceDataLibrary>>(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary}));
 
             var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
             
@@ -147,31 +148,31 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibraryWithSingleSiteReferenceLibraryInChainOfRDLs()
         {
-            this.engineeringModelSetupDao.Setup(x => x.Read(
+            this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<bool>(), 
                     null))
-                .Returns(new List<EngineeringModelSetup> { this.engineeringModelSetup });
+                .Returns(Task.FromResult<IEnumerable<EngineeringModelSetup>>(new List<EngineeringModelSetup> { this.engineeringModelSetup }));
 
             this.engineeringModelSetup.RequiredRdl.Add(this.modelReferenceDataLibrary.Iid);
 
-            this.modelReferenceDataLibraryDao.Setup(x => x.Read(
+            this.modelReferenceDataLibraryDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new [] { this.modelReferenceDataLibrary.Iid},
                     It.IsAny<bool>(),
                     null))
-                .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary });
+                .Returns(Task.FromResult<IEnumerable<ModelReferenceDataLibrary>>(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary }));
 
-            this.siteReferenceDataLibraryDao.Setup(x => x.Read(
+            this.siteReferenceDataLibraryDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.siteReferenceDataLibrary1.Iid },
                     It.IsAny<bool>(), 
                     null))
-                .Returns(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary1 });
+                .Returns(Task.FromResult<IEnumerable<SiteReferenceDataLibrary>>(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary1 }));
 
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
 
@@ -183,39 +184,39 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibraryWithMultipleSiteReferenceLibrariesInChainOfRDLs()
         {
-            this.engineeringModelSetupDao.Setup(x => x.Read(
+            this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     It.IsAny<bool>(),
                     null))
-                .Returns(new List<EngineeringModelSetup> { this.engineeringModelSetup });
+                .Returns(Task.FromResult<IEnumerable<EngineeringModelSetup>>(new List<EngineeringModelSetup> { this.engineeringModelSetup }));
 
             this.engineeringModelSetup.RequiredRdl.Add(this.modelReferenceDataLibrary.Iid);
 
-            this.modelReferenceDataLibraryDao.Setup(x => x.Read(
+            this.modelReferenceDataLibraryDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.modelReferenceDataLibrary.Iid },
                     It.IsAny<bool>(),
                     null))
-                .Returns(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary });
+                .Returns(Task.FromResult<IEnumerable<ModelReferenceDataLibrary>>(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary }));
 
-            this.siteReferenceDataLibraryDao.Setup(x => x.Read(
+            this.siteReferenceDataLibraryDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.siteReferenceDataLibrary1.Iid },
                     It.IsAny<bool>(),
                     null))
-                .Returns(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary1 });
+                .Returns(Task.FromResult<IEnumerable<SiteReferenceDataLibrary>>(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary1 }));
 
-            this.siteReferenceDataLibraryDao.Setup(x => x.Read(
+            this.siteReferenceDataLibraryDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     new[] { this.siteReferenceDataLibrary2.Iid },
                     It.IsAny<bool>(),
                     null))
-                .Returns(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary2 });
+                .Returns(Task.FromResult<IEnumerable<SiteReferenceDataLibrary>>(new List<SiteReferenceDataLibrary> { this.siteReferenceDataLibrary2 }));
 
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
             this.siteReferenceDataLibrary1.RequiredRdl = this.siteReferenceDataLibrary2.Iid;

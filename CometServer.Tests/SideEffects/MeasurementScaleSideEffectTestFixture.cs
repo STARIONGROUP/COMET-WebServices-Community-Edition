@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MeasurementScaleSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,9 +24,15 @@
 
 namespace CometServer.Tests.SideEffects
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CometServer.Exceptions;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -36,12 +42,6 @@ namespace CometServer.Tests.SideEffects
     using Npgsql;
 
     using NUnit.Framework;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
-    using CometServer.Exceptions;
 
     /// <summary>
     /// Suite of tests for the <see cref="MeasurementScaleSideEffectTestFixture"/>
@@ -112,18 +112,20 @@ namespace CometServer.Tests.SideEffects
             this.securityContext = new Mock<ISecurityContext>();
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,
                     It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary>
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary>
                 {
                     this.srdl
-                });
+                }));
 
             this.mappingToReferenceScaleService = new Mock<IMappingToReferenceScaleService>();
+
             this.mappingToReferenceScaleService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
@@ -135,13 +137,14 @@ namespace CometServer.Tests.SideEffects
                     {
                         iids = iids.ToList();
 
-                        return new List<Thing>
+                        return Task.FromResult<IEnumerable<Thing>>(new List<Thing>
                         {
                             this.rootMappingToReferenceScale
-                        }.Where(qk => iids.Contains(qk.Iid));
+                        }.Where(qk => iids.Contains(qk.Iid)));
                     });
 
             this.scaleValueDefinitionService = new Mock<IScaleValueDefinitionService>();
+
             this.scaleValueDefinitionService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
@@ -153,24 +156,25 @@ namespace CometServer.Tests.SideEffects
                     {
                         iids = iids.ToList();
 
-                        return new List<Thing>
+                        return Task.FromResult(new List<Thing>
                         {
                             this.scaleValueDefinition
-                        }.Where(qk => iids.Contains(qk.Iid));
+                        }.Where(qk => iids.Contains(qk.Iid)));
                     });
 
             this.measurementScaleService = new Mock<IMeasurementScaleService>();
+
             this.measurementScaleService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,
                     It.IsAny<ISecurityContext>()))
-                .Returns(new List<MeasurementScale>
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<MeasurementScale>
                 {
                     this.rootMeasurementScale,
                     this.containerMeasurementScale
-                });
+                }));
 
             this.sideEffect = new MeasurementScaleSideEffect
             {
@@ -191,7 +195,7 @@ namespace CometServer.Tests.SideEffects
                 { "MappingToReferenceScale", new List<Guid> { this.rootMappingToReferenceScale.Iid } }
             };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.rootMeasurementScale,
                     this.mrdl,
@@ -212,7 +216,7 @@ namespace CometServer.Tests.SideEffects
                 { "MappingToReferenceScale", new List<Guid> { this.rootMappingToReferenceScale.Iid } }
             };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.rootMeasurementScale,
                     this.mrdl,
@@ -230,7 +234,7 @@ namespace CometServer.Tests.SideEffects
                 { "MappingToReferenceScale", new List<Guid> { this.rootMappingToReferenceScale.Iid } }
             };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.rootMeasurementScale,
                     this.mrdl,

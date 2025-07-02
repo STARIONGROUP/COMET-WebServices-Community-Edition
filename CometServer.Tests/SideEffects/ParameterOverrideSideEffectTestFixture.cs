@@ -27,6 +27,7 @@ namespace CometServer.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -68,7 +69,7 @@ namespace CometServer.Tests.SideEffects
 
         private ParameterOverrideSideEffect sideEffect;
 
-        private static readonly string[] valueArrayValues = new [] {"1"};
+        private static readonly string[] valueArrayValues = ["1"];
 
         [SetUp]
         public void Setup()
@@ -81,46 +82,47 @@ namespace CometServer.Tests.SideEffects
             this.subscriptionValueSetService = new Mock<IParameterSubscriptionValueSetService>();
             this.defaultValueArrayFactory = new Mock<IDefaultValueArrayFactory>();
 
-            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] {"-"}));
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(["-"]));
 
             this.npgsqlTransaction = null;
 
             this.parameter = new Parameter(Guid.NewGuid(), 1);
-            this.valueset = new ParameterValueSet(Guid.NewGuid(), 1);
 
-            this.valueset.Manual = new ValueArray<string>(valueArrayValues);
-            this.valueset.Computed = new ValueArray<string>(valueArrayValues);
-            this.valueset.Formula = new ValueArray<string>(valueArrayValues);
-            this.valueset.Published = new ValueArray<string>(valueArrayValues);
-            this.valueset.Reference = new ValueArray<string>(valueArrayValues); 
+            this.valueset = new ParameterValueSet(Guid.NewGuid(), 1)
+            {
+                Manual = new ValueArray<string>(valueArrayValues),
+                Computed = new ValueArray<string>(valueArrayValues),
+                Formula = new ValueArray<string>(valueArrayValues),
+                Published = new ValueArray<string>(valueArrayValues),
+                Reference = new ValueArray<string>(valueArrayValues)
+            };
+
             this.parameter.ValueSet.Add(this.valueset.Iid);
             this.parameter.ParameterType = Guid.NewGuid();
             this.parameter.Owner = Guid.NewGuid();
 
             this.sideEffect = new ParameterOverrideSideEffect
-                              {
-                                  ParameterValueSetService = this.valueSetService.Object,
-                                  ParameterOverrideValueSetService = this.parameterOverrideValueSetService.Object,
-                                  ParameterService = this.parameterService.Object,
-                                  ParameterSubscriptionService = this.parameterSubscriptionService.Object,
-                                  ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
-                                  ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
-                                  ParameterSubscriptionValueSetService = this.subscriptionValueSetService.Object,
-                                  DefaultValueArrayFactory = this.defaultValueArrayFactory.Object
-                              };
+            {
+                ParameterValueSetService = this.valueSetService.Object,
+                ParameterOverrideValueSetService = this.parameterOverrideValueSetService.Object,
+                ParameterService = this.parameterService.Object,
+                ParameterSubscriptionService = this.parameterSubscriptionService.Object,
+                ParameterOverrideValueSetFactory = new ParameterOverrideValueSetFactory(),
+                ParameterSubscriptionValueSetFactory = new ParameterSubscriptionValueSetFactory(),
+                ParameterSubscriptionValueSetService = this.subscriptionValueSetService.Object,
+                DefaultValueArrayFactory = this.defaultValueArrayFactory.Object
+            };
 
             // prepare mock data
             this.elementDefinition = new ElementDefinition(Guid.NewGuid(), 1);
             this.elementDefinition.Parameter.Add(this.parameter.Iid);
             this.parameterOverride = new ParameterOverride(Guid.NewGuid(), 1) { Parameter = this.parameter.Iid };
-            this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid }};
+            this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid } };
 
             this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.parameter.Iid)), this.securityContext.Object))
-                    .Returns(new List<Thing> { this.parameter });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.parameter }));
 
-            this.valueSetService.
-                Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.valueset.Iid)), this.securityContext.Object)).
-                Returns(new[] { this.valueset });
+            this.valueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.valueset.Iid)), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([this.valueset]));
         }
 
         [Test]
@@ -150,12 +152,9 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterOverride.Owner = domain2.Iid;
 
-            this.parameterSubscriptionService.
-                Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(subscription.Iid)), this.securityContext.Object)).
-                Returns(new[] {subscription});
+            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(subscription.Iid)), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([subscription]));
 
-            this.parameterSubscriptionService.
-                Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>())).Returns(true);
+            this.parameterSubscriptionService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>())).Returns(Task.FromResult(true));
 
             this.sideEffect.AfterUpdateAsync(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
@@ -173,7 +172,7 @@ namespace CometServer.Tests.SideEffects
             this.parameter.ParameterSubscription.Add(subscription1.Iid);
             this.parameter.ParameterSubscription.Add(subscription2.Iid);
 
-            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(null, It.IsAny<string>(), null, this.securityContext.Object)).Returns(new[] { subscription2, subscription1 });
+            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(null, It.IsAny<string>(), null, this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([subscription2, subscription1]));
 
             this.sideEffect.AfterCreateAsync(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
