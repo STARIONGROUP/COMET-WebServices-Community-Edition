@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BooleanExpressionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -157,12 +159,12 @@ namespace CometServer.Tests.SideEffects
             this.parametricConstraintService = new Mock<IParametricConstraintService>();
             this.parametricConstraintService
                 .Setup(
-                    x => x.GetDeep(
+                    x => x.GetDeepAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.constraintA.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<Thing>
+                    Task.FromResult(new List<Thing>
                         {
                             this.relA,
                             this.relB,
@@ -176,7 +178,7 @@ namespace CometServer.Tests.SideEffects
                             this.exclusiveOrA,
                             this.orA,
                             this.andA
-                        });
+                        }.AsEnumerable()));
 
             this.sideEffect =
                 new NotExpressionSideEffect { ParametricConstraintService = this.parametricConstraintService.Object };

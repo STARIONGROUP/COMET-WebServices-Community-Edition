@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Tests.Services.Supplemental
     using System.Collections.Generic;
     using System.Data;
     using System.Security;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -85,7 +86,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
 
-            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.file)).Returns(Task.FromResult(true));
 
             this.credentialsService.Setup(x => x.Credentials)
                 .Returns(
@@ -99,35 +100,35 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.fileDao
                 .Setup(
-                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
-                .Returns(new[] { this.file });
+                    x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
+                .Returns(Task.FromResult<IEnumerable<File>>([this.file]));
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
-            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
+            this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult<object>(DateTime.MaxValue));
         }
 
         [Test]
         public void VerifyCheckFileLock()
         {
-            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(true));
 
-            Assert.DoesNotThrow(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
+            Assert.DoesNotThrowAsync(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
 
             this.file.LockedBy = this.person.Iid;
-            Assert.DoesNotThrow(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
+            Assert.DoesNotThrowAsync(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
 
             this.file.LockedBy = Guid.NewGuid();
-            Assert.Throws<SecurityException>(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
+            Assert.ThrowsAsync<SecurityException>(() => this.fileService.CheckFileLockAsync(this.transaction, this.iterationPartitionName, this.file));
         }
 
         [Test]
         public void VerifyContainerIsInstanceReadAllowed()
         {
-            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(true);
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(true));
 
             Assert.That(this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.True);
 
-            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(false);
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(false));
 
             Assert.That(this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.False);
         }

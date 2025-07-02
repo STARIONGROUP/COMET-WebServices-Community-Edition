@@ -361,7 +361,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var parameterOverrideColl = new List<Thing>(await this.ParameterOverrideDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var parameterOverrideColl = new List<Thing>(await this.ParameterOverrideDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(parameterOverrideColl, transaction, partition, idFilter);
         }

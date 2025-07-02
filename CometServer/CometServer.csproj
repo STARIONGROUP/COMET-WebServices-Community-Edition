@@ -17,10 +17,6 @@
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AsyncFixer" Version="1.6.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageReference Include="Carter" Version="9.0.0" />
     <PackageReference Include="CDP4MessagePackSerializer-CE" Version="28.3.0" />

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ChangeLogTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Tests.Services
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.CommonData;
@@ -374,7 +375,7 @@ namespace CometServer.Tests.Services
                             It.IsAny<string>(), 
                             It.IsAny<IEnumerable<Guid>>(), 
                             It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.elementDefinition_1 });
+                .Returns(Task.FromResult(new[] { this.elementDefinition_1 }.Cast<Thing>()));
 
             this.elementUsageService.Setup(
                     x =>
@@ -382,7 +383,7 @@ namespace CometServer.Tests.Services
                             It.IsAny<string>(), 
                             It.IsAny<IEnumerable<Guid>>(), 
                             It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.elementUsage_1 });
+                .Returns(Task.FromResult(new[] { this.elementUsage_1 }.Cast<Thing>()));
 
             this.iterationService.Setup(
                     x =>
@@ -390,7 +391,7 @@ namespace CometServer.Tests.Services
                             It.IsAny<string>(), 
                             It.IsAny<IEnumerable<Guid>>(), 
                             It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.iteration });
+                .Returns(Task.FromResult(new[] { this.iteration }.Cast<Thing>()));
             
             this.optionService.Setup(
                     x => x.GetShallowAsync(
@@ -398,7 +399,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.option.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.option });
+                .Returns(Task.FromResult(new[] { this.option }.Cast<Thing>()));
 
             this.actualFiniteStateService.Setup(
                     x => x.GetShallowAsync(
@@ -406,7 +407,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.actualFiniteState.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.actualFiniteState });
+                .Returns(Task.FromResult(new[] { this.actualFiniteState }.Cast<Thing>()));
 
             this.possibleFiniteStateService.Setup(
                     x => x.GetShallowAsync(
@@ -414,7 +415,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         this.actualFiniteState.PossibleState,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.possibleFiniteState });
+                .Returns(Task.FromResult(new[] { this.possibleFiniteState }.Cast<Thing>()));
 
             this.parameterService.Setup(
                     x => x.GetShallowAsync(
@@ -422,7 +423,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameter });
+                .Returns(Task.FromResult(new[] { this.parameter }.Cast<Thing>()));
 
             this.parameterService.Setup(
                     x => x.GetShallowAsync(
@@ -430,7 +431,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.parameter.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameter });
+                .Returns(Task.FromResult(new[] { this.parameter }.Cast<Thing>()));
 
             this.parameterTypeService.Setup(
                     x => x.GetShallowAsync(
@@ -438,7 +439,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.parameterType.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameterType });
+                .Returns(Task.FromResult(new[] { this.parameterType }.Cast<Thing>()));
 
             this.parameterOrOverrideBaseService.Setup(
                     x => x.GetShallowAsync(
@@ -446,7 +447,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { (ParameterOrOverrideBase) this.parameter, this.parameterOverride });
+                .Returns(Task.FromResult(new[] { (ParameterOrOverrideBase)this.parameter, this.parameterOverride }.Cast<Thing>()));
 
             this.parameterValueSetBaseService.Setup(
                     x => x.GetShallowAsync(
@@ -454,7 +455,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.parameterValueSet_1.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { (ParameterValueSetBase) this.parameterValueSet_1 });
+                .Returns(Task.FromResult(new[] { (ParameterValueSetBase) this.parameterValueSet_1 }.Cast<Thing>()));
 
             this.parameterValueSetBaseService.Setup(
                     x => x.GetShallowAsync(
@@ -462,7 +463,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.parameterOverrideValueSet_1.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { (ParameterValueSetBase) this.parameterOverrideValueSet_1 });
+                .Returns(Task.FromResult(new[] { (ParameterValueSetBase) this.parameterOverrideValueSet_1 }.Cast<Thing>()));
 
             this.domainOfExpertiseService.Setup(
                     x => x.GetShallowAsync(
@@ -470,7 +471,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.domain_ElementDefinition.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.domain_ElementDefinition });
+                .Returns(Task.FromResult(new[] { this.domain_ElementDefinition }.Cast<Thing>()));
 
             this.domainOfExpertiseService.Setup(
                     x => x.GetShallowAsync(
@@ -478,7 +479,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.domain_Parameter.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.domain_Parameter });
+                .Returns(Task.FromResult(new[] { this.domain_Parameter }.Cast<Thing>()));
 
             this.elementDefinitionService.Setup(
                     x => x.GetShallowAsync(
@@ -486,7 +487,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.elementDefinition_1 });
+                .Returns(Task.FromResult(new[] { this.elementDefinition_1 }.Cast<Thing>()));
 
             this.elementUsageService.Setup(
                     x => x.GetShallowAsync(
@@ -494,7 +495,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.elementUsage_1 });
+                .Returns(Task.FromResult(new[] { this.elementUsage_1 }.Cast<Thing>()));
 
             this.iterationSetupService.Setup(
                     x => x.GetShallowAsync(
@@ -502,7 +503,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.iteration.IterationSetup },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.iterationSetup });
+                .Returns(Task.FromResult(new[] { this.iterationSetup }.Cast<Thing>()));
 
             this.parameterValueSetService.Setup(
                     x => x.GetShallowAsync(
@@ -510,7 +511,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.parameterOverrideValueSet_1.ParameterValueSet },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameterValueSet_1 });
+                .Returns(Task.FromResult(new[] { this.parameterValueSet_1 }.Cast<Thing>()));
 
             this.parameterOverrideService.Setup(
                     x => x.GetShallowAsync(
@@ -518,7 +519,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameterOverride });
+                .Returns(Task.FromResult(new[] { this.parameterOverride }.Cast<Thing>()));
 
             this.parameterOverrideService.Setup(
                     x => x.GetShallowAsync(
@@ -526,7 +527,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new[] { this.parameterOverride.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameterOverride });
+                .Returns(Task.FromResult(new[] { this.parameterOverride }.Cast<Thing>()));
 
             this.parameterSubscriptionService.Setup(
                     x => x.GetShallowAsync(
@@ -534,7 +535,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameterSubscription, this.parameterOverrideSubscription });
+                .Returns(Task.FromResult(new[] { this.parameterSubscription, this.parameterOverrideSubscription }.Cast<Thing>()));
 
             this.parameterSubscriptionService.Setup(
                     x => x.GetShallowAsync(
@@ -542,7 +543,7 @@ namespace CometServer.Tests.Services
                         It.IsAny<string>(),
                         new [] { this.parameterSubscription.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new[] { this.parameterSubscription });
+                .Returns(Task.FromResult(new[] { this.parameterSubscription }.Cast<Thing>()));
         }
 
         [Test]

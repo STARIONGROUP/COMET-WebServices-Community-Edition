@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefaultValueArrayFactoryTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.Services.BusinessLogic
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -78,10 +79,10 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.PopulateParameterTypes();
 
             this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypesAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypes);
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypeComponents);
-            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.dependentParameterTypeAssignments);
-            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.independentParameterTypeAssignments);
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypesAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.parameterTypes));
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.parameterTypeComponents));
+            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.dependentParameterTypeAssignments));
+            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.independentParameterTypeAssignments));
 
             this.defaultValueArrayFactory = new DefaultValueArrayFactory();
             this.defaultValueArrayFactory.Logger = this.logger.Object;

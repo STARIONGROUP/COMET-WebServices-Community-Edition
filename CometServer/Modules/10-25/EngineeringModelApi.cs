@@ -1020,14 +1020,14 @@ namespace CometServer.Modules
                 await operationProcessor.ProcessAsync(postRequestData.OperationData, transaction, partition, postRequestData.Files);
 
                 var actor = credentialsService.Credentials.Person.Iid;
-
+                
                 if (this.AppConfigService.AppConfig.Changelog.CollectChanges)
                 {
                     var initiallyChangedThings = (await revisionService.GetCurrentChangesAsync(transaction, partition, transactionRevision, true)).ToList();
 
                     if (changeLogService != null)
                     {
-                        await changeLogService?.TryAppendModelChangeLogDataAsync(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
+                        await changeLogService.TryAppendModelChangeLogDataAsync(transaction, partition, actor, transactionRevision, postRequestData.OperationData, initiallyChangedThings);
                     }
                 }
 

@@ -366,7 +366,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var stakeholderColl = new List<Thing>(await this.StakeholderDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var stakeholderColl = new List<Thing>(await this.StakeholderDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(stakeholderColl, transaction, partition, idFilter);
         }

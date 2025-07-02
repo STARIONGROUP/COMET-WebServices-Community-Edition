@@ -371,7 +371,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var optionColl = new List<Thing>(await this.OptionDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var optionColl = new List<Thing>(await this.OptionDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(optionColl, transaction, partition, idFilter);
         }

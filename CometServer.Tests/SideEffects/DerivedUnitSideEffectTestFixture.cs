@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DerivedUnitSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -129,7 +130,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
 
             this.derivedUnitService = new Mock<IDerivedUnitService>();
             this.derivedUnitService
@@ -139,7 +140,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.simpleUnitD.Iid, this.derivedUnitA.Iid, this.derivedUnitB.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB }));
 
             this.unitFactorService = new Mock<IUnitFactorService>();
             this.unitFactorService
@@ -148,28 +149,28 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorA });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorA }));
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorB });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorB }));
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorC });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorC }));
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorD });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorD }));
         }
 
         [Test]

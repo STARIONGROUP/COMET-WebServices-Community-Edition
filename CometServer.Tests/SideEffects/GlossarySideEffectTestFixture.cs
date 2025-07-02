@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="GlossarySideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -76,13 +77,13 @@ namespace CometServer.Tests.SideEffects
         public void SetUp()
         {
             this.permittingPermissionService = new Mock<IPermissionService>();
-            this.permittingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(true);
+            this.permittingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(true));
 
             this.denyingPermissionService = new Mock<IPermissionService>();
-            this.denyingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(false);
+            this.denyingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(false));
 
             this.termService = new Mock<ITermService>();
-            this.termService.Setup(x => x.UpdateConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<Term>(), It.IsAny<Thing>())).Returns(true);
+            this.termService.Setup(x => x.UpdateConceptAsync(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<Term>(), It.IsAny<Thing>())).Returns(Task.FromResult(true));
 
             this.securityContext = new Mock<ISecurityContext>();
 
@@ -109,7 +110,7 @@ namespace CometServer.Tests.SideEffects
             
             this.termService.Verify(x => x.GetAsync(this.npgsqlTransaction, "partition", this.glossary.Term, this.securityContext.Object), Times.Never);
 
-            this.termService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
+            this.termService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
         }
 
         [Test]
@@ -127,7 +128,7 @@ namespace CometServer.Tests.SideEffects
 
             this.termService.Verify(x => x.GetAsync(this.npgsqlTransaction, "partition", this.glossary.Term, this.securityContext.Object), Times.Never);
 
-            this.termService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
+            this.termService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
         }
 
         [Test]
@@ -144,7 +145,7 @@ namespace CometServer.Tests.SideEffects
 
             this.denyingPermissionService.Verify(x => x.CanWriteAsync(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Once);
 
-            this.termService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
+            this.termService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Never);
         }
 
         [Test]
@@ -154,10 +155,12 @@ namespace CometServer.Tests.SideEffects
             var term1 = new Term(Guid.NewGuid(), 1);
             var term2 = new Term(Guid.NewGuid(), 1);
 
-            var returnedTerms = new List<Term>();
-            returnedTerms.Add(term1);
-            returnedTerms.Add(term2);
-            
+            var returnedTerms = new List<Term>
+            {
+                term1,
+                term2
+            };
+
             this.glossary.IsDeprecated = true;
             this.glossary.Term.Add(term1.Iid);
             this.glossary.Term.Add(term2.Iid);
@@ -165,13 +168,13 @@ namespace CometServer.Tests.SideEffects
             this.glossarySideEffect.PermissionService = this.permittingPermissionService.Object;
             this.glossarySideEffect.TermService = this.termService.Object;
 
-            this.termService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(returnedTerms);
+            this.termService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>(returnedTerms));
 
             this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
             
             this.permittingPermissionService.Verify(x => x.CanWriteAsync(this.npgsqlTransaction, originalThing, nameof(Term), "partition", "update", this.securityContext.Object), Times.Once);
 
-            this.termService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Exactly(2));
+            this.termService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "partition", It.IsAny<Term>(), It.IsAny<Thing>()), Times.Exactly(2));
         }        
     }
 }

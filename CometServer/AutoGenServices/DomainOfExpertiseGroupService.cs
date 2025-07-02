@@ -366,7 +366,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var domainOfExpertiseGroupColl = new List<Thing>(await this.DomainOfExpertiseGroupDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var domainOfExpertiseGroupColl = new List<Thing>(await this.DomainOfExpertiseGroupDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(domainOfExpertiseGroupColl, transaction, partition, idFilter);
         }

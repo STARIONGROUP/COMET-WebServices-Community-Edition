@@ -189,7 +189,7 @@ namespace CometServer.Services.ChangeLog
         {
             var sw = Stopwatch.StartNew();
             this.Logger.LogInformation("Starting to append changelog data");
-            
+
             var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
 
             if (!isCachedDtoReadEnabled)
@@ -495,7 +495,7 @@ namespace CometServer.Services.ChangeLog
                 AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
                 AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
 
-                stringBuilder.AppendLine($"* {this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
+                stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
             }
 
             var affectedThingsData = await this.GetAffectedThingsDataAsync(transaction, partition, createdThing, null);
@@ -517,7 +517,7 @@ namespace CometServer.Services.ChangeLog
                 stringBuilder.AppendLine(extraChangeDescription);
             }
 
-            stringBuilder.AppendLine($"* {this.GetThingDescriptionAsync(transaction, partition, createdThing)}");
+            stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, createdThing)}");
 
             var customDescriptions = await this.GetCustomDescriptionsAsync(transaction, partition, createdThing);
 
@@ -597,10 +597,10 @@ namespace CometServer.Services.ChangeLog
             {
                 AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
                 AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
-                stringBuilder.AppendLine($"* {this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
+                stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
             }
 
-            stringBuilder.AppendLine($"* {this.GetThingDescriptionAsync(transaction, partition, updatedThing)}");
+            stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, updatedThing)}");
 
             var extraDescriptions = await this.GetCustomDescriptionsAsync(transaction, partition, updatedThing);
 
@@ -753,7 +753,7 @@ namespace CometServer.Services.ChangeLog
         /// </returns>
         private Thing FindOriginalThing(Guid guid)
         {
-            foreach (var thing in this.OperationProcessor.OperationOriginalThingCache)
+            foreach (var thing in this.OperationProcessor.OperationOriginalThingCache.ToArray())
             {
                 if (thing.Iid.Equals(guid))
                 {
@@ -835,10 +835,10 @@ namespace CometServer.Services.ChangeLog
             {
                 AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
                 AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
-                stringBuilder.AppendLine($"* {this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
+                stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
             }
 
-            stringBuilder.AppendLine($"* {this.GetThingDescriptionAsync(transaction, partition, deletedThing)}");
+            stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, deletedThing)}");
 
             var extraDescriptions = await this.GetCustomDescriptionsAsync(transaction, partition, deletedThing);
 
@@ -1330,13 +1330,13 @@ namespace CometServer.Services.ChangeLog
             if (thing is Parameter parameter
                 && (await this.ParameterTypeService.GetShallowAsync(transaction, siteDirectoryPartition, [parameter.ParameterType], securityContext)).Single() is ParameterType parameterType)
             {
-                description = $"{description} {this.GetThingDescriptionAsync(transaction, partition, parameterType)}";
+                description = $"{description} {await this.GetThingDescriptionAsync(transaction, partition, parameterType)}";
             }
 
             if (thing is ParameterOverride parameterOverride
                 && (await this.ParameterService.GetShallowAsync(transaction, iterationPartition, [parameterOverride.Parameter], securityContext)).Single() is Parameter parameterOverrideParameter)
             {
-                description = $"ParameterOverride: {this.GetThingDescriptionAsync(transaction, partition, parameterOverrideParameter)}";
+                description = $"ParameterOverride: {await this.GetThingDescriptionAsync(transaction, partition, parameterOverrideParameter)}";
             }
 
             if (thing is ParameterSubscription parameterSubscription
@@ -1345,7 +1345,7 @@ namespace CometServer.Services.ChangeLog
                     .Cast<ParameterOrOverrideBase>()
                     .SingleOrDefault(x => x.ParameterSubscription.Contains(parameterSubscription.Iid)) is { } parameterOrOverride)
             {
-                description = $"ParameterSubscription => {this.GetThingDescriptionAsync(transaction, partition, parameterOrOverride)}";
+                description = $"ParameterSubscription => {await this.GetThingDescriptionAsync(transaction, partition, parameterOrOverride)}";
             }
 
             return description;

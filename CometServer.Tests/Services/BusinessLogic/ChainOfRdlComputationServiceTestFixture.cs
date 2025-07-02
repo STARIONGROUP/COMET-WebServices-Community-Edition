@@ -26,6 +26,7 @@ namespace CometServer.Tests.Services.BusinessLogic
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -64,10 +65,11 @@ namespace CometServer.Tests.Services.BusinessLogic
         {
             this.CreateTestData();
 
-            this.modelReferenceDataLibraryDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
-                .Returns(this.modelReferenceDataLibraries);
-            this.siteReferenceDataLibraryDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
-                .Returns(this.siteReferenceDataLibraries);
+            this.modelReferenceDataLibraryDao.Setup(x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
+                .Returns(Task.FromResult<IEnumerable<ModelReferenceDataLibrary>>(this.modelReferenceDataLibraries));
+
+            this.siteReferenceDataLibraryDao.Setup(x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
+                .Returns(Task.FromResult<IEnumerable<SiteReferenceDataLibrary>>(this.siteReferenceDataLibraries));
 
             this.chainOfRdlComputationService = new ChainOfRdlComputationService();
             this.chainOfRdlComputationService.Logger = this.logger.Object;

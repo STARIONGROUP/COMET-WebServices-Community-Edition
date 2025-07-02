@@ -89,15 +89,14 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ContainerInfo"/>.
         /// </returns>
-        public async Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadAsync(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
+        public Task<IEnumerable<Tuple<Guid, ContainerInfo>>> ReadAsync(NpgsqlTransaction transaction, string partition, string typeName, IEnumerable<Guid> ids)
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
-                // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-                return  (await this.ReadInternalFromSiteDirectoryAsync(transaction, partition, typeName, ids)).ToList();
+                return  this.ReadInternalFromSiteDirectoryAsync(transaction, partition, typeName, ids);
             }
 
-            return (await this.ReadInternalFromEngineeringModelAsync(transaction, partition, typeName, ids)).ToList();
+            return this.ReadInternalFromEngineeringModelAsync(transaction, partition, typeName, ids);
         }
 
         /// <summary>
@@ -234,15 +233,16 @@ namespace CDP4Orm.Dao.Resolve
 
             command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
 
-            await using var reader = await command.ExecuteReaderAsync();
-
             var result = new List<Tuple<Guid, ContainerInfo>>();
 
-            while (await reader.ReadAsync())
+            await using (var reader = await command.ExecuteReaderAsync())
             {
-                var tuple = MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
+                while (await reader.ReadAsync())
+                {
+                    var tuple = MapToEngineeringModelContainmentInfo(reader, connectedPartition, otherPartition);
 
-                result.Add(tuple);
+                    result.Add(tuple);
+                }
             }
 
             return result;

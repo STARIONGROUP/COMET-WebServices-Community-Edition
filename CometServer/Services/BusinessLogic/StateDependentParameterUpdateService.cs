@@ -369,7 +369,7 @@ namespace CometServer.Services
         /// <param name="container">The container</param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        private async Task CreateParameterSubscriptionValueSetAsync(ParameterSubscriptionValueSet oldValue, ParameterValueSetBase valueSetBase, ParameterSubscription container, NpgsqlTransaction transaction, string partition)
+        private Task CreateParameterSubscriptionValueSetAsync(ParameterSubscriptionValueSet oldValue, ParameterValueSetBase valueSetBase, ParameterSubscription container, NpgsqlTransaction transaction, string partition)
         {
             var isOldValueNull = oldValue == null;
 
@@ -380,7 +380,7 @@ namespace CometServer.Services
                 SubscribedValueSet = valueSetBase.Iid
             };
 
-            await this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, newValueSet, container);
+            return this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, newValueSet, container);
         }
     }
 }

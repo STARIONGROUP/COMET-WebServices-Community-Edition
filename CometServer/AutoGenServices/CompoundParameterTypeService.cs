@@ -390,7 +390,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var compoundParameterTypeColl = new List<Thing>(await this.CompoundParameterTypeDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var compoundParameterTypeColl = new List<Thing>(await this.CompoundParameterTypeDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             compoundParameterTypeColl.AddRange(
                 this.RequestUtils.QueryParameters.ExtentDeep

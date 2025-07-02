@@ -55,15 +55,12 @@ namespace CDP4Orm.Dao.Resolve
         /// </returns>
         public async Task<IEnumerable<ResolveInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
-            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return (await ReadSiteDirectoryThing(transaction, partition, ids)).ToList();
+                return await ReadSiteDirectoryThing(transaction, partition, ids);
             }
 
-            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            return (await ReadEngineeringModelInternal(transaction, partition, ids)).ToList();
+            return await ReadEngineeringModelInternal(transaction, partition, ids);
         }
 
         /// <summary>
@@ -83,6 +80,14 @@ namespace CDP4Orm.Dao.Resolve
         /// </returns>
         private static async Task<IEnumerable<ResolveInfo>> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
+            var enumerable = ids as Guid[] ?? ids.ToArray();
+
+            if (!enumerable.Any())
+            {
+                //No ids, so no query
+                return [];
+            }
+
             var sqlBuilder = new System.Text.StringBuilder();
 
             // get all Thing 'concepts' that are newer then passed in revision
@@ -94,7 +99,7 @@ namespace CDP4Orm.Dao.Resolve
 
             await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = enumerable.ToList();
 
             await using var reader = await command.ExecuteReaderAsync();
 
@@ -128,8 +133,16 @@ namespace CDP4Orm.Dao.Resolve
         /// </remarks>
         private static async Task<IEnumerable<ResolveInfo>> ReadEngineeringModelInternal(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
+            var enumerable = ids as Guid[] ?? ids.ToArray();
+
+            if (!enumerable.Any())
+            {
+                //No ids, so no query
+                return [];
+            }
+
             var sqlBuilder = new System.Text.StringBuilder();
-            
+
             // union the EngineeringModel and subpartition (Iteration) to help resolve the requested Iids
             sqlBuilder.Append(
                 "SELECT \"AllThings\".\"TypeInfo\", \"AllThings\".\"Iid\", \"AllThings\".\"SameAsConnectedPartition\"").Append(
@@ -150,7 +163,7 @@ namespace CDP4Orm.Dao.Resolve
 
             await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = enumerable.ToList();
 
             await using var reader = await command.ExecuteReaderAsync();
 

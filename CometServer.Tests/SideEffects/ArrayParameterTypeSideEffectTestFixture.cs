@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -149,7 +151,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .Returns(Task.FromResult(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }.Cast<Thing>()));
 
             this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
 
@@ -165,7 +167,7 @@ namespace CometServer.Tests.SideEffects
                                 this.arrayParameterTypeB.Iid
                             },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<CompoundParameterType> { this.arrayParameterTypeA, this.arrayParameterTypeB });
+                    Task.FromResult(new List<CompoundParameterType> { this.arrayParameterTypeA, this.arrayParameterTypeB }.Cast<Thing>()));
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
 
@@ -179,7 +181,7 @@ namespace CometServer.Tests.SideEffects
                             this.arrayParameterTypeA.Iid,
                             this.arrayParameterTypeB.Iid
                         },
-                    It.IsAny<ISecurityContext>())).Returns(new List<ArrayParameterType>());
+                    It.IsAny<ISecurityContext>())).Returns(Task.FromResult(new List<CompoundParameterType>().Cast<Thing>()));
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
 
@@ -190,7 +192,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentA });
+                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentA }.Cast<Thing>()));
 
             this.parameterTypeComponentService
                 .Setup(
@@ -199,7 +201,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentB });
+                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentB }.Cast<Thing>()));
 
             this.parameterTypeComponentService
                 .Setup(
@@ -208,7 +210,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentC });
+                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentC }.Cast<Thing>()));
 
             this.parameterTypeComponentService
                 .Setup(
@@ -217,7 +219,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentD });
+                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentD }.Cast<Thing>()));
 
 
             this.sideEffect = new ArrayParameterTypeSideEffect()

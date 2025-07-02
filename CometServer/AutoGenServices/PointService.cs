@@ -349,7 +349,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var pointColl = new List<Thing>(await this.PointDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var pointColl = new List<Thing>(await this.PointDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(pointColl, transaction, partition, idFilter);
         }

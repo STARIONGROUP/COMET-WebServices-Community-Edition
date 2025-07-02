@@ -388,7 +388,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var engineeringModelSetupColl = new List<Thing>(await this.EngineeringModelSetupDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var engineeringModelSetupColl = new List<Thing>(await this.EngineeringModelSetupDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(engineeringModelSetupColl, transaction, partition, idFilter);
         }

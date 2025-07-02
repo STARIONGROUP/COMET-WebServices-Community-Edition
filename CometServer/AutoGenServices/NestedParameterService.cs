@@ -349,7 +349,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var nestedParameterColl = new List<Thing>(await this.NestedParameterDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var nestedParameterColl = new List<Thing>(await this.NestedParameterDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(nestedParameterColl, transaction, partition, idFilter);
         }

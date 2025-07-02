@@ -126,9 +126,9 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        public async Task <ReadOnlyCollection<RevisionRegistryInfo>> ReadRevisionRegistryAsync(NpgsqlTransaction transaction, string partition)
+        public Task <ReadOnlyCollection<RevisionRegistryInfo>> ReadRevisionRegistryAsync(NpgsqlTransaction transaction, string partition)
         {
-            return await InternalGetRevisionRegistryInfo(transaction, partition);
+            return InternalGetRevisionRegistryInfo(transaction, partition);
         }
 
         /// <summary>
@@ -146,9 +146,9 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        public async Task<ReadOnlyCollection<RevisionInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, int revision)
+        public Task<ReadOnlyCollection<RevisionInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, int revision)
         {
-            return await InternalGetRevisionInfo(transaction, partition, revision, ChangesSinceRevision);
+            return InternalGetRevisionInfo(transaction, partition, revision, ChangesSinceRevision);
         }
 
         /// <summary>
@@ -166,9 +166,9 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        public async Task<ReadOnlyCollection<RevisionInfo>> ReadCurrentRevisionChangesAsync(NpgsqlTransaction transaction, string partition, int revision)
+        public Task<ReadOnlyCollection<RevisionInfo>> ReadCurrentRevisionChangesAsync(NpgsqlTransaction transaction, string partition, int revision)
         {
-            return await InternalGetRevisionInfo(transaction, partition, revision, ChangesInCurrentRevision);
+            return InternalGetRevisionInfo(transaction, partition, revision, ChangesInCurrentRevision);
         }
 
         /// <summary>
@@ -407,14 +407,14 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static async Task<ReadOnlyCollection<RevisionInfo>> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static Task<ReadOnlyCollection<RevisionInfo>> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return await ReadSiteDirectoryRevisions(transaction, partition, revision, comparator);
+                return ReadSiteDirectoryRevisions(transaction, partition, revision, comparator);
             }
 
-            return await ReadEngineeringModelRevisions(transaction, partition, revision, comparator);
+            return ReadEngineeringModelRevisions(transaction, partition, revision, comparator);
         }
 
         /// <summary>

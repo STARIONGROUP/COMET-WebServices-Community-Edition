@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CometStartUpServiceTestFixture" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -84,8 +84,8 @@ namespace CometServer.Tests.Health
         {
             var cts = new CancellationTokenSource();
 
-            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).Returns(true);
-            this.migrateEngine.Setup(x => x.MigrateAllAtStartUpAsync()).Returns(true);
+            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).Returns(Task.FromResult(true));
+            this.migrateEngine.Setup(x => x.MigrateAllAtStartUpAsync()).Returns(Task.FromResult(true));
 
             await this.testCometStartUpService.ExecuteAsync(cts.Token);
 
@@ -97,7 +97,7 @@ namespace CometServer.Tests.Health
         {
             var cts = new CancellationTokenSource();
 
-            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).Returns(false);
+            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).Returns(Task.FromResult(false));
             
             await this.testCometStartUpService.ExecuteAsync(cts.Token);
 

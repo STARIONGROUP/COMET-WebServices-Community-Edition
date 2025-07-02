@@ -219,7 +219,7 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 this.Logger.LogInformation("Create a Copy of an EngineeringModel");
 
-                this.CreateCopyEngineeringModel(thing, transaction, securityContext);
+                await this.CreateCopyEngineeringModel(thing, transaction, securityContext);
 
                 var stopwatch = Stopwatch.StartNew();
                 this.Logger.LogInformation("Create revisions for created EngineeringModel");
@@ -270,12 +270,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="thing">The <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        private void CreateCopyEngineeringModel(EngineeringModelSetup thing, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        private async Task CreateCopyEngineeringModel(EngineeringModelSetup thing, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var stopWatch = Stopwatch.StartNew();
 
             // copy data from the source engineering-model
-            this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
+            await this.ModelCreatorManager.CopyEngineeringModelData(thing, transaction, securityContext);
             stopWatch.Stop();
 
             this.Logger.LogDebug("Copied of the EngineeringModel took {ElapsedMilliseconds}[ms]", stopWatch.ElapsedMilliseconds);

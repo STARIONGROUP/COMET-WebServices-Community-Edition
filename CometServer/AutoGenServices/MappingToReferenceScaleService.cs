@@ -349,7 +349,9 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var mappingToReferenceScaleColl = new List<Thing>(await this.MappingToReferenceScaleDao.ReadAsync(transaction, partition, idFilter, await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction), (DateTime)(await this.TransactionManager.GetRawSessionInstantAsync(transaction))));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var mappingToReferenceScaleColl = new List<Thing>(await this.MappingToReferenceScaleDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
             return await this.AfterGetAsync(mappingToReferenceScaleColl, transaction, partition, idFilter);
         }

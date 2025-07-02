@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CategorySideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -130,7 +132,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .Returns(Task.FromResult(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }.Cast<Thing>()));
 
             this.categoryService = new Mock<ICategoryService>();
             this.categoryService
@@ -148,7 +150,7 @@ namespace CometServer.Tests.SideEffects
                                 this.categoryA.Iid
                             },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<Category>
+                    Task.FromResult(new List<Category>
                         {
                             this.categoryC,
                             this.categoryD,
@@ -156,7 +158,7 @@ namespace CometServer.Tests.SideEffects
                             this.categoryF,
                             this.categoryG,
                             this.categoryA
-                        });
+                        }.Cast<Thing>()));
         }
 
         [Test]

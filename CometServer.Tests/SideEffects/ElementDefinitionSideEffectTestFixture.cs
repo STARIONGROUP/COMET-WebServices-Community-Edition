@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementDefinitionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -113,8 +114,9 @@ namespace CometServer.Tests.SideEffects
             this.edC = new ElementDefinition
             {
                 Iid = Guid.NewGuid(),
-                ContainedElement = new List<Guid> { this.euC.Iid }
+                ContainedElement = [this.euC.Iid]
             };
+
             this.euB = new ElementUsage { Iid = Guid.NewGuid(), ElementDefinition = this.edC.Iid };
 
             this.edB = new ElementDefinition { Iid = Guid.NewGuid() };
@@ -123,19 +125,22 @@ namespace CometServer.Tests.SideEffects
             this.edA = new ElementDefinition
             {
                 Iid = Guid.NewGuid(),
-                ContainedElement = new List<Guid> { this.euA.Iid, this.euB.Iid }
+                ContainedElement = [this.euA.Iid, this.euB.Iid]
             };
+
             this.euD = new ElementUsage { Iid = Guid.NewGuid(), ElementDefinition = this.edA.Iid };
 
             this.elementDefinitionService = new Mock<IElementDefinitionService>();
+
             this.elementDefinitionService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(new List<Thing> { this.edA, this.edB, this.edC, this.edD });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.edA, this.edB, this.edC, this.edD }));
 
             this.elementUsageService = new Mock<IElementUsageService>();
+
             this.elementUsageService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(new List<Thing> { this.euA, this.euB, this.euC, this.euD, this.euE });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.euA, this.euB, this.euC, this.euD, this.euE }));
 
             this.iterationSetup = new IterationSetup
             {
@@ -145,16 +150,17 @@ namespace CometServer.Tests.SideEffects
             this.iteration = new Iteration
             {
                 Iid = Guid.NewGuid(),
-                Element = new List<Guid>
-                {
+                Element =
+                [
                     this.edA.Iid,
                     this.edB.Iid,
                     this.edC.Iid,
                     this.edD.Iid
-                },
+                ],
                 TopElement = this.edA.Iid,
                 IterationSetup = this.iterationSetup.Iid
             };
+
             this.updatedIteration = this.iteration.DeepClone<Iteration>();
 
             this.iterationSetup.IterationIid = this.iteration.Iid;
@@ -162,7 +168,7 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelSetup = new EngineeringModelSetup
             {
                 Iid = Guid.NewGuid(),
-                IterationSetup = new List<Guid> { this.iterationSetup.Iid }
+                IterationSetup = [this.iterationSetup.Iid]
             };
 
             this.engineeringModel = new EngineeringModel
@@ -170,6 +176,7 @@ namespace CometServer.Tests.SideEffects
                 Iid = Guid.NewGuid(),
                 EngineeringModelSetup = this.engineeringModelSetup.Iid
             };
+
             this.engineeringModelSetup.EngineeringModelIid = this.engineeringModel.Iid;
 
             this.sideEffect = new ElementDefinitionSideEffect
@@ -191,7 +198,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, new List<Guid> { this.euE.Iid } } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.edC,
                     this.iteration,
@@ -206,7 +213,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, new List<Guid> { this.euD.Iid } } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.edC,
                     this.iteration,
@@ -217,11 +224,11 @@ namespace CometServer.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyThatResetOfTopElementIsNotSetAndNotSavedWhenNonTopElementIsDeleted()
+        public async Task VerifyThatResetOfTopElementIsNotSetAndNotSavedWhenNonTopElementIsDeleted()
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
-            this.sideEffect.BeforeDeleteAsync(
+            await this.sideEffect.BeforeDeleteAsync(
                 this.edD,
                 this.iteration,
                 this.npgsqlTransaction,
@@ -232,18 +239,18 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
         [Test]
-        public void
+        public async Task
             VerifyThatResetOfTopElementIsNotSetAndNotSavedWhenTopElementIsDeletedAndTopElementWasAlreadyResetAtAnEarlierStage()
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
             this.updatedIteration.TopElement = null;
 
-            this.sideEffect.BeforeDeleteAsync(
+            await this.sideEffect.BeforeDeleteAsync(
                 this.edA,
                 this.iteration,
                 this.npgsqlTransaction,
@@ -254,16 +261,16 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
         [Test]
-        public void VerifyThatResetOfTopElementIsSetAndSavedWhenTopElementIsDeleted()
+        public async Task VerifyThatResetOfTopElementIsSetAndSavedWhenTopElementIsDeleted()
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
-            this.sideEffect.BeforeDeleteAsync(
+            await this.sideEffect.BeforeDeleteAsync(
                 this.edA,
                 this.iteration,
                 this.npgsqlTransaction,
@@ -274,7 +281,7 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Once);
         }
 
@@ -283,7 +290,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
-            Assert.Throws<ArgumentNullException>(() =>
+            Assert.ThrowsAsync<ArgumentNullException>(() =>
                 this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     null,
@@ -294,7 +301,7 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -303,7 +310,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.All);
 
-            Assert.Throws<ArgumentException>(() =>
+            Assert.ThrowsAsync<ArgumentException>(() =>
                 this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.edB,
@@ -314,7 +321,7 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -323,7 +330,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.EngineeringModelNotFound);
 
-            Assert.Throws<KeyNotFoundException>(() =>
+            Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
@@ -336,7 +343,7 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -346,7 +353,7 @@ namespace CometServer.Tests.SideEffects
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario
                 .EngineeringModelSetupNotFound);
 
-            Assert.Throws<KeyNotFoundException>(() =>
+            Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
@@ -354,9 +361,10 @@ namespace CometServer.Tests.SideEffects
                     this.iterationPartition,
                     this.securityContext.Object)
             );
+
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -365,7 +373,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.IterationNotFound);
 
-            Assert.Throws<KeyNotFoundException>(() =>
+            Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
@@ -376,7 +384,7 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -385,7 +393,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.SetupMethodCallsForTopElementTest(SetupMethodCallsForTopElementTestScenario.IterationSetupNotFound);
 
-            Assert.Throws<KeyNotFoundException>(() =>
+            Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 this.sideEffect.BeforeDeleteAsync(
                     this.edA,
                     this.iteration,
@@ -396,7 +404,7 @@ namespace CometServer.Tests.SideEffects
 
             this.iterationService
                 .Verify(
-                    x => x.UpdateConcept(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
+                    x => x.UpdateConceptAsync(this.npgsqlTransaction, this.engineeringModelPartition, this.updatedIteration,
                         this.engineeringModel), Times.Never);
         }
 
@@ -436,8 +444,9 @@ namespace CometServer.Tests.SideEffects
                 .Returns(this.engineeringModelPartition);
 
             var iterationSetups = new List<IterationSetup>();
+
             if (setupMethodCallsForTopElementTestScenario.HasFlag(SetupMethodCallsForTopElementTestScenario
-                .IterationSetup))
+                    .IterationSetup))
             {
                 iterationSetups.Add(this.iterationSetup);
             }
@@ -445,11 +454,12 @@ namespace CometServer.Tests.SideEffects
             this.iterationSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
                     new[] { this.iteration.IterationSetup }, this.securityContext.Object))
-                .Returns(iterationSetups);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(iterationSetups));
 
             var engineeringModelSetups = new List<EngineeringModelSetup>();
+
             if (setupMethodCallsForTopElementTestScenario.HasFlag(SetupMethodCallsForTopElementTestScenario
-                .EngineeringModelSetup))
+                    .EngineeringModelSetup))
             {
                 engineeringModelSetups.Add(this.engineeringModelSetup);
             }
@@ -457,9 +467,10 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
-                .Returns(engineeringModelSetups);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(engineeringModelSetups));
 
             var newIterations = new List<Iteration>();
+
             if (setupMethodCallsForTopElementTestScenario.HasFlag(SetupMethodCallsForTopElementTestScenario.Iteration))
             {
                 newIterations.Add(this.updatedIteration);
@@ -468,12 +479,12 @@ namespace CometServer.Tests.SideEffects
             this.iterationService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.iteration.Iid }, this.securityContext.Object))
-                .Returns(newIterations);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(newIterations));
 
             var engineeringModels = new List<EngineeringModel>();
 
             if (setupMethodCallsForTopElementTestScenario.HasFlag(SetupMethodCallsForTopElementTestScenario
-                .EngineeringModel))
+                    .EngineeringModel))
             {
                 engineeringModels.Add(this.engineeringModel);
             }
@@ -481,7 +492,7 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.engineeringModelSetup.EngineeringModelIid }, this.securityContext.Object))
-                .Returns(engineeringModels);
+                .Returns(Task.FromResult<IEnumerable<Thing>>(engineeringModels));
         }
     }
 }
