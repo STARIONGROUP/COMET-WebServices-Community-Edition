@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteReferenceDataLibrarySideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -78,41 +79,44 @@ namespace CometServer.Tests.SideEffects
             // There is a chain a -> b -> c
             this.siteReferenceDataLibraryD = new SiteReferenceDataLibrary { Iid = Guid.NewGuid() };
             this.siteReferenceDataLibraryC = new SiteReferenceDataLibrary { Iid = Guid.NewGuid() };
+
             this.siteReferenceDataLibraryB =
                 new SiteReferenceDataLibrary { Iid = Guid.NewGuid(), RequiredRdl = this.siteReferenceDataLibraryC.Iid };
+
             this.siteReferenceDataLibraryA =
                 new SiteReferenceDataLibrary { Iid = Guid.NewGuid(), RequiredRdl = this.siteReferenceDataLibraryB.Iid };
 
             this.siteDirectory = new SiteDirectory
-                                     {
-                                         Iid = Guid.NewGuid(),
-                                         SiteReferenceDataLibrary =
-                                             {
-                                                 this.siteReferenceDataLibraryA.Iid,
-                                                 this.siteReferenceDataLibraryB.Iid,
-                                                 this.siteReferenceDataLibraryC.Iid
-                                             }
-                                     };
+            {
+                Iid = Guid.NewGuid(),
+                SiteReferenceDataLibrary =
+                {
+                    this.siteReferenceDataLibraryA.Iid,
+                    this.siteReferenceDataLibraryB.Iid,
+                    this.siteReferenceDataLibraryC.Iid
+                }
+            };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
-                            {
-                                this.siteReferenceDataLibraryA.Iid,
-                                this.siteReferenceDataLibraryB.Iid,
-                                this.siteReferenceDataLibraryC.Iid
-                            },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    new List<SiteReferenceDataLibrary>
                         {
-                            this.siteReferenceDataLibraryA,
-                            this.siteReferenceDataLibraryB,
-                            this.siteReferenceDataLibraryC
-                        });
+                            this.siteReferenceDataLibraryA.Iid,
+                            this.siteReferenceDataLibraryB.Iid,
+                            this.siteReferenceDataLibraryC.Iid
+                        },
+                        It.IsAny<ISecurityContext>())).Returns(
+                    Task.FromResult<IEnumerable<Thing>>(new List<SiteReferenceDataLibrary>
+                    {
+                        this.siteReferenceDataLibraryA,
+                        this.siteReferenceDataLibraryB,
+                        this.siteReferenceDataLibraryC
+                    }));
         }
 
         [Test]
@@ -120,14 +124,14 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect =
                 new SiteReferenceDataLibrarySideEffect()
-                    {
-                        SiteReferenceDataLibraryService =
-                            this.siteReferenceDataLibraryService.Object
-                    };
+                {
+                    SiteReferenceDataLibraryService =
+                        this.siteReferenceDataLibraryService.Object
+                };
 
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -142,15 +146,15 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect =
                 new SiteReferenceDataLibrarySideEffect()
-                    {
-                        SiteReferenceDataLibraryService =
-                            this.siteReferenceDataLibraryService.Object
-                    };
+                {
+                    SiteReferenceDataLibraryService =
+                        this.siteReferenceDataLibraryService.Object
+                };
 
             var id = this.siteReferenceDataLibraryA.Iid;
             this.siteReferenceDataLibraryA.RequiredRdl = id;
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -164,15 +168,15 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect =
                 new SiteReferenceDataLibrarySideEffect()
-                    {
-                        SiteReferenceDataLibraryService =
-                            this.siteReferenceDataLibraryService.Object
-                    };
+                {
+                    SiteReferenceDataLibraryService =
+                        this.siteReferenceDataLibraryService.Object
+                };
 
             // Out of the store
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryD.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
@@ -184,7 +188,7 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.siteReferenceDataLibraryA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.siteReferenceDataLibraryC,
                     this.siteDirectory,
@@ -199,29 +203,30 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect =
                 new SiteReferenceDataLibrarySideEffect()
-                    {
-                        SiteReferenceDataLibraryService =
-                            this.siteReferenceDataLibraryService.Object
-                    };
+                {
+                    SiteReferenceDataLibraryService =
+                        this.siteReferenceDataLibraryService.Object
+                };
 
             // Out of the store
             var id = this.siteReferenceDataLibraryD.Iid;
             this.siteReferenceDataLibraryA.RequiredRdl = id;
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreateAsync(
                     this.siteReferenceDataLibraryA,
                     this.siteDirectory,
                     this.npgsqlTransaction,
                     "partition",
                     this.securityContext.Object));
+
             this.siteReferenceDataLibraryA.RequiredRdl = this.siteReferenceDataLibraryB.Iid;
 
             // Leads to circular dependency
             id = this.siteReferenceDataLibraryA.Iid;
             this.siteReferenceDataLibraryC.RequiredRdl = id;
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeCreateAsync(
                     this.siteReferenceDataLibraryC,
                     this.siteDirectory,

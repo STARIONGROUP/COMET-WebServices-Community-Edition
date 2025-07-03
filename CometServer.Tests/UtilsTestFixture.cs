@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="UtilsTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -84,12 +85,12 @@ namespace CometServer.Tests
 
             mockedProcessor.Setup(
                 x => x.GetContainmentResource(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<ISecurityContext>()))
-                           .Returns(this.siteDir);
+                           .Returns(Task.FromResult<Thing>(this.siteDir));
 
             mockedProcessor.Setup(
                 x => x.GetResourceAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
-                           .Returns(new[] { this.modelSetup });
+                           .Returns(Task.FromResult<IEnumerable<Thing>>([this.modelSetup]));
 
             mockedProcessor.SetupGet(x => x.RequestUtils).Returns(this.requestUtils);
 
@@ -111,19 +112,19 @@ namespace CometServer.Tests
         }
 
         [Test]
-        public void VerifyOnlyResourceReturned()
+        public async Task VerifyOnlyResourceReturned()
         {
             var mockedProcessor = this.SetupMockProcessor();
 
             var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object);
 
-            var result = siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
+            var result = await siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", ["SiteDirectory", this.mockedId, "model", this.mockedId]);
 
-            Assert.That(result, Is.EqualTo(new[] { this.modelSetup}));
+            Assert.That(result.ResourcePath, Is.EqualTo(new[] { this.modelSetup}));
         }
 
         [Test]
-        public void VerifyResourceWithContainmentReturned()
+        public async Task VerifyResourceWithContainmentReturned()
         {
             var mockedProcessor = this.SetupMockProcessor();
 
@@ -132,7 +133,7 @@ namespace CometServer.Tests
 
             var siteDirectoryApi = new SiteDirectoryApi(this.appConfigService.Object, this.cometHasStartedService.Object, this.tokenGeneratorService.Object, this.loggerFactory.Object, this.thingsMessageProducer.Object, this.cometTaskService.Object);
 
-            var result = siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", new[] { "SiteDirectory", this.mockedId, "model", this.mockedId }, out _);
+            var result = await siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object, "SiteDirectory", "SiteDirectory", ["SiteDirectory", this.mockedId, "model", this.mockedId]);
             
             // reset query parameter override
             this.requestUtils.OverrideQueryParameters = null;

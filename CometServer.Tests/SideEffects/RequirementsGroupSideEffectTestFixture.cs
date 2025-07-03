@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RequirementsGroupSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-202 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -85,42 +86,45 @@ namespace CometServer.Tests.SideEffects
             this.requirementsGroupC = new RequirementsGroup { Iid = Guid.NewGuid() };
 
             this.requirementsGroupF = new RequirementsGroup { Iid = Guid.NewGuid() };
+
             this.requirementsGroupE =
                 new RequirementsGroup { Iid = Guid.NewGuid(), Group = { this.requirementsGroupF.Iid } };
+
             this.requirementsGroupD =
                 new RequirementsGroup { Iid = Guid.NewGuid(), Group = { this.requirementsGroupE.Iid } };
 
             this.requirementsSpecification = new RequirementsSpecification
-                                                 {
-                                                     Iid = Guid.NewGuid(),
-                                                     Group =
-                                                         {
-                                                             this.requirementsGroupA.Iid,
-                                                             this.requirementsGroupB.Iid,
-                                                             this.requirementsGroupC.Iid,
-                                                             this.requirementsGroupD.Iid,
-                                                             this.requirementsGroupE.Iid,
-                                                             this.requirementsGroupF.Iid
-                                                         }
-                                                 };
+            {
+                Iid = Guid.NewGuid(),
+                Group =
+                {
+                    this.requirementsGroupA.Iid,
+                    this.requirementsGroupB.Iid,
+                    this.requirementsGroupC.Iid,
+                    this.requirementsGroupD.Iid,
+                    this.requirementsGroupE.Iid,
+                    this.requirementsGroupF.Iid
+                }
+            };
 
             this.requirementsSpecificationService = new Mock<IRequirementsSpecificationService>();
+
             this.requirementsSpecificationService
                 .Setup(
-                    x => x.GetDeep(
+                    x => x.GetDeepAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<RequirementsGroup>
-                        {
-                            this.requirementsGroupA,
-                            this.requirementsGroupB,
-                            this.requirementsGroupC,
-                            this.requirementsGroupD,
-                            this.requirementsGroupE,
-                            this.requirementsGroupF
-                        });
+                    Task.FromResult<IEnumerable<Thing>>(new List<RequirementsGroup>
+                    {
+                        this.requirementsGroupA,
+                        this.requirementsGroupB,
+                        this.requirementsGroupC,
+                        this.requirementsGroupD,
+                        this.requirementsGroupE,
+                        this.requirementsGroupF
+                    }));
         }
 
         [Test]
@@ -130,18 +134,18 @@ namespace CometServer.Tests.SideEffects
                 new RequirementsGroupSideEffect() { RequirementsSpecificationService = this.requirementsSpecificationService.Object };
 
             this.rawUpdateInfo = new ClasslessDTO()
-                                     {
-                                         {
-                                             TestKey,
-                                             new List<Guid>
-                                                 {
-                                                     this.requirementsGroupA.Iid,
-                                                     this.requirementsGroupC.Iid
-                                                 }
-                                         }
-                                     };
+            {
+                {
+                    TestKey,
+                    new List<Guid>
+                    {
+                        this.requirementsGroupA.Iid,
+                        this.requirementsGroupC.Iid
+                    }
+                }
+            };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.requirementsGroupA,
                     this.requirementsSpecification,
@@ -156,22 +160,22 @@ namespace CometServer.Tests.SideEffects
         {
             this.sideEffect =
                 new RequirementsGroupSideEffect() { RequirementsSpecificationService = this.requirementsSpecificationService.Object };
-            
+
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO()
-                                     {
-                                         {
-                                             TestKey,
-                                             new List<Guid>
-                                                 {
-                                                     this.requirementsGroupB.Iid,
-                                                     this.requirementsGroupD.Iid,
-                                                     this.requirementsGroupF.Iid
-                                                 }
-                                         }
-                                     };
+            {
+                {
+                    TestKey,
+                    new List<Guid>
+                    {
+                        this.requirementsGroupB.Iid,
+                        this.requirementsGroupD.Iid,
+                        this.requirementsGroupF.Iid
+                    }
+                }
+            };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.requirementsGroupA,
                     this.requirementsSpecification,
@@ -181,18 +185,18 @@ namespace CometServer.Tests.SideEffects
                     this.rawUpdateInfo));
 
             this.rawUpdateInfo = new ClasslessDTO()
-                                     {
-                                         {
-                                             TestKey,
-                                             new List<Guid>
-                                                 {
-                                                     this.requirementsGroupB.Iid,
-                                                     this.requirementsGroupD.Iid
-                                                 }
-                                         }
-                                     };
+            {
+                {
+                    TestKey,
+                    new List<Guid>
+                    {
+                        this.requirementsGroupB.Iid,
+                        this.requirementsGroupD.Iid
+                    }
+                }
+            };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.requirementsGroupF,
                     this.requirementsSpecification,
@@ -210,19 +214,19 @@ namespace CometServer.Tests.SideEffects
 
             // There is a chain d -> e -> f
             this.rawUpdateInfo = new ClasslessDTO()
-                                     {
-                                         {
-                                             TestKey,
-                                             new List<Guid>
-                                                 {
-                                                     this.requirementsGroupB.Iid,
-                                                     this.requirementsGroupD.Iid,
-                                                     this.requirementsGroupC.Iid
-                                                 }
-                                         }
-                                     };
+            {
+                {
+                    TestKey,
+                    new List<Guid>
+                    {
+                        this.requirementsGroupB.Iid,
+                        this.requirementsGroupD.Iid,
+                        this.requirementsGroupC.Iid
+                    }
+                }
+            };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.requirementsGroupA,
                     this.requirementsSpecification,

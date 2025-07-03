@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SpecializedQuantityKindSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -83,10 +84,13 @@ namespace CometServer.Tests.SideEffects
 
             // There is a chain a -> b -> c 
             this.specializedQuantityKindC = new SpecializedQuantityKind { Iid = Guid.NewGuid() };
+
             this.specializedQuantityKindB =
                 new SpecializedQuantityKind { Iid = Guid.NewGuid(), General = this.specializedQuantityKindC.Iid };
+
             this.specializedQuantityKindA =
                 new SpecializedQuantityKind { Iid = Guid.NewGuid(), General = this.specializedQuantityKindB.Iid };
+
             this.specializedQuantityKindD = new SpecializedQuantityKind { Iid = Guid.NewGuid() };
 
             // Outside the rdl chain
@@ -101,6 +105,7 @@ namespace CometServer.Tests.SideEffects
                     this.specializedQuantityKindD.Iid
                 }
             };
+
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
             {
                 Iid = Guid.NewGuid(),
@@ -114,6 +119,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(
                     x => x.GetAsync(
@@ -121,29 +127,30 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
 
             this.specializedQuantityKindService = new Mock<ISpecializedQuantityKindService>();
+
             this.specializedQuantityKindService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
-                            {
-                                this.specializedQuantityKindD.Iid,
-                                this.specializedQuantityKindA.Iid,
-                                this.specializedQuantityKindB.Iid,
-                                this.specializedQuantityKindC.Iid
-                            },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    new List<SpecializedQuantityKind>
                         {
-                            this.specializedQuantityKindD,
-                            this.specializedQuantityKindA,
-                            this.specializedQuantityKindB,
-                            this.specializedQuantityKindC
-                        });
+                            this.specializedQuantityKindD.Iid,
+                            this.specializedQuantityKindA.Iid,
+                            this.specializedQuantityKindB.Iid,
+                            this.specializedQuantityKindC.Iid
+                        },
+                        It.IsAny<ISecurityContext>())).Returns(
+                    Task.FromResult<IEnumerable<Thing>>(new List<SpecializedQuantityKind>
+                    {
+                        this.specializedQuantityKindD,
+                        this.specializedQuantityKindA,
+                        this.specializedQuantityKindB,
+                        this.specializedQuantityKindC
+                    }));
 
             this.sideEffect = new SpecializedQuantityKindSideEffect
             {
@@ -157,7 +164,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.specializedQuantityKindA,
                     this.referenceDataLibraryA,
@@ -173,7 +180,7 @@ namespace CometServer.Tests.SideEffects
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindE.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.specializedQuantityKindC,
                     this.referenceDataLibraryA,
@@ -189,7 +196,7 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.specializedQuantityKindC,
                     this.referenceDataLibraryA,
@@ -205,7 +212,7 @@ namespace CometServer.Tests.SideEffects
             // There is a chain a -> b -> c
             this.rawUpdateInfo = new ClasslessDTO { { TestKey, this.specializedQuantityKindD.Iid } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.specializedQuantityKindC,
                     this.referenceDataLibraryA,

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterTypeComponentSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -107,8 +108,10 @@ namespace CometServer.Tests.SideEffects
             // There is a chain cptA -> ptcA -> cptB -> ptcB -> bptD
             this.booleanParameterTypeD = new BooleanParameterType { Iid = Guid.NewGuid() };
             this.booleanParameterTypeE = new BooleanParameterType { Iid = Guid.NewGuid() };
+
             this.parameterTypeComponentD =
                 new ParameterTypeComponent { Iid = Guid.NewGuid(), ParameterType = this.booleanParameterTypeD.Iid };
+
             this.parameterTypeComponentB =
                 new ParameterTypeComponent { Iid = Guid.NewGuid(), ParameterType = this.booleanParameterTypeD.Iid };
 
@@ -132,77 +135,61 @@ namespace CometServer.Tests.SideEffects
 
             var parameterTypeComponentForC = new OrderedItem { K = 1, V = this.parameterTypeComponentC.Iid };
             var parameterTypeComponentsForC = new List<OrderedItem> { parameterTypeComponentForC };
+
             this.compoundParameterTypeC =
                 new CompoundParameterType { Iid = Guid.NewGuid(), Component = parameterTypeComponentsForC };
 
             // There is a chain librayA -> LibraryB
             this.referenceDataLibraryB = new SiteReferenceDataLibrary
-                                             {
-                                                 Iid = Guid.NewGuid(),
-                                                 ParameterType =
-                                                     {
-                                                         this.booleanParameterTypeD
-                                                             .Iid,
-                                                         this.booleanParameterTypeE
-                                                             .Iid
-                                                     }
-                                             };
+            {
+                Iid = Guid.NewGuid(),
+                ParameterType =
+                {
+                    this.booleanParameterTypeD
+                        .Iid,
+                    this.booleanParameterTypeE
+                        .Iid
+                }
+            };
+
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
-                                             {
-                                                 Iid = Guid.NewGuid(),
-                                                 ParameterType =
-                                                     {
-                                                         this
-                                                             .compoundParameterTypeA
-                                                             .Iid,
-                                                         this
-                                                             .compoundParameterTypeB
-                                                             .Iid,
-                                                         this
-                                                             .compoundParameterTypeC
-                                                             .Iid
-                                                     },
-                                                 RequiredRdl = this.referenceDataLibraryB.Iid
-                                             };
+            {
+                Iid = Guid.NewGuid(),
+                ParameterType =
+                {
+                    this
+                        .compoundParameterTypeA
+                        .Iid,
+                    this
+                        .compoundParameterTypeB
+                        .Iid,
+                    this
+                        .compoundParameterTypeC
+                        .Iid
+                },
+                RequiredRdl = this.referenceDataLibraryB.Iid
+            };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB }));
 
             this.modelReferenceDataLibraryService = new Mock<IModelReferenceDataLibraryService>();
+
             this.modelReferenceDataLibraryService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary>());
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary>()));
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
+
             this.compoundParameterTypeService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
-                            {
-                                this.compoundParameterTypeA.Iid,
-                                this.compoundParameterTypeB.Iid,
-                                this.compoundParameterTypeC.Iid,
-                                this.booleanParameterTypeD.Iid,
-                                this.booleanParameterTypeE.Iid
-                            },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    new List<CompoundParameterType>
-                        {
-                            this.compoundParameterTypeA,
-                            this.compoundParameterTypeB,
-                            this.compoundParameterTypeC
-                        });
-
-            this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
-            this.arrayParameterTypeService.Setup(
-                x => x.GetAsync(
-                    this.npgsqlTransaction,
-                    It.IsAny<string>(),
-                    new List<Guid>
                         {
                             this.compoundParameterTypeA.Iid,
                             this.compoundParameterTypeB.Iid,
@@ -210,9 +197,31 @@ namespace CometServer.Tests.SideEffects
                             this.booleanParameterTypeD.Iid,
                             this.booleanParameterTypeE.Iid
                         },
-                    It.IsAny<ISecurityContext>())).Returns(new List<ArrayParameterType>());
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<CompoundParameterType>
+                    {
+                        this.compoundParameterTypeA,
+                        this.compoundParameterTypeB,
+                        this.compoundParameterTypeC
+                    }));
+
+            this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
+
+            this.arrayParameterTypeService.Setup(
+                x => x.GetAsync(
+                    this.npgsqlTransaction,
+                    It.IsAny<string>(),
+                    new List<Guid>
+                    {
+                        this.compoundParameterTypeA.Iid,
+                        this.compoundParameterTypeB.Iid,
+                        this.compoundParameterTypeC.Iid,
+                        this.booleanParameterTypeD.Iid,
+                        this.booleanParameterTypeE.Iid
+                    },
+                    It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<ArrayParameterType>()));
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
@@ -220,7 +229,8 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentA });
+                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentA }));
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
@@ -228,7 +238,8 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentB });
+                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentB }));
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
@@ -236,7 +247,8 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentC });
+                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentC }));
+
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
@@ -244,26 +256,25 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentD });
+                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentD }));
 
-            this.sideEffect = new ParameterTypeComponentSideEffect()
-                                  {
-                                      CompoundParameterTypeService =
-                                          this.compoundParameterTypeService.Object,
-                                      ArrayParameterTypeService =
-                                          this.arrayParameterTypeService.Object,
-                                      ParameterTypeComponentService =
-                                          this.parameterTypeComponentService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService
-                                              .Object,
-                                      ModelReferenceDataLibraryService =
-                                          this.modelReferenceDataLibraryService
-                                              .Object
-                                  };
-
-            this.sideEffect.DefaultValueArrayFactory = this.defaultValueArrayFactory.Object;
-            this.sideEffect.CachedReferenceDataService = this.cachedReferenceDataService.Object;
+            this.sideEffect = new ParameterTypeComponentSideEffect
+            {
+                CompoundParameterTypeService =
+                    this.compoundParameterTypeService.Object,
+                ArrayParameterTypeService =
+                    this.arrayParameterTypeService.Object,
+                ParameterTypeComponentService =
+                    this.parameterTypeComponentService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService
+                        .Object,
+                ModelReferenceDataLibraryService =
+                    this.modelReferenceDataLibraryService
+                        .Object,
+                DefaultValueArrayFactory = this.defaultValueArrayFactory.Object,
+                CachedReferenceDataService = this.cachedReferenceDataService.Object
+            };
         }
 
         [Test]
@@ -271,7 +282,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.compoundParameterTypeC.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterTypeComponentB,
                     this.compoundParameterTypeB,
@@ -286,7 +297,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.booleanParameterTypeE.Iid } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.parameterTypeComponentB,
                     this.compoundParameterTypeB,

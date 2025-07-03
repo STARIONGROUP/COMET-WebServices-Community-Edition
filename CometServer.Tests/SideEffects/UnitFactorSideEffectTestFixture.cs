@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="UnitFactorSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -121,90 +122,99 @@ namespace CometServer.Tests.SideEffects
             // There is a chain librayA -> LibraryB
             this.referenceDataLibraryB =
                 new SiteReferenceDataLibrary
+                {
+                    Iid = Guid.NewGuid(),
+                    Unit =
                     {
-                        Iid = Guid.NewGuid(),
-                        Unit = {
-                                  this.simpleUnitD.Iid, this.simpleUnitE.Iid 
-                               }
-                    };
+                        this.simpleUnitD.Iid, this.simpleUnitE.Iid
+                    }
+                };
+
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
-                                             {
-                                                 Iid = Guid.NewGuid(),
-                                                 Unit =
-                                                     {
-                                                         this.derivedUnitA.Iid,
-                                                         this.derivedUnitB.Iid,
-                                                         this.derivedUnitC.Iid
-                                                     },
-                                                 RequiredRdl = this.referenceDataLibraryB.Iid
-                                             };
+            {
+                Iid = Guid.NewGuid(),
+                Unit =
+                {
+                    this.derivedUnitA.Iid,
+                    this.derivedUnitB.Iid,
+                    this.derivedUnitC.Iid
+                },
+                RequiredRdl = this.referenceDataLibraryB.Iid
+            };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB }));
 
             this.modelReferenceDataLibraryService = new Mock<IModelReferenceDataLibraryService>();
+
             this.modelReferenceDataLibraryService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary>());
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary>()));
 
             this.derivedUnitService = new Mock<IDerivedUnitService>();
+
             this.derivedUnitService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
-                            {
-                                this.derivedUnitA.Iid,
-                                this.derivedUnitB.Iid,
-                                this.derivedUnitC.Iid,
-                                this.simpleUnitD.Iid,
-                                this.simpleUnitE.Iid
-                            },
+                        {
+                            this.derivedUnitA.Iid,
+                            this.derivedUnitB.Iid,
+                            this.derivedUnitC.Iid,
+                            this.simpleUnitD.Iid,
+                            this.simpleUnitE.Iid
+                        },
                         It.IsAny<ISecurityContext>())).Returns(
-                    new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB, this.derivedUnitC });
+                   Task.FromResult<IEnumerable<Thing>>(new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB, this.derivedUnitC }));
 
             this.unitFactorService = new Mock<IUnitFactorService>();
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorA });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorA }));
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorB });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorB }));
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorC });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorC }));
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(new List<UnitFactor> { this.unitFactorD });
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorD }));
 
             this.sideEffect = new UnitFactorSideEffect()
-                                  {
-                                      DerivedUnitService = this.derivedUnitService.Object,
-                                      UnitFactorService = this.unitFactorService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object,
-                                      ModelReferenceDataLibraryService =
-                                          this.modelReferenceDataLibraryService.Object
-                                  };
+            {
+                DerivedUnitService = this.derivedUnitService.Object,
+                UnitFactorService = this.unitFactorService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService.Object,
+                ModelReferenceDataLibraryService =
+                    this.modelReferenceDataLibraryService.Object
+            };
         }
 
         [Test]
@@ -212,7 +222,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.derivedUnitC.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.unitFactorB,
                     this.derivedUnitB,
@@ -227,7 +237,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.simpleUnitE.Iid } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.unitFactorB,
                     this.derivedUnitB,

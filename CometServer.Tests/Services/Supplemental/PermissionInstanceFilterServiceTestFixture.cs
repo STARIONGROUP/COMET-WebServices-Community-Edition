@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionInstanceFilterServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Tests.Services.Supplemental
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -102,66 +103,79 @@ namespace CometServer.Tests.Services.Supplemental
         {
             this.npgsqlTransaction = null;
             this.metaInfoProvider = new MetaInfoProvider();
-            
-            this.personRoles = new List<PersonRole>
-                                   {
-                                       new()
-                                       {
-                                               Iid = Guid.NewGuid(),
-                                               RevisionNumber = 1,
-                                               PersonPermission =
-                                                   new List<Guid>
-                                                       {
-                                                           this
-                                                               .personPermission1id,
-                                                           this
-                                                               .personPermission2id,
-                                                           this
-                                                               .personPermission3id
-                                                       }
-                                           }
-                                   };
-            this.participantRoles = new List<ParticipantRole>
-                                        {
-                                            new()
-                                            {
-                                                    Iid = Guid.NewGuid(),
-                                                    RevisionNumber = 1,
-                                                    ParticipantPermission =
-                                                        new List<Guid>
-                                                            {
-                                                                this
-                                                                    .participantPermission1id,
-                                                                this
-                                                                    .participantPermission2id,
-                                                                this
-                                                                    .participantPermission3id
-                                                            }
-                                                }
-                                        };
+
+            this.personRoles =
+            [
+                new PersonRole
+                {
+                    Iid = Guid.NewGuid(),
+                    RevisionNumber = 1,
+                    PersonPermission =
+                    [
+                        this
+                            .personPermission1id,
+
+                        this
+                            .personPermission2id,
+
+                        this
+                            .personPermission3id
+                    ]
+                }
+            ];
+
+            this.participantRoles =
+            [
+                new ParticipantRole
+                {
+                    Iid = Guid.NewGuid(),
+                    RevisionNumber = 1,
+                    ParticipantPermission =
+                    [
+                        this
+                            .participantPermission1id,
+
+                        this
+                            .participantPermission2id,
+
+                        this
+                            .participantPermission3id
+                    ]
+                }
+            ];
 
             this.logger = new Mock<ILogger<PermissionInstanceFilterService>>();
 
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            NpgsqlConnection connection = null;
-            this.transactionManager.Setup(x => x.SetupTransaction(ref connection, null))
-                .Returns(this.npgsqlTransaction);
 
-            this.participantPermission1 = new ParticipantPermission(this.participantPermission1id, 1);
-            this.participantPermission1.ObjectClass = ClassKind.DomainOfExpertise;
-            this.participantPermission2 = new ParticipantPermission(this.participantPermission2id, 1);
-            this.participantPermission2.ObjectClass = ClassKind.IterationSetup;
-            this.participantPermission3 = new ParticipantPermission(this.participantPermission3id, 1);
-            this.participantPermission3.ObjectClass = ClassKind.SiteDirectoryDataAnnotation;
+            this.transactionManager.Setup(x => x.SetupTransactionAsync(null))
+                .Returns(Task.FromResult(this.npgsqlTransaction));
+
+            this.participantPermission1 = new ParticipantPermission(this.participantPermission1id, 1)
+            {
+                ObjectClass = ClassKind.DomainOfExpertise
+            };
+
+            this.participantPermission2 = new ParticipantPermission(this.participantPermission2id, 1)
+            {
+                ObjectClass = ClassKind.IterationSetup
+            };
+
+            this.participantPermission3 = new ParticipantPermission(this.participantPermission3id, 1)
+            {
+                ObjectClass = ClassKind.SiteDirectoryDataAnnotation
+            };
+
             this.participantPermissionDao = new Mock<IParticipantPermissionDao>();
-            this.participantPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null))
+
+            this.participantPermissionDao.Setup(x => x.ReadAsync(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null))
                 .Returns(
-                    new List<ParticipantPermission>
-                        {
-                            this.participantPermission1,
-                            this.participantPermission2,
-                            this.participantPermission3
-                        });
+                    Task.FromResult<IEnumerable<ParticipantPermission>>(new List<ParticipantPermission>
+                    {
+                        this.participantPermission1,
+                        this.participantPermission2,
+                        this.participantPermission3
+                    }));
 
             this.personPermission1 = new PersonPermission(this.personPermission1id, 1)
             {
@@ -180,8 +194,8 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.personPermissionDao = new Mock<IPersonPermissionDao>();
 
-            this.personPermissionDao.Setup(x => x.Read(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null)).Returns(
-                new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 });
+            this.personPermissionDao.Setup(x => x.ReadAsync(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null)).Returns(
+                Task.FromResult<IEnumerable<PersonPermission>>(new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 }));
 
             this.service = new PermissionInstanceFilterService
             {
@@ -194,39 +208,39 @@ namespace CometServer.Tests.Services.Supplemental
         }
 
         [Test]
-        public void VerifyThatPersonPermissionPropertyIsFilteredForPureRequest()
+        public async Task VerifyThatPersonPermissionPropertyIsFilteredForPureRequest()
         {
-            var result = this.service.FilterOutPermissionsAsync(this.personRoles, new Version("1.0.0")).OfType<PersonRole>().ToArray();
+            var result = (await this.service.FilterOutPermissionsAsync(this.personRoles, new Version("1.0.0"))).OfType<PersonRole>().ToArray();
 
             Assert.That(result[0].PersonPermission, Is.EquivalentTo(new List<Guid> { this.personPermission1id, this.personPermission2id }));
         }
 
         [Test]
-        public void VerifyThatPersonPermissionPropertyIsNotFilteredForCDP4Request()
+        public async Task VerifyThatPersonPermissionPropertyIsNotFilteredForCDP4Request()
         {
-            var result = this.service.FilterOutPermissionsAsync(this.personRoles, new Version("1.1.0")).OfType<PersonRole>().ToArray();
+            var result = (await this.service.FilterOutPermissionsAsync(this.personRoles, new Version("1.1.0"))).OfType<PersonRole>().ToArray();
 
             Assert.That(result[0].PersonPermission, Is.EquivalentTo(new List<Guid> { this.personPermission1id, this.personPermission2id, this.personPermission3id }));
         }
 
         [Test]
-        public void VerifyThatParticipantPermissionPropertyIsFilteredForPureRequest()
+        public async Task VerifyThatParticipantPermissionPropertyIsFilteredForPureRequest()
         {
-            var result = this.service.FilterOutPermissionsAsync(this.participantRoles, new Version("1.0.0")).OfType<ParticipantRole>().ToArray();
+            var result = (await this.service.FilterOutPermissionsAsync(this.participantRoles, new Version("1.0.0"))).OfType<ParticipantRole>().ToArray();
 
             Assert.That(result[0].ParticipantPermission, Is.EquivalentTo(new List<Guid> { this.participantPermission1id, this.participantPermission2id }));
         }
 
         [Test]
-        public void VerifyThatParticipantPermissionPropertyIsNotFilteredForCDP4Request()
+        public async Task VerifyThatParticipantPermissionPropertyIsNotFilteredForCDP4Request()
         {
-            var result = this.service.FilterOutPermissionsAsync(this.participantRoles, new Version("1.1.0")).OfType<ParticipantRole>().ToArray();
+            var result = (await this.service.FilterOutPermissionsAsync(this.participantRoles, new Version("1.1.0"))).OfType<ParticipantRole>().ToArray();
 
             Assert.That(result[0].ParticipantPermission, Is.EquivalentTo(new List<Guid> { this.participantPermission1id, this.participantPermission2id, this.participantPermission3id }));
         }
 
         [Test]
-        public void VerifyThatRoleAndPermissionAreFilteredCorrectly()
+        public async Task VerifyThatRoleAndPermissionAreFilteredCorrectly()
         {
             var personRole = new PersonRole(Guid.NewGuid(), 0);
             var participantRole = new ParticipantRole(Guid.NewGuid(), 0);
@@ -270,20 +284,20 @@ namespace CometServer.Tests.Services.Supplemental
             participantRole.ParticipantPermission.Add(this.participantPermission3.Iid);
 
             var input = new List<Thing>
-                            {
-                                personRole,
-                                participantRole,
-                                this.personPermission1,
-                                this.personPermission2,
-                                this.personPermission3,
-                                this.participantPermission1,
-                                this.participantPermission2,
-                                this.participantPermission3
-                            };
+            {
+                personRole,
+                participantRole,
+                this.personPermission1,
+                this.personPermission2,
+                this.personPermission3,
+                this.participantPermission1,
+                this.participantPermission2,
+                this.participantPermission3
+            };
 
-            var result = this.service.FilterOutPermissionsAsync(
+            var result = (await this.service.FilterOutPermissionsAsync(
                 input,
-                new Version(1, 0)).ToArray();
+                new Version(1, 0))).ToArray();
 
             Assert.That(result, Does.Not.Contain(this.personPermission1));
             Assert.That(result, Does.Not.Contain(this.participantPermission1));

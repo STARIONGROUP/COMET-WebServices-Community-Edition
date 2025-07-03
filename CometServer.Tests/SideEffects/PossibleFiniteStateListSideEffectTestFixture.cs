@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PossibleFiniteStateListSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -43,12 +44,12 @@ namespace CometServer.Tests.SideEffects
     [TestFixture]
     public class PossibleFiniteStateListSideEffectTestFixture
     {
-        private PossibleFiniteStateListSideEffect sideEffect = new ();
+        private readonly PossibleFiniteStateListSideEffect sideEffect = new();
 
-        private NpgsqlTransaction transaction = null;
+        private readonly NpgsqlTransaction transaction = null;
 
         private Mock<ISecurityContext> securityContext;
-        private Mock<IActualFiniteStateListService> actualFiniteStateListService; 
+        private Mock<IActualFiniteStateListService> actualFiniteStateListService;
         private Mock<IActualFiniteStateService> actualFiniteStateService;
         private Mock<IPossibleFiniteStateListService> possibleFiniteStateListslService;
         private Mock<IParameterValueSetService> parameterValueSetService;
@@ -63,7 +64,7 @@ namespace CometServer.Tests.SideEffects
 
         private StateDependentParameterUpdateService parameterUpdateService;
 
-        private string partition = "partition";
+        private readonly string partition = "partition";
 
         private Iteration iteration;
         private PossibleFiniteStateList psl1;
@@ -107,7 +108,7 @@ namespace CometServer.Tests.SideEffects
         private ParameterSubscriptionValueSet psvs21;
         private ParameterSubscriptionValueSet psvs22;
 
-        private List<string> initValue = new() { "init" };
+        private readonly List<string> initValue = ["init"];
 
         [SetUp]
         public void Setup()
@@ -140,7 +141,7 @@ namespace CometServer.Tests.SideEffects
             this.iteration = new Iteration(Guid.NewGuid(), 1);
             this.option1 = new Option(Guid.NewGuid(), 1);
 
-            this.iteration.Option.Add(new OrderedItem {K = 1, V = this.option1.Iid.ToString()});
+            this.iteration.Option.Add(new OrderedItem { K = 1, V = this.option1.Iid.ToString() });
 
             this.psl1 = new PossibleFiniteStateList(Guid.NewGuid(), 1);
             this.psl2 = new PossibleFiniteStateList(Guid.NewGuid(), 1);
@@ -160,13 +161,13 @@ namespace CometServer.Tests.SideEffects
             this.iteration.ActualFiniteStateList.Add(this.asl1.Iid);
             this.iteration.ActualFiniteStateList.Add(this.asl2.Iid);
 
-            this.psl1.PossibleState.Add(new OrderedItem {K = 1, V = this.ps11.Iid.ToString()});
-            this.psl1.PossibleState.Add(new OrderedItem {K = 2, V = this.ps12.Iid.ToString()});
-            this.psl2.PossibleState.Add(new OrderedItem {K = 1, V = this.ps21.Iid.ToString()});
-            this.psl2.PossibleState.Add(new OrderedItem {K = 2, V = this.ps22.Iid.ToString()});
+            this.psl1.PossibleState.Add(new OrderedItem { K = 1, V = this.ps11.Iid.ToString() });
+            this.psl1.PossibleState.Add(new OrderedItem { K = 2, V = this.ps12.Iid.ToString() });
+            this.psl2.PossibleState.Add(new OrderedItem { K = 1, V = this.ps21.Iid.ToString() });
+            this.psl2.PossibleState.Add(new OrderedItem { K = 2, V = this.ps22.Iid.ToString() });
 
-            this.asl1.PossibleFiniteStateList.Add(new OrderedItem {K = 1, V = this.psl1.Iid.ToString()});
-            this.asl1.PossibleFiniteStateList.Add(new OrderedItem {K = 2, V = this.psl2.Iid.ToString()});
+            this.asl1.PossibleFiniteStateList.Add(new OrderedItem { K = 1, V = this.psl1.Iid.ToString() });
+            this.asl1.PossibleFiniteStateList.Add(new OrderedItem { K = 2, V = this.psl2.Iid.ToString() });
 
             // initializes actual states actual states
             this.as11 = new ActualFiniteState(Guid.NewGuid(), 1);
@@ -180,7 +181,7 @@ namespace CometServer.Tests.SideEffects
             this.asl1.ActualState.Add(this.as11.Iid);
             this.asl1.ActualState.Add(this.as12.Iid);
 
-            this.asl2.PossibleFiniteStateList.Add(new OrderedItem {K = 1, V = this.psl2.Iid.ToString()});
+            this.asl2.PossibleFiniteStateList.Add(new OrderedItem { K = 1, V = this.psl2.Iid.ToString() });
             this.as21 = new ActualFiniteState(Guid.NewGuid(), 1);
             this.as21.PossibleState.Add(this.ps21.Iid);
             this.as22 = new ActualFiniteState(Guid.NewGuid(), 1);
@@ -190,32 +191,40 @@ namespace CometServer.Tests.SideEffects
             this.asl2.ActualState.Add(this.as22.Iid);
 
             this.possibleFiniteStateListslService.Setup(
-                x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing> {this.psl1, this.psl2});
+                    x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.psl1, this.psl2 }));
 
             this.actualFiniteStateListService.Setup(
-                x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.asl1, this.asl2});
+                    x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.asl1, this.asl2 }));
 
             this.actualFiniteStateService.Setup(
-                x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing> {this.as11, this.as12});
+                    x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.as11, this.as12 }));
 
             this.iterationService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> {this.iteration});
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.iteration }));
 
-            this.parameter1 = new Parameter(Guid.NewGuid(), 1);
-            this.parameter1.StateDependence = this.asl1.Iid;
+            this.parameter1 = new Parameter(Guid.NewGuid(), 1)
+            {
+                StateDependence = this.asl1.Iid
+            };
 
-            this.parameter2 = new Parameter(Guid.NewGuid(), 1);
-            this.parameter2.StateDependence = this.asl1.Iid;
-            this.parameter2.IsOptionDependent = true;
+            this.parameter2 = new Parameter(Guid.NewGuid(), 1)
+            {
+                StateDependence = this.asl1.Iid,
+                IsOptionDependent = true
+            };
 
-            this.parameterOverride1 = new ParameterOverride(Guid.NewGuid(), 1);
-            this.parameterOverride1.Parameter = this.parameter1.Iid;
+            this.parameterOverride1 = new ParameterOverride(Guid.NewGuid(), 1)
+            {
+                Parameter = this.parameter1.Iid
+            };
 
-            this.parameterOverride2 = new ParameterOverride(Guid.NewGuid(), 1);
-            this.parameterOverride2.Parameter = this.parameter2.Iid;
+            this.parameterOverride2 = new ParameterOverride(Guid.NewGuid(), 1)
+            {
+                Parameter = this.parameter2.Iid
+            };
 
             this.parameterSubscription1 = new ParameterSubscription(Guid.NewGuid(), 1);
             this.parameterSubscription2 = new ParameterSubscription(Guid.NewGuid(), 1);
@@ -232,6 +241,7 @@ namespace CometServer.Tests.SideEffects
                 Formula = new ValueArray<string>(this.initValue),
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
             };
+
             this.pvs12 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
@@ -241,6 +251,7 @@ namespace CometServer.Tests.SideEffects
                 Formula = new ValueArray<string>(this.initValue),
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
             };
+
             this.pvs21 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
@@ -250,6 +261,7 @@ namespace CometServer.Tests.SideEffects
                 Formula = new ValueArray<string>(this.initValue),
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
             };
+
             this.pvs22 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
@@ -281,6 +293,7 @@ namespace CometServer.Tests.SideEffects
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
                 ParameterValueSet = this.pvs11.Iid
             };
+
             this.povs21 = new ParameterOverrideValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
@@ -291,6 +304,7 @@ namespace CometServer.Tests.SideEffects
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
                 ParameterValueSet = this.pvs11.Iid
             };
+
             this.povs22 = new ParameterOverrideValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
@@ -308,18 +322,21 @@ namespace CometServer.Tests.SideEffects
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
                 SubscribedValueSet = this.pvs11.Iid
             };
+
             this.psvs12 = new ParameterSubscriptionValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
                 SubscribedValueSet = this.pvs12.Iid
             };
+
             this.psvs21 = new ParameterSubscriptionValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
                 ValueSwitch = CDP4Common.EngineeringModelData.ParameterSwitchKind.REFERENCE,
                 SubscribedValueSet = this.povs21.Iid
             };
+
             this.psvs22 = new ParameterSubscriptionValueSet(Guid.NewGuid(), 1)
             {
                 Manual = new ValueArray<string>(this.initValue),
@@ -343,75 +360,78 @@ namespace CometServer.Tests.SideEffects
             this.parameterSubscription2.ValueSet.Add(this.psvs22.Iid);
 
             this.parameterService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> { this.parameter1, this.parameter2 });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.parameter1, this.parameter2 }));
 
             this.parameterOverrideService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> { this.parameterOverride1, this.parameterOverride2 });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.parameterOverride1, this.parameterOverride2 }));
 
             this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object))
-                .Returns(new List<Thing> { this.parameterSubscription1, this.parameterSubscription2 });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.parameterSubscription1, this.parameterSubscription2 }));
 
             this.parameterValueSetService.Setup(
-                x => x.GetShallowAsync(this.transaction, this.partition, this.parameter1.ValueSet, this.securityContext.Object))
-                .Returns(new List<Thing> {this.pvs11, this.pvs12});
+                    x => x.GetShallowAsync(this.transaction, this.partition, this.parameter1.ValueSet, this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.pvs11, this.pvs12 }));
+
             this.parameterValueSetService.Setup(
-                x => x.GetShallowAsync(this.transaction, this.partition, this.parameter2.ValueSet, this.securityContext.Object))
-                .Returns(new List<Thing> {this.pvs21, this.pvs22});
+                    x => x.GetShallowAsync(this.transaction, this.partition, this.parameter2.ValueSet, this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.pvs21, this.pvs22 }));
 
             this.parameterOverrideValueSetService.Setup(
-                x =>
-                    x.GetShallowAsync(this.transaction, this.partition, this.parameterOverride1.ValueSet,
-                        this.securityContext.Object))
-                .Returns(new List<Thing> {this.povs11, this.povs12});
+                    x =>
+                        x.GetShallowAsync(this.transaction, this.partition, this.parameterOverride1.ValueSet,
+                            this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.povs11, this.povs12 }));
+
             this.parameterOverrideValueSetService.Setup(
-                x =>
-                    x.GetShallowAsync(this.transaction, this.partition, this.parameterOverride2.ValueSet,
-                        this.securityContext.Object))
-                .Returns(new List<Thing> {this.povs21, this.povs22});
+                    x =>
+                        x.GetShallowAsync(this.transaction, this.partition, this.parameterOverride2.ValueSet,
+                            this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.povs21, this.povs22 }));
 
             this.parameterSubscriptionValueSetService.Setup(
-                x =>
-                    x.GetShallowAsync(this.transaction, this.partition, this.parameterSubscription1.ValueSet,
-                        this.securityContext.Object))
-                .Returns(new List<Thing> {this.psvs11, this.psvs12});
+                    x =>
+                        x.GetShallowAsync(this.transaction, this.partition, this.parameterSubscription1.ValueSet,
+                            this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.psvs11, this.psvs12 }));
+
             this.parameterSubscriptionValueSetService.Setup(
-                x =>
-                    x.GetShallowAsync(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
-                        this.securityContext.Object))
-                .Returns(new List<Thing> {this.psvs21, this.psvs22});
+                    x =>
+                        x.GetShallowAsync(this.transaction, this.partition, this.parameterSubscription2.ValueSet,
+                            this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.psvs21, this.psvs22 }));
 
             this.compoundParameterTypeService.Setup(
-                x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
-                .Returns(new List<Thing>());
+                    x => x.GetShallowAsync(this.transaction, this.partition, It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object))
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing>()));
 
-            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
+            this.defaultValueArrayFactory.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(["-"]));
             this.parameterUpdateService.DefaultValueSetFactory = this.defaultValueArrayFactory.Object;
-            this.parameterValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(true);
-            this.parameterOverrideValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(true);
-            this.parameterSubscriptionValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>())).Returns(true);
-
+            this.parameterValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterValueSet>(), It.IsAny<Parameter>())).Returns(Task.FromResult(true));
+            this.parameterOverrideValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterOverrideValueSet>(), It.IsAny<ParameterOverride>())).Returns(Task.FromResult(true));
+            this.parameterSubscriptionValueSetService.Setup(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<ParameterSubscriptionValueSet>(), It.IsAny<ParameterSubscription>())).Returns(Task.FromResult(true));
         }
 
         [Test]
-        public void VerifyThatBeforeDeleteWorksPossibleListDeleted()
+        public async Task VerifyThatBeforeDeleteWorksPossibleListDeleted()
         {
             // The actual list is not deleted
-            this.sideEffect.BeforeDeleteAsync(this.psl1, this.iteration, this.transaction, this.partition, this.securityContext.Object);
+            await this.sideEffect.BeforeDeleteAsync(this.psl1, this.iteration, this.transaction, this.partition, this.securityContext.Object);
             this.actualFiniteStateListService.Verify(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object), Times.Once);
             this.actualFiniteStateListService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, It.IsAny<Thing>(), It.IsAny<Thing>()), Times.Never);
         }
 
         [Test]
-        public void VerifyThatBeforeDeleteWorksActualListDeleted()
+        public async Task VerifyThatBeforeDeleteWorksActualListDeleted()
         {
             this.parameter2.StateDependence = this.asl2.Iid;
 
             this.possibleFiniteStateListslService.Setup(
-                x => x.DeleteConceptAsync(this.transaction, this.partition, this.psl2, this.iteration)).Returns(true);
-            this.actualFiniteStateListService.Setup(
-                x => x.DeleteConceptAsync(this.transaction, this.partition, this.asl2, this.iteration)).Returns(true);
+                x => x.DeleteConceptAsync(this.transaction, this.partition, this.psl2, this.iteration)).Returns(Task.FromResult(true));
 
-            this.sideEffect.BeforeDeleteAsync(this.psl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
+            this.actualFiniteStateListService.Setup(
+                x => x.DeleteConceptAsync(this.transaction, this.partition, this.asl2, this.iteration)).Returns(Task.FromResult(true));
+
+            await this.sideEffect.BeforeDeleteAsync(this.psl2, this.iteration, this.transaction, this.partition, this.securityContext.Object);
 
             this.actualFiniteStateListService.Verify(x => x.GetShallowAsync(this.transaction, this.partition, null, this.securityContext.Object), Times.Once);
             this.actualFiniteStateListService.Verify(x => x.DeleteConceptAsync(this.transaction, this.partition, this.asl2, this.iteration), Times.Once);

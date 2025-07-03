@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PrefixedUnitSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -93,19 +94,21 @@ namespace CometServer.Tests.SideEffects
             // There is a chain librayA -> LibraryB
             this.referenceDataLibraryB =
                 new SiteReferenceDataLibrary { Iid = Guid.NewGuid(), Unit = { this.prefixedUnitD.Iid } };
+
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
-                                             {
-                                                 Iid = Guid.NewGuid(),
-                                                 Unit =
-                                                     {
-                                                         this.prefixedUnitA.Iid,
-                                                         this.prefixedUnitB.Iid,
-                                                         this.prefixedUnitC.Iid
-                                                     },
-                                                 RequiredRdl = this.referenceDataLibraryB.Iid
-                                             };
+            {
+                Iid = Guid.NewGuid(),
+                Unit =
+                {
+                    this.prefixedUnitA.Iid,
+                    this.prefixedUnitB.Iid,
+                    this.prefixedUnitC.Iid
+                },
+                RequiredRdl = this.referenceDataLibraryB.Iid
+            };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(
                     x => x.GetAsync(
@@ -113,45 +116,45 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
 
             this.conversionBasedUnitService = new Mock<IConversionBasedUnitService>();
+
             this.conversionBasedUnitService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
-                            {
-                                this.prefixedUnitD.Iid,
-                                this.prefixedUnitA.Iid,
-                                this.prefixedUnitB.Iid,
-                                this.prefixedUnitC.Iid
-                            },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    new List<ConversionBasedUnit>
                         {
-                            this.prefixedUnitD,
-                            this.prefixedUnitA,
-                            this.prefixedUnitB,
-                            this.prefixedUnitC
-                        });
+                            this.prefixedUnitD.Iid,
+                            this.prefixedUnitA.Iid,
+                            this.prefixedUnitB.Iid,
+                            this.prefixedUnitC.Iid
+                        },
+                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<ConversionBasedUnit>
+                    {
+                        this.prefixedUnitD,
+                        this.prefixedUnitA,
+                        this.prefixedUnitB,
+                        this.prefixedUnitC
+                    }));
         }
 
         [Test]
         public void VerifyThatExceptionIsThrownWhenReferenceIsUnitItself()
         {
             this.sideEffect = new PrefixedUnitSideEffect
-                                  {
-                                      ConversionBasedUnitService =
-                                          this.conversionBasedUnitService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
+            {
+                ConversionBasedUnitService =
+                    this.conversionBasedUnitService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService.Object
+            };
 
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitA,
                     this.referenceDataLibraryA,
@@ -165,17 +168,17 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatExceptionIsThrownWhenReferenceUnitIsOutOfChainOrLeadsToCircularDependency()
         {
             this.sideEffect = new PrefixedUnitSideEffect
-                                  {
-                                      ConversionBasedUnitService =
-                                          this.conversionBasedUnitService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
+            {
+                ConversionBasedUnitService =
+                    this.conversionBasedUnitService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService.Object
+            };
 
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitE.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,
@@ -187,7 +190,7 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,
@@ -201,17 +204,17 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatExceptionIsNotThrownWhenReferenceUnitDoesNotLeadToCircularDependency()
         {
             this.sideEffect = new PrefixedUnitSideEffect
-                                  {
-                                      ConversionBasedUnitService =
-                                          this.conversionBasedUnitService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
+            {
+                ConversionBasedUnitService =
+                    this.conversionBasedUnitService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService.Object
+            };
 
             // There is a chain a -> b -> c
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.prefixedUnitD.Iid } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.prefixedUnitC,
                     this.referenceDataLibraryA,

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Tests.Authorization
     using System;
     using System.Collections;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -148,8 +149,8 @@ namespace CometServer.Tests.Authorization
 
             this.participantDao.Setup(
                     x =>
-                        x.Read(null, It.IsAny<string>(), null, true, null))
-                .Returns(new List<Participant>() { this.participant });
+                        x.ReadAsync(null, It.IsAny<string>(), null, true, null))
+                .Returns(Task.FromResult<IEnumerable<Participant>>(new List<Participant>() { this.participant }));
 
             this.permissionService.ParticipantDao = this.participantDao.Object;
 

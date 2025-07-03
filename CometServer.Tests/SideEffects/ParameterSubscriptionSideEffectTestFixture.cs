@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterSubscriptionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Tests.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -87,7 +88,7 @@ namespace CometServer.Tests.SideEffects
                     It.IsAny<string>(),
                     It.IsAny<ParameterSubscriptionValueSet>(),
                     It.IsAny<ParameterSubscription>(),
-                    It.IsAny<long>())).Returns(true);
+                    It.IsAny<long>())).Returns(Task.FromResult(true));
 
             this.sideEffect = new ParameterSubscriptionSideEffect
             {
@@ -110,17 +111,21 @@ namespace CometServer.Tests.SideEffects
             var existingSub = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = subOwnerGuid };
             var parameterSubscription = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = subOwnerGuid };
 
-            var parameter = new Parameter(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() };
-            parameter.ValueSet = new List<Guid> { Guid.NewGuid() };
+            var parameter = new Parameter(Guid.NewGuid(), 1)
+            {
+                Owner = Guid.NewGuid(),
+                ValueSet = [Guid.NewGuid()]
+            };
+
             parameter.ParameterSubscription.Add(existingSub.Iid);
 
             this.parameterService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(i => i.Single() == parameter.Iid), this.securityContext.Object))
-                .Returns(new Thing[] { parameter });
+                .Returns(Task.FromResult<IEnumerable<Thing>>([parameter]));
 
-            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(existingSub.Iid)), this.securityContext.Object)).Returns(new List<Thing> { existingSub });
+            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(y => y.Contains(existingSub.Iid)), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { existingSub }));
 
-            Assert.That(this.sideEffect.BeforeCreateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Is.False);
+            Assert.That(async () => await this.sideEffect.BeforeCreateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object), Is.False);
         }
 
         [Test]
@@ -135,11 +140,11 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", It.Is<IEnumerable<Guid>>(i => i.Single() == parameter.Iid), this.securityContext.Object))
-                .Returns(new Thing[] { parameter });
+                .Returns(Task.FromResult<IEnumerable<Thing>>([parameter]));
 
-            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeCreateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.ThrowsAsync<Cdp4ModelValidationException>(() => this.sideEffect.BeforeCreateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object));
 
-            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeUpdateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object, null));
+            Assert.ThrowsAsync<Cdp4ModelValidationException>(() => this.sideEffect.BeforeUpdateAsync(parameterSubscription, parameter, this.npgsqlTransaction, "partition", this.securityContext.Object, null));
         }
 
         [Test]
@@ -147,17 +152,20 @@ namespace CometServer.Tests.SideEffects
         {
             this.parameterValueSetService
                 .Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), "partition", It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
-                .Returns(new[] { new ParameterValueSet(Guid.NewGuid(), 0) { Manual = new ValueArray<string>(new[] { "1", "2" }) } });
+                .Returns(Task.FromResult<IEnumerable<Thing>>([new ParameterValueSet(Guid.NewGuid(), 0) { Manual = new ValueArray<string>(["1", "2"]) }]));
 
             var parameterSubscription = new ParameterSubscription(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() };
             var originalparameterSubscription = new ParameterSubscription(parameterSubscription.Iid, 1);
 
-            var parameter = new Parameter(Guid.NewGuid(), 1) { Owner = Guid.NewGuid() };
-            parameter.ValueSet = new List<Guid> { Guid.NewGuid() };
+            var parameter = new Parameter(Guid.NewGuid(), 1)
+            {
+                Owner = Guid.NewGuid(),
+                ValueSet = [Guid.NewGuid()]
+            };
 
             this.parameterService
                 .Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), "partition", It.Is<IEnumerable<Guid>>(enu => enu.Contains(parameter.Iid)), It.IsAny<ISecurityContext>()))
-                .Returns(new[] { parameter });
+                .Returns(Task.FromResult<IEnumerable<Thing>>([parameter]));
 
             this.sideEffect.AfterCreateAsync(parameterSubscription, parameter, originalparameterSubscription, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
