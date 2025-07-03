@@ -53,7 +53,24 @@ namespace CometServer.Services
         /// </returns>
         public static string GetConnectionString(BacktierConfig backtierConfig, string database)
         {
-            return $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={database};CommandTimeout={backtierConfig.StatementTimeout};";
+            var connectionString = $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={database};CommandTimeout={backtierConfig.StatementTimeout};Maximum Pool Size=90;";
+
+            if (backtierConfig.MaximumPoolSize != 0)
+            {
+                connectionString = $"{connectionString}Maximum Pool Size={backtierConfig.MaximumPoolSize};";
+            }
+
+            if (backtierConfig.ConnectionTimeout!= 0)
+            {
+                connectionString = $"{connectionString}Timeout={backtierConfig.ConnectionTimeout};";
+            }
+
+            if (backtierConfig.Keepalive != 0)
+            {
+                connectionString = $"{connectionString}Keepalive={backtierConfig.Keepalive};";
+            }
+
+            return connectionString;
         }
 
         /// <summary>
