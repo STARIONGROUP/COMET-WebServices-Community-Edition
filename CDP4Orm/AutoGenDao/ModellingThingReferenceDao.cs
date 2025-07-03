@@ -31,6 +31,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -44,6 +45,7 @@ namespace CDP4Orm.Dao
     /// <summary>
     /// The ModellingThingReference Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public partial class ModellingThingReferenceDao : ThingReferenceDao, IModellingThingReferenceDao
     {
         /// <summary>

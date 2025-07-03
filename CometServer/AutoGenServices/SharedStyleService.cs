@@ -31,6 +31,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Security;
     using System.Threading.Tasks;
@@ -48,6 +49,7 @@ namespace CometServer.Services
     /// <summary>
     /// The <see cref="SharedStyle"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public sealed partial class SharedStyleService : ServiceBase, ISharedStyleService
     {
         /// <summary>
