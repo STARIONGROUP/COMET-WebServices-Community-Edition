@@ -235,7 +235,7 @@ namespace CometServer.Tests.SideEffects
                                          }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.compoundParameterTypeB,
                     this.referenceDataLibraryA,
@@ -265,7 +265,7 @@ namespace CometServer.Tests.SideEffects
                                          }
                                      };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.compoundParameterTypeB,
                     this.referenceDataLibraryA,

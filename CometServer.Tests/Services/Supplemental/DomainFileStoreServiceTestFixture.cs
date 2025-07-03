@@ -100,10 +100,7 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.iteration = new Iteration(Guid.NewGuid(), 0)
             {
-                DomainFileStore = new List<Guid>
-                {
-                    domainFileStore.Iid
-                }
+                DomainFileStore = [domainFileStore.Iid]
             };
 
             this.iterationService
@@ -132,7 +129,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.domainFileStoreDao
                 .Setup(
                     x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
-                .Returns(Task.FromResult<IEnumerable<DomainFileStore>>(new[] { domainFileStore, extraDomainFileStoreToTestDomainFileStoreSelectors }));
+                .Returns(Task.FromResult<IEnumerable<DomainFileStore>>([domainFileStore, extraDomainFileStoreToTestDomainFileStoreSelectors]));
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
             this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult<object>(DateTime.MaxValue));
@@ -141,25 +138,25 @@ namespace CometServer.Tests.Services.Supplemental
         [Test]
         public void VerifyIsAllowedAccordingToIsHidden()
         {
-            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.True);
+            Assert.That(async () => await this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.True);
 
             domainFileStore.IsHidden = true;
-            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.True);
+            Assert.That(async () => await this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.True);
 
             this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(Task.FromResult(false));
-            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.False);
+            Assert.That(async () => await this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.False);
 
             domainFileStore.IsHidden = false;
-            Assert.That(this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.True);
+            Assert.That(async () => await this.domainFileStoreService.IsAllowedAccordingToIsHiddenAsync(this.transaction.Object, domainFileStore), Is.True);
         }
 
         [Test]
         public void VerifyCheckAllowedAccordingToIsHidden()
         {
-            Assert.DoesNotThrow(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.DoesNotThrowAsync(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
 
             domainFileStore.IsHidden = true;
-            Assert.DoesNotThrow(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
+            Assert.DoesNotThrowAsync(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore));
 
             this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(Task.FromResult(false));
             Assert.That(() => this.domainFileStoreService.CheckAllowedAccordingToIsHidden(this.transaction.Object, domainFileStore), Throws.TypeOf<ThingNotFoundException>());
@@ -174,35 +171,35 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.That(() => this.domainFileStoreService.HasReadAccessAsync(
+                Assert.That(async () => await this.domainFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName), Throws.TypeOf<Cdp4ModelValidationException>());
             }
             else
             {
-                Assert.That(this.domainFileStoreService.HasReadAccessAsync(
+                Assert.That(async () => await this.domainFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName), Is.True);
 
                 domainFileStore.IsHidden = true;
 
-                Assert.That(() => this.domainFileStoreService.HasReadAccessAsync(
+                Assert.That(async () => await this.domainFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName), Is.True);
 
                 this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), domainFileStore)).Returns(Task.FromResult(false));
 
-                Assert.That(this.domainFileStoreService.HasReadAccessAsync(
+                Assert.That(async () => await this.domainFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName), Is.False);
 
                 domainFileStore.IsHidden = false;
 
-                Assert.That(this.domainFileStoreService.HasReadAccessAsync(
+                Assert.That(async () => await this.domainFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.iterationPartitionName), Is.True);

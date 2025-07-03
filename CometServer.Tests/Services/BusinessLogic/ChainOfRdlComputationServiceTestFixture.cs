@@ -48,18 +48,18 @@ namespace CometServer.Tests.Services.BusinessLogic
     [TestFixture]
     public class ChainOfRdlComputationServiceTestFixture
     {
-        private Mock<ILogger<ChainOfRdlComputationService>> logger = new ();
- 
-        private Mock<IModelReferenceDataLibraryDao> modelReferenceDataLibraryDao = new ();
+        private readonly Mock<ILogger<ChainOfRdlComputationService>> logger = new();
 
-        private Mock<ISiteReferenceDataLibraryDao> siteReferenceDataLibraryDao = new ();
+        private readonly Mock<IModelReferenceDataLibraryDao> modelReferenceDataLibraryDao = new();
+
+        private readonly Mock<ISiteReferenceDataLibraryDao> siteReferenceDataLibraryDao = new();
 
         private List<ModelReferenceDataLibrary> modelReferenceDataLibraries;
 
         private List<SiteReferenceDataLibrary> siteReferenceDataLibraries;
 
         private ChainOfRdlComputationService chainOfRdlComputationService;
-        
+
         [SetUp]
         public void SetUp()
         {
@@ -71,74 +71,87 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.siteReferenceDataLibraryDao.Setup(x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
                 .Returns(Task.FromResult<IEnumerable<SiteReferenceDataLibrary>>(this.siteReferenceDataLibraries));
 
-            this.chainOfRdlComputationService = new ChainOfRdlComputationService();
-            this.chainOfRdlComputationService.Logger = this.logger.Object;
-            this.chainOfRdlComputationService.ModelReferenceDataLibraryDao = this.modelReferenceDataLibraryDao.Object;
-            this.chainOfRdlComputationService.SiteReferenceDataLibraryDao = this.siteReferenceDataLibraryDao.Object;
+            this.chainOfRdlComputationService = new ChainOfRdlComputationService
+            {
+                Logger = this.logger.Object,
+                ModelReferenceDataLibraryDao = this.modelReferenceDataLibraryDao.Object,
+                SiteReferenceDataLibraryDao = this.siteReferenceDataLibraryDao.Object
+            };
         }
 
         [Test]
-        public void Verify_that_QueryReferenceDataLibraryDependency_returns_expected_identifiers_for_single_EngineeringModelSetup()
+        public async Task Verify_that_QueryReferenceDataLibraryDependency_returns_expected_identifiers_for_single_EngineeringModelSetup()
         {
-            var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1);
-            engineeringModelSetup_a.RequiredRdl = new List<Guid> { Guid.Parse("38c92eac-4aa5-4418-9b25-9ef76daab374") };
+            var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1)
+            {
+                RequiredRdl = [Guid.Parse("38c92eac-4aa5-4418-9b25-9ef76daab374")]
+            };
 
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a };
 
             var expectedResult = new List<Guid> { Guid.Parse("a43bcec9-3293-4ffa-adf1-2ba36de90d7c"), Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a") };
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
+            var result = await this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
 
             Assert.That(result, Is.EquivalentTo(expectedResult));
 
-            var engineeringModelSetup_b = new EngineeringModelSetup(Guid.NewGuid(), 1);
-            engineeringModelSetup_b.RequiredRdl = new List<Guid> { Guid.Parse("cf796a26-ec8f-47f6-8f29-7ea3e7083ff8") };
+            var engineeringModelSetup_b = new EngineeringModelSetup(Guid.NewGuid(), 1)
+            {
+                RequiredRdl = [Guid.Parse("cf796a26-ec8f-47f6-8f29-7ea3e7083ff8")]
+            };
 
-            engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_b };
-            expectedResult = new List<Guid> { Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a") };
-            result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
-            
+            engineeringModelSetups = [engineeringModelSetup_b];
+            expectedResult = [Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a")];
+            result = await this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
+
             Assert.That(result, Is.EquivalentTo(expectedResult));
         }
 
         [Test]
-        public void Verify_that_QueryReferenceDataLibraryDependency_returns_expected_identifiers_for_multiple_EngineeringModelSetup()
+        public async Task Verify_that_QueryReferenceDataLibraryDependency_returns_expected_identifiers_for_multiple_EngineeringModelSetup()
         {
-            var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1);
-            engineeringModelSetup_a.RequiredRdl = new List<Guid> { Guid.Parse("38c92eac-4aa5-4418-9b25-9ef76daab374") };
+            var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1)
+            {
+                RequiredRdl = [Guid.Parse("38c92eac-4aa5-4418-9b25-9ef76daab374")]
+            };
 
-            var engineeringModelSetup_aa = new EngineeringModelSetup(Guid.NewGuid(), 1);
-            engineeringModelSetup_aa.RequiredRdl = new List<Guid> { Guid.Parse("0469a960-0114-41d9-93f2-62862114502d") };
+            var engineeringModelSetup_aa = new EngineeringModelSetup(Guid.NewGuid(), 1)
+            {
+                RequiredRdl = [Guid.Parse("0469a960-0114-41d9-93f2-62862114502d")]
+            };
 
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a, engineeringModelSetup_aa };
 
             var expectedResult = new List<Guid> { Guid.Parse("a43bcec9-3293-4ffa-adf1-2ba36de90d7c"), Guid.Parse("71a05233-52ac-46bb-9d72-03ff99dc32e1"), Guid.Parse("4b2089e5-431e-4e18-96e3-6afcae0ac39a") };
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
+            var result = await this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
 
             Assert.That(result, Is.EquivalentTo(expectedResult));
         }
 
         [Test]
-        public void Verify_that_QueryReferenceDataLibraryDependency_retuns_empty_result()
+        public async Task Verify_that_QueryReferenceDataLibraryDependency_retuns_empty_result()
         {
             var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1);
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a };
-            
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
+
+            var result = await this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
             Assert.That(result, Is.Empty);
 
-            engineeringModelSetup_a.RequiredRdl = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
-            result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
+            engineeringModelSetup_a.RequiredRdl = [Guid.NewGuid(), Guid.NewGuid()];
+            result = await this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
             Assert.That(result, Is.Empty);
         }
 
         [Test]
-        public void Verify_that_when_the_modelrdl_cannot_be_found_empty_empty_is_returned()
+        public async Task Verify_that_when_the_modelrdl_cannot_be_found_empty_empty_is_returned()
         {
-            var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1);
-            engineeringModelSetup_a.RequiredRdl = new List<Guid> { Guid.NewGuid() };
+            var engineeringModelSetup_a = new EngineeringModelSetup(Guid.NewGuid(), 1)
+            {
+                RequiredRdl = [Guid.NewGuid()]
+            };
+
             var engineeringModelSetups = new List<EngineeringModelSetup> { engineeringModelSetup_a };
 
-            var result = this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
+            var result = await this.chainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(null, engineeringModelSetups);
 
             Assert.That(result, Is.Empty);
         }

@@ -122,7 +122,7 @@ namespace CometServer.Tests.Services.Supplemental
         }
 
         [Test]
-        public void VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibrary()
+        public async Task VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibrary()
         {
             this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
@@ -140,13 +140,13 @@ namespace CometServer.Tests.Services.Supplemental
                 null))
                 .Returns(Task.FromResult<IEnumerable<ModelReferenceDataLibrary>>(new List<ModelReferenceDataLibrary> { this.modelReferenceDataLibrary}));
 
-            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
+            var result = await this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
             
             Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary }));
         }
 
         [Test]
-        public void VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibraryWithSingleSiteReferenceLibraryInChainOfRDLs()
+        public async Task VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibraryWithSingleSiteReferenceLibraryInChainOfRDLs()
         {
             this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
@@ -176,13 +176,13 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
 
-            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
+            var result = await this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
 
             Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1 }));
         }
 
         [Test]
-        public void VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibraryWithMultipleSiteReferenceLibrariesInChainOfRDLs()
+        public async Task VerifyQueryReferenceDataLibraryWorksForModelReferenceDataLibraryWithMultipleSiteReferenceLibrariesInChainOfRDLs()
         {
             this.engineeringModelSetupDao.Setup(x => x.ReadAsync(
                     It.IsAny<NpgsqlTransaction>(),
@@ -221,7 +221,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.modelReferenceDataLibrary.RequiredRdl = this.siteReferenceDataLibrary1.Iid;
             this.siteReferenceDataLibrary1.RequiredRdl = this.siteReferenceDataLibrary2.Iid;
 
-            var result = this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
+            var result = await this.modelReferenceDataLibraryService.QueryReferenceDataLibraryAsync(null, this.iteration);
 
             Assert.That(result, Is.EqualTo(new List<ReferenceDataLibrary> { this.modelReferenceDataLibrary, this.siteReferenceDataLibrary1, this.siteReferenceDataLibrary2 }));
         }

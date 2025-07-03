@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Security;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -101,15 +102,15 @@ namespace CometServer.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyThatAdditionalCheckSecurityChecksWork()
+        public async Task VerifyThatAdditionalCheckSecurityChecksWork()
         {
             //Locked by me
-            this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
+            await this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
             this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
 
             //Locked by someone else
             this.fileService.Setup(x => x.CheckFileLockAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();
-            Assert.Throws<SecurityException>(() => this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
+            Assert.ThrowsAsync<SecurityException>(() => this.sideEffect.BeforeUpdateAsync(this.file, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
         }
     }
 }

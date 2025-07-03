@@ -51,6 +51,6 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        Task<bool> IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition);
+        Task<bool> IsAllowedAccordingToIsHiddenAsync(NpgsqlTransaction transaction, Thing thing, string partition);
     }
 }

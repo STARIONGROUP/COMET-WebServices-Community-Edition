@@ -89,7 +89,7 @@ namespace CometServer.Tests.SideEffects
                             this.denyingAccessRightKindValidationService.Object
                     };
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.ThrowsAsync<InvalidOperationException>(
                 () => this.sideEffect.BeforeCreateAsync(
                     participantPermission,
                     null,
@@ -97,7 +97,7 @@ namespace CometServer.Tests.SideEffects
                     "partition",
                     this.securityContext.Object));
 
-            Assert.Throws<InvalidOperationException>(
+            Assert.ThrowsAsync<InvalidOperationException>(
                 () => this.sideEffect.AfterUpdateAsync(
                     participantPermission,
                     null,

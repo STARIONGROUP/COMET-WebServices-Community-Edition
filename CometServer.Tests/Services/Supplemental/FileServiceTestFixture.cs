@@ -126,11 +126,11 @@ namespace CometServer.Tests.Services.Supplemental
         {
             this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(true));
 
-            Assert.That(this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.True);
+            Assert.That(async () => await this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.True);
 
             this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(false));
 
-            Assert.That(this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.False);
+            Assert.That(async () => await this.fileService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.file, this.iterationPartitionName), Is.False);
         }
     }
 }

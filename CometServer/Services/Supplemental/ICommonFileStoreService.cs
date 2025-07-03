@@ -46,7 +46,7 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        Task HasWriteAccess(Thing thing, IDbTransaction transaction, string partition);
+        Task HasWriteAccessAsync(Thing thing, IDbTransaction transaction, string partition);
 
         /// <summary>
         /// Check the security related functionality
@@ -60,6 +60,6 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        Task<bool> HasReadAccess(Thing thing, IDbTransaction transaction, string partition);
+        Task<bool> HasReadAccessAsync(Thing thing, IDbTransaction transaction, string partition);
     }
 }

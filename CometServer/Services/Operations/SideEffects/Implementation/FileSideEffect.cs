@@ -128,7 +128,7 @@ namespace CometServer.Services.Operations.SideEffects
 
             if (partition.StartsWith("EngineeringModel_"))
             {
-                await this.CommonFileStoreService.HasWriteAccess(
+                await this.CommonFileStoreService.HasWriteAccessAsync(
                     file,
                     transaction,
                     partition);

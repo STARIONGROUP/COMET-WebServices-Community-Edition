@@ -100,6 +100,7 @@ namespace CometServer.Health
                 {
                     this.Logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {BacktierWaitTime}", this.AppConfigService.AppConfig.Midtier.BacktierWaitTime);
                     this.applicationLifetime.StopApplication();
+                    return;
                 }
 
                 if (!await this.MigrationEngine.MigrateAllAtStartUpAsync())

@@ -176,7 +176,7 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryA.Iid } }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
@@ -202,7 +202,7 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryB.Iid } }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
@@ -217,7 +217,7 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryD.Iid } }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryC,
                     this.referenceDataLibraryA,
@@ -244,7 +244,7 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryD.Iid, this.categoryG.Iid } }
                                      };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,

@@ -125,21 +125,21 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasReadAccess(
+                Assert.ThrowsAsync<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
             }
             else
             {
-                Assert.That(this.commonFileStoreService.HasReadAccess(
+                Assert.That(async () => await this.commonFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName), Is.True);
 
                 this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(Task.FromResult(false));
 
-                Assert.That(this.commonFileStoreService.HasReadAccess(
+                Assert.That(async () => await this.commonFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName), Is.True);
@@ -152,28 +152,28 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
 
                 this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(Task.FromResult(true));
 
-                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
             }
             else
             {
-                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
 
                 this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), thing)).Returns(Task.FromResult(false));
 
-                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));

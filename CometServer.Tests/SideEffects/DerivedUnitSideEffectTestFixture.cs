@@ -111,18 +111,20 @@ namespace CometServer.Tests.SideEffects
             // There is a chain librayA -> LibraryB
             this.referenceDataLibraryB =
                 new SiteReferenceDataLibrary { Iid = Guid.NewGuid(), Unit = { this.simpleUnitD.Iid } };
+
             this.referenceDataLibraryA = new ModelReferenceDataLibrary
-                                             {
-                                                 Iid = Guid.NewGuid(),
-                                                 Unit =
-                                                     {
-                                                         this.derivedUnitA.Iid,
-                                                         this.derivedUnitB.Iid
-                                                     },
-                                                 RequiredRdl = this.referenceDataLibraryB.Iid
-                                             };
+            {
+                Iid = Guid.NewGuid(),
+                Unit =
+                {
+                    this.derivedUnitA.Iid,
+                    this.derivedUnitB.Iid
+                },
+                RequiredRdl = this.referenceDataLibraryB.Iid
+            };
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(
                     x => x.GetAsync(
@@ -133,6 +135,7 @@ namespace CometServer.Tests.SideEffects
                 .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
 
             this.derivedUnitService = new Mock<IDerivedUnitService>();
+
             this.derivedUnitService
                 .Setup(
                     x => x.GetAsync(
@@ -143,6 +146,7 @@ namespace CometServer.Tests.SideEffects
                 .Returns(Task.FromResult<IEnumerable<Thing>>(new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB }));
 
             this.unitFactorService = new Mock<IUnitFactorService>();
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
@@ -150,6 +154,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorA.Iid },
                         It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorA }));
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
@@ -157,6 +162,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorB.Iid },
                         It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorB }));
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
@@ -164,6 +170,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorC.Iid },
                         It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorC }));
+
             this.unitFactorService
                 .Setup(
                     x => x.GetAsync(
@@ -177,16 +184,16 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatExceptionIsThrownWhenUnitFactorLeadsToCircularDependency()
         {
             this.sideEffect = new DerivedUnitSideEffect()
-                                  {
-                                      DerivedUnitService = this.derivedUnitService.Object,
-                                      UnitFactorService = this.unitFactorService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
+            {
+                DerivedUnitService = this.derivedUnitService.Object,
+                UnitFactorService = this.unitFactorService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService.Object
+            };
 
-            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() {K = 3, V = this.unitFactorC.Iid} } } };
+            this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() { K = 3, V = this.unitFactorC.Iid } } } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedUnitB,
                     this.referenceDataLibraryA,
@@ -200,16 +207,16 @@ namespace CometServer.Tests.SideEffects
         public void VerifyThatExceptionIsNotThrownWhenUnitFactorDoesNotLeadToCircularDependency()
         {
             this.sideEffect = new DerivedUnitSideEffect()
-                                  {
-                                      DerivedUnitService = this.derivedUnitService.Object,
-                                      UnitFactorService = this.unitFactorService.Object,
-                                      SiteReferenceDataLibraryService =
-                                          this.siteReferenceDataLibraryService.Object
-                                  };
+            {
+                DerivedUnitService = this.derivedUnitService.Object,
+                UnitFactorService = this.unitFactorService.Object,
+                SiteReferenceDataLibraryService =
+                    this.siteReferenceDataLibraryService.Object
+            };
 
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, new List<OrderedItem> { new() { K = 4, V = this.unitFactorD.Iid } } } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedUnitB,
                     this.referenceDataLibraryA,

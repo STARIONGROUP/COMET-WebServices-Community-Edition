@@ -86,7 +86,7 @@ namespace CometServer.Services
         /// Also if a new CommonFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DommonFileStores might not return
         /// the to be created <see cref="CommonFileStore"/>. The isHidden check will then be ignored.
         /// </remarks>
-        public Task HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
+        public Task HasWriteAccessAsync(Thing thing, IDbTransaction transaction, string partition)
         {
             if (!partition.Contains("EngineeringModel"))
             {
@@ -115,7 +115,7 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        public Task<bool> HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
+        public Task<bool> HasReadAccessAsync(Thing thing, IDbTransaction transaction, string partition)
         {
             if (!partition.Contains("EngineeringModel"))
             {

@@ -152,22 +152,20 @@ namespace CometServer.Tests
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithoutIid);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                async () => await this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
+            Assert.ThrowsAsync<InvalidOperationException>(
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithoutClassKind);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                async () => await this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
+            Assert.ThrowsAsync<InvalidOperationException>(
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             var completeDeleteObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, SimpleQuantityKindTypeString } };
             postOperation.Delete.Clear();
             postOperation.Delete.Add(completeDeleteObject);
 
-            Assert.DoesNotThrow(async () =>await this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
+            Assert.DoesNotThrowAsync(() => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
         }
 
         [Test]
@@ -186,9 +184,8 @@ namespace CometServer.Tests
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithScalarPropertySet);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                async () => await this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
+            Assert.ThrowsAsync<InvalidOperationException>(
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             var deleteObjectWithListProperty = new ClasslessDTO()
             {
@@ -200,7 +197,7 @@ namespace CometServer.Tests
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithListProperty);
 
-            Assert.DoesNotThrow(async() => await this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
+            Assert.DoesNotThrowAsync(() => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
         }
 
         [Test]

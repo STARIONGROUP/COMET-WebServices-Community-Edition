@@ -120,40 +120,39 @@ namespace CometServer.Tests.SideEffects
                 new ExclusiveOrExpression
                     {
                         Iid = Guid.NewGuid(),
-                        Term = new List<Guid> { this.notC.Iid, this.notD.Iid }
+                        Term = [this.notC.Iid, this.notD.Iid]
                     };
 
             this.orA = new OrExpression
                            {
                                Iid = Guid.NewGuid(),
-                               Term = new List<Guid> { this.notB.Iid, this.exclusiveOrA.Iid }
+                               Term = [this.notB.Iid, this.exclusiveOrA.Iid]
                            };
 
             this.andA = new AndExpression
                             {
                                 Iid = Guid.NewGuid(),
-                                Term = new List<Guid> { this.notA.Iid, this.orA.Iid }
+                                Term = [this.notA.Iid, this.orA.Iid]
                             };
 
             this.constraintA = new ParametricConstraint
                                    {
                                        Iid = Guid.NewGuid(),
                                        Expression =
-                                           new List<Guid>
-                                               {
-                                                   this.relA.Iid,
-                                                   this.relB.Iid,
-                                                   this.relC.Iid,
-                                                   this.relD.Iid,
-                                                   this.relE.Iid,
-                                                   this.notA.Iid,
-                                                   this.notB.Iid,
-                                                   this.notC.Iid,
-                                                   this.notD.Iid,
-                                                   this.exclusiveOrA.Iid,
-                                                   this.orA.Iid,
-                                                   this.andA.Iid
-                                               }
+                                       [
+                                           this.relA.Iid,
+                                           this.relB.Iid,
+                                           this.relC.Iid,
+                                           this.relD.Iid,
+                                           this.relE.Iid,
+                                           this.notA.Iid,
+                                           this.notB.Iid,
+                                           this.notC.Iid,
+                                           this.notD.Iid,
+                                           this.exclusiveOrA.Iid,
+                                           this.orA.Iid,
+                                           this.andA.Iid
+                                       ]
                                    };
 
             this.parametricConstraintService = new Mock<IParametricConstraintService>();
@@ -189,7 +188,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.notD.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
@@ -205,7 +204,7 @@ namespace CometServer.Tests.SideEffects
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.notE.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
@@ -217,7 +216,7 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.andA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
+            Assert.ThrowsAsync<AcyclicValidationException>(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
@@ -232,7 +231,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.relE.Iid } };
 
-            Assert.DoesNotThrow(
+            Assert.DoesNotThrowAsync(
                 () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,

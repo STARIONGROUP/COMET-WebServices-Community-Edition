@@ -547,7 +547,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyAppendModelChangeLogDataOnlyWorksOnEngineeringModelChanges()
+        public async Task VerifyAppendModelChangeLogDataOnlyWorksOnEngineeringModelChanges()
         {
             var postOperation = new CdpPostOperation();
 
@@ -563,7 +563,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.iteration, this.elementDefinition_1 };
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.False);
             
@@ -580,9 +580,9 @@ namespace CometServer.Tests.Services
             postOperation.Update.Add(engineeringModelClasslessDto);
             postOperation.Create.Add(this.existingModelLogEntry);
 
-            things = new Thing[] { this.iteration, this.elementDefinition_1, this.engineeringModel, this.existingModelLogEntry };
+            things = [this.iteration, this.elementDefinition_1, this.engineeringModel, this.existingModelLogEntry];
 
-            result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
             
@@ -591,7 +591,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyAppendModelChangeLogDataAddsModelLogEntryWhenNeeded()
+        public async Task VerifyAppendModelChangeLogDataAddsModelLogEntryWhenNeeded()
         {
             var postOperation = new CdpPostOperation();
 
@@ -607,7 +607,7 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.iteration, this.elementDefinition_1, this.engineeringModel };
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -616,7 +616,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatUnsupportedThingsAreNotAddedToTheModelLogEntry()
+        public async Task VerifyThatUnsupportedThingsAreNotAddedToTheModelLogEntry()
         {
             var postOperation = new CdpPostOperation();
 
@@ -632,14 +632,14 @@ namespace CometServer.Tests.Services
 
             var things = new Thing[] { this.iteration, this.requirementsSpecification, this.engineeringModel };
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.False);
 
             this.operationProcessor.Verify(
                 x => x.ProcessAsync(It.IsAny<CdpPostOperation>(), null, It.IsAny<string>(), null), Times.Exactly(0));
 
-            things = new Thing[] { this.iteration, this.requirementsSpecification, this.elementDefinition_1, this.engineeringModel };
+            things = [this.iteration, this.requirementsSpecification, this.elementDefinition_1, this.engineeringModel];
             postOperation.Create.Add(this.elementDefinition_1);
             postOperation.Create.Add(this.existingModelLogEntry);
 
@@ -652,7 +652,7 @@ namespace CometServer.Tests.Services
 
             postOperation.Update.Add(engineeringModelClasslessDto);
 
-            result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -663,7 +663,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForNewParameter()
+        public async Task VerifyThatResultsAreAsExpectedForNewParameter()
         {
             var postOperation = new CdpPostOperation();
 
@@ -701,7 +701,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -755,7 +755,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForDeletedParameter()
+        public async Task VerifyThatResultsAreAsExpectedForDeletedParameter()
         {
             var postOperation = new CdpPostOperation();
 
@@ -796,7 +796,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -840,7 +840,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedParameter()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedParameter()
         {
             var postOperation = new CdpPostOperation();
 
@@ -881,7 +881,7 @@ namespace CometServer.Tests.Services
 
             this.operationProcessor.Setup(x => x.OperationOriginalThingCache).Returns(new List<Thing> {this.parameter});
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -923,7 +923,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedParameterValueSet()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterValueSet()
         {
             var postOperation = new CdpPostOperation();
 
@@ -931,7 +931,7 @@ namespace CometServer.Tests.Services
             {
                 { nameof(Thing.Iid), this.parameterValueSet_1.Iid },
                 { nameof(Thing.ClassKind), ClassKind.ParameterValueSet.ToString() },
-                { nameof(ParameterValueSet.Manual), new ValueArray<string>(new[] { "100" }) }
+                { nameof(ParameterValueSet.Manual), new ValueArray<string>(["100"]) }
             };
 
             var engineeringModelClasslessDto = new ClasslessDTO
@@ -960,7 +960,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1004,7 +1004,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForNewElementUsage()
+        public async Task VerifyThatResultsAreAsExpectedForNewElementUsage()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1042,7 +1042,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1093,7 +1093,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForDeletedElementUsage()
+        public async Task VerifyThatResultsAreAsExpectedForDeletedElementUsage()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1135,7 +1135,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1175,7 +1175,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedElementUsage()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedElementUsage()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1212,7 +1212,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1250,7 +1250,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForNewParameterOverride()
+        public async Task VerifyThatResultsAreAsExpectedForNewParameterOverride()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1288,7 +1288,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1352,7 +1352,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForDeletedParameterOverride()
+        public async Task VerifyThatResultsAreAsExpectedForDeletedParameterOverride()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1395,7 +1395,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1449,7 +1449,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedParameterOverride()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterOverride()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1486,7 +1486,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1538,7 +1538,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedParameterOverrideValueSet()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterOverrideValueSet()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1546,7 +1546,7 @@ namespace CometServer.Tests.Services
             {
                 { nameof(Thing.Iid), this.parameterOverrideValueSet_1.Iid },
                 { nameof(Thing.ClassKind), ClassKind.ParameterOverrideValueSet.ToString() },
-                { nameof(ParameterValueSet.Manual), new ValueArray<string>(new[] { "100" }) }
+                { nameof(ParameterValueSet.Manual), new ValueArray<string>(["100"]) }
             };
 
             var engineeringModelClasslessDto = new ClasslessDTO
@@ -1574,7 +1574,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1628,7 +1628,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForNewParameterSubscription_SubscriptionIsOnParameter()
+        public async Task VerifyThatResultsAreAsExpectedForNewParameterSubscription_SubscriptionIsOnParameter()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1668,7 +1668,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1727,7 +1727,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForDeletedParameterSubscription()
+        public async Task VerifyThatResultsAreAsExpectedForDeletedParameterSubscription()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1771,7 +1771,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1817,7 +1817,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedParameterSubscriptionValueSet_SubscriptionIsOnParameter()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterSubscriptionValueSet_SubscriptionIsOnParameter()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1827,7 +1827,7 @@ namespace CometServer.Tests.Services
             {
                 { nameof(Thing.Iid), this.parameterSubscriptionValueSet_1.Iid },
                 { nameof(Thing.ClassKind), ClassKind.ParameterSubscriptionValueSet.ToString() },
-                { nameof(ParameterSubscriptionValueSet.Manual), new ValueArray<string>(new[] { "100" }) }
+                { nameof(ParameterSubscriptionValueSet.Manual), new ValueArray<string>(["100"]) }
             };
 
             var engineeringModelClasslessDto = new ClasslessDTO
@@ -1856,7 +1856,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -1902,7 +1902,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForNewParameterSubscription_SubscriptionIsOnParameterOverride()
+        public async Task VerifyThatResultsAreAsExpectedForNewParameterSubscription_SubscriptionIsOnParameterOverride()
         {
             var postOperation = new CdpPostOperation();
 
@@ -1942,7 +1942,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries.AddRange(operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray());
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 
@@ -2016,7 +2016,7 @@ namespace CometServer.Tests.Services
         }
 
         [Test]
-        public void VerifyThatResultsAreAsExpectedForUpdatedParameterSubscriptionValueSet_SubscriptionIsOnParameterOverride()
+        public async Task VerifyThatResultsAreAsExpectedForUpdatedParameterSubscriptionValueSet_SubscriptionIsOnParameterOverride()
         {
             var postOperation = new CdpPostOperation();
 
@@ -2026,7 +2026,7 @@ namespace CometServer.Tests.Services
             {
                 { nameof(Thing.Iid), this.parameterOverrideSubscriptionValueSet_1.Iid },
                 { nameof(Thing.ClassKind), ClassKind.ParameterSubscriptionValueSet.ToString() },
-                { nameof(ParameterSubscriptionValueSet.Manual), new ValueArray<string>(new[] { "100" }) }
+                { nameof(ParameterSubscriptionValueSet.Manual), new ValueArray<string>(["100"]) }
             };
 
             var engineeringModelClasslessDto = new ClasslessDTO
@@ -2055,7 +2055,7 @@ namespace CometServer.Tests.Services
                         createdLogEntries = operation.Create.Where(x => x.ClassKind == ClassKind.LogEntryChangelogItem).Cast<LogEntryChangelogItem>().ToArray();
                     });
 
-            var result = this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
+            var result = await this.changeLogService.TryAppendModelChangeLogDataAsync(null, this.partition, this.actor, 0, postOperation, things);
 
             Assert.That(result, Is.True);
 

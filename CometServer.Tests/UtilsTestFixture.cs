@@ -120,7 +120,7 @@ namespace CometServer.Tests
 
             var result = await siteDirectoryApi.ProcessRequestPathAsync(this.requestUtils, this.transactionManager.Object, mockedProcessor.Object,  "SiteDirectory", "SiteDirectory", ["SiteDirectory", this.mockedId, "model", this.mockedId]);
 
-            Assert.That(result.ResourcePath, Is.EqualTo(new[] { this.modelSetup}));
+            Assert.That(result.RequestedResources, Is.EqualTo(new[] { this.modelSetup}));
         }
 
         [Test]
@@ -137,7 +137,7 @@ namespace CometServer.Tests
             
             // reset query parameter override
             this.requestUtils.OverrideQueryParameters = null;
-            Assert.That(result, Is.EqualTo(new Thing[] { this.siteDir, this.modelSetup }));
+            Assert.That(result.RequestedResources, Is.EqualTo(new Thing[] { this.siteDir, this.modelSetup }));
         }
     }
 }
