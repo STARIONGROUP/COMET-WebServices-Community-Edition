@@ -141,15 +141,15 @@ namespace CometServer.Tests.SideEffects
             this.iteration.Option.Add(orderedOption1);
             this.iteration.Option.Add(orderedOption2);
 
-            this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([parameter]));
-            this.OverideService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([parameterOverride]));
-            this.parameterValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([parameterValueSet1, parameterValueSet2]));
-            this.overrideValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([overrideValueset1, overrideValueset2]));
+            this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([parameter]);
+            this.OverideService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([parameterOverride]);
+            this.parameterValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([parameterValueSet1, parameterValueSet2]);
+            this.overrideValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([overrideValueset1, overrideValueset2]);
 
-            this.parameterValueSetService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).Returns(Task.FromResult(true));
-            this.overrideValueSetService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).Returns(Task.FromResult(true));
+            this.parameterValueSetService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).ReturnsAsync(true);
+            this.overrideValueSetService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).ReturnsAsync(true);
 
-            this.transactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.Now));
+            this.transactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.Now);
         }
 
         [Test]

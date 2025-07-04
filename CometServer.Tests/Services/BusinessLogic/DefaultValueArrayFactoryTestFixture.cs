@@ -79,14 +79,16 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.PopulateParameterTypes();
 
             this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypesAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.parameterTypes));
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.parameterTypeComponents));
-            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.dependentParameterTypeAssignments));
-            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(this.independentParameterTypeAssignments));
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypesAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.parameterTypes);
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.parameterTypeComponents);
+            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.dependentParameterTypeAssignments);
+            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.independentParameterTypeAssignments);
 
-            this.defaultValueArrayFactory = new DefaultValueArrayFactory();
-            this.defaultValueArrayFactory.Logger = this.logger.Object;
-            this.defaultValueArrayFactory.CachedReferenceDataService = this.cachedReferenceDataService.Object;
+            this.defaultValueArrayFactory = new DefaultValueArrayFactory
+            {
+                Logger = this.logger.Object,
+                CachedReferenceDataService = this.cachedReferenceDataService.Object
+            };
         }
 
         private void PopulateParameterTypes()

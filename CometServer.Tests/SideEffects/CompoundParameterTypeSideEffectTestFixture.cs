@@ -138,7 +138,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.compoundParameterTypeService
@@ -152,8 +152,8 @@ namespace CometServer.Tests.SideEffects
                                 this.compoundParameterTypeA.Iid,
                                 this.compoundParameterTypeB.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(
-                    new List<CompoundParameterType> { this.compoundParameterTypeA, this.compoundParameterTypeB }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<CompoundParameterType> { this.compoundParameterTypeA, this.compoundParameterTypeB });
 
             this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
             this.arrayParameterTypeService.Setup(
@@ -166,7 +166,7 @@ namespace CometServer.Tests.SideEffects
                             this.compoundParameterTypeA.Iid,
                             this.compoundParameterTypeB.Iid
                         },
-                    It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<ArrayParameterType>()));
+                    It.IsAny<ISecurityContext>())).ReturnsAsync(new List<ArrayParameterType>());
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
             this.parameterTypeComponentService
@@ -175,32 +175,32 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentA }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentA });
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentB }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentB });
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentC }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentC });
             this.parameterTypeComponentService
                 .Setup(
                     x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<ParameterTypeComponent> { this.parameterTypeComponentD }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentD });
 
             this.sideEffect = new CompoundParameterTypeSideEffect()
                                   {

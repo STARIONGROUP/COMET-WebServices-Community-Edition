@@ -85,12 +85,12 @@ namespace CometServer.Tests
 
             mockedProcessor.Setup(
                 x => x.GetContainmentResource(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<ISecurityContext>()))
-                           .Returns(Task.FromResult<Thing>(this.siteDir));
+                           .ReturnsAsync(this.siteDir);
 
             mockedProcessor.Setup(
                 x => x.GetResourceAsync(
                     It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
-                           .Returns(Task.FromResult<IEnumerable<Thing>>([this.modelSetup]));
+                           .ReturnsAsync([this.modelSetup]);
 
             mockedProcessor.SetupGet(x => x.RequestUtils).Returns(this.requestUtils);
 

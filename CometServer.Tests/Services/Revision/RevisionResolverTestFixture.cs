@@ -109,7 +109,7 @@ namespace CometServer.Tests
                 this.revision5
             }.AsReadOnly();
 
-            this.revisionDao.Setup(x => x.ReadRevisionRegistryAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(Task.FromResult(revisionRegistryInfoList));
+            this.revisionDao.Setup(x => x.ReadRevisionRegistryAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).ReturnsAsync(revisionRegistryInfoList);
         }
 
         [Test]

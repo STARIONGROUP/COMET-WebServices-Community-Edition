@@ -111,7 +111,7 @@ namespace CometServer.Tests
         {
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.MaxValue as object));
+            this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.MaxValue);
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationSideEffectProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
 
@@ -136,7 +136,7 @@ namespace CometServer.Tests
 
             this.permissionService = new Mock<IPermissionService>();
             this.permissionService.Setup(x => x.CanRead(It.IsAny<string>(), It.IsAny<ISecurityContext>(), It.IsAny<string>())).Returns(true);
-            this.permissionService.Setup(x => x.CanReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<Thing>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+            this.permissionService.Setup(x => x.CanReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<Thing>(), It.IsAny<string>())).ReturnsAsync(true);
         }
 
         [Test]
@@ -237,8 +237,8 @@ namespace CometServer.Tests
             {
                 Book = new List<OrderedItem>(),
                 CommonFileStore = new List<Guid>(),
-                Iteration = new List<Guid> { Guid.NewGuid() },
-                LogEntry = new List<Guid>()
+                Iteration = [Guid.NewGuid()],
+                LogEntry = []
             };
 
             var postOperation = new CdpPostOperation();
@@ -281,7 +281,7 @@ namespace CometServer.Tests
                 () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
-                    new List<string> { "PossibleState" },
+                    ["PossibleState"],
                     metaInfo
                 )
             );
@@ -319,7 +319,7 @@ namespace CometServer.Tests
                 () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
-                    new List<string> { "PossibleState" },
+                    ["PossibleState"],
                     metaInfo
                 )
             );
@@ -359,7 +359,7 @@ namespace CometServer.Tests
                 () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
-                    new List<string> { "PossibleState" },
+                    ["PossibleState"],
                     metaInfo
                 )
             );
@@ -449,7 +449,7 @@ namespace CometServer.Tests
             // alias container create
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
             {
-                Alias = new List<Guid> { newAlias.Iid },
+                Alias = [newAlias.Iid],
                 Definition = new List<Guid>(),
                 HyperLink = new List<Guid>(),
                 PossibleScale = new List<Guid>(),
@@ -504,7 +504,7 @@ namespace CometServer.Tests
 
         private List<Thing> copySourceDtos;
 
-        private static readonly string[] DefaultValueArray = new[] { "-" };
+        private static readonly string[] DefaultValueArray = ["-"];
 
         [Test]
         public async Task VerifyCopyElementDefWorks()
@@ -512,9 +512,9 @@ namespace CometServer.Tests
             var modelSetupService = new Mock<IEngineeringModelSetupService>();
             var iterationService = new Mock<IIterationService>();
             var defaultArrayService = new Mock<IDefaultValueArrayFactory>();
-            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new[] { "-" }));
+            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(["-"]));
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
-            modelSetupService.Setup(x => x.GetEngineeringModelSetupFromDataBaseCache(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).Returns(Task.FromResult(modelSetup));
+            modelSetupService.Setup(x => x.GetEngineeringModelSetupFromDataBaseCache(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).ReturnsAsync(modelSetup);
 
             this.copySourceDtos = new List<Thing>();
 
@@ -534,10 +534,10 @@ namespace CometServer.Tests
 
             var pvs1 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
-                Manual = new ValueArray<string>(new[] { "true" }),
-                Computed = new ValueArray<string>(new[] { "-" }),
-                Reference = new ValueArray<string>(new[] { "-" }),
-                Published = new ValueArray<string>(new[] { "-" }),
+                Manual = new ValueArray<string>(["true"]),
+                Computed = new ValueArray<string>(["-"]),
+                Reference = new ValueArray<string>(["-"]),
+                Published = new ValueArray<string>(["-"]),
                 ValueSwitch = ParameterSwitchKind.MANUAL
             };
 
@@ -545,10 +545,10 @@ namespace CometServer.Tests
 
             var pvs2 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
-                Manual = new ValueArray<string>(new[] { "true" }),
-                Computed = new ValueArray<string>(new[] { "-" }),
-                Reference = new ValueArray<string>(new[] { "-" }),
-                Published = new ValueArray<string>(new[] { "-" }),
+                Manual = new ValueArray<string>(["true"]),
+                Computed = new ValueArray<string>(["-"]),
+                Reference = new ValueArray<string>(["-"]),
+                Published = new ValueArray<string>(["-"]),
                 ValueSwitch = ParameterSwitchKind.MANUAL
             };
 
@@ -582,13 +582,13 @@ namespace CometServer.Tests
             this.serviceProvider.Setup(x => x.MapToReadService(It.IsAny<string>())).Returns<string>(x => new TestSourceService(this.copySourceDtos, x));
 
             this.serviceProvider.Setup(x => x.MapToReadService(It.Is<string>(t => t == ClassKind.ModelReferenceDataLibrary.ToString())))
-                .Returns<string>(x => new TestSourceService(new List<Thing> { mrdl }, x));
+                .Returns<string>(x => new TestSourceService([mrdl], x));
 
             this.serviceProvider.Setup(x => x.MapToReadService(It.Is<string>(t => t == ClassKind.Iteration.ToString())))
-                .Returns<string>(x => new TestSourceService(new List<Thing> { sourceIteration, targetIteration }, x));
+                .Returns<string>(x => new TestSourceService([sourceIteration, targetIteration], x));
 
             var customOperationSideEffectProcessor = new Mock<IOperationSideEffectProcessor>();
-            customOperationSideEffectProcessor.Setup(x => x.BeforeCreateAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(true));
+            customOperationSideEffectProcessor.Setup(x => x.BeforeCreateAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).ReturnsAsync(true);
 
             var paramSubscriptionService = new ParameterSubscriptionService
             {
@@ -656,8 +656,8 @@ namespace CometServer.Tests
                 });
 
             var paramDao = new TestParameterDao();
-            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(new List<Thing> { sourceIteration }.AsEnumerable()));
-            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(new List<Thing> { targetIteration }.AsEnumerable()));
+            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).ReturnsAsync(new List<Thing> { sourceIteration }.AsEnumerable());
+            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).ReturnsAsync(new List<Thing> { targetIteration }.AsEnumerable());
 
             var paramService = new ParameterService
             {

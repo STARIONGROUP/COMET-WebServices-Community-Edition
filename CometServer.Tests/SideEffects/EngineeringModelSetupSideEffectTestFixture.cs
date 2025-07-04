@@ -149,13 +149,13 @@ namespace CometServer.Tests.SideEffects
             this.siteDirectory.Model.Add(this.engineeringModelSetup.Iid);
             this.siteDirectory.DefaultParticipantRole = Guid.NewGuid();
 
-            this.engineeringModelService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), It.IsAny<Thing>(), -1)).Returns(Task.FromResult(true));
-            this.engineeringModelService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), null)).Returns(Task.FromResult(true));
-            this.engineeringModelService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([engineeringModel]));
+            this.engineeringModelService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), It.IsAny<Thing>(), -1)).ReturnsAsync(true);
+            this.engineeringModelService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), null)).ReturnsAsync(true);
+            this.engineeringModelService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([engineeringModel]);
 
-            this.engineeringModelSetupService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModelSetup>(), It.IsAny<Thing>())).Returns(Task.FromResult(true));
+            this.engineeringModelSetupService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModelSetup>(), It.IsAny<Thing>())).ReturnsAsync(true);
 
-            this.iterationService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).Returns(Task.FromResult(true));
+            this.iterationService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).ReturnsAsync(true);
 
             this.iterationService.Setup(
                 x =>
@@ -163,9 +163,9 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<NpgsqlTransaction>(),
                         It.IsAny<string>(),
                         It.IsAny<IEnumerable<Guid>>(),
-                        this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([iteration]));
+                        this.securityContext.Object)).ReturnsAsync([iteration]);
 
-            this.iterationSetupService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModelSetup>(), -1)).Returns(Task.FromResult(true));
+            this.iterationSetupService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModelSetup>(), -1)).ReturnsAsync(true);
 
             this.iterationSetupService.Setup(
                 x =>
@@ -173,9 +173,9 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<NpgsqlTransaction>(),
                         It.IsAny<string>(),
                         It.IsAny<IEnumerable<Guid>>(),
-                        this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([iterationSetup]));
+                        this.securityContext.Object)).ReturnsAsync([iterationSetup]);
 
-            this.participantService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Participant>(), It.IsAny<EngineeringModelSetup>(), -1)).Returns(Task.FromResult(true));
+            this.participantService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Participant>(), It.IsAny<EngineeringModelSetup>(), -1)).ReturnsAsync(true);
 
             this.participantService.Setup(
                 x =>
@@ -183,24 +183,24 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<NpgsqlTransaction>(),
                         It.IsAny<string>(),
                         It.IsAny<IEnumerable<Guid>>(),
-                        this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([participant]));
+                        this.securityContext.Object)).ReturnsAsync([participant]);
 
-            this.optionService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Option>(), It.IsAny<Iteration>(), -1)).Returns(Task.FromResult(true));
+            this.optionService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Option>(), It.IsAny<Iteration>(), -1)).ReturnsAsync(true);
 
             this.optionService.Setup(x => x.GetShallowAsync(
                 It.IsAny<NpgsqlTransaction>(),
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(),
-                this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([option]));
+                this.securityContext.Object)).ReturnsAsync([option]);
 
             this.revisionService.Setup(
                 x => x.SaveRevisionsAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<Guid>(),
-                    It.IsAny<int>())).Returns(Task.FromResult(new List<Thing>().AsEnumerable()));
+                    It.IsAny<int>())).ReturnsAsync(new List<Thing>());
 
-            this.engineeringModelDao.Setup(x => x.GetNextIterationNumberAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(Task.FromResult(1));
+            this.engineeringModelDao.Setup(x => x.GetNextIterationNumberAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).ReturnsAsync(1);
         }
 
         [Test]

@@ -84,7 +84,7 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterGroupA.Iid, this.parameterGroupB.Iid, this.parameterGroupC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<ParameterGroup> { this.parameterGroupA, this.parameterGroupB, this.parameterGroupC }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<ParameterGroup> { this.parameterGroupA, this.parameterGroupB, this.parameterGroupC });
 
             this.organizationalParticipationResolverService = new Mock<IOrganizationalParticipationResolverService>();
             this.organizationalParticipationResolverService.Setup(x => x.ValidateCreateOrganizationalParticipationAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<ISecurityContext>(), this.npgsqlTransaction, It.IsAny<string>()));

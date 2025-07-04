@@ -93,17 +93,17 @@ namespace CometServer.Tests.SideEffects
             var returnedIterations = new List<Iteration> { new(Guid.NewGuid(), 1) };
             var returnedIterationSetups = new List<IterationSetup> { new(Guid.NewGuid(), 1) };
 
-            this.mockedIterationSetupService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>(returnedIterationSetups));
-            this.mockedIterationSetupService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModelSetup>())).Returns(Task.FromResult(true));
+            this.mockedIterationSetupService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).ReturnsAsync(returnedIterationSetups);
+            this.mockedIterationSetupService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModelSetup>())).ReturnsAsync(true);
 
-            this.mockedIterationService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>(returnedIterations));
-            this.mockedIterationService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>())).Returns(Task.FromResult(true));
-            this.mockedIterationService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).Returns(Task.FromResult(true));
+            this.mockedIterationService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).ReturnsAsync(returnedIterations);
+            this.mockedIterationService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>())).ReturnsAsync(true);
+            this.mockedIterationService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).ReturnsAsync(true);
 
-            this.mockedEngineeringModelService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(returnedEngineeringModels));
-            this.mockedEngineeringModelService.Setup(x => x.AddToCollectionPropertyAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<Thing>())).Returns(Task.FromResult(true));
+            this.mockedEngineeringModelService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).ReturnsAsync(returnedEngineeringModels);
+            this.mockedEngineeringModelService.Setup(x => x.AddToCollectionPropertyAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<Thing>())).ReturnsAsync(true);
 
-            this.mockedTransactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.UtcNow));
+            this.mockedTransactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.UtcNow);
 
             this.mockedRequestUtils.Setup(x => x.GetEngineeringModelPartitionString(It.IsAny<Guid>())).Returns("EngineeringModel");
             this.mockedCredentialsService.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(Guid.Empty, 1) });
@@ -114,7 +114,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<NpgsqlTransaction>(),
                         It.IsAny<string>(),
                         It.IsAny<Guid>(),
-                        It.IsAny<int>())).Returns(Task.FromResult(new List<Thing>().AsEnumerable()));
+                        It.IsAny<int>())).ReturnsAsync(new List<Thing>());
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace CometServer.Tests.SideEffects
         {
             var sourceId = Guid.NewGuid();
 
-            this.mockedIterationSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([new IterationSetup(sourceId, 0)]));
+            this.mockedIterationSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).ReturnsAsync([new IterationSetup(sourceId, 0)]);
 
             var iterationSetup = new IterationSetup(Guid.NewGuid(), 1) { SourceIterationSetup = sourceId };
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
@@ -270,7 +270,7 @@ namespace CometServer.Tests.SideEffects
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     this.mockedSecurityContext.Object))
-                .Returns(Task.FromResult<IEnumerable<Thing>>([iterationSetup1, iterationSetup2, iterationSetup3]));
+                .ReturnsAsync([iterationSetup1, iterationSetup2, iterationSetup3]);
 
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup3.Iid } };
 

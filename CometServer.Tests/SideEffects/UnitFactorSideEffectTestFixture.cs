@@ -146,13 +146,13 @@ namespace CometServer.Tests.SideEffects
 
             this.siteReferenceDataLibraryService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB }));
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryA, this.referenceDataLibraryB });
 
             this.modelReferenceDataLibraryService = new Mock<IModelReferenceDataLibraryService>();
 
             this.modelReferenceDataLibraryService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary>()));
+                .ReturnsAsync(new List<ReferenceDataLibrary>());
 
             this.derivedUnitService = new Mock<IDerivedUnitService>();
 
@@ -169,8 +169,8 @@ namespace CometServer.Tests.SideEffects
                             this.simpleUnitD.Iid,
                             this.simpleUnitE.Iid
                         },
-                        It.IsAny<ISecurityContext>())).Returns(
-                   Task.FromResult<IEnumerable<Thing>>(new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB, this.derivedUnitC }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                   new List<DerivedUnit> { this.derivedUnitA, this.derivedUnitB, this.derivedUnitC });
 
             this.unitFactorService = new Mock<IUnitFactorService>();
 
@@ -180,7 +180,7 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorA }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<UnitFactor> { this.unitFactorA });
 
             this.unitFactorService
                 .Setup(
@@ -188,7 +188,7 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorB }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<UnitFactor> { this.unitFactorB });
 
             this.unitFactorService
                 .Setup(
@@ -196,7 +196,7 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorC }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<UnitFactor> { this.unitFactorC });
 
             this.unitFactorService
                 .Setup(
@@ -204,7 +204,7 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.unitFactorD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(Task.FromResult<IEnumerable<Thing>>(new List<UnitFactor> { this.unitFactorD }));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<UnitFactor> { this.unitFactorD });
 
             this.sideEffect = new UnitFactorSideEffect()
             {

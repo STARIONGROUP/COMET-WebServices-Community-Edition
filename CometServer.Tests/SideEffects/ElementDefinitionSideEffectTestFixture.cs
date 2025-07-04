@@ -134,13 +134,13 @@ namespace CometServer.Tests.SideEffects
 
             this.elementDefinitionService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.edA, this.edB, this.edC, this.edD }));
+                .ReturnsAsync(new List<Thing> { this.edA, this.edB, this.edC, this.edD });
 
             this.elementUsageService = new Mock<IElementUsageService>();
 
             this.elementUsageService
                 .Setup(x => x.GetAsync(this.npgsqlTransaction, It.IsAny<string>(), null, It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.euA, this.euB, this.euC, this.euD, this.euE }));
+                .ReturnsAsync(new List<Thing> { this.euA, this.euB, this.euC, this.euD, this.euE });
 
             this.iterationSetup = new IterationSetup
             {
@@ -454,7 +454,7 @@ namespace CometServer.Tests.SideEffects
             this.iterationSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
                     new[] { this.iteration.IterationSetup }, this.securityContext.Object))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(iterationSetups));
+                .ReturnsAsync(iterationSetups);
 
             var engineeringModelSetups = new List<EngineeringModelSetup>();
 
@@ -467,7 +467,7 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelSetupService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, Utils.SiteDirectoryPartition,
                     null, this.securityContext.Object))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(engineeringModelSetups));
+                .ReturnsAsync(engineeringModelSetups);
 
             var newIterations = new List<Iteration>();
 
@@ -479,7 +479,7 @@ namespace CometServer.Tests.SideEffects
             this.iterationService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.iteration.Iid }, this.securityContext.Object))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(newIterations));
+                .ReturnsAsync(newIterations);
 
             var engineeringModels = new List<EngineeringModel>();
 
@@ -492,7 +492,7 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelService
                 .Setup(x => x.GetShallowAsync(this.npgsqlTransaction, this.engineeringModelPartition,
                     new[] { this.engineeringModelSetup.EngineeringModelIid }, this.securityContext.Object))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(engineeringModels));
+                .ReturnsAsync(engineeringModels);
         }
     }
 }

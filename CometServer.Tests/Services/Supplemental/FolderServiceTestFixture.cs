@@ -89,7 +89,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.iterationPartitionName = "Iteration_" + Guid.NewGuid();
             this.engineeringModelPartitionName = "EngineeringModel_" + Guid.NewGuid();
 
-            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.folder)).Returns(Task.FromResult(true));
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.folder)).ReturnsAsync(true);
 
             this.credentialsService.Setup(x => x.Credentials)
                 .Returns(
@@ -104,7 +104,7 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
             this.folderDao
                 .Setup(
                     x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), this.iterationPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
-                .Returns(Task.FromResult<IEnumerable<Folder>>([this.folder]));
+                .ReturnsAsync([this.folder]);
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
         }
@@ -112,11 +112,11 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         [Test]
         public void VerifyContainerIsInstanceReadAllowedForDomainFileStore()
         {
-            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(true));
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).ReturnsAsync(true);
 
             Assert.That(async () => await this.folderService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.folder, this.iterationPartitionName), Is.True);
 
-            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).Returns(Task.FromResult(false));
+            this.domainFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.iterationPartitionName)).ReturnsAsync(false);
 
             Assert.That(async () => await this.folderService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.folder, this.iterationPartitionName), Is.False);
         }
@@ -124,11 +124,11 @@ namespace CDP4WebServices.API.Tests.Services.Supplemental
         [Test]
         public void VerifyContainerIsInstanceReadAllowedForCommonFileStore()
         {
-            this.commonFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.engineeringModelPartitionName)).Returns(Task.FromResult(true));
+            this.commonFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.engineeringModelPartitionName)).ReturnsAsync(true);
 
             Assert.That(async () => await this.folderService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.folder, this.engineeringModelPartitionName), Is.True);
 
-            this.commonFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.engineeringModelPartitionName)).Returns(Task.FromResult(false));
+            this.commonFileStoreService.Setup(x => x.HasReadAccessAsync(It.IsAny<Thing>(),It.IsAny<IDbTransaction>(), this.engineeringModelPartitionName)).ReturnsAsync(false);
 
             Assert.That(async () => await this.folderService.IsAllowedAccordingToIsHiddenAsync(this.transaction, this.folder, this.engineeringModelPartitionName), Is.False);
         }

@@ -132,7 +132,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }.Cast<Thing>()));
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.categoryService = new Mock<ICategoryService>();
             this.categoryService
@@ -149,16 +149,16 @@ namespace CometServer.Tests.SideEffects
                                 this.categoryG.Iid,
                                 this.categoryA.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<Category>
-                        {
-                            this.categoryC,
-                            this.categoryD,
-                            this.categoryE,
-                            this.categoryF,
-                            this.categoryG,
-                            this.categoryA
-                        }.Cast<Thing>()));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<Category>
+                    {
+                        this.categoryC,
+                        this.categoryD,
+                        this.categoryE,
+                        this.categoryF,
+                        this.categoryG,
+                        this.categoryA
+                    });
         }
 
         [Test]

@@ -120,9 +120,9 @@ namespace CometServer.Tests.SideEffects
             this.elementUsage = new ElementUsage(Guid.NewGuid(), 1) { ElementDefinition = this.elementDefinition.Iid, ParameterOverride = { this.parameterOverride.Iid } };
 
             this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.parameter.Iid)), this.securityContext.Object))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Thing> { this.parameter }));
+                .ReturnsAsync(new List<Thing> { this.parameter });
 
-            this.valueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.valueset.Iid)), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([this.valueset]));
+            this.valueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(this.valueset.Iid)), this.securityContext.Object)).ReturnsAsync([this.valueset]);
         }
 
         [Test]
@@ -152,9 +152,9 @@ namespace CometServer.Tests.SideEffects
 
             this.parameterOverride.Owner = domain2.Iid;
 
-            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(subscription.Iid)), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([subscription]));
+            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(y => y.Contains(subscription.Iid)), this.securityContext.Object)).ReturnsAsync([subscription]);
 
-            this.parameterSubscriptionService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>())).Returns(Task.FromResult(true));
+            this.parameterSubscriptionService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterSubscription>(), It.IsAny<ParameterOverride>())).ReturnsAsync(true);
 
             this.sideEffect.AfterUpdateAsync(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 
@@ -172,7 +172,7 @@ namespace CometServer.Tests.SideEffects
             this.parameter.ParameterSubscription.Add(subscription1.Iid);
             this.parameter.ParameterSubscription.Add(subscription2.Iid);
 
-            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(null, It.IsAny<string>(), null, this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([subscription2, subscription1]));
+            this.parameterSubscriptionService.Setup(x => x.GetShallowAsync(null, It.IsAny<string>(), null, this.securityContext.Object)).ReturnsAsync([subscription2, subscription1]);
 
             this.sideEffect.AfterCreateAsync(this.parameterOverride, this.elementUsage, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
 

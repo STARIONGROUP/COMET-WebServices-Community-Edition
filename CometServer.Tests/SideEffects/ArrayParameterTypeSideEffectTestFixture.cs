@@ -151,7 +151,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }.Cast<Thing>()));
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
 
@@ -166,8 +166,8 @@ namespace CometServer.Tests.SideEffects
                                 this.arrayParameterTypeA.Iid,
                                 this.arrayParameterTypeB.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<CompoundParameterType> { this.arrayParameterTypeA, this.arrayParameterTypeB }.Cast<Thing>()));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<CompoundParameterType> { this.arrayParameterTypeA, this.arrayParameterTypeB });
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
 
@@ -181,7 +181,7 @@ namespace CometServer.Tests.SideEffects
                             this.arrayParameterTypeA.Iid,
                             this.arrayParameterTypeB.Iid
                         },
-                    It.IsAny<ISecurityContext>())).Returns(Task.FromResult(new List<CompoundParameterType>().Cast<Thing>()));
+                    It.IsAny<ISecurityContext>())).ReturnsAsync(new List<CompoundParameterType>());
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
 
@@ -191,8 +191,8 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentA }.Cast<Thing>()));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentA });
 
             this.parameterTypeComponentService
                 .Setup(
@@ -200,8 +200,8 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentB }.Cast<Thing>()));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentB });
 
             this.parameterTypeComponentService
                 .Setup(
@@ -209,8 +209,8 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentC }.Cast<Thing>()));
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                        new List<ParameterTypeComponent> { this.parameterTypeComponentC });
 
             this.parameterTypeComponentService
                 .Setup(
@@ -218,10 +218,9 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<ParameterTypeComponent> { this.parameterTypeComponentD }.Cast<Thing>()));
-
-
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<ParameterTypeComponent> { this.parameterTypeComponentD });
+            
             this.sideEffect = new ArrayParameterTypeSideEffect()
                                   {
                                       CompoundParameterTypeService =

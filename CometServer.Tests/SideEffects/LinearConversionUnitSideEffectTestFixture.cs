@@ -116,7 +116,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.conversionBasedUnitService = new Mock<IConversionBasedUnitService>();
             this.conversionBasedUnitService
@@ -131,14 +131,13 @@ namespace CometServer.Tests.SideEffects
                                 this.linearConversionUnitB.Iid,
                                 this.linearConversionUnitC.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<ConversionBasedUnit>
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<ConversionBasedUnit>
                         {
                             this.linearConversionUnitD,
                             this.linearConversionUnitA,
                             this.linearConversionUnitB,
                             this.linearConversionUnitC
-                        }));
+                        });
         }
 
         [Test]

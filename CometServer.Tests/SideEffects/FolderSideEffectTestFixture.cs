@@ -91,7 +91,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         new List<Guid> { this.folderA.Iid, this.folderB.Iid, this.folderC.Iid },
                         It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<Folder> { this.folderA, this.folderB, this.folderC }));
+                .ReturnsAsync(new List<Folder> { this.folderA, this.folderB, this.folderC });
 
             this.sideEffect = new FolderSideEffect
             {

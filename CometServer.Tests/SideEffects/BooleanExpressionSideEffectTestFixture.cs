@@ -162,8 +162,8 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.constraintA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult(new List<Thing>
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<Thing>
                         {
                             this.relA,
                             this.relB,
@@ -177,7 +177,7 @@ namespace CometServer.Tests.SideEffects
                             this.exclusiveOrA,
                             this.orA,
                             this.andA
-                        }.AsEnumerable()));
+                        }.AsEnumerable());
 
             this.sideEffect =
                 new NotExpressionSideEffect { ParametricConstraintService = this.parametricConstraintService.Object };

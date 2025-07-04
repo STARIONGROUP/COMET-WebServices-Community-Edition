@@ -24,10 +24,16 @@
 
 namespace CometServer.Tests.SideEffects
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CometServer.Exceptions;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -37,13 +43,6 @@ namespace CometServer.Tests.SideEffects
     using Npgsql;
 
     using NUnit.Framework;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-
-    using CometServer.Exceptions;
 
     /// <summary>
     /// Suite of tests for the <see cref="DerivedUnitSideEffectTestFixture"/>
@@ -152,18 +151,20 @@ namespace CometServer.Tests.SideEffects
             this.securityContext = new Mock<ISecurityContext>();
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,
                     It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary>
+                .ReturnsAsync(new List<ReferenceDataLibrary>
                 {
                     this.srdl
-                }));
+                });
 
             this.quantityKindFactorService = new Mock<IQuantityKindFactorService>();
+
             this.quantityKindFactorService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
@@ -185,6 +186,7 @@ namespace CometServer.Tests.SideEffects
                     });
 
             this.quantityKindService = new Mock<IQuantityKindService>();
+
             this.quantityKindService
                 .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,

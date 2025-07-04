@@ -119,10 +119,10 @@ namespace CometServer.Tests.SideEffects
                     It.IsAny<string>(),
                     null,
                     It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary>
+                .ReturnsAsync(new List<ReferenceDataLibrary>
                 {
                     this.srdl
-                }));
+                });
 
             this.mappingToReferenceScaleService = new Mock<IMappingToReferenceScaleService>();
 
@@ -170,11 +170,11 @@ namespace CometServer.Tests.SideEffects
                     It.IsAny<string>(),
                     null,
                     It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<MeasurementScale>
+                .ReturnsAsync(new List<MeasurementScale>
                 {
                     this.rootMeasurementScale,
                     this.containerMeasurementScale
-                }));
+                });
 
             this.sideEffect = new MeasurementScaleSideEffect
             {

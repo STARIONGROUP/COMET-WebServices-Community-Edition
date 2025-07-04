@@ -115,8 +115,8 @@ namespace CometServer.Tests.SideEffects
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<RequirementsGroup>
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<RequirementsGroup>
                     {
                         this.requirementsGroupA,
                         this.requirementsGroupB,
@@ -124,7 +124,7 @@ namespace CometServer.Tests.SideEffects
                         this.requirementsGroupD,
                         this.requirementsGroupE,
                         this.requirementsGroupF
-                    }));
+                    });
         }
 
         [Test]

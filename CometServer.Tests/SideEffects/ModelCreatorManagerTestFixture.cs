@@ -78,7 +78,7 @@ namespace CometServer.Tests.SideEffects
                 TransactionManager = this.transactionManager.Object
             };
 
-            this.transactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).Returns(Task.FromResult(DateTime.Now));
+            this.transactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.Now);
 
             this.requestUtilCache = new List<Thing>();
 
@@ -126,7 +126,7 @@ namespace CometServer.Tests.SideEffects
             modelSetup.Participant.Add(participant.Iid);
 
             this.modelSetupService.Setup(x => x.GetDeepAsync(It.IsAny<NpgsqlTransaction>(), "SiteDirectory", It.Is<IEnumerable<Guid>>(y => y.Contains(modelSetup.Iid)), It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>([modelSetup, mrdl, cat, participant, iterationSetup1, iterationSetup2]));
+                .ReturnsAsync([modelSetup, mrdl, cat, participant, iterationSetup1, iterationSetup2]);
 
             var copy = new EngineeringModelSetup(Guid.NewGuid(), 0);
 

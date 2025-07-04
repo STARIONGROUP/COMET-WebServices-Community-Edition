@@ -149,7 +149,7 @@ namespace CometServer.Tests.Services.Supplemental
             this.transactionManager = new Mock<ICdp4TransactionManager>();
 
             this.transactionManager.Setup(x => x.SetupTransactionAsync(null))
-                .Returns(Task.FromResult(this.npgsqlTransaction));
+                .ReturnsAsync(this.npgsqlTransaction);
 
             this.participantPermission1 = new ParticipantPermission(this.participantPermission1id, 1)
             {
@@ -169,13 +169,13 @@ namespace CometServer.Tests.Services.Supplemental
             this.participantPermissionDao = new Mock<IParticipantPermissionDao>();
 
             this.participantPermissionDao.Setup(x => x.ReadAsync(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null))
-                .Returns(
-                    Task.FromResult<IEnumerable<ParticipantPermission>>(new List<ParticipantPermission>
+                .ReturnsAsync(
+                    new List<ParticipantPermission>
                     {
                         this.participantPermission1,
                         this.participantPermission2,
                         this.participantPermission3
-                    }));
+                    });
 
             this.personPermission1 = new PersonPermission(this.personPermission1id, 1)
             {
@@ -194,8 +194,8 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.personPermissionDao = new Mock<IPersonPermissionDao>();
 
-            this.personPermissionDao.Setup(x => x.ReadAsync(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null)).Returns(
-                Task.FromResult<IEnumerable<PersonPermission>>(new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 }));
+            this.personPermissionDao.Setup(x => x.ReadAsync(this.npgsqlTransaction, SiteDirectoryData, It.IsAny<IEnumerable<Guid>>(), true, null)).ReturnsAsync(
+                new List<PersonPermission> { this.personPermission1, this.personPermission2, this.personPermission3 });
 
             this.service = new PermissionInstanceFilterService
             {

@@ -82,11 +82,11 @@ namespace CometServer.Tests.SideEffects
             this.parametricConstraint.Expression.Add(this.relationalExpression1.Iid);
             this.parametricConstraint.Expression.Add(this.relationalExpression2.Iid);
 
-            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid }, this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([this.relationalExpression1]));
-            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression2.Iid }, this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([this.relationalExpression2]));
-            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid, this.relationalExpression2.Iid }, this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([this.relationalExpression1, this.relationalExpression2]));
+            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid }, this.securityContext.Object)).ReturnsAsync([this.relationalExpression1]);
+            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression2.Iid }, this.securityContext.Object)).ReturnsAsync([this.relationalExpression2]);
+            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid, this.relationalExpression2.Iid }, this.securityContext.Object)).ReturnsAsync([this.relationalExpression1, this.relationalExpression2]);
 
-            this.parametricConstraintService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.parametricConstraint.Iid }, this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>([this.parametricConstraint]));
+            this.parametricConstraintService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.parametricConstraint.Iid }, this.securityContext.Object)).ReturnsAsync([this.parametricConstraint]);
         }
 
         [Test]

@@ -127,7 +127,7 @@ namespace CometServer.Tests.SideEffects
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(Task.FromResult<IEnumerable<Thing>>(new List<ReferenceDataLibrary> { this.referenceDataLibraryB }));
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.specializedQuantityKindService = new Mock<ISpecializedQuantityKindService>();
 
@@ -143,14 +143,14 @@ namespace CometServer.Tests.SideEffects
                             this.specializedQuantityKindB.Iid,
                             this.specializedQuantityKindC.Iid
                         },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<SpecializedQuantityKind>
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<SpecializedQuantityKind>
                     {
                         this.specializedQuantityKindD,
                         this.specializedQuantityKindA,
                         this.specializedQuantityKindB,
                         this.specializedQuantityKindC
-                    }));
+                    });
 
             this.sideEffect = new SpecializedQuantityKindSideEffect
             {

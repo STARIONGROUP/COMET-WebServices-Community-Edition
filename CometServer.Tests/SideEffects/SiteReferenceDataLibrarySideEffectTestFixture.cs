@@ -110,13 +110,13 @@ namespace CometServer.Tests.SideEffects
                             this.siteReferenceDataLibraryB.Iid,
                             this.siteReferenceDataLibraryC.Iid
                         },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    Task.FromResult<IEnumerable<Thing>>(new List<SiteReferenceDataLibrary>
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                    new List<SiteReferenceDataLibrary>
                     {
                         this.siteReferenceDataLibraryA,
                         this.siteReferenceDataLibraryB,
                         this.siteReferenceDataLibraryC
-                    }));
+                    });
         }
 
         [Test]

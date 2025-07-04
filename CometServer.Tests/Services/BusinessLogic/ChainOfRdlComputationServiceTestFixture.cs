@@ -66,10 +66,10 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.CreateTestData();
 
             this.modelReferenceDataLibraryDao.Setup(x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
-                .Returns(Task.FromResult<IEnumerable<ModelReferenceDataLibrary>>(this.modelReferenceDataLibraries));
+                .ReturnsAsync(this.modelReferenceDataLibraries);
 
             this.siteReferenceDataLibraryDao.Setup(x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
-                .Returns(Task.FromResult<IEnumerable<SiteReferenceDataLibrary>>(this.siteReferenceDataLibraries));
+                .ReturnsAsync(this.siteReferenceDataLibraries);
 
             this.chainOfRdlComputationService = new ChainOfRdlComputationService
             {

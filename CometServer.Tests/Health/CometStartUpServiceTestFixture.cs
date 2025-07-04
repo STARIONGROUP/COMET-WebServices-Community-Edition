@@ -84,8 +84,8 @@ namespace CometServer.Tests.Health
         {
             var cts = new CancellationTokenSource();
 
-            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).Returns(Task.FromResult(true));
-            this.migrateEngine.Setup(x => x.MigrateAllAtStartUpAsync()).Returns(Task.FromResult(true));
+            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).ReturnsAsync(true);
+            this.migrateEngine.Setup(x => x.MigrateAllAtStartUpAsync()).ReturnsAsync(true);
 
             await this.testCometStartUpService.ExecuteAsync(cts.Token);
 
@@ -97,7 +97,7 @@ namespace CometServer.Tests.Health
         {
             var cts = new CancellationTokenSource();
 
-            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).Returns(Task.FromResult(false));
+            this.dataStoreConnectionChecker.Setup(x => x.CheckConnectionAsync(cts.Token)).ReturnsAsync(false);
             
             await this.testCometStartUpService.ExecuteAsync(cts.Token);
 

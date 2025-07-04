@@ -150,7 +150,7 @@ namespace CometServer.Tests.Authorization
             this.participantDao.Setup(
                     x =>
                         x.ReadAsync(null, It.IsAny<string>(), null, true, null))
-                .Returns(Task.FromResult<IEnumerable<Participant>>(new List<Participant>() { this.participant }));
+                .ReturnsAsync(new List<Participant>() { this.participant });
 
             this.permissionService.ParticipantDao = this.participantDao.Object;
 

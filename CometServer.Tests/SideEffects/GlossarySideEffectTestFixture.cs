@@ -77,13 +77,13 @@ namespace CometServer.Tests.SideEffects
         public void SetUp()
         {
             this.permittingPermissionService = new Mock<IPermissionService>();
-            this.permittingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(true));
+            this.permittingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).ReturnsAsync(true);
 
             this.denyingPermissionService = new Mock<IPermissionService>();
-            this.denyingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).Returns(Task.FromResult(false));
+            this.denyingPermissionService.Setup(x => x.CanWriteAsync(this.npgsqlTransaction, It.IsAny<Thing>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).ReturnsAsync(false);
 
             this.termService = new Mock<ITermService>();
-            this.termService.Setup(x => x.UpdateConceptAsync(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<Term>(), It.IsAny<Thing>())).Returns(Task.FromResult(true));
+            this.termService.Setup(x => x.UpdateConceptAsync(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<Term>(), It.IsAny<Thing>())).ReturnsAsync(true);
 
             this.securityContext = new Mock<ISecurityContext>();
 
@@ -168,7 +168,7 @@ namespace CometServer.Tests.SideEffects
             this.glossarySideEffect.PermissionService = this.permittingPermissionService.Object;
             this.glossarySideEffect.TermService = this.termService.Object;
 
-            this.termService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(Task.FromResult<IEnumerable<Thing>>(returnedTerms));
+            this.termService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync(returnedTerms);
 
             this.glossarySideEffect.AfterUpdateAsync(this.glossary, null, originalThing, this.npgsqlTransaction, "partition", this.securityContext.Object);
             
