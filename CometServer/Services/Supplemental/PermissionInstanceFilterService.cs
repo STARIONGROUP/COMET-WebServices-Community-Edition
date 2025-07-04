@@ -187,10 +187,7 @@ namespace CometServer.Services.Supplemental
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await this.TransactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -238,10 +235,7 @@ namespace CometServer.Services.Supplemental
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await this.TransactionManager.TryDisposeTransaction(transaction);
             }
         }
     }

@@ -285,17 +285,14 @@ namespace CometServer.Services
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await this.TransactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.Logger.LogError(ex, "Failed to create a file structure on the disk.");
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await this.TransactionManager.TryDisposeTransaction(transaction);
             }
         }
 

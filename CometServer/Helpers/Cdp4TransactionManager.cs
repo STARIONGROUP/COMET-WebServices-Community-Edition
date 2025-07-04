@@ -38,6 +38,8 @@ namespace CometServer.Helpers
 
     using Configuration;
 
+    using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     using NpgsqlTypes;
@@ -125,9 +127,77 @@ namespace CometServer.Helpers
         public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
+        /// Gets the injected <see cref="ILogger{T}"/> of type <see cref="Cdp4TransactionManager"/>
+        /// </summary>
+        public ILogger<Cdp4TransactionManager> Logger { get; set; }
+
+        /// <summary>
         /// Gets or sets the iteration setup.
         /// </summary>
         public IterationSetup IterationSetup { get; private set; }
+
+        /// <summary>
+        /// Checks if an <see cref="NpgsqlTransaction"/> is already disposed
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>A value indicating if the transaction is disposed, or not</returns>
+        public bool IsTransactionDisposed(NpgsqlTransaction transaction)
+        {
+            try
+            {
+                // Accessing the Connection property will throw if disposed
+                var _ = transaction.Connection;
+                return false;
+            }
+            catch (ObjectDisposedException)
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously tries to rollback the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        public async Task TryRollbackTransaction(NpgsqlTransaction transaction)
+        {
+            try
+            {
+                if (transaction != null && !this.IsTransactionDisposed(transaction))
+                {
+                    await transaction.RollbackAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogWarning(ex, "Rollback transaction failed.");
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously tries to dispose the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        public async Task TryDisposeTransaction(NpgsqlTransaction transaction)
+        {
+            try
+            {
+                if (transaction != null && !this.IsTransactionDisposed(transaction))
+                {
+                    await transaction.DisposeAsync();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // empty catch on purpose, I don't care if it is already disposed, when I want to dispose.
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogWarning(ex, "Dispose transaction failed.");
+            }
+        }
 
         /// <summary>
         /// Asynchronously setup a new Transaction
@@ -492,12 +562,23 @@ namespace CometServer.Helpers
         /// <returns>An awaitable <see cref="ValueTask"/></returns>
         public async ValueTask DisposeAsync()
         {
-            foreach (var connection in this.connections)
+            try
             {
-                if (connection != null)
+                foreach (var connection in this.connections)
                 {
-                    await connection.DisposeAsync();
+                    if (connection != null)
+                    {
+                        await connection.DisposeAsync();
+                    }
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                //empty on purpose, already disposed!
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, $"Error was thrown during disposal of the {nameof(Cdp4TransactionManager)}");
             }
         }
     }

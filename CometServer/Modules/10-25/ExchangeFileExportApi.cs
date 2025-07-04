@@ -223,7 +223,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "{Request}:{RequestToken} - Request failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
@@ -234,10 +234,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
 
                 if (System.IO.File.Exists(zipFilePath))
                 {

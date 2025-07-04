@@ -383,7 +383,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
@@ -395,7 +395,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
@@ -407,7 +407,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(exception, "{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
@@ -418,10 +418,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
 
                 this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", request.QueryNameMethodPath(), requestToken, stopwatch.ElapsedMilliseconds);
             }
@@ -682,7 +679,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
@@ -694,7 +691,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
@@ -706,7 +703,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex,"{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
@@ -717,10 +714,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
 
                 this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", httpRequest.QueryNameMethodPath(), requestToken, reqsw.ElapsedMilliseconds);
             }
@@ -1082,7 +1076,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
@@ -1096,7 +1090,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
@@ -1111,7 +1105,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - BadRequest failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
@@ -1126,7 +1120,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - InvalidData failed after {ElapsedMilliseconds} [ms] \n {ErrorMessage}", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds, ex.Message);
@@ -1139,7 +1133,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
@@ -1154,7 +1148,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - Unauthorized (Thing Not Found) request returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
@@ -1169,7 +1163,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogWarning("{Request}:{RequestToken} - BadRequest (Thing Not Resolved) returned after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
@@ -1184,7 +1178,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "{Request}:{RequestToken} - Failed after {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
@@ -1197,10 +1191,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
 
                 this.logger.LogInformation("{Request}:{RequestToken} - Response returned in {ElapsedMilliseconds} [ms]", postRequestData.MethodPathName.Sanitize(), requestToken, reqsw.ElapsedMilliseconds);
             }

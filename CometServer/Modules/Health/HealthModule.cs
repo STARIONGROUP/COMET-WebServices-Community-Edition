@@ -201,10 +201,7 @@ namespace CometServer.Modules.Health
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
             }
         }
 

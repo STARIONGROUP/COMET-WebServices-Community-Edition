@@ -783,7 +783,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                await transaction.DisposeAsync();
+                await transactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -1118,7 +1118,7 @@ namespace CometServer.Modules
             }
             finally
             {
-                await transaction.DisposeAsync();
+                await transactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -1331,7 +1331,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
@@ -1340,17 +1340,14 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -1398,7 +1395,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
@@ -1407,17 +1404,14 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -1497,7 +1491,7 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
@@ -1506,17 +1500,14 @@ namespace CometServer.Modules
             {
                 if (transaction != null)
                 {
-                    await transaction.RollbackAsync();
+                    await transactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.logger.LogError(ex, "Error occured during revision history creation");
             }
             finally
             {
-                if (transaction != null)
-                {
-                    await transaction.DisposeAsync();
-                }
+                await transactionManager.TryDisposeTransaction(transaction);
             }
         }
 

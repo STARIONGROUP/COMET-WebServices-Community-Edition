@@ -179,5 +179,26 @@ namespace CometServer.Helpers
         /// The value indicating whether the current person has full access or not.
         /// </param>
         void SetFullAccessState(bool value);
+
+        /// <summary>
+        /// Checks if an <see cref="NpgsqlTransaction"/> is already disposed
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>A value indicating if the transaction is disposed, or not</returns>
+        bool IsTransactionDisposed(NpgsqlTransaction transaction);
+
+        /// <summary>
+        /// Asynchronously tries to rollback the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        Task TryRollbackTransaction(NpgsqlTransaction transaction);
+
+        /// <summary>
+        /// Asynchronously tries to dispose the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        Task TryDisposeTransaction(NpgsqlTransaction transaction);
     }
 }
