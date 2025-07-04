@@ -99,6 +99,11 @@ namespace CometServer.Modules
         private readonly ITokenGeneratorService tokenGeneratorService;
 
         /// <summary>
+        /// Gets or sets the <see cref="IDataSource"/> that provides access to the data store
+        /// </summary>
+        protected IDataSource DataSource { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ExchangeFileImportApi"/>
         /// </summary>
         /// <param name="appConfigService">
@@ -113,12 +118,16 @@ namespace CometServer.Modules
         /// <param name="logger">
         /// The (injected) <see cref="ILogger{ExchangeFileImportyApi}"/>
         /// </param>
-        public ExchangeFileImportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportApi> logger)
+        /// <param name="dataSource">
+        ///The (injected) <see cref="IDataSource"/> 
+        /// </param>
+        public ExchangeFileImportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILogger<ExchangeFileImportApi> logger, IDataSource dataSource)
         {
             this.appConfigService = appConfigService;
             this.cometHasStartedService = cometHasStartedService;
             this.tokenGeneratorService = tokenGeneratorService;
             this.logger = logger;
+            this.DataSource = dataSource;
         }
 
         /// <summary>
@@ -1244,48 +1253,43 @@ namespace CometServer.Modules
             var backtierConfig = this.appConfigService.AppConfig.Backtier;
 
             // Drop the existing databases
-            await using (var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(backtierConfig, backtierConfig.DatabaseManage)))
+            await using var connection = await this.DataSource.OpenNewConnectionAsync();
+
+            // Drop the existing database
+            await using (var cmd = new NpgsqlCommand())
             {
-                await connection.OpenAsync();
+                this.logger.LogDebug("Drop the data store");
 
-                // Drop the existing database
-                await using (var cmd = new NpgsqlCommand())
-                {
-                    this.logger.LogDebug("Drop the data store");
+                await dataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
 
-                    await dataStoreController.DropDataStoreConnections(backtierConfig.Database, connection);
+                cmd.Connection = connection;
+                
+                cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.Database}\";";
 
-                    cmd.Connection = connection;
-                    
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.Database}\";";
+                await cmd.ExecuteNonQueryAsync();
+            }
 
-                    await cmd.ExecuteNonQueryAsync();
-                }
+            // Drop the existing restore database
+            await using (var cmd = new NpgsqlCommand())
+            {
+                this.logger.LogDebug("Drop the restore data store");
 
-                // Drop the existing restore database
-                await using (var cmd = new NpgsqlCommand())
-                {
-                    this.logger.LogDebug("Drop the restore data store");
+                cmd.Connection = connection;
+                
+                cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.DatabaseRestore}\";";
 
-                    cmd.Connection = connection;
-                    
-                    cmd.CommandText = $"DROP DATABASE IF EXISTS \"{backtierConfig.DatabaseRestore}\";";
+                await cmd.ExecuteNonQueryAsync();
+            }
 
-                    await cmd.ExecuteNonQueryAsync();
-                }
+            // Create a new database
+            await using (var cmd = new NpgsqlCommand())
+            {
+                this.logger.LogDebug("Create the data store");
+                cmd.Connection = connection;
 
-                // Create a new database
-                await using (var cmd = new NpgsqlCommand())
-                {
-                    this.logger.LogDebug("Create the data store");
-                    cmd.Connection = connection;
+                cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = 'UTF8';";
 
-                    cmd.CommandText = $"CREATE DATABASE \"{backtierConfig.Database}\" WITH OWNER = \"{backtierConfig.UserName}\" TEMPLATE = \"{backtierConfig.DatabaseManage}\" ENCODING = 'UTF8';";
-
-                    await cmd.ExecuteNonQueryAsync();
-                }
-
-                await connection.CloseAsync();
+                await cmd.ExecuteNonQueryAsync();
             }
 
             this.logger.LogInformation("dropping existing data stores completed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);

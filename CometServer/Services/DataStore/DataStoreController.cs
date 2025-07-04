@@ -27,6 +27,8 @@ namespace CometServer.Services.DataStore
     using System.IO;
     using System.Threading.Tasks;
 
+    using CometServer.Helpers;
+
     using Configuration;
 
     using Microsoft.Extensions.Logging;
@@ -51,6 +53,11 @@ namespace CometServer.Services.DataStore
         public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
+        /// Gets or sets the (injected) DataSource manager.
+        /// </summary>
+        public IDataSource DataSource { get; set; }
+
+        /// <summary>
         /// Creates a clone of the data store.
         /// </summary>
         public async Task CloneDataStore()
@@ -59,9 +66,7 @@ namespace CometServer.Services.DataStore
 
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
-            await using var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage));
-
-            await connection.OpenAsync();
+            await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
             // Create a clone of the database
             await using (var cmd = new NpgsqlCommand())
@@ -76,8 +81,6 @@ namespace CometServer.Services.DataStore
 
                 await cmd.ExecuteNonQueryAsync();
             }
-
-            await connection.CloseAsync();
         }
 
         /// <summary>
@@ -93,9 +96,7 @@ namespace CometServer.Services.DataStore
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
             // Connect to the restore database
-            await using var connection = new NpgsqlConnection(Utils.GetConnectionString(backtier, backtier.DatabaseManage));
-
-            await connection.OpenAsync();
+            await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
             // Drop the existing database
             await using (var cmd = new NpgsqlCommand())
@@ -122,8 +123,6 @@ namespace CometServer.Services.DataStore
 
                 await cmd.ExecuteNonQueryAsync();
             }
-
-            await connection.CloseAsync();
         }
 
         /// <summary>
@@ -138,7 +137,7 @@ namespace CometServer.Services.DataStore
         public async Task DropDataStoreConnections(string dataStoreName, NpgsqlConnection connection)
         {
             await using var cmd = new NpgsqlCommand();
-
+            
             this.Logger.LogDebug("Drop all connections to the data store");
 
             NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, dataStoreName)));

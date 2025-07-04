@@ -36,15 +36,11 @@ namespace CometServer.Helpers
 
     using CometServer.Authorization;
 
-    using Configuration;
-
     using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
     using NpgsqlTypes;
-
-    using ServiceUtils = Services.Utils;
 
     /// <summary>
     /// A wrapper class for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
@@ -122,9 +118,9 @@ namespace CometServer.Helpers
         public IIterationSetupDao IterationSetupDao { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IAppConfigService"/>
+        /// Gets or sets the <see cref="IDataSource"/>
         /// </summary>
-        public IAppConfigService AppConfigService { get; set; }
+        public IDataSource DataSource { get; set; }
 
         /// <summary>
         /// Gets the injected <see cref="ILogger{T}"/> of type <see cref="Cdp4TransactionManager"/>
@@ -492,10 +488,9 @@ namespace CometServer.Helpers
         /// </returns>
         private async Task<NpgsqlTransaction> SetupNewTransactionAsync()
         {
-            var connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-            
+            var connection = await this.DataSource.OpenNewConnectionAsync();
+
             this.connections.Add(connection);
-            await connection.OpenAsync();
 
             // start transaction with rollback support
             var transaction = await connection.BeginTransactionAsync();

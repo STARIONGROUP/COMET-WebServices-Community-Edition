@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="UsernameModule.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,25 +24,17 @@
 
 namespace CometServer.Modules
 {
-    using System;
-    using System.Linq;
-    using System.Net;
-    using System.Security.Claims;
-
-    using Carter;
     using Carter.Response;
 
     using CDP4DalCommon.Tasks;
 
     using CDP4ServicesMessaging.Services.BackgroundMessageProducers;
 
-    using CometServer.Authentication.Bearer;
     using CometServer.Authorization;
     using CometServer.Configuration;
-    using CometServer.Enumerations;
     using CometServer.Exceptions;
-    using CometServer.Extensions;
     using CometServer.Health;
+    using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Tasks;
 
@@ -51,8 +43,6 @@ namespace CometServer.Modules
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
-
-    using Npgsql;
 
     /// <summary>
     /// handle request on the logged-in users
@@ -63,7 +53,7 @@ namespace CometServer.Modules
         /// The (injected) <see cref="ILogger{UsernameModule}"/> instance
         /// </summary>
         private readonly ILogger<UsernameModule> logger;
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ApiBase"/> class
         /// </summary>
@@ -86,8 +76,11 @@ namespace CometServer.Modules
         /// <param name="cometTaskService">
         /// The (injected) <see cref="ICometTaskService"/> used to register and access running <see cref="CometTask"/>s
         /// </param>
-        public UsernameModule(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService) :
-            base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService)
+        /// <param name="dataSource">
+        /// The (injected) <see cref="IDataSource"/> used to access the database
+        /// </param>
+        public UsernameModule(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService, IDataSource dataSource) :
+            base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService, dataSource)
         {
             this.logger = loggerFactory == null ? NullLogger<UsernameModule>.Instance : loggerFactory.CreateLogger<UsernameModule>();
         }
@@ -108,8 +101,11 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public UsernameModule(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) :
-            base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory)
+        /// <param name="dataSource">
+        /// The (injected) <see cref="IDataSource"/> used to access the database
+        /// </param>
+        public UsernameModule(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IDataSource dataSource) :
+            base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, dataSource)
         {
             this.logger = loggerFactory == null ? NullLogger<UsernameModule>.Instance : loggerFactory.CreateLogger<UsernameModule>();
         }
@@ -122,7 +118,7 @@ namespace CometServer.Modules
         /// </param>
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapGet("/username", async (HttpRequest req, HttpResponse res, IAppConfigService appConfigService, ICredentialsService credentialsService) =>
+            app.MapGet("/username", async (HttpRequest req, HttpResponse res, ICredentialsService credentialsService) =>
             {
                 if (!await this.IsServerReadyAsync(res))
                 {
@@ -130,10 +126,10 @@ namespace CometServer.Modules
                 }
 
                 var identity = req.HttpContext.User.Identity!.Name;
-                
+
                 try
                 {
-                    identity = await this.AuthorizeAsync(appConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(credentialsService, req);
                     await res.AsJson(credentialsService.Credentials.UserName);
                 }
                 catch (AuthorizationException)
@@ -143,7 +139,7 @@ namespace CometServer.Modules
                     res.UpdateWithNotAutherizedSettings();
                     await res.AsJson("not authorized");
                 }
-            }).RequireAuthorization(ApiBase.AuthenticationSchemes);
+            }).RequireAuthorization(AuthenticationSchemes);
         }
     }
 }

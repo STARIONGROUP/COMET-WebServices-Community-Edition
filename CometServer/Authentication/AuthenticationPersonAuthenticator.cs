@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AuthenticationPersonAuthenticator.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -32,9 +32,8 @@ namespace CometServer.Authentication
 
     using CDP4Orm.Dao.Authentication;
 
-    using CometServer.Configuration;
     using CometServer.Exceptions;
-    using CometServer.Services;
+    using CometServer.Helpers;
 
     using Microsoft.Extensions.Logging;
 
@@ -57,14 +56,14 @@ namespace CometServer.Authentication
         public IAuthenticationPluginInjector AuthenticationPluginInjector { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IAppConfigService"/>
-        /// </summary>
-        public IAppConfigService AppConfigService { get; set; }
-
-        /// <summary>
         /// Gets or sets the authentication dao.
         /// </summary>
         public IAuthenticationPersonDao AuthenticationPersonDao { get; set; }
+
+        /// <summary>
+        /// Gets or sets the DataSource manager.
+        /// </summary>
+        public IDataSource DataSource { get; set; }
 
         /// <summary>
         /// Authenticates the <see cref="AuthenticationPerson"/> from the E-TM-10-25 datasource
@@ -81,8 +80,7 @@ namespace CometServer.Authentication
         {
             try
             {
-                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-                await connection.OpenAsync();
+                await using var connection = await this.DataSource.OpenNewConnectionAsync();
                 await using var transaction = await connection.BeginTransactionAsync();
 
                 var authenticationPerson = (await this.AuthenticationPersonDao.Read(transaction, "SiteDirectory", username, null)).SingleOrDefault();
@@ -110,13 +108,13 @@ namespace CometServer.Authentication
             {
                 this.Logger.LogCritical(ex, "The AuthenticationPersonAuthenticator could not interact with the CDP4-COMET database");
 
-                throw new AuthenticatorException("The authenticator could not connect to the CDP4-COMET database", innerException: ex);
+                throw new AuthenticatorException("The authenticator could not connect to the CDP4-COMET database", ex);
             }
             catch (Exception ex)
             {
                 this.Logger.LogCritical(ex, "There was an error while authenticating the user credentials");
 
-                throw new AuthenticatorException("There was an error while authenticating the user credentials", innerException: ex);
+                throw new AuthenticatorException("There was an error while authenticating the user credentials", ex);
             }
         }
 

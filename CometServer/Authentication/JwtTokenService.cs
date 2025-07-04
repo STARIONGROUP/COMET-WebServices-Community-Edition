@@ -38,15 +38,13 @@ namespace CometServer.Authentication
 
     using CometServer.Authorization;
     using CometServer.Configuration;
-    using CometServer.Services;
+    using CometServer.Helpers;
 
     using Microsoft.AspNetCore.Authentication.JwtBearer;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     using Microsoft.IdentityModel.JsonWebTokens;
     using Microsoft.IdentityModel.Tokens;
-
-    using Npgsql;
 
     using JwtRegisteredClaimNames = System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames;
 
@@ -88,6 +86,11 @@ namespace CometServer.Authentication
         private readonly JwtBearerOptions bearerOptions;
 
         /// <summary>
+        /// Gets or sets the DataSource manager.
+        /// </summary>
+        public IDataSource DataSource { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="JwtTokenService" />
         /// </summary>
         /// <param name="logger">
@@ -103,7 +106,7 @@ namespace CometServer.Authentication
             this.logger = logger;
             this.appConfigService = appConfigService;
             this.credentialsService = credentialsService;
-            this.bearerOptions = options.Get(CometServer.Authentication.Bearer.JwtBearerDefaults.LocalAuthenticationScheme);
+            this.bearerOptions = options.Get(Bearer.JwtBearerDefaults.LocalAuthenticationScheme);
         }
 
         /// <summary>
@@ -116,7 +119,7 @@ namespace CometServer.Authentication
             var issuedAtTime = DateTimeOffset.UtcNow;
             var accessExpirationTime = issuedAtTime.AddMinutes(this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.TokenExpirationMinutes);
             var refreshExpirationTime = issuedAtTime.AddMinutes(this.appConfigService.AppConfig.AuthenticationConfig.LocalJwtAuthenticationConfig.RefreshExpirationMinutes);
-            
+
             var commonClaims = CreateCommonClaims(authenticationPerson, issuedAtTime);
             var accessClaims = CreateAccessClaims(authenticationPerson, accessExpirationTime);
             var refreshClaims = CreateRefreshClaims(refreshExpirationTime);
@@ -142,7 +145,7 @@ namespace CometServer.Authentication
             var tokenHandler = this.bearerOptions.TokenHandlers.Single();
 
             if (tokenHandler.ReadToken(refreshToken) is not JsonWebToken securityToken
-                                                         || securityToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Typ) is not { Value: RefreshClaimValue })
+                || securityToken.Claims.FirstOrDefault(x => x.Type == JwtRegisteredClaimNames.Typ) is not { Value: RefreshClaimValue })
             {
                 throw new ArgumentException("Invalid refresh token", nameof(refreshToken));
             }
@@ -161,10 +164,7 @@ namespace CometServer.Authentication
                 throw new ArgumentException("Invalid refresh token", nameof(refreshToken));
             }
 
-            await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.appConfigService.AppConfig.Backtier, this.appConfigService.AppConfig.Backtier.Database));
-
-            await connection.OpenAsync();
-
+            await using var connection = await this.DataSource.OpenNewConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
 
             await this.credentialsService.ResolveCredentialsAsync(transaction, userId);
@@ -243,7 +243,7 @@ namespace CometServer.Authentication
             {
                 new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new(JwtRegisteredClaimNames.Typ, AccessClaimValue),
-                new (JwtRegisteredClaimNames.Exp, accessExpirationTime.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new(JwtRegisteredClaimNames.Exp, accessExpirationTime.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                 new(ClaimTypes.Name, authenticationPerson.UserName),
                 new(ClaimTypes.NameIdentifier, authenticationPerson.Iid.ToString())
             };
@@ -260,7 +260,7 @@ namespace CometServer.Authentication
         {
             return
             [
-                new (JwtRegisteredClaimNames.Exp, refreshExpirationTime.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
+                new(JwtRegisteredClaimNames.Exp, refreshExpirationTime.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Typ, RefreshClaimValue)
             ];

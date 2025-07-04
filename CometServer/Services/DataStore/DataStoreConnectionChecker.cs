@@ -29,6 +29,7 @@ namespace CometServer.Services.DataStore
     using System.Threading.Tasks;
 
     using CometServer.Configuration;
+    using CometServer.Helpers;
     using CometServer.Services;
 
     using Microsoft.Extensions.Logging;
@@ -47,9 +48,14 @@ namespace CometServer.Services.DataStore
         public ILogger<DataStoreConnectionChecker> Logger { get; set; }
 
         /// <summary>
-        /// Gets or sets the (injected) <see cref="IAppConfigService"/>
+        /// Gets or sets the (injected) <see cref="IDataSource"/>
         /// </summary>
         public IAppConfigService AppConfigService { get; set; }
+
+        /// <summary>
+        /// Gets or sets the DataSource manager.
+        /// </summary>
+        public IDataSource DataSource { get; set; }
 
         /// <summary>
         /// Checks whether a connection to the Data store can be made
@@ -59,8 +65,6 @@ namespace CometServer.Services.DataStore
         /// </returns>
         public async Task<bool> CheckConnectionAsync(CancellationToken cancellationToken)
         {
-            await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.DatabaseManage));
-
             var startTime = DateTime.UtcNow;
 
             var backtierWaitTime = this.AppConfigService.AppConfig.Midtier.BacktierWaitTime;
@@ -70,8 +74,7 @@ namespace CometServer.Services.DataStore
             {
                 try
                 {
-                    await connection.OpenAsync(cancellationToken);
-                    await connection.CloseAsync();
+                    await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
                     return true;
                 }

@@ -134,8 +134,11 @@ namespace CometServer.Modules
         /// <param name="cometTaskService">
         /// The (injected) <see cref="ICometTaskService"/> used to register and access running <see cref="CometTask"/>s
         /// </param>
-        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService)
-            : base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService)
+        /// <param name="dataSource">
+        ///The (injected) <see cref="IDataSource"/> 
+        /// </param>
+        public EngineeringModelApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService, IDataSource dataSource)
+            : base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, thingsMessageProducer, cometTaskService, dataSource)
         {
             this.logger = loggerFactory == null ? NullLogger<EngineeringModelApi>.Instance : loggerFactory.CreateLogger<EngineeringModelApi>();
         }
@@ -164,7 +167,7 @@ namespace CometServer.Modules
 
                 try
                 {
-                    identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(credentialsService, req);
                 }
                 catch (AuthorizationException)
                 {
@@ -191,7 +194,7 @@ namespace CometServer.Modules
 
                 try
                 {
-                    identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(credentialsService, req);
                 }
                 catch (AuthorizationException)
                 {
@@ -287,7 +290,7 @@ namespace CometServer.Modules
             
             try
             {
-               identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, request);
+               identity = await this.AuthorizeAsync(credentialsService, request);
             }
             catch (AuthorizationException)
             {

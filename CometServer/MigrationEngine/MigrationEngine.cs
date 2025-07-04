@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MigrationEngine.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,7 +26,6 @@ namespace CometServer
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
@@ -34,7 +33,7 @@ namespace CometServer
     using CDP4Orm.MigrationEngine;
 
     using CometServer.Configuration;
-    using CometServer.Services;
+    using CometServer.Helpers;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -62,6 +61,11 @@ namespace CometServer
         public IMigrationService MigrationService { get; set; }
 
         /// <summary>
+        /// Gets or sets the DataSource manager.
+        /// </summary>
+        public IDataSource DataSource { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="MigrationEngine"/> class.
         /// </summary>
         /// <param name="loggerFactory">
@@ -83,21 +87,7 @@ namespace CometServer
 
             try
             {
-                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-
-                // ensure an open connection
-                if (connection.State != ConnectionState.Open)
-                {
-                    try
-                    {
-                        await connection.OpenAsync();
-                    }
-                    catch (PostgresException e)
-                    {
-                        this.logger.LogWarning(e, "Could not connect to the database for migration, the database might not exist yet. Error message: {Message}", e.Message);
-                        return false;
-                    }
-                }
+                await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
                 // start transaction with rollback support
                 await using var transaction = await connection.BeginTransactionAsync();
@@ -112,6 +102,7 @@ namespace CometServer
                         while (await reader.ReadAsync())
                         {
                             var schemaName = reader[0].ToString();
+
                             if (schemaName.StartsWith(MigrationScriptApplicationKind.SiteDirectory.ToString())
                                 || schemaName.StartsWith(MigrationScriptApplicationKind.EngineeringModel.ToString())
                                 || schemaName.StartsWith(MigrationScriptApplicationKind.Iteration.ToString()))

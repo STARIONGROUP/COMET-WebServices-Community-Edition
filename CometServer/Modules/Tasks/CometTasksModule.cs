@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CometTasksModule.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -38,6 +38,7 @@ namespace CometServer.Modules.Tasks
     using CometServer.Configuration;
     using CometServer.Exceptions;
     using CometServer.Health;
+    using CometServer.Helpers;
     using CometServer.Modules.Health;
     using CometServer.Tasks;
 
@@ -45,8 +46,6 @@ namespace CometServer.Modules.Tasks
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.Logging;
-
-    using Npgsql;
 
     /// <summary>
     /// The purpose of the <see cref="CometTasksModule"/> is to expose an EndPoint where users can request the status of
@@ -73,7 +72,7 @@ namespace CometServer.Modules.Tasks
         /// <summary>
         /// The (injected) <see cref="IAppConfigService"/> 
         /// </summary>
-        protected readonly IAppConfigService appConfigService;
+        protected readonly IDataSource DataSource;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HealthModule"/>
@@ -88,15 +87,15 @@ namespace CometServer.Modules.Tasks
         /// <param name="cometTaskService">
         /// The (injected) <see cref="ICometTaskService"/> used to query tasks
         /// </param>
-        /// <param name="appConfigService">
-        /// The (injected) <see cref="IAppConfigService"/> used to access application settings
+        /// <param name="dataSource">
+        ///The (injected) <see cref="IDataSource"/> 
         /// </param>
-        public CometTasksModule(ILogger<HealthModule> logger, ICometHasStartedService cometHasStartedService, ICometTaskService cometTaskService, IAppConfigService appConfigService)
+        public CometTasksModule(ILogger<HealthModule> logger, ICometHasStartedService cometHasStartedService, ICometTaskService cometTaskService, IDataSource dataSource)
         {
             this.logger = logger;
             this.cometHasStartedService = cometHasStartedService;
             this.cometTaskService = cometTaskService;
-            this.appConfigService = appConfigService;
+            this.DataSource = dataSource;
         }
 
         /// <summary>
@@ -288,9 +287,7 @@ namespace CometServer.Modules.Tasks
         {
             try
             {
-                await using var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.appConfigService.AppConfig.Backtier, this.appConfigService.AppConfig.Backtier.Database));
-
-                await connection.OpenAsync();
+                await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
                 await using var transaction = await connection.BeginTransactionAsync();
 
@@ -298,7 +295,7 @@ namespace CometServer.Modules.Tasks
             }
             catch (Exception)
             {
-                this.logger.LogWarning("Authorization failed for {username}", username);
+                this.logger.LogWarning("Authorization failed for {Username}", username);
 
                 throw;
             }

@@ -93,7 +93,10 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        public ExchangeFileExportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory) : base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory)
+        /// <param name="dataSource">
+        ///The (injected) <see cref="IDataSource"/> 
+        /// </param>
+        public ExchangeFileExportApi(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IDataSource dataSource) : base(appConfigService, cometHasStartedService, tokenGeneratorService, loggerFactory, dataSource)
         {
             this.logger = loggerFactory == null ? NullLogger<ExchangeFileExportApi>.Instance : loggerFactory.CreateLogger<ExchangeFileExportApi>();
         }
@@ -118,7 +121,7 @@ namespace CometServer.Modules
 
                 try
                 {
-                    identity = await this.AuthorizeAsync(this.AppConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(credentialsService, req);
                 }
                 catch (AuthorizationException ex)
                 {

@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Startup.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -418,6 +418,7 @@ namespace CometServer
             builder.RegisterType<MetaInfoProvider>().As<IMetaDataProvider>().As<IMetaInfoProvider>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();
             builder.RegisterType<Cdp4JsonSerializer>().As<ICdp4JsonSerializer>().InstancePerLifetimeScope();
             builder.RegisterType<MessagePackSerializer>().As<IMessagePackSerializer>().InstancePerLifetimeScope();
+            builder.RegisterType<DataSource>().As<IDataSource>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).SingleInstance();
 
             // authentication services
             builder.RegisterType<AuthenticationPersonDao>().As<IAuthenticationPersonDao>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies).InstancePerLifetimeScope();

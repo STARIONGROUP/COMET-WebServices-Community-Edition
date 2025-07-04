@@ -26,7 +26,6 @@ namespace CometServer.ChangeNotification
 {
     using System;
     using System.Collections.Generic;
-    using System.Data;
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
@@ -35,14 +34,14 @@ namespace CometServer.ChangeNotification
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
-    
+
     using CometServer.ChangeNotification.UserPreference;
-    using CometServer.Configuration;
+    using CometServer.Helpers;
     using CometServer.Services.Email;
 
-    using Newtonsoft.Json;
-
     using Microsoft.Extensions.Logging;
+
+    using Newtonsoft.Json;
 
     using Npgsql;
 
@@ -51,11 +50,6 @@ namespace CometServer.ChangeNotification
     /// </summary>
     public class ChangeNoticationService
     {
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="IAppConfigService"/>
-        /// </summary>
-        public IAppConfigService AppConfigService { get; set; }
-
         /// <summary>
         /// Gets or sets the (injected) <see cref="ILogger"/>
         /// </summary>
@@ -87,6 +81,11 @@ namespace CometServer.ChangeNotification
         public IUserPreferenceDao UserPreferenceDao { get; set; }
 
         /// <summary>
+        /// Gets or sets the DataSource manager.
+        /// </summary>
+        public IDataSource DataSource { get; set; }
+
+        /// <summary>
         /// Executes the <see cref="ChangeNoticationService"/>, processes all 
         /// </summary>
         /// <returns>
@@ -96,81 +95,71 @@ namespace CometServer.ChangeNotification
         {
             var sw = Stopwatch.StartNew();
 
-            await using var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+            await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
-            // ensure an open connection
-            if (connection.State != ConnectionState.Open)
+            try
             {
-                try
+                var transaction = await connection.BeginTransactionAsync();
+
+                var persons = (await this.PersonDao.ReadAsync(transaction, "SiteDirectory", null, true)).ToList();
+
+                foreach (var person in persons)
                 {
-                    await connection.OpenAsync();
-                    var transaction = await connection.BeginTransactionAsync();
-
-                    var persons = (await this.PersonDao.ReadAsync(transaction, "SiteDirectory", null, true)).ToList();
-
-                    foreach (var person in persons)
+                    if (!person.IsActive)
                     {
-                        if (!person.IsActive)
-                        {
-                            continue;
-                        }
-
-                        var emailAddresses = (await this.GetEmailAdressessAsync(transaction, person)).ToList();
-
-                        if (emailAddresses.Count == 0)
-                        {
-                            continue;
-                        }
-
-                        var changeNotificationSubscriptionUserPreferences = await this.GetChangeLogSubscriptionUserPreferencesAsync(transaction, person);
-
-                        var endDateTime = GetEndDateTime(DayOfWeek.Monday);
-                        var startDateTime = endDateTime.AddDays(-7);
-                        var htmlStringBuilder = new StringBuilder();
-                        var textStringBuilder = new StringBuilder();
-                        var subject = "Weekly Changelog from COMET server";
-                        htmlStringBuilder.AppendLine($"<h3>{subject}<br />{startDateTime:R} - {endDateTime:R}</h3>");
-                        textStringBuilder.AppendLine($"{subject}\n{startDateTime:R} - {endDateTime:R}");
-
-                        foreach (var changeNotificationSubscriptionUserPreference in changeNotificationSubscriptionUserPreferences)
-                        {
-                            if (changeNotificationSubscriptionUserPreference.Value.ChangeNotificationSubscriptions.Count != 0
-                                && changeNotificationSubscriptionUserPreference.Value.ChangeNotificationReportType != ChangeNotificationReportType.None)
-                            {
-                                var changelogSections = (await this.ChangelogBodyComposer.CreateChangelogSectionsAsync(
-                                    transaction,
-                                    Guid.Parse(changeNotificationSubscriptionUserPreference.Key),
-                                    person,
-                                    changeNotificationSubscriptionUserPreference.Value,
-                                    startDateTime,
-                                    endDateTime
-                                )).ToList();
-
-                                htmlStringBuilder.Append(this.ChangelogBodyComposer.CreateHtmlBody(changelogSections));
-                                textStringBuilder.Append(this.ChangelogBodyComposer.CreateTextBody(changelogSections));
-                            }
-                        }
-
-                        await this.EmailService.Send(emailAddresses, subject, textStringBuilder.ToString(), htmlStringBuilder.ToString());
-                    }
-                }
-                catch (PostgresException postgresException)
-                {
-                    this.Logger.LogCritical(postgresException, "Could not connect to the database to process Change Notifications. Error message: {PostgresExceptionMessage}", postgresException.Message);
-                }
-                catch (Exception ex)
-                {
-                    this.Logger.LogCritical(ex, "The ChangeNoticationService failed");
-                }
-                finally
-                {
-                    if (connection?.State == ConnectionState.Open)
-                    {
-                        await connection.CloseAsync();
+                        continue;
                     }
 
-                    this.Logger.LogInformation("ChangeNotifications processed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
+                    var emailAddresses = (await this.GetEmailAdressessAsync(transaction, person)).ToList();
+
+                    if (emailAddresses.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var changeNotificationSubscriptionUserPreferences = await this.GetChangeLogSubscriptionUserPreferencesAsync(transaction, person);
+
+                    var endDateTime = GetEndDateTime(DayOfWeek.Monday);
+                    var startDateTime = endDateTime.AddDays(-7);
+                    var htmlStringBuilder = new StringBuilder();
+                    var textStringBuilder = new StringBuilder();
+                    var subject = "Weekly Changelog from COMET server";
+                    htmlStringBuilder.AppendLine($"<h3>{subject}<br />{startDateTime:R} - {endDateTime:R}</h3>");
+                    textStringBuilder.AppendLine($"{subject}\n{startDateTime:R} - {endDateTime:R}");
+
+                    foreach (var changeNotificationSubscriptionUserPreference in changeNotificationSubscriptionUserPreferences)
+                    {
+                        if (changeNotificationSubscriptionUserPreference.Value.ChangeNotificationSubscriptions.Count != 0
+                            && changeNotificationSubscriptionUserPreference.Value.ChangeNotificationReportType != ChangeNotificationReportType.None)
+                        {
+                            var changelogSections = (await this.ChangelogBodyComposer.CreateChangelogSectionsAsync(
+                                transaction,
+                                Guid.Parse(changeNotificationSubscriptionUserPreference.Key),
+                                person,
+                                changeNotificationSubscriptionUserPreference.Value,
+                                startDateTime,
+                                endDateTime
+                            )).ToList();
+
+                            htmlStringBuilder.Append(this.ChangelogBodyComposer.CreateHtmlBody(changelogSections));
+                            textStringBuilder.Append(this.ChangelogBodyComposer.CreateTextBody(changelogSections));
+                        }
+                    }
+
+                    await this.EmailService.Send(emailAddresses, subject, textStringBuilder.ToString(), htmlStringBuilder.ToString());
                 }
+            }
+            catch (PostgresException postgresException)
+            {
+                this.Logger.LogCritical(postgresException, "Could not connect to the database to process Change Notifications. Error message: {PostgresExceptionMessage}", postgresException.Message);
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogCritical(ex, "The ChangeNoticationService failed");
+            }
+            finally
+            {
+                this.Logger.LogInformation("ChangeNotifications processed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
             }
         }
 
@@ -247,8 +236,8 @@ namespace CometServer.ChangeNotification
             var userPreferences =
                 (await this.UserPreferenceDao
                     .ReadAsync(transaction, "SiteDirectory", person.UserPreference, true))
-                    .Where(x => x.ShortName.StartsWith("ChangeLogSubscriptions_"))
-                    .ToList();
+                .Where(x => x.ShortName.StartsWith("ChangeLogSubscriptions_"))
+                .ToList();
 
             foreach (var userPreference in userPreferences)
             {

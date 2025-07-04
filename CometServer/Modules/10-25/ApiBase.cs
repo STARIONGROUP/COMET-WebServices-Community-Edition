@@ -65,8 +65,6 @@ namespace CometServer.Modules
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
 
-    using Npgsql;
-
     using Services;
     using Services.Authorization;
     using Services.Protocol;
@@ -115,7 +113,12 @@ namespace CometServer.Modules
         /// The (injected) <see cref="ICometHasStartedService"/>
         /// </summary>
         protected readonly ICometHasStartedService CometHasStartedService;
-        
+
+        /// <summary>
+        /// Gets or sets the <see cref="IDataSource"/> that provides access to the data store
+        /// </summary>
+        protected IDataSource DataSource { get; set; }
+
         /// <summary>
         /// Provides an array of supported authentication schemes, to be used by routes that requires authentication
         /// </summary>
@@ -143,7 +146,10 @@ namespace CometServer.Modules
         /// <param name="cometTaskService">
         /// The (injected) <see cref="ICometTaskService"/> used to register and access running <see cref="CometTask"/>s
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService)
+        /// <param name="dataSource">
+        ///The (injected) <see cref="IDataSource"/> 
+        /// </param>
+        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IBackgroundThingsMessageProducer thingsMessageProducer, ICometTaskService cometTaskService, IDataSource dataSource)
         {
             this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
             this.CometHasStartedService = cometHasStartedService;
@@ -151,6 +157,7 @@ namespace CometServer.Modules
             this.AppConfigService = appConfigService;
             this.thingsMessageProducer = thingsMessageProducer;
             this.CometTaskService = cometTaskService;
+            this.DataSource = dataSource;
         }
 
         /// <summary>
@@ -169,12 +176,13 @@ namespace CometServer.Modules
         /// <param name="loggerFactory">
         /// The (injected) <see cref="ILoggerFactory"/> used to create typed loggers
         /// </param>
-        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory)
+        protected ApiBase(IAppConfigService appConfigService, ICometHasStartedService cometHasStartedService, ITokenGeneratorService tokenGeneratorService, ILoggerFactory loggerFactory, IDataSource dataSource)
         {
             this.logger = loggerFactory == null ? NullLogger<ApiBase>.Instance : loggerFactory.CreateLogger<ApiBase>();
             this.CometHasStartedService = cometHasStartedService;
             this.TokenGeneratorService = tokenGeneratorService;
             this.AppConfigService = appConfigService;
+            this.DataSource = dataSource;
         }
 
         /// <summary>
@@ -191,34 +199,31 @@ namespace CometServer.Modules
         /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
         /// services while handling a request
         /// </param>
-        /// <param name="appConfigService">
-        /// The <see cref="IAppConfigService"/> used to read applicaton settings
-        /// </param>
         /// <param name="request">
         /// The <see cref="HttpRequest"/> that provides that should be ahtorized
         /// </param>
         /// <returns>
         /// an awaitable <see cref="Task"/> that contains the value of the identifier uses to check authorization
         /// </returns>
-        protected async Task<string> AuthorizeAsync(IAppConfigService appConfigService, ICredentialsService credentialsService, HttpRequest request)
+        protected async Task<string> AuthorizeAsync(ICredentialsService credentialsService, HttpRequest request)
         {
             var userName = request.HttpContext.User.Identity!.Name;
 
             if (!request.DoesAuthorizationHeaderMatches(JwtBearerDefaults.ExternalAuthenticationScheme))
             {
-                await this.AuthorizeAsync(appConfigService, credentialsService, userName);
+                await this.AuthorizeAsync(credentialsService, userName);
                 return userName;
             }
 
             var claim = request.HttpContext.User.Claims
-                .FirstOrDefault(x => x.Type == appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
+                .FirstOrDefault(x => x.Type == this.AppConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
 
             if (claim != null)
             {
-                switch ( appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.PersonIdentifierPropertyKind)
+                switch ( this.AppConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.PersonIdentifierPropertyKind)
                 {
                     case PersonIdentifierPropertyKind.ShortName:
-                        await this.AuthorizeAsync(appConfigService, credentialsService, claim.Value);
+                        await this.AuthorizeAsync(credentialsService, claim.Value);
                         break;
                     case PersonIdentifierPropertyKind.Iid:
                         if (!Guid.TryParse(claim.Value, out var userId))
@@ -226,7 +231,7 @@ namespace CometServer.Modules
                             throw new AuthorizationException("Provided claim value is not a valid GUID.");
                         }
                         
-                        await this.AuthorizeAsync(appConfigService, credentialsService, userId);
+                        await this.AuthorizeAsync(credentialsService, userId);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(PersonIdentifierPropertyKind), "Unsupported PersonIdentifierPropertyKind");
@@ -236,9 +241,9 @@ namespace CometServer.Modules
             }
 
             this.logger.LogWarning("Identifier claim {ClaimName} missing from User Claims",
-                appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
+                this.AppConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName);
 
-            throw new AuthorizationException($"Identifer claim {appConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName} missing from User Claims");
+            throw new AuthorizationException($"Identifer claim {this.AppConfigService.AppConfig.AuthenticationConfig.ExternalJwtAuthenticationConfig.IdentifierClaimName} missing from User Claims");
         }
 
         /// <summary>
@@ -250,22 +255,17 @@ namespace CometServer.Modules
         /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
         /// services while handling a request
         /// </param>
-        /// <param name="appConfigService">
-        /// The <see cref="IAppConfigService"/> used to read applicaton settings
-        /// </param>
         /// <param name="username">
         /// The username used to authorize
         /// </param>
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        private async Task AuthorizeAsync(IAppConfigService appConfigService, ICredentialsService credentialsService, string username)
+        private async Task AuthorizeAsync(ICredentialsService credentialsService, string username)
         {
             try
             {
-                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
-
-                await connection.OpenAsync();
+                await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
                 await using var transaction = await connection.BeginTransactionAsync();
 
@@ -288,22 +288,17 @@ namespace CometServer.Modules
         /// The <see cref="ICredentialsService"/> used to provide authorization and <see cref="Credentials"/>
         /// services while handling a request
         /// </param>
-        /// <param name="appConfigService">
-        /// The <see cref="IAppConfigService"/> used to read applicaton settings
-        /// </param>
         /// <param name="userId">
         /// The user unqiue <see cref="Guid"/> used to authorize
         /// </param>
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        private async Task AuthorizeAsync(IAppConfigService appConfigService, ICredentialsService credentialsService, Guid userId)
+        private async Task AuthorizeAsync(ICredentialsService credentialsService, Guid userId)
         {
             try
             {
-                await using var connection = new NpgsqlConnection(Utils.GetConnectionString(appConfigService.AppConfig.Backtier, appConfigService.AppConfig.Backtier.Database));
-
-                await connection.OpenAsync();
+                await using var connection = await this.DataSource.OpenNewConnectionAsync();
 
                 await using var transaction = await connection.BeginTransactionAsync();
 
