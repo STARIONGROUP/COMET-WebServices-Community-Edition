@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Cdp4TransactionManager.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -47,7 +47,7 @@ namespace CometServer.Helpers
     /// <summary>
     /// A wrapper class for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
     /// </summary>
-    public class Cdp4TransactionManager : ICdp4TransactionManager, IDisposable
+    public class Cdp4TransactionManager : ICdp4TransactionManager, IAsyncDisposable
     {
         /// <summary>
         /// The SiteDirectory partition
@@ -98,6 +98,11 @@ namespace CometServer.Helpers
         /// The transaction audit enabled.
         /// </summary>
         private const string TransactionAuditEnabled = "audit_enabled";
+
+        /// <summary>
+        /// The list of connections to the PostgreSQL database.
+        /// </summary>
+        private readonly List<NpgsqlConnection> connections = [];
 
         /// <summary>
         /// The value indicating whether to use cache tables for retrieving the data.
@@ -409,8 +414,6 @@ namespace CometServer.Helpers
             return iterationSetups.SingleOrDefault();
         }
 
-        private List<NpgsqlConnection> connections = [];
-
         /// <summary>
         /// The setup new transaction.
         /// </summary>
@@ -483,17 +486,17 @@ namespace CometServer.Helpers
             await command.ExecuteNonQueryAsync();
         }
 
-        public void Dispose()
+        /// <summary>
+        /// handles the disposal of the transaction manager and all connections.
+        /// </summary>
+        /// <returns>An awaitable <see cref="ValueTask"/></returns>
+        public async ValueTask DisposeAsync()
         {
             foreach (var connection in this.connections)
             {
-                try
+                if (connection != null)
                 {
-                    connection?.Dispose();
-                }
-                catch (Exception ex)
-                {
-
+                    await connection.DisposeAsync();
                 }
             }
         }
