@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefinitionDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -32,8 +31,10 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -44,6 +45,7 @@ namespace CDP4Orm.Dao
     /// <summary>
     /// The Definition Data Access Object which acts as an ORM layer to the SQL database.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public partial class DefinitionDao : ThingDao, IDefinitionDao
     {
         /// <summary>
@@ -65,11 +67,13 @@ namespace CDP4Orm.Dao
         /// The instant as a nullable <see cref="DateTime"/>
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="CDP4Common.DTO.Definition"/>.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="CDP4Common.DTO.Definition"/> as result.
         /// </returns>
-        public virtual IEnumerable<CDP4Common.DTO.Definition> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
+        public virtual async Task<IEnumerable<CDP4Common.DTO.Definition>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
-            using (var command = new NpgsqlCommand())
+            var result = new List<Definition>();
+
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
 
@@ -90,14 +94,14 @@ namespace CDP4Orm.Dao
                     command.Transaction = transaction;
                     command.CommandText = sqlBuilder.ToString();
 
-                    using (var reader = command.ExecuteReader())
+                    await using (var reader = await command.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             var thing = this.MapJsonbToDto(reader);
                             if (thing != null)
                             {
-                                yield return thing as Definition;
+                                result.Add(thing as Definition);
                             }
                         }
                     }
@@ -123,15 +127,17 @@ namespace CDP4Orm.Dao
                     command.Transaction = transaction;
                     command.CommandText = sqlBuilder.ToString();
 
-                    using (var reader = command.ExecuteReader())
+                    await using (var reader = await command.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
-                            yield return this.MapToDto(reader);
+                            result.Add(this.MapToDto(reader));
                         }
                     }
                 }
             }
+
+            return result;
         }
 
         /// <summary>
@@ -201,16 +207,19 @@ namespace CDP4Orm.Dao
         /// The container of the DTO to be persisted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully persisted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully persisted as result.
         /// </returns>
-        public virtual bool Write(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
+        public virtual async Task<bool> WriteAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
         {
-            bool isHandled;
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            var beforeWrite = this.BeforeWrite(transaction, partition, definition, container, out isHandled, valueTypeDictionaryAdditions);
+            var beforeWriteResult = await this.BeforeWriteAsync(transaction, partition, definition, container, valueTypeDictionaryAdditions);
+
+            var beforeWrite = beforeWriteResult.Value;
+            var isHandled = beforeWriteResult.IsHandled;
+
             if (!isHandled)
             {
-                beforeWrite = beforeWrite && base.Write(transaction, partition, definition, container);
+                beforeWrite = beforeWrite && await base.WriteAsync(transaction, partition, definition, container);
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
@@ -218,7 +227,7 @@ namespace CDP4Orm.Dao
                     { "LanguageCode", !this.IsDerived(definition, "LanguageCode") ? definition.LanguageCode.Escape() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                using (var command = new NpgsqlCommand())
+                await using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
 
@@ -234,15 +243,21 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
 
-                definition.Example.ForEach(x => this.AddExample(transaction, partition, definition.Iid, x));
+                foreach (var item in definition.Example)
+                {
+                    await this.AddExampleAsync(transaction, partition, definition.Iid, item);
+                }
 
-                definition.Note.ForEach(x => this.AddNote(transaction, partition, definition.Iid, x));
+                foreach (var item in definition.Note)
+                {
+                    await this.AddNoteAsync(transaction, partition, definition.Iid, item);
+                }
             }
 
-            return this.AfterWrite(beforeWrite, transaction, partition, definition, container);
+            return await this.AfterWriteAsync(beforeWrite, transaction, partition, definition, container);
         }
 
         /// <summary>
@@ -262,12 +277,12 @@ namespace CDP4Orm.Dao
         /// The container of the DTO to be persisted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully persisted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully persisted as result.
         /// </returns>
-        public virtual bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
+        public virtual async Task<bool> UpsertAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
         {
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            base.Upsert(transaction, partition, definition, container);
+            await base.UpsertAsync(transaction, partition, definition, container);
 
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
@@ -275,7 +290,7 @@ namespace CDP4Orm.Dao
                 { "LanguageCode", !this.IsDerived(definition, "LanguageCode") ? definition.LanguageCode.Escape() : string.Empty },
             }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
 
@@ -295,12 +310,18 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
             }
 
-            definition.Example.ForEach(x => this.UpsertExample(transaction, partition, definition.Iid, x));
+            foreach (var item in definition.Example)
+            {
+                await this.UpsertExampleAsync(transaction, partition, definition.Iid, item);
+            }
 
-            definition.Note.ForEach(x => this.UpsertNote(transaction, partition, definition.Iid, x));
+            foreach (var item in definition.Note)
+            {
+                await this.UpsertNoteAsync(transaction, partition, definition.Iid, item);
+            }
 
             return true;
         }
@@ -324,23 +345,23 @@ namespace CDP4Orm.Dao
         /// A value for which a link table record wil be created.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully created.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully created as result.
         /// </returns>
-        public override bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public override async Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            var isCreated = base.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            var isCreated = await base.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
 
             switch (propertyName)
             {
                 case "Example":
                     {
-                        isCreated = this.AddExample(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
+                        isCreated = await this.AddExampleAsync(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
                         break;
                     }
 
                 case "Note":
                     {
-                        isCreated = this.AddNote(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
+                        isCreated = await this.AddNoteAsync(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
                         break;
                     }
 
@@ -369,11 +390,11 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be created.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully created.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully created as result.
         /// </returns>
-        public bool AddExample(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
+        public async Task<bool> AddExampleAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Example\"", partition);
@@ -388,7 +409,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 
@@ -409,11 +430,11 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be created.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully created.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully created as result.
         /// </returns>
-        public bool UpsertExample(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
+        public async Task<bool> UpsertExampleAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Example\"", partition);
@@ -432,7 +453,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
         /// <summary>
@@ -451,11 +472,11 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be created.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully created.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully created as result.
         /// </returns>
-        public bool AddNote(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
+        public async Task<bool> AddNoteAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Note\"", partition);
@@ -470,7 +491,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 
@@ -491,11 +512,11 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be created.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully created.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully created as result.
         /// </returns>
-        public bool UpsertNote(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
+        public async Task<bool> UpsertNoteAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("INSERT INTO \"{0}\".\"Definition_Note\"", partition);
@@ -514,7 +535,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 
@@ -534,16 +555,19 @@ namespace CDP4Orm.Dao
         /// The container of the DTO to be updated.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully updated.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully updated as result.
         /// </returns>
-        public virtual bool Update(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
+        public virtual async Task<bool> UpdateAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Definition definition, CDP4Common.DTO.Thing container = null)
         {
-            bool isHandled;
             var valueTypeDictionaryAdditions = new Dictionary<string, string>();
-            var beforeUpdate = this.BeforeUpdate(transaction, partition, definition, container, out isHandled, valueTypeDictionaryAdditions);
+            var beforeUpdateResult = await this.BeforeUpdateAsync(transaction, partition, definition, container, valueTypeDictionaryAdditions);
+
+            var beforeUpdate = beforeUpdateResult.Value;
+            var isHandled = beforeUpdateResult.IsHandled;
+
             if (!isHandled)
             {
-                beforeUpdate = beforeUpdate && base.Update(transaction, partition, definition, container);
+                beforeUpdate = beforeUpdate && await base.UpdateAsync(transaction, partition, definition, container);
 
                 var valueTypeDictionaryContents = new Dictionary<string, string>
                 {
@@ -551,7 +575,7 @@ namespace CDP4Orm.Dao
                     { "LanguageCode", !this.IsDerived(definition, "LanguageCode") ? definition.LanguageCode.Escape() : string.Empty },
                 }.Concat(valueTypeDictionaryAdditions).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                using (var command = new NpgsqlCommand())
+                await using (var command = new NpgsqlCommand())
                 {
                     var sqlBuilder = new System.Text.StringBuilder();
                     sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Definition\"", partition);
@@ -567,11 +591,11 @@ namespace CDP4Orm.Dao
                     command.Connection = transaction.Connection;
                     command.Transaction = transaction;
 
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
             }
 
-            return this.AfterUpdate(beforeUpdate, transaction, partition, definition, container);
+            return await this.AfterUpdateAsync(beforeUpdate, transaction, partition, definition, container);
         }
 
         /// <summary>
@@ -593,23 +617,23 @@ namespace CDP4Orm.Dao
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully reordered as result.
         /// </returns>
-        public override bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public override async Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            var isReordered = base.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            var isReordered = await base.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
 
             switch (propertyName)
             {
                 case "Example":
                     {
-                        isReordered = this.ReorderExample(transaction, partition, iid, orderUpdate);
+                        isReordered = await this.ReorderExampleAsync(transaction, partition, iid, orderUpdate);
                         break;
                     }
 
                 case "Note":
                     {
-                        isReordered = this.ReorderNote(transaction, partition, iid, orderUpdate);
+                        isReordered = await this.ReorderNoteAsync(transaction, partition, iid, orderUpdate);
                         break;
                     }
 
@@ -638,11 +662,11 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be reordered.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully reordered as result.
         /// </returns>
-        public bool ReorderExample(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
+        public async Task<bool> ReorderExampleAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Definition_Example\"", partition);
@@ -661,7 +685,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 
@@ -681,11 +705,11 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be reordered.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully reordered as result.
         /// </returns>
-        public bool ReorderNote(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
+        public async Task<bool> ReorderNoteAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("UPDATE \"{0}\".\"Definition_Note\"", partition);
@@ -704,7 +728,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 
@@ -721,18 +745,21 @@ namespace CDP4Orm.Dao
         /// The <see cref="CDP4Common.DTO.Definition"/> id that is to be deleted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully deleted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully deleted as result.
         /// </returns>
-        public override bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public override async Task<bool> DeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
-            bool isHandled;
-            var beforeDelete = this.BeforeDelete(transaction, partition, iid, out isHandled);
+            var beforeDeleteResult = await this.BeforeDeleteAsync(transaction, partition, iid);
+
+            var beforeDelete = beforeDeleteResult.Value;
+            var isHandled = beforeDeleteResult.IsHandled;
+
             if (!isHandled)
             {
-                beforeDelete = beforeDelete && base.Delete(transaction, partition, iid);
+                beforeDelete = beforeDelete && await base.DeleteAsync(transaction, partition, iid);
             }
 
-            return this.AfterDelete(beforeDelete, transaction, partition, iid);
+            return await this.AfterDeleteAsync(beforeDelete, transaction, partition, iid);
         }
 
         /// <summary>
@@ -750,13 +777,13 @@ namespace CDP4Orm.Dao
         /// The <see cref="CDP4Common.DTO.Definition"/> id that is to be deleted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully deleted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully deleted as result.
         /// </returns>
-        public override bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public override async Task<bool> RawDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             var result = false;
 
-            result = base.Delete(transaction, partition, iid);
+            result = await base.DeleteAsync(transaction, partition, iid);
             return result;
         }
 
@@ -779,23 +806,23 @@ namespace CDP4Orm.Dao
         /// A value for which a link table record wil be removed.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully removed.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully deleted as result.
         /// </returns>
-        public override bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public override async Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            var isDeleted = base.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            var isDeleted = await base.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
 
             switch (propertyName)
             {
                 case "Example":
                     {
-                        isDeleted = this.DeleteExample(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
+                        isDeleted = await this.DeleteExampleAsync(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
                         break;
                     }
 
                 case "Note":
                     {
-                        isDeleted = this.DeleteNote(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
+                        isDeleted = await this.DeleteNoteAsync(transaction, partition, iid, (CDP4Common.Types.OrderedItem)value);
                         break;
                     }
 
@@ -824,11 +851,11 @@ namespace CDP4Orm.Dao
         /// A value for which a link table record wil be deleted.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully removed.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully removed as result.
         /// </returns>
-        public bool DeleteExample(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
+        public async Task<bool> DeleteExampleAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem example)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Definition_Example\"", partition);
@@ -844,7 +871,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 
@@ -864,11 +891,11 @@ namespace CDP4Orm.Dao
         /// A value for which a link table record wil be deleted.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully removed.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully removed as result.
         /// </returns>
-        public bool DeleteNote(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
+        public async Task<bool> DeleteNoteAsync(NpgsqlTransaction transaction, string partition, Guid iid, CDP4Common.Types.OrderedItem note)
         {
-            using (var command = new NpgsqlCommand())
+            await using (var command = new NpgsqlCommand())
             {
                 var sqlBuilder = new System.Text.StringBuilder();
                 sqlBuilder.AppendFormat("DELETE FROM \"{0}\".\"Definition_Note\"", partition);
@@ -884,7 +911,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                return command.ExecuteNonQuery() > 0;
+                return (await command.ExecuteNonQueryAsync()) > 0;
             }
         }
 

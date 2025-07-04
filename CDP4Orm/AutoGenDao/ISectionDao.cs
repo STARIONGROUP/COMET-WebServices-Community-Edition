@@ -1,19 +1,19 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ISectionDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Merlin Bieze, Alex Vorobiev, Naron Phou, Alexander van Delft, Nathanael Smiechowski
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
-//    This file is part of COMET Web Services Community Edition. 
-//    The COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
+//    This file is part of CDP4-COMET Web Services Community Edition. 
+//    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
 //    This is an auto-generated class. Any manual changes to this file will be overwritten!
 //
-//    The COMET Web Services Community Edition is free software; you can redistribute it and/or
+//    The CDP4-COMET Web Services Community Edition is free software; you can redistribute it and/or
 //    modify it under the terms of the GNU Affero General Public
 //    License as published by the Free Software Foundation; either
 //    version 3 of the License, or (at your option) any later version.
 //
-//    The COMET Web Services Community Edition is distributed in the hope that it will be useful,
+//    The CDP4-COMET Web Services Community Edition is distributed in the hope that it will be useful,
 //    but WITHOUT ANY WARRANTY; without even the implied warranty of
 //    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 //    Lesser General Public License for more details.
@@ -31,6 +31,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using Npgsql;
 
@@ -58,9 +59,9 @@ namespace CDP4Orm.Dao
         /// The instant as a nullable <see cref="DateTime"/>
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="CDP4Common.DTO.Section"/>.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="CDP4Common.DTO.Section"/> as result.
         /// </returns>
-        IEnumerable<CDP4Common.DTO.Section> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null);
+        Task<IEnumerable<CDP4Common.DTO.Section>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null);
 
         /// <summary>
         /// Write a database record from the supplied data transfer object.
@@ -81,9 +82,9 @@ namespace CDP4Orm.Dao
         /// The container of the DTO to be persisted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully persisted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully persisted as result.
         /// </returns>
-        bool Write(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Section section, long sequence, CDP4Common.DTO.Thing container = null);
+        Task<bool> WriteAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Section section, long sequence, CDP4Common.DTO.Thing container = null);
 
         /// <summary>
         /// Insert a database record from the supplied data transfer object and updates it if it already exists.
@@ -105,9 +106,9 @@ namespace CDP4Orm.Dao
         /// The container of the DTO to be persisted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully persisted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully persisted as result.
         /// </returns>
-        bool Upsert(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Section section, long sequence, CDP4Common.DTO.Thing container = null);
+        Task<bool> UpsertAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Section section, long sequence, CDP4Common.DTO.Thing container = null);
 
         /// <summary>
         /// Update a database record from the supplied data transfer object.
@@ -125,9 +126,9 @@ namespace CDP4Orm.Dao
         /// The container of the DTO to be updated.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully updated.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully persisted as result.
         /// </returns>
-        bool Update(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Section section, CDP4Common.DTO.Thing container = null);
+        Task<bool> UpdateAsync(NpgsqlTransaction transaction, string partition, CDP4Common.DTO.Section section, CDP4Common.DTO.Thing container = null);
 
         /// <summary>
         /// Update the containment order as indicated by the supplied orderedItem.
@@ -142,9 +143,9 @@ namespace CDP4Orm.Dao
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem);
+        Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem);
 
         /// <summary>
         /// Reorder the supplied value collection of the association link table indicated by the supplied property name
@@ -165,9 +166,9 @@ namespace CDP4Orm.Dao
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully reordered as result.
         /// </returns>
-        bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate);
+        Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate);
 
         /// <summary>
         /// Add the supplied value collection to the association link table indicated by the supplied property name.
@@ -188,9 +189,9 @@ namespace CDP4Orm.Dao
         /// A value for which a link table record wil be created.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully created.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully created as result.
         /// </returns>
-        bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+        Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
 
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
@@ -205,9 +206,9 @@ namespace CDP4Orm.Dao
         /// The <see cref="CDP4Common.DTO.Section"/> id that is to be deleted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully deleted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully deleted as result.
         /// </returns>
-        bool Delete(NpgsqlTransaction transaction, string partition, Guid iid);
+        Task<bool> DeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid);
 
         /// <summary>
         /// Delete a database record from the supplied data transfer object.
@@ -224,9 +225,9 @@ namespace CDP4Orm.Dao
         /// The <see cref="CDP4Common.DTO.Section"/> id that is to be deleted.
         /// </param>
         /// <returns>
-        /// True if the concept was successfully deleted.
+        /// An awaitable <see cref="Task"/> having True if the concept was successfully deleted as result.
         /// </returns>
-        bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid);
+        Task<bool> RawDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid);
 
         /// <summary>
         /// Delete the supplied value from the association link table indicated by the supplied property name.
@@ -247,9 +248,9 @@ namespace CDP4Orm.Dao
         /// The value for which a link table record wil be removed.
         /// </param>
         /// <returns>
-        /// True if the value link was successfully deleted.
+        /// An awaitable <see cref="Task"/> having True if the value link was successfully deleted as result.
         /// </returns>
-        bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
+        Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value);
     }
 }
 

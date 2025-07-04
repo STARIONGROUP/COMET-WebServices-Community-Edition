@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IOperationProcessor.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services.Operations
 {
     using System.Collections.Generic;
     using System.IO;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -51,7 +52,8 @@ namespace CometServer.Services.Operations
         /// <param name="fileStore">
         /// The optional file binaries that were included in the request.
         /// </param>
-        void Process(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        Task ProcessAsync(CdpPostOperation operation, NpgsqlTransaction transaction, string partition, Dictionary<string, Stream> fileStore = null);
 
         /// <summary>
         /// Gets the operation original <see cref="Thing"/> instance cache.

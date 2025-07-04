@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -111,7 +112,7 @@ namespace CometServer.Services
         /// <returns>
         /// Collection of retrieved resources.
         /// </returns>
-        IEnumerable<Thing> GetResource(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext);
+        Task<IEnumerable<Thing>> GetResourceAsync(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext);
 
         /// <summary>
         /// The get containment resource.
@@ -131,6 +132,6 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="Thing"/>.
         /// </returns>
-        Thing GetContainmentResource(string serviceType, string topContainer, Guid identifier, ISecurityContext containerSecurityContext);
+        Task<Thing> GetContainmentResource(string serviceType, string topContainer, Guid identifier, ISecurityContext containerSecurityContext);
     }
 }

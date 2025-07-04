@@ -170,7 +170,7 @@ namespace CometServer.Authentication.Basic
 
             if (!this.Options.IsWWWAuthenticateHeaderSuppressed)
             {
-                this.Response.Headers.WWWAuthenticate = $"Basic realm=\"{Options.Realm}\", charset=\"UTF-8\"";
+                this.Response.Headers.WWWAuthenticate = $"Basic realm=\"{this.Options.Realm}\", charset=\"UTF-8\"";
             }
 
             await base.HandleChallengeAsync(properties);
@@ -221,7 +221,7 @@ namespace CometServer.Authentication.Basic
 
                 if (authenticationPerson == null)
                 {
-                    this.Logger.LogWarning("The {username} could not be authenticated", username);
+                    this.Logger.LogWarning("The {Username} could not be authenticated", username);
                     return AuthenticateResult.Fail("Invalid username or password.");
                 }
 
@@ -230,7 +230,7 @@ namespace CometServer.Authentication.Basic
                 var principal = new ClaimsPrincipal(identity);
                 var ticket = new AuthenticationTicket(principal, this.Scheme.Name);
 
-                this.Logger.LogWarning("The {useid}:{username} successfully authenticated", authenticationPerson.Iid, username);
+                this.Logger.LogDebug("The {Useid}:{Username} successfully authenticated", authenticationPerson.Iid, username);
 
                 // sign in and add cookie
                 var authProperties = new AuthenticationProperties
@@ -243,9 +243,10 @@ namespace CometServer.Authentication.Basic
 
                 return AuthenticateResult.Success(ticket);
             }
-            catch (AuthenticatorException)
+            catch (AuthenticatorException aex)
             {
                 this.Logger.LogError("Basic authentication failed - database error - service unavailable");
+                this.Logger.LogDebug(aex, "Basic authentication failed - database error - service unavailable");
 
                 this.Response.ContentType = "application/json";
                 this.Response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;

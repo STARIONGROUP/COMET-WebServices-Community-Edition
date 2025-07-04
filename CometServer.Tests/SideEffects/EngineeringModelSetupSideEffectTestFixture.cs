@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -87,8 +89,10 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelDao = new Mock<IEngineeringModelDao>();
             this.npgsqlTransaction = null;
 
-            this.modelCreatorManager = new ModelCreatorManager();
-            this.modelCreatorManager.RevisionService = this.revisionService.Object;
+            this.modelCreatorManager = new ModelCreatorManager
+            {
+                RevisionService = this.revisionService.Object
+            };
 
             this.engineeringModelSetupSideEffect = new EngineeringModelSetupSideEffect
             {
@@ -109,11 +113,12 @@ namespace CometServer.Tests.SideEffects
             this.siteDirectory = new SiteDirectory(Guid.NewGuid(), 1);
             this.engineeringModelSetup = new EngineeringModelSetup(Guid.NewGuid(), 1);
             var domainOfExpertise = new DomainOfExpertise(Guid.NewGuid(), 1);
-            var domainOfExpertise1 = new DomainOfExpertise(Guid.NewGuid(), 1);
-            var domainFileStore = new DomainFileStore(Guid.NewGuid(), 1);
-            domainFileStore.Owner = domainOfExpertise.Iid;
-            var domainFileStore1 = new DomainFileStore(Guid.NewGuid(), 1);
-            domainFileStore1.Owner = domainOfExpertise1.Iid;
+
+            var domainFileStore = new DomainFileStore(Guid.NewGuid(), 1)
+            {
+                Owner = domainOfExpertise.Iid
+            };
+
             var option = new Option(Guid.NewGuid(), 1)
             {
                 Name = "Option 1",
@@ -130,6 +135,7 @@ namespace CometServer.Tests.SideEffects
                 K = 1,
                 V = option.Iid
             };
+
             iteration.Option.Add(orderedOption);
 
             var iterationSetup = new IterationSetup(Guid.NewGuid(), 1);
@@ -143,65 +149,70 @@ namespace CometServer.Tests.SideEffects
             this.siteDirectory.Model.Add(this.engineeringModelSetup.Iid);
             this.siteDirectory.DefaultParticipantRole = Guid.NewGuid();
 
-            this.engineeringModelService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), It.IsAny<Thing>(), -1)).Returns(true);
-            this.engineeringModelService.Setup(x => x.DeleteConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), null)).Returns(true);
-            this.engineeringModelService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(new[] { engineeringModel });
+            this.engineeringModelService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), It.IsAny<Thing>(), -1)).ReturnsAsync(true);
+            this.engineeringModelService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModel>(), null)).ReturnsAsync(true);
+            this.engineeringModelService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([engineeringModel]);
 
-            this.engineeringModelSetupService.Setup(x => x.UpdateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModelSetup>(), It.IsAny<Thing>())).Returns(true);
+            this.engineeringModelSetupService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<EngineeringModelSetup>(), It.IsAny<Thing>())).ReturnsAsync(true);
 
-            this.iterationService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).Returns(true);
+            this.iterationService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).ReturnsAsync(true);
+
             this.iterationService.Setup(
                 x =>
-                x.GetShallow(
-                    It.IsAny<NpgsqlTransaction>(),
-                    It.IsAny<string>(),
-                    It.IsAny<IEnumerable<Guid>>(),
-                    this.securityContext.Object)).Returns(new[] { iteration });
-            this.iterationSetupService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModelSetup>(), -1)).Returns(true);
+                    x.GetShallowAsync(
+                        It.IsAny<NpgsqlTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<IEnumerable<Guid>>(),
+                        this.securityContext.Object)).ReturnsAsync([iteration]);
+
+            this.iterationSetupService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModelSetup>(), -1)).ReturnsAsync(true);
+
             this.iterationSetupService.Setup(
                 x =>
-                x.GetShallow(
-                    It.IsAny<NpgsqlTransaction>(),
-                    It.IsAny<string>(),
-                    It.IsAny<IEnumerable<Guid>>(),
-                    this.securityContext.Object)).Returns(new[] { iterationSetup });
+                    x.GetShallowAsync(
+                        It.IsAny<NpgsqlTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<IEnumerable<Guid>>(),
+                        this.securityContext.Object)).ReturnsAsync([iterationSetup]);
 
-            this.participantService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Participant>(), It.IsAny<EngineeringModelSetup>(), -1)).Returns(true);
+            this.participantService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Participant>(), It.IsAny<EngineeringModelSetup>(), -1)).ReturnsAsync(true);
+
             this.participantService.Setup(
                 x =>
-                x.GetShallow(
-                    It.IsAny<NpgsqlTransaction>(),
-                    It.IsAny<string>(),
-                    It.IsAny<IEnumerable<Guid>>(),
-                    this.securityContext.Object)).Returns(new[] { participant });
+                    x.GetShallowAsync(
+                        It.IsAny<NpgsqlTransaction>(),
+                        It.IsAny<string>(),
+                        It.IsAny<IEnumerable<Guid>>(),
+                        this.securityContext.Object)).ReturnsAsync([participant]);
 
-            this.optionService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Option>(), It.IsAny<Iteration>(), -1)).Returns(true);
-            this.optionService.Setup(x => x.GetShallow(
+            this.optionService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Option>(), It.IsAny<Iteration>(), -1)).ReturnsAsync(true);
+
+            this.optionService.Setup(x => x.GetShallowAsync(
                 It.IsAny<NpgsqlTransaction>(),
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<Guid>>(),
-                this.securityContext.Object)).Returns(new[] { option });
+                this.securityContext.Object)).ReturnsAsync([option]);
 
             this.revisionService.Setup(
-                x => x.SaveRevisions(
+                x => x.SaveRevisionsAsync(
                     It.IsAny<NpgsqlTransaction>(),
                     It.IsAny<string>(),
                     It.IsAny<Guid>(),
-                    It.IsAny<int>())).Returns(new List<Thing>());
+                    It.IsAny<int>())).ReturnsAsync(new List<Thing>());
 
-            this.engineeringModelDao.Setup(x => x.GetNextIterationNumber(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(1);
+            this.engineeringModelDao.Setup(x => x.GetNextIterationNumberAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).ReturnsAsync(1);
         }
 
         [Test]
         public void VerifyAfterUpdate()
         {
             var originalThing = this.engineeringModelSetup.DeepClone<Thing>();
-            this.engineeringModelSetupSideEffect.BeforeUpdate(this.engineeringModelSetup, this.siteDirectory, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object, null);
+            this.engineeringModelSetupSideEffect.BeforeUpdateAsync(this.engineeringModelSetup, this.siteDirectory, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object, null);
             this.engineeringModelSetup.ActiveDomain.RemoveAt(0);
             var domainOfExpertise2 = new DomainOfExpertise(Guid.NewGuid(), 1);
             this.engineeringModelSetup.ActiveDomain.Add(domainOfExpertise2.Iid);
-            
-            Assert.That(() => this.engineeringModelSetupSideEffect.AfterUpdate(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object),
+
+            Assert.That(() => this.engineeringModelSetupSideEffect.AfterUpdateAsync(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object),
                 Throws.Nothing);
         }
 
@@ -209,10 +220,10 @@ namespace CometServer.Tests.SideEffects
         public void VerifyAfterDelete()
         {
             var originalThing = this.engineeringModelSetup.DeepClone<Thing>();
-            this.engineeringModelSetupSideEffect.AfterDelete(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
+            this.engineeringModelSetupSideEffect.AfterDeleteAsync(this.engineeringModelSetup, this.siteDirectory, originalThing, this.npgsqlTransaction, "siteDirectory", this.securityContext.Object);
 
             // Check that the engineering model is deleted in the newEngineeringModelPartition
-            this.engineeringModelService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<EngineeringModel>(), null), Times.Never);
+            this.engineeringModelService.Verify(x => x.DeleteConceptAsync(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<EngineeringModel>(), null), Times.Never);
         }
     }
 }

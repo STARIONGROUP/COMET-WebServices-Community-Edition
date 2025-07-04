@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementDefinitionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -101,18 +102,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// Returns true if the create operation may continue, otherwise it shall be skipped.
         /// </returns>
-        public override bool BeforeCreate(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task<bool> BeforeCreateAsync(ElementDefinition thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // inject the organizational participant of the creator to the ED before creating
-            if (this.CredentialsService.Credentials != null && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant)
+            if (this.CredentialsService.Credentials != null 
+                && this.CredentialsService.Credentials.EngineeringModelSetup.OrganizationalParticipant.Count != 0 
+                && !this.CredentialsService.Credentials.IsDefaultOrganizationalParticipant 
+                && !thing.OrganizationalParticipant.Contains(this.CredentialsService.Credentials.OrganizationalParticipant.Iid))
             {
-                if (!thing.OrganizationalParticipant.Contains(this.CredentialsService.Credentials.OrganizationalParticipant.Iid))
-                {
-                    thing.OrganizationalParticipant.Add(this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
-                }
+                thing.OrganizationalParticipant.Add(this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
             }
 
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -133,7 +134,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(ElementDefinition thing, Thing container, NpgsqlTransaction transaction,
+        public override async Task BeforeDeleteAsync(ElementDefinition thing, Thing container, NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext)
         {
@@ -146,9 +147,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.TopElement)} to null.";
 
-                var iterationSetup = this.IterationSetupService.GetShallow(transaction,
+                var iterationSetup = (await this.IterationSetupService.GetShallowAsync(transaction,
                     Utils.SiteDirectoryPartition,
-                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+                    [iteration.IterationSetup], securityContext)).Cast<IterationSetup>().SingleOrDefault();
 
                 if (iterationSetup == null)
                 {
@@ -156,8 +157,8 @@ namespace CometServer.Services.Operations.SideEffects
                         $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
                 }
 
-                var engineeringModelSetup = this.EngineeringModelSetupService
-                    .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                var engineeringModelSetup = (await this.EngineeringModelSetupService
+                    .GetShallowAsync(transaction, Utils.SiteDirectoryPartition, null, securityContext))
                     .Cast<EngineeringModelSetup>()
                     .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
@@ -170,8 +171,8 @@ namespace CometServer.Services.Operations.SideEffects
                 var engineeringModelPartition =
                     this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
-                var updatedIteration = this.IterationService
-                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                var updatedIteration = (await this.IterationService
+                    .GetShallowAsync(transaction, engineeringModelPartition, [iteration.Iid], securityContext))
                     .Cast<Iteration>()
                     .SingleOrDefault();
 
@@ -188,9 +189,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 updatedIteration.TopElement = null;
 
-                var engineeringModel = this.EngineeringModelService
-                    .GetShallow(transaction, engineeringModelPartition,
-                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                var engineeringModel = (await this.EngineeringModelService
+                    .GetShallowAsync(transaction, engineeringModelPartition,
+                        [engineeringModelSetup.EngineeringModelIid], securityContext)).Cast<EngineeringModel>()
                     .SingleOrDefault();
 
                 if (engineeringModel == null)
@@ -199,7 +200,7 @@ namespace CometServer.Services.Operations.SideEffects
                         $"{baseErrorString}\n{nameof(EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
                 }
 
-                this.IterationService.UpdateConcept(transaction, engineeringModelPartition, updatedIteration,
+                await this.IterationService.UpdateConceptAsync(transaction, engineeringModelPartition, updatedIteration,
                     engineeringModel);
             }
             else
@@ -235,7 +236,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation
         /// processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             ElementDefinition thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -245,12 +246,12 @@ namespace CometServer.Services.Operations.SideEffects
         {
             if (rawUpdateInfo.TryGetValue("ContainedElement", out var value))
             {
-                var containedElementsId = (IEnumerable<Guid>) value;
+                var containedElementsId = value as IEnumerable<Guid>;
 
-                var elementDefinitions = this.ElementDefinitionService
-                    .Get(transaction, partition, null, securityContext).Cast<ElementDefinition>().ToList();
+                var elementDefinitions = (await this.ElementDefinitionService
+                    .GetAsync(transaction, partition, null, securityContext)).Cast<ElementDefinition>().ToList();
 
-                var elementUsages = this.ElementUsageService.Get(transaction, partition, null, securityContext)
+                var elementUsages = (await this.ElementUsageService.GetAsync(transaction, partition, null, securityContext))
                     .Cast<ElementUsage>().ToList();
 
                 // Check every contained element that it is acyclic

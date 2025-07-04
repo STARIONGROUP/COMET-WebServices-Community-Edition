@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CacheService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -48,9 +49,10 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The collection of revised <see cref="Thing"/>s</param>
-        public void BulkWriteToCache(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        public Task BulkWriteToCacheAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
         {
-            this.CacheDao.BulkWrite(transaction, partition, things);
+            return this.CacheDao.BulkWriteAsync(transaction, partition, things);
         }
     }
 }

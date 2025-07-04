@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 // 
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 // 
@@ -28,6 +28,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.Dto;
     using CDP4Common.DTO;
@@ -77,11 +78,11 @@ namespace CometServer.Services
         /// <param name="securityContext">The <see cref="ISecurityContext" /></param>
         /// <returns>A collection of referenced <see cref="Thing" />s</returns>
         /// <exception cref="ThingNotFoundException">If one of the referenced <see cref="Thing" /> can not be retrieved</exception>
-        public IReadOnlyCollection<Thing> QueryReferencedSiteDirectoryThings(Parameter parameter, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        public async Task<IReadOnlyCollection<Thing>> QueryReferencedSiteDirectoryThingsAsync(Parameter parameter, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var things = new List<Thing>();
 
-            if (!this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext).TryGetValue(parameter.ParameterType, out var parameterType))
+            if (!(await this.CachedReferenceDataService.QueryParameterTypesAsync(transaction, securityContext)).TryGetValue(parameter.ParameterType, out var parameterType))
             {
                 throw new ThingNotFoundException($"ParameterType {parameter.ParameterType} does not exist");
             }
@@ -90,7 +91,7 @@ namespace CometServer.Services
 
             if (parameter.Scale.HasValue)
             {
-                if (!this.CachedReferenceDataService.QueryMeasurementScales(transaction, securityContext).TryGetValue(parameter.Scale.Value, out var measurementScale))
+                if (!(await this.CachedReferenceDataService.QueryMeasurementScalesAsync(transaction, securityContext)).TryGetValue(parameter.Scale.Value, out var measurementScale))
                 {
                     throw new ThingNotFoundException($"MeasurementScale {parameter.Scale.Value} does not exist");
                 }
@@ -101,13 +102,13 @@ namespace CometServer.Services
             switch (parameterType)
             {
                 case EnumerationParameterType enumerationParameterType:
-                    things.AddRange(this.QueryEnumerationValueDefinitions(enumerationParameterType, transaction, securityContext));
+                    things.AddRange(await this.QueryEnumerationValueDefinitions(enumerationParameterType, transaction, securityContext));
                     break;
                 case SampledFunctionParameterType sampledFunctionParameterType:
-                    things.AddRange(this.QueryParameterTypeAssignments(sampledFunctionParameterType, transaction, securityContext));
+                    things.AddRange(await this.QueryParameterTypeAssignmentsAsync(sampledFunctionParameterType, transaction, securityContext));
                     break;
                 case CompoundParameterType compoundParameterType:
-                    things.AddRange(this.QueryParameterTypeComponents(compoundParameterType, transaction, securityContext));
+                    things.AddRange(await this.QueryParameterTypeComponentsAsync(compoundParameterType, transaction, securityContext));
                     break;
             }
 
@@ -127,7 +128,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary" /></param>
         /// <param name="targetEngineeringModelSetup"></param>
         /// <param name="securityContext">The <see cref="ISecurityContext" /></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is Parameter sourceParameter))
@@ -165,40 +166,40 @@ namespace CometServer.Services
                 copy.Owner = copyinfo.ActiveOwner;
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!await this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
-            this.ParameterDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            await this.ParameterDao.WriteAsync(transaction, partition, copy, targetContainer);
+            await this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
-            var newparameter = this.ParameterDao.Read(transaction, partition, new[] { copy.Iid }).Single();
+            var newparameter = (await this.ParameterDao.ReadAsync(transaction, partition, [copy.Iid])).Single();
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ValueSetService
-                    .GetShallow(transaction, partition, newparameter.ValueSet, securityContext)
+                var valuesets = (await this.ValueSetService
+                    .GetShallowAsync(transaction, partition, newparameter.ValueSet, securityContext))
                     .OfType<ParameterValueSet>().ToList();
 
                 var topcontainerPartition = $"EngineeringModel_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
-                this.TransactionManager.SetIterationContext(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
+                await this.TransactionManager.SetIterationContextAsync(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
                 var sourcepartition = $"Iteration_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
-                var iteration = (Iteration)this.IterationService.Get(transaction, topcontainerPartition, new[] { copyinfo.Source.IterationId.Value }, securityContext).SingleOrDefault();
+                var iteration = (Iteration)(await this.IterationService.GetAsync(transaction, topcontainerPartition, [copyinfo.Source.IterationId.Value], securityContext)).SingleOrDefault();
 
                 if (iteration == null)
                 {
                     throw new InvalidOperationException($"The source iteration {copyinfo.Source.IterationId.Value} could not be found.");
                 }
 
-                this.OldParameterContextProvider.Initialize(sourceParameter, transaction, sourcepartition, securityContext, iteration);
+                await this.OldParameterContextProvider.InitializeAsync(sourceParameter, transaction, sourcepartition, securityContext, iteration);
 
                 // switch back to request context
                 var engineeringModelPartition = partition.Replace("Iteration", "EngineeringModel");
-                this.TransactionManager.SetIterationContext(transaction, engineeringModelPartition, copyinfo.Target.IterationId.Value);
+                await this.TransactionManager.SetIterationContextAsync(transaction, engineeringModelPartition, copyinfo.Target.IterationId.Value);
 
                 // update all value-set
-                this.DefaultValueArrayFactory.Load(transaction, securityContext);
+                await this.DefaultValueArrayFactory.LoadAsync(transaction, securityContext);
 
                 foreach (var valueset in valuesets)
                 {
@@ -228,7 +229,7 @@ namespace CometServer.Services
 
                     try
                     {
-                        this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                        await this.ValueSetService.UpdateConceptAsync(transaction, partition, valueset, copy);
                     }
                     finally
                     {
@@ -247,7 +248,7 @@ namespace CometServer.Services
                     continue;
                 }
 
-                ((ServiceBase)this.ParameterSubscriptionService).Copy(transaction, partition, sourceSubscription, newparameter, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                await ((ServiceBase)this.ParameterSubscriptionService).CopyAsync( transaction, partition, sourceSubscription, newparameter, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
         }
 
@@ -269,12 +270,12 @@ namespace CometServer.Services
         /// If one of the referenced <see cref="ParameterTypeComponent" />,
         /// <see cref="ParameterType" /> or <see cref="MeasurementScale" /> cannot be retrieved
         /// </exception>
-        private List<Thing> QueryParameterTypeComponents(CompoundParameterType compoundParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        private async Task<List<Thing>> QueryParameterTypeComponentsAsync(CompoundParameterType compoundParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var things = new List<Thing>();
-            var parameterTypeComponents = this.CachedReferenceDataService.QueryParameterTypeComponents(transaction, securityContext);
-            var parameterTypes = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
-            var measurementScales = this.CachedReferenceDataService.QueryMeasurementScales(transaction, securityContext);
+            var parameterTypeComponents = await this.CachedReferenceDataService.QueryParameterTypeComponentsAsync(transaction, securityContext);
+            var parameterTypes = await this.CachedReferenceDataService.QueryParameterTypesAsync(transaction, securityContext);
+            var measurementScales = await this.CachedReferenceDataService.QueryMeasurementScalesAsync(transaction, securityContext);
 
             foreach (var componentId in compoundParameterType.Component.Select(x => x.V).OfType<Guid>())
             {
@@ -327,12 +328,12 @@ namespace CometServer.Services
         /// If one of the referenced <see cref="IParameterTypeAssignment" />,
         /// <see cref="ParameterType" /> or <see cref="MeasurementScale" /> cannot be retrieved
         /// </exception>
-        private List<Thing> QueryParameterTypeAssignments(SampledFunctionParameterType sampledFunctionParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        private async Task<List<Thing>> QueryParameterTypeAssignmentsAsync(SampledFunctionParameterType sampledFunctionParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
             var things = new List<Thing>();
-            var independentParameterTypeAssignements = this.CachedReferenceDataService.QueryIndependentParameterTypeAssignments(transaction, securityContext);
-            var parameterTypes = this.CachedReferenceDataService.QueryParameterTypes(transaction, securityContext);
-            var measurementScales = this.CachedReferenceDataService.QueryMeasurementScales(transaction, securityContext);
+            var independentParameterTypeAssignements = await this.CachedReferenceDataService.QueryIndependentParameterTypeAssignmentsAsync(transaction, securityContext);
+            var parameterTypes = await this.CachedReferenceDataService.QueryParameterTypesAsync(transaction, securityContext);
+            var measurementScales = await this.CachedReferenceDataService.QueryMeasurementScalesAsync(transaction, securityContext);
 
             foreach (var independentParameterTypeId in sampledFunctionParameterType.IndependentParameterType.Select(x => x.V).OfType<Guid>())
             {
@@ -344,7 +345,7 @@ namespace CometServer.Services
                 things.Add(independentParameterTypeAssignment);
             }
 
-            var dependentParameterTypeAssignements = this.CachedReferenceDataService.QueryDependentParameterTypeAssignments(transaction, securityContext);
+            var dependentParameterTypeAssignements = await this.CachedReferenceDataService.QueryDependentParameterTypeAssignmentsAsync(transaction, securityContext);
 
             foreach (var dependentParameterTypeId in sampledFunctionParameterType.DependentParameterType.Select(x => x.V).OfType<Guid>())
             {
@@ -393,9 +394,11 @@ namespace CometServer.Services
         /// <exception cref="ThingNotFoundException">
         /// If one of the referenced <see cref="EnumerationValueDefinition" /> cannot be retrieved
         /// </exception>
-        private IEnumerable<Thing> QueryEnumerationValueDefinitions(EnumerationParameterType enumerationParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
+        private async Task<IEnumerable<Thing>> QueryEnumerationValueDefinitions(EnumerationParameterType enumerationParameterType, NpgsqlTransaction transaction, ISecurityContext securityContext)
         {
-            var valueDefinitions = this.CachedReferenceDataService.QueryEnumerationValueDefinitions(transaction, securityContext);
+            var valueDefinitions = await this.CachedReferenceDataService.QueryEnumerationValueDefinitionsAsync(transaction, securityContext);
+
+            var result = new List<Thing>();
 
             foreach (var valueDefinitionId in enumerationParameterType.ValueDefinition.Select(x => x.V).OfType<Guid>())
             {
@@ -404,8 +407,10 @@ namespace CometServer.Services
                     throw new ThingNotFoundException($"EnumerationValueDefinition {valueDefinitionId} does not exist");
                 }
 
-                yield return enumerationValueDefinition;
+                result.Add(enumerationValueDefinition);
             }
+
+            return result;
         }
     }
 }

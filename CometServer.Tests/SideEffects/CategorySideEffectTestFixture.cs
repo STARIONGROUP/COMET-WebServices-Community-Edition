@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CategorySideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -125,17 +127,17 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.categoryService = new Mock<ICategoryService>();
             this.categoryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
@@ -147,16 +149,16 @@ namespace CometServer.Tests.SideEffects
                                 this.categoryG.Iid,
                                 this.categoryA.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<Category>
-                        {
-                            this.categoryC,
-                            this.categoryD,
-                            this.categoryE,
-                            this.categoryF,
-                            this.categoryG,
-                            this.categoryA
-                        });
+                    {
+                        this.categoryC,
+                        this.categoryD,
+                        this.categoryE,
+                        this.categoryF,
+                        this.categoryG,
+                        this.categoryA
+                    });
         }
 
         [Test]
@@ -174,8 +176,8 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryA.Iid } }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -200,8 +202,8 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryB.Iid } }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -215,8 +217,8 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryD.Iid } }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -242,8 +244,8 @@ namespace CometServer.Tests.SideEffects
                                          { TestKey, new List<Guid> { this.categoryD.Iid, this.categoryG.Iid } }
                                      };
 
-            Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.DoesNotThrowAsync(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.categoryA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

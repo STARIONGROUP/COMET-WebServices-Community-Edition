@@ -92,20 +92,20 @@ namespace CometServer.Health
         /// <returns>
         /// an awaitable <see cref="Task"/>
         /// </returns>
-        protected override Task ExecuteAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
             try
             {
-                if (!this.DataStoreConnectionChecker.CheckConnection(cancellationToken))
+                if (!await this.DataStoreConnectionChecker.CheckConnectionAsync(cancellationToken))
                 {
                     this.Logger.LogCritical("The CDP4-COMET REST API has terminated - The data-store was not availble within the configured BacktierWaitTime: {BacktierWaitTime}", this.AppConfigService.AppConfig.Midtier.BacktierWaitTime);
                     this.applicationLifetime.StopApplication();
+                    return;
                 }
 
-                if (!this.MigrationEngine.MigrateAllAtStartUp())
+                if (!await this.MigrationEngine.MigrateAllAtStartUpAsync())
                 {
                     this.Logger.LogWarning("The Migrations could not be completed");
-                    return Task.CompletedTask;
                 }
 
                 this.CometHasStartedService.SetHasStartedAndIsReady(true);
@@ -118,8 +118,6 @@ namespace CometServer.Health
                 // Stop the application
                 this.applicationLifetime.StopApplication();
             }
-            
-            return Task.CompletedTask;
         }
     }
 }

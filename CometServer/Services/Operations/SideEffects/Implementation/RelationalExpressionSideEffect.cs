@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RelationalExpressionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services.Operations.SideEffects
 {
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -60,16 +61,18 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(RelationalExpression thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(RelationalExpression thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
+            await base.BeforeDeleteAsync(thing, container, transaction, partition, securityContext);
+
             var parametricConstraintThatContainsRelationalExpression =
-                this.ParametricConstraintService.GetShallow(transaction, partition, new[] { container.Iid }, securityContext)
+                (await this.ParametricConstraintService.GetShallowAsync(transaction, partition, [container.Iid], securityContext))
                     .SingleOrDefault(x => x.Iid == container.Iid);
 
             if (parametricConstraintThatContainsRelationalExpression is ParametricConstraint parametricConstraint)
             {
                 var relationalExpressions =
-                    this.RelationalExpressionService.GetShallow(transaction, partition, parametricConstraint.Expression, securityContext).ToList();
+                    (await this.RelationalExpressionService.GetShallowAsync(transaction, partition, parametricConstraint.Expression, securityContext)).ToList();
 
                 if (relationalExpressions.Any(x => x.Iid == thing.Iid) && relationalExpressions.Count == 1)
                 {

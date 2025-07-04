@@ -26,6 +26,7 @@
 namespace CometServer.Services
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -48,6 +49,6 @@ namespace CometServer.Services
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         /// <returns>A collection of referenced <see cref="Thing"/>s</returns>
         /// <exception cref="ThingNotFoundException">If one of the referenced <see cref="Thing"/> can not be retrieved</exception>
-        IReadOnlyCollection<Thing> QueryReferencedSiteDirectoryThings(Parameter parameter, NpgsqlTransaction transaction, ISecurityContext securityContext);
+        Task<IReadOnlyCollection<Thing>> QueryReferencedSiteDirectoryThingsAsync(Parameter parameter, NpgsqlTransaction transaction, ISecurityContext securityContext);
     }
 }

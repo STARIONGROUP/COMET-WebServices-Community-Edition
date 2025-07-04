@@ -26,6 +26,7 @@ namespace CometServer.ChangeNotification.Data
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -60,7 +61,7 @@ namespace CometServer.ChangeNotification.Data
         /// <returns>
         /// The created <see cref="IEnumerable{T}"/> of type <see cref="ModelLogEntryData"/>
         /// </returns>
-        IEnumerable<ModelLogEntryData> Create(
+        Task<IEnumerable<ModelLogEntryData>> CreateAsync(
             NpgsqlTransaction transaction, 
             string engineeringModelPartition, 
             IEnumerable<ModelLogEntry> modelLogEntries, 

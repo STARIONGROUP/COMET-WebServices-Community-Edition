@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
     
@@ -98,9 +99,9 @@ namespace CometServer.Services
         /// <param name="securityContext">The security-context</param>
         /// <param name="transaction">The current transaction</param>
         /// <returns>The default <see cref="ActualFiniteState"/> if any, null otherwise</returns>
-        public ActualFiniteState GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, string partition, ISecurityContext securityContext, NpgsqlTransaction transaction)
+        public async Task<ActualFiniteState> GetDefaultState(ActualFiniteStateList actualList, IReadOnlyList<ActualFiniteState> actualListStates, string partition, ISecurityContext securityContext, NpgsqlTransaction transaction)
         {
-            var possibleLists = this.PossibleFiniteStateListService.GetShallow(transaction, partition, actualList.PossibleFiniteStateList.Select(x => Guid.Parse(x.V.ToString())), securityContext).OfType<PossibleFiniteStateList>().ToList();
+            var possibleLists = (await this.PossibleFiniteStateListService.GetShallowAsync(transaction, partition, actualList.PossibleFiniteStateList.Select(x => Guid.Parse(x.V.ToString())), securityContext)).OfType<PossibleFiniteStateList>().ToList();
             return this.GetDefaultState(actualList, actualListStates, possibleLists);
         }
     }

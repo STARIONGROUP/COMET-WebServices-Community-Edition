@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -47,14 +48,14 @@ namespace CometServer.Services
         /// <param name="targetPartition">
         /// The target Engineering-Model
         /// </param>
-        void CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
+        Task CopyEngineeringModel(NpgsqlTransaction transaction, string sourcePartition, string targetPartition);
 
         /// <summary>
         /// Modify the identifier of all records in a partition
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The egineering-model partition to modify</param>
-        void ModifyIdentifier(NpgsqlTransaction transaction, string partition);
+        Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Modify the identifier of the <paramref name="thing"/>
@@ -63,7 +64,7 @@ namespace CometServer.Services
         /// <param name="partition">The partition</param>
         /// <param name="thing">The updated <see cref="Thing"/></param>
         /// <param name="oldIid">The old identifier</param>
-        void ModifyIdentifier(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid);
+        Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid);
 
         /// <summary>
         /// Copy the tables from a source to an Engineering-Model partition
@@ -77,7 +78,7 @@ namespace CometServer.Services
         /// <param name="enable">
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
-        void ModifyUserTrigger(NpgsqlTransaction transaction, string sourcePartition, bool enable);
+        Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable);
 
         /// <summary>
         /// Query the next iteration number
@@ -85,6 +86,6 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <returns>The next iteration number</returns>
-        int QueryNextIterationNumber(NpgsqlTransaction transaction, string partition);
+        Task<int> QueryNextIterationNumber(NpgsqlTransaction transaction, string partition);
     }
 }

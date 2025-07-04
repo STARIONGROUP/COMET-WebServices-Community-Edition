@@ -28,6 +28,7 @@ namespace CDP4Orm.Dao.Cache
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
 
@@ -86,7 +87,7 @@ namespace CDP4Orm.Dao.Cache
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="thing">The revised <see cref="Thing" /></param>
-        public void Write(NpgsqlTransaction transaction, string partition, Thing thing)
+        public async Task WriteAsync(NpgsqlTransaction transaction, string partition, Thing thing)
         {
             var table = GetThingCacheTableName(thing);
 
@@ -94,14 +95,14 @@ namespace CDP4Orm.Dao.Cache
             var values = "(:iid, :revisionnumber, :jsonb)";
             var sqlQuery = $"INSERT INTO \"{partition}\".\"{table}\" {columns} VALUES {values} ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=:revisionnumber, \"{JsonColumnName}\"=:jsonb;";
 
-            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
             command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
             command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
 
             // log the sql command 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -110,7 +111,7 @@ namespace CDP4Orm.Dao.Cache
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The collection of revised <see cref="Thing" />s</param>
-        public void BulkWrite(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
+        public async Task BulkWriteAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things)
         {
             var thingsGroupedByClasskind = things.GroupBy(x => x.ClassKind).ToDictionary(g => g.Key, g => g.ToList());
 
@@ -148,12 +149,12 @@ namespace CDP4Orm.Dao.Cache
                 sqlQueryBuilder.Append($" ON CONFLICT (\"{IidKey}\") DO UPDATE SET \"{RevisionColumnName}\"=EXCLUDED.\"{RevisionColumnName}\", \"{JsonColumnName}\"=EXCLUDED.\"{JsonColumnName}\";");
 
                 var sqlQuery = sqlQueryBuilder.ToString();
-                this.Logger.LogDebug("Running insert command for Cache : {sqlQuery}", sqlQuery);
+                this.Logger.LogDebug("Running insert command for Cache : {SqlQuery}", sqlQuery);
 
-                using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+                await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
                 command.Parameters.AddRange(parameters.ToArray());
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
             }
         }
 

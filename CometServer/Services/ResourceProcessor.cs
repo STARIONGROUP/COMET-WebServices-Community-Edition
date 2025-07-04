@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ResourceProcessor.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -222,10 +223,10 @@ namespace CometServer.Services
         /// <returns>
         /// Collection of retrieved resources.
         /// </returns>
-        public IEnumerable<Thing> GetResource(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public Task<IEnumerable<Thing>> GetResourceAsync(string serviceType, string topContainer, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.ServiceProvider.MapToReadService(serviceType)
-                                 .Get(this.Transaction, topContainer, ids, containerSecurityContext);
+                                 .GetAsync(this.Transaction, topContainer, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -246,13 +247,13 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="Thing"/>.
         /// </returns>
-        public Thing GetContainmentResource(string serviceType, string topContainer, Guid identifier, ISecurityContext containerSecurityContext)
+        public async Task<Thing> GetContainmentResource(string serviceType, string topContainer, Guid identifier, ISecurityContext containerSecurityContext)
         {
             // override query parameters
             this.RequestUtils.OverrideQueryParameters = new QueryParameters();
             
             // collect the specified containment resource
-            var containementResource = this.GetResource(serviceType, topContainer, new[] { identifier }, containerSecurityContext).SingleOrDefault();
+            var containementResource = (await this.GetResourceAsync(serviceType, topContainer, [identifier], containerSecurityContext)).SingleOrDefault();
 
             if (containementResource == null)
             {

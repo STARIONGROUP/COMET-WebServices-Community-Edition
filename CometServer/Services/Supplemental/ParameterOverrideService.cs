@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParameterOverrideService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,7 +27,8 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    
+    using System.Threading.Tasks;
+
     using Authorization;
     
     using CDP4Common.Dto;
@@ -61,7 +62,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup"></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is ParameterOverride sourceParameterOverride))
@@ -87,21 +88,20 @@ namespace CometServer.Services
                 copy.Parameter = sourceToCopyMap[sourceParameterOverride.Parameter];
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!await this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
-            this.ParameterOverrideDao.Write(transaction, partition, copy, targetContainer);
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            await this.ParameterOverrideDao.WriteAsync(transaction, partition, copy, targetContainer);
+            await this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
 
-            var newparameterOverride = this.ParameterOverrideDao.Read(transaction, partition, new[] { copy.Iid }).Single();
-
+            var newparameterOverride = (await this.ParameterOverrideDao.ReadAsync(transaction, partition, [copy.Iid])).Single();
 
             if (copyinfo.Options.KeepValues.HasValue && copyinfo.Options.KeepValues.Value)
             {
-                var valuesets = this.ValueSetService
-                    .GetShallow(transaction, partition, newparameterOverride.ValueSet, securityContext)
+                var valuesets = (await this.ValueSetService
+                    .GetShallowAsync(transaction, partition, newparameterOverride.ValueSet, securityContext))
                     .OfType<ParameterOverrideValueSet>().ToList();
 
                 // update all value-set
@@ -127,11 +127,12 @@ namespace CometServer.Services
                     valueset.Published = new ValueArray<string>(Enumerable.Repeat("-", valueset.Manual.Count));
                     valueset.ValueSwitch = sourceOverridenValueSet.ValueSwitch;
 
-                    this.ValueSetService.UpdateConcept(transaction, partition, valueset, copy);
+                    await this.ValueSetService.UpdateConceptAsync(transaction, partition, valueset, copy);
                 }
             }
 
             var sourceSubscriptions = allSourceThings.OfType<ParameterSubscription>().Where(x => sourceParameterOverride.ParameterSubscription.Contains(x.Iid)).ToList();
+
             foreach (var sourceSubscription in sourceSubscriptions)
             {
                 if (sourceSubscription.Owner == newparameterOverride.Owner)
@@ -140,7 +141,7 @@ namespace CometServer.Services
                     continue;
                 }
 
-                ((ServiceBase)this.ParameterSubscriptionService).Copy(transaction, partition, sourceSubscription, newparameterOverride, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                await ((ServiceBase)this.ParameterSubscriptionService).CopyAsync(transaction, partition, sourceSubscription, newparameterOverride, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
         }
     }

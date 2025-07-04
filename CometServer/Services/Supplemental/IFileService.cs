@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using Npgsql;
@@ -49,7 +51,7 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        bool IsAllowedAccordingToIsHidden(NpgsqlTransaction transaction, Thing thing, string partition);
+        Task<bool> IsAllowedAccordingToIsHiddenAsync(NpgsqlTransaction transaction, Thing thing, string partition);
 
         /// <summary>
         /// Checks is a file lock is present and throws an error when it is set by another user
@@ -63,6 +65,6 @@ namespace CometServer.Services
         /// <param name="file">
         /// The <see cref="File"/> to check
         /// </param>
-        void CheckFileLock(NpgsqlTransaction transaction, string partition, File file);
+        Task CheckFileLockAsync(NpgsqlTransaction transaction, string partition, File file);
     }
 }

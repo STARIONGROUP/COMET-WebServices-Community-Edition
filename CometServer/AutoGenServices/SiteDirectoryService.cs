@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SiteDirectoryService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -32,17 +31,25 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
     /// The <see cref="SiteDirectory"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public sealed partial class SiteDirectoryService : ServiceBase, ISiteDirectoryService
     {
         /// <summary>
@@ -121,13 +128,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="SiteDirectory"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="SiteDirectory"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -146,12 +153,12 @@ namespace CometServer.Services
         /// The container instance of the DTO to be persisted.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool Insert(NpgsqlTransaction transaction, string partition, Thing dto, Thing container = null)
+        public Task<bool> InsertAsync(NpgsqlTransaction transaction, string partition, Thing dto, Thing container = null)
         {
             var siteDirectory = dto as SiteDirectory;
-            return this.CreateConcept(transaction, partition, siteDirectory, container);
+            return this.CreateConceptAsync(transaction, partition, siteDirectory, container);
         }
 
         /// <summary>
@@ -173,11 +180,11 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.SiteDirectoryDao.AddToCollectionProperty(transaction, partition, propertyName, iid, value);
+            return this.SiteDirectoryDao.AddToCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -199,11 +206,11 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return this.SiteDirectoryDao.DeleteFromCollectionProperty(transaction, partition, propertyName, iid, value);
+            return this.SiteDirectoryDao.DeleteFromCollectionPropertyAsync(transaction, partition, propertyName, iid, value);
         }
 
         /// <summary>
@@ -225,11 +232,11 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
-            return this.SiteDirectoryDao.ReorderCollectionProperty(transaction, partition, propertyName, iid, orderUpdate);
+            return this.SiteDirectoryDao.ReorderCollectionPropertyAsync(transaction, partition, propertyName, iid, orderUpdate);
         }
 
         /// <summary>
@@ -245,9 +252,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -268,16 +275,16 @@ namespace CometServer.Services
         /// The container instance of the <see cref="SiteDirectory"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public async Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, DeleteOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, DeleteOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate delete permission for " + thing.GetType().Name + ".");
             }
 
-            return this.SiteDirectoryDao.Delete(transaction, partition, thing.Iid);
+            return await this.SiteDirectoryDao.DeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -298,12 +305,12 @@ namespace CometServer.Services
         /// The container instance of the <see cref="SiteDirectory"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
 
-            return this.SiteDirectoryDao.RawDelete(transaction, partition, thing.Iid);
+            return this.SiteDirectoryDao.RawDeleteAsync(transaction, partition, thing.Iid);
         }
 
         /// <summary>
@@ -322,17 +329,17 @@ namespace CometServer.Services
         /// The container instance of the <see cref="SiteDirectory"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
 
             var siteDirectory = thing as SiteDirectory;
-            return this.SiteDirectoryDao.Update(transaction, partition, siteDirectory, container);
+            return await this.SiteDirectoryDao.UpdateAsync(transaction, partition, siteDirectory, container);
         }
 
         /// <summary>
@@ -354,18 +361,18 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, CreateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
 
             var siteDirectory = thing as SiteDirectory;
-            var createSuccesful = this.SiteDirectoryDao.Write(transaction, partition, siteDirectory, container);
-            return createSuccesful && this.CreateContainment(transaction, partition, siteDirectory);
+            var createSuccesful = await this.SiteDirectoryDao.WriteAsync(transaction, partition, siteDirectory, container);
+            return createSuccesful && await this.CreateContainmentAsync(transaction, partition, siteDirectory);
         }
 
         /// <summary>
@@ -388,13 +395,13 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var siteDirectory = thing as SiteDirectory;
-            var createSuccesful = this.SiteDirectoryDao.Upsert(transaction, partition, siteDirectory, container);
-            return createSuccesful && this.UpsertContainment(transaction, partition, siteDirectory);
+            var createSuccesful = await this.SiteDirectoryDao.UpsertAsync(transaction, partition, siteDirectory, container);
+            return createSuccesful && await this.UpsertContainmentAsync(transaction, partition, siteDirectory);
         }
 
         /// <summary>
@@ -413,21 +420,23 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="SiteDirectory"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="SiteDirectory"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("SiteDirectory", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
-            var siteDirectoryColl = new List<Thing>(this.SiteDirectoryDao.Read(transaction, partition, idFilter, this.TransactionManager.IsCachedDtoReadEnabled(transaction), (DateTime)this.TransactionManager.GetRawSessionInstant(transaction)));
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
+            var sessionInstant = (DateTime)await this.TransactionManager.GetRawSessionInstantAsync(transaction);
+            var siteDirectoryColl = new List<Thing>(await this.SiteDirectoryDao.ReadAsync(transaction, partition, idFilter, isCachedDtoReadEnabled, sessionInstant));
 
-            return this.AfterGet(siteDirectoryColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(siteDirectoryColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -446,9 +455,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="SiteDirectory"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="SiteDirectory"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -456,20 +465,20 @@ namespace CometServer.Services
                 return Enumerable.Empty<Thing>();
             }
 
-            var results = new List<Thing>(this.GetShallow(transaction, partition, idFilter, containerSecurityContext));
+            var results = new List<Thing>(await this.GetShallowAsync(transaction, partition, idFilter, containerSecurityContext));
             var siteDirectoryColl = results.Where(i => i.GetType() == typeof(SiteDirectory)).Cast<SiteDirectory>().ToList();
 
-            results.AddRange(this.AnnotationService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.Annotation), containerSecurityContext));
-            results.AddRange(this.DomainService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.Domain), containerSecurityContext));
-            results.AddRange(this.DomainGroupService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.DomainGroup), containerSecurityContext));
-            results.AddRange(this.LogEntryService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.LogEntry), containerSecurityContext));
-            results.AddRange(this.ModelService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.Model), containerSecurityContext));
-            results.AddRange(this.NaturalLanguageService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.NaturalLanguage), containerSecurityContext));
-            results.AddRange(this.OrganizationService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.Organization), containerSecurityContext));
-            results.AddRange(this.ParticipantRoleService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.ParticipantRole), containerSecurityContext));
-            results.AddRange(this.PersonService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.Person), containerSecurityContext));
-            results.AddRange(this.PersonRoleService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.PersonRole), containerSecurityContext));
-            results.AddRange(this.SiteReferenceDataLibraryService.GetDeep(transaction, partition, siteDirectoryColl.SelectMany(x => x.SiteReferenceDataLibrary), containerSecurityContext));
+            results.AddRange(await this.AnnotationService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.Annotation), containerSecurityContext));
+            results.AddRange(await this.DomainService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.Domain), containerSecurityContext));
+            results.AddRange(await this.DomainGroupService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.DomainGroup), containerSecurityContext));
+            results.AddRange(await this.LogEntryService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.LogEntry), containerSecurityContext));
+            results.AddRange(await this.ModelService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.Model), containerSecurityContext));
+            results.AddRange(await this.NaturalLanguageService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.NaturalLanguage), containerSecurityContext));
+            results.AddRange(await this.OrganizationService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.Organization), containerSecurityContext));
+            results.AddRange(await this.ParticipantRoleService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.ParticipantRole), containerSecurityContext));
+            results.AddRange(await this.PersonService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.Person), containerSecurityContext));
+            results.AddRange(await this.PersonRoleService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.PersonRole), containerSecurityContext));
+            results.AddRange(await this.SiteReferenceDataLibraryService.GetDeepAsync(transaction, partition, siteDirectoryColl.SelectMany(x => x.SiteReferenceDataLibrary), containerSecurityContext));
 
             return results;
         }
@@ -493,14 +502,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }
@@ -526,65 +535,65 @@ namespace CometServer.Services
         /// The <see cref="SiteDirectory"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool CreateContainment(NpgsqlTransaction transaction, string partition, SiteDirectory siteDirectory)
+        private async Task<bool> CreateContainmentAsync(NpgsqlTransaction transaction, string partition, SiteDirectory siteDirectory)
         {
             var results = new List<bool>();
 
             foreach (var annotation in this.ResolveFromRequestCache(siteDirectory.Annotation))
             {
-                results.Add(this.AnnotationService.CreateConcept(transaction, partition, annotation, siteDirectory));
+                results.Add(await this.AnnotationService.CreateConceptAsync(transaction, partition, annotation, siteDirectory));
             }
 
             foreach (var domain in this.ResolveFromRequestCache(siteDirectory.Domain))
             {
-                results.Add(this.DomainService.CreateConcept(transaction, partition, domain, siteDirectory));
+                results.Add(await this.DomainService.CreateConceptAsync(transaction, partition, domain, siteDirectory));
             }
 
             foreach (var domainGroup in this.ResolveFromRequestCache(siteDirectory.DomainGroup))
             {
-                results.Add(this.DomainGroupService.CreateConcept(transaction, partition, domainGroup, siteDirectory));
+                results.Add(await this.DomainGroupService.CreateConceptAsync(transaction, partition, domainGroup, siteDirectory));
             }
 
             foreach (var logEntry in this.ResolveFromRequestCache(siteDirectory.LogEntry))
             {
-                results.Add(this.LogEntryService.CreateConcept(transaction, partition, logEntry, siteDirectory));
+                results.Add(await this.LogEntryService.CreateConceptAsync(transaction, partition, logEntry, siteDirectory));
             }
 
             foreach (var model in this.ResolveFromRequestCache(siteDirectory.Model))
             {
-                results.Add(this.ModelService.CreateConcept(transaction, partition, model, siteDirectory));
+                results.Add(await this.ModelService.CreateConceptAsync(transaction, partition, model, siteDirectory));
             }
 
             foreach (var naturalLanguage in this.ResolveFromRequestCache(siteDirectory.NaturalLanguage))
             {
-                results.Add(this.NaturalLanguageService.CreateConcept(transaction, partition, naturalLanguage, siteDirectory));
+                results.Add(await this.NaturalLanguageService.CreateConceptAsync(transaction, partition, naturalLanguage, siteDirectory));
             }
 
             foreach (var organization in this.ResolveFromRequestCache(siteDirectory.Organization))
             {
-                results.Add(this.OrganizationService.CreateConcept(transaction, partition, organization, siteDirectory));
+                results.Add(await this.OrganizationService.CreateConceptAsync(transaction, partition, organization, siteDirectory));
             }
 
             foreach (var participantRole in this.ResolveFromRequestCache(siteDirectory.ParticipantRole))
             {
-                results.Add(this.ParticipantRoleService.CreateConcept(transaction, partition, participantRole, siteDirectory));
+                results.Add(await this.ParticipantRoleService.CreateConceptAsync(transaction, partition, participantRole, siteDirectory));
             }
 
             foreach (var person in this.ResolveFromRequestCache(siteDirectory.Person))
             {
-                results.Add(this.PersonService.CreateConcept(transaction, partition, person, siteDirectory));
+                results.Add(await this.PersonService.CreateConceptAsync(transaction, partition, person, siteDirectory));
             }
 
             foreach (var personRole in this.ResolveFromRequestCache(siteDirectory.PersonRole))
             {
-                results.Add(this.PersonRoleService.CreateConcept(transaction, partition, personRole, siteDirectory));
+                results.Add(await this.PersonRoleService.CreateConceptAsync(transaction, partition, personRole, siteDirectory));
             }
 
             foreach (var siteReferenceDataLibrary in this.ResolveFromRequestCache(siteDirectory.SiteReferenceDataLibrary))
             {
-                results.Add(this.SiteReferenceDataLibraryService.CreateConcept(transaction, partition, siteReferenceDataLibrary, siteDirectory));
+                results.Add(await this.SiteReferenceDataLibraryService.CreateConceptAsync(transaction, partition, siteReferenceDataLibrary, siteDirectory));
             }
 
             return results.All(x => x);
@@ -604,65 +613,65 @@ namespace CometServer.Services
         /// The <see cref="SiteDirectory"/> instance to persist.
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        private bool UpsertContainment(NpgsqlTransaction transaction, string partition, SiteDirectory siteDirectory)
+        private async Task<bool> UpsertContainmentAsync(NpgsqlTransaction transaction, string partition, SiteDirectory siteDirectory)
         {
             var results = new List<bool>();
 
             foreach (var annotation in this.ResolveFromRequestCache(siteDirectory.Annotation))
             {
-                results.Add(this.AnnotationService.UpsertConcept(transaction, partition, annotation, siteDirectory));
+                results.Add(await this.AnnotationService.UpsertConceptAsync(transaction, partition, annotation, siteDirectory));
             }
 
             foreach (var domain in this.ResolveFromRequestCache(siteDirectory.Domain))
             {
-                results.Add(this.DomainService.UpsertConcept(transaction, partition, domain, siteDirectory));
+                results.Add(await this.DomainService.UpsertConceptAsync(transaction, partition, domain, siteDirectory));
             }
 
             foreach (var domainGroup in this.ResolveFromRequestCache(siteDirectory.DomainGroup))
             {
-                results.Add(this.DomainGroupService.UpsertConcept(transaction, partition, domainGroup, siteDirectory));
+                results.Add(await this.DomainGroupService.UpsertConceptAsync(transaction, partition, domainGroup, siteDirectory));
             }
 
             foreach (var logEntry in this.ResolveFromRequestCache(siteDirectory.LogEntry))
             {
-                results.Add(this.LogEntryService.UpsertConcept(transaction, partition, logEntry, siteDirectory));
+                results.Add(await this.LogEntryService.UpsertConceptAsync(transaction, partition, logEntry, siteDirectory));
             }
 
             foreach (var model in this.ResolveFromRequestCache(siteDirectory.Model))
             {
-                results.Add(this.ModelService.UpsertConcept(transaction, partition, model, siteDirectory));
+                results.Add(await this.ModelService.UpsertConceptAsync(transaction, partition, model, siteDirectory));
             }
 
             foreach (var naturalLanguage in this.ResolveFromRequestCache(siteDirectory.NaturalLanguage))
             {
-                results.Add(this.NaturalLanguageService.UpsertConcept(transaction, partition, naturalLanguage, siteDirectory));
+                results.Add(await this.NaturalLanguageService.UpsertConceptAsync(transaction, partition, naturalLanguage, siteDirectory));
             }
 
             foreach (var organization in this.ResolveFromRequestCache(siteDirectory.Organization))
             {
-                results.Add(this.OrganizationService.UpsertConcept(transaction, partition, organization, siteDirectory));
+                results.Add(await this.OrganizationService.UpsertConceptAsync(transaction, partition, organization, siteDirectory));
             }
 
             foreach (var participantRole in this.ResolveFromRequestCache(siteDirectory.ParticipantRole))
             {
-                results.Add(this.ParticipantRoleService.UpsertConcept(transaction, partition, participantRole, siteDirectory));
+                results.Add(await this.ParticipantRoleService.UpsertConceptAsync(transaction, partition, participantRole, siteDirectory));
             }
 
             foreach (var person in this.ResolveFromRequestCache(siteDirectory.Person))
             {
-                results.Add(this.PersonService.UpsertConcept(transaction, partition, person, siteDirectory));
+                results.Add(await this.PersonService.UpsertConceptAsync(transaction, partition, person, siteDirectory));
             }
 
             foreach (var personRole in this.ResolveFromRequestCache(siteDirectory.PersonRole))
             {
-                results.Add(this.PersonRoleService.UpsertConcept(transaction, partition, personRole, siteDirectory));
+                results.Add(await this.PersonRoleService.UpsertConceptAsync(transaction, partition, personRole, siteDirectory));
             }
 
             foreach (var siteReferenceDataLibrary in this.ResolveFromRequestCache(siteDirectory.SiteReferenceDataLibrary))
             {
-                results.Add(this.SiteReferenceDataLibraryService.UpsertConcept(transaction, partition, siteReferenceDataLibrary, siteDirectory));
+                results.Add(await this.SiteReferenceDataLibraryService.UpsertConceptAsync(transaction, partition, siteReferenceDataLibrary, siteDirectory));
             }
 
             return results.All(x => x);

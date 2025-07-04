@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ModelLogEntryDataCreator.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.ChangeNotification.Data
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -76,7 +77,7 @@ namespace CometServer.ChangeNotification.Data
         /// <returns>
         /// The created <see cref="IEnumerable{T}"/> of type <see cref="ModelLogEntryData"/>
         /// </returns>
-        public IEnumerable<ModelLogEntryData> Create(
+        public async Task<IEnumerable<ModelLogEntryData>> CreateAsync(
             NpgsqlTransaction transaction, 
             string engineeringModelPartition, 
             IEnumerable<ModelLogEntry> modelLogEntries, 
@@ -85,7 +86,7 @@ namespace CometServer.ChangeNotification.Data
         {
             var modelLogEntryDataList = new List<ModelLogEntryData>();
 
-            var domainOfExpertises = this.DomainOfExpertiseDao.Read(transaction, "SiteDirectory", domains).ToList();
+            var domainOfExpertises = (await this.DomainOfExpertiseDao.ReadAsync(transaction, "SiteDirectory", domains)).ToList();
 
             foreach (var changeNotificationSubscription in changeNotificationSubscriptionUserPreference.ChangeNotificationSubscriptions)
             {
@@ -99,7 +100,7 @@ namespace CometServer.ChangeNotification.Data
                         var addModelLogEntryData = false;
 
                         var logEntryChangeLogItems = 
-                            this.LogEntryChangelogItemDao.Read(transaction, engineeringModelPartition, modelLogEntry.LogEntryChangelogItem).ToList();
+                            (await this.LogEntryChangelogItemDao.ReadAsync(transaction, engineeringModelPartition, modelLogEntry.LogEntryChangelogItem)).ToList();
 
                         foreach (var logEntryChangelogItem in logEntryChangeLogItems)
                         {

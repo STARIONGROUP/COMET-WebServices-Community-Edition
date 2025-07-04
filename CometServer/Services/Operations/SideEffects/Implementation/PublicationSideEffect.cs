@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PublicationSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,10 +27,11 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
-    using Authorization;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
+
+    using CometServer.Services.Authorization;
 
     using Npgsql;
 
@@ -80,21 +81,24 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(Publication thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task<bool> BeforeCreateAsync(Publication thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            thing.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
+            await base.BeforeCreateAsync(thing, container, transaction, partition, securityContext);
+
+            thing.CreatedOn = await this.TransactionManager.GetTransactionTimeAsync(transaction);
 
             // gets all parameter/override which value-set to update
-            var parameterToUpdate = this.ParameterService.GetShallow(transaction, partition, thing.PublishedParameter, securityContext).OfType<Parameter>().ToArray();
-            var overridesToUpdate = this.ParameterOverrideService.GetShallow(transaction, partition, thing.PublishedParameter, securityContext).OfType<ParameterOverride>().ToArray();
-           
+            var parameterToUpdate = (await this.ParameterService.GetShallowAsync(transaction, partition, thing.PublishedParameter, securityContext)).OfType<Parameter>().ToArray();
+            var overridesToUpdate = (await this.ParameterOverrideService.GetShallowAsync(transaction, partition, thing.PublishedParameter, securityContext)).OfType<ParameterOverride>().ToArray();
+
             if (parameterToUpdate.Length + overridesToUpdate.Length != thing.PublishedParameter.Count)
             {
                 throw new InvalidOperationException("All the parameter/override could not be retrieved for update on a publication.");
             }
 
-            this.UpdatePublishedParameter(thing, parameterToUpdate, transaction, partition, securityContext);
-            this.UpdatePublishedOverride(thing, overridesToUpdate, transaction, partition, securityContext);
+            await this.UpdatePublishedParameterAsync(thing, parameterToUpdate, transaction, partition, securityContext);
+            await this.UpdatePublishedOverrideAsync(thing, overridesToUpdate, transaction, partition, securityContext);
+
             return true;
         }
 
@@ -106,15 +110,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        private void UpdatePublishedParameter(Publication thing, IReadOnlyCollection<Parameter> parameterToUpdate, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private async Task UpdatePublishedParameterAsync(Publication thing, IReadOnlyCollection<Parameter> parameterToUpdate, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var parameterValueSets = this.ParameterValueSetService.GetShallow(transaction, partition, parameterToUpdate.SelectMany(po => po.ValueSets), securityContext).
-                OfType<ParameterValueSet>().
-                ToArray();
+            var parameterValueSets = (await this.ParameterValueSetService.GetShallowAsync(transaction, partition, parameterToUpdate.SelectMany(po => po.ValueSets), securityContext)).OfType<ParameterValueSet>().ToArray();
 
             foreach (var parameterOrOverrideBase in parameterToUpdate)
             {
                 var sets = parameterValueSets.Where(v => parameterOrOverrideBase.ValueSets.Contains(v.Iid)).ToArray();
+
                 foreach (var set in sets)
                 {
                     switch (set.ValueSwitch)
@@ -130,7 +133,7 @@ namespace CometServer.Services.Operations.SideEffects
                             break;
                     }
 
-                    if (!this.ParameterValueSetService.UpdateConcept(transaction, partition, set, parameterOrOverrideBase))
+                    if (!await this.ParameterValueSetService.UpdateConceptAsync(transaction, partition, set, parameterOrOverrideBase))
                     {
                         throw new InvalidOperationException($"The parameter value set {set.Iid} could not be updated");
                     }
@@ -151,15 +154,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
-        private void UpdatePublishedOverride(Publication thing, IReadOnlyCollection<ParameterOverride> overrideToUpdate, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private async Task UpdatePublishedOverrideAsync(Publication thing, IReadOnlyCollection<ParameterOverride> overrideToUpdate, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var overrideValueSets = this.ParameterOverrideValueSetService.GetShallow(transaction, partition, overrideToUpdate.SelectMany(po => po.ValueSets), securityContext).
-                OfType<ParameterOverrideValueSet>().
-                ToArray();
+            var overrideValueSets = (await this.ParameterOverrideValueSetService.GetShallowAsync(transaction, partition, overrideToUpdate.SelectMany(po => po.ValueSets), securityContext)).OfType<ParameterOverrideValueSet>().ToArray();
 
             foreach (var parameterOrOverrideBase in overrideToUpdate)
             {
                 var sets = overrideValueSets.Where(v => parameterOrOverrideBase.ValueSets.Contains(v.Iid)).ToArray();
+
                 foreach (var set in sets)
                 {
                     switch (set.ValueSwitch)
@@ -175,7 +177,7 @@ namespace CometServer.Services.Operations.SideEffects
                             break;
                     }
 
-                    if (!this.ParameterOverrideValueSetService.UpdateConcept(transaction, partition, set, parameterOrOverrideBase))
+                    if (!await this.ParameterOverrideValueSetService.UpdateConceptAsync(transaction, partition, set, parameterOrOverrideBase))
                     {
                         throw new InvalidOperationException($"The parameter override value set {set.Iid} could not be updated");
                     }

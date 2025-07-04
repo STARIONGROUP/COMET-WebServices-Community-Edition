@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="JsonExchangeFileWriter.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -29,6 +29,7 @@ namespace CometServer.Services
     using System.Collections.ObjectModel;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.Comparers;
     using CDP4Common.DTO;
@@ -123,7 +124,7 @@ namespace CometServer.Services
         /// <returns>
         /// The path to the temporary E-TM-10-25 Annex-C3 zip archive
         /// </returns>
-        public string Create(NpgsqlTransaction transaction, string exportDirectory, IEnumerable<EngineeringModelSetup> engineeringModelSetups, Version version)
+        public async Task<string> CreateAsync(NpgsqlTransaction transaction, string exportDirectory, IEnumerable<EngineeringModelSetup> engineeringModelSetups, Version version)
         {
             if (!Directory.Exists(exportDirectory))
             {
@@ -132,11 +133,11 @@ namespace CometServer.Services
 
             var path = Path.Combine(exportDirectory, $"E-TM-10-25-Annex-C3-{DateTime.UtcNow:yyyyMMddThhmmssfff}.zip");
 
-            var siteDirectoryCache = this.PopulateSiteDirectoryDataCache(transaction);
-            this.PruneSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
+            var siteDirectoryCache = await this.PopulateSiteDirectoryDataCacheAsync(transaction);
+            PruneSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
             
-            using var fileStream = System.IO.File.Create(path);
-            using var zipOutputStream = new ZipOutputStream(fileStream);
+            await using var fileStream = System.IO.File.Create(path);
+            await using var zipOutputStream = new ZipOutputStream(fileStream);
             zipOutputStream.SetLevel(2);
             
             var exchangeFileHeader = this.CreateExchangeFileHeader(siteDirectoryCache);
@@ -146,10 +147,11 @@ namespace CometServer.Services
             this.ZipArchiveWriter.WriteSiteDirectoryToZipFile(siteDirectoryThings, zipOutputStream);
 
             var modelRdls = siteDirectoryCache.Values.OfType<ModelReferenceDataLibrary>();
+
             foreach (var modelReferenceDataLibrary in modelRdls)
             {
                 this.RequestUtils.OverrideQueryParameters = new QueryParameters { IncludeReferenceData = true };
-                var modelReferenceData = this.ModelReferenceDataLibraryService.GetDeep(transaction, "SiteDirectory", new List<Guid> { modelReferenceDataLibrary.Iid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
+                var modelReferenceData = (await this.ModelReferenceDataLibraryService.GetDeepAsync(transaction, "SiteDirectory", new List<Guid> { modelReferenceDataLibrary.Iid }, new RequestSecurityContext { ContainerReadAllowed = true })).ToList();
                 this.RequestUtils.OverrideQueryParameters = null;
 
                 var modelRdl = modelReferenceData.OfType<ModelReferenceDataLibrary>().Single();
@@ -160,10 +162,11 @@ namespace CometServer.Services
             }
 
             var siteRdls = siteDirectoryCache.Values.OfType<SiteReferenceDataLibrary>();
+
             foreach (var siteReferenceDataLibrary in siteRdls)
             {
                 this.RequestUtils.OverrideQueryParameters = new QueryParameters { IncludeReferenceData = true };
-                var siteReferenceData = this.SiteReferenceDataLibraryService.GetDeep(transaction, "SiteDirectory", new List<Guid> { siteReferenceDataLibrary.Iid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
+                var siteReferenceData = (await this.SiteReferenceDataLibraryService.GetDeepAsync(transaction, "SiteDirectory", new List<Guid> { siteReferenceDataLibrary.Iid }, new RequestSecurityContext { ContainerReadAllowed = true })).ToList();
                 this.RequestUtils.OverrideQueryParameters = null;
 
                 var siteRdl = siteReferenceData.OfType<SiteReferenceDataLibrary>().Single();
@@ -178,10 +181,10 @@ namespace CometServer.Services
                 var fileRevisionsHashSet = new HashSet<FileRevision>();
 
                 this.CredentialsService.Credentials.EngineeringModelSetup = engineeringModelSetup;
-                this.CredentialsService.ResolveParticipantCredentials(transaction);
+                await this.CredentialsService.ResolveParticipantCredentialsAsync(transaction);
 
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
-                var engineeringModelThings = this.EngineeringModelService.GetDeep(transaction, engineeringModelPartition, new List<Guid> { engineeringModelSetup.EngineeringModelIid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
+                var engineeringModelThings = (await this.EngineeringModelService.GetDeepAsync(transaction, engineeringModelPartition, new List<Guid> { engineeringModelSetup.EngineeringModelIid }, new RequestSecurityContext { ContainerReadAllowed = true })).ToList();
 
                 if (engineeringModelSetup.OrganizationalParticipant.Count != 0)
                 {
@@ -189,6 +192,7 @@ namespace CometServer.Services
                 }
 
                 var engineeringModelFileRevisions = engineeringModelThings.OfType<FileRevision>().ToList();
+
                 foreach (var fileRevision in engineeringModelFileRevisions)
                 {
                     fileRevisionsHashSet.Add(fileRevision);
@@ -200,7 +204,7 @@ namespace CometServer.Services
                 {
                      var iterationSetup = siteDirectoryCache.Values.OfType<IterationSetup>().SingleOrDefault(x => x.Iid == iterationSetupIid);
 
-                     var iterationThings = this.IterationService.GetDeep(transaction, engineeringModelPartition, new List<Guid> { iterationSetup.IterationIid }, new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
+                     var iterationThings = (await this.IterationService.GetDeepAsync(transaction, engineeringModelPartition, new List<Guid> { iterationSetup.IterationIid }, new RequestSecurityContext { ContainerReadAllowed = true })).ToList();
 
                      if (engineeringModelSetup.OrganizationalParticipant.Count != 0)
                      {
@@ -208,6 +212,7 @@ namespace CometServer.Services
                      }
 
                      var iterationFileRevisions = iterationThings.OfType<FileRevision>().ToList();
+
                      foreach (var fileRevision in iterationFileRevisions)
                      {
                          fileRevisionsHashSet.Add(fileRevision);
@@ -302,11 +307,11 @@ namespace CometServer.Services
         /// <param name="transaction">
         /// The current (open) <see cref="NpgsqlTransaction"/> used to connect to the database
         /// </param>
-        private Dictionary<Guid, Thing> PopulateSiteDirectoryDataCache(NpgsqlTransaction transaction)
+        private async Task<Dictionary<Guid, Thing>> PopulateSiteDirectoryDataCacheAsync(NpgsqlTransaction transaction)
         {
             var dictionary = new Dictionary<Guid, Thing>();
             
-            var siteDirectoryData = this.SiteDirectoryService.GetDeep(transaction, "SiteDirectory", null, new RequestSecurityContext { ContainerReadAllowed = true });
+            var siteDirectoryData = await this.SiteDirectoryService.GetDeepAsync(transaction, "SiteDirectory", null, new RequestSecurityContext { ContainerReadAllowed = true });
 
             foreach (var thing in siteDirectoryData)
             {
@@ -338,7 +343,7 @@ namespace CometServer.Services
         /// EngineeringModelReferenceDataLibraries that are not referenced by any of the EngineeringModelSetups are removed
         /// EngineeringModelSetups that are not in the to-be included EngineeringModelSetup are removed
         /// </remarks>
-        private void PruneSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
+        private static void PruneSiteDirectoryCache(IEnumerable<EngineeringModelSetup> engineeringModelSetups, ref Dictionary<Guid, Thing> siteDirectoryCache)
         {
             PruneEngineeringModelSetupsFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);
             PruneSiteReferenceDataLibrariesFromSiteDirectoryCache(engineeringModelSetups, ref siteDirectoryCache);

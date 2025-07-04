@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -40,6 +40,7 @@ namespace CometServer.Services.Operations.SideEffects
 
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// The iteration setup side effect.
@@ -94,9 +95,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override bool BeforeCreate(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task<bool> BeforeCreateAsync(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            thing.CreatedOn = this.TransactionManager.GetTransactionTime(transaction);
+            thing.CreatedOn = await this.TransactionManager.GetTransactionTimeAsync(transaction);
 
             if (string.IsNullOrWhiteSpace(thing.Description))
             {
@@ -109,7 +110,7 @@ namespace CometServer.Services.Operations.SideEffects
             var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
             // set the next iteration number
-            thing.IterationNumber = this.EngineeringModelDao.GetNextIterationNumber(transaction, engineeringModelPartition);
+            thing.IterationNumber = await this.EngineeringModelDao.GetNextIterationNumberAsync(transaction, engineeringModelPartition);
             return true;
         }
 
@@ -134,17 +135,17 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreateAsync(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // Freeze all other iterationSetups contained by this EngineeringModelSetup that are not frozen yet
             var engineeringModelSetup = (EngineeringModelSetup)container;
-            var iterationSetupIidsToUpdate = engineeringModelSetup.IterationSetup.Except(new[] { thing.Iid });
-            var iterationSetupsToUpdate = this.IterationSetupService.GetShallow(transaction, partition, iterationSetupIidsToUpdate, securityContext).OfType<IterationSetup>();
+            var iterationSetupIidsToUpdate = engineeringModelSetup.IterationSetup.Except([thing.Iid]);
+            var iterationSetupsToUpdate = (await this.IterationSetupService.GetShallowAsync(transaction, partition, iterationSetupIidsToUpdate, securityContext)).OfType<IterationSetup>();
 
             foreach (var iterationSetup in iterationSetupsToUpdate.Where(x => x.FrozenOn == null && x.Iid != thing.Iid))
             {
-                iterationSetup.FrozenOn = this.TransactionManager.GetTransactionTime(transaction);
-                this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
+                iterationSetup.FrozenOn = await this.TransactionManager.GetTransactionTimeAsync(transaction);
+                await this.IterationSetupService.UpdateConceptAsync(transaction, partition, iterationSetup, container);
             }
 
             // Create the iteration for the IterationSetup
@@ -155,20 +156,21 @@ namespace CometServer.Services.Operations.SideEffects
             
             // make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
             this.CredentialsService.Credentials.EngineeringModelSetup = engineeringModelSetup;
-            this.CredentialsService.ResolveParticipantCredentials(transaction);
+            await this.CredentialsService.ResolveParticipantCredentialsAsync(transaction);
 
-            var engineeringModel = this.EngineeringModelService.GetShallow(transaction, engineeringModelPartition, new[] { engineeringModelIid }, securityContext).SingleOrDefault() as EngineeringModel;
+            var engineeringModel = (await this.EngineeringModelService.GetShallowAsync(transaction, engineeringModelPartition, [engineeringModelIid], securityContext)).SingleOrDefault() as EngineeringModel;
 
-            var sourceIterationSetups = this.IterationSetupService.GetShallow(
+            var sourceIterationSetups = (await this.IterationSetupService.GetShallowAsync(
                 transaction,
                 Cdp4TransactionManager.SITE_DIRECTORY_PARTITION,
                 engineeringModelSetup.IterationSetup,
-                securityContext).Where(x => x.Iid != thing.Iid).Cast<IterationSetup>().ToList();
+                securityContext)).Where(x => x.Iid != thing.Iid).Cast<IterationSetup>().ToList();
 
             // update iteration partition with source data if applicable
             if (thing.SourceIterationSetup.HasValue)
             {
                 var sourceIterationSetup = sourceIterationSetups.SingleOrDefault(x => x.Iid == thing.SourceIterationSetup.Value);
+
                 if (sourceIterationSetup == null)
                 {
                     throw new InvalidOperationException("The source iteration-setup could not be found.");
@@ -176,13 +178,14 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var lastIterationNumber = sourceIterationSetups.Max(x => x.IterationNumber);
                 var iterationPartition = $"{Cdp4TransactionManager.ITERATION_PARTITION_PREFIX}{engineeringModelIid.ToString().Replace("-", "_")}";
+
                 if (sourceIterationSetup.IterationNumber != lastIterationNumber)
                 {
-                    this.IterationService.PopulateDataFromOlderIteration(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
+                    await this.IterationService.PopulateDataFromOlderIterationAsync(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
                 }
                 else
                 {
-                    this.IterationService.PopulateDataFromLastIteration(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
+                        await this.IterationService.PopulateDataFromLastIterationAsync(transaction, iterationPartition, thing, sourceIterationSetup, engineeringModel, securityContext);
                 }
             }
             else if (sourceIterationSetups.Count > 0)
@@ -193,10 +196,10 @@ namespace CometServer.Services.Operations.SideEffects
             // Create revisions for created Iteration and updated EngineeringModel
             var actor = this.CredentialsService.Credentials.Person.Iid;
 
-            this.TransactionManager.SetDefaultContext(transaction);
+            await this.TransactionManager.SetDefaultContextAsync(transaction);
             this.TransactionManager.SetCachedDtoReadEnabled(false);
-            var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
-            this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+            var transactionRevision = await this.RevisionService.GetRevisionForTransactionAsync(transaction, engineeringModelPartition);
+            await this.RevisionService.SaveRevisionsAsync(transaction, engineeringModelPartition, actor, transactionRevision);
         }
 
         /// <summary>
@@ -222,7 +225,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             IterationSetup thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -243,8 +246,8 @@ namespace CometServer.Services.Operations.SideEffects
                                                          $"a source IterationSetup from outside the current EngineeringModelSetup.");
                 }
 
-                var iterationSetups = this.IterationSetupService
-                    .Get(transaction, partition, engineeringModelSetup.IterationSetup, securityContext)
+                var iterationSetups = (await this.IterationSetupService
+                    .GetAsync(transaction, partition, engineeringModelSetup.IterationSetup, securityContext))
                     .Cast<IterationSetup>()
                     .ToList();
 
@@ -280,10 +283,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(IterationSetup thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var iterationSetups = this.IterationSetupService.GetShallow(transaction, partition, new [] {thing.Iid}, securityContext)
-                                                            .OfType<IterationSetup>();
+            var iterationSetups = (await this.IterationSetupService.GetShallowAsync(transaction, partition, [thing.Iid], securityContext)).OfType<IterationSetup>();
 
             var iterationSetup = iterationSetups.SingleOrDefault();
 
@@ -307,13 +309,13 @@ namespace CometServer.Services.Operations.SideEffects
 
             // Make sure to switch security context to participant based (as we're going to operate on engineeringmodel data)
             this.CredentialsService.Credentials.EngineeringModelSetup = (EngineeringModelSetup)container;
-            this.CredentialsService.ResolveParticipantCredentials(transaction);
+            await this.CredentialsService.ResolveParticipantCredentialsAsync(transaction);
 
-            var iteration = this.IterationService.GetShallow(transaction, engineeringModelPartition, new [] {iterationSetup.IterationIid}, securityContext)
-                                                 .Cast<Iteration>()
-                                                 .SingleOrDefault();
+            var iteration = (await this.IterationService.GetShallowAsync(transaction, engineeringModelPartition, [iterationSetup.IterationIid], securityContext))
+                             .Cast<Iteration>()
+                             .SingleOrDefault();
 
-            this.IterationService.DeleteConcept(transaction, engineeringModelPartition, iteration, container);
+            await this.IterationService.DeleteConceptAsync(transaction, engineeringModelPartition, iteration, container);
         }
 
         /// <summary>
@@ -337,24 +339,24 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterDeleteAsync(IterationSetup thing, Thing container, IterationSetup originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var iterationSetup = this.IterationSetupService.GetShallow(transaction, partition, new[] { thing.Iid }, securityContext)
-                                                           .OfType<IterationSetup>()
-                                                           .SingleOrDefault();
+            var iterationSetup = (await this.IterationSetupService.GetShallowAsync(transaction, partition, [thing.Iid], securityContext))
+                                       .OfType<IterationSetup>()
+                                       .SingleOrDefault();
 
             if (iterationSetup!=null)
             {
                 iterationSetup.IsDeleted = true;
-                this.IterationSetupService.UpdateConcept(transaction, partition, iterationSetup, container);
+                await this.IterationSetupService.UpdateConceptAsync(transaction, partition, iterationSetup, container);
 
                 // Swtitch partition to EngineeringModel
                 var engineeringModelPartition = this.RequestUtils.GetEngineeringModelPartitionString(((EngineeringModelSetup)container).EngineeringModelIid);
 
                 // Create revisions for deleted Iteration and updated EngineeringModel
                 var actor = this.CredentialsService.Credentials.Person.Iid;
-                var transactionRevision = this.RevisionService.GetRevisionForTransaction(transaction, engineeringModelPartition);
-                this.RevisionService.SaveRevisions(transaction, engineeringModelPartition, actor, transactionRevision);
+                var transactionRevision = await this.RevisionService.GetRevisionForTransactionAsync(transaction, engineeringModelPartition);
+                await this.RevisionService.SaveRevisionsAsync(transaction, engineeringModelPartition, actor, transactionRevision);
             }
             else 
             {

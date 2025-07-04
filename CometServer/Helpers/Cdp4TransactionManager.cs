@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="Cdp4TransactionManager.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,9 +25,10 @@
 namespace CometServer.Helpers
 {
     using System;
-    using System.Data;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -36,6 +37,8 @@ namespace CometServer.Helpers
     using CometServer.Authorization;
 
     using Configuration;
+
+    using Microsoft.Extensions.Logging;
 
     using Npgsql;
 
@@ -46,7 +49,7 @@ namespace CometServer.Helpers
     /// <summary>
     /// A wrapper class for the <see cref="NpgsqlTransaction"/> class, allowing temporal database interaction.
     /// </summary>
-    public class Cdp4TransactionManager : ICdp4TransactionManager
+    public class Cdp4TransactionManager : ICdp4TransactionManager, IAsyncDisposable
     {
         /// <summary>
         /// The SiteDirectory partition
@@ -99,6 +102,11 @@ namespace CometServer.Helpers
         private const string TransactionAuditEnabled = "audit_enabled";
 
         /// <summary>
+        /// The list of connections to the PostgreSQL database.
+        /// </summary>
+        private readonly List<NpgsqlConnection> connections = [];
+
+        /// <summary>
         /// The value indicating whether to use cache tables for retrieving the data.
         /// </summary>
         private bool isCachedDtoReadEnabled;
@@ -119,16 +127,81 @@ namespace CometServer.Helpers
         public IAppConfigService AppConfigService { get; set; }
 
         /// <summary>
+        /// Gets the injected <see cref="ILogger{T}"/> of type <see cref="Cdp4TransactionManager"/>
+        /// </summary>
+        public ILogger<Cdp4TransactionManager> Logger { get; set; }
+
+        /// <summary>
         /// Gets or sets the iteration setup.
         /// </summary>
         public IterationSetup IterationSetup { get; private set; }
 
         /// <summary>
-        /// The setup transaction.
+        /// Checks if an <see cref="NpgsqlTransaction"/> is already disposed
         /// </summary>
-        /// <param name="connection">
-        /// The connection.
-        /// </param>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>A value indicating if the transaction is disposed, or not</returns>
+        public bool IsTransactionDisposed(NpgsqlTransaction transaction)
+        {
+            try
+            {
+                // Accessing the Connection property will throw if disposed
+                var _ = transaction.Connection;
+                return false;
+            }
+            catch (ObjectDisposedException)
+            {
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously tries to rollback the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        public async Task TryRollbackTransaction(NpgsqlTransaction transaction)
+        {
+            try
+            {
+                if (transaction != null && !this.IsTransactionDisposed(transaction))
+                {
+                    await transaction.RollbackAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogWarning(ex, "Rollback transaction failed.");
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously tries to dispose the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        public async Task TryDisposeTransaction(NpgsqlTransaction transaction)
+        {
+            try
+            {
+                if (transaction != null && !this.IsTransactionDisposed(transaction))
+                {
+                    await transaction.DisposeAsync();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // empty catch on purpose, I don't care if it is already disposed, when I want to dispose.
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogWarning(ex, "Dispose transaction failed.");
+            }
+        }
+
+        /// <summary>
+        /// Asynchronously setup a new Transaction
+        /// </summary>
         /// <param name="credentials">
         /// The credentials.
         /// </param>
@@ -138,33 +211,30 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        public NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials, Guid iterationIid)
+        public async Task<NpgsqlTransaction> SetupTransactionAsync(Credentials credentials, Guid iterationIid)
         {
-            var transaction = this.GetTransaction(ref connection, credentials);
+            var transaction = await this.GetTransactionAsync(credentials);
 
             if (iterationIid != Guid.Empty)
             {
-                this.IterationSetup = this.GetIterationContext(transaction, iterationIid);
+                this.IterationSetup = await this.GetIterationContextAsync(transaction, iterationIid);
             }
 
             return transaction;
         }
 
         /// <summary>
-        /// Setup a new transaction.
+        /// Asynchronously setup a new Transaction
         /// </summary>
-        /// <param name="connection">
-        /// The connection.
-        /// </param>
         /// <param name="credentials">
         /// The user credentials of the current request.
         /// </param>
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        public NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials)
+        public Task<NpgsqlTransaction> SetupTransactionAsync(Credentials credentials)
         {
-            return this.GetTransaction(ref connection, credentials);
+            return this.GetTransactionAsync(credentials);
         }
 
         /// <summary>
@@ -176,9 +246,9 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="DateTime"/>.
         /// </returns>
-        public DateTime GetSessionInstant(NpgsqlTransaction transaction)
+        public async Task<DateTime> GetSessionInstantAsync(NpgsqlTransaction transaction)
         {
-            return (DateTime)this.GetRawSessionInstant(transaction);
+            return (DateTime) await this.GetRawSessionInstantAsync(transaction);
         }
 
         /// <summary>
@@ -190,14 +260,14 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="object"/>.
         /// </returns>
-        public object GetRawSessionInstant(NpgsqlTransaction transaction)
+        public async Task<object> GetRawSessionInstantAsync(NpgsqlTransaction transaction)
         {
-            using var command = new NpgsqlCommand(
+            await using var command = new NpgsqlCommand(
                 "SELECT * FROM \"SiteDirectory\".\"get_session_instant\"();",
                 transaction.Connection,
                 transaction);
 
-            return command.ExecuteScalar();
+            return await command.ExecuteScalarAsync();
         }
 
         /// <summary>
@@ -231,14 +301,14 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public bool IsCachedDtoReadEnabled(NpgsqlTransaction transaction)
+        public async Task<bool> IsCachedDtoReadEnabledAsync(NpgsqlTransaction transaction)
         {
             if (!this.isCachedDtoReadEnabled)
             {
                 return false;
             }
 
-            var dateTime = this.GetSessionInstant(transaction);
+            var dateTime = await this.GetSessionInstantAsync(transaction);
 
             return dateTime == DateTime.MaxValue;
         }
@@ -263,13 +333,13 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="DateTime"/>.
         /// </returns>
-        public DateTime GetTransactionTime(NpgsqlTransaction transaction)
+        public async Task<DateTime> GetTransactionTimeAsync(NpgsqlTransaction transaction)
         {
-            using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".get_transaction_time();",
+            await using var command = new NpgsqlCommand("SELECT * FROM \"SiteDirectory\".get_transaction_time();",
                 transaction.Connection,
                 transaction);
 
-            return (DateTime)command.ExecuteScalar();
+            return  (DateTime) await command.ExecuteScalarAsync();
         }
 
         /// <summary>
@@ -278,13 +348,13 @@ namespace CometServer.Helpers
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        public void SetDefaultContext(NpgsqlTransaction transaction)
+        public async Task SetDefaultContextAsync(NpgsqlTransaction transaction)
         {
             var sql = $"UPDATE {TransactionInfoTable} SET ({PeriodStartColumn}, {PeriodEndColumn}) = ('-infinity', 'infinity');";
-            
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-            command.ExecuteNonQuery();
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -296,19 +366,19 @@ namespace CometServer.Helpers
         /// <param name="enabled">
         /// Set the audit logging framework state to off (false), or on (true).
         /// </param>
-        public void SetAuditLoggingState(NpgsqlTransaction transaction, bool enabled)
+        public async Task SetAuditLoggingStateAsync(NpgsqlTransaction transaction, bool enabled)
         {
             var sql = $"UPDATE {TransactionInfoTable} SET {TransactionAuditEnabled} = :{TransactionAuditEnabled};";
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
             command.Parameters.Add($"{TransactionAuditEnabled}", NpgsqlDbType.Boolean).Value = enabled;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
-        /// Apply the iteration context as set from transaction setup method.
+        /// Asyncrhonoulsy Apply the iteration context as set from transaction setup method.
         /// </summary>
         /// <param name="transaction">
         /// The current transaction to the database.
@@ -316,9 +386,9 @@ namespace CometServer.Helpers
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        public void SetIterationContext(NpgsqlTransaction transaction, string partition)
+        public Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition)
         {
-            ApplyIterationContext(transaction, partition, this.IterationSetup);
+            return ApplyIterationContextAsync(transaction, partition, this.IterationSetup);
         }
 
         /// <summary>
@@ -333,31 +403,29 @@ namespace CometServer.Helpers
         /// <param name="iterationId">
         /// The iteration id.
         /// </param>
-        public void SetIterationContext(NpgsqlTransaction transaction, string partition, Guid iterationId)
+        public async Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition, Guid iterationId)
         {
             // use default (non-iteration-tagged) temporal context to retrieve iterationsetup
-            this.SetDefaultContext(transaction);
-            this.IterationSetup = this.GetIterationContext(transaction, iterationId);
-            this.SetIterationContext(transaction, partition);
+            await this.SetDefaultContextAsync(transaction);
+            this.IterationSetup = await this.GetIterationContextAsync(transaction, iterationId);
+            await this.SetIterationContextAsync(transaction, partition);
         }
 
         /// <summary>
-        /// The get transaction.
+        /// Asyncrhonously gets a new transaction and prepares the PostgreSQL database
+        /// with CDP4-COMET transaction data
         /// </summary>
-        /// <param name="connection">
-        /// The connection.
-        /// </param>
         /// <param name="credentials">
-        /// The credentials.
+        /// The <see cref="Credentials"/> used to perform authentication and authorization
         /// </param>
         /// <returns>
-        /// The <see cref="NpgsqlTransaction"/>.
+        /// The new <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        private NpgsqlTransaction GetTransaction(ref NpgsqlConnection connection, Credentials credentials)
+        private async Task<NpgsqlTransaction> GetTransactionAsync(Credentials credentials)
         {
-            var transaction = this.SetupNewTransaction(ref connection);
-            CreateTransactionInfoTable(transaction);
-            CreateDefaultTransactionInfoEntry(transaction, credentials);
+            var transaction = await this.SetupNewTransactionAsync();
+            await CreateTransactionInfoTable(transaction);
+            await CreateDefaultTransactionInfoEntry(transaction, credentials);
 
             return transaction;
         }
@@ -374,7 +442,7 @@ namespace CometServer.Helpers
         /// <param name="iterationSetup">
         /// The iteration Setup.
         /// </param>
-        private static void ApplyIterationContext(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
+        private static async Task ApplyIterationContextAsync(NpgsqlTransaction transaction, string partition, IterationSetup iterationSetup)
         {
             if (iterationSetup == null)
             {
@@ -390,11 +458,11 @@ namespace CometServer.Helpers
             sqlBuilder.AppendFormat("FROM \"{0}\".\"IterationRevisionLog\" iteration_log LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_from ON iteration_log.\"FromRevision\" = revision_from.\"Revision\" LEFT JOIN \"{0}\".\"RevisionRegistry\" revision_to ON iteration_log.\"ToRevision\" = revision_to.\"Revision\") IterationLogRevision", partition);
             sqlBuilder.Append(" WHERE \"IterationIid\" = :iterationIid);");
 
-            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
             command.Parameters.Add("iterationIid", NpgsqlDbType.Uuid).Value = iterationSetup.IterationIid;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -409,36 +477,28 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="IterationSetup"/>.
         /// </returns>
-        private IterationSetup GetIterationContext(NpgsqlTransaction transaction, Guid iterationIid)
+        private async Task<IterationSetup> GetIterationContextAsync(NpgsqlTransaction transaction, Guid iterationIid)
         {
-            return this.IterationSetupDao.ReadByIteration(transaction, "SiteDirectory", iterationIid, (DateTime)this.GetRawSessionInstant(transaction)).SingleOrDefault();
+            var iterationSetups  = await this.IterationSetupDao.ReadByIterationAsync(transaction, "SiteDirectory", iterationIid, (DateTime) await this.GetRawSessionInstantAsync(transaction));
+
+            return iterationSetups.SingleOrDefault();
         }
 
         /// <summary>
         /// The setup new transaction.
         /// </summary>
-        /// <param name="connection">
-        /// The connection.
-        /// </param>
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        private NpgsqlTransaction SetupNewTransaction(ref NpgsqlConnection connection)
+        private async Task<NpgsqlTransaction> SetupNewTransactionAsync()
         {
-            // setup connection if not supplied
-            if (connection == null)
-            {
-                connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-            }
+            var connection = new NpgsqlConnection(ServiceUtils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
             
-            // ensure an open connection
-            if (connection.State != ConnectionState.Open)
-            {
-                connection.Open();
-            }
+            this.connections.Add(connection);
+            await connection.OpenAsync();
 
             // start transaction with rollback support
-            var transaction = connection.BeginTransaction();
+            var transaction = await connection.BeginTransactionAsync();
 
             return transaction;
         }
@@ -452,7 +512,7 @@ namespace CometServer.Helpers
         /// <param name="credentials">
         /// The credentials.
         /// </param>
-        private static void CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
+        private static async Task CreateDefaultTransactionInfoEntry(NpgsqlTransaction transaction, Credentials credentials)
         {
             // insert actor from the request credentials otherwise use default (null) user
             var sqlBuilder = new StringBuilder();
@@ -461,14 +521,14 @@ namespace CometServer.Helpers
             sqlBuilder.AppendFormat("INSERT INTO {0} ({1}, {2})", TransactionInfoTable, UserIdColumn, TransactionTimeColumn);
             sqlBuilder.AppendFormat(" VALUES({0}, statement_timestamp());", isCredentialSet ? $":{UserIdColumn}" : "null");
 
-            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
             if (isCredentialSet)
             {
                 command.Parameters.Add(UserIdColumn, NpgsqlDbType.Uuid).Value = credentials.Person.Iid;
             }
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -477,7 +537,7 @@ namespace CometServer.Helpers
         /// <param name="transaction">
         /// The current transaction to the database.
         /// </param>
-        private static void CreateTransactionInfoTable(NpgsqlTransaction transaction)
+        private static async Task CreateTransactionInfoTable(NpgsqlTransaction transaction)
         {
             // setup transaction_info table that is valid only for this transaction
             var sqlBuilder = new StringBuilder();
@@ -491,9 +551,35 @@ namespace CometServer.Helpers
             sqlBuilder.AppendFormat("{0} boolean NOT NULL DEFAULT 'true'", TransactionAuditEnabled);
             sqlBuilder.Append(") ON COMMIT DROP;");
 
-            using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlBuilder.ToString(), transaction.Connection, transaction);
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// handles the disposal of the transaction manager and all connections.
+        /// </summary>
+        /// <returns>An awaitable <see cref="ValueTask"/></returns>
+        public async ValueTask DisposeAsync()
+        {
+            try
+            {
+                foreach (var connection in this.connections)
+                {
+                    if (connection != null)
+                    {
+                        await connection.DisposeAsync();
+                    }
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                //empty on purpose, already disposed!
+            }
+            catch (Exception ex)
+            {
+                this.Logger.LogError(ex, $"Error was thrown during disposal of the {nameof(Cdp4TransactionManager)}");
+            }
         }
     }
 }

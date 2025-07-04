@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ICdp4TransactionManager.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Helpers
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     
@@ -45,23 +46,17 @@ namespace CometServer.Helpers
         /// <summary>
         /// Setup a new transaction instance. 
         /// </summary>
-        /// <param name="connection">
-        /// The connection to the database
-        /// </param>
         /// <param name="credentials">
         /// The user credential information for this request
         /// </param>
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials);
+        Task<NpgsqlTransaction> SetupTransactionAsync(Credentials credentials);
 
         /// <summary>
         /// Setup a new transaction instance bound to an iteration context. 
         /// </summary>
-        /// <param name="connection">
-        /// The connection to the database
-        /// </param>
         /// <param name="credentials">
         /// The user credential information for this request
         /// </param>
@@ -71,7 +66,7 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="NpgsqlTransaction"/>.
         /// </returns>
-        NpgsqlTransaction SetupTransaction(ref NpgsqlConnection connection, Credentials credentials, Guid iterationIid);
+        Task<NpgsqlTransaction> SetupTransactionAsync(Credentials credentials, Guid iterationIid);
 
         /// <summary>
         /// Get the current transaction time.
@@ -82,8 +77,8 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="DateTime"/>.
         /// </returns>
-        DateTime GetTransactionTime(NpgsqlTransaction transaction);
-        
+        Task<DateTime> GetTransactionTimeAsync(NpgsqlTransaction transaction);
+
         /// <summary>
         /// Get the current session time instant.
         /// </summary>
@@ -93,7 +88,7 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="DateTime"/>.
         /// </returns>
-        DateTime GetSessionInstant(NpgsqlTransaction transaction);
+        Task<DateTime> GetSessionInstantAsync(NpgsqlTransaction transaction);
 
         /// <summary>
         /// Get the raw current session time instant value from the database.
@@ -104,7 +99,7 @@ namespace CometServer.Helpers
         /// <returns>
         /// The current session instant as an <see cref="object"/>.
         /// </returns>
-        object GetRawSessionInstant(NpgsqlTransaction transaction);
+        Task<object> GetRawSessionInstantAsync(NpgsqlTransaction transaction);
 
         /// <summary>
         /// Indicate whether the full access was granted for the current person.
@@ -123,7 +118,7 @@ namespace CometServer.Helpers
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        bool IsCachedDtoReadEnabled(NpgsqlTransaction transaction);
+        Task<bool> IsCachedDtoReadEnabledAsync(NpgsqlTransaction transaction);
 
         /// <summary>
         /// Set the audit logging framework state for the current transaction.
@@ -134,7 +129,7 @@ namespace CometServer.Helpers
         /// <param name="enabled">
         /// Set the audit logging framework state to off (false), or on (true).
         /// </param>
-        void SetAuditLoggingState(NpgsqlTransaction transaction, bool enabled);
+        Task SetAuditLoggingStateAsync(NpgsqlTransaction transaction, bool enabled);
 
         /// <summary>
         /// The set default context.
@@ -142,7 +137,7 @@ namespace CometServer.Helpers
         /// <param name="transaction">
         /// The transaction.
         /// </param>
-        void SetDefaultContext(NpgsqlTransaction transaction);
+        Task SetDefaultContextAsync(NpgsqlTransaction transaction);
 
         /// <summary>
         /// Apply the iteration context as set from transaction setup method.
@@ -153,7 +148,7 @@ namespace CometServer.Helpers
         /// <param name="partition">
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
-        void SetIterationContext(NpgsqlTransaction transaction, string partition);
+        Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Set the iteration context to a specific iteration.
@@ -167,7 +162,7 @@ namespace CometServer.Helpers
         /// <param name="iterationId">
         /// The iteration id.
         /// </param>
-        void SetIterationContext(NpgsqlTransaction transaction, string partition, Guid iterationId);
+        Task SetIterationContextAsync(NpgsqlTransaction transaction, string partition, Guid iterationId);
 
         /// <summary>
         /// Sets a value indicating whether to use a cached Dto in form of Jsonb.
@@ -184,5 +179,26 @@ namespace CometServer.Helpers
         /// The value indicating whether the current person has full access or not.
         /// </param>
         void SetFullAccessState(bool value);
+
+        /// <summary>
+        /// Checks if an <see cref="NpgsqlTransaction"/> is already disposed
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>A value indicating if the transaction is disposed, or not</returns>
+        bool IsTransactionDisposed(NpgsqlTransaction transaction);
+
+        /// <summary>
+        /// Asynchronously tries to rollback the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        Task TryRollbackTransaction(NpgsqlTransaction transaction);
+
+        /// <summary>
+        /// Asynchronously tries to dispose the transaction, if it is not disposed.
+        /// </summary>
+        /// <param name="transaction">The <see cref="NpgsqlTransaction"/></param>
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        Task TryDisposeTransaction(NpgsqlTransaction transaction);
     }
 }

@@ -24,6 +24,8 @@
 
 namespace CDP4Orm.Dao
 {
+    using System.Threading.Tasks;
+
     using Npgsql;
 
     /// <summary>
@@ -36,6 +38,6 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        void DeleteAll(NpgsqlTransaction transaction, string partition);
+        Task DeleteAllAsync(NpgsqlTransaction transaction, string partition);
     }
 }

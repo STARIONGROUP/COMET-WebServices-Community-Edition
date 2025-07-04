@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DomainOfExpertiseDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -69,9 +70,9 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// List of instances of <see cref="DomainOfExpertise"/>.
         /// </returns>
-        public IEnumerable<DomainOfExpertise> ReadByPersonAndEngineeringModelSetup(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null)
+        public async Task<IEnumerable<DomainOfExpertise>> ReadByPersonAndEngineeringModelSetupAsync(NpgsqlTransaction transaction, string partition, Guid personId, Guid engineeringModelSetupId, DateTime? instant = null)
         {
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sqlBuilder = new System.Text.StringBuilder();
 
@@ -95,12 +96,17 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sqlBuilder.ToString();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            var result = new List<DomainOfExpertise>();
+
+            while (await reader.ReadAsync())
             {
-                yield return this.MapToDto(reader);
+                var domainOfExpertise = this.MapToDto(reader);
+                result.Add(domainOfExpertise);
             }
+
+            return result;
         }
     }
 }

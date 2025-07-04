@@ -167,7 +167,7 @@ namespace CometServer.Authentication
 
             await using var transaction = await connection.BeginTransactionAsync();
 
-            await this.credentialsService.ResolveCredentials(transaction, userId);
+            await this.credentialsService.ResolveCredentialsAsync(transaction, userId);
             return this.GenerateTokens(this.credentialsService.Credentials.Person);
         }
 

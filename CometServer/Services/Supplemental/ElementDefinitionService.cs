@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ElementDefinitionService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -60,7 +61,7 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup">The target <see cref="EngineeringModelSetup"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public override void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo, Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
+        public override async Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo, Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
             if (!(sourceThing is ElementDefinition sourceElementDef))
             {
@@ -95,24 +96,24 @@ namespace CometServer.Services
                 copy.Owner = copyinfo.ActiveOwner;
             }
 
-            if (!this.OperationSideEffectProcessor.BeforeCreate(copy, targetContainer, transaction, partition, securityContext))
+            if (!await this.OperationSideEffectProcessor.BeforeCreateAsync(copy, targetContainer, transaction, partition, securityContext))
             {
                 return;
             }
 
-            this.ElementDefinitionDao.Write(transaction, partition, copy, targetContainer);
+            await this.ElementDefinitionDao.WriteAsync(transaction, partition, copy, targetContainer);
 
-            this.OperationSideEffectProcessor.AfterCreate(copy, targetContainer, null, transaction, partition, securityContext);
+            await this.OperationSideEffectProcessor.AfterCreateAsync(copy, targetContainer, null, transaction, partition, securityContext);
             
             // copy contained things
             foreach (var group in allSourceThings.Where(x => sourceElementDef.ParameterGroup.Contains(x.Iid)))
             {
-                ((ServiceBase)this.ParameterGroupService).Copy(transaction, partition, group, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                await ((ServiceBase)this.ParameterGroupService).CopyAsync(transaction, partition, group, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
 
             foreach (var parameter in allSourceThings.Where(x => sourceElementDef.Parameter.Contains(x.Iid)))
             {
-                ((ServiceBase)this.ParameterService).Copy(transaction, partition, parameter, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                await ((ServiceBase)this.ParameterService).CopyAsync(transaction, partition, parameter, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
             }
 
             // only copy directly usage if in same iteration, otherwise extra actions are required at a higher level
@@ -120,7 +121,7 @@ namespace CometServer.Services
             {
                 foreach (var usage in allSourceThings.Where(x => sourceElementDef.ContainedElement.Contains(x.Iid)))
                 {
-                    ((ServiceBase)this.ContainedElementService).Copy(transaction, partition, usage, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
+                    await ((ServiceBase)this.ContainedElementService).CopyAsync(transaction, partition, usage, copy, allSourceThings, copyinfo, sourceToCopyMap, rdls, targetEngineeringModelSetup, securityContext);
                 }
             }
         }

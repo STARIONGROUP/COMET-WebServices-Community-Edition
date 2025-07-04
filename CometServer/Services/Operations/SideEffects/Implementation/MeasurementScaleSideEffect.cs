@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MeasurementScaleSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -85,7 +86,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             MeasurementScale thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -100,7 +101,7 @@ namespace CometServer.Services.Operations.SideEffects
                 var referenceDataLibrary = (ReferenceDataLibrary)container;
 
                 // Check that all referenced MeasurementScales are from the same RDL chain
-                var availableMeasurementScaleIids = this.GetMeasurementScaleIidsFromRdlChain(
+                var availableMeasurementScaleIids = await this.GetMeasurementScaleIidsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
@@ -108,12 +109,12 @@ namespace CometServer.Services.Operations.SideEffects
 
                 availableMeasurementScaleIids.AddRange(referenceDataLibrary.Scale);
 
-                var allMeasurementScales = this.MeasurementScaleService
-                    .Get(transaction, partition, null, securityContext)
+                var allMeasurementScales = (await this.MeasurementScaleService
+                    .GetAsync(transaction, partition, null, securityContext))
                     .Cast<MeasurementScale>()
                     .ToList();
 
-                var scaleValueDefinitionContainerMeasurementScales = this.GetScaleValueDefinitionContainerMeasurementScales(
+                var scaleValueDefinitionContainerMeasurementScales = await this.GetScaleValueDefinitionContainerMeasurementScalesAsync(
                     transaction, partition, securityContext, allMeasurementScales, mappingToReferenceScaleIids);
 
                 if (scaleValueDefinitionContainerMeasurementScales.Any(x => !availableMeasurementScaleIids.Contains(x.Iid)))
@@ -124,7 +125,7 @@ namespace CometServer.Services.Operations.SideEffects
                                                          $"from outside the current RDL chain.");
                 }
 
-                this.CheckCycleDeep(
+                await this.CheckCycleDeepAsync(
                     transaction,
                     partition,
                     securityContext,
@@ -152,7 +153,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of <see cref="MeasurementScale"/> iids.
         /// </returns>
-        private List<Guid> GetMeasurementScaleIidsFromRdlChain(
+        private async Task<List<Guid>> GetMeasurementScaleIidsFromRdlChainAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -165,8 +166,8 @@ namespace CometServer.Services.Operations.SideEffects
                 return measurementScaleIids;
             }
 
-            var availableRdls = this.SiteReferenceDataLibraryService
-                .Get(transaction, partition, null, securityContext)
+            var availableRdls = (await this.SiteReferenceDataLibraryService
+                .GetAsync(transaction, partition, null, securityContext))
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var next = srdlIid;
@@ -204,26 +205,26 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of <see cref="MeasurementScale"/> containers.
         /// </returns>
-        private List<MeasurementScale> GetScaleValueDefinitionContainerMeasurementScales(
+        private async Task<List<MeasurementScale>> GetScaleValueDefinitionContainerMeasurementScalesAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             List<MeasurementScale> allMeasurementScales,
             IEnumerable<Guid> mappingToReferenceScaleIids)
         {
-            var mappingToReferenceScales = this.MappingToReferenceScaleService
-                .Get(transaction, partition, mappingToReferenceScaleIids, securityContext)
+            var mappingToReferenceScales = (await this.MappingToReferenceScaleService
+                .GetAsync(transaction, partition, mappingToReferenceScaleIids, securityContext))
                 .Cast<MappingToReferenceScale>()
                 .ToList();
 
             var scaleValueDefinitions = new List<Thing>();
 
-            scaleValueDefinitions.AddRange(this.ScaleValueDefinitionService
-                .Get(transaction, partition, mappingToReferenceScales.Select(x => x.ReferenceScaleValue), securityContext)
+            scaleValueDefinitions.AddRange((await this.ScaleValueDefinitionService
+                .GetAsync(transaction, partition, mappingToReferenceScales.Select(x => x.ReferenceScaleValue), securityContext))
                 .ToList());
 
-            scaleValueDefinitions.AddRange(this.ScaleValueDefinitionService
-                .Get(transaction, partition, mappingToReferenceScales.Select(x => x.DependentScaleValue), securityContext)
+            scaleValueDefinitions.AddRange((await this.ScaleValueDefinitionService
+                .GetAsync(transaction, partition, mappingToReferenceScales.Select(x => x.DependentScaleValue), securityContext))
                 .ToList());
 
             return scaleValueDefinitions
@@ -252,7 +253,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="scaleValueDefinitionContainerMeasurementScales">
         /// The <see cref="MeasurementScale"/>s that will be inspected.
         /// </param>
-        private void CheckCycleDeep(
+        private async Task CheckCycleDeepAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
@@ -275,10 +276,10 @@ namespace CometServer.Services.Operations.SideEffects
                     continue;
                 }
 
-                var next = this.GetScaleValueDefinitionContainerMeasurementScales(
+                var next = await this.GetScaleValueDefinitionContainerMeasurementScalesAsync(
                     transaction, partition, securityContext, allMeasurementScales, measurementScale.MappingToReferenceScale);
 
-                this.CheckCycleDeep(
+                await this.CheckCycleDeepAsync(
                     transaction,
                     partition,
                     securityContext,

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OptionSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -87,11 +88,6 @@ namespace CometServer.Services.Operations.SideEffects
         /// Gets or sets the (injected) <see cref="IParameterTypeService"/> that is used to query the <see cref="ParameterType"/>s
         /// </summary>
         public IParameterTypeService ParameterTypeService { get; set; }
-
-        /// <summary>
-        /// Gets or sets the (injected) <see cref="IParameterTypeComponentService"/> that is used to query the <see cref="ParameterTypeComponent"/>s
-        /// </summary>
-        public IParameterTypeComponentService ParameterTypeComponentService { get; set; }
 
         /// <summary>
         /// Gets or sets the (injected) <see cref="IParameterValueSetService"/> that is used to create <see cref="ParameterValueSet"/>s
@@ -166,9 +162,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task BeforeDeleteAsync(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+            var options = (await this.OptionService.GetShallowAsync(transaction, partition, null, securityContext)).ToList();
 
             if (options.Count == 1 && options.Single().Iid == thing.Iid)
             {
@@ -197,7 +193,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterDelete(Option thing, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterDeleteAsync(Option thing, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (container is Iteration iteration)
             {
@@ -208,9 +204,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var baseErrorString = $"Could not set {nameof(Iteration)}.{nameof(Iteration.DefaultOption)} to null.";
 
-                var iterationSetup = this.IterationSetupService.GetShallow(transaction,
+                var iterationSetup = (await this.IterationSetupService.GetShallowAsync(transaction,
                     Utils.SiteDirectoryPartition,
-                    new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+                    [iteration.IterationSetup], securityContext)).Cast<IterationSetup>().SingleOrDefault();
 
                 if (iterationSetup == null)
                 {
@@ -218,8 +214,8 @@ namespace CometServer.Services.Operations.SideEffects
                         $"{baseErrorString}\n{nameof(IterationSetup)} with iid {iteration.IterationSetup} could not be found.");
                 }
 
-                var engineeringModelSetup = this.EngineeringModelSetupService
-                    .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+                var engineeringModelSetup = (await this.EngineeringModelSetupService
+                    .GetShallowAsync(transaction, Utils.SiteDirectoryPartition, null, securityContext))
                     .Cast<EngineeringModelSetup>()
                     .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
@@ -232,8 +228,8 @@ namespace CometServer.Services.Operations.SideEffects
                 var engineeringModelPartition =
                     this.RequestUtils.GetEngineeringModelPartitionString(engineeringModelSetup.EngineeringModelIid);
 
-                var updatedIteration = this.IterationService
-                    .GetShallow(transaction, engineeringModelPartition, new[] { iteration.Iid }, securityContext)
+                var updatedIteration = (await this.IterationService
+                    .GetShallowAsync(transaction, engineeringModelPartition, [iteration.Iid], securityContext))
                     .Cast<Iteration>()
                     .SingleOrDefault();
 
@@ -250,9 +246,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 updatedIteration.DefaultOption = null;
 
-                var engineeringModel = this.EngineeringModelService
-                    .GetShallow(transaction, engineeringModelPartition,
-                        new[] { engineeringModelSetup.EngineeringModelIid }, securityContext).Cast<EngineeringModel>()
+                var engineeringModel = (await this.EngineeringModelService
+                    .GetShallowAsync(transaction, engineeringModelPartition,
+                        [engineeringModelSetup.EngineeringModelIid], securityContext)).Cast<EngineeringModel>()
                     .SingleOrDefault();
 
                 if (engineeringModel == null)
@@ -261,7 +257,7 @@ namespace CometServer.Services.Operations.SideEffects
                         $"{baseErrorString}\n{nameof(EngineeringModelSetup)} with iid {engineeringModelSetup.EngineeringModelIid}) could not be found in any {nameof(EngineeringModel)}");
                 }
 
-                this.IterationService.UpdateConcept(transaction, engineeringModelPartition, updatedIteration,
+                await this.IterationService.UpdateConceptAsync(transaction, engineeringModelPartition, updatedIteration,
                     engineeringModel);
             }
             else
@@ -294,10 +290,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// Returns true if the create operation may continue, otherwise it shall be skipped.
         /// </returns>
-        public override bool BeforeCreate(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task<bool> BeforeCreateAsync(Option thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // when the amount of Options is zero, it is always allowed to create an Option.
-            var options = this.OptionService.GetShallow(transaction, partition, null, securityContext).ToList();
+            var options = (await this.OptionService.GetShallowAsync(transaction, partition, null, securityContext)).ToList();
+
             if (options.Count == 0)
             {
                 return true;
@@ -309,11 +306,11 @@ namespace CometServer.Services.Operations.SideEffects
             // a model that contains more than one Option is converted into a Catalogue.
             var iteration = (Iteration)container;
 
-            var iterationSetup = this.IterationSetupService.GetShallow(transaction, Utils.SiteDirectoryPartition,
-                new[] { iteration.IterationSetup }, securityContext).Cast<IterationSetup>().SingleOrDefault();
+            var iterationSetup = (await this.IterationSetupService.GetShallowAsync(transaction, Utils.SiteDirectoryPartition,
+                [iteration.IterationSetup], securityContext)).Cast<IterationSetup>().SingleOrDefault();
 
-            var engineeringModelSetup = this.EngineeringModelSetupService
-                .GetShallow(transaction, Utils.SiteDirectoryPartition, null, securityContext)
+            var engineeringModelSetup = (await this.EngineeringModelSetupService
+                .GetShallowAsync(transaction, Utils.SiteDirectoryPartition, null, securityContext))
                 .Cast<EngineeringModelSetup>()
                 .SingleOrDefault(ms => ms.IterationSetup.Contains(iterationSetup.Iid));
 
@@ -326,10 +323,8 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 throw new InvalidOperationException("The container EngineeringModel is a Catalogue, a Catalogue may not contain more than one Option");
             }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
 
         /// <summary>
@@ -353,30 +348,30 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void AfterCreate(Option option, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterCreateAsync(Option option, Thing container, Option originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // query all the parametertypes and parametertype components and store them in cache. this cache is used to compute the number of values for a ValueArray
-            this.DefaultValueArrayFactory.Load(transaction, securityContext);
+            await this.DefaultValueArrayFactory.LoadAsync(transaction, securityContext);
 
             // query and cache all the option dependent parameters for which new valuesets will need to be created for the option that has just been created.
-            this.QueryAndCacheAllOptionDependentParameters(transaction, partition, securityContext);
+            await this.QueryAndCacheAllOptionDependentParametersAsync(transaction, partition, securityContext);
 
             // for each option dependent parameter, create new ParameterValueSets and cache them such that they can later be referenced by the newly created ParameterOverrideValueSets
             var optionDependentParameters = this.optionDependentParameterCache.Values.ToList();
 
             foreach (var optionDependentParameter in optionDependentParameters)
             {
-                this.CreateAndCacheParameterValueSetsAndCreateParameterSubscriptionValueSets(transaction, partition, option, optionDependentParameter, securityContext);
+                await this.CreateAndCacheParameterValueSetsAndCreateParameterSubscriptionValueSetsAsync(transaction, partition, option, optionDependentParameter, securityContext);
             }
 
             // for each option dependent ParameterOverride check whether it references an option depedent Parameter; if this is the case, create a new ParameterOverrideValueSet that references the newly created option
-            var parameterOverrideDtos = this.ParameterOverrideService.GetShallow(transaction, partition, null, securityContext).Cast<ParameterOverride>();
+            var parameterOverrideDtos = (await this.ParameterOverrideService.GetShallowAsync(transaction, partition, null, securityContext)).Cast<ParameterOverride>();
 
             foreach (var parameterOverrideDto in parameterOverrideDtos)
             {
                 if (this.optionDependentParameterCache.ContainsKey(parameterOverrideDto.Parameter))
                 {
-                    this.CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(transaction, partition, option, parameterOverrideDto, securityContext);
+                    await this.CreateParameterOverrideValueSetsAndParameterSubscriptionValueSetsAsync(transaction, partition, option, parameterOverrideDto, securityContext);
                 }
             }
         }
@@ -402,12 +397,12 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private void CreateAndCacheParameterValueSetsAndCreateParameterSubscriptionValueSets(NpgsqlTransaction transaction, string partition, Option option, Parameter container, ISecurityContext securityContext)
+        private async Task CreateAndCacheParameterValueSetsAndCreateParameterSubscriptionValueSetsAsync(NpgsqlTransaction transaction, string partition, Option option, Parameter container, ISecurityContext securityContext)
         {
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(container.ParameterType);
 
             // get all the ParameterSubscriptions that are contained by the container Parameter, for each of these subscriptions additional ParameterSubscriptionValueSets will be created as well
-            var containerParameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, container.ParameterSubscription, securityContext).Cast<ParameterSubscription>().ToList();
+            var containerParameterSubscriptions = (await this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, container.ParameterSubscription, securityContext)).Cast<ParameterSubscription>().ToList();
 
             var actualFiniteStateListIid = container.StateDependence;
 
@@ -415,18 +410,18 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, null, null, defaultValueArray);
 
-                this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, container);
+                await this.ParameterValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, container);
 
                 // the created ParameterValueSet is cached because it will later be referenced by a potentialy created ParameterOverrideValueSet
                 var parameterValuetSetCacheItem = new ParameterValueSetCacheItem(container, parameterValueSet);
                 this.createdParameterValuetSetCacheItems.Add(parameterValuetSetCacheItem);
 
-                this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
+                await this.CreateParameterSubscriptionValueSetsAsync(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
 
                 return;
             }
 
-            this.QueryAndCacheAllActualFiniteStateLists(transaction, partition, securityContext);
+            await this.QueryAndCacheAllActualFiniteStateListsAsync(transaction, partition, securityContext);
 
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == actualFiniteStateListIid);
 
@@ -434,12 +429,12 @@ namespace CometServer.Services.Operations.SideEffects
             {
                 var parameterValueSet = this.ParameterValueSetFactory.CreateNewParameterValueSetFromSource(option.Iid, actualStateIid, null, defaultValueArray);
 
-                this.ParameterValueSetService.CreateConcept(transaction, partition, parameterValueSet, container);
+                await this.ParameterValueSetService.CreateConceptAsync(transaction, partition, parameterValueSet, container);
 
                 var parameterValuetSetCacheItem = new ParameterValueSetCacheItem(container, parameterValueSet);
                 this.createdParameterValuetSetCacheItems.Add(parameterValuetSetCacheItem);
 
-                this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
+                await this.CreateParameterSubscriptionValueSetsAsync(containerParameterSubscriptions, defaultValueArray, parameterValueSet.Iid, transaction, partition);
             }
         }
 
@@ -463,7 +458,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        private void CreateParameterOverrideValueSetsAndParameterSubscriptionValueSets(NpgsqlTransaction transaction, string partition, Option option, ParameterOverride container, ISecurityContext securityContext)
+        private async Task CreateParameterOverrideValueSetsAndParameterSubscriptionValueSetsAsync(NpgsqlTransaction transaction, string partition, Option option, ParameterOverride container, ISecurityContext securityContext)
         {
             if (!this.optionDependentParameterCache.TryGetValue(container.Parameter, out var parameter))
             {
@@ -473,7 +468,7 @@ namespace CometServer.Services.Operations.SideEffects
             var defaultValueArray = this.DefaultValueArrayFactory.CreateDefaultValueArray(parameter.ParameterType);
 
             // get all the ParameterSubscriptions that are contained by the container ParameterOverride, for each of these subscriptions additional ParameterSubscriptionValueSets will be created as well
-            var containerParameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, partition, container.ParameterSubscription, securityContext).Cast<ParameterSubscription>().ToList();
+            var containerParameterSubscriptions = (await this.ParameterSubscriptionService.GetShallowAsync(transaction, partition, container.ParameterSubscription, securityContext)).Cast<ParameterSubscription>().ToList();
 
             if (parameter.StateDependence == null)
             {
@@ -481,14 +476,14 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var parameterOverrideValueSet = this.ParameterOverrideValueSetFactory.CreateWithDefaultValueArray(parameterValueSet.Iid, defaultValueArray);
 
-                this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterOverrideValueSet, container);
+                await this.ParameterOverrideValueSetService.CreateConceptAsync(transaction, partition, parameterOverrideValueSet, container);
 
-                this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterOverrideValueSet.Iid, transaction, partition);
+                await this.CreateParameterSubscriptionValueSetsAsync(containerParameterSubscriptions, defaultValueArray, parameterOverrideValueSet.Iid, transaction, partition);
 
                 return;
             }
 
-            this.QueryAndCacheAllActualFiniteStateLists(transaction, partition, securityContext);
+            await this.QueryAndCacheAllActualFiniteStateListsAsync(transaction, partition, securityContext);
 
             var actualFiniteStateList = this.actualFiniteStateLists.Single(x => x.Iid == parameter.StateDependence);
 
@@ -498,9 +493,9 @@ namespace CometServer.Services.Operations.SideEffects
 
                 var parameterOverrideValueSet = this.ParameterOverrideValueSetFactory.CreateWithDefaultValueArray(parameterValueSet.Iid, defaultValueArray);
 
-                this.ParameterOverrideValueSetService.CreateConcept(transaction, partition, parameterOverrideValueSet, container);
+                await this.ParameterOverrideValueSetService.CreateConceptAsync(transaction, partition, parameterOverrideValueSet, container);
 
-                this.CreateParameterSubscriptionValueSets(containerParameterSubscriptions, defaultValueArray, parameterOverrideValueSet.Iid, transaction, partition);
+                await this.CreateParameterSubscriptionValueSetsAsync(containerParameterSubscriptions, defaultValueArray, parameterOverrideValueSet.Iid, transaction, partition);
             }
         }
 
@@ -522,7 +517,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void CreateParameterSubscriptionValueSets(IEnumerable<ParameterSubscription> containerParameterSubscriptions, ValueArray<string> defaultValueArray, Guid subscribedValueSetIid, NpgsqlTransaction transaction, string partition)
+        private async Task CreateParameterSubscriptionValueSetsAsync(IEnumerable<ParameterSubscription> containerParameterSubscriptions, ValueArray<string> defaultValueArray, Guid subscribedValueSetIid, NpgsqlTransaction transaction, string partition)
         {
             foreach (var parameterSubscription in containerParameterSubscriptions)
             {
@@ -531,7 +526,7 @@ namespace CometServer.Services.Operations.SideEffects
                         subscribedValueSetIid,
                         defaultValueArray);
 
-                this.ParameterSubscriptionValueSetService.CreateConcept(transaction, partition, parameterSubscriptionValueSet, parameterSubscription);
+                await this.ParameterSubscriptionValueSetService.CreateConceptAsync(transaction, partition, parameterSubscriptionValueSet, parameterSubscription);
             }
         }
 
@@ -574,11 +569,11 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The <see cref="ISecurityContext"/> used for permission checking.
         /// </param>
-        private void QueryAndCacheAllActualFiniteStateLists(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private async Task QueryAndCacheAllActualFiniteStateListsAsync(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (this.actualFiniteStateLists == null)
             {
-                this.actualFiniteStateLists = this.ActualFiniteStateListService.GetShallow(transaction, partition, null, securityContext).Cast<ActualFiniteStateList>();
+                this.actualFiniteStateLists = (await this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, null, securityContext)).Cast<ActualFiniteStateList>();
             }
         }
 
@@ -594,14 +589,14 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The <see cref="ISecurityContext"/> used for permission checking.
         /// </param>
-        private void QueryAndCacheAllOptionDependentParameters(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        private async Task QueryAndCacheAllOptionDependentParametersAsync(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (this.optionDependentParameterCache.Count != 0)
             {
                 return;
             }
 
-            var parameters = this.ParameterService.GetShallow(transaction, partition, null, securityContext).Cast<Parameter>();
+            var parameters = (await this.ParameterService.GetShallowAsync(transaction, partition, null, securityContext)).Cast<Parameter>();
 
             foreach (var parameter in parameters)
             {
@@ -615,7 +610,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// <summary>
         /// The parameter value set cache item class.
         /// </summary>
-        private class ParameterValueSetCacheItem
+        private sealed class ParameterValueSetCacheItem
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="ParameterValueSetCacheItem"/> class. 

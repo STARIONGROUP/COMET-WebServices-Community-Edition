@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Threading.Tasks;
+
     using Npgsql;
 
     /// <summary>
@@ -36,9 +38,9 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        public void DeleteAll(NpgsqlTransaction transaction, string partition)
+        public Task DeleteAllAsync(NpgsqlTransaction transaction, string partition)
         {
-             this.PublicationDao.DeleteAll(transaction, partition);
+             return this.PublicationDao.DeleteAllAsync(transaction, partition);
         }
     }
 }

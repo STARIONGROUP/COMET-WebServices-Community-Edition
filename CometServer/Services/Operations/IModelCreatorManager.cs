@@ -25,6 +25,7 @@
 namespace CometServer.Services.Operations
 {
     using System;
+    using System.Threading.Tasks;
 
     using Authorization;
     
@@ -49,7 +50,7 @@ namespace CometServer.Services.Operations
         /// <param name="setupToCreate">The new <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        void CreateEngineeringModelSetupFromSource(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext);
+        Task CreateEngineeringModelSetupFromSourceAsync(Guid source, EngineeringModelSetup setupToCreate, NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Copy the engineering-model data from the source to the target <see cref="EngineeringModel"/>
@@ -57,12 +58,12 @@ namespace CometServer.Services.Operations
         /// <param name="newModelSetup">The new <see cref="EngineeringModelSetup"/></param>
         /// <param name="transaction">The current transaction</param>
         /// <param name="securityContext">The security context</param>
-        void CopyEngineeringModelData(EngineeringModelSetup newModelSetup, NpgsqlTransaction transaction, ISecurityContext securityContext);
+        Task CopyEngineeringModelData(EngineeringModelSetup newModelSetup, NpgsqlTransaction transaction, ISecurityContext securityContext);
 
         /// <summary>
         /// Enable the user-triggers in the engineering-model and iteration schema
         /// </summary>
         /// <param name="transaction">The current transaction</param>
-        void EnableUserTrigger(NpgsqlTransaction transaction);
+        Task EnableUserTrigger(NpgsqlTransaction transaction);
     }
 }

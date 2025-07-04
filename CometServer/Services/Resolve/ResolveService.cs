@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ResolveService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Orm.Dao;
     using CDP4Orm.Dao.Resolve;
@@ -89,20 +90,24 @@ namespace CometServer.Services
         /// <param name="resolvableInfo">
         /// The resolvable info placeholders.
         /// </param>
-        public void ResolveItems(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns> 
+        public async Task ResolveItemsAsync(NpgsqlTransaction transaction, string partition, Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo)
         {
             // 1. try to statically resolve partition info (without access to datastore) 
             this.ResolvePartitionStatically(partition, resolvableInfo.Values);
 
             // 1.1 resolve partition info and retrieve container info for types
-            this.ResolvePartitionFromDataStore(transaction, partition, resolvableInfo.Values);
+            await this.ResolvePartitionFromDataStoreAsync(transaction, partition, resolvableInfo.Values);
 
             // 2. collect missing container info from the datastore
             var resolvableContainer = new ContainerInfo();
+
             var partionedResolveInfoGroup = resolvableInfo.Values.Where(x => !this.MetaInfoProvider.GetMetaInfo(x.InstanceInfo.TypeName).IsTopContainer && (x.ContainerInfo == null || x.ContainerInfo.Equals(resolvableContainer)))
                                             .GroupBy(x => $"{x.Partition}|{x.InstanceInfo.TypeName}");
 
-            this.ResolveContainersFromDataStore(transaction, resolvableInfo, partionedResolveInfoGroup);
+            await this.ResolveContainersFromDataStore(transaction, resolvableInfo, partionedResolveInfoGroup);
 
             // 2.1 resolve any remaining unresolved partition info (e.g. for newly created items) by using the partition from the instance's nearest (partition-resolved) container
             ResolvePartitionFromContainmentTree(partition, resolvableInfo.Values.Where(x => !x.IsPartitionResolved), resolvableInfo);
@@ -116,7 +121,7 @@ namespace CometServer.Services
             // 3. resolve instance info for any remaining un-resolved items
             // group the items to limit database calls
             var unresolvedPerPartition = resolvableInfo.Values.Where(x => !x.IsInstanceResolved).GroupBy(x => x.Partition);
-            this.ResolveInstances(transaction, unresolvedPerPartition);
+            await this.ResolveInstancesAsync(transaction, unresolvedPerPartition);
 
             // All items should be resolved, break if not
             if (resolvableInfo.Values.Any(x => !x.IsResolved))
@@ -140,19 +145,21 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> type name of the supplied item.
         /// </returns> 
-        public string ResolveTypeNameByGuid(NpgsqlTransaction transaction, string partition, Guid iid)
+        public async Task<string> ResolveTypeNameByGuidAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
-            var resolveInfo = this.ResolveDao.Read(
-                transaction,
-                partition,
-                new List<Guid>() { iid }).ToList();
+            var resolveInfo = (
+                await this.ResolveDao.ReadAsync(
+                    transaction,
+                    partition,
+                 [iid])
+                ).FirstOrDefault();
 
-            if (resolveInfo.Count == 0)
+            if (resolveInfo == null)
             {
                 throw new ResolveException($"TypeName could not be resolved for iid {iid}.");
             }
 
-            return resolveInfo[0].InstanceInfo.TypeName;
+            return resolveInfo.InstanceInfo.TypeName;
         }
 
         /// <summary>
@@ -167,7 +174,7 @@ namespace CometServer.Services
         /// <exception cref="Exception">
         /// Exception if unresolved
         /// </exception>
-        internal void ResolveInstances(NpgsqlTransaction transaction, IEnumerable<IGrouping<string, DtoResolveHelper>> unresolvedPerPartition)
+        internal async Task ResolveInstancesAsync(NpgsqlTransaction transaction, IEnumerable<IGrouping<string, DtoResolveHelper>> unresolvedPerPartition)
         {
             foreach (var partitionedInfo in unresolvedPerPartition)
             {
@@ -181,15 +188,16 @@ namespace CometServer.Services
 
                     // resolve the items from the datastore
                     var resolvedItems =
-                        service.GetShallow(
+                        (await service.GetShallowAsync(
                             transaction,
                             resolvedPartition,
                             resolveIds,
-                            new RequestSecurityContext { ContainerReadAllowed = true }).ToList();
+                            new RequestSecurityContext { ContainerReadAllowed = true })).ToList();
 
                     foreach (var unresolved in unresolvedTypeInfo)
                     {
                         var resolvedItem = resolvedItems.SingleOrDefault(x => x.Iid == unresolved.InstanceInfo.Iid);
+
                         if (resolvedItem == null)
                         {
                             throw new ResolveException($"Could not resolve item {unresolved.InstanceInfo.TypeName}:{unresolved.InstanceInfo.Iid}");
@@ -271,12 +279,9 @@ namespace CometServer.Services
             {
                 var resolvedPartition = this.ResolvePartition(partition, unresolved.InstanceInfo.TypeName);
 
-                if (resolvedPartition.Any())
+                if (resolvedPartition.Count == 1)
                 {
-                    if (resolvedPartition.Count == 1)
-                    {
-                        unresolved.Partition = resolvedPartition.Single();
-                    }
+                    unresolved.Partition = resolvedPartition.Single();
                 }
             }
         }
@@ -293,7 +298,7 @@ namespace CometServer.Services
         /// <param name="unresolvedItems">
         /// The unresolved items.
         /// </param>
-        internal void ResolvePartitionFromDataStore(NpgsqlTransaction transaction, string partition, IEnumerable<DtoResolveHelper> unresolvedItems)
+        internal async Task ResolvePartitionFromDataStoreAsync(NpgsqlTransaction transaction, string partition, IEnumerable<DtoResolveHelper> unresolvedItems)
         {
             var unresolved = unresolvedItems.Where(x => !x.IsPartitionResolved).ToList();
 
@@ -305,11 +310,12 @@ namespace CometServer.Services
             }
 
             // resolve the partition of the instance data (engineeringmodel or iteration bound)
-            var resolvedInfo = this.ResolveDao.Read(transaction, partition, unresolved.Select(x => x.InstanceInfo.Iid)).ToList();
+            var resolvedInfo = (await this.ResolveDao.ReadAsync(transaction, partition, unresolved.Select(x => x.InstanceInfo.Iid))).ToList();
 
             foreach (var unresolvedItem in unresolved)
             {
                 var resolvedItem = resolvedInfo.SingleOrDefault(x => x.InstanceInfo.Iid == unresolvedItem.InstanceInfo.Iid);
+
                 if (resolvedItem == null)
                 {
                     continue;
@@ -378,7 +384,7 @@ namespace CometServer.Services
         /// <param name="partionedResolveInfoGroup">
         /// The resolve info grouped per partition/type.
         /// </param>
-        private void ResolveContainersFromDataStore(
+        private async Task ResolveContainersFromDataStore(
             NpgsqlTransaction transaction,
             Dictionary<DtoInfo, DtoResolveHelper> resolvableInfo,
             IEnumerable<IGrouping<string, DtoResolveHelper>> partionedResolveInfoGroup)
@@ -389,7 +395,7 @@ namespace CometServer.Services
                 var resolvableType = partionedResolveInfo.First().InstanceInfo.TypeName;
 
                 // resolve the container info per type
-                var resolvedContainerInfos = this.ContainerDao.Read(
+                var resolvedContainerInfos = await this.ContainerDao.ReadAsync(
                     transaction,
                     resolvedPartition,
                     resolvableType,

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="LinearConversionUnitSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -110,17 +111,17 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.conversionBasedUnitService = new Mock<IConversionBasedUnitService>();
             this.conversionBasedUnitService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
@@ -130,8 +131,7 @@ namespace CometServer.Tests.SideEffects
                                 this.linearConversionUnitB.Iid,
                                 this.linearConversionUnitC.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    new List<ConversionBasedUnit>
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(new List<ConversionBasedUnit>
                         {
                             this.linearConversionUnitD,
                             this.linearConversionUnitA,
@@ -153,8 +153,8 @@ namespace CometServer.Tests.SideEffects
 
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitA,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -177,8 +177,8 @@ namespace CometServer.Tests.SideEffects
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitE.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -189,8 +189,8 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -213,8 +213,8 @@ namespace CometServer.Tests.SideEffects
             // There is a chain a -> b -> c
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.linearConversionUnitD.Iid } };
 
-            Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.DoesNotThrowAsync(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.linearConversionUnitC,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IPublicationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Threading.Tasks;
+
     using Npgsql;
 
     /// <summary>
@@ -36,6 +38,6 @@ namespace CometServer.Services
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The current partition</param>
-        void DeleteAll(NpgsqlTransaction transaction, string partition);
+        Task DeleteAllAsync(NpgsqlTransaction transaction, string partition);
     }
 }

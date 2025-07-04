@@ -78,7 +78,7 @@ namespace CometServer.Modules
                 await res.AsJson("not authenticated");
             });
 
-            app.MapPost("/logout", async (HttpRequest req, HttpResponse res) =>
+            app.MapPost("/logout", (HttpRequest req, HttpResponse res) =>
             {
                 throw new NotImplementedException();
             }).RequireAuthorization(ApiBase.AuthenticationSchemes);

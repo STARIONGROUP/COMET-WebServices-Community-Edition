@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -45,7 +46,7 @@ namespace CometServer.Services
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
         /// <param name="iteration">The current <see cref="Iteration"/> (nullable)</param>
-        void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration);
+        Task InitializeAsync(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration);
 
         /// <summary>
         /// Gets the source <see cref="ParameterValueSet"/> for the new one to be created for a specified option and state

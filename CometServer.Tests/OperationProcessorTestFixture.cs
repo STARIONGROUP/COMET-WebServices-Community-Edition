@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OperationProcessorTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Tests
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.CommonData;
@@ -54,7 +55,7 @@ namespace CometServer.Tests
     using Npgsql;
 
     using NUnit.Framework;
-    
+
     using Alias = CDP4Common.DTO.Alias;
     using ElementDefinition = CDP4Common.DTO.ElementDefinition;
     using ElementUsage = CDP4Common.DTO.ElementUsage;
@@ -91,9 +92,9 @@ namespace CometServer.Tests
         private readonly SimpleQuantityKindMetaInfo simpleQuantityKindMetaInfo = new();
 
         private readonly QuantityKindMetaInfo quantityKindMetaInfo = new();
-        private readonly ThingMetaInfo thingMetaInfo = new ();
+        private readonly ThingMetaInfo thingMetaInfo = new();
 
-        private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new ();
+        private readonly EngineeringModelMetaInfo engineeringModelMetaInfo = new();
 
         private readonly Dictionary<string, Stream> fileStore = new();
 
@@ -110,7 +111,7 @@ namespace CometServer.Tests
         {
             this.mockedMetaInfoProvider = new Mock<IMetaInfoProvider>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
-            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
+            this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.MaxValue);
             this.operationSideEffectProcessor.RequestUtils = this.requestUtils;
             this.operationSideEffectProcessor.MetaInfoProvider = this.mockedMetaInfoProvider.Object;
 
@@ -135,7 +136,7 @@ namespace CometServer.Tests
 
             this.permissionService = new Mock<IPermissionService>();
             this.permissionService.Setup(x => x.CanRead(It.IsAny<string>(), It.IsAny<ISecurityContext>(), It.IsAny<string>())).Returns(true);
-            this.permissionService.Setup(x => x.CanRead(It.IsAny<NpgsqlTransaction>(), It.IsAny<Thing>(), It.IsAny<string>())).Returns(true);
+            this.permissionService.Setup(x => x.CanReadAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<Thing>(), It.IsAny<string>())).ReturnsAsync(true);
         }
 
         [Test]
@@ -150,23 +151,21 @@ namespace CometServer.Tests
 
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithoutIid);
-            
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+
+            Assert.ThrowsAsync<InvalidOperationException>(
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithoutClassKind);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+            Assert.ThrowsAsync<InvalidOperationException>(
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             var completeDeleteObject = new ClasslessDTO() { { IidKey, Guid.NewGuid() }, { ClasskindKey, SimpleQuantityKindTypeString } };
             postOperation.Delete.Clear();
             postOperation.Delete.Add(completeDeleteObject);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+            Assert.DoesNotThrowAsync(() => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
         }
 
         [Test]
@@ -176,29 +175,29 @@ namespace CometServer.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == SimpleQuantityKindTypeString))).Returns(this.simpleQuantityKindMetaInfo);
 
             var deleteObjectWithScalarPropertySet = new ClasslessDTO()
-                                                    {
-                                                        { IidKey, Guid.NewGuid() },
-                                                        { ClasskindKey, SimpleQuantityKindTypeString },
-                                                        { "Name", TestName }
-                                                    };
-            
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, SimpleQuantityKindTypeString },
+                { "Name", TestName }
+            };
+
             var postOperation = new CdpPostOperation();
             postOperation.Delete.Add(deleteObjectWithScalarPropertySet);
 
-            Assert.Throws(
-                typeof(InvalidOperationException),
-                () => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+            Assert.ThrowsAsync<InvalidOperationException>(
+                () => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
 
             var deleteObjectWithListProperty = new ClasslessDTO()
-                                                    {
-                                                        { IidKey, Guid.NewGuid() },
-                                                        { ClasskindKey, SimpleQuantityKindTypeString },
-                                                        { "PossibleScale", new[] { Guid.NewGuid() } }
-                                                    };
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, SimpleQuantityKindTypeString },
+                { "PossibleScale", new[] { Guid.NewGuid() } }
+            };
+
             postOperation.Delete.Clear();
             postOperation.Delete.Add(deleteObjectWithListProperty);
 
-            Assert.DoesNotThrow(() => this.operationProcessor.ValidateDeleteOperations(postOperation, null, ""));
+            Assert.DoesNotThrowAsync(() => this.operationProcessor.ValidateDeleteOperationsAsync(postOperation, null, ""));
         }
 
         [Test]
@@ -210,14 +209,14 @@ namespace CometServer.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == QuantityKindTypeString))).Returns(this.quantityKindMetaInfo);
 
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
-                                        {
-                                            Alias = new List<Guid>(),
-                                            Definition = new List<Guid>(),
-                                            HyperLink = new List<Guid>(),
-                                            PossibleScale = new List<Guid>(),
-                                            ShortName = TestShortName,
-                                            Symbol = "testSymbol"
-                                        };
+            {
+                Alias = new List<Guid>(),
+                Definition = new List<Guid>(),
+                HyperLink = new List<Guid>(),
+                PossibleScale = new List<Guid>(),
+                ShortName = TestShortName,
+                Symbol = "testSymbol"
+            };
 
             var postOperation = new CdpPostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
@@ -238,8 +237,8 @@ namespace CometServer.Tests
             {
                 Book = new List<OrderedItem>(),
                 CommonFileStore = new List<Guid>(),
-                Iteration = new List<Guid> { Guid.NewGuid() },
-                LogEntry = new List<Guid>()
+                Iteration = [Guid.NewGuid()],
+                LogEntry = []
             };
 
             var postOperation = new CdpPostOperation();
@@ -282,7 +281,7 @@ namespace CometServer.Tests
                 () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
-                    new List<string> { "PossibleState" },
+                    ["PossibleState"],
                     metaInfo
                 )
             );
@@ -320,10 +319,10 @@ namespace CometServer.Tests
                 () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
-                    new List<string> { "PossibleState" },
+                    ["PossibleState"],
                     metaInfo
-                    )
-                );
+                )
+            );
 
             Assert.That(exception.Message, Contains.Substring("contains duplicate keys"));
         }
@@ -360,15 +359,13 @@ namespace CometServer.Tests
                 () => OperationProcessor.OrderedItemListValidation(
                     null,
                     updatedItem,
-                    new List<string> { "PossibleState" },
+                    ["PossibleState"],
                     metaInfo
                 )
             );
 
             Assert.That(exception.Message, Contains.Substring("contains duplicate values"));
         }
-
-
 
         [Test]
         public void VerifyCreateWithoutContainerUpdateValidation()
@@ -420,11 +417,11 @@ namespace CometServer.Tests
 
             // simpleQuantityKind container update
             var modelReferenceDataLibrary = new ClasslessDTO()
-                                            {
-                                                { IidKey, Guid.NewGuid() },
-                                                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
-                                                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
-                                            };
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
+                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
+            };
 
             var postOperation = new CdpPostOperation();
             postOperation.Create.Add(newSimpleQuantityKind);
@@ -447,12 +444,12 @@ namespace CometServer.Tests
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "Alias"))).Returns(aliasMetaInfo);
             this.mockedMetaInfoProvider.Setup(x => x.GetMetaInfo(It.Is<string>(y => y == "ModelReferenceDataLibrary"))).Returns(modelReferenceDataLibraryMetaInfo);
 
-            var newAlias = new Alias(Guid.NewGuid(), 0) { Content = "testContent", LanguageCode = "en-GB"};
+            var newAlias = new Alias(Guid.NewGuid(), 0) { Content = "testContent", LanguageCode = "en-GB" };
 
             // alias container create
             var newSimpleQuantityKind = new SimpleQuantityKind(Guid.NewGuid(), 0)
             {
-                Alias = new List<Guid> { newAlias.Iid },
+                Alias = [newAlias.Iid],
                 Definition = new List<Guid>(),
                 HyperLink = new List<Guid>(),
                 PossibleScale = new List<Guid>(),
@@ -463,11 +460,11 @@ namespace CometServer.Tests
 
             // simplequantitykind container update
             var modelReferenceDataLibrary = new ClasslessDTO()
-                                            {
-                                                { IidKey, Guid.NewGuid() },
-                                                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
-                                                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
-                                            };
+            {
+                { IidKey, Guid.NewGuid() },
+                { ClasskindKey, ClassKind.ModelReferenceDataLibrary },
+                { "ParameterType", new[] { newSimpleQuantityKind.Iid } }
+            };
 
             var postOperation = new CdpPostOperation();
             postOperation.Create.Add(newAlias);
@@ -476,7 +473,7 @@ namespace CometServer.Tests
 
             Assert.DoesNotThrow(() => this.operationProcessor.ValidateCreateOperations(postOperation, this.fileStore));
         }
-        
+
         [Test]
         public void VerifyIncompleteUpdateOperationValidation()
         {
@@ -507,18 +504,17 @@ namespace CometServer.Tests
 
         private List<Thing> copySourceDtos;
 
-        private static readonly string[] DefaultValueArray = new[] { "-" };
-
+        private static readonly string[] DefaultValueArray = ["-"];
 
         [Test]
-        public void VerifyCopyElementDefWorks()
+        public async Task VerifyCopyElementDefWorks()
         {
             var modelSetupService = new Mock<IEngineeringModelSetupService>();
             var iterationService = new Mock<IIterationService>();
             var defaultArrayService = new Mock<IDefaultValueArrayFactory>();
-            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(new [] {"-"}));
+            defaultArrayService.Setup(x => x.CreateDefaultValueArray(It.IsAny<Guid>())).Returns(new ValueArray<string>(["-"]));
             var modelSetup = new EngineeringModelSetup(Guid.NewGuid(), 0);
-            modelSetupService.Setup(x => x.GetEngineeringModelSetupFromDataBaseCache(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).Returns(modelSetup);
+            modelSetupService.Setup(x => x.GetEngineeringModelSetupFromDataBaseCache(It.IsAny<NpgsqlTransaction>(), It.IsAny<Guid>())).ReturnsAsync(modelSetup);
 
             this.copySourceDtos = new List<Thing>();
 
@@ -535,22 +531,24 @@ namespace CometServer.Tests
             sourceIteration.Element.Add(sourceElementDef2.Iid);
 
             var parameter1 = new Parameter(Guid.NewGuid(), 1) { ParameterType = boolParamTypeId };
+
             var pvs1 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
-                Manual = new ValueArray<string>(new[] {"true"}),
-                Computed = new ValueArray<string>(new[] {"-"}),
-                Reference = new ValueArray<string>(new[] {"-"}),
-                Published = new ValueArray<string>(new[] {"-"}),
+                Manual = new ValueArray<string>(["true"]),
+                Computed = new ValueArray<string>(["-"]),
+                Reference = new ValueArray<string>(["-"]),
+                Published = new ValueArray<string>(["-"]),
                 ValueSwitch = ParameterSwitchKind.MANUAL
             };
 
             var parameter2 = new Parameter(Guid.NewGuid(), 1) { ParameterType = boolParamTypeId };
+
             var pvs2 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
-                Manual = new ValueArray<string>(new[] { "true" }),
-                Computed = new ValueArray<string>(new[] { "-" }),
-                Reference = new ValueArray<string>(new[] { "-" }),
-                Published = new ValueArray<string>(new[] { "-" }),
+                Manual = new ValueArray<string>(["true"]),
+                Computed = new ValueArray<string>(["-"]),
+                Reference = new ValueArray<string>(["-"]),
+                Published = new ValueArray<string>(["-"]),
                 ValueSwitch = ParameterSwitchKind.MANUAL
             };
 
@@ -564,10 +562,9 @@ namespace CometServer.Tests
                 Parameter = parameter2.Iid
             };
 
-            var ovs = new ParameterOverrideValueSet(Guid.NewGuid(), 1) {ParameterValueSet = pvs2.Iid};
+            var ovs = new ParameterOverrideValueSet(Guid.NewGuid(), 1) { ParameterValueSet = pvs2.Iid };
             override2.ValueSet.Add(ovs.Iid);
             sourceUsage1.ParameterOverride.Add(override2.Iid);
-
 
             this.copySourceDtos.Add(sourceIteration);
             this.copySourceDtos.Add(sourceElementDef1);
@@ -583,15 +580,15 @@ namespace CometServer.Tests
             var targetIteration = new Iteration(Guid.NewGuid(), 1);
 
             this.serviceProvider.Setup(x => x.MapToReadService(It.IsAny<string>())).Returns<string>(x => new TestSourceService(this.copySourceDtos, x));
+
             this.serviceProvider.Setup(x => x.MapToReadService(It.Is<string>(t => t == ClassKind.ModelReferenceDataLibrary.ToString())))
-                .Returns<string>(x => new TestSourceService(new List<Thing> { mrdl }, x));
+                .Returns<string>(x => new TestSourceService([mrdl], x));
 
             this.serviceProvider.Setup(x => x.MapToReadService(It.Is<string>(t => t == ClassKind.Iteration.ToString())))
-                .Returns<string>(x => new TestSourceService(new List<Thing> { sourceIteration, targetIteration }, x));
+                .Returns<string>(x => new TestSourceService([sourceIteration, targetIteration], x));
 
             var customOperationSideEffectProcessor = new Mock<IOperationSideEffectProcessor>();
-            customOperationSideEffectProcessor.Setup(x => x.BeforeCreate(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).
-                Returns(true);
+            customOperationSideEffectProcessor.Setup(x => x.BeforeCreateAsync(It.IsAny<Thing>(), It.IsAny<Thing>(), It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ISecurityContext>())).ReturnsAsync(true);
 
             var paramSubscriptionService = new ParameterSubscriptionService
             {
@@ -613,10 +610,12 @@ namespace CometServer.Tests
             };
 
             var valueSetService = new Mock<IParameterValueSetService>();
-            valueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
-                .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>((a, b, c, d) =>
+
+            valueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
+                .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>(async (a, b, c, d) =>
                 {
                     var list = new List<ParameterValueSet>();
+
                     foreach (var guid in c)
                     {
                         var vs = new ParameterValueSet(guid, 1)
@@ -629,15 +628,17 @@ namespace CometServer.Tests
 
                         list.Add(vs);
                     }
-                    
+
                     return list;
-                });  
+                });
 
             var overrideValueSetService = new Mock<IParameterOverrideValueSetService>();
-            overrideValueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
-                .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>((a, b, c, d) =>
+
+            overrideValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
+                .Returns<NpgsqlTransaction, string, IEnumerable<Guid>, ISecurityContext>(async (a, b, c, d) =>
                 {
                     var list = new List<ParameterOverrideValueSet>();
+
                     foreach (var guid in c)
                     {
                         var vs = new ParameterOverrideValueSet(guid, 1)
@@ -655,8 +656,8 @@ namespace CometServer.Tests
                 });
 
             var paramDao = new TestParameterDao();
-            iterationService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { sourceIteration });
-            iterationService.Setup(x => x.Get(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).Returns(new[] { targetIteration });
+            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(sourceIteration.Iid)), It.IsAny<ISecurityContext>())).ReturnsAsync(new List<Thing> { sourceIteration }.AsEnumerable());
+            iterationService.Setup(x => x.GetAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.Is<IEnumerable<Guid>>(c => c.Contains(targetIteration.Iid)), It.IsAny<ISecurityContext>())).ReturnsAsync(new List<Thing> { targetIteration }.AsEnumerable());
 
             var paramService = new ParameterService
             {
@@ -685,6 +686,7 @@ namespace CometServer.Tests
             };
 
             var usageDao = new Mock<IElementUsageDao>();
+
             var usageService = new ElementUsageService
             {
                 PermissionService = this.permissionService.Object,
@@ -696,6 +698,7 @@ namespace CometServer.Tests
             };
 
             var edDao = new TestElementDefinitionDao();
+
             var edService = new ElementDefinitionService
             {
                 PermissionService = this.permissionService.Object,
@@ -716,6 +719,7 @@ namespace CometServer.Tests
             this.serviceProvider.Setup(x => x.MapToPersitableService(ClassKind.ParameterGroup.ToString())).Returns(paramGroupService);
 
             var postOperation = new CdpPostOperation();
+
             var copyinfo = new CopyInfo
             {
                 ActiveOwner = Guid.NewGuid(),
@@ -758,13 +762,14 @@ namespace CometServer.Tests
             postOperation.Copy.Add(copyinfo);
 
             this.serviceProvider.Setup(x => x.MapToReadService(ClassKind.EngineeringModelSetup.ToString())).Returns(modelSetupService.Object);
+
             // targetIteration
-            this.operationProcessor.Process(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
+            await this.operationProcessor.ProcessAsync(postOperation, null, $"Iteration_{targetIteration.Iid.ToString().Replace("-", "_")}", null);
 
             Assert.That(edDao.WrittenThingCount, Is.EqualTo(2));
             Assert.That(paramDao.WrittenThingCount, Is.EqualTo(2));
             Assert.That(paramOverrideDao.WrittenThingCount, Is.EqualTo(1));
-            usageDao.Verify(x => x.Write(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ElementUsage>(), It.IsAny<Thing>()), Times.Once);
+            usageDao.Verify(x => x.WriteAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ElementUsage>(), It.IsAny<Thing>()), Times.Once);
         }
     }
 
@@ -781,31 +786,33 @@ namespace CometServer.Tests
             this.type = type;
         }
 
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             throw new NotImplementedException();
         }
 
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext securityContext)
+        public Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext securityContext)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
-                return this.dtos.Where(x => x.ClassKind.ToString() == this.type);
+                return Task.FromResult(this.dtos.Where(x => x.ClassKind.ToString() == this.type));
             }
 
-            return this.dtos.Where(x => x.ClassKind.ToString() == this.type && queriedIds.Contains(x.Iid));
+            return Task.FromResult(this.dtos.Where(x => x.ClassKind.ToString() == this.type && queriedIds.Contains(x.Iid)));
         }
 
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext securityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext securityContext)
         {
             if (this.type != ClassKind.ElementDefinition.ToString())
             {
                 throw new NotImplementedException();
             }
 
-            var eds = this.GetShallow(transaction, partition, ids, securityContext).OfType<ElementDefinition>().ToList();
+            var eds = (await this.GetShallowAsync(transaction, partition, ids, securityContext)).OfType<ElementDefinition>().ToList();
             var dtos = new List<Thing>(eds);
+
             foreach (var thing in eds)
             {
                 dtos.AddRange(this.dtos.Where(x => x.ClassKind.ToString() == ClassKind.ElementUsage.ToString() && thing.ContainedElement.Contains(x.Iid)));
@@ -831,114 +838,116 @@ namespace CometServer.Tests
             return dtos;
         }
 
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, OrderedItem orderedItem)
+        public Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, OrderedItem orderedItem)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
-        {
-            this.writtenThings.Add(thing);
-            return true;
-        }
-
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             this.writtenThings.Add(thing);
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            return true;
+            this.writtenThings.Add(thing);
+            return Task.FromResult(true);
         }
 
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        public IEnumerable<ReferenceDataLibrary> QueryReferenceDataLibrary(NpgsqlTransaction transaction, Iteration iteration)
+        public Task<IEnumerable<ReferenceDataLibrary>> QueryReferenceDataLibraryAsync(NpgsqlTransaction transaction, Iteration iteration)
         {
-            return this.dtos.OfType<ReferenceDataLibrary>();
+            return Task.FromResult(this.dtos.OfType<ReferenceDataLibrary>());
         }
     }
 
     public class TestParameterDao : IParameterDao
     {
         private List<Thing> writtenThings = new();
+
         public int WrittenThingCount => this.writtenThings.Count;
 
-        public IEnumerable<Parameter> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
+        public Task<IEnumerable<Parameter>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
-                return this.writtenThings.OfType<Parameter>();
+                return Task.FromResult(this.writtenThings.OfType<Parameter>());
             }
 
-            return this.writtenThings.OfType<Parameter>().Where(x => queriedIds.Contains(x.Iid));
+            return Task.FromResult(this.writtenThings.OfType<Parameter>().Where(x => queriedIds.Contains(x.Iid)));
         }
 
-        public bool Write(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
+        public Task<bool> WriteAsync(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
         {
             parameter.ValueSet.Clear();
             parameter.ValueSet.Add(Guid.NewGuid());
             this.writtenThings.Add(parameter);
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool Upsert(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
+        public Task<bool> UpsertAsync(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool Update(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
+        public Task<bool> UpdateAsync(NpgsqlTransaction transaction, string partition, Parameter parameter, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
         {
             throw new NotImplementedException();
         }
 
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public Task<bool> DeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
 
-        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public Task<bool> RawDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
 
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
         }
@@ -962,58 +971,60 @@ namespace CometServer.Tests
     public class TestParameterOverrideDao : IParameterOverrideDao
     {
         private List<Thing> writtenThings = new();
+
         public int WrittenThingCount => this.writtenThings.Count;
 
-        public IEnumerable<ParameterOverride> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
+        public Task<IEnumerable<ParameterOverride>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
-                return this.writtenThings.OfType<ParameterOverride>();
+                return Task.FromResult(this.writtenThings.OfType<ParameterOverride>());
             }
 
-            return this.writtenThings.OfType<ParameterOverride>().Where(x => queriedIds.Contains(x.Iid));
+            return Task.FromResult(this.writtenThings.OfType<ParameterOverride>().Where(x => queriedIds.Contains(x.Iid)));
         }
 
-        public bool Write(NpgsqlTransaction transaction, string partition, ParameterOverride parameter, Thing container = null)
+        public Task<bool> WriteAsync(NpgsqlTransaction transaction, string partition, ParameterOverride parameter, Thing container = null)
         {
             this.writtenThings.Add(parameter);
             parameter.ValueSet.Clear();
             parameter.ValueSet.Add(Guid.NewGuid());
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool Upsert(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, Thing container = null)
+        public Task<bool> UpsertAsync(NpgsqlTransaction transaction, string partition, ParameterOverride parameterOverride, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool Update(NpgsqlTransaction transaction, string partition, ParameterOverride parameter, Thing container = null)
+        public Task<bool> UpdateAsync(NpgsqlTransaction transaction, string partition, ParameterOverride parameter, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
         {
             throw new NotImplementedException();
         }
 
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public Task<bool> DeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
 
-        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public Task<bool> RawDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
 
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
         }
@@ -1040,54 +1051,55 @@ namespace CometServer.Tests
 
         public int WrittenThingCount => this.writtenThings.Count;
 
-        public IEnumerable<ElementDefinition> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
+        public Task<IEnumerable<ElementDefinition>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids = null, bool isCachedDtoReadEnabledAndInstant = false, DateTime? instant = null)
         {
             var queriedIds = ids?.ToList();
+
             if (queriedIds == null)
             {
-                return this.writtenThings.OfType<ElementDefinition>();
+                return Task.FromResult(this.writtenThings.OfType<ElementDefinition>());
             }
 
-            return this.writtenThings.OfType<ElementDefinition>().Where(x => queriedIds.Contains(x.Iid));
+            return Task.FromResult(this.writtenThings.OfType<ElementDefinition>().Where(x => queriedIds.Contains(x.Iid)));
         }
 
-        public bool Write(NpgsqlTransaction transaction, string partition, ElementDefinition ed, Thing container = null)
+        public Task<bool> WriteAsync(NpgsqlTransaction transaction, string partition, ElementDefinition ed, Thing container = null)
         {
             this.writtenThings.Add(ed);
-            return true;
+            return Task.FromResult(true);
         }
 
-        public bool Upsert(NpgsqlTransaction transaction, string partition, ElementDefinition elementDefinition, Thing container = null)
+        public Task<bool> UpsertAsync(NpgsqlTransaction transaction, string partition, ElementDefinition elementDefinition, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool Update(NpgsqlTransaction transaction, string partition, ElementDefinition parameter, Thing container = null)
+        public Task<bool> UpdateAsync(NpgsqlTransaction transaction, string partition, ElementDefinition parameter, Thing container = null)
         {
             throw new NotImplementedException();
         }
 
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, OrderedItem orderUpdate)
         {
             throw new NotImplementedException();
         }
 
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
         }
 
-        public bool Delete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public Task<bool> DeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
 
-        public bool RawDelete(NpgsqlTransaction transaction, string partition, Guid iid)
+        public Task<bool> RawDeleteAsync(NpgsqlTransaction transaction, string partition, Guid iid)
         {
             throw new NotImplementedException();
         }
 
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotImplementedException();
         }

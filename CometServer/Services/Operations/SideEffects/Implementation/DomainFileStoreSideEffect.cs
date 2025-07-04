@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DomainFileStoreSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services.Operations.SideEffects
 {
+    using System.Threading.Tasks;
+
     using CDP4Common;
     using CDP4Common.DTO;
 
@@ -64,7 +66,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override Task BeforeUpdateAsync(
             DomainFileStore thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -72,7 +74,7 @@ namespace CometServer.Services.Operations.SideEffects
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
-            this.HasWriteAccess(thing, transaction, partition);
+            return this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -93,9 +95,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public override void BeforeDelete(DomainFileStore thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override Task BeforeDeleteAsync(DomainFileStore thing, Thing container, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
-            this.HasWriteAccess(thing, transaction, partition);
+            return this.HasWriteAccess(thing, transaction, partition);
         }
 
         /// <summary>
@@ -110,9 +112,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        private void HasWriteAccess(Thing thing, NpgsqlTransaction transaction, string partition)
+        private Task HasWriteAccess(Thing thing, NpgsqlTransaction transaction, string partition)
         {
-            this.DomainFileStoreService.HasWriteAccess(
+            return this.DomainFileStoreService.HasWriteAccessAsync(
                 thing,
                 transaction,
                 partition);

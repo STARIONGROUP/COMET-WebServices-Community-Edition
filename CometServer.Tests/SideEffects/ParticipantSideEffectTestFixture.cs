@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ParticipantSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -80,11 +81,12 @@ namespace CometServer.Tests.SideEffects
             this.personService = new Mock<IPersonService>();
 
             this.npgsqlTransaction = null;
-            this.participantSideEffect = new ParticipantSideEffect();
-
-            this.participantSideEffect.PersonService = this.personService.Object;
-            this.participantSideEffect.EngineeringModelSetupService = this.engineeringModelSetupService.Object;
-            this.participantSideEffect.ParticipantService = this.participantService.Object;
+            this.participantSideEffect = new ParticipantSideEffect
+            {
+                PersonService = this.personService.Object,
+                EngineeringModelSetupService = this.engineeringModelSetupService.Object,
+                ParticipantService = this.participantService.Object
+            };
 
             this.person = new Person(Guid.NewGuid(), 0)
             {
@@ -121,7 +123,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.BeforeUpdate(
+                    this.participantSideEffect.BeforeUpdateAsync(
                         this.participant,
                         null,
                         this.npgsqlTransaction,
@@ -132,12 +134,12 @@ namespace CometServer.Tests.SideEffects
             //invalid selected domain verification
             this.rawUpdateInfo = new ClasslessDTO()
             {
-                { SelectedDomainKey, default }
+                { SelectedDomainKey, null }
             };
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.BeforeUpdate(
+                    this.participantSideEffect.BeforeUpdateAsync(
                         this.participant,
                         null,
                         this.npgsqlTransaction,
@@ -151,7 +153,7 @@ namespace CometServer.Tests.SideEffects
         {
             Assert.That(
                 () =>
-                this.participantSideEffect.AfterCreate(this.participant, null, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                this.participantSideEffect.AfterCreateAsync(this.participant, null, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
@@ -161,7 +163,7 @@ namespace CometServer.Tests.SideEffects
         {
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.participant, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.participant, null, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
@@ -169,11 +171,11 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatAfterCreateThrowsExceptionWhenEngineeringModelSetupIsNotFound()
         {
-            this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(Array.Empty<Thing>());
+            this.engineeringModelSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).ReturnsAsync(Array.Empty<Thing>());
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
             );
         }
@@ -181,13 +183,13 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatAfterCreateDoesNotThrowWhenParticipantIsNotFound()
         {
-            this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(new List<Thing> {this.engineeringModelSetup});
+            this.engineeringModelSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).ReturnsAsync(new List<Thing> {this.engineeringModelSetup});
 
-            this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).Returns(Array.Empty<Thing>());
+            this.participantService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).ReturnsAsync(Array.Empty<Thing>());
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Nothing
             );
         }
@@ -195,13 +197,13 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatAfterCreateDoesNotThrowWhenNoNewParticipantIsAdded()
         {
-            this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(new List<Thing> { this.engineeringModelSetup });
+            this.engineeringModelSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.engineeringModelSetup });
 
-            this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).Returns(new List<Thing> { this.participant });
+            this.participantService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.participant });
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Nothing
             );
         }
@@ -209,15 +211,15 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatAfterCreateDoesNotThrowWhenNewParticipantIsAdded()
         {
-            this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(new List<Thing> { this.engineeringModelSetup });
+            this.engineeringModelSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.engineeringModelSetup });
 
-            this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).Returns(new List<Thing> { this.participant });
+            this.participantService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", this.originalEngineeringModelSetup.Participant, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.participant });
 
-            this.personService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new [] {this.participant.Person}, this.securityContext.Object)).Returns(Array.Empty<Thing>());
+            this.personService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new [] {this.participant.Person}, this.securityContext.Object)).ReturnsAsync(Array.Empty<Thing>());
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Nothing
             );
         }
@@ -230,15 +232,15 @@ namespace CometServer.Tests.SideEffects
 
             this.originalEngineeringModelSetup.Participant.Add(this.originalParticipant.Iid);
 
-            this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(new List<Thing> { this.engineeringModelSetup });
+            this.engineeringModelSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.engineeringModelSetup });
 
-            this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.engineeringModelSetup.Participant, this.securityContext.Object)).Returns(new List<Thing> { this.participant, this.originalParticipant });
+            this.participantService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", this.engineeringModelSetup.Participant, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.participant, this.originalParticipant });
 
-            this.personService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.participant.Person }, this.securityContext.Object)).Returns(Array.Empty<Thing>());
+            this.personService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.participant.Person }, this.securityContext.Object)).ReturnsAsync(Array.Empty<Thing>());
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                     , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
                     .With.Message.Contains($"{nameof(Person)} itself was not found.")
             );
@@ -252,15 +254,15 @@ namespace CometServer.Tests.SideEffects
 
             this.originalEngineeringModelSetup.Participant.Add(this.originalParticipant.Iid);
 
-            this.engineeringModelSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).Returns(new List<Thing> { this.engineeringModelSetup });
+            this.engineeringModelSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.originalEngineeringModelSetup.Iid }, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.engineeringModelSetup });
 
-            this.participantService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", this.engineeringModelSetup.Participant, this.securityContext.Object)).Returns(new List<Thing> { this.participant, this.originalParticipant });
+            this.participantService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", this.engineeringModelSetup.Participant, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.participant, this.originalParticipant });
 
-            this.personService.Setup(x => x.GetShallow(this.npgsqlTransaction, "partition", new[] { this.participant.Person }, this.securityContext.Object)).Returns(new List<Thing> {this.person});
+            this.personService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "partition", new[] { this.participant.Person }, this.securityContext.Object)).ReturnsAsync(new List<Thing> { this.person });
 
             Assert.That(
                 () =>
-                    this.participantSideEffect.AfterCreate(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
+                    this.participantSideEffect.AfterCreateAsync(this.participant, this.originalEngineeringModelSetup, this.participant, this.npgsqlTransaction, "partition", this.securityContext.Object)
                 , Throws.Exception.TypeOf<Cdp4ModelValidationException>()
                     .With.Message.Contains($"is already a {nameof(Participant)}")
             );

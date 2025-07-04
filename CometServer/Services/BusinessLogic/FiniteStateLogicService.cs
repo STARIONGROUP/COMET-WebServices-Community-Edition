@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FiniteStateLogicService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.EngineeringModelData;
 
@@ -84,7 +85,7 @@ namespace CometServer.Services
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        public void UpdateAllRelevantActualFiniteStateList(PossibleFiniteStateList possibleFiniteStateList, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public async Task UpdateAllRelevantActualFiniteStateListAsync(PossibleFiniteStateList possibleFiniteStateList, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // redirect out the iteration partition to the engineeringmodel one, as that contains the iteration information
             var engineeringModelPartition = partition.Replace(
@@ -92,15 +93,15 @@ namespace CometServer.Services
                 CDP4Orm.Dao.Utils.EngineeringModelPartition);
 
             var iteration =
-                this.IterationService.GetActiveIteration(transaction, engineeringModelPartition, securityContext);
+                await this.IterationService.GetActiveIterationAsync(transaction, engineeringModelPartition, securityContext);
 
             // get all actual finite state list
-            var actualFiniteStateList = this.ActualFiniteStateListService.GetShallow(transaction, partition, null, securityContext).Cast<ActualFiniteStateList>();
+            var actualFiniteStateList = (await this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, null, securityContext)).Cast<ActualFiniteStateList>();
             var actualFiniteStateListToUpdate = actualFiniteStateList.Where(x => x.PossibleFiniteStateList.Select(item => Guid.Parse(item.V.ToString())).Contains(possibleFiniteStateList.Iid));
 
             foreach (var finiteStateList in actualFiniteStateListToUpdate)
             {
-                this.UpdateActualFinisteStateList(finiteStateList, iteration, transaction, partition, securityContext);
+                await this.UpdateActualFinisteStateListAsync(finiteStateList, iteration, transaction, partition, securityContext);
             }
         }
 
@@ -112,16 +113,15 @@ namespace CometServer.Services
         /// <param name="transaction">The current <see cref="NpgsqlTransaction"/></param>
         /// <param name="partition">The partition</param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public void UpdateActualFinisteStateList(ActualFiniteStateList actualFiniteStateList, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public async Task UpdateActualFinisteStateListAsync(ActualFiniteStateList actualFiniteStateList, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             // delete the old ActualFiniteState
-            var oldActualStates = this.ActualFiniteStateService.GetShallow(transaction, partition, actualFiniteStateList.ActualState, securityContext)
-                                                                .OfType<ActualFiniteState>().ToList();
+            var oldActualStates = (await this.ActualFiniteStateService.GetShallowAsync(transaction, partition, actualFiniteStateList.ActualState, securityContext)).OfType<ActualFiniteState>().ToList();
 
             // Gets the possible finite state list of the current processed ActualFiniteStateList
             var pslCollection =
-                this.PossibleFiniteStateListService
-                    .GetShallow(transaction, partition, actualFiniteStateList.PossibleFiniteStateList.Select(item => Guid.Parse(item.V.ToString())), securityContext)
+                (await this.PossibleFiniteStateListService
+                    .GetShallowAsync(transaction, partition, actualFiniteStateList.PossibleFiniteStateList.Select(item => Guid.Parse(item.V.ToString())), securityContext))
                     .OfType<PossibleFiniteStateList>()
                     .ToList();
 
@@ -132,22 +132,22 @@ namespace CometServer.Services
 
             // Build the ordered collection of PossibleFiniteStateList for the current ActualFiniteStateList
             var orderedPslCollection = new List<PossibleFiniteStateList>(pslCollection.Count);
+
             foreach (var item in actualFiniteStateList.PossibleFiniteStateList.OrderBy(x => x.K))
             {
                 var psl = pslCollection.Single(x => x.Iid.ToString() == item.V.ToString());
                 orderedPslCollection.Add(psl);
             }
 
-            var newOldActualStateMap = new Dictionary<ActualFiniteState, ActualFiniteState>();
-            this.CreateActualStates(orderedPslCollection, 0, null, actualFiniteStateList, transaction, partition, oldActualStates, ref newOldActualStateMap);
+            var newOldActualStateMap = await this.CreateActualStates(orderedPslCollection, 0, null, actualFiniteStateList, transaction, partition, oldActualStates);
 
-            this.StateDependentParameterUpdateService.UpdateAllStateDependentParameters(actualFiniteStateList, iteration, transaction, partition, securityContext, newOldActualStateMap);
+            await this.StateDependentParameterUpdateService.UpdateAllStateDependentParametersAsync(actualFiniteStateList, iteration, transaction, partition, securityContext, newOldActualStateMap);
 
             // This is where value-set are cleaned up
             // delete old actual states which will clean up all value sets that depend on it
             foreach (var actualState in oldActualStates)
             {
-                if (!this.ActualFiniteStateService.DeleteConcept(transaction, partition, actualState, actualFiniteStateList))
+                if (!await this.ActualFiniteStateService.DeleteConceptAsync(transaction, partition, actualState, actualFiniteStateList))
                 {
                     throw new InvalidOperationException($"The actual finite state {actualState.Iid} could not be deleted");
                 }
@@ -164,10 +164,10 @@ namespace CometServer.Services
         /// <param name="transaction">The current <see cref="NpgsqlTransaction"/></param>
         /// <param name="partition">The partition in the database</param>
         /// <param name="oldActualStates">The old <see cref="ActualFiniteState"/></param>
-        /// <param name="newOldStateMap">The resulting map that links the new to old <see cref="ActualFiniteState"/></param>
-        private void CreateActualStates(IReadOnlyList<PossibleFiniteStateList> pslCollection, int pslIndex, IEnumerable<Guid> possibleStateIds, ActualFiniteStateList container, NpgsqlTransaction transaction, string partition, IReadOnlyList<ActualFiniteState> oldActualStates, ref Dictionary<ActualFiniteState, ActualFiniteState> newOldStateMap)
+        private async Task<Dictionary<ActualFiniteState, ActualFiniteState>> CreateActualStates(IReadOnlyList<PossibleFiniteStateList> pslCollection, int pslIndex, IEnumerable<Guid> possibleStateIds, ActualFiniteStateList container, NpgsqlTransaction transaction, string partition, IReadOnlyList<ActualFiniteState> oldActualStates)
         {
             var currentPossibleStateIds = possibleStateIds == null ? new List<Guid>() : possibleStateIds.ToList();
+            var newOldStateMap = new Dictionary<ActualFiniteState, ActualFiniteState>();
 
             // build the different PossibleStates combination taken from the PossibleFiniteStateLists and create an ActualState for each of these combinations
             foreach (var orderedItem in pslCollection[pslIndex].PossibleState.OrderBy(x => x.K))
@@ -182,7 +182,7 @@ namespace CometServer.Services
                     var newActualstate = new ActualFiniteState(Guid.NewGuid(), 1);
                     newActualstate.PossibleState.AddRange(newPossibleStateIds);
 
-                    this.ActualFiniteStateService.CreateConcept(transaction, partition, newActualstate, container);
+                    await this.ActualFiniteStateService.CreateConceptAsync(transaction, partition, newActualstate, container);
 
                     var oldActualState =
                         oldActualStates.FirstOrDefault(x => x.PossibleState.All(ps => newPossibleStateIds.Contains(ps)));
@@ -193,8 +193,13 @@ namespace CometServer.Services
                     continue;
                 }
 
-                this.CreateActualStates(pslCollection, pslIndex + 1, newPossibleStateIds, container, transaction, partition, oldActualStates, ref newOldStateMap);
+                foreach (var kvp in await this.CreateActualStates(pslCollection, pslIndex + 1, newPossibleStateIds, container, transaction, partition, oldActualStates))
+                {
+                    newOldStateMap.TryAdd(kvp.Key, kvp.Value);
+                }
             }
+
+            return newOldStateMap;
         }
     }
 }

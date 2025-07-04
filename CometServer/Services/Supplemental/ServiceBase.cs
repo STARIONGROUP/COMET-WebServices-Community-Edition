@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ServiceBase.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.Dto;
     using CDP4Common.DTO;
@@ -99,9 +100,13 @@ namespace CometServer.Services
         /// <param name="rdls">The <see cref="ReferenceDataLibrary"/></param>
         /// <param name="targetEngineeringModelSetup">The target <see cref="EngineeringModelSetup"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        public virtual void Copy(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
+        /// <returns>
+        /// An awaitable <see cref="Task"/>
+        /// </returns>
+        public virtual Task CopyAsync(NpgsqlTransaction transaction, string partition, Thing sourceThing, Thing targetContainer, IReadOnlyList<Thing> allSourceThings, CopyInfo copyinfo,
             Dictionary<Guid, Guid> sourceToCopyMap, IReadOnlyList<ReferenceDataLibrary> rdls, EngineeringModelSetup targetEngineeringModelSetup, ISecurityContext securityContext)
         {
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -120,11 +125,11 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// Return true to continue logic flow, or false to stop further concept retrieval logic.
+        /// An awaitable <see cref="Task"/> having true to continue logic flow, or false to stop further concept retrieval logic as result.
         /// </returns>
-        public virtual bool BeforeGet(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public virtual Task<bool> BeforeGetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -146,11 +151,11 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having a post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public virtual IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public virtual Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
-            return resultCollection;
+            return Task.FromResult(resultCollection);
         }
 
         /// <summary>
@@ -189,6 +194,7 @@ namespace CometServer.Services
             foreach (var resolvable in resolvables)
             {
                 var dto = this.RequestUtils.Cache.SingleOrDefault(x => x.Iid == Guid.Parse(resolvable.V.ToString()));
+
                 if (dto != null)
                 {
                     yield return new OrderedItem { K = resolvable.K, V = dto };
@@ -237,9 +243,10 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected virtual bool IsInstanceReadAllowed(NpgsqlTransaction transaction, Thing thing, string partition)
+        protected virtual async Task<bool> IsInstanceReadAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            return this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanRead(transaction, thing, partition);
+            return this.TransactionManager.IsFullAccessEnabled() 
+                   || await this.PermissionService.CanReadAsync(transaction, thing, partition);
         }
 
         /// <summary>
@@ -260,9 +267,10 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        protected virtual bool IsInstanceModifyAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
+        protected virtual async Task<bool> IsInstanceModifyAllowedAsync(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation)
         {
-            return this.TransactionManager.IsFullAccessEnabled() || this.PermissionService.CanWrite(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true });
+            return this.TransactionManager.IsFullAccessEnabled() 
+                   || await this.PermissionService.CanWriteAsync(transaction, thing, thing.GetType().Name, partition, modifyOperation, new RequestSecurityContext { ContainerWriteAllowed = true });
         }
     }
 }

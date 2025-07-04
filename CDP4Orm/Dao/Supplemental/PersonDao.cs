@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,10 +26,13 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.Threading.Tasks;
+
     using CDP4Authentication;
 
     using CDP4Common.DTO;
+
+    using CDP4Orm.Helper;
 
     using Npgsql;
 
@@ -48,13 +51,7 @@ namespace CDP4Orm.Dao
         /// <summary>
         /// Gets the password change token that is only valid in the context of this class instance lifetime.
         /// </summary>
-        public string PasswordChangeToken
-        {
-            get
-            {
-                return this.passwordChangeToken;
-            }
-        }
+        public string PasswordChangeToken => this.passwordChangeToken;
 
         /// <summary>
         /// The before update.
@@ -71,9 +68,6 @@ namespace CDP4Orm.Dao
         /// <param name="container">
         /// The container.
         /// </param>
-        /// <param name="isHandled">
-        /// The is handled.
-        /// </param>
         /// <param name="valueTypeDictionaryAdditions">
         /// This dictionary instance can be used to add additional value (non reference) variables that are to be persisted as a HSTORE implementation together with the supplied <see cref="Thing"/> instance.
         /// Developers are required to take care to add property keys that are not already in the ValueTypeDictionary that is managed in the respective generated partial class.
@@ -83,7 +77,7 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// The <see cref="bool"/>.
         /// </returns>
-        public new bool BeforeUpdate(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
+        public new async Task<BooleanValueAndHandledResult> BeforeUpdateAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             var person = (Person)thing;
             var isPasswordChangeRequest = person.Password.StartsWith(this.passwordChangeToken) && person.Password.EndsWith(this.passwordChangeToken);
@@ -96,11 +90,10 @@ namespace CDP4Orm.Dao
             else
             {
                 // if password is not being changed, salt should be re-persisted
-                this.ExtractExistingSaltToValueDictionary(transaction, partition, person, valueTypeDictionaryAdditions);
+                await this.ExtractExistingSaltToValueDictionary(transaction, partition, person, valueTypeDictionaryAdditions);
             }
 
-            isHandled = false;
-            return true;
+            return BooleanValueAndHandledResult.Default;
         }
 
         /// <summary>
@@ -118,9 +111,6 @@ namespace CDP4Orm.Dao
         /// <param name="container">
         /// The container of the DTO to be persisted.
         /// </param>
-        /// <param name="isHandled">
-        /// Logic flag that can be set to true to skip the generated write logic
-        /// </param>
         /// <param name="valueTypeDictionaryAdditions">
         /// This dictionary instance can be used to add additional value (non reference) variables that are to be persisted as a HSTORE implementation together with the supplied <see cref="Thing"/> instance.
         /// Developers are required to take care to add property keys that are not already in the ValueTypeDictionary that is managed in the respective generated partial class.
@@ -130,12 +120,11 @@ namespace CDP4Orm.Dao
         /// <returns>
         /// True if the concept was persisted.
         /// </returns>
-        public new bool BeforeWrite(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, out bool isHandled, Dictionary<string, string> valueTypeDictionaryAdditions)
+        public new Task<BooleanValueAndHandledResult> BeforeWriteAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             ApplyPasswordChange(thing, valueTypeDictionaryAdditions);
 
-            isHandled = false;
-            return true;
+            return Task.FromResult(BooleanValueAndHandledResult.Default);
         }
 
         /// <summary>
@@ -154,11 +143,11 @@ namespace CDP4Orm.Dao
         /// The supplied values will be persisted as is and thus must be in a valid format (escaped) that can be persisted to SQL.
         /// Even though the additional stored variables are read from the data-store, developers will have to add custom DTO mapping to get retrieve the value again.
         /// </param>
-        private void ExtractExistingSaltToValueDictionary(NpgsqlTransaction transaction, string partition, Person person, Dictionary<string, string> valueTypeDictionaryAdditions)
+        private async Task ExtractExistingSaltToValueDictionary(NpgsqlTransaction transaction, string partition, Person person, Dictionary<string, string> valueTypeDictionaryAdditions)
         {
             ArgumentNullException.ThrowIfNull(person);
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sqlBuilder = new System.Text.StringBuilder();
             sqlBuilder.Append(this.BuildReadQuery(partition, null));
@@ -172,9 +161,9 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sqlBuilder.ToString();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var valueDict = (Dictionary<string, string>) reader["ValueTypeSet"];
 
@@ -209,10 +198,7 @@ namespace CDP4Orm.Dao
         {
             var person = (Person)thing;
 
-            if (person.Password == null)
-            {
-                person.Password = EncryptionUtils.GenerateRandomSaltString();
-            }
+            person.Password ??= EncryptionUtils.GenerateRandomSaltString();
 
             // encrypt the password as a salted hash
             var salt = EncryptionUtils.GenerateRandomSaltString();
@@ -233,9 +219,9 @@ namespace CDP4Orm.Dao
         /// <param name="person">The person <see cref="Person" /></param>
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
         /// <returns>
-        /// The true if operation finished with success
+        /// An awaitable<see cref="Task"/> true if operation finished with success as result
         /// </returns>
-        public bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Person person, MigrationPasswordCredentials credentials)
+        public async Task<bool> UpdateCredentialsAsync(NpgsqlTransaction transaction, string partition, Person person, MigrationPasswordCredentials credentials)
         {
             var operationSuccess = true;
 
@@ -253,7 +239,7 @@ namespace CDP4Orm.Dao
 
             try
             {
-                using var command = new NpgsqlCommand();
+                await using var command = new NpgsqlCommand();
 
                 var sqlBuilder = new System.Text.StringBuilder();
 
@@ -268,7 +254,7 @@ namespace CDP4Orm.Dao
                 command.Connection = transaction.Connection;
                 command.Transaction = transaction;
 
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
             }
             catch
             {

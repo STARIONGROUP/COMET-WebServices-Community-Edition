@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RelationalExpressionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,8 @@
 namespace CometServer.Tests.SideEffects
 {
     using System;
+    using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -80,26 +82,26 @@ namespace CometServer.Tests.SideEffects
             this.parametricConstraint.Expression.Add(this.relationalExpression1.Iid);
             this.parametricConstraint.Expression.Add(this.relationalExpression2.Iid);
 
-            this.relationalExpressionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid }, this.securityContext.Object)).Returns(new[] { this.relationalExpression1 });
-            this.relationalExpressionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression2.Iid }, this.securityContext.Object)).Returns(new[] { this.relationalExpression2 });
-            this.relationalExpressionService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid, this.relationalExpression2.Iid }, this.securityContext.Object)).Returns(new[] { this.relationalExpression1, this.relationalExpression2 });
+            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid }, this.securityContext.Object)).ReturnsAsync([this.relationalExpression1]);
+            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression2.Iid }, this.securityContext.Object)).ReturnsAsync([this.relationalExpression2]);
+            this.relationalExpressionService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.relationalExpression1.Iid, this.relationalExpression2.Iid }, this.securityContext.Object)).ReturnsAsync([this.relationalExpression1, this.relationalExpression2]);
 
-            this.parametricConstraintService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.parametricConstraint.Iid }, this.securityContext.Object)).Returns(new[] { this.parametricConstraint });
+            this.parametricConstraintService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), new[] { this.parametricConstraint.Iid }, this.securityContext.Object)).ReturnsAsync([this.parametricConstraint]);
         }
 
         [Test]
         public void VerifyBeforeDeleteSideEffectDoesNotThrowExceptionWhenMultipleRelationalExpressionsArePresent()
         {
-            Assert.DoesNotThrow(() => this.sideEffect.BeforeDelete(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
-            Assert.DoesNotThrow(() => this.sideEffect.BeforeDelete(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.DoesNotThrowAsync(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.DoesNotThrowAsync(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
 
         [Test]
         public void VerifyBeforeDeleteSideEffectThrowsExceptionLastRelationalExpressionsIsDeleted()
         {
             this.parametricConstraint.Expression.Remove(this.relationalExpression2.Iid);
-            Assert.Throws<Cdp4ModelValidationException>(() => this.sideEffect.BeforeDelete(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
-            Assert.DoesNotThrow(() => this.sideEffect.BeforeDelete(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.ThrowsAsync<Cdp4ModelValidationException>(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression1, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
+            Assert.DoesNotThrowAsync(() => this.sideEffect.BeforeDeleteAsync(this.relationalExpression2, this.parametricConstraint, this.npgsqlTransaction, "partition", this.securityContext.Object));
         }
     }
 }

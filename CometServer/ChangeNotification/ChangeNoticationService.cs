@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ChangeNoticationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -92,21 +92,21 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// An awaitable <see cref="Task"/>
         /// </returns>
-        public async Task Execute()
+        public async Task ExecuteAsync()
         {
             var sw = Stopwatch.StartNew();
 
-            var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
+            await using var connection = new NpgsqlConnection(Services.Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
 
             // ensure an open connection
             if (connection.State != ConnectionState.Open)
             {
                 try
                 {
-                    connection.Open();
-                    var transaction = connection.BeginTransaction();
+                    await connection.OpenAsync();
+                    var transaction = await connection.BeginTransactionAsync();
 
-                    var persons = this.PersonDao.Read(transaction, "SiteDirectory", null, true).ToList();
+                    var persons = (await this.PersonDao.ReadAsync(transaction, "SiteDirectory", null, true)).ToList();
 
                     foreach (var person in persons)
                     {
@@ -115,14 +115,14 @@ namespace CometServer.ChangeNotification
                             continue;
                         }
 
-                        var emailAddresses = this.GetEmailAdressess(transaction, person).ToList();
+                        var emailAddresses = (await this.GetEmailAdressessAsync(transaction, person)).ToList();
 
                         if (emailAddresses.Count == 0)
                         {
                             continue;
                         }
 
-                        var changeNotificationSubscriptionUserPreferences = this.GetChangeLogSubscriptionUserPreferences(transaction, person);
+                        var changeNotificationSubscriptionUserPreferences = await this.GetChangeLogSubscriptionUserPreferencesAsync(transaction, person);
 
                         var endDateTime = GetEndDateTime(DayOfWeek.Monday);
                         var startDateTime = endDateTime.AddDays(-7);
@@ -137,14 +137,14 @@ namespace CometServer.ChangeNotification
                             if (changeNotificationSubscriptionUserPreference.Value.ChangeNotificationSubscriptions.Count != 0
                                 && changeNotificationSubscriptionUserPreference.Value.ChangeNotificationReportType != ChangeNotificationReportType.None)
                             {
-                                var changelogSections = this.ChangelogBodyComposer.CreateChangelogSections(
+                                var changelogSections = (await this.ChangelogBodyComposer.CreateChangelogSectionsAsync(
                                     transaction,
                                     Guid.Parse(changeNotificationSubscriptionUserPreference.Key),
                                     person,
                                     changeNotificationSubscriptionUserPreference.Value,
                                     startDateTime,
                                     endDateTime
-                                ).ToList();
+                                )).ToList();
 
                                 htmlStringBuilder.Append(this.ChangelogBodyComposer.CreateHtmlBody(changelogSections));
                                 textStringBuilder.Append(this.ChangelogBodyComposer.CreateTextBody(changelogSections));
@@ -156,7 +156,7 @@ namespace CometServer.ChangeNotification
                 }
                 catch (PostgresException postgresException)
                 {
-                    this.Logger.LogCritical("Could not connect to the database to process Change Notifications. Error message: {postgresException.Message}", postgresException.Message);
+                    this.Logger.LogCritical(postgresException, "Could not connect to the database to process Change Notifications. Error message: {PostgresExceptionMessage}", postgresException.Message);
                 }
                 catch (Exception ex)
                 {
@@ -169,7 +169,7 @@ namespace CometServer.ChangeNotification
                         await connection.CloseAsync();
                     }
 
-                    this.Logger.LogInformation("ChangeNotifications processed in {sw} [ms]", sw.ElapsedMilliseconds);
+                    this.Logger.LogInformation("ChangeNotifications processed in {ElapsedMilliseconds} [ms]", sw.ElapsedMilliseconds);
                 }
             }
         }
@@ -186,28 +186,30 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// An <see cref="IEnumerable{T}"/> of type <see cref="EmailAddress"/>
         /// </returns>
-        private IEnumerable<EmailAddress> GetEmailAdressess(NpgsqlTransaction transaction, Person person)
+        private async Task<IEnumerable<EmailAddress>> GetEmailAdressessAsync(NpgsqlTransaction transaction, Person person)
         {
             if (person.EmailAddress.Count == 0)
             {
-                yield break;
+                return [];
             }
 
-            var emailAddresses = this.EmailAddressDao.Read(transaction, "SiteDirectory", person.EmailAddress).ToList();
+            var emailAddresses = (await this.EmailAddressDao.ReadAsync(transaction, "SiteDirectory", person.EmailAddress)).ToList();
 
             if (emailAddresses.Count == 0)
             {
-                yield break;
+                return [];
             }
 
             if (person.DefaultEmailAddress != null && emailAddresses.Any(x => x.Iid == person.DefaultEmailAddress.Value))
             {
-                yield return emailAddresses.Single(x => x.Iid == person.DefaultEmailAddress.Value);
+                return [emailAddresses.Single(x => x.Iid == person.DefaultEmailAddress.Value)];
             }
             else
             {
-                yield return emailAddresses.First();
+                return [emailAddresses.First()];
             }
+
+            return [];
         }
 
         /// <summary>
@@ -238,13 +240,13 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// A <see cref="Dictionary{TKey, TValue}"/> of type <see cref="string"/> and <see cref="ChangeNotificationSubscriptionUserPreference"/>
         /// </returns>
-        private Dictionary<string, ChangeNotificationSubscriptionUserPreference> GetChangeLogSubscriptionUserPreferences(NpgsqlTransaction transaction, Person person)
+        private async Task<Dictionary<string, ChangeNotificationSubscriptionUserPreference>> GetChangeLogSubscriptionUserPreferencesAsync(NpgsqlTransaction transaction, Person person)
         {
             var changeLogSubscriptions = new Dictionary<string, ChangeNotificationSubscriptionUserPreference>();
 
             var userPreferences =
-                this.UserPreferenceDao
-                    .Read(transaction, "SiteDirectory", person.UserPreference, true)
+                (await this.UserPreferenceDao
+                    .ReadAsync(transaction, "SiteDirectory", person.UserPreference, true))
                     .Where(x => x.ShortName.StartsWith("ChangeLogSubscriptions_"))
                     .ToList();
 

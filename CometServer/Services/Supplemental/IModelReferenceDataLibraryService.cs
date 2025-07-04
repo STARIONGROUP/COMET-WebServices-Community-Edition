@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IModelReferenceDataLibraryService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -41,6 +42,6 @@ namespace CometServer.Services
         /// <param name="transaction">The current transaction</param>
         /// <param name="iteration">The <see cref="Iteration"/></param>
         /// <returns>The <see cref="ReferenceDataLibrary"/></returns>
-        IEnumerable<ReferenceDataLibrary> QueryReferenceDataLibrary(NpgsqlTransaction transaction, Iteration iteration);
+        Task<IEnumerable<ReferenceDataLibrary>> QueryReferenceDataLibraryAsync(NpgsqlTransaction transaction, Iteration iteration);
     }
 }

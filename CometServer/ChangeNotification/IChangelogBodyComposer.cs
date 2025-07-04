@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IChangelogBodyComposer.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.ChangeNotification
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -84,7 +85,7 @@ namespace CometServer.ChangeNotification
         /// <returns>
         /// An <see cref="IEnumerable{T}"/> of type <see cref="ChangelogSection"/>s
         /// </returns>
-        IEnumerable<ChangelogSection> CreateChangelogSections(
+        Task<IEnumerable<ChangelogSection>> CreateChangelogSectionsAsync(
             NpgsqlTransaction transaction, 
             Guid engineeringModelIid, 
             Person person, 

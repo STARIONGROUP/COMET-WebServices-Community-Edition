@@ -45,6 +45,9 @@ namespace CometServer.Configuration
             this.DatabaseRestore = "cdp4serverrestore";
             this.DatabaseManage = "cdp4manage";
             this.StatementTimeout = 120;
+            this.ConnectionTimeout = 15;
+            this.Keepalive = 0; // No keepalive by default
+            this.MaximumPoolSize = 100; // Default maximum pool size
             this.IsDbImportEnabled = false;
             this.IsDbSeedEnabled = false;
             this.IsDbRestoreEnabled = false;
@@ -59,16 +62,52 @@ namespace CometServer.Configuration
         public BacktierConfig(IConfiguration configuration)
         {
             this.HostName = configuration["Backtier:HostName"];
-            this.Port = int.Parse(configuration["Backtier:Port"]);
+
+            if (int.TryParse(configuration["Backtier:Port"], out var port))
+            {
+                this.Port = port;
+            }
+
             this.UserName = configuration["Backtier:UserName"];
             this.Password = configuration["Backtier:Password"];
             this.Database = configuration["Backtier:Database"];
             this.DatabaseRestore = configuration["Backtier:DatabaseRestore"];
             this.DatabaseManage = configuration["Backtier:DatabaseManage"];
-            this.StatementTimeout = int.Parse(configuration["Backtier:StatementTimeout"]);
-            this.IsDbImportEnabled = bool.Parse(configuration["Backtier:IsDbImportEnabled"]);
-            this.IsDbSeedEnabled = bool.Parse(configuration["Backtier:IsDbSeedEnabled"]);
-            this.IsDbRestoreEnabled = bool.Parse(configuration["Backtier:IsDbRestoreEnabled"]);
+
+            if (int.TryParse(configuration["Backtier:ConnectionTimeout"], out var connectionTimeout))
+            {
+                this.ConnectionTimeout = connectionTimeout;
+            }
+
+            if (int.TryParse(configuration["Backtier:Keepalive"], out var keepAlive))
+            {
+                this.Keepalive = keepAlive;
+            }
+
+            if (int.TryParse(configuration["Backtier:MaximumPoolSize"], out var maximumPoolSize))
+            {
+                this.MaximumPoolSize = maximumPoolSize;
+            }
+
+            if (int.TryParse(configuration["Backtier:StatementTimeout"], out var statementTimeout))
+            {
+                this.StatementTimeout = statementTimeout;
+            }
+
+            if (bool.TryParse(configuration["Backtier:IsDbImportEnabled"], out var isDbImportEnabled))
+            {
+                this.IsDbImportEnabled = isDbImportEnabled;
+            }
+
+            if (bool.TryParse(configuration["Backtier:IsDbSeedEnabled"], out var isDbSeedEnabled))
+            {
+                this.IsDbSeedEnabled = isDbSeedEnabled;
+            }
+
+            if (bool.TryParse(configuration["Backtier:IsDbRestoreEnabled"], out var isDbRestoreEnabled))
+            {
+                this.IsDbRestoreEnabled = isDbRestoreEnabled;
+            }
         }
 
         /// <summary>
@@ -113,6 +152,30 @@ namespace CometServer.Configuration
         /// Default is 120 seconds
         /// </remarks>
         public int StatementTimeout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the time to wait (in seconds) while trying to get a connection from the connection pool before terminating the attempt and generating an error.
+        /// </summary>
+        /// <remarks>
+        /// Default is 15 seconds
+        /// </remarks>
+        public int ConnectionTimeout { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of seconds of connection inactivity before Npgsql sends a keepalive query.
+        /// </summary>
+        /// <remarks>
+        /// Default is 0 seconds
+        /// </remarks>
+        public int Keepalive { get; set; }
+
+        /// <summary>
+        /// Gets or sets the maximum connection pool size.
+        /// </summary>
+        /// <remarks>
+        /// Default is 100
+        /// </remarks>
+        public int MaximumPoolSize { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether database import is enabled.

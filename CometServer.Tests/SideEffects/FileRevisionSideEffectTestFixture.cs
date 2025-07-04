@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileRevisionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Security;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
@@ -85,40 +86,40 @@ namespace CometServer.Tests.SideEffects
         [Test]
         public void VerifyThatBeforeDeleteCheckSecurityWorks()
         {
-           this.sideEffect.BeforeDelete(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+           this.sideEffect.BeforeDeleteAsync(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void VerifyThatBeforeUpdateCheckSecurityWorks()
         {
-            this.sideEffect.BeforeUpdate(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
+            this.sideEffect.BeforeUpdateAsync(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
         }
 
         [Test]
         public void VerifyThatBeforeCreateCheckSecurityWorks()
         {
-            this.sideEffect.BeforeCreate(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
+            this.sideEffect.BeforeCreateAsync(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext());
 
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Never);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Never);
         }
 
         [Test]
-        public void VerifyThatAdditionalCheckSecurityChecksWork()
+        public async Task VerifyThatAdditionalCheckSecurityChecksWork()
         {
             // Wrong container, should be a File
-            Assert.Throws<IncompleteModelException>(() => this.sideEffect.BeforeUpdate(this.fileRevision, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
+            Assert.ThrowsAsync<IncompleteModelException>(() => this.sideEffect.BeforeUpdateAsync(this.fileRevision, this.fileStore, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
 
             //Locked by me
-            this.sideEffect.BeforeUpdate(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
-            this.domainFileStoreService.Verify(x => x.HasWriteAccess(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
+            await this.sideEffect.BeforeUpdateAsync(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null);
+            this.domainFileStoreService.Verify(x => x.HasWriteAccessAsync(It.IsAny<File>(), null, It.IsAny<string>()), Times.Once);
 
             //Locked by someone else
-            this.fileService.Setup(x => x.CheckFileLock(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();
-            Assert.Throws<SecurityException>(() => this.sideEffect.BeforeUpdate(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
+            this.fileService.Setup(x => x.CheckFileLockAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), this.file)).Throws<SecurityException>();
+            Assert.ThrowsAsync<SecurityException>(() => this.sideEffect.BeforeUpdateAsync(this.fileRevision, this.file, this.npgsqlTransaction, "Iteration_something", new RequestSecurityContext(), null));
         }
     }
 }

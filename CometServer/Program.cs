@@ -109,6 +109,9 @@ namespace CometServer
                 logger.LogInformation("Backtier-DatabaseRestore: {DatabaseRestore}", appConfigService.AppConfig.Backtier.DatabaseRestore);
                 logger.LogInformation("Backtier-DatabaseManage: {DatabaseManage}", appConfigService.AppConfig.Backtier.DatabaseManage);
                 logger.LogInformation("Backtier-StatementTimeout: {StatementTimeout}", appConfigService.AppConfig.Backtier.StatementTimeout);
+                logger.LogInformation("Backtier-ConnectionTimeout: {ConnectionTimeout}", appConfigService.AppConfig.Backtier.ConnectionTimeout);
+                logger.LogInformation("Backtier-Keepalive: {Keepalive}", appConfigService.AppConfig.Backtier.Keepalive);
+                logger.LogInformation("Backtier-MaximumPoolSize: {MaximumPoolSize}", appConfigService.AppConfig.Backtier.MaximumPoolSize);
                 logger.LogInformation("Backtier-IsDbSeedEnabled: {IsDbSeedEnabled}", appConfigService.AppConfig.Backtier.IsDbSeedEnabled);
                 logger.LogInformation("Backtier-IsDbImportEnabled: {IsDbImportEnabled}", appConfigService.AppConfig.Backtier.IsDbImportEnabled);
                 logger.LogInformation("Backtier-IsDbRestoreEnabled: {IsDbRestoreEnabled}", appConfigService.AppConfig.Backtier.IsDbRestoreEnabled);

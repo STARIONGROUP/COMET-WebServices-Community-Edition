@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ThingService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -32,17 +31,25 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
     /// The <see cref="Thing"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public sealed partial class ThingService : ServiceBase, IThingService
     {
         /// <summary>
@@ -351,13 +358,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="Thing"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -379,9 +386,9 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotSupportedException();
         }
@@ -405,9 +412,9 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotSupportedException();
         }
@@ -431,9 +438,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
             throw new NotSupportedException();
         }
@@ -451,9 +458,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -474,9 +481,9 @@ namespace CometServer.Services
         /// The container instance of the <see cref="Thing"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotSupportedException();
         }
@@ -499,9 +506,9 @@ namespace CometServer.Services
         /// The container instance of the <see cref="Thing"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotSupportedException();
         }
@@ -522,9 +529,9 @@ namespace CometServer.Services
         /// The container instance of the <see cref="Thing"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
             throw new NotSupportedException(string.Format("The abstract DTO type: {0} cannot be updated.", thing.GetType().Name));
         }
@@ -548,9 +555,9 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             throw new NotSupportedException(string.Format("The abstract DTO type: {0} cannot be created.", thing.GetType().Name));
         }
@@ -575,9 +582,9 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             throw new NotSupportedException(string.Format("The abstract DTO type: {0} cannot be created.", thing.GetType().Name));
         }
@@ -598,79 +605,79 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="Thing"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("Thing", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
             var thingColl = new List<Thing>();
-            thingColl.AddRange(this.ActualFiniteStateService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ActualFiniteStateListService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.AliasService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.BookService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.BooleanExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.CitationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.DefinedThingService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.DefinitionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.DependentParameterTypeAssignmentService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.DiagramThingBaseService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.EmailAddressService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ExternalIdentifierMapService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.FileService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.FileRevisionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.FileStoreService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.FolderService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.GenericAnnotationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.HyperLinkService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.IdCorrespondenceService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.IndependentParameterTypeAssignmentService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.IterationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.IterationSetupService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.LogEntryChangelogItemService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.MappingToReferenceScaleService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ModelLogEntryService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.NaturalLanguageService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.NestedElementService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.NestedParameterService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.NoteService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.OrganizationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.OrganizationalParticipantService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.PageService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParameterBaseService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParameterGroupService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParameterSubscriptionValueSetService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParameterTypeComponentService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParameterValueService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParameterValueSetBaseService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParametricConstraintService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParticipantService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ParticipantPermissionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.PersonService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.PersonPermissionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.PublicationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.QuantityKindFactorService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.RelationshipService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.RuleVerificationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.RuleViolationService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ScaleReferenceQuantityValueService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.SectionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.SimpleParameterValueService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.SiteLogEntryService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.StakeHolderValueMapSettingsService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.TelephoneNumberService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.ThingReferenceService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.TopContainerService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.UnitFactorService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            thingColl.AddRange(this.UserPreferenceService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ActualFiniteStateService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ActualFiniteStateListService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.AliasService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.BookService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.BooleanExpressionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.CitationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.DefinedThingService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.DefinitionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.DependentParameterTypeAssignmentService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.DiagramThingBaseService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.EmailAddressService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ExternalIdentifierMapService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.FileService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.FileRevisionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.FileStoreService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.FolderService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.GenericAnnotationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.HyperLinkService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.IdCorrespondenceService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.IndependentParameterTypeAssignmentService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.IterationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.IterationSetupService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.LogEntryChangelogItemService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.MappingToReferenceScaleService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ModelLogEntryService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.NaturalLanguageService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.NestedElementService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.NestedParameterService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.NoteService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.OrganizationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.OrganizationalParticipantService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.PageService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParameterBaseService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParameterGroupService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParameterSubscriptionValueSetService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParameterTypeComponentService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParameterValueService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParameterValueSetBaseService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParametricConstraintService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParticipantService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ParticipantPermissionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.PersonService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.PersonPermissionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.PublicationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.QuantityKindFactorService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.RelationshipService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.RuleVerificationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.RuleViolationService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ScaleReferenceQuantityValueService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.SectionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.SimpleParameterValueService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.SiteLogEntryService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.StakeHolderValueMapSettingsService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.TelephoneNumberService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.ThingReferenceService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.TopContainerService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.UnitFactorService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            thingColl.AddRange(await this.UserPreferenceService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
 
-            return this.AfterGet(thingColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(thingColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -689,9 +696,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="Thing"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="Thing"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -700,64 +707,64 @@ namespace CometServer.Services
             }
 
             var results = new List<Thing>();
-            results.AddRange(this.ActualFiniteStateService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ActualFiniteStateListService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.AliasService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.BookService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.BooleanExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.CitationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.DefinedThingService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.DefinitionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.DependentParameterTypeAssignmentService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.DiagramThingBaseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.EmailAddressService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ExternalIdentifierMapService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.FileService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.FileRevisionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.FileStoreService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.FolderService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.GenericAnnotationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.HyperLinkService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.IdCorrespondenceService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.IndependentParameterTypeAssignmentService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.IterationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.IterationSetupService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.LogEntryChangelogItemService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.MappingToReferenceScaleService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ModelLogEntryService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.NaturalLanguageService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.NestedElementService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.NestedParameterService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.NoteService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.OrganizationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.OrganizationalParticipantService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.PageService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParameterBaseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParameterGroupService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParameterSubscriptionValueSetService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParameterTypeComponentService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParameterValueService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParameterValueSetBaseService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParametricConstraintService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParticipantService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ParticipantPermissionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.PersonService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.PersonPermissionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.PublicationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.QuantityKindFactorService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.RelationshipService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.RuleVerificationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.RuleViolationService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ScaleReferenceQuantityValueService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.SectionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.SimpleParameterValueService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.SiteLogEntryService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.StakeHolderValueMapSettingsService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.TelephoneNumberService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ThingReferenceService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.TopContainerService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.UnitFactorService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.UserPreferenceService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ActualFiniteStateService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ActualFiniteStateListService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.AliasService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.BookService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.BooleanExpressionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.CitationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.DefinedThingService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.DefinitionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.DependentParameterTypeAssignmentService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.DiagramThingBaseService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.EmailAddressService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ExternalIdentifierMapService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.FileService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.FileRevisionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.FileStoreService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.FolderService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.GenericAnnotationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.HyperLinkService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.IdCorrespondenceService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.IndependentParameterTypeAssignmentService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.IterationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.IterationSetupService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.LogEntryChangelogItemService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.MappingToReferenceScaleService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ModelLogEntryService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.NaturalLanguageService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.NestedElementService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.NestedParameterService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.NoteService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.OrganizationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.OrganizationalParticipantService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.PageService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParameterBaseService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParameterGroupService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParameterSubscriptionValueSetService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParameterTypeComponentService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParameterValueService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParameterValueSetBaseService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParametricConstraintService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParticipantService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ParticipantPermissionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.PersonService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.PersonPermissionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.PublicationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.QuantityKindFactorService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.RelationshipService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.RuleVerificationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.RuleViolationService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ScaleReferenceQuantityValueService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.SectionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.SimpleParameterValueService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.SiteLogEntryService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.StakeHolderValueMapSettingsService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.TelephoneNumberService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ThingReferenceService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.TopContainerService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.UnitFactorService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.UserPreferenceService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
             return results;
         }
 
@@ -780,14 +787,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }

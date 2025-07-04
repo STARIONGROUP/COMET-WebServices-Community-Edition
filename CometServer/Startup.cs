@@ -518,7 +518,7 @@ namespace CometServer
 
             appLifetime.ApplicationStarted.Register(() =>
             {
-                RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.Execute(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
+                RecurringJob.AddOrUpdate<ChangeNoticationService>("ChangeNotificationService.Execute", notificationService => notificationService.ExecuteAsync(), Cron.Weekly(DayOfWeek.Monday, 0, 15));
             });
         }
     }

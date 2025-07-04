@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -144,18 +146,18 @@ namespace CometServer.Tests.SideEffects
 
             this.siteReferenceDataLibraryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
 
             this.arrayParameterTypeService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
@@ -164,13 +166,13 @@ namespace CometServer.Tests.SideEffects
                                 this.arrayParameterTypeA.Iid,
                                 this.arrayParameterTypeB.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<CompoundParameterType> { this.arrayParameterTypeA, this.arrayParameterTypeB });
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
 
             this.compoundParameterTypeService.Setup(
-                x => x.Get(
+                x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     new List<Guid>
@@ -179,47 +181,46 @@ namespace CometServer.Tests.SideEffects
                             this.arrayParameterTypeA.Iid,
                             this.arrayParameterTypeB.Iid
                         },
-                    It.IsAny<ISecurityContext>())).Returns(new List<ArrayParameterType>());
+                    It.IsAny<ISecurityContext>())).ReturnsAsync(new List<CompoundParameterType>());
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentA });
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentB });
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
-                    new List<ParameterTypeComponent> { this.parameterTypeComponentC });
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
+                        new List<ParameterTypeComponent> { this.parameterTypeComponentC });
 
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentD });
-
-
+            
             this.sideEffect = new ArrayParameterTypeSideEffect()
                                   {
                                       CompoundParameterTypeService =
@@ -253,8 +254,8 @@ namespace CometServer.Tests.SideEffects
                                          }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.arrayParameterTypeB,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -284,7 +285,7 @@ namespace CometServer.Tests.SideEffects
                                      };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.arrayParameterTypeB,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

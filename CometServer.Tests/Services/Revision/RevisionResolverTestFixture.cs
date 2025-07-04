@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="RevisionResolverTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Tests
     using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Orm.Dao.Revision;
 
@@ -108,14 +109,16 @@ namespace CometServer.Tests
                 this.revision5
             }.AsReadOnly();
 
-            this.revisionDao.Setup(x => x.ReadRevisionRegistry(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).Returns(revisionRegistryInfoList);
+            this.revisionDao.Setup(x => x.ReadRevisionRegistryAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>())).ReturnsAsync(revisionRegistryInfoList);
         }
 
         [Test]
         [TestCaseSource(nameof(IntTestCases))]
-        public void VerifyThatCorrectRevisionsAreReturnedWhenRevisionNumbersAreUsed(int? fromRevision, int? toRevision, int checkFromRevision, int checkToRevision, int checkRevisionCount)
+        public async Task VerifyThatCorrectRevisionsAreReturnedWhenRevisionNumbersAreUsed(int? fromRevision, int? toRevision, int checkFromRevision, int checkToRevision, int checkRevisionCount)
         {
-            this.revisionResolver.TryResolve(It.IsAny<NpgsqlTransaction>(), "", fromRevision, toRevision, out var resolvedValues);
+            var result = await this.revisionResolver.TryResolve(It.IsAny<NpgsqlTransaction>(), "", fromRevision, toRevision);
+
+            var resolvedValues = result.Value;
 
             Assert.That(resolvedValues.FromRevision, Is.EqualTo(checkFromRevision));
             Assert.That(resolvedValues.ToRevision, Is.EqualTo(checkToRevision));
@@ -124,9 +127,12 @@ namespace CometServer.Tests
 
         [Test]
         [TestCaseSource(nameof(DateTimeTestCases))]
-        public void VerifyThatCorrectRevisionsAreReturnedWhenRevisionTimestampsAreUsed(DateTime? fromRevision, DateTime? toRevision, int checkFromRevision, int checkToRevision, int checkRevisionCount)
+        public async Task VerifyThatCorrectRevisionsAreReturnedWhenRevisionTimestampsAreUsed(DateTime? fromRevision, DateTime? toRevision, int checkFromRevision, int checkToRevision, int checkRevisionCount)
         {
-            this.revisionResolver.TryResolve(It.IsAny<NpgsqlTransaction>(), "", fromRevision, toRevision, out var resolvedValues);
+            var result = await this.revisionResolver.TryResolve(It.IsAny<NpgsqlTransaction>(), "", fromRevision, toRevision);
+
+            var resolvedValues = result.Value;
+
 
             Assert.That(resolvedValues.FromRevision, Is.EqualTo(checkFromRevision));
             Assert.That(resolvedValues.ToRevision, Is.EqualTo(checkToRevision));

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CopySourceService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,7 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -60,12 +61,12 @@ namespace CometServer.Services
         /// <param name="copyinfo">The <see cref="CopyInfo"/></param>
         /// <param name="requestPartition">The contextual partition</param>
         /// <returns>The source data</returns>
-        public ReadOnlyCollection<Thing> GetCopySourceData(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition)
+        public async Task<ReadOnlyCollection<Thing>> GetCopySourceDataAsync(NpgsqlTransaction transaction, CopyInfo copyinfo, string requestPartition)
         {
             if (copyinfo.Source.IterationId.HasValue && copyinfo.Source.IterationId.Value != Guid.Empty)
             {
                 var topcontainerPartition = $"EngineeringModel_{copyinfo.Source.TopContainer.Iid.ToString().Replace("-", "_")}";
-                this.TransactionManager.SetIterationContext(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
+                await this.TransactionManager.SetIterationContextAsync(transaction, topcontainerPartition, copyinfo.Source.IterationId.Value);
             }
 
             // transaction shall be contextual to source iteration if applicable (get new transaction)
@@ -78,19 +79,19 @@ namespace CometServer.Services
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true, ContainerWriteAllowed = true };
 
             var sourceThings = copyinfo.Options.CopyKind == CopyKind.Deep
-                ? readservice.GetDeep(transaction, partition, new[] {copyinfo.Source.Thing.Iid}, securityContext)
-                : readservice.GetShallow(transaction, partition, new[] {copyinfo.Source.Thing.Iid}, securityContext);
+                ? await readservice.GetDeepAsync(transaction, partition, [copyinfo.Source.Thing.Iid], securityContext)
+                : await readservice.GetShallowAsync(transaction, partition, [copyinfo.Source.Thing.Iid], securityContext);
 
             var source = sourceThings.ToList();
 
             // also get all referenced element-definition as they dont exist in target iteration
             if (copyinfo.Source.IterationId.Value != copyinfo.Target.IterationId.Value)
             {
-                source.AddRange(GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, source, readservice, source.Select(x => x.Iid).ToList()));
+                source.AddRange(await GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, source, readservice, source.Select(x => x.Iid).ToList()));
             }
 
             // revert context to current
-            this.TransactionManager.SetIterationContext(transaction, requestPartition, copyinfo.Target.IterationId.Value);
+            await this.TransactionManager.SetIterationContextAsync(transaction, requestPartition, copyinfo.Target.IterationId.Value);
 
             return source.AsReadOnly();
         }
@@ -122,16 +123,16 @@ namespace CometServer.Services
         /// <param name="readservice">The element-definition read service</param>
         /// <param name="allSourcesId">A list containing the identifier of all things to copy</param>
         /// <returns>A list containing additional <see cref="Thing"/> to copy</returns>guid
-        private static ReadOnlyCollection<Thing> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
+        private static async Task<ReadOnlyCollection<Thing>> GetElementDefinitionTreeFromRootDefinition(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, IReadOnlyList<Thing> source, IReadService readservice, IReadOnlyList<Guid> allSourcesId)
         {
             var additionalSources = new List<Thing>();
             var usages = source.OfType<ElementUsage>().ToArray();
 
             if (usages.Length > 0)
             {
-                var getResults = readservice.GetDeep(transaction, partition, usages.Select(x => x.ElementDefinition).Distinct().Where(x => !allSourcesId.Contains(x)).ToArray(), securityContext).ToList();
+                var getResults = (await readservice.GetDeepAsync(transaction, partition, usages.Select(x => x.ElementDefinition).Distinct().Where(x => !allSourcesId.Contains(x)).ToArray(), securityContext)).ToList();
                 additionalSources.AddRange(getResults);
-                additionalSources.AddRange(GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, getResults, readservice, allSourcesId.Union(getResults.Select(x => x.Iid)).ToList()));
+                additionalSources.AddRange(await GetElementDefinitionTreeFromRootDefinition(transaction, partition, securityContext, getResults, readservice, allSourcesId.Union(getResults.Select(x => x.Iid)).ToList()));
             }
 
             return additionalSources.AsReadOnly();

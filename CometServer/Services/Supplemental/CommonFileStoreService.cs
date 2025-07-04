@@ -1,6 +1,6 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CommonFileStoreService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,7 +28,8 @@ namespace CometServer.Services
     using System.Collections.Generic;
     using System.Data;
     using System.Linq;
-    
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
     using CDP4Common.Exceptions;
 
@@ -85,7 +86,7 @@ namespace CometServer.Services
         /// Also if a new CommonFileStore including Files and Folders are created in the same webservice call, then GetShallow for the new DommonFileStores might not return
         /// the to be created <see cref="CommonFileStore"/>. The isHidden check will then be ignored.
         /// </remarks>
-        public void HasWriteAccess(Thing thing, IDbTransaction transaction, string partition)
+        public Task HasWriteAccessAsync(Thing thing, IDbTransaction transaction, string partition)
         {
             if (!partition.Contains("EngineeringModel"))
             {
@@ -98,6 +99,8 @@ namespace CometServer.Services
             {
                 throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking CommonFileStore security: {thingType.Name}");
             }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -112,7 +115,7 @@ namespace CometServer.Services
         /// <param name="partition">
         /// The database partition (schema) where the requested resource will be stored.
         /// </param>
-        public bool HasReadAccess(Thing thing, IDbTransaction transaction, string partition)
+        public Task<bool> HasReadAccessAsync(Thing thing, IDbTransaction transaction, string partition)
         {
             if (!partition.Contains("EngineeringModel"))
             {
@@ -126,7 +129,7 @@ namespace CometServer.Services
                 throw new Cdp4ModelValidationException($"Incompatible ClassType found when checking CommonFileStore security: {thingType.Name}");
             }
 
-            return true;
+            return Task.FromResult(true);
         }
     }
 }

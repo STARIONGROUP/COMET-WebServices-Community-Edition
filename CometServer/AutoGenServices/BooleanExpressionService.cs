@@ -1,9 +1,8 @@
 // --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BooleanExpressionService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
-//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, 
-//            Antoine Théate, Omar Elebiary, Jaime Bernar
+//    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
 //    This file is part of CDP4-COMET Web Services Community Edition. 
 //    The CDP4-COMET Web Services Community Edition is the STARION implementation of ECSS-E-TM-10-25 Annex A and Annex C.
@@ -32,17 +31,25 @@ namespace CometServer.Services
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Security;
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
+
     using CDP4Orm.Dao;
+
     using CometServer.Services.Authorization;
+
     using Microsoft.Extensions.Logging;
+
     using Npgsql;
 
     /// <summary>
     /// The <see cref="BooleanExpression"/> Service which uses the ORM layer to interact with the data model.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     public sealed partial class BooleanExpressionService : ServiceBase, IBooleanExpressionService
     {
         /// <summary>
@@ -86,13 +93,13 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="BooleanExpression"/>, optionally with contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having a list of instances of <see cref="BooleanExpression"/>, optionally with contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> Get(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             return this.RequestUtils.QueryParameters.ExtentDeep
-                        ? this.GetDeep(transaction, partition, ids, containerSecurityContext)
-                        : this.GetShallow(transaction, partition, ids, containerSecurityContext);
+                        ? await this.GetDeepAsync(transaction, partition, ids, containerSecurityContext)
+                        : await this.GetShallowAsync(transaction, partition, ids, containerSecurityContext);
         }
 
         /// <summary>
@@ -114,9 +121,9 @@ namespace CometServer.Services
         /// A value for which a link table record will be created.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool AddToCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> AddToCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotSupportedException();
         }
@@ -140,9 +147,9 @@ namespace CometServer.Services
         /// A value for which the link table record will be removed.
         /// </param>
         /// <returns>
-        /// True if the link was removed.
+        /// An awaitable <see cref="Task"/> having True if the link was removed as result.
         /// </returns>
-        public bool DeleteFromCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
+        public Task<bool> DeleteFromCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, object value)
         {
             throw new NotSupportedException();
         }
@@ -166,9 +173,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the link was created.
+        /// An awaitable <see cref="Task"/> having True if the link was created as result.
         /// </returns>
-        public bool ReorderCollectionProperty(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
+        public Task<bool> ReorderCollectionPropertyAsync(NpgsqlTransaction transaction, string partition, string propertyName, Guid iid, CDP4Common.Types.OrderedItem orderUpdate)
         {
             throw new NotSupportedException();
         }
@@ -186,9 +193,9 @@ namespace CometServer.Services
         /// The order update information containing the new order key.
         /// </param>
         /// <returns>
-        /// True if the contained item was successfully reordered.
+        /// An awaitable <see cref="Task"/> having True if the contained item was successfully reordered as result.
         /// </returns>
-        public bool ReorderContainment(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
+        public Task<bool> ReorderContainmentAsync(NpgsqlTransaction transaction, string partition, CDP4Common.Types.OrderedItem orderedItem)
         {
             throw new NotSupportedException();
         }
@@ -209,9 +216,9 @@ namespace CometServer.Services
         /// The container instance of the <see cref="BooleanExpression"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool DeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> DeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotSupportedException();
         }
@@ -234,9 +241,9 @@ namespace CometServer.Services
         /// The container instance of the <see cref="BooleanExpression"/> to be removed.
         /// </param>
         /// <returns>
-        /// True if the removal was successful.
+        /// An awaitable <see cref="Task"/> having True if the removal was successful as result.
         /// </returns>
-        public bool RawDeleteConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
+        public Task<bool> RawDeleteConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container = null)
         {
             throw new NotSupportedException();
         }
@@ -257,11 +264,11 @@ namespace CometServer.Services
         /// The container instance of the <see cref="BooleanExpression"/> to be updated.
         /// </param>
         /// <returns>
-        /// True if the update was successful.
+        /// An awaitable <see cref="Task"/> having True if the update was successful as result.
         /// </returns>
-        public bool UpdateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
+        public async Task<bool> UpdateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, UpdateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, UpdateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate update permission for " + thing.GetType().Name + ".");
             }
@@ -269,27 +276,27 @@ namespace CometServer.Services
             var booleanExpression = thing as BooleanExpression;
             if (booleanExpression.IsSameOrDerivedClass<AndExpression>())
             {
-                return this.AndExpressionService.UpdateConcept(transaction, partition, booleanExpression, container);
+                return await this.AndExpressionService.UpdateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<ExclusiveOrExpression>())
             {
-                return this.ExclusiveOrExpressionService.UpdateConcept(transaction, partition, booleanExpression, container);
+                return await this.ExclusiveOrExpressionService.UpdateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<NotExpression>())
             {
-                return this.NotExpressionService.UpdateConcept(transaction, partition, booleanExpression, container);
+                return await this.NotExpressionService.UpdateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<OrExpression>())
             {
-                return this.OrExpressionService.UpdateConcept(transaction, partition, booleanExpression, container);
+                return await this.OrExpressionService.UpdateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<RelationalExpression>())
             {
-                return this.RelationalExpressionService.UpdateConcept(transaction, partition, booleanExpression, container);
+                return await this.RelationalExpressionService.UpdateConceptAsync(transaction, partition, booleanExpression, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", booleanExpression.GetType().Name));
         }
@@ -313,11 +320,11 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool CreateConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> CreateConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
-            if (!this.IsInstanceModifyAllowed(transaction, thing, partition, CreateOperation))
+            if (!await this.IsInstanceModifyAllowedAsync(transaction, thing, partition, CreateOperation))
             {
                 throw new SecurityException("The person " + this.CredentialsService.Credentials.Person.UserName + " does not have an appropriate create permission for " + thing.GetType().Name + ".");
             }
@@ -325,27 +332,27 @@ namespace CometServer.Services
             var booleanExpression = thing as BooleanExpression;
             if (booleanExpression.IsSameOrDerivedClass<AndExpression>())
             {
-                return this.AndExpressionService.CreateConcept(transaction, partition, booleanExpression, container);
+                return await this.AndExpressionService.CreateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<ExclusiveOrExpression>())
             {
-                return this.ExclusiveOrExpressionService.CreateConcept(transaction, partition, booleanExpression, container);
+                return await this.ExclusiveOrExpressionService.CreateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<NotExpression>())
             {
-                return this.NotExpressionService.CreateConcept(transaction, partition, booleanExpression, container);
+                return await this.NotExpressionService.CreateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<OrExpression>())
             {
-                return this.OrExpressionService.CreateConcept(transaction, partition, booleanExpression, container);
+                return await this.OrExpressionService.CreateConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<RelationalExpression>())
             {
-                return this.RelationalExpressionService.CreateConcept(transaction, partition, booleanExpression, container);
+                return await this.RelationalExpressionService.CreateConceptAsync(transaction, partition, booleanExpression, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", booleanExpression.GetType().Name));
         }
@@ -370,34 +377,34 @@ namespace CometServer.Services
         /// The order sequence used to persist this instance. Default is not used (-1).
         /// </param>
         /// <returns>
-        /// True if the persistence was successful.
+        /// An awaitable <see cref="Task"/> having True if the persistence was successful as result.
         /// </returns>
-        public bool UpsertConcept(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
+        public async Task<bool> UpsertConceptAsync(NpgsqlTransaction transaction, string partition, Thing thing, Thing container, long sequence = -1)
         {
             var booleanExpression = thing as BooleanExpression;
             if (booleanExpression.IsSameOrDerivedClass<AndExpression>())
             {
-                return this.AndExpressionService.UpsertConcept(transaction, partition, booleanExpression, container);
+                return await this.AndExpressionService.UpsertConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<ExclusiveOrExpression>())
             {
-                return this.ExclusiveOrExpressionService.UpsertConcept(transaction, partition, booleanExpression, container);
+                return await this.ExclusiveOrExpressionService.UpsertConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<NotExpression>())
             {
-                return this.NotExpressionService.UpsertConcept(transaction, partition, booleanExpression, container);
+                return await this.NotExpressionService.UpsertConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<OrExpression>())
             {
-                return this.OrExpressionService.UpsertConcept(transaction, partition, booleanExpression, container);
+                return await this.OrExpressionService.UpsertConceptAsync(transaction, partition, booleanExpression, container);
             }
 
             if (booleanExpression.IsSameOrDerivedClass<RelationalExpression>())
             {
-                return this.RelationalExpressionService.UpsertConcept(transaction, partition, booleanExpression, container);
+                return await this.RelationalExpressionService.UpsertConceptAsync(transaction, partition, booleanExpression, container);
             }
             throw new NotSupportedException(string.Format("The supplied DTO type: {0} is not a supported type", booleanExpression.GetType().Name));
         }
@@ -418,26 +425,26 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="BooleanExpression"/>.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="BooleanExpression"/> as result.
         /// </returns>
-        public IEnumerable<Thing> GetShallow(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetShallowAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             var authorizedContext = this.AuthorizeReadRequest("BooleanExpression", containerSecurityContext, partition);
-            var isAllowed = authorizedContext.ContainerReadAllowed && this.BeforeGet(transaction, partition, idFilter);
+            var isAllowed = authorizedContext.ContainerReadAllowed && await this.BeforeGetAsync(transaction, partition, idFilter);
             if (!isAllowed || (idFilter != null && !idFilter.Any()))
             {
                 return Enumerable.Empty<Thing>();
             }
 
             var booleanExpressionColl = new List<Thing>();
-            booleanExpressionColl.AddRange(this.AndExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            booleanExpressionColl.AddRange(this.ExclusiveOrExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            booleanExpressionColl.AddRange(this.NotExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            booleanExpressionColl.AddRange(this.OrExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
-            booleanExpressionColl.AddRange(this.RelationalExpressionService.GetShallow(transaction, partition, idFilter, authorizedContext));
+            booleanExpressionColl.AddRange(await this.AndExpressionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            booleanExpressionColl.AddRange(await this.ExclusiveOrExpressionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            booleanExpressionColl.AddRange(await this.NotExpressionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            booleanExpressionColl.AddRange(await this.OrExpressionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
+            booleanExpressionColl.AddRange(await this.RelationalExpressionService.GetShallowAsync(transaction, partition, idFilter, authorizedContext));
 
-            return this.AfterGet(booleanExpressionColl, transaction, partition, idFilter);
+            return await this.AfterGetAsync(booleanExpressionColl, transaction, partition, idFilter);
         }
 
         /// <summary>
@@ -456,9 +463,9 @@ namespace CometServer.Services
         /// The security context of the container instance.
         /// </param>
         /// <returns>
-        /// List of instances of <see cref="BooleanExpression"/> and contained <see cref="Thing"/>s.
+        /// An awaitable <see cref="Task"/> having List of instances of <see cref="BooleanExpression"/> and contained <see cref="Thing"/>s as result.
         /// </returns>
-        public IEnumerable<Thing> GetDeep(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
+        public async Task<IEnumerable<Thing>> GetDeepAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, ISecurityContext containerSecurityContext)
         {
             var idFilter = ids == null ? null : ids.ToArray();
             if (idFilter != null && !idFilter.Any())
@@ -467,11 +474,11 @@ namespace CometServer.Services
             }
 
             var results = new List<Thing>();
-            results.AddRange(this.AndExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.ExclusiveOrExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.NotExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.OrExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
-            results.AddRange(this.RelationalExpressionService.GetDeep(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.AndExpressionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.ExclusiveOrExpressionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.NotExpressionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.OrExpressionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
+            results.AddRange(await this.RelationalExpressionService.GetDeepAsync(transaction, partition, idFilter, containerSecurityContext));
             return results;
         }
 
@@ -494,14 +501,14 @@ namespace CometServer.Services
         /// Control flag to indicate if reference library data should be retrieved extent=deep or extent=shallow.
         /// </param>
         /// <returns>
-        /// A post filtered instance of the passed in resultCollection.
+        /// An awaitable <see cref="Task"/> having A post filtered instance of the passed in resultCollection as result.
         /// </returns>
-        public override IEnumerable<Thing> AfterGet(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
+        public override async Task<IEnumerable<Thing>> AfterGetAsync(IEnumerable<Thing> resultCollection, NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids, bool includeReferenceData = false)
         {
             var filteredCollection = new List<Thing>();
             foreach (var thing in resultCollection)
             {
-                if (this.IsInstanceReadAllowed(transaction, thing, partition))
+                if (await this.IsInstanceReadAllowedAsync(transaction, thing, partition))
                 {
                     filteredCollection.Add(thing);
                 }

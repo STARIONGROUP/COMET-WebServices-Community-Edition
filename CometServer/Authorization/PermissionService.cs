@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Authorization
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -126,7 +127,7 @@ namespace CometServer.Authorization
         /// </returns>
         public bool CanRead(string typeName, ISecurityContext securityContext, string partition)
         {
-            this.Logger.LogDebug("Type CanRead: {typeName}:{partition}", typeName, partition);
+            this.Logger.LogDebug("Type CanRead: {TypeName}:{Partition}", typeName, partition);
 
             if (partition == SiteDirectory)
             {
@@ -206,9 +207,9 @@ namespace CometServer.Authorization
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
         /// <returns>True if the given <see cref="Thing"/> can be read.</returns>
-        public bool CanRead(NpgsqlTransaction transaction, Thing thing, string partition)
+        public async Task<bool> CanReadAsync(NpgsqlTransaction transaction, Thing thing, string partition)
         {
-            this.Logger.LogDebug("Database CanRead: {ClassKind}:{IId}:{partition}", thing.ClassKind, thing.Iid, partition);
+            this.Logger.LogDebug("Database CanRead: {ClassKind}:{IId}:{Partition}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))
@@ -226,7 +227,7 @@ namespace CometServer.Authorization
                     {
                         if (thing is Person person)
                         {
-                            return this.PersonIsParticipantWithinCurrentUserModel(transaction, person);
+                            return await this.PersonIsParticipantWithinCurrentUserModelAsync(transaction, person);
                         }
 
                         if (!(thing is IParticipantAffectedAccessThing))
@@ -256,7 +257,7 @@ namespace CometServer.Authorization
 
                         if (thing is SiteReferenceDataLibrary)
                         {
-                            var rdlDependency = this.ChainOfRdlComputationService.QueryReferenceDataLibraryDependency(transaction, this.CredentialsService.Credentials.EngineeringModelSetups);
+                            var rdlDependency = await this.ChainOfRdlComputationService.QueryReferenceDataLibraryDependencyAsync(transaction, this.CredentialsService.Credentials.EngineeringModelSetups);
                             return rdlDependency.Contains(thing.Iid);
                         }
 
@@ -267,7 +268,7 @@ namespace CometServer.Authorization
                     {
                         if (thing is Person person)
                         {
-                            return this.PersonIsParticipantWithinCurrentUserModel(transaction, person) || person.Iid == this.CredentialsService.Credentials.Person.Iid;
+                            return await this.PersonIsParticipantWithinCurrentUserModelAsync(transaction, person) || person.Iid == this.CredentialsService.Credentials.Person.Iid;
                         }
 
                         // That should only be applied on Person
@@ -280,7 +281,7 @@ namespace CometServer.Authorization
 
             // EngineeringModel context
             // Check for excluded Domains
-            var isExcludedDomain = this.IsExcludedDomain(transaction, thing);
+            var isExcludedDomain = await this.IsExcludedDomainAsync(transaction, thing);
 
             if (isExcludedDomain)
             {
@@ -311,9 +312,9 @@ namespace CometServer.Authorization
         /// The security context of the current request.
         /// </param>
         /// <returns>True if the given <see cref="Thing"/> can be written.</returns>
-        public bool CanWrite(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext)
+        public async Task<bool> CanWriteAsync(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext)
         {
-            this.Logger.LogDebug("Database CanWrite: {ClassKind}:{IId}:{partition}", thing.ClassKind, thing.Iid, partition);
+            this.Logger.LogDebug("Database CanWrite: {ClassKind}:{IId}:{Partition}", thing.ClassKind, thing.Iid, partition);
 
             // Check for excluded Persons
             if (thing.ExcludedPerson.Contains(this.CredentialsService.Credentials.Person.Iid))
@@ -329,12 +330,12 @@ namespace CometServer.Authorization
                 {
                     case PersonAccessRightKind.SAME_AS_CONTAINER:
                         {
-                            return this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
+                            return await this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
                         }
 
                     case PersonAccessRightKind.SAME_AS_SUPERCLASS:
                         {
-                            return this.CanWrite(transaction, thing, this.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
+                            return await this.CanWriteAsync(transaction, thing, this.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
                         }
 
                     case PersonAccessRightKind.MODIFY_IF_PARTICIPANT:
@@ -362,7 +363,7 @@ namespace CometServer.Authorization
 
             // EngineeringModel context
             // Check for excluded Domains
-            var isExcludedDomain = this.IsExcludedDomain(transaction, thing);
+            var isExcludedDomain = await this.IsExcludedDomainAsync(transaction, thing);
 
             if (isExcludedDomain)
             {
@@ -405,7 +406,7 @@ namespace CometServer.Authorization
                         else
                         {
                             // walk up the container chain until the ElementDefinition is found
-                            var isOrganizationallyAllowed = this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipations(transaction, partition, this.CredentialsService.Credentials.Iteration, thing, this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
+                            var isOrganizationallyAllowed = await this.OrganizationalParticipationResolverService.ResolveApplicableOrganizationalParticipationsAsync(transaction, partition, this.CredentialsService.Credentials.Iteration, thing, this.CredentialsService.Credentials.OrganizationalParticipant.Iid);
 
                             if (!isOrganizationallyAllowed)
                             {
@@ -434,17 +435,17 @@ namespace CometServer.Authorization
             {
                 case ParticipantAccessRightKind.SAME_AS_CONTAINER:
                     {
-                        return this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
+                        return await this.ComputeSameAsContainerWriteAllowed(transaction, thing, partition, modifyOperation, securityContext);
                     }
 
                 case ParticipantAccessRightKind.SAME_AS_SUPERCLASS:
                     {
-                        return this.CanWrite(transaction, thing, this.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
+                        return await this.CanWriteAsync(transaction, thing, this.MetaInfoProvider.BaseType(typeName), partition, modifyOperation, securityContext);
                     }
 
                 case ParticipantAccessRightKind.MODIFY_IF_OWNER:
                     {
-                        return this.IsOwner(transaction, thing);
+                        return await this.IsOwnerAsync(transaction, thing);
                     }
 
                 case ParticipantAccessRightKind.MODIFY:
@@ -489,7 +490,7 @@ namespace CometServer.Authorization
         /// The security context of the current request.
         /// </param>
         /// <returns></returns>
-        private bool ComputeSameAsContainerWriteAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation, ISecurityContext securityContext)
+        private async Task<bool> ComputeSameAsContainerWriteAllowed(NpgsqlTransaction transaction, Thing thing, string partition, string modifyOperation, ISecurityContext securityContext)
         {
             if (modifyOperation != ServiceBase.UpdateOperation)
             {
@@ -511,13 +512,13 @@ namespace CometServer.Authorization
                 ? partition.Replace(CDP4Orm.Dao.Utils.IterationSubPartition, CDP4Orm.Dao.Utils.EngineeringModelPartition)
                 : partition;
 
-            this.ResolveService.ResolveItems(transaction, resolvePartition, operationThingContainerCache);
+            await this.ResolveService.ResolveItemsAsync(transaction, resolvePartition, operationThingContainerCache);
 
             var containerThing = operationThingContainerCache.SingleOrDefault(x => x.Key is ContainerInfo).Value;
 
             return containerThing != null
                    &&
-                   this.CanWrite(
+                   await this.CanWriteAsync(
                        transaction,
                        containerThing.Thing,
                        containerThing.Thing.ClassKind.ToString(),
@@ -577,14 +578,14 @@ namespace CometServer.Authorization
         /// The <see cref="Participant"/> objects are cached in the <see cref="currentParticipantCache"/> field of the current
         /// <see cref="PermissionService"/>. This can be done due to the fact that the <see cref="PermissionService"/> is valid for one request
         /// </remarks>
-        private List<Participant> QueryCurrentParticipant(NpgsqlTransaction transaction)
+        private async Task<List<Participant>> QueryCurrentParticipantAsync(NpgsqlTransaction transaction)
         {
             if (this.currentParticipantCache == null)
             {
-                this.currentParticipantCache = new List<Participant>();
+                this.currentParticipantCache = [];
 
-                var participants = this.ParticipantDao
-                    .Read(transaction, SiteDirectory, null, true).ToList()
+                var participants = (await this.ParticipantDao
+                    .ReadAsync(transaction, SiteDirectory, null, true))
                     .Where(participant => participant.Person == this.CredentialsService.Credentials.Person.Iid && this.CredentialsService.Credentials.EngineeringModelSetup.Participant.Contains(participant.Iid));
 
                 this.currentParticipantCache.AddRange(participants);
@@ -601,7 +602,7 @@ namespace CometServer.Authorization
         /// </param>
         /// <param name="thing">The <see cref="Thing"/> to check whether it is own <see cref="Person"/>.</param>
         /// <returns>True if a supplied <see cref="Thing"/> is owned by the current <see cref="Participant"/>.</returns>
-        public bool IsOwner(NpgsqlTransaction transaction, Thing thing)
+        public async Task<bool> IsOwnerAsync(NpgsqlTransaction transaction, Thing thing)
         {
             // Check if owned thing
             var ownedThing = thing as IOwnedThing;
@@ -611,7 +612,7 @@ namespace CometServer.Authorization
                 return true;
             }
 
-            var currentParticipant = this.QueryCurrentParticipant(transaction);
+            var currentParticipant = await this.QueryCurrentParticipantAsync(transaction);
 
             return currentParticipant.SelectMany(x => x.Domain).Contains(ownedThing.Owner);
         }
@@ -624,9 +625,9 @@ namespace CometServer.Authorization
         /// </param>
         /// <param name="thing">The <see cref="Thing"/> to check whether it is own <see cref="Person"/>.</param>
         /// <returns>True if a supplied <see cref="Thing"/> excludes a domain of the current <see cref="Participant"/>.</returns>
-        private bool IsExcludedDomain(NpgsqlTransaction transaction, Thing thing)
+        private async Task<bool> IsExcludedDomainAsync(NpgsqlTransaction transaction, Thing thing)
         {
-            var currentParticipant = this.QueryCurrentParticipant(transaction);
+            var currentParticipant = await this.QueryCurrentParticipantAsync(transaction);
 
             var isExcludedDomain = true;
 
@@ -648,7 +649,7 @@ namespace CometServer.Authorization
         /// <param name="transaction">The current transaction</param>
         /// <param name="person">The <see cref="Person"/></param>
         /// <returns>True if that is the case</returns>
-        private bool PersonIsParticipantWithinCurrentUserModel(NpgsqlTransaction transaction, Person person)
+        private async Task<bool> PersonIsParticipantWithinCurrentUserModelAsync(NpgsqlTransaction transaction, Person person)
         {
             var participantsIds = this.CredentialsService.Credentials.EngineeringModelSetups.SelectMany(x => x.Participant).ToArray();
 
@@ -659,8 +660,8 @@ namespace CometServer.Authorization
 
             if (this.allAvailableParticipantCache == null || this.allAvailableParticipantCache.Count == 0)
             {
-                this.allAvailableParticipantCache = this.ParticipantDao
-                    .Read(transaction, SiteDirectory, participantsIds, true).ToList();
+                this.allAvailableParticipantCache = (await this.ParticipantDao
+                    .ReadAsync(transaction, SiteDirectory, participantsIds, true)).ToList();
             }
 
             return this.allAvailableParticipantCache.Exists(p => p.Person == person.Iid);

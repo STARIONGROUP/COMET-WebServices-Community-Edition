@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CommonFileStoreServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -28,6 +28,8 @@ namespace CometServer.Tests.Services.Supplemental
     using System.Collections;
     using System.Collections.Generic;
     using System.Data;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -89,9 +91,9 @@ namespace CometServer.Tests.Services.Supplemental
             commonFileStore.Folder.Clear();
             commonFileStore.Folder.Add(folder.Iid);
 
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(true);
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), folder)).Returns(true);
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), file)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), commonFileStore)).ReturnsAsync(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), folder)).ReturnsAsync(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), file)).ReturnsAsync(true);
 
             this.credentialsService.Setup(x => x.Credentials)
                 .Returns(
@@ -110,11 +112,11 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.commonFileStoreDao
                 .Setup(
-                    x => x.Read(It.IsAny<NpgsqlTransaction>(), this.engineeringModelPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
-                .Returns(new[] { commonFileStore, extraCommonFileStoreToTestCommonFileStoreSelectors });
+                    x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), this.engineeringModelPartitionName, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), DateTime.MaxValue))
+                .ReturnsAsync([commonFileStore, extraCommonFileStoreToTestCommonFileStoreSelectors]);
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
-            this.transactionManager.Setup(x => x.GetRawSessionInstant(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.MaxValue);
+            this.transactionManager.Setup(x => x.GetRawSessionInstantAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.MaxValue);
         }
 
         [Test]
@@ -123,21 +125,21 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasReadAccess(
+                Assert.ThrowsAsync<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
             }
             else
             {
-                Assert.That(this.commonFileStoreService.HasReadAccess(
+                Assert.That(async () => await this.commonFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName), Is.True);
 
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), commonFileStore)).Returns(false);
+                this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), commonFileStore)).ReturnsAsync(false);
 
-                Assert.That(this.commonFileStoreService.HasReadAccess(
+                Assert.That(async () => await this.commonFileStoreService.HasReadAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName), Is.True);
@@ -150,28 +152,28 @@ namespace CometServer.Tests.Services.Supplemental
         {
             if (shouldFail)
             {
-                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
 
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).Returns(true);
+                this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ElementDefinition>())).ReturnsAsync(true);
 
-                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.Throws<Cdp4ModelValidationException>(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
             }
             else
             {
-                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));
 
-                this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), thing)).Returns(false);
+                this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), thing)).ReturnsAsync(false);
 
-                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccess(
+                Assert.DoesNotThrow(() => this.commonFileStoreService.HasWriteAccessAsync(
                     thing,
                     this.transaction.Object,
                     this.engineeringModelPartitionName));

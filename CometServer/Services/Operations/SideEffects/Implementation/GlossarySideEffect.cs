@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="GlossarySideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CometServer.Services.Operations.SideEffects
 {
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -67,7 +68,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// When a <see cref="Glossary"/> is deprecated the <see cref="Term"/>s that are contained by that <see cref="Glossary"/> shall be deprecated as well.
         /// When the <see cref="Person"/> does not have the permission to write to <see cref="Term"/>s, this will be ignored.
         /// </remarks>
-        public override void AfterUpdate(Glossary glossary, Thing container, Glossary originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
+        public override async Task AfterUpdateAsync(Glossary glossary, Thing container, Glossary originalThing, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext)
         {
             if (!glossary.IsDeprecated)
             {
@@ -79,17 +80,18 @@ namespace CometServer.Services.Operations.SideEffects
                 return;
             }
 
-            if (!this.PermissionService.CanWrite(transaction, originalThing, nameof(Term), partition, "update", securityContext))
+            if (!await this.PermissionService.CanWriteAsync(transaction, originalThing, nameof(Term), partition, "update", securityContext))
             {
                 return;
             }
-            
-            var terms = this.TermService.GetShallow(transaction, partition, glossary.Term, securityContext)
+
+            var terms = (await this.TermService.GetShallowAsync(transaction, partition, glossary.Term, securityContext))
                 .Where(i => i.GetType() == typeof(Term)).Cast<Term>();
+
             foreach (var term in terms)
             {
                 term.IsDeprecated = true;
-                this.TermService.UpdateConcept(transaction, partition, term, glossary);
+                await this.TermService.UpdateConceptAsync(transaction, partition, term, glossary);
             }
         }
     }

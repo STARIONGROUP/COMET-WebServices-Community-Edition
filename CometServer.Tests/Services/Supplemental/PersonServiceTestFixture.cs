@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PersonServiceTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Tests.Services.Supplemental
     using System;
     using System.Collections.Generic;
     using System.Security;
+    using System.Threading.Tasks;
 
     using CDP4Authentication;
 
@@ -68,19 +69,20 @@ namespace CometServer.Tests.Services.Supplemental
             this.transactionManager = new Mock<ICdp4TransactionManager>();
             this.schemaName = Cdp4TransactionManager.SITE_DIRECTORY_PARTITION;
 
-            this.permissionService.Setup(x => x.IsOwner(It.IsAny<NpgsqlTransaction>(), this.person)).Returns(true);
+            this.permissionService.Setup(x => x.IsOwnerAsync(It.IsAny<NpgsqlTransaction>(), this.person)).ReturnsAsync(true);
 
-            var credentials = new Credentials();
-
-            credentials.Person = new AuthenticationPerson(Guid.NewGuid(), 1)
+            var credentials = new Credentials
             {
-                UserName = "jdoe"
+                Person = new AuthenticationPerson(Guid.NewGuid(), 1)
+                {
+                    UserName = "jdoe"
+                }
             };
 
             this.credentialsService.Setup(x => x.Credentials).Returns(credentials);
 
-            this.personDao.Setup(x => x.Read(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
-                .Returns(new[] { this.person });
+            this.personDao.Setup(x => x.ReadAsync(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, It.IsAny<IEnumerable<Guid>>(), It.IsAny<bool>(), null))
+                .ReturnsAsync([this.person]);
 
             this.personService = new PersonService
             {
@@ -106,7 +108,7 @@ namespace CometServer.Tests.Services.Supplemental
         {
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(false);
 
-            Assert.Throws<SecurityException>(() => this.personService.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, null));
+            Assert.ThrowsAsync<SecurityException>(() => this.personService.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, null));
         }
 
         [Test]
@@ -116,9 +118,9 @@ namespace CometServer.Tests.Services.Supplemental
 
             this.transactionManager.Setup(x => x.IsFullAccessEnabled()).Returns(true);
 
-            this.personDao.Setup(x => x.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, this.person, credentials)).Returns(true);
+            this.personDao.Setup(x => x.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, this.person, credentials)).ReturnsAsync(true);
 
-            Assert.DoesNotThrow(() => this.personService.UpdateCredentials(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, credentials));
+            Assert.DoesNotThrowAsync(() => this.personService.UpdateCredentialsAsync(It.IsAny<NpgsqlTransaction>(), this.schemaName, this.person, credentials));
         }
     }
 }

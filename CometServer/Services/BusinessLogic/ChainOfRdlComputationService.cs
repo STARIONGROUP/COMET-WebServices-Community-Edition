@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ChainOfRdlComputationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -89,15 +90,15 @@ namespace CometServer.Services
         /// <returns>
         /// The unique identifiers of the <see cref="SiteReferenceDataLibrary"/> dependency of the provided <see cref="IEnumerable{EngineeringModelSetup}"/>
         /// </returns>
-        public IEnumerable<Guid> QueryReferenceDataLibraryDependency(NpgsqlTransaction transaction, IEnumerable<EngineeringModelSetup> engineeringModelSetups)
+        public async Task<IEnumerable<Guid>> QueryReferenceDataLibraryDependencyAsync(NpgsqlTransaction transaction, IEnumerable<EngineeringModelSetup> engineeringModelSetups)
         {
             if (this.cachedModelReferenceDataLibraries == null || this.cachedModelReferenceDataLibraries.Count == 0)
             {
                 this.Logger.LogDebug("Retrieving the ModelReferenceDataLibrary objects from the cached tables in the datastore");
 
-                var modelReferenceDataLibraries = this.ModelReferenceDataLibraryDao.Read(transaction, SiteDirectoryPartition, null, true);
+                var modelReferenceDataLibraries = await this.ModelReferenceDataLibraryDao.ReadAsync(transaction, SiteDirectoryPartition, null, true);
 
-                this.cachedModelReferenceDataLibraries = new List<ModelReferenceDataLibrary>();
+                this.cachedModelReferenceDataLibraries = [];
                 
                 this.cachedModelReferenceDataLibraries.AddRange(modelReferenceDataLibraries);
             }
@@ -106,9 +107,9 @@ namespace CometServer.Services
             {
                 this.Logger.LogDebug("Retrieving the SiteReferenceDataLibrary objects from the cached tables in the datastore");
 
-                var siteReferenceDataLibraries = this.SiteReferenceDataLibraryDao.Read(transaction, SiteDirectoryPartition, null, true);
+                var siteReferenceDataLibraries = await this.SiteReferenceDataLibraryDao.ReadAsync(transaction, SiteDirectoryPartition, null, true);
 
-                this.cachedSiteReferenceDataLibraries = new List<SiteReferenceDataLibrary>();
+                this.cachedSiteReferenceDataLibraries = [];
 
                 this.cachedSiteReferenceDataLibraries.AddRange(siteReferenceDataLibraries);
             }
@@ -119,21 +120,23 @@ namespace CometServer.Services
             {
                 if (engineeringModelSetup.RequiredRdl.Count > 1)
                 {
-                    this.Logger.LogWarning("The EngineeringModelSetup { engineeringModelSetupIid } has more than 1 required rdl, this is not allowed, this EngineeringModelSetup is ignored", engineeringModelSetup.Iid);
+                    this.Logger.LogWarning("The EngineeringModelSetup {EngineeringModelSetupIid} has more than 1 required rdl, this is not allowed, this EngineeringModelSetup is ignored", engineeringModelSetup.Iid);
                     continue;
                 }
 
                 var modelReferenceDataLibararyIid = engineeringModelSetup.RequiredRdl.SingleOrDefault();
+                
                 if (modelReferenceDataLibararyIid == Guid.Empty)
                 {
-                    this.Logger.LogWarning("The EngineeringModelSetup { engineeringModelSetupIid } does not have a required rdl, this is not allowed, this EngineeringModelSetup is ignored", engineeringModelSetup.Iid);
+                    this.Logger.LogWarning("The EngineeringModelSetup {EngineeringModelSetupIid} does not have a required rdl, this is not allowed, this EngineeringModelSetup is ignored", engineeringModelSetup.Iid);
                     continue;
                 }
 
                 var modelReferenceDataLibarary = this.cachedModelReferenceDataLibraries.SingleOrDefault(x => x.Iid == modelReferenceDataLibararyIid);
+
                 if (modelReferenceDataLibarary == null)
                 { 
-                    this.Logger.LogWarning("The ModelReferenceDataLibarary { modelReferenceDataLibararyIid } could not be found, there is a fault in the data, the EngineeringModelSetup {engineeringModelSetupIid} is ignored", modelReferenceDataLibararyIid, engineeringModelSetup.Iid);
+                    this.Logger.LogWarning("The ModelReferenceDataLibarary {ModelReferenceDataLibararyIid} could not be found, there is a fault in the data, the EngineeringModelSetup {EngineeringModelSetupIid} is ignored", modelReferenceDataLibararyIid, engineeringModelSetup.Iid);
                 }
                 else
                 {

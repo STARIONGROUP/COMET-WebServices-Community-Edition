@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="FileArchiveService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -29,6 +29,7 @@ namespace CometServer.Services
     using System.IO;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
@@ -112,22 +113,20 @@ namespace CometServer.Services
         /// <returns>
         /// The <see cref="string"/> folder path where the file structure is created.
         /// </returns>
-        public DirectoryInfo CreateFolderAndFileStructureOnDisk(List<Thing> resourceResponse, string partition, string[] routeSegments)
+        public async Task<DirectoryInfo> CreateFolderAndFileStructureOnDiskAsync(List<Thing> resourceResponse, string partition, string[] routeSegments)
         {
-            if (resourceResponse[0].ClassKind == ClassKind.CommonFileStore
-                || resourceResponse[0].ClassKind == ClassKind.DomainFileStore
-                || resourceResponse[0].ClassKind == ClassKind.Folder)
+            if (resourceResponse[0].ClassKind is ClassKind.CommonFileStore or ClassKind.DomainFileStore or ClassKind.Folder)
             {
                 var temporaryFolderOnDiskDirectoryInfo = this.CreateTemporaryFolderOnDisk();
 
                 try
                 {
-                    this.CreateFolderAndFileStructureOnDisk(resourceResponse[0], partition, temporaryFolderOnDiskDirectoryInfo.FullName, routeSegments);
+                    await this.CreateFolderAndFileStructureOnDiskAsync(resourceResponse[0], partition, temporaryFolderOnDiskDirectoryInfo.FullName, routeSegments);
                     return temporaryFolderOnDiskDirectoryInfo;
                 }
                 catch (Exception exception)
                 {
-                    this.Logger.LogError("An attempt to create a file structure was unsuccsessful. Exited with the error: {exceptionMessage}.", exception.Message);
+                    this.Logger.LogError(exception, "An attempt to create a file structure was unsuccsessful. Exited with the error: {ExceptionMessage}.", exception.Message);
 
                     temporaryFolderOnDiskDirectoryInfo.Delete(true);
                 }
@@ -173,7 +172,7 @@ namespace CometServer.Services
 
             System.IO.File.Delete(zipArchive);
 
-            this.Logger.LogInformation("File structure {folderPath} and archive {zipArchive}.zip are deleted.", directoryInfo.FullName, zipArchive);
+            this.Logger.LogInformation("File structure {FolderPath} and archive {ZipArchive}.zip are deleted.", directoryInfo.FullName, zipArchive);
         }
 
         /// <summary>
@@ -189,11 +188,11 @@ namespace CometServer.Services
 
             folderPath = Path.Combine(this.AppConfigService.AppConfig.Midtier.TemporaryFileStorageDirectory, folderPath);
 
-            this.Logger.LogDebug("Creating temporary folder {folderPath}.", folderPath);
+            this.Logger.LogDebug("Creating temporary folder {FolderPath}.", folderPath);
 
             var directoryInfo = Directory.CreateDirectory(folderPath);
 
-            this.Logger.LogInformation("Temporary folder {folderPath} is created.", folderPath);
+            this.Logger.LogInformation("Temporary folder {FolderPath} is created.", folderPath);
 
             return directoryInfo;
         }
@@ -213,20 +212,19 @@ namespace CometServer.Services
         /// <param name="routeSegments">
         /// The route segments.
         /// </param>
-        private void CreateFolderAndFileStructureOnDisk(Thing thing, string partition, string folderPath, string[] routeSegments)
+        private async Task CreateFolderAndFileStructureOnDiskAsync(Thing thing, string partition, string folderPath, string[] routeSegments)
         {
-            this.Logger.LogInformation("File structure creation is started into the temporary folder {folderPath}.", folderPath);
+            this.Logger.LogInformation("File structure creation is started into the temporary folder {FolderPath}.", folderPath);
 
             var credentials = this.CredentialsService.Credentials;
 
             var authorizedContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
-            NpgsqlConnection connection = null;
-            var transaction = this.TransactionManager.SetupTransaction(ref connection, credentials);
+            var transaction = await this.TransactionManager.SetupTransactionAsync(credentials);
 
             try
             {
-                var things = this.GetFileStoreThings(thing, routeSegments, partition, transaction, authorizedContext);
+                var things = await this.GetFileStoreThingsAsync(thing, routeSegments, partition, transaction, authorizedContext);
 
                 if (things.Count != 0)
                 {
@@ -241,6 +239,7 @@ namespace CometServer.Services
 
                     // Get all fileType iids
                     var fileTypeOrderedItems = new List<OrderedItem>();
+
                     foreach (var fileRevision in fileRevisions)
                     {
                         fileTypeOrderedItems.AddRange(fileRevision.FileType);
@@ -248,14 +247,15 @@ namespace CometServer.Services
 
                     // Get fileTypes iids
                     var fileTypeIids = new List<Guid>();
+                    
                     foreach (var fileTypeOrderedItem in fileTypeOrderedItems)
                     {
                         fileTypeIids.Add(Guid.Parse(fileTypeOrderedItem.V.ToString()));
                     }
 
                     // Get all fileTypes
-                    var fileTypes = this.FileTypeService
-                        .GetShallow(transaction, "SiteDirectory", fileTypeIids.Distinct(), authorizedContext)
+                    var fileTypes = (await this.FileTypeService
+                        .GetShallowAsync(transaction, "SiteDirectory", fileTypeIids.Distinct(), authorizedContext))
                         .OfType<FileType>().ToList();
 
                     if (thing.ClassKind != ClassKind.Folder)
@@ -279,28 +279,20 @@ namespace CometServer.Services
                     }
                 }
 
-                transaction.Commit();
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
                 if (transaction != null)
                 {
-                    transaction.Rollback();
+                    await this.TransactionManager.TryRollbackTransaction(transaction);
                 }
 
                 this.Logger.LogError(ex, "Failed to create a file structure on the disk.");
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
-
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
+                await this.TransactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -325,35 +317,35 @@ namespace CometServer.Services
         /// <returns>
         /// The list of things form a fileStore.
         /// </returns>
-        private List<Thing> GetFileStoreThings(Thing thing, string[] routeSegments, string partition, NpgsqlTransaction transaction, RequestSecurityContext authorizedContext)
+        private async Task<List<Thing>> GetFileStoreThingsAsync(Thing thing, string[] routeSegments, string partition, NpgsqlTransaction transaction, RequestSecurityContext authorizedContext)
         {
             var iids = new List<Guid>();
 
             if (routeSegments.Length == 8 && routeSegments[6] == "folder")
             {
                 iids.Add(Guid.Parse(routeSegments[5]));
-                return this.DomainFileStoreService.GetDeep(transaction, partition, iids, authorizedContext).ToList();
+                return (await this.DomainFileStoreService.GetDeepAsync(transaction, partition, iids, authorizedContext)).ToList();
             }
 
             if (routeSegments.Length == 6 && routeSegments[4] == "folder")
             {
                 iids.Add(Guid.Parse(routeSegments[3]));
-                return this.CommonFileStoreService.GetDeep(transaction, partition, iids, authorizedContext).ToList();
+                return (await this.CommonFileStoreService.GetDeepAsync(transaction, partition, iids, authorizedContext)).ToList();
             }
 
             if (routeSegments.Length == 6 && routeSegments[4] == "domainFileStore")
             {
                 iids.Add(thing.Iid);
-                return this.DomainFileStoreService.GetDeep(transaction, partition, iids, authorizedContext).ToList();
+                return (await this.DomainFileStoreService.GetDeepAsync(transaction, partition, iids, authorizedContext)).ToList();
             }
 
             if (routeSegments.Length == 4 && routeSegments[2] == "commonFileStore")
             {
                 iids.Add(thing.Iid);
-                return this.CommonFileStoreService.GetDeep(transaction, partition, iids, authorizedContext).ToList();
+                return (await this.CommonFileStoreService.GetDeepAsync(transaction, partition, iids, authorizedContext)).ToList();
             }
 
-            return new List<Thing>();
+            return [];
         }
 
         /// <summary>
@@ -382,11 +374,11 @@ namespace CometServer.Services
         {
             var path = Path.Combine(folderPath, rootFolder.Name);
 
-            this.Logger.LogInformation("Starting to create Directory: {path}", path);
+            this.Logger.LogInformation("Starting to create Directory: {Path}", path);
             
             Directory.CreateDirectory(path);
 
-            this.Logger.LogInformation("Directory {path} is created.", path);
+            this.Logger.LogInformation("Directory {Path} is created.", path);
 
             // Recursively create all child folders
             // Get folders that is of the root folder
@@ -455,6 +447,7 @@ namespace CometServer.Services
 
                 // Determine an extension for the file
                 var extension = new StringBuilder();
+
                 foreach (var orderedItem in subFileRevision.FileType)
                 {
                     var tempExtension = fileTypes.Single(x => x.Iid == Guid.Parse(orderedItem.V.ToString()))
@@ -465,11 +458,11 @@ namespace CometServer.Services
 
                 var destFile = Path.Combine(folderPath, $"{subFileRevision.Name}{extension}");
 
-                this.Logger.LogDebug("Copying {storageFilePath} to {destFile}", storageFilePath, destFile);
+                this.Logger.LogDebug("Copying {StorageFilePath} to {DestFile}", storageFilePath, destFile);
 
                 System.IO.File.Copy(storageFilePath, destFile, true);
 
-                this.Logger.LogInformation("File {subFileRevisionContentHash}/{subFileRevisionName}{extension} is copied from {storageFilePath} to {folderPath}.", subFileRevision.ContentHash, subFileRevision.Name, extension, storageFilePath, folderPath);
+                this.Logger.LogInformation("File {SubFileRevisionContentHash}/{SubFileRevisionName}{Extension} is copied from {StorageFilePath} to {FolderPath}.", subFileRevision.ContentHash, subFileRevision.Name, extension, storageFilePath, folderPath);
             }
         }
     }

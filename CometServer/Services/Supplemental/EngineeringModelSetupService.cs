@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelSetupService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Services
 {
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -47,10 +48,10 @@ namespace CometServer.Services
         /// <remarks>
         /// The <see cref="EngineeringModelSetup"/> objects are read from the Cache Table and not from the View table
         /// </remarks>
-        public EngineeringModelSetup GetEngineeringModelSetupFromDataBaseCache(NpgsqlTransaction transaction, Guid engineeringModelId)
+        public async Task<EngineeringModelSetup> GetEngineeringModelSetupFromDataBaseCache(NpgsqlTransaction transaction, Guid engineeringModelId)
         {
-            return this.EngineeringModelSetupDao
-                .Read(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, null, true)
+            return (await this.EngineeringModelSetupDao
+                .ReadAsync(transaction, Cdp4TransactionManager.SITE_DIRECTORY_PARTITION, null, true))
                 .FirstOrDefault(x => x.EngineeringModelIid == engineeringModelId);
         }
     }

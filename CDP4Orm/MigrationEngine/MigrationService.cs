@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="MigrationService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CDP4Orm.MigrationEngine
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Logging.Abstractions;
@@ -65,13 +66,14 @@ namespace CDP4Orm.MigrationEngine
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The target partition</param>
         /// <param name="isStartup">Asserts whether the <see cref="IMigrationService"/> is called on startup</param>
-        public void ApplyMigrations(NpgsqlTransaction transaction, string partition, bool isStartup)
+        /// <returns>An awaitable <see cref="Task"/></returns>
+        public async Task ApplyMigrationsAsync(NpgsqlTransaction transaction, string partition, bool isStartup)
         {
             var migrations = this.GetMigrations(isStartup).Where(x => partition.StartsWith(x.MigrationMetaData.MigrationScriptApplicationKind.ToString()) || x.MigrationMetaData.MigrationScriptApplicationKind == MigrationScriptApplicationKind.All);
 
             foreach (var migrationBase in migrations.OrderBy(x => x.MigrationMetaData.Version))
             {
-                migrationBase.ApplyMigration(transaction, new [] { partition });
+                await migrationBase.ApplyMigration(transaction, [partition]);
             }
         }
 

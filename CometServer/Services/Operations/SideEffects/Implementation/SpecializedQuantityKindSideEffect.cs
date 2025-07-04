@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="SpecializedQuantityKindSideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -74,13 +75,15 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(SpecializedQuantityKind thing,
+        public override async Task BeforeUpdateAsync(SpecializedQuantityKind thing,
             Thing container,
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             ClasslessDTO rawUpdateInfo)
         {
+            await base.BeforeUpdateAsync(thing, container, transaction, partition, securityContext, rawUpdateInfo);
+
             if (rawUpdateInfo.TryGetValue("General", out var value))
             {
                 var kindId = (Guid)value;
@@ -93,7 +96,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Get RDL chain and collect types' ids
-                var parameterTypeIdsFromChain = this.GetParameterTypeIdsFromRdlChain(
+                var parameterTypeIdsFromChain = await this.GetParameterTypeIdsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
@@ -109,8 +112,8 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Get all SpecializedQuantityKinds
-                var parameterTypes = this.SpecializedQuantityKindService
-                    .Get(transaction, partition, parameterTypeIdsFromChain, securityContext)
+                var parameterTypes = (await this.SpecializedQuantityKindService
+                    .GetAsync(transaction, partition, parameterTypeIdsFromChain, securityContext))
                     .Cast<SpecializedQuantityKind>().ToList();
 
                 // Check whether containing folder is acyclic
@@ -140,9 +143,9 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of parameter types ids.
         /// </returns>
-        private List<Guid> GetParameterTypeIdsFromRdlChain(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Guid? rdlId)
+        private async Task<List<Guid>> GetParameterTypeIdsFromRdlChainAsync(NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = (await this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext))
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var parameterTypeIds = new List<Guid>();

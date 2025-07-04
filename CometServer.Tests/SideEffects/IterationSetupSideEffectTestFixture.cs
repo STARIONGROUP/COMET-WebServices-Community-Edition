@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IterationSetupSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,11 +24,18 @@
 
 namespace CometServer.Tests.SideEffects
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     using CDP4Authentication;
 
     using CDP4Common;
     using CDP4Common.DTO;
 
+    using CometServer.Authorization;
+    using CometServer.Exceptions;
     using CometServer.Helpers;
     using CometServer.Services;
     using CometServer.Services.Authorization;
@@ -39,13 +46,6 @@ namespace CometServer.Tests.SideEffects
     using Npgsql;
 
     using NUnit.Framework;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
-    using CometServer.Authorization;
-    using CometServer.Exceptions;
 
     [TestFixture]
     internal class IterationSetupSideEffectTestFixture
@@ -93,28 +93,28 @@ namespace CometServer.Tests.SideEffects
             var returnedIterations = new List<Iteration> { new(Guid.NewGuid(), 1) };
             var returnedIterationSetups = new List<IterationSetup> { new(Guid.NewGuid(), 1) };
 
-            this.mockedIterationSetupService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).Returns(returnedIterationSetups);
-            this.mockedIterationSetupService.Setup(x => x.UpdateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModelSetup>())).Returns(true);
+            this.mockedIterationSetupService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).ReturnsAsync(returnedIterationSetups);
+            this.mockedIterationSetupService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModelSetup>())).ReturnsAsync(true);
 
-            this.mockedIterationService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).Returns(returnedIterations);
-            this.mockedIterationService.Setup(x => x.DeleteConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>())).Returns(true);
-            this.mockedIterationService.Setup(x => x.CreateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).Returns(true);
+            this.mockedIterationService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).ReturnsAsync(returnedIterations);
+            this.mockedIterationService.Setup(x => x.DeleteConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>())).ReturnsAsync(true);
+            this.mockedIterationService.Setup(x => x.CreateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>(), -1)).ReturnsAsync(true);
 
-            this.mockedEngineeringModelService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).Returns(returnedEngineeringModels);
-            this.mockedEngineeringModelService.Setup(x => x.AddToCollectionProperty(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<Thing>())).Returns(true);
+            this.mockedEngineeringModelService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>())).ReturnsAsync(returnedEngineeringModels);
+            this.mockedEngineeringModelService.Setup(x => x.AddToCollectionPropertyAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Guid>(), It.IsAny<Thing>())).ReturnsAsync(true);
 
-            this.mockedTransactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.UtcNow);
+            this.mockedTransactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.UtcNow);
 
             this.mockedRequestUtils.Setup(x => x.GetEngineeringModelPartitionString(It.IsAny<Guid>())).Returns("EngineeringModel");
-            this.mockedCredentialsService.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(new Guid(), 1) });
+            this.mockedCredentialsService.Setup(x => x.Credentials).Returns(new Credentials { Person = new AuthenticationPerson(Guid.Empty, 1) });
 
             this.mockedRevisionService
                 .Setup(
-                    x => x.SaveRevisions(
+                    x => x.SaveRevisionsAsync(
                         It.IsAny<NpgsqlTransaction>(),
                         It.IsAny<string>(),
                         It.IsAny<Guid>(),
-                        It.IsAny<int>())).Returns(new List<Thing>());
+                        It.IsAny<int>())).ReturnsAsync(new List<Thing>());
         }
 
         [Test]
@@ -122,20 +122,19 @@ namespace CometServer.Tests.SideEffects
         {
             var sourceId = Guid.NewGuid();
 
-            this.mockedIterationSetupService.Setup(x => x.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).
-              Returns(new[] {new IterationSetup(sourceId, 0)});
+            this.mockedIterationSetupService.Setup(x => x.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).ReturnsAsync([new IterationSetup(sourceId, 0)]);
 
-            var iterationSetup = new IterationSetup(Guid.NewGuid(), 1) {SourceIterationSetup = sourceId };
+            var iterationSetup = new IterationSetup(Guid.NewGuid(), 1) { SourceIterationSetup = sourceId };
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
             var originalThing = iterationSetup.DeepClone<Thing>();
 
-            this.iterationSetupSideEffect.AfterCreate(iterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
+            this.iterationSetupSideEffect.AfterCreateAsync(iterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
 
             // Check that the other iterationSetups get frozen when creating the iterationSetup
-            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", It.IsAny<IterationSetup>(), this.engineeringModelSetup), Times.Once);
+            this.mockedIterationSetupService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "siteDirectory", It.IsAny<IterationSetup>(), this.engineeringModelSetup), Times.Once);
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
-            this.mockedIterationService.Verify(x => x.PopulateDataFromLastIteration(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModel>(), this.mockedSecurityContext.Object), Times.Once);
+            this.mockedIterationService.Verify(x => x.PopulateDataFromLastIterationAsync(this.npgsqlTransaction, It.IsAny<string>(), It.IsAny<IterationSetup>(), It.IsAny<IterationSetup>(), It.IsAny<EngineeringModel>(), this.mockedSecurityContext.Object), Times.Once);
         }
 
         [Test]
@@ -144,57 +143,57 @@ namespace CometServer.Tests.SideEffects
             var removeIiterationSetup = new IterationSetup(Guid.NewGuid(), 1);
             var originalThing = removeIiterationSetup.DeepClone<Thing>();
 
-            this.iterationSetupSideEffect.AfterDelete(removeIiterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
+            this.iterationSetupSideEffect.AfterDeleteAsync(removeIiterationSetup, this.engineeringModelSetup, originalThing, this.npgsqlTransaction, "siteDirectory", this.mockedSecurityContext.Object);
 
             // Check that a new iteration is created triggered by the the IterationSetup creation
-            this.mockedIterationService.Verify(x => x.DeleteConcept(this.npgsqlTransaction, It.Is<string>(s => s.Contains("EngineeringModel")), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>()), Times.Never);
+            this.mockedIterationService.Verify(x => x.DeleteConceptAsync(this.npgsqlTransaction, It.Is<string>(s => s.Contains("EngineeringModel")), It.IsAny<Iteration>(), It.IsAny<EngineeringModel>()), Times.Never);
         }
 
         [Test]
-        public void VerifyBeforeDeleteWhenIterationIsCurrentIteration()
+        public async Task VerifyBeforeDeleteWhenIterationIsCurrentIteration()
         {
-            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            var iterationSetup = (await this.mockedIterationSetupService.Object.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).OfType<IterationSetup>().SingleOrDefault();
 
-            Assert.Throws<InvalidOperationException>(() => 
-                this.iterationSetupSideEffect.BeforeDelete(
-                    iterationSetup,
-                    this.engineeringModelSetup, 
-                    this.npgsqlTransaction, 
-                    "siteDirectory", 
-                    this.mockedSecurityContext.Object));
-
-            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup , this.engineeringModelSetup), Times.Never);
-        }
-
-        [Test]
-        public void VerifyBeforeDeleteWhenIterationIsFrozenAndDeleted()
-        {
-            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
-            iterationSetup.FrozenOn=DateTime.Now;
-            iterationSetup.IsDeleted = true;
-
-            var originalThing = iterationSetup.DeepClone<Thing>();
-
-            this.iterationSetupSideEffect.BeforeDelete(
+            Assert.ThrowsAsync<InvalidOperationException>(() =>
+                this.iterationSetupSideEffect.BeforeDeleteAsync(
                     iterationSetup,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,
                     "siteDirectory",
-                    this.mockedSecurityContext.Object);
+                    this.mockedSecurityContext.Object));
 
-            Assert.That(iterationSetup.Iid, Is.EqualTo(originalThing.Iid));
-
-            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Never);
+            this.mockedIterationSetupService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Never);
         }
 
         [Test]
-        public void VerifyBeforeDeleteWhenIterationIsFrozenAndMarkItLikeIsDeleted()
+        public async Task VerifyBeforeDeleteWhenIterationIsFrozenAndDeleted()
         {
-            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            var iterationSetup = (await this.mockedIterationSetupService.Object.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).OfType<IterationSetup>().Single();
+            iterationSetup.FrozenOn = DateTime.Now;
+            iterationSetup.IsDeleted = true;
+
+            var originalThing = iterationSetup.DeepClone<Thing>();
+
+            await this.iterationSetupSideEffect.BeforeDeleteAsync(
+                iterationSetup,
+                this.engineeringModelSetup,
+                this.npgsqlTransaction,
+                "siteDirectory",
+                this.mockedSecurityContext.Object);
+
+            Assert.That(iterationSetup.Iid, Is.EqualTo(originalThing.Iid));
+
+            this.mockedIterationSetupService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Never);
+        }
+
+        [Test]
+        public async Task VerifyBeforeDeleteWhenIterationIsFrozenAndMarkItLikeIsDeleted()
+        {
+            var iterationSetup = (await this.mockedIterationSetupService.Object.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).OfType<IterationSetup>().Single();
             var originalThing = iterationSetup.DeepClone<Thing>();
             iterationSetup.FrozenOn = DateTime.Now;
 
-            this.iterationSetupSideEffect.BeforeDelete(
+            await this.iterationSetupSideEffect.BeforeDeleteAsync(
                 iterationSetup,
                 this.engineeringModelSetup,
                 this.npgsqlTransaction,
@@ -203,7 +202,7 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(iterationSetup.IsDeleted, Is.False);
 
-            this.iterationSetupSideEffect.AfterDelete(
+            await this.iterationSetupSideEffect.AfterDeleteAsync(
                 iterationSetup,
                 this.engineeringModelSetup,
                 originalThing,
@@ -213,20 +212,20 @@ namespace CometServer.Tests.SideEffects
 
             Assert.That(iterationSetup.IsDeleted, Is.True);
 
-            this.mockedIterationSetupService.Verify(x => x.UpdateConcept(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
+            this.mockedIterationSetupService.Verify(x => x.UpdateConceptAsync(this.npgsqlTransaction, "siteDirectory", iterationSetup, this.engineeringModelSetup), Times.Once);
         }
 
         [Test]
-        public void VerifySelfReferenceError()
+        public async Task VerifySelfReferenceError()
         {
-            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            var iterationSetup = (await this.mockedIterationSetupService.Object.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).OfType<IterationSetup>().Single();
 
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
 
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.iterationSetupSideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.iterationSetupSideEffect.BeforeUpdateAsync(
                     iterationSetup,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,
@@ -236,16 +235,16 @@ namespace CometServer.Tests.SideEffects
         }
 
         [Test]
-        public void VerifyOutOfModelError()
+        public async Task VerifyOutOfModelError()
         {
-            var iterationSetup = this.mockedIterationSetupService.Object.GetShallow(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object).OfType<IterationSetup>().SingleOrDefault();
+            var iterationSetup = (await this.mockedIterationSetupService.Object.GetShallowAsync(this.npgsqlTransaction, "SiteDirectory", It.IsAny<IEnumerable<Guid>>(), this.mockedSecurityContext.Object)).OfType<IterationSetup>().Single();
 
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup.Iid);
 
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", Guid.NewGuid() } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.iterationSetupSideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.iterationSetupSideEffect.BeforeUpdateAsync(
                     iterationSetup,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,
@@ -266,17 +265,17 @@ namespace CometServer.Tests.SideEffects
             this.engineeringModelSetup.IterationSetup.Add(iterationSetup3.Iid);
 
             this.mockedIterationSetupService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
                     this.mockedSecurityContext.Object))
-                .Returns(new[] { iterationSetup1, iterationSetup2, iterationSetup3 });
+                .ReturnsAsync([iterationSetup1, iterationSetup2, iterationSetup3]);
 
             var rawUpdateInfo = new ClasslessDTO() { { "SourceIterationSetup", iterationSetup3.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.iterationSetupSideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.iterationSetupSideEffect.BeforeUpdateAsync(
                     iterationSetup1,
                     this.engineeringModelSetup,
                     this.npgsqlTransaction,

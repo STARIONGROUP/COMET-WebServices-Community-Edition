@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IEngineeringModelDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -25,6 +25,7 @@
 namespace CDP4Orm.Dao
 {
     using System;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -50,7 +51,7 @@ namespace CDP4Orm.Dao
         /// <exception cref="InvalidOperationException">
         /// Throws if an iterationNumber could not be retrieved
         /// </exception>
-        int GetNextIterationNumber(NpgsqlTransaction transaction, string partition);
+        Task<int> GetNextIterationNumberAsync(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// The reset iteration number sequence start number.
@@ -64,14 +65,14 @@ namespace CDP4Orm.Dao
         /// <param name="iterationStartNumber">
         /// The start number.
         /// </param>
-        void ResetIterationNumberSequenceStartNumber(NpgsqlTransaction transaction, string partition, int iterationStartNumber);
+        Task ResetIterationNumberSequenceStartNumberAsync(NpgsqlTransaction transaction, string partition, int iterationStartNumber);
 
         /// <summary>
         /// Modify the identifier of all records in a partition
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The egineering-model partition to modify</param>
-        void ModifyIdentifier(NpgsqlTransaction transaction, string partition);
+        Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition);
 
         /// <summary>
         /// Modify the identifier of the <paramref name="thing"/>
@@ -80,7 +81,7 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The partition</param>
         /// <param name="thing">The updated <see cref="Thing"/></param>
         /// <param name="oldIid">The old identifier</param>
-        void ModifyIdentifier(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid);
+        Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid);
 
         /// <summary>
         /// Copy the tables from a source to an EngineeringModel partition
@@ -94,6 +95,6 @@ namespace CDP4Orm.Dao
         /// <param name="enable">
         /// A value indicating whether the user trigger shall be enabled
         /// </param>
-        void ModifyUserTrigger(NpgsqlTransaction transaction, string sourcePartition, bool enable);
+        Task ModifyUserTriggerAsync(NpgsqlTransaction transaction, string sourcePartition, bool enable);
     }
 }

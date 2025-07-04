@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DerivedQuantityKindSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,10 +24,16 @@
 
 namespace CometServer.Tests.SideEffects
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+
     using CDP4Common;
     using CDP4Common.DTO;
     using CDP4Common.Types;
 
+    using CometServer.Exceptions;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -37,12 +43,6 @@ namespace CometServer.Tests.SideEffects
     using Npgsql;
 
     using NUnit.Framework;
-
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-
-    using CometServer.Exceptions;
 
     /// <summary>
     /// Suite of tests for the <see cref="DerivedUnitSideEffectTestFixture"/>
@@ -151,20 +151,22 @@ namespace CometServer.Tests.SideEffects
             this.securityContext = new Mock<ISecurityContext>();
 
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
+
             this.siteReferenceDataLibraryService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     null,
                     It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary>
+                .ReturnsAsync(new List<ReferenceDataLibrary>
                 {
                     this.srdl
                 });
 
             this.quantityKindFactorService = new Mock<IQuantityKindFactorService>();
+
             this.quantityKindFactorService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
@@ -174,18 +176,19 @@ namespace CometServer.Tests.SideEffects
                     {
                         iids = iids.ToList();
 
-                        return new List<Thing>
+                        return Task.FromResult(new List<Thing>
                         {
                             this.derivedQkFactor,
                             this.rootQkFactor,
                             this.derivedQkCyclicFactor,
                             this.derivedQkOutsideRdlFactor
-                        }.Where(qkf => iids.Contains(qkf.Iid));
+                        }.Where(qkf => iids.Contains(qkf.Iid)));
                     });
 
             this.quantityKindService = new Mock<IQuantityKindService>();
+
             this.quantityKindService
-                .Setup(x => x.Get(
+                .Setup(x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<Guid>>(),
@@ -195,14 +198,14 @@ namespace CometServer.Tests.SideEffects
                     {
                         iids = iids.ToList();
 
-                        return new List<Thing>
+                        return Task.FromResult<IEnumerable<Thing>>(new List<Thing>
                         {
                             this.simpleQk,
                             this.derivedQk,
                             this.specializedQk,
                             this.rootQk,
                             this.outsideRdlQk
-                        }.Where(qk => iids.Contains(qk.Iid));
+                        }.Where(qk => iids.Contains(qk.Iid)));
                     });
 
             this.sideEffect = new DerivedQuantityKindSideEffect
@@ -221,8 +224,8 @@ namespace CometServer.Tests.SideEffects
                 { "QuantityKindFactor", new List<OrderedItem> { new() { K = 2, V = this.derivedQkOutsideRdlFactor.Iid } } }
             };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedQk,
                     this.mrdl,
                     this.npgsqlTransaction,
@@ -239,8 +242,8 @@ namespace CometServer.Tests.SideEffects
                 { "QuantityKindFactor", new List<OrderedItem> { new() { K = 2, V = this.derivedQkCyclicFactor.Iid } } }
             };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.derivedQk,
                     this.mrdl,
                     this.npgsqlTransaction,
@@ -258,7 +261,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.rootQk,
                     this.mrdl,
                     this.npgsqlTransaction,

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="EngineeringModelDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CDP4Orm.Dao
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
 
@@ -53,14 +54,14 @@ namespace CDP4Orm.Dao
         /// <exception cref="InvalidOperationException">
         /// Throws if an iterationNumber could not be retrieved
         /// </exception>
-        public int GetNextIterationNumber(NpgsqlTransaction transaction, string partition)
+        public async Task<int> GetNextIterationNumberAsync(NpgsqlTransaction transaction, string partition)
         {
             if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sql = $"SELECT nextval('\"{partition}\".\"IterationNumberSequence\"');";
 
@@ -68,7 +69,7 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sql;
 
-            var response = command.ExecuteScalar();
+            var response = await command.ExecuteScalarAsync();
 
             if (response != null && int.TryParse(response.ToString(), out var iterationNumber))
             {
@@ -90,14 +91,14 @@ namespace CDP4Orm.Dao
         /// <param name="iterationStartNumber">
         /// The start number.
         /// </param>
-        public void ResetIterationNumberSequenceStartNumber(NpgsqlTransaction transaction, string partition, int iterationStartNumber)
+        public async Task ResetIterationNumberSequenceStartNumberAsync(NpgsqlTransaction transaction, string partition, int iterationStartNumber)
         {
             if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sql = $"ALTER SEQUENCE \"{partition}\".\"IterationNumberSequence\" RESTART WITH {iterationStartNumber};";
 
@@ -105,7 +106,7 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sql;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -113,14 +114,14 @@ namespace CDP4Orm.Dao
         /// </summary>
         /// <param name="transaction">The current transaction</param>
         /// <param name="partition">The egineering-model partition to modify</param>
-        public void ModifyIdentifier(NpgsqlTransaction transaction, string partition)
+        public async Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition)
         {
             if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var valueTypeDictionaryContents = new Dictionary<string, string>
             {
@@ -135,7 +136,7 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sql;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -145,14 +146,14 @@ namespace CDP4Orm.Dao
         /// <param name="partition">The partition</param>
         /// <param name="thing">The updated <see cref="Thing"/></param>
         /// <param name="oldIid">The old identifier</param>
-        public void ModifyIdentifier(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
+        public async Task ModifyIdentifierAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid oldIid)
         {
             if (!CDP4Orm.Helper.StringExtensions.IsValidPartitionName(partition))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            using var command = new NpgsqlCommand();
+            await using var command = new NpgsqlCommand();
 
             var sql = $"UPDATE \"{partition}\".\"Thing\" SET \"Iid\" = :newIid WHERE \"Iid\" = :oldIid;";
 
@@ -163,7 +164,7 @@ namespace CDP4Orm.Dao
             command.Transaction = transaction;
             command.CommandText = sql;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
     }
 }

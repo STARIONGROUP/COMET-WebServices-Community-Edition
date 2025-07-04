@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="DefaultValueArrayFactoryTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.Services.BusinessLogic
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -78,14 +79,16 @@ namespace CometServer.Tests.Services.BusinessLogic
             this.PopulateParameterTypes();
 
             this.cachedReferenceDataService = new Mock<ICachedReferenceDataService>();
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypes(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypes);
-            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponents(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.parameterTypeComponents);
-            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignments(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.dependentParameterTypeAssignments);
-            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignments(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).Returns(this.independentParameterTypeAssignments);
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypesAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.parameterTypes);
+            this.cachedReferenceDataService.Setup(x => x.QueryParameterTypeComponentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.parameterTypeComponents);
+            this.cachedReferenceDataService.Setup(x => x.QueryDependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.dependentParameterTypeAssignments);
+            this.cachedReferenceDataService.Setup(x => x.QueryIndependentParameterTypeAssignmentsAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<ISecurityContext>())).ReturnsAsync(this.independentParameterTypeAssignments);
 
-            this.defaultValueArrayFactory = new DefaultValueArrayFactory();
-            this.defaultValueArrayFactory.Logger = this.logger.Object;
-            this.defaultValueArrayFactory.CachedReferenceDataService = this.cachedReferenceDataService.Object;
+            this.defaultValueArrayFactory = new DefaultValueArrayFactory
+            {
+                Logger = this.logger.Object,
+                CachedReferenceDataService = this.cachedReferenceDataService.Object
+            };
         }
 
         private void PopulateParameterTypes()
@@ -173,12 +176,12 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>() {"-"};
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.LoadAsync(this.transaction, this.secutrityContext.Object);
 
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypesAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.massIid);
 
@@ -195,12 +198,12 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>() { "-", "-", "-" };
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.LoadAsync(this.transaction, this.secutrityContext.Object);
 
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypesAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.vectorIid);
 
@@ -217,12 +220,12 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>() { "-", "-", "-", "-" };
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.LoadAsync(this.transaction, this.secutrityContext.Object);
 
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypesAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
             
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.jaggedArrayIid);
 
@@ -239,12 +242,12 @@ namespace CometServer.Tests.Services.BusinessLogic
             var value = new List<string>(0);
             var expectedValueArray = new ValueArray<string>(value);
 
-            this.defaultValueArrayFactory.Load(this.transaction, this.secutrityContext.Object);
+            this.defaultValueArrayFactory.LoadAsync(this.transaction, this.secutrityContext.Object);
 
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypes(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponents(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
-            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignments(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypesAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryParameterTypeComponentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryDependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
+            this.cachedReferenceDataService.Verify(x => x.QueryIndependentParameterTypeAssignmentsAsync(this.transaction, this.secutrityContext.Object), Times.Exactly(1));
 
             var valueArray = this.defaultValueArrayFactory.CreateDefaultValueArray(this.incompleteCoundParameterTypeIid);
 

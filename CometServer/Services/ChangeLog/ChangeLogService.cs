@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ChangeLogService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -30,6 +30,7 @@ namespace CometServer.Services.ChangeLog
     using System.Diagnostics;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.CommonData;
@@ -68,7 +69,7 @@ namespace CometServer.Services.ChangeLog
         /// <summary>
         /// Property names that are excluded from <see cref="CDP4Common.DTO.LogEntryChangelogItem.ChangeDescription"/> text.
         /// </summary>
-        private readonly string[] excludedPropertyNames = { nameof(Thing.Iid), nameof(Thing.ClassKind), nameof(Thing.ModifiedOn) };
+        private readonly string[] excludedPropertyNames = [nameof(Thing.Iid), nameof(Thing.ClassKind), nameof(Thing.ModifiedOn)];
 
         /// <summary>
         /// The injected <see cref="Services.IServiceProvider"/>
@@ -184,12 +185,12 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// True if change log data was added, otherwise false
         /// </returns>
-        public bool TryAppendModelChangeLogData(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things)
+        public async Task<bool> TryAppendModelChangeLogDataAsync(NpgsqlTransaction transaction, string partition, Guid actor, int transactionRevision, CdpPostOperation operation, IReadOnlyList<Thing> things)
         {
             var sw = Stopwatch.StartNew();
             this.Logger.LogInformation("Starting to append changelog data");
-            
-            var isCachedDtoReadEnabled = this.TransactionManager.IsCachedDtoReadEnabled(transaction);
+
+            var isCachedDtoReadEnabled = await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction);
 
             if (!isCachedDtoReadEnabled)
             {
@@ -253,7 +254,7 @@ namespace CometServer.Services.ChangeLog
 
                     foreach (var changedThing in changedThings.Where(x => x.ClassKind != ClassKind.ModelLogEntry))
                     {
-                        var newLogEntryChangelogItem = this.CreateAddOrUpdateLogEntryChangelogItem(transaction, partition, changedThing, modelLogEntry, operation, changedThings);
+                        var newLogEntryChangelogItem = await this.CreateAddOrUpdateLogEntryChangelogItemAsync(transaction, partition, changedThing, modelLogEntry, operation, changedThings);
 
                         if (newLogEntryChangelogItem == null)
                         {
@@ -281,7 +282,7 @@ namespace CometServer.Services.ChangeLog
                     foreach (var deleteInfo in operation.Delete)
                     {
                         var newLogEntryChangelogItem =
-                            this.CreateDeleteLogEntryChangelogItems(transaction, partition, deleteInfo, modelLogEntry, changedThings);
+                            await this.CreateDeleteLogEntryChangelogItemsAsync(transaction, partition, deleteInfo, modelLogEntry, changedThings);
 
                         if (newLogEntryChangelogItem != null)
                         {
@@ -314,14 +315,14 @@ namespace CometServer.Services.ChangeLog
                                 ClasslessDtoFactory
                                     .FromThing(this.MetaInfoProvider,
                                         modelLogEntry,
-                                        new[] { nameof(ModelLogEntry.LogEntryChangelogItem), nameof(ModelLogEntry.AffectedItemIid), nameof(ModelLogEntry.AffectedDomainIid) });
+                                        [nameof(ModelLogEntry.LogEntryChangelogItem), nameof(ModelLogEntry.AffectedItemIid), nameof(ModelLogEntry.AffectedDomainIid)]);
 
                             operationData.Update.Add(modelLogEntryClasslessDTO);
                         }
 
                         // New things that need to be read that are not yet in cache at this moment in time
                         this.TransactionManager.SetCachedDtoReadEnabled(false);
-                        this.OperationProcessor.Process(operationData, transaction, partition);
+                        await this.OperationProcessor.ProcessAsync(operationData, transaction, partition);
 
                         result = true;
                     }
@@ -329,7 +330,7 @@ namespace CometServer.Services.ChangeLog
             }
             catch (ResolveException ex)
             {
-                this.Logger.LogDebug("{message}", ex.Message);
+                this.Logger.LogDebug(ex, "{Message}", ex.Message);
             }
             catch (Exception ex)
             {
@@ -342,7 +343,7 @@ namespace CometServer.Services.ChangeLog
                     this.TransactionManager.SetFullAccessState(false);
                 }
 
-                if (!isCachedDtoReadEnabled && this.TransactionManager.IsCachedDtoReadEnabled(transaction))
+                if (!isCachedDtoReadEnabled && await this.TransactionManager.IsCachedDtoReadEnabledAsync(transaction))
                 {
                     this.TransactionManager.SetCachedDtoReadEnabled(false);
                 }
@@ -378,7 +379,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The created <see cref="CDP4Common.CommonData.LogEntryChangelogItem"/> if one was created, otherwise null.
         /// </returns>
-        private LogEntryChangelogItem CreateAddOrUpdateLogEntryChangelogItem(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, CdpPostOperation operation, IReadOnlyList<Thing> changedThings)
+        private async Task<LogEntryChangelogItem> CreateAddOrUpdateLogEntryChangelogItemAsync(NpgsqlTransaction transaction, string partition, Thing changedThing, ModelLogEntry modelLogEntry, CdpPostOperation operation, IReadOnlyList<Thing> changedThings)
         {
             if (!IsAddLogEntryChangeLogItemAllowed(changedThing.ClassKind))
             {
@@ -388,14 +389,15 @@ namespace CometServer.Services.ChangeLog
             var logEntryChangeLogItem = new LogEntryChangelogItem(Guid.NewGuid(), 0);
             AddIfNotExists(modelLogEntry.AffectedItemIid, changedThing.Iid);
 
-            if (operation.Create.SingleOrDefault(x => x.Iid == changedThing.Iid) is { })
+            if (operation.Create.SingleOrDefault(x => x.Iid == changedThing.Iid) is not null)
             {
-                this.SetCreateLogEntryChangeLogItem(transaction, partition, changedThing, modelLogEntry, logEntryChangeLogItem, changedThings);
+                await this.SetCreateLogEntryChangeLogItemAsync(transaction, partition, changedThing, modelLogEntry, logEntryChangeLogItem, changedThings);
                 return logEntryChangeLogItem;
             }
-            else if (operation.Update.SingleOrDefault(x => x[nameof(Thing.Iid)] as Guid? == changedThing.Iid) is { } updateOperation)
+
+            if (operation.Update.SingleOrDefault(x => x[nameof(Thing.Iid)] as Guid? == changedThing.Iid) is { } updateOperation)
             {
-                this.SetUpdateLogEntryChangeLogItem(transaction, partition, changedThing, modelLogEntry, logEntryChangeLogItem, updateOperation);
+                await this.SetUpdateLogEntryChangeLogItemAsync(transaction, partition, changedThing, modelLogEntry, logEntryChangeLogItem, updateOperation);
                 return logEntryChangeLogItem;
             }
 
@@ -423,7 +425,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The created <see cref="CDP4Common.CommonData.LogEntryChangelogItem"/>s.
         /// </returns>
-        private LogEntryChangelogItem CreateDeleteLogEntryChangelogItems(NpgsqlTransaction transaction, string partition, ClasslessDTO deleteInfo, ModelLogEntry modelLogEntry, IReadOnlyList<Thing> changedThings)
+        private async Task<LogEntryChangelogItem> CreateDeleteLogEntryChangelogItemsAsync(NpgsqlTransaction transaction, string partition, ClasslessDTO deleteInfo, ModelLogEntry modelLogEntry, IReadOnlyList<Thing> changedThings)
         {
             if (Enum.TryParse<ClassKind>(deleteInfo[nameof(Thing.ClassKind)].ToString(), out var classKind) && IsAddLogEntryChangeLogItemAllowed(classKind))
             {
@@ -434,7 +436,7 @@ namespace CometServer.Services.ChangeLog
 
                 if (deletedThing != null)
                 {
-                    this.SetDeleteLogEntryChangeLogItem(transaction, partition, deletedThing, modelLogEntry, newLogEntryChangelogItem, deleteInfo, changedThings);
+                    await this.SetDeleteLogEntryChangeLogItemAsync(transaction, partition, deletedThing, modelLogEntry, newLogEntryChangelogItem, deleteInfo, changedThings);
                 }
 
                 return newLogEntryChangelogItem;
@@ -464,7 +466,7 @@ namespace CometServer.Services.ChangeLog
         /// <param name="changedThings">
         /// An <see cref="IReadOnlyList{T}"/> of type <see cref="Thing"/> that contains all changed things.
         /// </param>
-        private void SetCreateLogEntryChangeLogItem(NpgsqlTransaction transaction, string partition, Thing createdThing, ModelLogEntry modelLogEntry, LogEntryChangelogItem logEntryChangeLogItem, IReadOnlyList<Thing> changedThings)
+        private async Task SetCreateLogEntryChangeLogItemAsync(NpgsqlTransaction transaction, string partition, Thing createdThing, ModelLogEntry modelLogEntry, LogEntryChangelogItem logEntryChangeLogItem, IReadOnlyList<Thing> changedThings)
         {
             logEntryChangeLogItem.ChangelogKind = LogEntryChangelogItemKind.ADD;
             logEntryChangeLogItem.AffectedItemIid = createdThing.Iid;
@@ -493,10 +495,10 @@ namespace CometServer.Services.ChangeLog
                 AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
                 AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
 
-                stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
+                stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
             }
 
-            var affectedThingsData = this.GetAffectedThingsData(transaction, partition, createdThing, null);
+            var affectedThingsData = await this.GetAffectedThingsDataAsync(transaction, partition, createdThing, null);
 
             foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
@@ -515,9 +517,9 @@ namespace CometServer.Services.ChangeLog
                 stringBuilder.AppendLine(extraChangeDescription);
             }
 
-            stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, createdThing)}");
+            stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, createdThing)}");
 
-            var customDescriptions = this.GetCustomDescriptions(transaction, partition, createdThing);
+            var customDescriptions = await this.GetCustomDescriptionsAsync(transaction, partition, createdThing);
 
             if (!string.IsNullOrWhiteSpace(customDescriptions))
             {
@@ -548,7 +550,7 @@ namespace CometServer.Services.ChangeLog
         /// <param name="updateOperation">
         /// The original update operation as a <see cref="ClasslessDTO"/>
         /// </param>
-        private void SetUpdateLogEntryChangeLogItem(NpgsqlTransaction transaction, string partition, Thing updatedThing, ModelLogEntry modelLogEntry, LogEntryChangelogItem logEntryChangeLogItem, ClasslessDTO updateOperation)
+        private async Task SetUpdateLogEntryChangeLogItemAsync(NpgsqlTransaction transaction, string partition, Thing updatedThing, ModelLogEntry modelLogEntry, LogEntryChangelogItem logEntryChangeLogItem, ClasslessDTO updateOperation)
         {
             logEntryChangeLogItem.ChangelogKind = LogEntryChangelogItemKind.UPDATE;
             logEntryChangeLogItem.AffectedItemIid = updatedThing.Iid;
@@ -568,7 +570,7 @@ namespace CometServer.Services.ChangeLog
                 }
             }
 
-            var affectedThingsData = this.GetAffectedThingsData(transaction, partition, updatedThing, updateOperation);
+            var affectedThingsData = await this.GetAffectedThingsDataAsync(transaction, partition, updatedThing, updateOperation);
 
             foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
@@ -589,25 +591,25 @@ namespace CometServer.Services.ChangeLog
                 stringBuilder.AppendLine(extraChangeDescription);
             }
 
-            var containerThing = this.GetContainer(transaction, partition, updatedThing);
+            var containerThing = await this.GetContainerAsync(transaction, partition, updatedThing);
 
             if (containerThing != null)
             {
                 AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
                 AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
-                stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
+                stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
             }
 
-            stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, updatedThing)}");
+            stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, updatedThing)}");
 
-            var extraDescriptions = this.GetCustomDescriptions(transaction, partition, updatedThing);
+            var extraDescriptions = await this.GetCustomDescriptionsAsync(transaction, partition, updatedThing);
 
             if (!string.IsNullOrEmpty(extraDescriptions))
             {
                 stringBuilder.AppendLine(extraDescriptions);
             }
 
-            var changedValues = this.BuildUpdateOperationText(transaction, partition, updateOperation);
+            var changedValues = await this.BuildUpdateOperationTextAsync(transaction, partition, updateOperation);
 
             stringBuilder.AppendLine(changedValues);
 
@@ -627,7 +629,7 @@ namespace CometServer.Services.ChangeLog
         /// The <see cref="ClasslessDTO"/>
         /// </param>
         /// <returns>T <see cref="string"/></returns>
-        private string BuildUpdateOperationText(NpgsqlTransaction transaction, string partition, ClasslessDTO updateOperation)
+        private async Task<string> BuildUpdateOperationTextAsync(NpgsqlTransaction transaction, string partition, ClasslessDTO updateOperation)
         {
             var relevantOperations = updateOperation.Where(x => !this.excludedPropertyNames.Contains(x.Key)).ToList();
             var stringBuilder = new StringBuilder();
@@ -646,13 +648,13 @@ namespace CometServer.Services.ChangeLog
 
                 if (operation.Value is Guid changedValue)
                 {
-                    this.AddChangedThingIidLine(transaction, partition, originalThing, operation.Key, changedValue, stringBuilder);
+                    await this.AddChangedThingIidLineAsync(transaction, partition, originalThing, operation.Key, changedValue, stringBuilder);
                 }
                 else if (operation.Value is IEnumerable<Guid> guids)
                 {
                     foreach (var guid in guids)
                     {
-                        this.AddChangedThingIidLine(transaction, partition, originalThing, operation.Key, guid, stringBuilder);
+                        await this.AddChangedThingIidLineAsync(transaction, partition, originalThing, operation.Key, guid, stringBuilder);
                     }
                 }
                 else
@@ -688,7 +690,7 @@ namespace CometServer.Services.ChangeLog
         /// <param name="stringBuilder">
         /// The <see cref="StringBuilder"/>
         /// </param>
-        private void AddChangedThingIidLine(NpgsqlTransaction transaction, string partition, Thing originalThing, string propertyName, Guid changedValue, StringBuilder stringBuilder)
+        private async Task AddChangedThingIidLineAsync(NpgsqlTransaction transaction, string partition, Thing originalThing, string propertyName, Guid changedValue, StringBuilder stringBuilder)
         {
             var metaInfoProvider = this.MetaInfoProvider.GetMetaInfo(originalThing);
             var metaInfo = metaInfoProvider.GetPropertyMetaInfo(propertyName);
@@ -702,9 +704,9 @@ namespace CometServer.Services.ChangeLog
 
             if (this.DataModelUtils.GetSourcePartition(metaInfo.TypeName) != null)
             {
-                this.ResolveService.ResolveItems(transaction, partition, resolverDictionary);
+                await this.ResolveService.ResolveItemsAsync(transaction, partition, resolverDictionary);
 
-                var changedValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { changedValue }, securityContext).FirstOrDefault();
+                var changedValueThing = (await service.GetShallowAsync(transaction, dtoResolverHelper.Partition, [changedValue], securityContext)).FirstOrDefault();
 
                 var orgValue = metaInfoProvider.GetValue(propertyName, originalThing);
 
@@ -726,7 +728,7 @@ namespace CometServer.Services.ChangeLog
                 {
                     if (orgValue != null)
                     {
-                        var orgValueThing = service.GetShallow(transaction, dtoResolverHelper.Partition, new[] { (Guid) orgValue }, securityContext).FirstOrDefault();
+                        var orgValueThing = (await service.GetShallowAsync(transaction, dtoResolverHelper.Partition, [(Guid) orgValue], securityContext)).FirstOrDefault();
 
                         if (TryGetName(changedValueThing, out var changedThingName) && TryGetName(orgValueThing, out var orgThingName))
                         {
@@ -751,7 +753,7 @@ namespace CometServer.Services.ChangeLog
         /// </returns>
         private Thing FindOriginalThing(Guid guid)
         {
-            foreach (var thing in this.OperationProcessor.OperationOriginalThingCache)
+            foreach (var thing in this.OperationProcessor.OperationOriginalThingCache.ToArray())
             {
                 if (thing.Iid.Equals(guid))
                 {
@@ -786,7 +788,7 @@ namespace CometServer.Services.ChangeLog
         /// <param name="changedThings">
         /// An <see cref="IReadOnlyList{T}"/> of type <see cref="Thing"/> that contains all changed things.
         /// </param>
-        private void SetDeleteLogEntryChangeLogItem(NpgsqlTransaction transaction, string partition, Thing deletedThing, ModelLogEntry modelLogEntry, LogEntryChangelogItem logEntryChangeLogItem, ClasslessDTO deleteOperation, IReadOnlyList<Thing> changedThings)
+        private async Task SetDeleteLogEntryChangeLogItemAsync(NpgsqlTransaction transaction, string partition, Thing deletedThing, ModelLogEntry modelLogEntry, LogEntryChangelogItem logEntryChangeLogItem, ClasslessDTO deleteOperation, IReadOnlyList<Thing> changedThings)
         {
             logEntryChangeLogItem.ChangelogKind = LogEntryChangelogItemKind.DELETE;
             logEntryChangeLogItem.AffectedItemIid = deletedThing.Iid;
@@ -806,7 +808,7 @@ namespace CometServer.Services.ChangeLog
                 }
             }
 
-            var affectedThingsData = this.GetAffectedThingsData(transaction, partition, deletedThing, deleteOperation, deletedThing);
+            var affectedThingsData = await this.GetAffectedThingsDataAsync(transaction, partition, deletedThing, deleteOperation, deletedThing);
 
             foreach (var affectedItemId in affectedThingsData.AffectedItemIds)
             {
@@ -833,12 +835,12 @@ namespace CometServer.Services.ChangeLog
             {
                 AddIfNotExists(logEntryChangeLogItem.AffectedReferenceIid, containerThing.Iid);
                 AddIfNotExists(modelLogEntry.AffectedItemIid, containerThing.Iid);
-                stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, containerThing)}");
+                stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, containerThing)}");
             }
 
-            stringBuilder.AppendLine($"* {this.GetThingDescription(transaction, partition, deletedThing)}");
+            stringBuilder.AppendLine($"* {await this.GetThingDescriptionAsync(transaction, partition, deletedThing)}");
 
-            var extraDescriptions = this.GetCustomDescriptions(transaction, partition, deletedThing);
+            var extraDescriptions = await this.GetCustomDescriptionsAsync(transaction, partition, deletedThing);
 
             if (!string.IsNullOrEmpty(extraDescriptions))
             {
@@ -868,7 +870,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The <see cref="AffectedThingsData"/>
         /// </returns>
-        private AffectedThingsData GetAffectedThingsData(NpgsqlTransaction transaction, string partition, Thing rootThing, ClasslessDTO updateOperation, Thing thing = null)
+        private async Task<AffectedThingsData> GetAffectedThingsDataAsync(NpgsqlTransaction transaction, string partition, Thing rootThing, ClasslessDTO updateOperation, Thing thing = null)
         {
             thing ??= rootThing;
             var affectedThingsData = new AffectedThingsData();
@@ -887,7 +889,7 @@ namespace CometServer.Services.ChangeLog
                 {
                         AddIfNotExists(affectedThingsData.AffectedItemIds, parameter.ParameterType);
 
-                    if (this.ParameterTypeService.GetShallow(transaction, siteDirectoryPartition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
+                    if ((await this.ParameterTypeService.GetShallowAsync(transaction, siteDirectoryPartition, [parameter.ParameterType], securityContext)).Single() is ParameterType parameterType)
                     {
                         foreach (var category in parameterType.Category)
                         {
@@ -907,9 +909,9 @@ namespace CometServer.Services.ChangeLog
                         }
                     }
 
-                    if (this.GetContainer(transaction, engineeringModelPartition, parameter) is ElementDefinition elementDefinition)
+                    if (await this.GetContainerAsync(transaction, engineeringModelPartition, parameter) is ElementDefinition elementDefinition)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, elementDefinition);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, elementDefinition);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -923,9 +925,9 @@ namespace CometServer.Services.ChangeLog
                 }
                 case ElementUsage elementUsage:
                 {
-                    if (this.GetContainer(transaction, engineeringModelPartition, elementUsage) is ElementDefinition elementDefinition)
+                    if (await this.GetContainerAsync(transaction, engineeringModelPartition, elementUsage) is ElementDefinition elementDefinition)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, elementDefinition);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, elementDefinition);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -976,19 +978,19 @@ namespace CometServer.Services.ChangeLog
                         }
                     }
 
-                    var parameterOverrideParameter = this.ParameterService.GetShallow(transaction, iterationPartition, new[] { parameterOverride.Parameter }, securityContext)
+                    var parameterOverrideParameter = (await this.ParameterService.GetShallowAsync(transaction, iterationPartition, [parameterOverride.Parameter], securityContext))
                         .Cast<Parameter>()
                         .SingleOrDefault();
 
                     if (parameterOverrideParameter != null)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOverrideParameter);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, parameterOverrideParameter);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
-                    if (this.GetContainer(transaction, engineeringModelPartition, parameterOverride) is ElementUsage elementUsage)
+                    if (await this.GetContainerAsync(transaction, engineeringModelPartition, parameterOverride) is ElementUsage elementUsage)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, elementUsage);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, elementUsage);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -1002,7 +1004,7 @@ namespace CometServer.Services.ChangeLog
                 }
                 case ParameterValueSet parameterValueSet:
                 {
-                    var parameterValueSetParameters = this.ParameterService.GetShallow(transaction, iterationPartition, null, securityContext)
+                    var parameterValueSetParameters = (await this.ParameterService.GetShallowAsync(transaction, iterationPartition, null, securityContext))
                         .Cast<Parameter>()
                         .ToList();
 
@@ -1010,7 +1012,7 @@ namespace CometServer.Services.ChangeLog
 
                     if (parameterValueSetParameter != null)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterValueSetParameter);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, parameterValueSetParameter);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -1018,7 +1020,7 @@ namespace CometServer.Services.ChangeLog
                 }
                 case ParameterOverrideValueSet parameterOverrideValueSet:
                 {
-                    var parameterOverrideValueSetParameterOverrides = this.ParameterOverrideService.GetShallow(transaction, iterationPartition, null, securityContext)
+                    var parameterOverrideValueSetParameterOverrides = (await this.ParameterOverrideService.GetShallowAsync(transaction, iterationPartition, null, securityContext))
                         .Cast<ParameterOverride>()
                         .ToList();
 
@@ -1026,7 +1028,7 @@ namespace CometServer.Services.ChangeLog
 
                     if (parameterOverrideValueSetParameterOverride != null)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOverrideValueSetParameterOverride);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, parameterOverrideValueSetParameterOverride);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -1034,7 +1036,7 @@ namespace CometServer.Services.ChangeLog
                 }
                 case ParameterSubscription parameterSubscription:
                 {
-                    var parameterOrOverrideBases = this.ParameterOrOverrideBaseService.GetShallow(transaction, iterationPartition, null, securityContext)
+                    var parameterOrOverrideBases = (await this.ParameterOrOverrideBaseService.GetShallowAsync(transaction, iterationPartition, null, securityContext))
                         .Cast<ParameterOrOverrideBase>()
                         .ToList();
 
@@ -1042,7 +1044,7 @@ namespace CometServer.Services.ChangeLog
 
                     if (parameterOrOverrideBase != null)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterOrOverrideBase);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, parameterOrOverrideBase);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -1056,7 +1058,7 @@ namespace CometServer.Services.ChangeLog
                 }
                 case ParameterSubscriptionValueSet parameterSubscriptionValueSet:
                 {
-                    var parameterSubscriptionValueSetParameterSubscriptions = this.ParameterSubscriptionService.GetShallow(transaction, iterationPartition, null, securityContext)
+                    var parameterSubscriptionValueSetParameterSubscriptions = (await this.ParameterSubscriptionService.GetShallowAsync(transaction, iterationPartition, null, securityContext))
                         .Cast<ParameterSubscription>()
                         .ToList();
 
@@ -1064,7 +1066,7 @@ namespace CometServer.Services.ChangeLog
 
                     if (parameterSubscriptionValueSetParameterSubscription != null)
                     {
-                        var newAffectedItemsData = this.GetAffectedThingsData(transaction, partition, rootThing, updateOperation, parameterSubscriptionValueSetParameterSubscription);
+                        var newAffectedItemsData = await this.GetAffectedThingsDataAsync(transaction, partition, rootThing, updateOperation, parameterSubscriptionValueSetParameterSubscription);
                         affectedThingsData.AddFrom(newAffectedItemsData);
                     }
 
@@ -1090,7 +1092,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// <paramref name="updatedThing"/>'s container <see cref="Thing"/> if found, otherwise null
         /// </returns>
-        private Thing GetContainer(NpgsqlTransaction transaction, string partition, Thing updatedThing)
+        private async Task<Thing> GetContainerAsync(NpgsqlTransaction transaction, string partition, Thing updatedThing)
         {
             try
             {
@@ -1117,7 +1119,7 @@ namespace CometServer.Services.ChangeLog
                     containerPartition = partition.Replace("EngineeringModel", "Iteration");
                 }
 
-                var possibleContainers = service.GetShallow(transaction, containerPartition, null, securityContext).ToList();
+                var possibleContainers = (await service.GetShallowAsync(transaction, containerPartition, null, securityContext)).ToList();
 
                 if (possibleContainers.Count == 0)
                 {
@@ -1299,7 +1301,7 @@ namespace CometServer.Services.ChangeLog
         /// <returns>
         /// The <see cref="Thing"/>s description.
         /// </returns>
-        private string GetThingDescription(NpgsqlTransaction transaction, string partition, Thing thing)
+        private async Task<string> GetThingDescriptionAsync(NpgsqlTransaction transaction, string partition, Thing thing)
         {
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
             var iterationPartition = $"Iteration{basePartition}";
@@ -1320,30 +1322,30 @@ namespace CometServer.Services.ChangeLog
             var securityContext = new RequestSecurityContext { ContainerReadAllowed = true };
 
             if (thing is Iteration iteration
-                && this.IterationSetupService.GetShallow(transaction, siteDirectoryPartition, new[] { iteration.IterationSetup }, securityContext).Single() is IterationSetup iterationSetup)
+                && (await this.IterationSetupService.GetShallowAsync(transaction, siteDirectoryPartition, [iteration.IterationSetup], securityContext)).Single() is IterationSetup iterationSetup)
             {
                 description = $"{description} {iterationSetup.IterationNumber}";
             }
 
             if (thing is Parameter parameter
-                && this.ParameterTypeService.GetShallow(transaction, siteDirectoryPartition, new[] { parameter.ParameterType }, securityContext).Single() is ParameterType parameterType)
+                && (await this.ParameterTypeService.GetShallowAsync(transaction, siteDirectoryPartition, [parameter.ParameterType], securityContext)).Single() is ParameterType parameterType)
             {
-                description = $"{description} {this.GetThingDescription(transaction, partition, parameterType)}";
+                description = $"{description} {await this.GetThingDescriptionAsync(transaction, partition, parameterType)}";
             }
 
             if (thing is ParameterOverride parameterOverride
-                && this.ParameterService.GetShallow(transaction, iterationPartition, new[] { parameterOverride.Parameter }, securityContext).Single() is Parameter parameterOverrideParameter)
+                && (await this.ParameterService.GetShallowAsync(transaction, iterationPartition, [parameterOverride.Parameter], securityContext)).Single() is Parameter parameterOverrideParameter)
             {
-                description = $"ParameterOverride: {this.GetThingDescription(transaction, partition, parameterOverrideParameter)}";
+                description = $"ParameterOverride: {await this.GetThingDescriptionAsync(transaction, partition, parameterOverrideParameter)}";
             }
 
             if (thing is ParameterSubscription parameterSubscription
-                && this.ParameterOrOverrideBaseService
-                    .GetShallow(transaction, iterationPartition, null, securityContext)
+                && (await this.ParameterOrOverrideBaseService
+                    .GetShallowAsync(transaction, iterationPartition, null, securityContext))
                     .Cast<ParameterOrOverrideBase>()
                     .SingleOrDefault(x => x.ParameterSubscription.Contains(parameterSubscription.Iid)) is { } parameterOrOverride)
             {
-                description = $"ParameterSubscription => {this.GetThingDescription(transaction, partition, parameterOrOverride)}";
+                description = $"ParameterSubscription => {await this.GetThingDescriptionAsync(transaction, partition, parameterOrOverride)}";
             }
 
             return description;
@@ -1360,7 +1362,7 @@ namespace CometServer.Services.ChangeLog
         /// </param>
         /// <param name="thing">The specific <see cref="Thing"/></param>
         /// <returns>A string containing the custom descriptions</returns>
-        private string GetCustomDescriptions(NpgsqlTransaction transaction, string partition, Thing thing)
+        private async Task<string> GetCustomDescriptionsAsync(NpgsqlTransaction transaction, string partition, Thing thing)
         {
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
             var iterationPartition = $"Iteration{basePartition}";
@@ -1375,21 +1377,21 @@ namespace CometServer.Services.ChangeLog
                 {
                     if (parameterValueSet.ActualOption.HasValue)
                     {
-                        this.TryAddOptionLine(transaction, partition, parameterValueSet.ActualOption.Value, securityContext, stringBuilder);
+                        await this.TryAddOptionLineAsync(transaction, partition, parameterValueSet.ActualOption.Value, securityContext, stringBuilder);
                     }
 
                     if (parameterValueSet.ActualState.HasValue)
                     {
-                        this.TryAddStateLine(transaction, partition, parameterValueSet.ActualState.Value, securityContext, stringBuilder);
+                        await this.TryAddStateLineAsync(transaction, partition, parameterValueSet.ActualState.Value, securityContext, stringBuilder);
                     }
 
                     break;
                 }
                 case ParameterOverrideValueSet parameterOverrideValueSet:
                 {
-                    if (this.ParameterValueSetService.GetShallow(transaction, iterationPartition, new[] { parameterOverrideValueSet.ParameterValueSet }, securityContext).Single() is ParameterValueSet parameterOverrideValueSetParameterValueSet)
+                    if ((await this.ParameterValueSetService.GetShallowAsync(transaction, iterationPartition, [parameterOverrideValueSet.ParameterValueSet], securityContext)).Single() is ParameterValueSet parameterOverrideValueSetParameterValueSet)
                     {
-                        var description = this.GetCustomDescriptions(transaction, partition, parameterOverrideValueSetParameterValueSet);
+                        var description = await this.GetCustomDescriptionsAsync(transaction, partition, parameterOverrideValueSetParameterValueSet);
 
                         if (!string.IsNullOrWhiteSpace(description))
                         {
@@ -1401,9 +1403,9 @@ namespace CometServer.Services.ChangeLog
                 }
                 case ParameterSubscriptionValueSet parameterSubscriptionValueSet:
                 {
-                    if (this.ParameterValueSetBaseService.GetShallow(transaction, iterationPartition, new[] { parameterSubscriptionValueSet.SubscribedValueSet }, securityContext).Single() is ParameterValueSetBase parameterSubscriptionValueSetParameterValueSetBase)
+                    if ((await this.ParameterValueSetBaseService.GetShallowAsync(transaction, iterationPartition, [parameterSubscriptionValueSet.SubscribedValueSet], securityContext)).Single() is ParameterValueSetBase parameterSubscriptionValueSetParameterValueSetBase)
                     {
-                        var description = this.GetCustomDescriptions(transaction, partition, parameterSubscriptionValueSetParameterValueSetBase);
+                        var description = await this.GetCustomDescriptionsAsync(transaction, partition, parameterSubscriptionValueSetParameterValueSetBase);
 
                         if (!string.IsNullOrWhiteSpace(description))
                         {
@@ -1443,18 +1445,18 @@ namespace CometServer.Services.ChangeLog
         /// <param name="stateIid">The <see cref="ActualFiniteState.Iid"/> of the <see cref="ActualFiniteState"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         /// <param name="stringBuilder">The <see cref="StringBuilder"/></param>
-        private void TryAddStateLine(NpgsqlTransaction transaction, string partition, Guid stateIid, ISecurityContext securityContext, StringBuilder stringBuilder)
+        private async Task TryAddStateLineAsync(NpgsqlTransaction transaction, string partition, Guid stateIid, ISecurityContext securityContext, StringBuilder stringBuilder)
         {
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
             var iterationPartition = $"Iteration{basePartition}";
 
-            if (this.ActualFiniteStateService.GetShallow(transaction, iterationPartition, new[] { stateIid }, securityContext).Single() is not ActualFiniteState actualState)
+            if ((await this.ActualFiniteStateService.GetShallowAsync(transaction, iterationPartition, [stateIid], securityContext)).Single() is not ActualFiniteState actualState)
             {
                 return;
             }
 
             var possibleFiniteStates = 
-                this.PossibleFiniteStateService.GetShallow(transaction, iterationPartition, actualState.PossibleState, securityContext)
+                (await this.PossibleFiniteStateService.GetShallowAsync(transaction, iterationPartition, actualState.PossibleState, securityContext))
                     .Cast<PossibleFiniteState>()
                     .ToList(); 
 
@@ -1479,12 +1481,12 @@ namespace CometServer.Services.ChangeLog
         /// <param name="optionIid">The <see cref="Option.Iid"/> of the <see cref="Option"/></param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
         /// <param name="stringBuilder">The <see cref="StringBuilder"/></param>
-        private void TryAddOptionLine(NpgsqlTransaction transaction, string partition, Guid optionIid, ISecurityContext securityContext, StringBuilder stringBuilder)
+        private async Task TryAddOptionLineAsync(NpgsqlTransaction transaction, string partition, Guid optionIid, ISecurityContext securityContext, StringBuilder stringBuilder)
         {
             var basePartition = partition.Replace("EngineeringModel", "").Replace("Iteration", "");
             var iterationPartition = $"Iteration{basePartition}";
 
-            if (this.OptionService.GetShallow(transaction, iterationPartition, new[] { optionIid }, securityContext).Single() is Option actualOption)
+            if ((await this.OptionService.GetShallowAsync(transaction, iterationPartition, [optionIid], securityContext)).Single() is Option actualOption)
             {
                 stringBuilder.AppendLine($"* Option: {actualOption.Name} ({actualOption.ShortName})");
             }

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ThingTableMigrationBase.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -29,6 +29,7 @@ namespace CDP4Orm.MigrationEngine
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
 
@@ -68,7 +69,7 @@ namespace CDP4Orm.MigrationEngine
         /// <summary>
         /// Apply the current migration on the specified schema if applicable
         /// </summary>
-        public override void ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
+        public override async Task ApplyMigration(NpgsqlTransaction transaction, IReadOnlyList<string> existingSchemas)
         {
             this.logger.LogInformation("Start migration script {ResourceName}", this.MigrationMetaData.ResourceName);
 
@@ -95,9 +96,9 @@ namespace CDP4Orm.MigrationEngine
             {
                 var thingTableList = new List<string>();
 
-                using (var tableListCmd = new NpgsqlCommand())
+                await using (var tableListCmd = new NpgsqlCommand())
                 {
-                    this.logger.LogInformation("Getting all {tableNameTemplate} tables for schema {applicableSchema}", this.GetTableNameTemplate(), applicableSchema);
+                    this.logger.LogInformation("Getting all {TableNameTemplate} tables for schema {ApplicableSchema}", this.GetTableNameTemplate(), applicableSchema);
 
                     var cmdTxt = "SELECT table_name FROM information_schema.tables WHERE table_schema = :schemaName AND table_type = 'BASE TABLE';";
 
@@ -106,9 +107,9 @@ namespace CDP4Orm.MigrationEngine
                     tableListCmd.Connection = transaction.Connection;
                     tableListCmd.Transaction = transaction;
 
-                    using (var reader = tableListCmd.ExecuteReader())
+                    await using (var reader = await tableListCmd.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             var tableName = reader[0].ToString();
 
@@ -119,27 +120,27 @@ namespace CDP4Orm.MigrationEngine
                         }
                     }
 
-                    this.logger.LogInformation("{tableNameTemplate} table fetched: {Count}", this.GetTableNameTemplate(), thingTableList.Count);
+                    this.logger.LogInformation("{TableNameTemplate} table fetched: {Count}", this.GetTableNameTemplate(), thingTableList.Count);
                 }
 
-                using (var sqlCommand = new NpgsqlCommand())
+                await using (var sqlCommand = new NpgsqlCommand())
                 {
                     var cmdList = new List<string>();
 
                     using (var reader = new StreamReader(Assembly.GetExecutingAssembly().GetManifestResourceStream(this.MigrationMetaData.ResourceName)))
                     {
-                        var strText = reader.ReadToEnd();
+                        var strText = await reader.ReadToEndAsync();
                         cmdList.AddRange(thingTableList.Select(x => strText.Replace(TABLE_REPLACE, x).Replace(SCHEMA_NAME_REPLACE, applicableSchema)));
                     }
 
                     sqlCommand.CommandText = string.Join(Environment.NewLine, cmdList);
                     sqlCommand.Connection = transaction.Connection;
                     sqlCommand.Transaction = transaction;
-                    sqlCommand.ExecuteNonQuery();
+                    await sqlCommand.ExecuteNonQueryAsync();
                     this.logger.LogInformation("End migration script {ResourceName}", this.MigrationMetaData.ResourceName);
                 }
 
-                base.ApplyMigration(transaction, existingSchemas);
+                await base.ApplyMigration(transaction, existingSchemas);
             }
         }
 

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="OldParameterContextProvider.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Authorization;
 
@@ -115,10 +116,10 @@ namespace CometServer.Services
         /// <param name="partition">The current partition</param>
         /// <param name="securityContext">The security context</param>
         /// <param name="iteration">The current <see cref="Iteration"/> (nullable)</param>
-        public void Initialize(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration)
+        public async Task InitializeAsync(Parameter oldParameter, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext, Iteration iteration)
         {
             this.OldParameter = oldParameter;
-            this.OldValueSet = this.ParameterValueSetService.GetShallow(transaction, partition, this.OldParameter.ValueSet, securityContext).Cast<ParameterValueSet>().ToList();
+            this.OldValueSet = (await this.ParameterValueSetService.GetShallowAsync(transaction, partition, this.OldParameter.ValueSet, securityContext)).Cast<ParameterValueSet>().ToList();
 
             this.OldActualFiniteStateList = null;
             this.OldActualFiniteStates = null;
@@ -126,17 +127,17 @@ namespace CometServer.Services
 
             if (this.OldParameter.StateDependence.HasValue)
             {
-                this.OldActualFiniteStateList = this.ActualFiniteStateListService
-                    .GetShallow(transaction, partition, new[] { this.OldParameter.StateDependence.Value }, securityContext)
+                this.OldActualFiniteStateList = (await this.ActualFiniteStateListService
+                    .GetShallowAsync(transaction, partition, [this.OldParameter.StateDependence.Value], securityContext))
                     .Cast<ActualFiniteStateList>()
                     .First();
 
-                this.OldActualFiniteStates = this.ActualFiniteStateService
-                    .GetShallow(transaction, partition, this.OldActualFiniteStateList.ActualState, securityContext)
+                this.OldActualFiniteStates = (await this.ActualFiniteStateService
+                    .GetShallowAsync(transaction, partition, this.OldActualFiniteStateList.ActualState, securityContext))
                     .Cast<ActualFiniteState>()
                     .ToList();
 
-                this.OldDefaultState = this.ActualFiniteStateListService.GetDefaultState(this.OldActualFiniteStateList, this.OldActualFiniteStates, partition, securityContext, transaction);
+                this.OldDefaultState = await this.ActualFiniteStateListService.GetDefaultState(this.OldActualFiniteStateList, this.OldActualFiniteStates, partition, securityContext, transaction);
             }
 
             this.OldDefaultOption = null;
@@ -145,7 +146,7 @@ namespace CometServer.Services
             {
                 ArgumentNullException.ThrowIfNull(iteration);
 
-                var options = this.OptionService.GetShallow(transaction, partition, iteration.Option.Select(x => Guid.Parse(x.V.ToString())), securityContext).Cast<Option>().ToList();
+                var options = (await this.OptionService.GetShallowAsync(transaction, partition, iteration.Option.Select(x => Guid.Parse(x.V.ToString())), securityContext)).Cast<Option>().ToList();
 
                 this.OptionBusinessLogicService.Initialize(iteration, options);
                 this.OldDefaultOption = this.OptionBusinessLogicService.GetDefaultOption();

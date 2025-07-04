@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="ResolveDao.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2023 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CDP4Orm.Dao.Resolve
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using Npgsql;
 
@@ -52,17 +53,14 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ResolveInfo"/>.
         /// </returns>
-        public IEnumerable<ResolveInfo> Read(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        public async Task<IEnumerable<ResolveInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
-            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            
             if (partition == Utils.SiteDirectoryPartition)
             {
-                return ReadSiteDirectoryThing(transaction, partition, ids).ToList();
+                return await ReadSiteDirectoryThing(transaction, partition, ids);
             }
 
-            // make sure to wrap the yield result as list; the internal iterator yield response otherwise (somehow) sets the transaction to an invalid state. 
-            return ReadEngineeringModelInternal(transaction, partition, ids).ToList();
+            return await ReadEngineeringModelInternal(transaction, partition, ids);
         }
 
         /// <summary>
@@ -80,8 +78,16 @@ namespace CDP4Orm.Dao.Resolve
         /// <returns>
         /// List of instances of <see cref="ResolveInfo"/>.
         /// </returns>
-        private static IEnumerable<ResolveInfo> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        private static async Task<IEnumerable<ResolveInfo>> ReadSiteDirectoryThing(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
+            var enumerable = ids as Guid[] ?? ids.ToArray();
+
+            if (!enumerable.Any())
+            {
+                //No ids, so no query
+                return [];
+            }
+
             var sqlBuilder = new System.Text.StringBuilder();
 
             // get all Thing 'concepts' that are newer then passed in revision
@@ -91,16 +97,20 @@ namespace CDP4Orm.Dao.Resolve
 
             var sql = sqlBuilder.ToString();
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = enumerable.ToList();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            var result = new List<ResolveInfo>();
+
+            while (await reader.ReadAsync())
             {
-                yield return MapToSiteDirectoryDto(reader);
+                result.Add(MapToSiteDirectoryDto(reader));
             }
+
+            return result;
         }
 
         /// <summary>
@@ -121,10 +131,18 @@ namespace CDP4Orm.Dao.Resolve
         /// <remarks>
         /// Do not use for SiteDirectory items
         /// </remarks>
-        private static IEnumerable<ResolveInfo> ReadEngineeringModelInternal(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
+        private static async Task<IEnumerable<ResolveInfo>> ReadEngineeringModelInternal(NpgsqlTransaction transaction, string partition, IEnumerable<Guid> ids)
         {
+            var enumerable = ids as Guid[] ?? ids.ToArray();
+
+            if (!enumerable.Any())
+            {
+                //No ids, so no query
+                return [];
+            }
+
             var sqlBuilder = new System.Text.StringBuilder();
-            
+
             // union the EngineeringModel and subpartition (Iteration) to help resolve the requested Iids
             sqlBuilder.Append(
                 "SELECT \"AllThings\".\"TypeInfo\", \"AllThings\".\"Iid\", \"AllThings\".\"SameAsConnectedPartition\"").Append(
@@ -143,16 +161,21 @@ namespace CDP4Orm.Dao.Resolve
                 connectedPartition,
                 subPartition);
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
-            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = ids.ToList();
+            command.Parameters.Add("ids", NpgsqlDbType.Array | NpgsqlDbType.Uuid).Value = enumerable.ToList();
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            var result = new List<ResolveInfo>();
+
+            while (await reader.ReadAsync())
             {
-                yield return MapToEngineeringModelDto(reader, connectedPartition, subPartition);
+                var resolveInfo = MapToEngineeringModelDto(reader, connectedPartition, subPartition);
+                result.Add(resolveInfo);
             }
+
+            return result;
         }
 
         /// <summary>

@@ -124,7 +124,7 @@ namespace CometServer.Modules
         {
             app.MapGet("/username", async (HttpRequest req, HttpResponse res, IAppConfigService appConfigService, ICredentialsService credentialsService) =>
             {
-                if (!await this.IsServerReady(res))
+                if (!await this.IsServerReadyAsync(res))
                 {
                     return;
                 }
@@ -133,7 +133,7 @@ namespace CometServer.Modules
                 
                 try
                 {
-                    identity = await this.Authorize(appConfigService, credentialsService, req);
+                    identity = await this.AuthorizeAsync(appConfigService, credentialsService, req);
                     await res.AsJson(credentialsService.Credentials.UserName);
                 }
                 catch (AuthorizationException)

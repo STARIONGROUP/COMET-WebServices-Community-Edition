@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PublicationSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common.DTO;
     using CDP4Common.Types;
@@ -64,6 +65,7 @@ namespace CometServer.Tests.SideEffects
             this.parameterService = new Mock<IParameterService>();
             this.securityContext = new Mock<ISecurityContext>();
             this.transactionManager = new Mock<ICdp4TransactionManager>();
+
             this.publicationSideEffect = new PublicationSideEffect
             {
                 ParameterService = this.parameterService.Object,
@@ -74,7 +76,7 @@ namespace CometServer.Tests.SideEffects
             };
 
             this.npgsqlTransaction = null;
-            var valuearray = new ValueArray<string>(new[] {"-"});
+            var valuearray = new ValueArray<string>(["-"]);
 
             var option1 = new Option(Guid.NewGuid(), 1);
             var option2 = new Option(Guid.NewGuid(), 1);
@@ -82,6 +84,7 @@ namespace CometServer.Tests.SideEffects
             var orderedOption2 = new OrderedItem { V = option2 };
             this.iteration = new Iteration(Guid.NewGuid(), 1);
             var actualFiniteState = new ActualFiniteState(Guid.NewGuid(), 1);
+
             var parameterValueSet1 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 ActualState = actualFiniteState.Iid,
@@ -90,6 +93,7 @@ namespace CometServer.Tests.SideEffects
                 Computed = valuearray,
                 Reference = valuearray
             };
+
             var parameterValueSet2 = new ParameterValueSet(Guid.NewGuid(), 1)
             {
                 ActualState = actualFiniteState.Iid,
@@ -98,16 +102,19 @@ namespace CometServer.Tests.SideEffects
                 Computed = valuearray,
                 Reference = valuearray
             };
+
             var parameter = new Parameter(Guid.NewGuid(), 1)
             {
                 IsOptionDependent = true,
                 StateDependence = actualFiniteState.Iid
             };
+
             parameter.ValueSet.Add(parameterValueSet1.Iid);
             parameter.ValueSet.Add(parameterValueSet2.Iid);
             var actualFiniteStateList = new ActualFiniteStateList(Guid.NewGuid(), 1);
             actualFiniteStateList.ActualState.Add(actualFiniteState.Iid);
             var parameterOverride = new ParameterOverride(Guid.NewGuid(), 1) { Parameter = parameter.Iid };
+
             var overrideValueset1 = new ParameterOverrideValueSet(Guid.NewGuid(), 1)
             {
                 ParameterValueSet = parameterValueSet1.Iid,
@@ -115,6 +122,7 @@ namespace CometServer.Tests.SideEffects
                 Computed = valuearray,
                 Reference = valuearray
             };
+
             var overrideValueset2 = new ParameterOverrideValueSet(Guid.NewGuid(), 1)
             {
                 ParameterValueSet = parameterValueSet2.Iid,
@@ -133,30 +141,29 @@ namespace CometServer.Tests.SideEffects
             this.iteration.Option.Add(orderedOption1);
             this.iteration.Option.Add(orderedOption2);
 
+            this.parameterService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([parameter]);
+            this.OverideService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([parameterOverride]);
+            this.parameterValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([parameterValueSet1, parameterValueSet2]);
+            this.overrideValueSetService.Setup(x => x.GetShallowAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).ReturnsAsync([overrideValueset1, overrideValueset2]);
 
-            this.parameterService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(new [] { parameter });
-            this.OverideService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(new [] { parameterOverride});
-            this.parameterValueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(new [] { parameterValueSet1, parameterValueSet2 });
-            this.overrideValueSetService.Setup(x => x.GetShallow(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<IEnumerable<Guid>>(), this.securityContext.Object)).Returns(new [] { overrideValueset1 , overrideValueset2 });
+            this.parameterValueSetService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).ReturnsAsync(true);
+            this.overrideValueSetService.Setup(x => x.UpdateConceptAsync(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).ReturnsAsync(true);
 
-            this.parameterValueSetService.Setup(x => x.UpdateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).Returns(true);
-            this.overrideValueSetService.Setup(x => x.UpdateConcept(It.IsAny<NpgsqlTransaction>(), It.IsAny<string>(), It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>())).Returns(true);
-
-            this.transactionManager.Setup(x => x.GetTransactionTime(It.IsAny<NpgsqlTransaction>())).Returns(DateTime.Now);
+            this.transactionManager.Setup(x => x.GetTransactionTimeAsync(It.IsAny<NpgsqlTransaction>())).ReturnsAsync(DateTime.Now);
         }
 
         [Test]
-        public void VerifyBeforeCreate()
+        public async Task VerifyBeforeCreate()
         {
-            this.publicationSideEffect.BeforeCreate(this.publication, this.iteration, this.npgsqlTransaction, "EngineeringModel", this.securityContext.Object);
+            await this.publicationSideEffect.BeforeCreateAsync(this.publication, this.iteration, this.npgsqlTransaction, "EngineeringModel", this.securityContext.Object);
 
             // Check that the value sets of the parameters and parameterOverrides included in this publications are updated
-            this.parameterValueSetService.Verify(x => 
-                x.UpdateConcept(this.npgsqlTransaction, "EngineeringModel", It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>()), 
+            this.parameterValueSetService.Verify(x =>
+                    x.UpdateConceptAsync(this.npgsqlTransaction, "EngineeringModel", It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>()),
                 Times.Exactly(2));
 
             this.overrideValueSetService.Verify(x =>
-                    x.UpdateConcept(this.npgsqlTransaction, "EngineeringModel", It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>()),
+                    x.UpdateConceptAsync(this.npgsqlTransaction, "EngineeringModel", It.IsAny<ParameterValueSetBase>(), It.IsAny<ParameterOrOverrideBase>()),
                 Times.Exactly(2));
         }
     }

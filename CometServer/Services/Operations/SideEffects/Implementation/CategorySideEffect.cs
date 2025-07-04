@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CategorySideEffect.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,6 +27,7 @@ namespace CometServer.Services.Operations.SideEffects
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -74,7 +75,7 @@ namespace CometServer.Services.Operations.SideEffects
         /// The <see cref="ClasslessDTO"/> instance only contains values for properties that are to be updated.
         /// It is important to note that this variable is not to be changed likely as it can/will change the operation processor outcome.
         /// </param>
-        public override void BeforeUpdate(
+        public override async Task BeforeUpdateAsync(
             Category thing,
             Thing container,
             NpgsqlTransaction transaction,
@@ -84,7 +85,7 @@ namespace CometServer.Services.Operations.SideEffects
         {
             if (rawUpdateInfo.TryGetValue("SuperCategory", out var value))
             {
-                var superCategoriesId = (IEnumerable<Guid>)value;
+                var superCategoriesId = value as IEnumerable<Guid>;
 
                 // Check for itself in super categories list
                 if (superCategoriesId.Contains(thing.Iid))
@@ -94,7 +95,7 @@ namespace CometServer.Services.Operations.SideEffects
                 }
 
                 // Get RDL chain and collect categories' ids
-                var categoryIdsFromChain = this.GetCategoryIdsFromRdlChain(
+                var categoryIdsFromChain = await this.GetCategoryIdsFromRdlChainAsync(
                     transaction,
                     partition,
                     securityContext,
@@ -112,7 +113,7 @@ namespace CometServer.Services.Operations.SideEffects
                     }
                 }
 
-                var categories = this.CategoryService.Get(transaction, partition, categoryIdsFromChain, securityContext)
+                var categories = (await this.CategoryService.GetAsync(transaction, partition, categoryIdsFromChain, securityContext))
                     .Cast<Category>().ToList();
 
                 // Check every super category that it is acyclic
@@ -145,13 +146,13 @@ namespace CometServer.Services.Operations.SideEffects
         /// <returns>
         /// The list of Category ids.
         /// </returns>
-        private List<Guid> GetCategoryIdsFromRdlChain(
+        private async Task<List<Guid>> GetCategoryIdsFromRdlChainAsync(
             NpgsqlTransaction transaction,
             string partition,
             ISecurityContext securityContext,
             Guid? rdlId)
         {
-            var availableRdls = this.SiteReferenceDataLibraryService.Get(transaction, partition, null, securityContext)
+            var availableRdls = (await this.SiteReferenceDataLibraryService.GetAsync(transaction, partition, null, securityContext))
                 .Cast<SiteReferenceDataLibrary>().ToList();
 
             var categoryIds = new List<Guid>();

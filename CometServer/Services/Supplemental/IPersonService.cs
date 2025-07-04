@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="IPersonService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using CDP4Orm.Dao;
@@ -43,6 +45,6 @@ namespace CometServer.Services
         /// <param name="thing">The person <see cref="Thing" /></param>
         /// <param name="credentials">The new credentials from migration.json <see cref="MigrationPasswordCredentials" /></param>
         /// <returns>True if opperation succeeded</returns>
-        bool UpdateCredentials(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials);
+        Task<bool> UpdateCredentialsAsync(NpgsqlTransaction transaction, string partition, Thing thing, MigrationPasswordCredentials credentials);
     }
 }

@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="CompoundParameterTypeSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,7 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -132,17 +133,17 @@ namespace CometServer.Tests.SideEffects
             this.siteReferenceDataLibraryService = new Mock<ISiteReferenceDataLibraryService>();
             this.siteReferenceDataLibraryService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         null,
                         It.IsAny<ISecurityContext>()))
-                .Returns(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
+                .ReturnsAsync(new List<ReferenceDataLibrary> { this.referenceDataLibraryB });
 
             this.compoundParameterTypeService = new Mock<ICompoundParameterTypeService>();
             this.compoundParameterTypeService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid>
@@ -151,12 +152,12 @@ namespace CometServer.Tests.SideEffects
                                 this.compoundParameterTypeA.Iid,
                                 this.compoundParameterTypeB.Iid
                             },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<CompoundParameterType> { this.compoundParameterTypeA, this.compoundParameterTypeB });
 
             this.arrayParameterTypeService = new Mock<IArrayParameterTypeService>();
             this.arrayParameterTypeService.Setup(
-                x => x.Get(
+                x => x.GetAsync(
                     this.npgsqlTransaction,
                     It.IsAny<string>(),
                     new List<Guid>
@@ -165,40 +166,40 @@ namespace CometServer.Tests.SideEffects
                             this.compoundParameterTypeA.Iid,
                             this.compoundParameterTypeB.Iid
                         },
-                    It.IsAny<ISecurityContext>())).Returns(new List<ArrayParameterType>());
+                    It.IsAny<ISecurityContext>())).ReturnsAsync(new List<ArrayParameterType>());
 
             this.parameterTypeComponentService = new Mock<IParameterTypeComponentService>();
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentA });
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentB.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentB });
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentC.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentC });
             this.parameterTypeComponentService
                 .Setup(
-                    x => x.Get(
+                    x => x.GetAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.parameterTypeComponentD.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<ParameterTypeComponent> { this.parameterTypeComponentD });
 
             this.sideEffect = new CompoundParameterTypeSideEffect()
@@ -234,8 +235,8 @@ namespace CometServer.Tests.SideEffects
                                          }
                                      };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.compoundParameterTypeB,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,
@@ -264,8 +265,8 @@ namespace CometServer.Tests.SideEffects
                                          }
                                      };
 
-            Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.DoesNotThrowAsync(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.compoundParameterTypeB,
                     this.referenceDataLibraryA,
                     this.npgsqlTransaction,

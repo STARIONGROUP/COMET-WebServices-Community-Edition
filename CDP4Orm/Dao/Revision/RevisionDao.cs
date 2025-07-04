@@ -30,6 +30,7 @@ namespace CDP4Orm.Dao.Revision
     using System.Data;
     using System.Linq;
     using System.Text;
+    using System.Threading.Tasks;
 
     using CDP4Common.CommonData;
 
@@ -125,7 +126,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        public ReadOnlyCollection<RevisionRegistryInfo> ReadRevisionRegistry(NpgsqlTransaction transaction, string partition)
+        public Task <ReadOnlyCollection<RevisionRegistryInfo>> ReadRevisionRegistryAsync(NpgsqlTransaction transaction, string partition)
         {
             return InternalGetRevisionRegistryInfo(transaction, partition);
         }
@@ -145,7 +146,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        public ReadOnlyCollection<RevisionInfo> Read(NpgsqlTransaction transaction, string partition, int revision)
+        public Task<ReadOnlyCollection<RevisionInfo>> ReadAsync(NpgsqlTransaction transaction, string partition, int revision)
         {
             return InternalGetRevisionInfo(transaction, partition, revision, ChangesSinceRevision);
         }
@@ -165,7 +166,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        public ReadOnlyCollection<RevisionInfo> ReadCurrentRevisionChanges(NpgsqlTransaction transaction, string partition, int revision)
+        public Task<ReadOnlyCollection<RevisionInfo>> ReadCurrentRevisionChangesAsync(NpgsqlTransaction transaction, string partition, int revision)
         {
             return InternalGetRevisionInfo(transaction, partition, revision, ChangesInCurrentRevision);
         }
@@ -177,9 +178,9 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="thing">The revised <see cref="CDP4Common.DTO.Thing"/></param>
         /// <param name="actor">The identifier of the person who made this revision</param>
-        public void WriteRevision(NpgsqlTransaction transaction, string partition, Thing thing, Guid actor)
+        public async Task WriteRevisionAsync(NpgsqlTransaction transaction, string partition, Thing thing, Guid actor)
         {
-            this.Logger.LogDebug("WriteRevision of {thing} to {partition} by {actor}", thing, partition, actor);
+            this.Logger.LogDebug("WriteRevision of {Thing} to {Partition} by {Actor}", thing, partition, actor);
 
             var table = GetThingRevisionTableName(thing);
 
@@ -187,14 +188,14 @@ namespace CDP4Orm.Dao.Revision
             var values = "(:iid, :revisionnumber, \"SiteDirectory\".get_transaction_time(), :actor, :jsonb)";
             var sqlQuery = $"INSERT INTO \"{partition}\".\"{table}\" {columns} VALUES {values}";
 
-            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
             command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = thing.Iid;
             command.Parameters.Add("revisionnumber", NpgsqlDbType.Integer).Value = thing.RevisionNumber;
             command.Parameters.Add("actor", NpgsqlDbType.Uuid).Value = actor;
             command.Parameters.Add("jsonb", NpgsqlDbType.Jsonb).Value = thing.ToJsonObject().ToString(Formatting.None);
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -204,9 +205,9 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <param name="things">The revised <see cref="Thing"/></param>
         /// <param name="actor">The identifier of the person who made this revision</param>
-        public void BulkWriteRevision(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things, Guid actor)
+        public async Task BulkWriteRevisionAsync(NpgsqlTransaction transaction, string partition, IReadOnlyCollection<Thing> things, Guid actor)
         {
-            this.Logger.LogDebug("WriteRevision for {thing} Thing(s) to {partition} by {actor}", things.Count, partition, actor);
+            this.Logger.LogDebug("WriteRevision for {Thing} Thing(s) to {Partition} by {Actor}", things.Count, partition, actor);
 
              var thingsGroupedByClasskind = things.GroupBy(x => x.ClassKind).ToDictionary(g => g.Key, g => g.ToList());
 
@@ -239,12 +240,13 @@ namespace CDP4Orm.Dao.Revision
                 }
 
                 var sqlQuery = sqlQueryBuilder.ToString();
-                this.Logger.LogDebug("Running insert command for Revision : {sqlQuery}", sqlQuery);
+                this.Logger.LogDebug("Running insert command for Revision : {SqlQuery}", sqlQuery);
 
-                using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+                await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
                 command.Parameters.AddRange(parameters.ToArray());
-                command.ExecuteNonQuery();
+
+                await command.ExecuteNonQueryAsync();
             }
         }
 
@@ -257,11 +259,11 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="revisionFrom">The oldest revision to query</param>
         /// <param name="revisionTo">The latest revision to query</param>
         /// <returns>The collection of revised <see cref="Thing"/></returns>
-        public ReadOnlyCollection<Thing> ReadRevision(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
+        public async Task<ReadOnlyCollection<Thing>> ReadRevisionAsync(NpgsqlTransaction transaction, string partition, Guid thingIid, int revisionFrom, int revisionTo)
         {
             var result = new List<Thing>();
 
-            var resolveInfos = this.ResolveDao.Read(transaction, partition, new[] { thingIid }).ToArray();
+            var resolveInfos = (await this.ResolveDao.ReadAsync(transaction, partition, [thingIid])).ToArray();
 
             if (resolveInfos.Length > 1)
             {
@@ -276,15 +278,15 @@ namespace CDP4Orm.Dao.Revision
 
                 var sqlQuery = $"SELECT \"{JsonColumnName}\" FROM \"{resolveInfo.Partition}\".\"{revisionTableName}\" WHERE \"{IidKey}\" = :iid AND \"{RevisionColumnName}\" >= :fromrevision AND \"{RevisionColumnName}\" <= :torevision";
 
-                using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+                await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
                 command.Parameters.Add("iid", NpgsqlDbType.Uuid).Value = resolveInfo.InstanceInfo.Iid;
                 command.Parameters.Add("fromrevision", NpgsqlDbType.Integer).Value = revisionFrom;
                 command.Parameters.Add("torevision", NpgsqlDbType.Integer).Value = revisionTo;
 
-                using var reader = command.ExecuteReader();
+                await using var reader = await command.ExecuteReaderAsync();
 
-                while (reader.Read())
+                while (await reader.ReadAsync())
                 {
                     var thing = this.MapToDto(reader);
 
@@ -311,13 +313,13 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// The current or next available revision number
         /// </returns>
-        public int GetRevisionForTransaction(NpgsqlTransaction transaction, string partition)
+        public async Task<int> GetRevisionForTransactionAsync(NpgsqlTransaction transaction, string partition)
         {
             var sqlQuery = $"SELECT * FROM \"{partition}\".get_current_revision();";
 
-            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
-            if (!int.TryParse(command.ExecuteScalar()?.ToString(), out var revision))
+            if (!int.TryParse((await command.ExecuteScalarAsync())?.ToString(), out var revision))
             {
                 throw new DataException("The revision number for this transaction could not be retrieved, cancel processing");
             }
@@ -343,7 +345,7 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="toRevision">
         /// The ending revision number for the iteration. If null it means the iteration is the current one.
         /// </param>
-        public void InsertIterationRevisionLog(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
+        public async Task InsertIterationRevisionLogAsync(NpgsqlTransaction transaction, string partition, Guid iteration, int? fromRevision, int? toRevision)
         {
             var iterationColumn = "\"IterationIid\"";
             var fromRevisionColumn = "\"FromRevision\"";
@@ -370,7 +372,7 @@ namespace CDP4Orm.Dao.Revision
 
             var sqlQuery = $"INSERT INTO \"{partition}\".\"IterationRevisionLog\" ({string.Join(", ", columns)}) VALUES ({string.Join(", ", values)})";
 
-            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
             command.Parameters.Add("iterationId", NpgsqlDbType.Uuid).Value = iteration;
 
@@ -384,7 +386,7 @@ namespace CDP4Orm.Dao.Revision
                 command.Parameters.Add("toRevision", NpgsqlDbType.Integer).Value = toRevision;
             }
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         /// <summary>
@@ -405,7 +407,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static ReadOnlyCollection<RevisionInfo> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static Task<ReadOnlyCollection<RevisionInfo>> InternalGetRevisionInfo(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             if (partition == Utils.SiteDirectoryPartition)
             {
@@ -421,15 +423,15 @@ namespace CDP4Orm.Dao.Revision
         /// <param name="transaction">The current transaction to the database.</param>
         /// <param name="partition">The database partition (schema) where the requested resource is stored.</param>
         /// <returns>The collection of revised <see cref="Thing"/></returns>
-        private static ReadOnlyCollection<RevisionRegistryInfo> InternalGetRevisionRegistryInfo(NpgsqlTransaction transaction, string partition)
+        private static async Task<ReadOnlyCollection<RevisionRegistryInfo>> InternalGetRevisionRegistryInfo(NpgsqlTransaction transaction, string partition)
         {
             var sqlQuery = $"SELECT \"Revision\", \"Instant\", \"Actor\" FROM \"{partition}\".\"RevisionRegistry\"";
 
-            using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sqlQuery, transaction.Connection, transaction);
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            return MapToRevisionRegistryInfoList(reader);
+            return await MapToRevisionRegistryInfoList(reader);
         }
 
         /// <summary>
@@ -441,11 +443,11 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// Enumerable of <see cref="RevisionRegistryInfo"/>.
         /// </returns>
-        private static ReadOnlyCollection<RevisionRegistryInfo> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
+        private static async Task<ReadOnlyCollection<RevisionRegistryInfo>> MapToRevisionRegistryInfoList(NpgsqlDataReader reader)
         {
             var result = new List<RevisionRegistryInfo>();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 var revision = reader["Revision"];
                 var instant = reader["Instant"];
@@ -480,7 +482,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static ReadOnlyCollection<RevisionInfo> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static async Task<ReadOnlyCollection<RevisionInfo>> ReadSiteDirectoryRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             var result = new List<RevisionInfo>();
 
@@ -499,13 +501,13 @@ namespace CDP4Orm.Dao.Revision
                 IidKey, 
                 comparator);
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
             command.Parameters.Add("revision", NpgsqlDbType.Integer).Value = revision;
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 result.Add(MapToSiteDirectoryRevisionInfo(reader, partition));
             }
@@ -553,7 +555,7 @@ namespace CDP4Orm.Dao.Revision
         /// <returns>
         /// List of instances of <see cref="RevisionInfo"/>.
         /// </returns>
-        private static ReadOnlyCollection<RevisionInfo> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
+        private static async Task<ReadOnlyCollection<RevisionInfo>> ReadEngineeringModelRevisions(NpgsqlTransaction transaction, string partition, int revision, string comparator)
         {
             var result = new List<RevisionInfo>();
 
@@ -581,13 +583,13 @@ namespace CDP4Orm.Dao.Revision
                 SameAsConnectedPartitionKey,
                 comparator);
 
-            using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+            await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
 
             command.Parameters.Add("revision", NpgsqlDbType.Integer).Value = revision;
 
-            using var reader = command.ExecuteReader();
+            await using var reader = await command.ExecuteReaderAsync();
 
-            while (reader.Read())
+            while (await reader.ReadAsync())
             {
                 result.Add(MapToEngineeringModelRevisionInfo(reader, connectedPartition, subPartition));
             }

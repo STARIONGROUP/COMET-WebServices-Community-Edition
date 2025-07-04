@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="BooleanExpressionSideEffectTestFixture.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -26,6 +26,8 @@ namespace CometServer.Tests.SideEffects
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
 
     using CDP4Common;
     using CDP4Common.DTO;
@@ -118,50 +120,49 @@ namespace CometServer.Tests.SideEffects
                 new ExclusiveOrExpression
                     {
                         Iid = Guid.NewGuid(),
-                        Term = new List<Guid> { this.notC.Iid, this.notD.Iid }
+                        Term = [this.notC.Iid, this.notD.Iid]
                     };
 
             this.orA = new OrExpression
                            {
                                Iid = Guid.NewGuid(),
-                               Term = new List<Guid> { this.notB.Iid, this.exclusiveOrA.Iid }
+                               Term = [this.notB.Iid, this.exclusiveOrA.Iid]
                            };
 
             this.andA = new AndExpression
                             {
                                 Iid = Guid.NewGuid(),
-                                Term = new List<Guid> { this.notA.Iid, this.orA.Iid }
+                                Term = [this.notA.Iid, this.orA.Iid]
                             };
 
             this.constraintA = new ParametricConstraint
                                    {
                                        Iid = Guid.NewGuid(),
                                        Expression =
-                                           new List<Guid>
-                                               {
-                                                   this.relA.Iid,
-                                                   this.relB.Iid,
-                                                   this.relC.Iid,
-                                                   this.relD.Iid,
-                                                   this.relE.Iid,
-                                                   this.notA.Iid,
-                                                   this.notB.Iid,
-                                                   this.notC.Iid,
-                                                   this.notD.Iid,
-                                                   this.exclusiveOrA.Iid,
-                                                   this.orA.Iid,
-                                                   this.andA.Iid
-                                               }
+                                       [
+                                           this.relA.Iid,
+                                           this.relB.Iid,
+                                           this.relC.Iid,
+                                           this.relD.Iid,
+                                           this.relE.Iid,
+                                           this.notA.Iid,
+                                           this.notB.Iid,
+                                           this.notC.Iid,
+                                           this.notD.Iid,
+                                           this.exclusiveOrA.Iid,
+                                           this.orA.Iid,
+                                           this.andA.Iid
+                                       ]
                                    };
 
             this.parametricConstraintService = new Mock<IParametricConstraintService>();
             this.parametricConstraintService
                 .Setup(
-                    x => x.GetDeep(
+                    x => x.GetDeepAsync(
                         this.npgsqlTransaction,
                         It.IsAny<string>(),
                         new List<Guid> { this.constraintA.Iid },
-                        It.IsAny<ISecurityContext>())).Returns(
+                        It.IsAny<ISecurityContext>())).ReturnsAsync(
                     new List<Thing>
                         {
                             this.relA,
@@ -176,7 +177,7 @@ namespace CometServer.Tests.SideEffects
                             this.exclusiveOrA,
                             this.orA,
                             this.andA
-                        });
+                        }.AsEnumerable());
 
             this.sideEffect =
                 new NotExpressionSideEffect { ParametricConstraintService = this.parametricConstraintService.Object };
@@ -187,8 +188,8 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.notD.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
                     this.npgsqlTransaction,
@@ -203,8 +204,8 @@ namespace CometServer.Tests.SideEffects
             // Out of chain
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.notE.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
                     this.npgsqlTransaction,
@@ -215,8 +216,8 @@ namespace CometServer.Tests.SideEffects
             // Leads to circular dependency
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.andA.Iid } };
 
-            Assert.Throws<AcyclicValidationException>(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.ThrowsAsync<AcyclicValidationException>(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
                     this.npgsqlTransaction,
@@ -230,8 +231,8 @@ namespace CometServer.Tests.SideEffects
         {
             this.rawUpdateInfo = new ClasslessDTO() { { TestKey, this.relE.Iid } };
 
-            Assert.DoesNotThrow(
-                () => this.sideEffect.BeforeUpdate(
+            Assert.DoesNotThrowAsync(
+                () => this.sideEffect.BeforeUpdateAsync(
                     this.notD,
                     this.constraintA,
                     this.npgsqlTransaction,

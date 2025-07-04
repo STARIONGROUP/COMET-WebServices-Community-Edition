@@ -24,6 +24,8 @@
 
 namespace CometServer.Authorization
 {
+    using System.Threading.Tasks;
+
     using CDP4Common.DTO;
 
     using CometServer.Services.Authorization;
@@ -64,7 +66,7 @@ namespace CometServer.Authorization
         /// The database partition (schema) where the requested resource is stored.
         /// </param>
         /// <returns>True if the given <see cref="Thing"/> can be read.</returns>
-        bool CanRead(NpgsqlTransaction transaction, Thing thing, string partition);
+        Task<bool> CanReadAsync(NpgsqlTransaction transaction, Thing thing, string partition);
 
         /// <summary>
         /// Determines whether the <see cref="Thing"/> can be written. This method is exclusively to be used in the after hook of the services to determine
@@ -87,7 +89,7 @@ namespace CometServer.Authorization
         /// The security context of the current request.
         /// </param>
         /// <returns>True if the given <see cref="Thing"/> can be written.</returns>
-        bool CanWrite(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext);
+        Task<bool> CanWriteAsync(NpgsqlTransaction transaction, Thing thing, string typeName, string partition, string modifyOperation, ISecurityContext securityContext);
 
         /// <summary>
         /// Determines whether a supplied <see cref="Thing"/> is owned by the current <see cref="Participant"/>.
@@ -97,6 +99,6 @@ namespace CometServer.Authorization
         /// </param>
         /// <param name="thing">The <see cref="Thing"/> to check whether it is own <see cref="Person"/>.</param>
         /// <returns>True if a supplied <see cref="Thing"/> is owned by the current <see cref="Participant"/>.</returns>
-        bool IsOwner(NpgsqlTransaction transaction, Thing thing);
+        Task<bool> IsOwnerAsync(NpgsqlTransaction transaction, Thing thing);
     }
 }

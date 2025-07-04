@@ -79,7 +79,7 @@ namespace CometServer.Tests.SideEffects
                                             { PasswordKey, ClearTextPassword }
                                      };
 
-            this.personSideEffect.BeforeUpdate(null, null, null, null, null, this.rawUpdateinfo);
+            this.personSideEffect.BeforeUpdateAsync(null, null, null, null, null, this.rawUpdateinfo);
 
             var expectedPasswordText = $"{this.personSideEffect.PersonDao.PasswordChangeToken}{ClearTextPassword}{this.personSideEffect.PersonDao.PasswordChangeToken}";
             
@@ -99,7 +99,7 @@ namespace CometServer.Tests.SideEffects
                                              { TestValue, TestValue }
                                      };
 
-            this.personSideEffect.BeforeUpdate(null, null, null, null, null, this.rawUpdateinfo);
+            this.personSideEffect.BeforeUpdateAsync(null, null, null, null, null, this.rawUpdateinfo);
 
             // assert same number of entries in raw update info object
             Assert.That(this.rawUpdateinfo.Count, Is.EqualTo(1));
@@ -132,7 +132,7 @@ namespace CometServer.Tests.SideEffects
                 GivenName = "new name"
             };
 
-            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+            Assert.That(() => this.personSideEffect.AfterUpdateAsync(updatedPerson, null, orginalPerson, null, null, null),
                 Throws.Nothing);
         }
 
@@ -163,7 +163,7 @@ namespace CometServer.Tests.SideEffects
                 IsDeprecated = false
             };
 
-            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+            Assert.That(() => this.personSideEffect.AfterUpdateAsync(updatedPerson, null, orginalPerson, null, null, null),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("Update to role of the Person making the request is not allowed"));
         }
@@ -196,14 +196,14 @@ namespace CometServer.Tests.SideEffects
                 GivenName = "new name"
             };
 
-            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+            Assert.That(() => this.personSideEffect.AfterUpdateAsync(updatedPerson, null, orginalPerson, null, null, null),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("Update IsActive = false to own Person is not allowed"));
 
             updatedPerson.IsActive = true;
             updatedPerson.IsDeprecated = true;
 
-            Assert.That(() => this.personSideEffect.AfterUpdate(updatedPerson, null, orginalPerson, null, null, null),
+            Assert.That(() => this.personSideEffect.AfterUpdateAsync(updatedPerson, null, orginalPerson, null, null, null),
                 Throws.TypeOf<InvalidOperationException>()
                     .With.Message.EqualTo("Update IsDeprecated = true to own Person is not allowed"));
         }

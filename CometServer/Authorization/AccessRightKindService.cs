@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="AccessRightKindService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -82,7 +82,7 @@ namespace CometServer.Authorization
         /// <returns><see cref="PersonAccessRightKind"/> for the supplied object type.</returns>
         public PersonAccessRightKind QueryPersonAccessRightKind(Credentials credentials, string typeName)
         {
-            this.Logger.LogTrace("Query PersonAccessRightKind {typeName} for {credentials}", typeName, credentials);
+            this.Logger.LogTrace("Query PersonAccessRightKind {TypeName} for {Credentials}", typeName, credentials);
 
             // the PersonAccessRightKind already exists in the personAccessRightKindCache, return it
             if (this.personAccessRightKindCache.TryGetValue(typeName, out var personAccessRightKind))
@@ -92,9 +92,7 @@ namespace CometServer.Authorization
 
             // Get the person's permission and if found use it. If not, use the default and add to personAccessRightKindCache for later use
             var personPermission = credentials.PersonPermissions.FirstOrDefault(pp => pp.ObjectClass.ToString().Equals(typeName));
-            personAccessRightKind = personPermission == null
-                ? this.DefaultPermissionProvider.GetDefaultPersonPermission(typeName)
-                : personPermission.AccessRight;
+            personAccessRightKind = personPermission?.AccessRight ?? this.DefaultPermissionProvider.GetDefaultPersonPermission(typeName);
 
             this.personAccessRightKindCache.Add(typeName, personAccessRightKind);
 
@@ -113,7 +111,7 @@ namespace CometServer.Authorization
         /// <returns><see cref="ParticipantAccessRightKind"/> for the supplied object type.</returns>
         public ParticipantAccessRightKind QueryParticipantAccessRightKind(Credentials credentials, string typeName)
         {
-            this.Logger.LogTrace("Query ParticipantAccessRightKind {typeName} for {credentials}", typeName, credentials);
+            this.Logger.LogTrace("Query ParticipantAccessRightKind {TypeName} for {Credentials}", typeName, credentials);
 
             // the ParticipantAccessRightKind already exists in the participantAccessRightKindCache, return it
             if (this.participantAccessRightKindCache.TryGetValue(typeName, out var participantAccessRightKind))
@@ -124,9 +122,7 @@ namespace CometServer.Authorization
             // Get the particpant's permission and if found use it. If not, use the default and add to participantAccessRightKindCache for later use
             var participantPermission = credentials.ParticipantPermissions.FirstOrDefault(
                 pp => pp.ObjectClass.ToString().Equals(typeName));
-            participantAccessRightKind = participantPermission == null
-                ? this.DefaultPermissionProvider.GetDefaultParticipantPermission(typeName)
-                : participantPermission.AccessRight;
+            participantAccessRightKind = participantPermission?.AccessRight ?? this.DefaultPermissionProvider.GetDefaultParticipantPermission(typeName);
 
             this.participantAccessRightKindCache.Add(typeName, participantAccessRightKind);
 

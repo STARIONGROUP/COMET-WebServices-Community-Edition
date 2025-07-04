@@ -1,6 +1,6 @@
 ﻿// --------------------------------------------------------------------------------------------------------------------
 // <copyright file="PermissionInstanceFilterService.cs" company="Starion Group S.A.">
-//    Copyright (c) 2015-2024 Starion Group S.A.
+//    Copyright (c) 2015-2025 Starion Group S.A.
 //
 //    Author: Sam Gerené, Alex Vorobiev, Alexander van Delft, Nathanael Smiechowski, Antoine Théate
 //
@@ -27,10 +27,10 @@ namespace CometServer.Services.Supplemental
     using System;
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
-    using System.Data;
     using System.Diagnostics;
     using System.Linq;
-    
+    using System.Threading.Tasks;
+
     using CDP4Common.CommonData;
     using CDP4Common.DTO;
     
@@ -88,7 +88,7 @@ namespace CometServer.Services.Supplemental
         /// The data model version of this request to use with serialization.
         /// </param>
         /// <returns>The filtered collection of <see cref="CDP4Common.DTO.Thing"/></returns>
-        public IEnumerable<Thing> FilterOutPermissions(IReadOnlyCollection<Thing> things, Version requestDataModelVersion)
+        public async Task<IEnumerable<Thing>> FilterOutPermissionsAsync(IReadOnlyCollection<Thing> things, Version requestDataModelVersion)
         {
             var sw = Stopwatch.StartNew();
 
@@ -100,7 +100,7 @@ namespace CometServer.Services.Supplemental
             // do not do anything if no role/permission in things
             if (personRoles.Length == 0 && participantRoles.Length == 0 && personPermissions.Length == 0 && participantPermissions.Length == 0)
             {
-                this.Logger.LogInformation("Filtering-out permissions took {sw} ms (no filtering required)", sw.ElapsedMilliseconds);
+                this.Logger.LogInformation("Filtering-out permissions took {ElapsedMilliseconds} ms (no filtering required)", sw.ElapsedMilliseconds);
                 return things;
             }
 
@@ -109,7 +109,8 @@ namespace CometServer.Services.Supplemental
 
             if (personRoles.Length != 0 || personPermissions.Length != 0)
             {
-                excludedPersonPermission = this.GetIgnoredPersonPermissionIds(requestDataModelVersion, personPermissions, personRoles);
+                excludedPersonPermission = await this.GetIgnoredPersonPermissionIdsAsync(requestDataModelVersion, personPermissions, personRoles);
+
                 if (excludedPersonPermission.Count > 0)
                 {
                     foreach (var personRole in personRoles)
@@ -121,7 +122,8 @@ namespace CometServer.Services.Supplemental
 
             if (participantRoles.Length != 0 || participantPermissions.Length != 0)
             {
-                excludedParticipantPermission = this.GetIgnoredParticipantPermissionIds(requestDataModelVersion, participantPermissions, participantRoles);
+                excludedParticipantPermission = await this.GetIgnoredParticipantPermissionIdsAsync(requestDataModelVersion, participantPermissions, participantRoles);
+
                 if (excludedParticipantPermission.Count > 0)
                 {
                     foreach (var participantRole in participantRoles)
@@ -132,7 +134,7 @@ namespace CometServer.Services.Supplemental
             }
 
             // filter-out permissions
-            this.Logger.LogInformation("Filtering-out permissions took {sw} ms", sw.ElapsedMilliseconds);
+            this.Logger.LogInformation("Filtering-out permissions took {ElapsedMilliseconds} ms", sw.ElapsedMilliseconds);
 
             return things.Where(
                 x => (x.ClassKind != ClassKind.PersonPermission && x.ClassKind != ClassKind.ParticipantPermission) ||
@@ -146,11 +148,10 @@ namespace CometServer.Services.Supplemental
         /// <param name="inPersonPermissions">The source <see cref="PersonPermission"/></param>
         /// <param name="inPersonRoles">The source <see cref="PersonRole"/></param>
         /// <returns>The ignored identifier</returns>
-        private ReadOnlyCollection<Guid> GetIgnoredPersonPermissionIds(Version requestDataModelVersion, IReadOnlyList<PersonPermission> inPersonPermissions, IReadOnlyList<PersonRole> inPersonRoles)
+        private async Task<ReadOnlyCollection<Guid>> GetIgnoredPersonPermissionIdsAsync(Version requestDataModelVersion, IReadOnlyList<PersonPermission> inPersonPermissions, IReadOnlyList<PersonRole> inPersonRoles)
         {
             var excludedPersonPermission = new List<Guid>();
 
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             try
@@ -158,11 +159,11 @@ namespace CometServer.Services.Supplemental
                 // get prepared data source transaction
                 var queryPersonPermissions = inPersonRoles.SelectMany(x => x.PersonPermission).Except(inPersonPermissions.Select(x => x.Iid)).ToArray();
 
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                transaction = await this.TransactionManager.SetupTransactionAsync(null);
 
                 // if all permissions are in then dont do extra db query
                 var personPermissions = queryPersonPermissions.Length > 0
-                    ? this.PersonPermissionDao.Read(transaction, SiteDirectoryData, queryPersonPermissions, true).Union(inPersonPermissions)
+                    ? (await this.PersonPermissionDao.ReadAsync(transaction, SiteDirectoryData, queryPersonPermissions, true)).Union(inPersonPermissions)
                     : inPersonPermissions;
 
                 foreach (var personPermission in personPermissions)
@@ -181,21 +182,12 @@ namespace CometServer.Services.Supplemental
             }
             catch (Exception e)
             {
-                this.Logger.LogError("Getting participant permission ids failed: {e.Message}", e.Message);
+                this.Logger.LogError(e, "Getting participant permission ids failed: {Message}", e.Message);
                 throw;
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
-
-                if (connection != null && connection.State != ConnectionState.Closed)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
+                await this.TransactionManager.TryDisposeTransaction(transaction);
             }
         }
 
@@ -206,21 +198,20 @@ namespace CometServer.Services.Supplemental
         /// <param name="inParticipantPermissions">The source <see cref="PersonPermission"/></param>
         /// <param name="inParticipantRoles">The source <see cref="PersonRole"/></param>
         /// <returns>The ignored identifier</returns>
-        private ReadOnlyCollection<Guid> GetIgnoredParticipantPermissionIds(Version requestDataModelVersion, IReadOnlyList<ParticipantPermission> inParticipantPermissions, IReadOnlyList<ParticipantRole> inParticipantRoles)
+        private async Task<ReadOnlyCollection<Guid>> GetIgnoredParticipantPermissionIdsAsync(Version requestDataModelVersion, IReadOnlyList<ParticipantPermission> inParticipantPermissions, IReadOnlyList<ParticipantRole> inParticipantRoles)
         {
             var excludedParticipantPermission = new List<Guid>();
-            NpgsqlConnection connection = null;
             NpgsqlTransaction transaction = null;
 
             try
             {
                 // get prepared data source transaction
-                transaction = this.TransactionManager.SetupTransaction(ref connection, null);
+                transaction = await this.TransactionManager.SetupTransactionAsync(null);
 
                 var queryPersonPermissions = inParticipantRoles.SelectMany(x => x.ParticipantPermission).Except(inParticipantPermissions.Select(x => x.Iid)).ToArray();
 
                 var participantPermissions = queryPersonPermissions.Length > 0
-                    ? this.ParticipantPermissionDao.Read(transaction, SiteDirectoryData, null, true).Union(inParticipantPermissions)
+                    ? (await this.ParticipantPermissionDao.ReadAsync(transaction, SiteDirectoryData, null, true)).Union(inParticipantPermissions)
                     : inParticipantPermissions;
 
                 foreach (var participantPermission in participantPermissions)
@@ -239,21 +230,12 @@ namespace CometServer.Services.Supplemental
             }
             catch (Exception e)
             {
-                this.Logger.LogError("Getting participant permission ids failed: {e.Message}", e.Message);
+                this.Logger.LogError(e, "Getting participant permission ids failed: {Message}", e.Message);
                 throw;
             }
             finally
             {
-                if (transaction != null)
-                {
-                    transaction.Dispose();
-                }
-
-                if (connection != null && connection.State != ConnectionState.Closed)
-                {
-                    connection.Close();
-                    connection.Dispose();
-                }
+                await this.TransactionManager.TryDisposeTransaction(transaction);
             }
         }
     }

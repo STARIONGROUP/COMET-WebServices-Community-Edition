@@ -24,6 +24,8 @@
 
 namespace CometServer.Services
 {
+    using System.Threading.Tasks;
+
     using Authorization;
 
     using CDP4Common.DTO;
@@ -50,7 +52,7 @@ namespace CometServer.Services
         /// <param name="securityContext">
         /// The security Context used for permission checking.
         /// </param>
-        void UpdateAllRelevantActualFiniteStateList(PossibleFiniteStateList possibleFiniteStateList, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
+        Task UpdateAllRelevantActualFiniteStateListAsync(PossibleFiniteStateList possibleFiniteStateList, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
 
         /// <summary>
         /// Update a <see cref="ActualFiniteStateList"/> by allocating new <see cref="ActualFiniteState"/>
@@ -60,6 +62,6 @@ namespace CometServer.Services
         /// <param name="transaction">The current <see cref="NpgsqlTransaction"/></param>
         /// <param name="partition">The partition</param>
         /// <param name="securityContext">The <see cref="ISecurityContext"/></param>
-        void UpdateActualFinisteStateList(ActualFiniteStateList actualFiniteStateList, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
+        Task UpdateActualFinisteStateListAsync(ActualFiniteStateList actualFiniteStateList, Iteration iteration, NpgsqlTransaction transaction, string partition, ISecurityContext securityContext);
     }
 }
