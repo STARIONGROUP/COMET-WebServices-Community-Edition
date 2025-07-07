@@ -40,9 +40,20 @@ namespace CometServer.Helpers
         NpgsqlConnection CreateConnection();
 
         /// <summary>
+        /// Tries to clear all idle connections.
+        /// </summary>
+        void ClearConnections();
+
+        /// <summary>
         /// Creates and opens a new <see cref="NpgsqlConnection"/> asynchronously.
         /// </summary>
         /// <returns>An awaitable <see cref="ValueTask{T}"/> of type <see cref="NpgsqlConnection"/></returns>
         ValueTask<NpgsqlConnection> OpenNewConnectionAsync();
+
+        /// <summary>
+        /// Creates and opens a new <see cref="NpgsqlConnection"/> asynchronously.
+        /// </summary>
+        /// <returns>An awaitable <see cref="ValueTask{T}"/> of type <see cref="NpgsqlConnection"/></returns>
+        ValueTask<NpgsqlConnection> OpenNewConnectionToManageDatabaseAsync();
     }
 }

@@ -47,17 +47,40 @@ namespace CometServer.Helpers
         public NpgsqlDataSource npgsqlDataSource { get; set; }
 
         /// <summary>
+        /// Gets or sets the <see cref="NpgsqlDataSource"/> used to create connections to the PostgreSQL database for management purposes.
+        /// </summary>
+        public NpgsqlDataSource npgsqlDataSourceManage { get; set; }
+
+        /// <summary>
         /// Creates a new <see cref="NpgsqlConnection"/> class.
         /// </summary>
         /// <returns>The <see cref="NpgsqlConnection"/></returns>
         public NpgsqlConnection CreateConnection()
         {
-            if (this.npgsqlDataSource == null)
-            {
-                this.npgsqlDataSource= NpgsqlDataSource.Create(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-            }
+            this.InitializeDataSource();
 
             return this.npgsqlDataSource.CreateConnection();
+        }
+
+        /// <summary>
+        /// Clears all idle connections
+        /// </summary>
+        public void ClearConnections()
+        {
+            this.InitializeDataSource();
+
+            this.npgsqlDataSource.Clear();
+        }
+
+        /// <summary>
+        /// Initializes a DataSource instance by creating a new <see cref="NpgsqlDataSource"/> if it is not already set.
+        /// </summary>
+        private void InitializeDataSource()
+        {
+            if (this.npgsqlDataSource == null)
+            {
+                this.npgsqlDataSource = NpgsqlDataSource.Create(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier));
+            }
         }
 
         /// <summary>
@@ -66,12 +89,23 @@ namespace CometServer.Helpers
         /// <returns>An awaitable <see cref="ValueTask{T}"/> of type <see cref="NpgsqlConnection"/></returns>
         public ValueTask<NpgsqlConnection> OpenNewConnectionAsync()
         {
-            if (this.npgsqlDataSource == null)
-            {
-                this.npgsqlDataSource = NpgsqlDataSource.Create(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, this.AppConfigService.AppConfig.Backtier.Database));
-            }
+            this.InitializeDataSource();
 
             return this.npgsqlDataSource.OpenConnectionAsync();
+        }
+
+        /// <summary>
+        /// Creates and opens a new <see cref="NpgsqlConnection"/> asynchronously.
+        /// </summary>
+        /// <returns>An awaitable <see cref="ValueTask{T}"/> of type <see cref="NpgsqlConnection"/></returns>
+        public ValueTask<NpgsqlConnection> OpenNewConnectionToManageDatabaseAsync()
+        {
+            if (this.npgsqlDataSourceManage == null)
+            {
+                this.npgsqlDataSourceManage = NpgsqlDataSource.Create(Utils.GetManageDatabaseConnectionString(this.AppConfigService.AppConfig.Backtier));
+            }
+
+            return this.npgsqlDataSourceManage.OpenConnectionAsync();
         }
     }
 }

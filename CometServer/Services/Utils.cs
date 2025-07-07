@@ -45,15 +45,12 @@ namespace CometServer.Services
         /// <param name="backtierConfig">
         /// The <see cref="BacktierConfig"/> that provides the connection string settings
         /// </param>
-        /// <param name="database">
-        /// The name of the database to connect to.
-        /// </param>
         /// <returns>
         /// The constructed connection string
         /// </returns>
-        public static string GetConnectionString(BacktierConfig backtierConfig, string database)
+        public static string GetConnectionString(BacktierConfig backtierConfig)
         {
-            var connectionString = $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={database};CommandTimeout={backtierConfig.StatementTimeout};Maximum Pool Size=90;";
+            var connectionString = $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={backtierConfig.Database};CommandTimeout={backtierConfig.StatementTimeout};";
 
             if (backtierConfig.MaximumPoolSize != 0)
             {
@@ -61,6 +58,32 @@ namespace CometServer.Services
             }
 
             if (backtierConfig.ConnectionTimeout!= 0)
+            {
+                connectionString = $"{connectionString}Timeout={backtierConfig.ConnectionTimeout};";
+            }
+
+            if (backtierConfig.Keepalive != 0)
+            {
+                connectionString = $"{connectionString}Keepalive={backtierConfig.Keepalive};";
+            }
+
+            return connectionString;
+        }
+
+        /// <summary>
+        /// Construct a POSTGRESQL connection string based on the passed in database namefor management purposes.
+        /// </summary>
+        /// <param name="backtierConfig">
+        /// The <see cref="BacktierConfig"/> that provides the connection string settings
+        /// </param>
+        /// <returns>
+        /// The constructed connection string
+        /// </returns>
+        public static string GetManageDatabaseConnectionString(BacktierConfig backtierConfig)
+        {
+            var connectionString = $"Server={backtierConfig.HostName};Port={backtierConfig.Port};User Id={backtierConfig.UserName};Password={backtierConfig.Password};Database={backtierConfig.DatabaseManage};CommandTimeout={backtierConfig.StatementTimeout};Maximum Pool Size=1;";
+
+            if (backtierConfig.ConnectionTimeout != 0)
             {
                 connectionString = $"{connectionString}Timeout={backtierConfig.ConnectionTimeout};";
             }

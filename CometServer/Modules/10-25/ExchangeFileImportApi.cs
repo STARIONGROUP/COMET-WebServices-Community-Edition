@@ -1253,7 +1253,7 @@ namespace CometServer.Modules
             var backtierConfig = this.appConfigService.AppConfig.Backtier;
 
             // Drop the existing databases
-            await using var connection = await this.DataSource.OpenNewConnectionAsync();
+            await using var connection = await this.DataSource.OpenNewConnectionToManageDatabaseAsync();
 
             // Drop the existing database
             await using (var cmd = new NpgsqlCommand())

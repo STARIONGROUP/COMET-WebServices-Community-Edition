@@ -66,7 +66,7 @@ namespace CometServer.Services.DataStore
 
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
-            await using var connection = await this.DataSource.OpenNewConnectionAsync();
+            await using var connection = await this.DataSource.OpenNewConnectionToManageDatabaseAsync();
 
             // Create a clone of the database
             await using (var cmd = new NpgsqlCommand())
@@ -96,7 +96,7 @@ namespace CometServer.Services.DataStore
             var backtier = this.AppConfigService.AppConfig.Backtier;
 
             // Connect to the restore database
-            await using var connection = await this.DataSource.OpenNewConnectionAsync();
+            await using var connection = await this.DataSource.OpenNewConnectionToManageDatabaseAsync();
 
             // Drop the existing database
             await using (var cmd = new NpgsqlCommand())
@@ -138,9 +138,9 @@ namespace CometServer.Services.DataStore
         {
             await using var cmd = new NpgsqlCommand();
             
-            this.Logger.LogDebug("Drop all connections to the data store");
+            this.Logger.LogDebug("Drop all idle connections to the data store");
 
-            NpgsqlConnection.ClearPool(new NpgsqlConnection(Utils.GetConnectionString(this.AppConfigService.AppConfig.Backtier, dataStoreName)));
+            this.DataSource.ClearConnections();
 
             cmd.Connection = connection;
 
