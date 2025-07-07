@@ -3,7 +3,7 @@
     <TargetFramework>net9.0</TargetFramework>
     <Company>Starion Group S.A.</Company>
     <Title>CometServer-CE</Title>
-    <Version>11.0.2</Version>
+    <Version>11.0.0-rc1</Version>
     <Description>CDP4-COMET Services API</Description>
     <Copyright>Copyright © Starion Group S.A.</Copyright>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
