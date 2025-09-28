@@ -80,9 +80,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CDP4JsonSerializer-CE" Version="28.3.0" />
+    <PackageReference Include="CDP4JsonSerializer-CE" Version="28.3.2" />
     <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.9" />
   </ItemGroup>
 
     <ItemGroup Label="override transitive vulnerable dependency">
