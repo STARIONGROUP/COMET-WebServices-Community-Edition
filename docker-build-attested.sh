@@ -30,7 +30,7 @@ echo "Building and Pushing COMET-Webservices Docker image with SBOM and provenan
 
 docker buildx build \
   --platform=linux/amd64 \
-  -f reqifviewer/Dockerfile \
+  -f Dockerfile \
   -t stariongroup/comet-webservices-community-edition:latest \
   -t stariongroup/comet-webservices-community-edition:$VERSION \
   --sbom=true \
