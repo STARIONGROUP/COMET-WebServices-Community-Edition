@@ -56,8 +56,8 @@ namespace CDP4Orm.MigrationEngine
     {
         protected const char SCRIPT_VERSION_SEPARATOR = '_';
         protected const char CODE_VERSION_SEPARATOR = '.';
-        protected static Regex MIGRATION_FILENAME_PATTERN = new(@"^(?<applicableDomain>[a-zA-Z]+)(_(?<migrationClass>[a-zA-Z]+))?_(?<date>\d{8})_(?<version>\d+_\d+_\d+_\d+)_(?<name>.*\.sql)$");
-        
+        protected static Regex MIGRATION_FILENAME_PATTERN = new(@"^(?<applicableDomain>[a-zA-Z]+)(_(?<migrationClass>[a-zA-Z]+))?_(?<date>\d{8})_(?<version>\d+_\d+_\d+_\d+)_(?<name>.*\.sql)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MigrationMetaData"/> class
         /// </summary>

@@ -40,6 +40,8 @@ namespace CDP4Orm.Dao
     /// </summary>
     public partial class IterationDao
     {
+        private static readonly Regex ContainedTypeRegex = new(@"^([A-Za-z]+(\.[A-Za-z]+)*)$", RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
         /// <summary>
         /// Set the end-validity of all iteration data
         /// </summary>
@@ -181,9 +183,7 @@ namespace CDP4Orm.Dao
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
 
-            var containedTypePattern = @"^([A-Za-z]+(\.[A-Za-z]+)*)$";
-
-            if (!Regex.IsMatch(containedType.Name, containedTypePattern))
+            if (!ContainedTypeRegex.IsMatch(containedType.Name))
             {
                 throw new ArgumentException("partition format is invalid. It must start with alphabetic characters and can be followed by segments of lowercase letters, numbers, and underscores.");
             }
