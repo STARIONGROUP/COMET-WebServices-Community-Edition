@@ -40,18 +40,22 @@ namespace CometServer.Tests.Services.Supplemental
         public void OrganizationInfoStoresValues()
         {
             var iid = Guid.NewGuid();
+
             var info = new OrganizationInfo
             {
                 Iid = iid,
                 Name = "Starion",
-                Unit = "R&D",
-                Site = "Luxembourg"
+                Unit = "SEMT",
+                Site = "The Netherlands"
             };
 
-            Assert.That(info.Iid, Is.EqualTo(iid));
-            Assert.That(info.Name, Is.EqualTo("Starion"));
-            Assert.That(info.Unit, Is.EqualTo("R&D"));
-            Assert.That(info.Site, Is.EqualTo("Luxembourg"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(info.Iid, Is.EqualTo(iid));
+                Assert.That(info.Name, Is.EqualTo("Starion"));
+                Assert.That(info.Unit, Is.EqualTo("SEMT"));
+                Assert.That(info.Site, Is.EqualTo("The Netherlands"));
+            }
         }
     }
 }

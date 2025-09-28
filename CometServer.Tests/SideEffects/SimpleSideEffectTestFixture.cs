@@ -28,6 +28,7 @@ namespace CometServer.Tests.SideEffects
 
     using CDP4Common.DTO;
 
+    using CometServer.Authorization;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
 
@@ -85,6 +86,7 @@ namespace CometServer.Tests.SideEffects
             var result = await sideEffect.BeforeCreateAsync(citation, container, null, "partition", this.securityContext.Object);
 
             Assert.That(result, Is.True);
+
             this.resolverService.Verify(
                 r => r.ValidateCreateOrganizationalParticipationAsync(citation, container, this.securityContext.Object, null, "partition"),
                 Times.Once);
@@ -104,6 +106,7 @@ namespace CometServer.Tests.SideEffects
             var result = await sideEffect.BeforeCreateAsync(hyperlink, container, null, "partition", this.securityContext.Object);
 
             Assert.That(result, Is.True);
+
             this.resolverService.Verify(
                 r => r.ValidateCreateOrganizationalParticipationAsync(hyperlink, container, this.securityContext.Object, null, "partition"),
                 Times.Once);

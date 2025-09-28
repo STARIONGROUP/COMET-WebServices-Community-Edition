@@ -30,8 +30,9 @@ namespace CometServer.Tests.SideEffects
 
     using CDP4Common;
     using CDP4Common.DTO;
+    using CDP4Common.EngineeringModelData;
+    using CDP4Common.Exceptions;
 
-    using CometServer.Exceptions;
     using CometServer.Services;
     using CometServer.Services.Authorization;
     using CometServer.Services.Operations.SideEffects;
@@ -39,6 +40,13 @@ namespace CometServer.Tests.SideEffects
     using Moq;
 
     using NUnit.Framework;
+
+    using Parameter = CDP4Common.DTO.Parameter;
+    using ParameterOverride = CDP4Common.DTO.ParameterOverride;
+    using ParameterOverrideValueSet = CDP4Common.DTO.ParameterOverrideValueSet;
+    using ParameterSubscription = CDP4Common.DTO.ParameterSubscription;
+    using ParameterSubscriptionValueSet = CDP4Common.DTO.ParameterSubscriptionValueSet;
+    using ParameterValueSet = CDP4Common.DTO.ParameterValueSet;
 
     /// <summary>
     /// Tests the Parameter value set side effects.
@@ -185,6 +193,7 @@ namespace CometServer.Tests.SideEffects
         {
             this.parameterService.Setup(x => x.GetAsync(null, "partition", null, this.securityContext.Object))
                 .ReturnsAsync(new List<Thing>());
+
             this.parameterOverrideService.Setup(x => x.GetAsync(null, "partition", null, this.securityContext.Object))
                 .ReturnsAsync(new List<Thing>());
 

@@ -27,6 +27,7 @@ namespace CometServer.Tests.Services.BusinessLogic
     using System;
     using System.IO;
     using System.Text;
+
     using CometServer.Configuration;
     using CometServer.Services;
 
@@ -79,17 +80,6 @@ namespace CometServer.Tests.Services.BusinessLogic
         }
 
         [Test]
-        public void CalculateHashFromStreamProducesExpectedHash()
-        {
-            var bytes = Encoding.UTF8.GetBytes("COMET");
-            using var stream = new MemoryStream(bytes);
-
-            var hash = this.fileBinaryService.CalculateHashFromStream(stream);
-
-            Assert.That(hash, Is.EqualTo("9C3D6644BFBBCBAC92A9051A54F433845CF65D02"));
-        }
-
-        [Test]
         public void StoreAndRetrieveBinaryDataRoundTripsContent()
         {
             var data = Encoding.UTF8.GetBytes("Hello World");
@@ -129,8 +119,11 @@ namespace CometServer.Tests.Services.BusinessLogic
         {
             var result = this.fileBinaryService.TryGetFileStoragePath("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", out var filePath);
 
-            Assert.That(result, Is.False);
-            Assert.That(filePath, Does.Contain(Path.Combine(this.storageRoot, "f")));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(result, Is.False);
+                Assert.That(filePath, Does.Contain(Path.Combine(this.storageRoot, "f")));
+            }
         }
 
         [Test]

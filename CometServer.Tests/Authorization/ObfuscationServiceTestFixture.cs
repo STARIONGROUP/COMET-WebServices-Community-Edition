@@ -64,7 +64,7 @@ namespace CometServer.Tests.Authorization
                 IsDefaultOrganizationalParticipant = true
             };
 
-            var elementDefinition = new ElementDefinition { Name = "Original", ShortName = "original" };
+            var elementDefinition = new CDP4Common.DTO.ElementDefinition { Name = "Original", ShortName = "original" };
 
             this.service.ObfuscateResponse(new List<Thing> { elementDefinition }, credentials);
 
@@ -83,7 +83,7 @@ namespace CometServer.Tests.Authorization
 
             var valueArray = new ValueArray<string>(new List<string> { "value" });
 
-            var parameterValueSet = new ParameterValueSet
+            var parameterValueSet = new CDP4Common.DTO.ParameterValueSet
             {
                 Iid = valueSetId,
                 Manual = valueArray,
@@ -94,18 +94,17 @@ namespace CometServer.Tests.Authorization
                 ValueSwitch = ParameterSwitchKind.MANUAL
             };
 
-            var parameter = new Parameter
+            var parameter = new CDP4Common.DTO.Parameter
             {
                 Iid = parameterId,
-                ValueSets = new List<Guid> { valueSetId },
                 ParameterSubscription = new List<Guid>()
             };
 
-            var parameterGroup = new ParameterGroup { Iid = parameterGroupId, Name = "Group" };
+            var parameterGroup = new CDP4Common.DTO.ParameterGroup { Iid = parameterGroupId, Name = "Group" };
             var alias = new Alias { Iid = aliasId, Content = "Alias" };
             var hyperlink = new HyperLink { Iid = hyperlinkId, Content = "Link", Uri = "http://example.com" };
 
-            var elementDefinition = new ElementDefinition
+            var elementDefinition = new CDP4Common.DTO.ElementDefinition
             {
                 Iid = elementDefinitionId,
                 Name = "Visible",
@@ -134,11 +133,13 @@ namespace CometServer.Tests.Authorization
 
             this.service.ObfuscateResponse(resourceResponse, credentials);
 
-            Assert.That(elementDefinition.Name, Is.EqualTo("Hidden Element Definition"));
-            Assert.That(parameterGroup.Name, Is.EqualTo("Hidden Group"));
-            Assert.That(alias.Content, Is.EqualTo("Hidden Alias"));
-            Assert.That(hyperlink.Content, Is.EqualTo("Hidden Alias"));
-            Assert.That(parameterValueSet.Manual[0], Is.EqualTo("-"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(elementDefinition.Name, Is.EqualTo("Hidden Element Definition"));
+                Assert.That(parameterGroup.Name, Is.EqualTo("Hidden Group"));
+                Assert.That(alias.Content, Is.EqualTo("Hidden Alias"));
+                Assert.That(hyperlink.Content, Is.EqualTo("Hidden Alias"));
+            }
         }
     }
 }

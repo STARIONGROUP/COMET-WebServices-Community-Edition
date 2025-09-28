@@ -43,9 +43,12 @@ namespace CometServer.Tests.Modules
 
             response.UpdateWithNotAuthenticatedSettings();
 
-            Assert.That(response.ContentType, Is.EqualTo("application/json"));
-            Assert.That(response.StatusCode, Is.EqualTo(401));
-            Assert.That(response.Headers["WWW-Authenticate"].ToString(), Is.EqualTo("Basic"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(response.ContentType, Is.EqualTo("application/json"));
+                Assert.That(response.StatusCode, Is.EqualTo(401));
+                Assert.That(response.Headers["WWW-Authenticate"].ToString(), Is.EqualTo("Basic"));
+            }
         }
 
         [Test]
@@ -55,9 +58,12 @@ namespace CometServer.Tests.Modules
 
             response.UpdateWithNotBearerAuthenticatedSettings();
 
-            Assert.That(response.ContentType, Is.EqualTo("application/json"));
-            Assert.That(response.StatusCode, Is.EqualTo(401));
-            Assert.That(response.Headers["WWW-Authenticate"].ToString(), Is.EqualTo("Bearer"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(response.ContentType, Is.EqualTo("application/json"));
+                Assert.That(response.StatusCode, Is.EqualTo(401));
+                Assert.That(response.Headers["WWW-Authenticate"].ToString(), Is.EqualTo("Bearer"));
+            }
         }
 
         [Test]

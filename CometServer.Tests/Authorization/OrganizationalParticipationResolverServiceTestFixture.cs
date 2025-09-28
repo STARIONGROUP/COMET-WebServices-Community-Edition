@@ -28,7 +28,6 @@ namespace CometServer.Tests.Authorization
     using System.Collections.Generic;
     using System.Threading.Tasks;
 
-    using CDP4Common.CommonData;
     using CDP4Common.DTO;
 
     using CometServer.Authorization;
@@ -107,14 +106,13 @@ namespace CometServer.Tests.Authorization
             };
 
             this.elementDefinitionService.Setup(x => x.GetAsync(null, "partition", iteration.Element, It.IsAny<ISecurityContext>()))
-                .ReturnsAsync(new List<Thing> { elementDefinition });
+                .ReturnsAsync(new List<CDP4Common.DTO.Thing> { elementDefinition });
             this.elementDefinitionService.Setup(x => x.GetDeepAsync(null, "partition", It.IsAny<IEnumerable<Guid>>(), It.IsAny<ISecurityContext>()))
-                .ReturnsAsync(new List<Thing> { elementDefinition });
+                .ReturnsAsync(new List<CDP4Common.DTO.Thing> { elementDefinition });
 
             var thingToCheck = new ElementDefinition
             {
                 Iid = elementDefinitionId,
-                ClassKind = ClassKind.ElementDefinition
             };
 
             var result = await this.service.ResolveApplicableOrganizationalParticipationsAsync(null, "partition", iteration, thingToCheck, participantId);

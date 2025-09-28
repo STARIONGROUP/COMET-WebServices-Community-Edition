@@ -45,28 +45,34 @@ namespace CometServer.Tests.Services.Headers
 
             provider.RegisterResponseHeaders(context.Response, ContentTypeKind.MULTIPARTMIXED, boundary);
 
-            Assert.That(context.Response.Headers[HttpConstants.Cdp4ServerHeader].ToString(), Does.Contain("."));
-            Assert.That(context.Response.Headers[HttpConstants.CometServerHeader].ToString(), Does.Contain("."));
-            Assert.That(context.Response.Headers[HttpConstants.Cdp4CommonHeader].ToString(), Does.Contain("."));
-            Assert.That(context.Response.Headers[HttpConstants.ContentTypeHeader].ToString(), Does.Contain(boundary));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(context.Response.Headers[HttpConstants.Cdp4ServerHeader].ToString(), Does.Contain("."));
+                Assert.That(context.Response.Headers[HttpConstants.CometServerHeader].ToString(), Does.Contain("."));
+                Assert.That(context.Response.Headers[HttpConstants.Cdp4CommonHeader].ToString(), Does.Contain("."));
+                Assert.That(context.Response.Headers[HttpConstants.ContentTypeHeader].ToString(), Does.Contain(boundary));
+            }
         }
 
         [Test]
         public void HttpConstantsExposeExpectedValues()
         {
-            Assert.That(HttpConstants.BoundaryString, Is.EqualTo("----Boundary"));
-            Assert.That(HttpConstants.MimeTypeJson, Is.EqualTo("application/json"));
-            Assert.That(HttpConstants.MimeTypeMessagePack, Is.EqualTo("application/msgpack"));
-            Assert.That(HttpConstants.MimeTypeOctetStream, Is.EqualTo("application/octet-stream"));
-            Assert.That(HttpConstants.ContentTypeHeader, Is.EqualTo("Content-Type"));
-            Assert.That(HttpConstants.ContentDispositionHeader, Is.EqualTo("Content-Disposition"));
-            Assert.That(HttpConstants.ContentLengthHeader, Is.EqualTo("Content-Length"));
-            Assert.That(HttpConstants.Cdp4CommonHeader, Is.EqualTo("CDP4-Common"));
-            Assert.That(HttpConstants.Cdp4ServerHeader, Is.EqualTo("CDP4-Server"));
-            Assert.That(HttpConstants.CometServerHeader, Is.EqualTo("COMET-Server"));
-            Assert.That(HttpConstants.AcceptCdpVersionHeader, Is.EqualTo("Accept-CDP"));
-            Assert.That(HttpConstants.CDPErrorTag, Is.EqualTo("CDP-Error-Tag"));
-            Assert.That(HttpConstants.DefaultDataModelVersion, Is.EqualTo("1.0.0"));
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(HttpConstants.BoundaryString, Is.EqualTo("----Boundary"));
+                Assert.That(HttpConstants.MimeTypeJson, Is.EqualTo("application/json"));
+                Assert.That(HttpConstants.MimeTypeMessagePack, Is.EqualTo("application/msgpack"));
+                Assert.That(HttpConstants.MimeTypeOctetStream, Is.EqualTo("application/octet-stream"));
+                Assert.That(HttpConstants.ContentTypeHeader, Is.EqualTo("Content-Type"));
+                Assert.That(HttpConstants.ContentDispositionHeader, Is.EqualTo("Content-Disposition"));
+                Assert.That(HttpConstants.ContentLengthHeader, Is.EqualTo("Content-Length"));
+                Assert.That(HttpConstants.Cdp4CommonHeader, Is.EqualTo("CDP4-Common"));
+                Assert.That(HttpConstants.Cdp4ServerHeader, Is.EqualTo("CDP4-Server"));
+                Assert.That(HttpConstants.CometServerHeader, Is.EqualTo("COMET-Server"));
+                Assert.That(HttpConstants.AcceptCdpVersionHeader, Is.EqualTo("Accept-CDP"));
+                Assert.That(HttpConstants.CDPErrorTag, Is.EqualTo("CDP-Error-Tag"));
+                Assert.That(HttpConstants.DefaultDataModelVersion, Is.EqualTo("1.0.0"));
+            }
         }
     }
 }

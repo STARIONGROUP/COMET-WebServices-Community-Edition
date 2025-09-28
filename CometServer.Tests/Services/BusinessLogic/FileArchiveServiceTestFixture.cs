@@ -93,12 +93,12 @@ namespace CometServer.Tests.Services.BusinessLogic
         public void CreateZipArchiveCreatesZipFile()
         {
             var sourceDirectory = Directory.CreateDirectory(Path.Combine(this.temporaryRoot, "source"));
-            File.WriteAllText(Path.Combine(sourceDirectory.FullName, "file.txt"), "content");
+            System.IO.File.WriteAllText(Path.Combine(sourceDirectory.FullName, "file.txt"), "content");
 
             this.fileArchiveService.CreateZipArchive(sourceDirectory);
 
             var expectedArchive = Path.Combine(this.temporaryRoot, "source.zip");
-            Assert.That(File.Exists(expectedArchive), Is.True);
+            Assert.That(System.IO.File.Exists(expectedArchive), Is.True);
         }
 
         [Test]
@@ -106,13 +106,16 @@ namespace CometServer.Tests.Services.BusinessLogic
         {
             var folder = Directory.CreateDirectory(Path.Combine(this.temporaryRoot, "toDelete"));
             var zipPath = Path.Combine(this.temporaryRoot, "toDelete.zip");
-            File.WriteAllText(Path.Combine(folder.FullName, "file.txt"), "content");
-            File.WriteAllText(zipPath, "zipcontent");
+            System.IO.File.WriteAllText(Path.Combine(folder.FullName, "file.txt"), "content");
+            System.IO.File.WriteAllText(zipPath, "zipcontent");
 
             this.fileArchiveService.DeleteFolderAndFileStructureAndArchive(folder);
 
-            Assert.That(Directory.Exists(folder.FullName), Is.False);
-            Assert.That(File.Exists(zipPath), Is.False);
+            using (Assert.EnterMultipleScope())
+            {
+                Assert.That(Directory.Exists(folder.FullName), Is.False);
+                Assert.That(System.IO.File.Exists(zipPath), Is.False);
+            }
         }
     }
 }
