@@ -57,11 +57,10 @@ jobs:
         
       - name: Sonarqube Begin
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"STARIONGROUP_CDP4-COMET-WebServices-Community-Edition" /o:"stariongroup" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverageReportPaths="./CoverageResultsReport/SonarQube.xml"
+          dotnet sonarscanner begin /k:"STARIONGROUP_CDP4-COMET-WebServices-Community-Edition" /o:"stariongroup" /d:sonar.token="$SONAR_TOKEN" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.coverageReportPaths="./CoverageResultsReport/SonarQube.xml"
 
       - name: Build
         run: dotnet build COMET-WebServices.sln -c Debug --no-restore /p:ContinuousIntegrationBuild=true
@@ -115,6 +114,6 @@ jobs:
         run: docker stop comet-db && docker rm comet-db
 
       - name: Sonarqube end
-        run: dotnet sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
