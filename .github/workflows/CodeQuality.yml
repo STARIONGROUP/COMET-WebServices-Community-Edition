@@ -19,7 +19,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: cdp4-test-database-community-edition Image
-        run: docker pull stariongroup/cdp4-test-database-community-edition:4.0.0
+        run: docker pull stariongroup/cdp4-test-database-community-edition:4.1.0
 
       - name: Start PostgreSQL Container
         run: |
@@ -28,7 +28,7 @@ jobs:
              -p 5432:5432 \
              --tmpfs /var/lib/postgresql/data:rw \
              --name comet-db \
-             stariongroup/cdp4-test-database-community-edition:4.0.0
+             stariongroup/cdp4-test-database-community-edition:4.1.0
 
       - name: Wait for PostgreSQL to be ready
         run: |
@@ -50,7 +50,9 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: add Starion GitHub nuget feed
-        run: dotnet nuget add source https://nuget.pkg.github.com/STARIONGROUP/index.json -n GHRHEA -u gh -p ${{ secrets.GH_PR_TOKEN }} --store-password-in-clear-text
+        env:
+          GH_PR_TOKEN: ${{ secrets.GH_PR_TOKEN }}
+        run: dotnet nuget add source https://nuget.pkg.github.com/STARIONGROUP/index.json -n GHRHEA -u gh -p $GH_PR_TOKEN --store-password-in-clear-text
 
       - name: Restore dependencies
         run: dotnet restore COMET-WebServices.sln
