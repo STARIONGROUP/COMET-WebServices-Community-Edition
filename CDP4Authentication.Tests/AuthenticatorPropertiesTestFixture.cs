@@ -2,6 +2,7 @@ namespace CDP4Authentication.Tests
 {
     using System;
     using System.Collections.Generic;
+
     using NUnit.Framework;
 
     [TestFixture]
@@ -18,13 +19,13 @@ namespace CDP4Authentication.Tests
                 Description = "Authenticator used for unit testing"
             };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(properties.Rank, Is.EqualTo(1));
                 Assert.That(properties.IsEnabled, Is.True);
                 Assert.That(properties.Name, Is.EqualTo("TestAuthenticator"));
                 Assert.That(properties.Description, Is.EqualTo("Authenticator used for unit testing"));
-            });
+            }
         }
 
         [Test]
@@ -35,7 +36,7 @@ namespace CDP4Authentication.Tests
 
             var person = new AuthenticationPerson(iid, revision);
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(person.Iid, Is.EqualTo(iid));
                 Assert.That(person.RevisionNumber, Is.EqualTo(revision));
@@ -47,7 +48,7 @@ namespace CDP4Authentication.Tests
                 Assert.That(person.Role, Is.Null);
                 Assert.That(person.DefaultDomain, Is.Null);
                 Assert.That(person.Organization, Is.Null);
-            });
+            }
         }
 
         [Test]
@@ -55,6 +56,7 @@ namespace CDP4Authentication.Tests
         {
             var iid = Guid.NewGuid();
             const int revision = 10;
+
             var person = new AuthenticationPerson(iid, revision)
             {
                 Password = "password",
@@ -67,7 +69,7 @@ namespace CDP4Authentication.Tests
                 Organization = Guid.NewGuid()
             };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(person.Password, Is.EqualTo("password"));
                 Assert.That(person.UserName, Is.EqualTo("user"));
@@ -77,7 +79,7 @@ namespace CDP4Authentication.Tests
                 Assert.That(person.Role, Is.Not.Null);
                 Assert.That(person.DefaultDomain, Is.Not.Null);
                 Assert.That(person.Organization, Is.Not.Null);
-            });
+            }
         }
 
         [Test]
@@ -115,14 +117,14 @@ namespace CDP4Authentication.Tests
                 ServerSalts = serverSalts
             };
 
-            Assert.Multiple(() =>
+            using (Assert.EnterMultipleScope())
             {
                 Assert.That(wspProperties.Rank, Is.EqualTo(3));
                 Assert.That(wspProperties.IsEnabled, Is.False);
                 Assert.That(wspProperties.Name, Is.EqualTo("Wsp"));
                 Assert.That(wspProperties.Description, Is.EqualTo("WSP description"));
                 Assert.That(wspProperties.ServerSalts, Is.SameAs(serverSalts));
-            });
+            }
         }
     }
 }
