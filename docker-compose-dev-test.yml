@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   cdp4_db:
-    image: stariongroup/cdp4-test-database-community-edition:3.4.0
+    image: stariongroup/cdp4-test-database-community-edition:4.2.0
     shm_size: 2gb
     hostname: cdp4-postgresql
     command: postgres -c max_locks_per_transaction=1024

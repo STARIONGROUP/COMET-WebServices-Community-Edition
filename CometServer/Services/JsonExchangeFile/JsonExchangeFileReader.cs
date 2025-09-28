@@ -342,7 +342,7 @@ namespace CometServer.Services
 
                 zipFile.Password = password;
 
-                this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid, engineeringModelSetup.EngineeringModelIid);
+                this.Logger.LogDebug("extracting Things from: EngineeringModels/{EngineeringModelIid}.json", engineeringModelSetup.EngineeringModelIid);
 
                 var engineeringModelZipEntry = zipFile.GetEntry($"EngineeringModels/{engineeringModelSetup.EngineeringModelIid}/{engineeringModelSetup.EngineeringModelIid}.json");
                 var engineeringModelItems = this.ReadInfoFromArchiveEntry(version, zipFile,engineeringModelZipEntry);

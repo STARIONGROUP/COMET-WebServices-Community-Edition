@@ -65,6 +65,39 @@ The COMET Webservices are built on top of the [Carter](https://github.com/Carter
 
 The ECSS-E-TM-10-25 Annex C integration tests are used to validate the correctness of the implementation. These integration tests are available on [Github](https://github.com/STARIONGROUP/ecss-10-25-annexc-integration-tests)
 
+## Build and Deploy using Docker
+
+The CDP4-COMET-Webservices solution is built using docker and the result is a Docker container ready to be deployed (or pushed to Docker Hub).
+
+Two scripts are provided to create a docker image:
+  - `docker-build-local.sh`: creates an image that can be run locally with `docker run -p 5000:5000 -it -d --name cdp4-services-community-edition --network cdp4-comet stariongroup/comet-webservices-community-edition:10.0.0`
+  - `docker-build-attested.sh`: creates an image that is attested and includes an SBOM. This is immediately pushed to docker hub
+
+> both scripts need to be run from a linux command line (like the console in GitExtensions)
+
+## Software Bill of Materials (SBOM) and Provenance
+
+As part of our commitment to security, transparency, and traceability, this Docker image includes a Software Bill of Materials (SBOM) and Provenance information. These are automatically generated during the build process, providing detailed insights into the components, their licenses, versions, and the integrity of the image itself.
+What is Included:
+
+### SBOM (Software Bill of Materials):
+
+  - A comprehensive list of all open-source and third-party components included in this Docker image.
+  - Tracks software dependencies, licenses, and versions.
+  - Helps with vulnerability management by allowing users to quickly identify potential risks tied to specific components.
+
+### Provenance:
+
+  - A record of the image's origin and build process, providing traceability and assurance regarding the integrity of the image.
+  - This ensures that the image was built using the declared sources and under the specified conditions, helping verify its authenticity and consistency.
+
+### Why SBOM and Provenance?
+
+  - Improved Transparency: Provides full visibility into the open-source and third-party components included in the image.
+  - Security Assurance: Enables easier tracking of vulnerabilities associated with specific components, promoting proactive security measures.
+  - Compliance: Ensures adherence to licensing requirements and simplifies audits of dependencies and build processes.
+  - Image Integrity: Provenance guarantees that the image is built as expected, without unauthorized modifications.
+
 ## License
 
 The COMET Webservices Community Edition are provided to the community under the GNU Affero General Public License. The COMET Community Edition relies on open source and proprietary licensed components. Some of these components have a license that is not compatible with the GPL or AGPL. For these components Additional permission under GNU GPL version 3 section 7 are granted. See the license files for the details. The license can be found [here](LICENSE).
