@@ -14,28 +14,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
-
-      - name: cdp4-test-database-community-edition Image
-        run: docker pull stariongroup/cdp4-test-database-community-edition:4.2.0
-
-      - name: Start PostgreSQL Container
-        run: |
-            docker run -it -d \
-             -e POSTGRES_PASSWORD=postgres \
-             -p 5432:5432 \
-             --tmpfs /var/lib/postgresql/data:rw \
-             --name comet-db \
-             stariongroup/cdp4-test-database-community-edition:4.2.0
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          until docker exec comet-db pg_isready -U postgres; do
-            echo "Waiting for PostgreSQL to be ready..."
-            sleep 5
-          done
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -70,24 +48,70 @@ jobs:
       - name: Run Unit Tests and Compute Coverage
         run: dotnet test COMET-WebServices.sln --no-restore --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutput="../CoverageResults/" /p:MergeWith="../CoverageResults/coverage.json" /p:CoverletOutputFormat=\"cobertura,opencover,json\"
 
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: cdp4-test-database-community-edition Image
+        run: docker pull stariongroup/cdp4-test-database-community-edition:4.2.0
+
+      - name: Start PostgreSQL Container
+        run: |
+            docker run -it -d \
+             -e POSTGRES_PASSWORD=postgres \
+             -p 5432:5432 \
+             --tmpfs /var/lib/postgresql/data:rw \
+             --name comet-db \
+             stariongroup/cdp4-test-database-community-edition:4.2.0
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          until docker exec comet-db pg_isready -U postgres; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 5
+          done
+
       - name: install dotnet-coverage
         run: dotnet tool install --global dotnet-coverage
 
       - name: install dotnet-reportgenerator-globaltool
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
-      - name: Start API
-        run: dotnet-coverage collect --output CoverageResults/integration.test.report.coverage.xml --output-format cobertura --session-id integrationtestsession "dotnet run --project CometServer/CometServer.csproj -c Debug" &
+      - name: Start coverage collector
+        run: |
+          dotnet-coverage collect \
+            --session-id integrationtestsession \
+            --server-mode \
+            --background \
+            --output CoverageResults/integration.cobertura.xml \
+            --output-format cobertura \
+            --log-file CoverageResults/coverage.log \
+            --log-level Verbose
 
-      - name: Wait for API to start
-        run: sleep 70  # Adjust as necessary to ensure the API is up
+      - name: Start API
+        run: |
+          set x
+          dotnet run --project CometServer/CometServer.csproj -c Debug --no-build --no-restore > api.log 2>&1 &
+
+      - name: Wait for API to become ready
+        run: |
+          echo "Waiting for API on http://localhost:5000/healthz"
+          for i in {1..60}; do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:5000/healthz | grep -q "200"; then
+              echo "API is UP"
+              exit 0
+            fi
+            echo "[$i/60] API not ready yet, retrying in 2 seconds..."
+            sleep 2
+          done
+          echo "ERROR: API did not become ready in time"
+          exit 1
 
       - name: Checkout Integration Test Suite
         uses: actions/checkout@v4
         with:
           repository: STARIONGROUP/ecss-10-25-annexc-integration-tests
           path: integration-tests
-          
+
       - name: Zip Integration Test Results
         run: |
           cd integration-tests/Data
